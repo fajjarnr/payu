@@ -1,0 +1,97 @@
+# BI-FAST Simulator Configuration
+quarkus:
+  application:
+    name: bi-fast-simulator
+    version: 1.0.0
+
+  # HTTP Server
+  http:
+    port: 8090
+    cors:
+      ~: true
+      origins: "*"
+      methods: GET,POST,PUT,DELETE,OPTIONS
+      headers: "*"
+
+  # Database
+  datasource:
+    db-kind: postgresql
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    jdbc:
+      url: ${DB_URL:jdbc:postgresql://localhost:5432/bifast_simulator}
+      max-size: 10
+
+  hibernate-orm:
+    database:
+      generation: drop-and-create
+    log:
+      sql: true
+
+  # Health & Metrics
+  smallrye-health:
+    ui:
+      enable: true
+
+  micrometer:
+    export:
+      prometheus:
+        path: /q/metrics
+
+  # OpenTelemetry
+  otel:
+    exporter:
+      otlp:
+        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+    resource:
+      attributes:
+        - service.name=bi-fast-simulator
+        - service.version=1.0.0
+
+  # Logging
+  log:
+    level: INFO
+    category:
+      "id.payu.simulator":
+        level: DEBUG
+      "org.hibernate.SQL":
+        level: DEBUG
+    console:
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e%n"
+      json: false
+
+# Simulator Configuration
+simulator:
+  # Network latency simulation (milliseconds)
+  latency:
+    min: 50
+    max: 500
+
+  # Failure rate (percentage, 0-100)
+  failure-rate: 5
+
+  # Webhook configuration
+  webhook:
+    enabled: true
+    delay-ms: 2000
+    retry-count: 3
+    retry-delay-ms: 1000
+
+# Test Bank Accounts (loaded on startup)
+test-accounts:
+  - bank-code: BCA
+    account-number: "1234567890"
+    account-name: "JOHN DOE"
+    status: ACTIVE
+  - bank-code: BRI
+    account-number: "0987654321"
+    account-name: "JANE DOE"
+    status: ACTIVE
+  - bank-code: MANDIRI
+    account-number: "1111222233"
+    account-name: "TEST BLOCKED"
+    status: BLOCKED
+  - bank-code: BNI
+    account-number: "9999888877"
+    account-name: "TEST TIMEOUT"
+    status: TIMEOUT

@@ -9,17 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **External Service Simulators** (Section 12):
+- **Project Structure**: Complete monorepo setup
+  - `backend/` - All microservices
+  - `backend/simulators/` - External service simulators
+  - `frontend/` - Web, mobile, admin apps
+  - `infrastructure/` - OpenShift, Terraform, Helm configurations
+  - `docs/` - API, architecture, runbooks
+
+- **BI-FAST Simulator** (Quarkus 3.17.5):
+  - Account inquiry endpoint (`POST /api/v1/inquiry`)
+  - Fund transfer endpoint (`POST /api/v1/transfer`)
+  - Status check endpoint (`GET /api/v1/status/{ref}`)
+  - Configurable latency simulation (50-500ms)
+  - Configurable failure rate (default 5%)
+  - Test bank accounts (BCA, BRI, MANDIRI, BNI, etc.)
+  - Blocked and timeout scenarios for testing
+  - Health checks and Prometheus metrics
+  - OpenTelemetry tracing
+  - Dockerfile with Red Hat UBI base images
+
+- **OpenShift Manifests**:
+  - Namespace definitions (5 environments)
+  - BI-FAST Simulator deployment, service, configmap
+
+- **External Service Simulators** (Section 12 in ARCHITECTURE.md):
   - BI-FAST Simulator (Quarkus Native) - transfer, inquiry, webhook
   - Dukcapil Simulator (Quarkus Native) - NIK verification, face matching
   - QRIS Simulator (Quarkus Native) - QR generation, payment
-  - Test data for each simulator
-- **Frontend Architecture** (Section 13):
+
+- **Frontend Architecture** (Section 13 in ARCHITECTURE.md):
   - Web App: Next.js 15 + Tailwind CSS 4
   - Mobile App: Expo (React Native)
   - Admin Dashboard: Next.js 15 + shadcn/ui
   - Shared layer: TypeScript, Zustand, TanStack Query
-- **Lab Configuration & Decisions** (Section 14):
+
+- **Lab Configuration & Decisions** (Section 14 in ARCHITECTURE.md):
   - 5 Environment strategy (DEV, SIT, UAT, PREPROD, PROD)
   - Infrastructure decisions (AWS ap-southeast-1, OpenShift 4.20+)
   - Security tools (Vault, RHACS, Falco, Wazuh)

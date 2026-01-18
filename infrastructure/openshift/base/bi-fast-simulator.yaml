@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bi-fast-simulator
+  labels:
+    app: bi-fast-simulator
+    app.kubernetes.io/name: bi-fast-simulator
+    app.kubernetes.io/component: simulator
+    app.kubernetes.io/part-of: payu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bi-fast-simulator
+  template:
+    metadata:
+      labels:
+        app: bi-fast-simulator
+        app.kubernetes.io/name: bi-fast-simulator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/q/metrics"
+        prometheus.io/port: "8090"
+    spec:
+      containers:
+        - name: bi-fast-simulator
+          image: bi-fast-simulator:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8090
+              name: http
+              protocol: TCP
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bi-fast-simulator-db
+                  key: url
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: bi-fast-simulator-db
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bi-fast-simulator-db
+                  key: password
+          envFrom:
+            - configMapRef:
+                name: bi-fast-simulator-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8090
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bi-fast-simulator
+  labels:
+    app: bi-fast-simulator
+spec:
+  selector:
+    app: bi-fast-simulator
+  ports:
+    - port: 8090
+      targetPort: 8090
+      name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bi-fast-simulator-config
+data:
+  SIMULATOR_LATENCY_MIN: "50"
+  SIMULATOR_LATENCY_MAX: "500"
+  SIMULATOR_FAILURE_RATE: "5"
+  SIMULATOR_WEBHOOK_ENABLED: "true"
+  SIMULATOR_WEBHOOK_DELAY_MS: "2000"

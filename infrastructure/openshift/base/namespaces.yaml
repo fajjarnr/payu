@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-dev
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: dev
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: sit
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: uat
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-preprod
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: preprod
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-prod
+  labels:
+    app.kubernetes.io/part-of: payu
+    environment: prod
