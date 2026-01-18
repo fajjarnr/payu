@@ -34,14 +34,46 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 
 | Layer | Technology |
 |-------|------------|
-| **Backend Services** | Java 21 (Spring Boot 3.4.x), Python 3.12 (FastAPI) |
-| **API Gateway** | Spring Cloud Gateway |
-| **Message Broker** | Apache Kafka 3.x |
+| **Core Banking Services** | Java 21 (Spring Boot 3.4.x) |
+| **Supporting Services** | Java 21 (Quarkus 3.x Native) |
+| **ML/Data Services** | Python 3.12 (FastAPI) |
+| **API Gateway** | Quarkus Reactive Gateway |
+| **Message Broker** | AMQ Streams (Kafka) + AMQ Broker (AMQP) |
 | **Databases** | PostgreSQL 16, MongoDB 7, Redis 7 |
-| **Identity & Access** | Keycloak 24 |
-| **Container Runtime** | Kubernetes (EKS) |
+| **Identity & Access** | Red Hat SSO (Keycloak) 24 |
+| **Container Runtime** | OpenShift / Kubernetes (EKS) |
 | **Service Mesh** | Istio |
 | **Observability** | Prometheus, Grafana, Jaeger, ELK |
+
+### Polyglot Microservices Strategy
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       JAVA-CENTRIC POLYGLOT STACK                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CORE BANKING (Spring Boot 3.4)       SUPPORTING (Quarkus 3.x Native)       │
+│  ┌───────────────────────────────┐    ┌───────────────────────────────┐     │
+│  │ account-service               │    │ gateway-service               │     │
+│  │ auth-service                  │    │ billing-service               │     │
+│  │ transaction-service           │    │ notification-service          │     │
+│  │ wallet-service                │    │ card-service                  │     │
+│  │                               │    │ promotion-service             │     │
+│  │ Why Spring Boot?              │    │ Why Quarkus Native?           │     │
+│  │ ✓ Enterprise maturity         │    │ ✓ <50ms startup time          │     │
+│  │ ✓ Axon Framework (CQRS/ES)    │    │ ✓ <50MB memory footprint      │     │
+│  │ ✓ Strong transaction support  │    │ ✓ Java skills reuse           │     │
+│  │ ✓ Banking library ecosystem   │    │ ✓ Red Hat enterprise support  │     │
+│  └───────────────────────────────┘    └───────────────────────────────┘     │
+│                                                                              │
+│  ML/DATA PROCESSING (Python 3.12 FastAPI)                                   │
+│  ┌───────────────────────────────┐                                          │
+│  │ kyc-service (OCR, liveness)   │                                          │
+│  │ analytics-service (ML)        │                                          │
+│  │ recommendation-service        │                                          │
+│  └───────────────────────────────┘                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -89,20 +121,32 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
 │ │ Account  │ │   Auth   │ │Transaction│ │  Wallet  │ │ Billing  │ │   KYC    │ │
 │ │ Service  │ │ Service  │ │ Service  │ │ Service  │ │ Service  │ │ Service  │ │
-│ │ (Java)   │ │ (Java)   │ │ (Java)   │ │ (Java)   │ │ (Java)   │ │(Python)  │ │
+│ │(Spring)  │ │(Spring)  │ │ (Spring) │ │(Spring)  │ │(Quarkus) │ │(Python)  │ │
 │ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ │
 └──────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────┘
        │            │            │            │            │            │
        └────────────┴────────────┴─────┬──────┴────────────┴────────────┘
                                        │
 ┌──────────────────────────────────────┼────────────────────────────────────────┐
-│                           EVENT BUS (Kafka)                                    │
-│                    ┌─────────────────▼─────────────────┐                      │
-│                    │     Apache Kafka Cluster          │                      │
-│                    │     - Event Sourcing              │                      │
-│                    │     - Saga Orchestration          │                      │
-│                    │     - CDC (Debezium)              │                      │
-│                    └─────────────────┬─────────────────┘                      │
+│                    HYBRID MESSAGING (AMQ Streams + AMQ Broker)                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐  │
+│  │                      AMQ STREAMS (Kafka)                                 │  │
+│  │  ┌─────────────────▼─────────────────┐                                   │  │
+│  │  │  Event Sourcing & Saga            │  Topics:                          │  │
+│  │  │  - Transaction events             │  - payu.transactions.*            │  │
+│  │  │  - Audit logs                     │  - payu.accounts.*                │  │
+│  │  │  - CDC (Debezium)                 │  - payu.wallet.*                  │  │
+│  │  └───────────────────────────────────┘                                   │  │
+│  └─────────────────────────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────────────────────────┐  │
+│  │                      AMQ BROKER (AMQP 1.0)                               │  │
+│  │  ┌───────────────────────────────────┐                                   │  │
+│  │  │  Point-to-Point Messaging         │  Queues:                          │  │
+│  │  │  - Notification delivery          │  - notification.send              │  │
+│  │  │  - External callbacks             │  - webhook.outbound               │  │
+│  │  │  - Legacy integration             │  - legacy.bridge                  │  │
+│  │  └───────────────────────────────────┘                                   │  │
+│  └─────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────┼────────────────────────────────────────┘
                                        │
 ┌──────────────────────────────────────┼────────────────────────────────────────┐
@@ -297,8 +341,9 @@ CREATE TABLE ledger_entries (
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | NestJS (TypeScript) |
+| **Technology** | Java 21, Quarkus 3.x (Native) |
 | **Database** | MongoDB |
+| **Messaging** | AMQ Broker (AMQP 1.0) |
 | **Port** | 8006 |
 | **Responsibilities** | Push notifications, SMS, Email, in-app messages |
 

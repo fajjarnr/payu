@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Updated technology stack with polyglot strategy:
+  - Core Banking: Spring Boot 3.4 (account, auth, transaction, wallet)
+  - Supporting Services: Quarkus 3.x Native (billing, notification, gateway, card, promotion)
+  - ML Services: Python 3.12 FastAPI (kyc, analytics, recommendation)
+- Updated message broker to hybrid approach:
+  - AMQ Streams (Kafka) for event sourcing, saga, CDC
+  - AMQ Broker (AMQP 1.0) for notifications, webhooks, legacy integration
+- Updated identity provider to Red Hat SSO (Keycloak)
+- Added polyglot microservices strategy diagram
+
 ### Added
 - Initial PRD.md with comprehensive digital banking requirements
 - ARCHITECTURE.md with production-ready microservices architecture
