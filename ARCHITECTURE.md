@@ -32,46 +32,52 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 
 ### Technology Stack Overview
 
-| Layer | Technology |
-|-------|------------|
-| **Core Banking Services** | Java 21 (Spring Boot 3.4.x) |
-| **Supporting Services** | Java 21 (Quarkus 3.x Native) |
-| **ML/Data Services** | Python 3.12 (FastAPI) |
-| **API Gateway** | Quarkus Reactive Gateway |
-| **Message Broker** | AMQ Streams (Kafka) + AMQ Broker (AMQP) |
-| **Databases** | PostgreSQL 16, MongoDB 7, Redis 7 |
-| **Identity & Access** | Red Hat SSO (Keycloak) 24 |
-| **Container Runtime** | OpenShift / Kubernetes (EKS) |
-| **Service Mesh** | Istio |
-| **Observability** | Prometheus, Grafana, Jaeger, ELK |
+| Layer | Red Hat Product | Portable Alternative |
+|-------|-----------------|----------------------|
+| **Container Platform** | Red Hat OpenShift 4.20+ | Kubernetes (EKS/GKE/AKS) |
+| **Core Banking Services** | Red Hat Runtimes (Spring Boot 3.4) | Spring Boot |
+| **Supporting Services** | Red Hat Build of Quarkus 3.x | Quarkus |
+| **ML/Data Services** | Python 3.12 (UBI-based) | Python FastAPI |
+| **API Gateway** | Red Hat Build of Quarkus | Any API Gateway |
+| **Event Streaming** | AMQ Streams (Kafka) | Apache Kafka, Confluent |
+| **Message Queue** | AMQ Broker (Artemis) | ActiveMQ Artemis, RabbitMQ |
+| **Database** | Crunchy PostgreSQL 16 | Any PostgreSQL |
+| **Caching** | Red Hat Data Grid (RESP mode) | Redis, ElastiCache |
+| **Identity & Access** | Red Hat SSO (Keycloak) 24 | Keycloak, Auth0 |
+| **Service Mesh** | OpenShift Service Mesh | Istio, Linkerd |
+| **Logging** | OpenShift Logging (LokiStack) | Grafana Loki |
+| **Monitoring** | OpenShift Monitoring | Prometheus/Grafana |
+| **Tracing** | OpenShift Distributed Tracing | Jaeger, Tempo |
+| **CI/CD** | OpenShift Pipelines + GitOps | Tekton + ArgoCD |
+
+> **Portability Note**: All components use standard APIs (OIDC, RESP, Kafka Protocol, SQL, AMQP).
+> Code remains portable - only configuration changes needed to switch providers.
 
 ### Polyglot Microservices Strategy
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                       JAVA-CENTRIC POLYGLOT STACK                            │
+│                  RED HAT OPENSHIFT 4.20+ ECOSYSTEM                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  CORE BANKING (Spring Boot 3.4)       SUPPORTING (Quarkus 3.x Native)       │
+│  CORE BANKING (Red Hat Runtimes)       SUPPORTING (Red Hat Build of Quarkus)│
 │  ┌───────────────────────────────┐    ┌───────────────────────────────┐     │
 │  │ account-service               │    │ gateway-service               │     │
 │  │ auth-service                  │    │ billing-service               │     │
 │  │ transaction-service           │    │ notification-service          │     │
 │  │ wallet-service                │    │ card-service                  │     │
 │  │                               │    │ promotion-service             │     │
-│  │ Why Spring Boot?              │    │ Why Quarkus Native?           │     │
-│  │ ✓ Enterprise maturity         │    │ ✓ <50ms startup time          │     │
-│  │ ✓ Axon Framework (CQRS/ES)    │    │ ✓ <50MB memory footprint      │     │
-│  │ ✓ Strong transaction support  │    │ ✓ Java skills reuse           │     │
-│  │ ✓ Banking library ecosystem   │    │ ✓ Red Hat enterprise support  │     │
+│  │ Spring Boot 3.4               │    │ Quarkus 3.x Native            │     │
+│  │ ✓ Axon Framework (CQRS/ES)    │    │ ✓ <50ms startup, <50MB RAM    │     │
+│  │ ✓ Strong ACID transactions    │    │ ✓ Redis-compatible (RESP)     │     │
 │  └───────────────────────────────┘    └───────────────────────────────┘     │
 │                                                                              │
-│  ML/DATA PROCESSING (Python 3.12 FastAPI)                                   │
-│  ┌───────────────────────────────┐                                          │
-│  │ kyc-service (OCR, liveness)   │                                          │
-│  │ analytics-service (ML)        │                                          │
-│  │ recommendation-service        │                                          │
-│  └───────────────────────────────┘                                          │
+│  ML/DATA (Python 3.12 UBI)            DATA LAYER                            │
+│  ┌───────────────────────────────┐    ┌───────────────────────────────┐     │
+│  │ kyc-service (OCR, liveness)   │    │ PostgreSQL 16 (JSONB)         │     │
+│  │ analytics-service (ML)        │    │ Red Hat Data Grid (RESP)      │     │
+│  │ recommendation-service        │    │ OpenShift Elasticsearch       │     │
+│  └───────────────────────────────┘    └───────────────────────────────┘     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -316,8 +322,8 @@ CREATE TABLE ledger_entries (
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Python 3.12, FastAPI |
-| **Database** | MongoDB |
+| **Technology** | Python 3.12, FastAPI (UBI-based) |
+| **Database** | PostgreSQL (JSONB) |
 | **Port** | 8005 |
 | **Responsibilities** | eKYC, OCR, liveness detection, Dukcapil verification |
 
@@ -342,7 +348,8 @@ CREATE TABLE ledger_entries (
 | Attribute | Value |
 |-----------|-------|
 | **Technology** | Java 21, Quarkus 3.x (Native) |
-| **Database** | MongoDB |
+| **Database** | PostgreSQL |
+| **Cache** | Red Hat Data Grid (RESP mode) |
 | **Messaging** | AMQ Broker (AMQP 1.0) |
 | **Port** | 8006 |
 | **Responsibilities** | Push notifications, SMS, Email, in-app messages |
@@ -499,11 +506,12 @@ public class TransferSaga {
 
 ### 5.1 Database Strategy
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           DATABASE PER SERVICE                               │
+│              UNIFIED POSTGRESQL + DATA GRID STRATEGY                        │
 └─────────────────────────────────────────────────────────────────────────────┘
 
+                        PRIMARY DATABASE (Crunchy PostgreSQL 16)
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │ Account Service │     │Transaction Svc  │     │  Wallet Service │
 └────────┬────────┘     └────────┬────────┘     └────────┬────────┘
@@ -511,7 +519,7 @@ public class TransferSaga {
          ▼                       ▼                       ▼
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │   PostgreSQL    │     │   PostgreSQL    │     │   PostgreSQL    │
-│  payu_accounts  │     │ payu_transactions│    │   payu_wallet   │
+│  payu_accounts  │     │payu_transactions│     │   payu_wallet   │
 │                 │     │  + Event Store  │     │  (Double-entry) │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 
@@ -521,10 +529,24 @@ public class TransferSaga {
          │                       │                       │
          ▼                       ▼                       ▼
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│    MongoDB      │     │    MongoDB      │     │   ClickHouse    │
-│    payu_kyc     │     │payu_notifications│    │  payu_analytics │
+│   PostgreSQL    │     │   PostgreSQL    │     │   TimescaleDB   │
+│    payu_kyc     │     │payu_notification│     │  payu_analytics │
+│    (JSONB)      │     │                 │     │  (Time-series)  │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
+
+                        CACHING LAYER (Red Hat Data Grid - RESP Mode)
+                        ┌─────────────────────────────────────────────┐
+                        │  • Session Store (TTL-based)            │
+                        │  • Rate Limiting Counters                │
+                        │  • Token Cache                           │
+                        │  • Hot Data Cache (account balances)     │
+                        │                                          │
+                        │  Redis Protocol (RESP) = Portable Code   │
+                        └─────────────────────────────────────────────┘
 ```
+
+> **Portability**: All services use standard Redis clients (`spring-data-redis`, `quarkus-redis-client`).
+> Can switch to AWS ElastiCache, Azure Cache, or plain Redis by changing configuration only.
 
 ### 5.2 CQRS Implementation
 
@@ -546,7 +568,7 @@ public class TransferSaga {
               ▼                                    ▼
     ┌───────────────────┐                ┌───────────────────┐
     │   Write Model     │───── CDC ─────▶│    Read Model     │
-    │   (PostgreSQL)    │    (Debezium)  │    (MongoDB)      │
+    │   (PostgreSQL)    │    (Debezium)  │    (Data Grid)    │
     └───────────────────┘                └───────────────────┘
               │
               ▼
