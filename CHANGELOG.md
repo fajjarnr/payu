@@ -68,6 +68,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Proxy routing to simulators and core services
   - Health, status, and version endpoints
   - Prometheus metrics and OpenTelemetry tracing
+- **Account Service** (Spring Boot 3.4.1):
+  - User Management (User, Account, Profile entities)
+  - PostgreSQL integration with JSONB support for profiles
+  - eKYC Integration with Dukcapil Simulator via Feign Client
+  - OAuth2 Resource Server Security
+  - Kafka Producer configuration
+  - Registration API (`POST /api/v1/accounts/register`)
 
 - **External Service Simulators** (Section 12 in ARCHITECTURE.md):
   - BI-FAST Simulator (Quarkus Native) - transfer, inquiry, webhook
