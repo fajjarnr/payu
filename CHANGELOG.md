@@ -28,9 +28,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - OpenTelemetry tracing
   - Dockerfile with Red Hat UBI base images
 
+- **Dukcapil Simulator** (Quarkus 3.17.5):
+  - NIK verification endpoint (`POST /api/v1/verify`)
+  - Face matching endpoint (`POST /api/v1/match-photo`)
+  - Citizen data retrieval (`GET /api/v1/nik/{nik}`)
+  - Configurable latency simulation (100-800ms)
+  - Configurable failure rate (default 3%)
+  - Simulated face match scores with configurable threshold (75%)
+  - Liveness detection simulation
+  - Test citizens (VALID, BLOCKED, INVALID, DECEASED statuses)
+  - Verification audit logging
+  - Health checks and Prometheus metrics
+
 - **OpenShift Manifests**:
   - Namespace definitions (5 environments)
   - BI-FAST Simulator deployment, service, configmap
+  - Dukcapil Simulator deployment, service, configmap
 
 - **External Service Simulators** (Section 12 in ARCHITECTURE.md):
   - BI-FAST Simulator (Quarkus Native) - transfer, inquiry, webhook

@@ -1,0 +1,111 @@
+# Dukcapil Simulator Configuration
+quarkus:
+  application:
+    name: dukcapil-simulator
+    version: 1.0.0
+
+  # HTTP Server
+  http:
+    port: 8091
+    cors:
+      ~: true
+      origins: "*"
+      methods: GET,POST,PUT,DELETE,OPTIONS
+      headers: "*"
+
+  # Database
+  datasource:
+    db-kind: postgresql
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    jdbc:
+      url: ${DB_URL:jdbc:postgresql://localhost:5432/dukcapil_simulator}
+      max-size: 10
+
+  hibernate-orm:
+    database:
+      generation: drop-and-create
+    log:
+      sql: true
+
+  # Health & Metrics
+  smallrye-health:
+    ui:
+      enable: true
+
+  micrometer:
+    export:
+      prometheus:
+        path: /q/metrics
+
+  # OpenTelemetry
+  otel:
+    exporter:
+      otlp:
+        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+    resource:
+      attributes:
+        - service.name=dukcapil-simulator
+        - service.version=1.0.0
+
+  # Logging
+  log:
+    level: INFO
+    category:
+      "id.payu.simulator":
+        level: DEBUG
+    console:
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e%n"
+
+# Simulator Configuration
+simulator:
+  # Network latency simulation (milliseconds)
+  latency:
+    min: 100
+    max: 800
+
+  # Failure rate (percentage, 0-100)
+  failure-rate: 3
+
+  # Face matching configuration
+  face-match:
+    # Threshold for successful match (0-100)
+    threshold: 75
+    # Random variance for match scores
+    variance: 10
+
+# Test NIK data (loaded on startup)
+test-citizens:
+  - nik: "3201234567890001"
+    name: "JOHN DOE"
+    birth-place: "JAKARTA"
+    birth-date: "1990-01-15"
+    gender: "MALE"
+    address: "JL. SUDIRMAN NO. 123"
+    rt: "001"
+    rw: "002"
+    village: "MENTENG"
+    district: "MENTENG"
+    city: "JAKARTA PUSAT"
+    province: "DKI JAKARTA"
+    status: VALID
+
+  - nik: "3201234567890002"
+    name: "JANE DOE"
+    birth-place: "BANDUNG"
+    birth-date: "1992-05-20"
+    gender: "FEMALE"
+    address: "JL. BRAGA NO. 456"
+    status: VALID
+
+  - nik: "3201234567890003"
+    name: "BLOCKED USER"
+    birth-place: "SURABAYA"
+    birth-date: "1985-12-01"
+    gender: "MALE"
+    address: "JL. TUNJUNGAN NO. 789"
+    status: BLOCKED
+
+  - nik: "3299999999999999"
+    name: "INVALID NIK"
+    status: INVALID
