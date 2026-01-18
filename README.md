@@ -1,7 +1,9 @@
 # PayU Digital Banking Platform
 
-> Platform digital banking modern untuk generasi digital Indonesia
+> Platform digital banking modern untuk generasi digital Indonesia  
+> Built on **Red Hat OpenShift 4.20+** ecosystem
 
+[![Platform](https://img.shields.io/badge/platform-OpenShift%204.20+-EE0000?logo=redhat)]()
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)]()
 [![Status](https://img.shields.io/badge/status-In%20Development-yellow.svg)]()
 
@@ -9,7 +11,7 @@
 
 ## 📋 Overview
 
-**PayU** (bahasa Jawa: "laku/berhasil") adalah platform digital banking yang menyediakan pengalaman perbankan yang mudah, cepat, dan aman. Terinspirasi dari Bank Jago dan blu by BCA, PayU hadir dengan arsitektur microservices yang production-ready.
+**PayU** (bahasa Jawa: "laku/berhasil") adalah platform digital banking standalone yang menyediakan pengalaman perbankan yang mudah, cepat, dan aman. Platform ini dirancang sebagai payment infrastructure untuk multiple projects.
 
 ## 🎯 Key Features
 
@@ -20,20 +22,45 @@
 - **Financial Management** - Budget tracker, goals, dan insights
 - **Virtual Cards** - Kartu virtual untuk belanja online
 
-## 🏗️ Architecture
+## 🏗️ Technology Stack
 
-PayU dibangun dengan arsitektur microservices modern:
+### Red Hat OpenShift 4.20+ Ecosystem
 
-| Service | Technology | Domain |
-|---------|------------|--------|
-| `account-service` | Java Spring Boot | User accounts, eKYC |
-| `auth-service` | Java Spring Boot + Keycloak | Authentication, MFA |
-| `transaction-service` | Java Spring Boot | Transfers, payments |
-| `wallet-service` | Java Spring Boot | Balance, ledger |
-| `notification-service` | NestJS | Push, SMS, Email |
-| `kyc-service` | Python FastAPI | OCR, ML |
+| Layer | Red Hat Product | Portable Alternative |
+|-------|-----------------|----------------------|
+| **Container Platform** | OpenShift 4.20+ | Kubernetes |
+| **Core Banking** | Red Hat Runtimes (Spring Boot 3.4) | Spring Boot |
+| **Supporting Services** | Red Hat Build of Quarkus 3.x | Quarkus |
+| **Caching** | Red Hat Data Grid (RESP mode) | Redis, ElastiCache |
+| **Event Streaming** | AMQ Streams (Kafka) | Apache Kafka |
+| **Message Queue** | AMQ Broker (AMQP 1.0) | ActiveMQ Artemis |
+| **Identity** | Red Hat SSO (Keycloak) | Keycloak, Auth0 |
+| **Logging** | OpenShift Logging (LokiStack) | Grafana Loki |
+| **Monitoring** | OpenShift Monitoring | Prometheus/Grafana |
 
-Lihat [ARCHITECTURE.md](./ARCHITECTURE.md) untuk detail lengkap.
+> **Portability**: All components use standard APIs. Code remains portable - only configuration changes needed to switch providers.
+
+### Service Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    RED HAT OPENSHIFT 4.20+ ECOSYSTEM                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  CORE BANKING (Spring Boot)         SUPPORTING (Quarkus Native)         │
+│  ┌─────────────────────────────┐    ┌─────────────────────────────┐     │
+│  │ account-service             │    │ gateway-service             │     │
+│  │ auth-service                │    │ billing-service             │     │
+│  │ transaction-service         │    │ notification-service        │     │
+│  │ wallet-service              │    │ card-service                │     │
+│  └─────────────────────────────┘    └─────────────────────────────┘     │
+│                                                                          │
+│  DATA LAYER                                                              │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ PostgreSQL 16 (JSONB)  │  Data Grid (RESP)  │  TimescaleDB     │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 ## 📁 Project Structure
 
@@ -43,17 +70,48 @@ payu/
 ├── CHANGELOG.md        # Version history
 ├── PRD.md              # Product Requirements Document
 ├── README.md           # This file
-└── (services TBD)      # Microservices implementation
+└── backend/            # Microservices implementation (TBD)
+    ├── account-service/
+    ├── auth-service/
+    ├── transaction-service/
+    ├── wallet-service/
+    ├── billing-service/
+    ├── notification-service/
+    ├── kyc-service/
+    └── gateway-service/
 ```
 
 ## 🔗 Integration
 
-PayU terintegrasi dengan **TokoBapak** e-commerce platform sebagai External Banking Provider:
+PayU dapat diintegrasikan sebagai **External Banking Provider** untuk project lain:
 
+```text
+┌──────────────────┐         ┌──────────────────┐
+│    TokoBapak     │         │    Project X     │
+│  payment-service │         │  payment-client  │
+└────────┬─────────┘         └────────┬─────────┘
+         │                            │
+         │  HTTPS + OAuth2            │
+         └──────────┬─────────────────┘
+                    │
+         ┌──────────▼──────────┐
+         │       PayU          │
+         │  (Standalone API)   │
+         │                     │
+         │  /v1/partner/auth   │
+         │  /v1/partner/payments│
+         │  Webhook Callbacks  │
+         └─────────────────────┘
 ```
-TokoBapak payment-service ───► PayU API ───► PayU Transaction Service
-                          ◄─── Webhook ◄───
-```
+
+### Partner API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/partner/auth/token` | POST | Get access token (OAuth2) |
+| `/v1/partner/payments` | POST | Create payment |
+| `/v1/partner/payments/{id}` | GET | Get payment status |
+| `/v1/partner/payments/{id}/refund` | POST | Refund payment |
 
 ## 📚 Documentation
 
@@ -70,6 +128,23 @@ TokoBapak payment-service ───► PayU API ───► PayU Transaction Se
 - OJK Digital Banking License (target)
 - BI-FAST Participation (target)
 
+## 🚀 Getting Started
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd payu
+
+# View documentation
+cat ARCHITECTURE.md
+cat PRD.md
+```
+
+## 📞 Contact
+
+- **Architecture**: backend-team@payu.id
+- **Infrastructure**: platform-team@payu.id
+
 ---
 
-**© 2026 PayU Digital Banking**
+**© 2026 PayU Digital Banking** | Built with ❤️ on Red Hat OpenShift
