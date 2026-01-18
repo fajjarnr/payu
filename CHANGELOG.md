@@ -57,6 +57,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - BI-FAST Simulator deployment, service, configmap
   - Dukcapil Simulator deployment, service, configmap
   - QRIS Simulator deployment, service, configmap
+  - Gateway Service deployment, service, route, configmaps
+
+- **Gateway Service** (Quarkus 3.17.5):
+  - API Gateway for all backend services
+  - Distributed rate limiting with Redis
+  - Circuit breaker with fault tolerance
+  - Correlation ID for distributed tracing
+  - OIDC/JWT authentication support (Red Hat SSO)
+  - Proxy routing to simulators and core services
+  - Health, status, and version endpoints
+  - Prometheus metrics and OpenTelemetry tracing
 
 - **External Service Simulators** (Section 12 in ARCHITECTURE.md):
   - BI-FAST Simulator (Quarkus Native) - transfer, inquiry, webhook

@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  labels:
+    app: gateway-service
+    app.kubernetes.io/name: gateway-service
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: payu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+        app.kubernetes.io/name: gateway-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/q/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: gateway-service
+          image: gateway-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: url
+            - name: OIDC_ENABLED
+              value: "true"
+            - name: OIDC_AUTH_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: oidc-auth-server-url
+          envFrom:
+            - configMapRef:
+                name: gateway-services-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  labels:
+    app: gateway-service
+spec:
+  selector:
+    app: gateway-service
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-services-config
+data:
+  ACCOUNT_SERVICE_URL: "http://account-service:8081"
+  AUTH_SERVICE_URL: "http://auth-service:8082"
+  TRANSACTION_SERVICE_URL: "http://transaction-service:8083"
+  WALLET_SERVICE_URL: "http://wallet-service:8084"
+  BILLING_SERVICE_URL: "http://billing-service:8085"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:8086"
+  KYC_SERVICE_URL: "http://kyc-service:8087"
+  ANALYTICS_SERVICE_URL: "http://analytics-service:8088"
+  BIFAST_SIMULATOR_URL: "http://bi-fast-simulator:8090"
+  DUKCAPIL_SIMULATOR_URL: "http://dukcapil-simulator:8091"
+  QRIS_SIMULATOR_URL: "http://qris-simulator:8092"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+data:
+  oidc-auth-server-url: "http://keycloak:8180/realms/payu"
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gateway-service
+  labels:
+    app: gateway-service
+spec:
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: gateway-service
+    weight: 100
+  wildcardPolicy: None

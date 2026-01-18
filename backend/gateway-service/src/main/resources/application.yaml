@@ -1,0 +1,159 @@
+# PayU API Gateway Configuration
+quarkus:
+  application:
+    name: gateway-service
+    version: 1.0.0
+
+  # HTTP Server
+  http:
+    port: 8080
+    cors:
+      ~: true
+      origins:
+        - http://localhost:3000
+        - http://localhost:8081
+        - https://payu.id
+      methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+      headers: "*"
+      exposed-headers: X-Request-Id,X-Correlation-Id
+      access-control-max-age: 24H
+      access-control-allow-credentials: true
+
+  # OIDC Configuration (Red Hat SSO / Keycloak)
+  oidc:
+    enabled: ${OIDC_ENABLED:false}
+    auth-server-url: ${OIDC_AUTH_SERVER_URL:http://localhost:8180/realms/payu}
+    client-id: ${OIDC_CLIENT_ID:gateway-service}
+    credentials:
+      secret: ${OIDC_CLIENT_SECRET:secret}
+    tls:
+      verification: none
+    token:
+      issuer: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
+
+  # Redis Configuration (for rate limiting & caching)
+  redis:
+    hosts: ${REDIS_URL:redis://localhost:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 5s
+
+  # Health & Metrics
+  smallrye-health:
+    ui:
+      enable: true
+
+  micrometer:
+    export:
+      prometheus:
+        path: /q/metrics
+    binder:
+      http-server:
+        enabled: true
+      jvm: true
+
+  # OpenTelemetry
+  otel:
+    exporter:
+      otlp:
+        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+    resource:
+      attributes:
+        - service.name=gateway-service
+        - service.version=1.0.0
+
+  # OpenAPI
+  smallrye-openapi:
+    info-title: PayU API Gateway
+    info-version: 1.0.0
+    info-description: API Gateway for PayU Digital Banking Platform
+    info-contact-name: PayU Engineering Team
+    info-contact-email: engineering@payu.id
+    security-scheme: bearerAuth
+    security-scheme-name: bearerAuth
+    path: /q/openapi
+
+  # Logging
+  log:
+    level: INFO
+    category:
+      "id.payu.gateway":
+        level: DEBUG
+      "io.quarkus.oidc":
+        level: DEBUG
+    console:
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlationId}] [%c{3.}] (%t) %s%e%n"
+      json: false
+
+# Gateway Configuration
+gateway:
+  # Backend Services
+  services:
+    account-service:
+      url: ${ACCOUNT_SERVICE_URL:http://localhost:8081}
+      timeout: 30s
+    auth-service:
+      url: ${AUTH_SERVICE_URL:http://localhost:8082}
+      timeout: 10s
+    transaction-service:
+      url: ${TRANSACTION_SERVICE_URL:http://localhost:8083}
+      timeout: 30s
+    wallet-service:
+      url: ${WALLET_SERVICE_URL:http://localhost:8084}
+      timeout: 15s
+    billing-service:
+      url: ${BILLING_SERVICE_URL:http://localhost:8085}
+      timeout: 30s
+    notification-service:
+      url: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
+      timeout: 10s
+    kyc-service:
+      url: ${KYC_SERVICE_URL:http://localhost:8087}
+      timeout: 60s
+    analytics-service:
+      url: ${ANALYTICS_SERVICE_URL:http://localhost:8088}
+      timeout: 30s
+
+  # Simulators
+  simulators:
+    bi-fast:
+      url: ${BIFAST_SIMULATOR_URL:http://localhost:8090}
+      timeout: 30s
+    dukcapil:
+      url: ${DUKCAPIL_SIMULATOR_URL:http://localhost:8091}
+      timeout: 30s
+    qris:
+      url: ${QRIS_SIMULATOR_URL:http://localhost:8092}
+      timeout: 15s
+
+  # Rate Limiting
+  rate-limit:
+    enabled: true
+    default:
+      requests-per-minute: 60
+      burst: 100
+    endpoints:
+      auth:
+        requests-per-minute: 5
+        burst: 10
+      otp:
+        requests-per-minute: 3
+        burst: 5
+      transfer:
+        requests-per-minute: 10
+        burst: 20
+      balance:
+        requests-per-minute: 30
+        burst: 50
+
+  # Circuit Breaker
+  circuit-breaker:
+    enabled: true
+    failure-ratio: 0.5
+    delay: 30s
+    success-threshold: 3
+
+  # Request/Response Logging
+  logging:
+    enabled: true
+    log-body: false
+    max-body-size: 1024
