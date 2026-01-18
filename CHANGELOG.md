@@ -40,10 +40,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Verification audit logging
   - Health checks and Prometheus metrics
 
+- **QRIS Simulator** (Quarkus 3.17.5):
+  - QR code generation endpoint (`POST /api/v1/generate`)
+  - Payment simulation endpoint (`POST /api/v1/pay`)
+  - Status check endpoint (`GET /api/v1/status/{qrId}`)
+  - Real QR code image generation (ZXing library)
+  - QRIS-compliant QR content format
+  - Configurable latency simulation (50-300ms)
+  - Configurable failure rate (default 2%)
+  - QR expiry handling (default 5 minutes)
+  - Test merchants (Food & Beverage, Electronics, Health, etc.)
+  - Health checks and Prometheus metrics
+
 - **OpenShift Manifests**:
   - Namespace definitions (5 environments)
   - BI-FAST Simulator deployment, service, configmap
   - Dukcapil Simulator deployment, service, configmap
+  - QRIS Simulator deployment, service, configmap
 
 - **External Service Simulators** (Section 12 in ARCHITECTURE.md):
   - BI-FAST Simulator (Quarkus Native) - transfer, inquiry, webhook

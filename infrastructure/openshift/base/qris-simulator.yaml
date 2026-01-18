@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qris-simulator
+  labels:
+    app: qris-simulator
+    app.kubernetes.io/name: qris-simulator
+    app.kubernetes.io/component: simulator
+    app.kubernetes.io/part-of: payu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qris-simulator
+  template:
+    metadata:
+      labels:
+        app: qris-simulator
+        app.kubernetes.io/name: qris-simulator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/q/metrics"
+        prometheus.io/port: "8092"
+    spec:
+      containers:
+        - name: qris-simulator
+          image: qris-simulator:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8092
+              name: http
+              protocol: TCP
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: qris-simulator-db
+                  key: url
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: qris-simulator-db
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: qris-simulator-db
+                  key: password
+          envFrom:
+            - configMapRef:
+                name: qris-simulator-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8092
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8092
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qris-simulator
+  labels:
+    app: qris-simulator
+spec:
+  selector:
+    app: qris-simulator
+  ports:
+    - port: 8092
+      targetPort: 8092
+      name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qris-simulator-config
+data:
+  SIMULATOR_LATENCY_MIN: "50"
+  SIMULATOR_LATENCY_MAX: "300"
+  SIMULATOR_FAILURE_RATE: "2"
+  SIMULATOR_QR_EXPIRY_SECONDS: "300"
+  SIMULATOR_QR_IMAGE_SIZE: "300"
+  SIMULATOR_WEBHOOK_ENABLED: "true"
