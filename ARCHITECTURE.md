@@ -15,10 +15,18 @@
 7. [API Gateway & Service Mesh](#7-api-gateway--service-mesh)
 8. [Infrastructure & DevOps](#8-infrastructure--devops)
 9. [Monitoring & Observability](#9-monitoring--observability)
-10. [TokoBapak Integration](#10-tokobapak-integration)
-11. [Disaster Recovery & High Availability](#11-disaster-recovery--high-availability)
+10. [External Service Simulators](#10-external-service-simulators)
+11. [Frontend Architecture](#11-frontend-architecture)
+12. [TokoBapak Integration](#12-tokobapak-integration)
+13. [Disaster Recovery & High Availability](#13-disaster-recovery--high-availability)
+14. [Lab Configuration & Decisions](#14-lab-configuration--decisions)
 
 ---
+
+## Lab Project Context
+
+> **Note**: This is a **lab project** with a realistic production approach.
+> External integrations (BI-FAST, Dukcapil, QRIS) will use **simulators** for development and testing.
 
 ## 1. Executive Summary
 
@@ -1293,12 +1301,287 @@ Payment status = payu.payments().get(payment.getId());
 
 | Data Type | Backup Method | Frequency | Retention |
 |-----------|---------------|-----------|-----------|
-| PostgreSQL | RDS Automated | Continuous | 35 days |
-| PostgreSQL | Manual Snapshots | Daily | 7 years |
-| MongoDB | Atlas Backup | Continuous | 30 days |
-| Redis | RDB + AOF | Every 1 min | 7 days |
+| PostgreSQL | RDS Automated | Continuous | 7 days |
+| PostgreSQL | Manual Snapshots | Weekly | 1 year |
+| Data Grid | Cluster backup | Daily | 7 days |
 | Kafka | Log retention | Continuous | 7 days |
-| S3 (Documents) | Cross-region replication | Real-time | Forever |
+| S3 (Documents) | Cross-region replication | Real-time | Compliance-based |
+
+---
+
+## 12. External Service Simulators
+
+> For lab/development environment, external banking integrations use simulators.
+
+### 12.1 BI-FAST Simulator
+
+```text
+bi-fast-simulator (Quarkus Native)
+├── POST /api/v1/inquiry          → Account inquiry (name, bank)
+├── POST /api/v1/transfer         → Initiate transfer
+├── GET  /api/v1/status/{ref}     → Check transfer status
+└── POST /webhook/callback        → Async notification
+
+Features:
+• Configurable network latency (50-500ms)
+• Random failure simulation (5% default)
+• Test bank accounts database
+• Webhook callback simulation
+```
+
+**Test Bank Accounts:**
+
+| Bank Code | Account Number | Name | Status |
+|-----------|----------------|------|--------|
+| BCA | 1234567890 | John Doe | Active |
+| BRI | 0987654321 | Jane Doe | Active |
+| MANDIRI | 1111222233 | Test Blocked | Blocked |
+| BNI | 9999888877 | Test Timeout | Timeout |
+
+### 12.2 Dukcapil Simulator
+
+```text
+dukcapil-simulator (Quarkus Native)
+├── POST /api/v1/verify           → NIK verification
+├── POST /api/v1/match-photo      → Face matching (KTP vs Selfie)
+└── GET  /api/v1/nik/{nik}        → Get citizen data
+
+Features:
+• Test NIK database (valid/invalid)
+• Configurable match scores (0-100%)
+• Various error scenarios
+• Photo similarity simulation
+```
+
+**Test NIK Database:**
+
+| NIK | Name | Status | Match Score |
+|-----|------|--------|-------------|
+| 3201234567890001 | JOHN DOE | Valid | 95% |
+| 3201234567890002 | JANE DOE | Valid | 88% |
+| 3201234567890003 | BLOCKED USER | Blocked | N/A |
+| 3299999999999999 | INVALID NIK | Invalid | N/A |
+
+### 12.3 QRIS Simulator
+
+```text
+qris-simulator (Quarkus Native)
+├── POST /api/v1/generate         → Generate QR code
+├── POST /api/v1/pay              → Simulate payment
+├── GET  /api/v1/status/{id}      → Check payment status
+└── POST /webhook/callback        → Payment notification
+
+Features:
+• QR code generation (PNG/Base64)
+• Payment simulation with configurable delay
+• Expiry handling (5 min default)
+• Multiple merchant simulation
+```
+
+---
+
+## 13. Frontend Architecture
+
+### 13.1 Technology Stack
+
+| Platform | Technology | Purpose |
+|----------|------------|---------|
+| **Web App** | Next.js 15 + Tailwind CSS 4 | Customer portal |
+| **Admin Dashboard** | Next.js 15 + shadcn/ui | Internal ops |
+| **Mobile App** | Expo (React Native) | iOS/Android/Web |
+| **Shared** | TypeScript, Zustand, TanStack Query | Cross-platform |
+
+### 13.2 Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         FRONTEND ARCHITECTURE                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────────┐│
+│  │                        SHARED LAYER                                      ││
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    ││
+│  │  │  API Client │  │   Stores    │  │    Types    │  │ Validation  │    ││
+│  │  │ (TanStack)  │  │  (Zustand)  │  │(TypeScript) │  │   (Zod)     │    ││
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    ││
+│  └─────────────────────────────────────────────────────────────────────────┘│
+│                                                                              │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐          │
+│  │    WEB APP       │  │  ADMIN DASHBOARD │  │   MOBILE APP     │          │
+│  │   (Next.js 15)   │  │   (Next.js 15)   │  │    (Expo)        │          │
+│  │                  │  │                  │  │                  │          │
+│  │ • SSR/SSG        │  │ • Role-based UI  │  │ • iOS/Android    │          │
+│  │ • App Router     │  │ • Data tables    │  │ • Web preview    │          │
+│  │ • Tailwind CSS 4 │  │ • Charts         │  │ • Push notif     │          │
+│  │ • shadcn/ui      │  │ • shadcn/ui      │  │ • Biometrics     │          │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘          │
+│           │                    │                    │                       │
+│           └────────────────────┴────────────────────┘                       │
+│                                │                                            │
+│                    ┌───────────▼───────────┐                               │
+│                    │     API Gateway       │                               │
+│                    │   (gateway-service)   │                               │
+│                    └───────────────────────┘                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 13.3 Mobile Development Workflow
+
+```text
+Daily Development (95% of time):
+┌─────────────────────────────────────────┐
+│ 1. Expo Web (Browser)                   │
+│    $ cd mobile && bun run web           │
+│    → Opens http://localhost:8081        │
+│    → Instant preview, hot reload        │
+│                                         │
+│ 2. Expo Go (Real Android Phone)         │
+│    $ cd mobile && bun run start         │
+│    → Scan QR code with Expo Go app      │
+│    → Test on real device                │
+└─────────────────────────────────────────┘
+
+Testing Native Features (5% of time):
+┌─────────────────────────────────────────┐
+│ 3. Android Studio Emulator              │
+│    $ cd mobile && bun run android       │
+│    → Camera, biometrics, etc.           │
+│                                         │
+│ 4. EAS Build (Production-like)          │
+│    $ eas build --platform android       │
+│    → Download APK, install on device    │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## 14. Lab Configuration & Decisions
+
+### 14.1 Environment Strategy
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    5 ENVIRONMENT STRATEGY (Banking Standard)                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   DEV ────► SIT ────► UAT ────► PREPROD ────► PROD                          │
+│                                                                              │
+│   ┌─────┐   ┌─────┐   ┌─────┐   ┌─────────┐   ┌─────────┐                  │
+│   │ DEV │   │ SIT │   │ UAT │   │ PREPROD │   │  PROD   │                  │
+│   └──┬──┘   └──┬──┘   └──┬──┘   └────┬────┘   └────┬────┘                  │
+│      │         │         │           │             │                        │
+│      ▼         ▼         ▼           ▼             ▼                        │
+│   Fake      Synthetic  Anonymized  Prod-like    Real                        │
+│   Data      Data       Real-like   Volume       Data                        │
+│                                                                              │
+│   Smallest   Small     Medium     SAME AS      Full                         │
+│   Infra      Infra     Infra      PROD         Scale                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Environment | Purpose | Data | OpenShift Namespace |
+|-------------|---------|------|---------------------|
+| **DEV** | Daily development | Fake/minimal | `payu-dev` |
+| **SIT** | Integration testing | Synthetic | `payu-sit` |
+| **UAT** | Business validation | Anonymized | `payu-uat` |
+| **PREPROD** | Production rehearsal | Prod copy | `payu-preprod` |
+| **PROD** | Live production | Real | `payu-prod` |
+
+### 14.2 Infrastructure Decisions
+
+| Component | Decision | Notes |
+|-----------|----------|-------|
+| **Cloud Provider** | AWS | Region: ap-southeast-1 |
+| **Cluster** | Single cluster, Multi-AZ | Cost-effective for lab |
+| **Platform** | Red Hat OpenShift 4.20+ | Full ecosystem |
+| **PostgreSQL** | AWS RDS (primary) | + Crunchy Operator for learning |
+| **Object Storage** | OpenShift Data Foundation + S3 | ODF for persistence |
+| **Backup Retention** | 7 days (lab) | Extend for production |
+
+### 14.3 Security Tools
+
+| Category | Tool | Purpose |
+|----------|------|---------|
+| **Key Management** | HashiCorp Vault | Secrets, PKI, transit encryption |
+| **Container Security** | RHACS (OpenShift ACS) | Image scanning, runtime |
+| **Runtime Security** | Falco | Container runtime threats |
+| **SIEM** | Wazuh | Security monitoring, compliance |
+| **Alerting** | AlertManager → Gmail | Email notifications |
+
+### 14.4 External Service Strategy
+
+| Service | Strategy | Provider |
+|---------|----------|----------|
+| **BI-FAST** | Simulator (Quarkus) | Self-built |
+| **Dukcapil** | Simulator (Quarkus) | Self-built |
+| **QRIS** | Simulator + Sandbox | Self-built + Xendit |
+| **SMS OTP** | Telesign (500 free) | telesign.com |
+| **Push Notification** | Firebase FCM | Free unlimited |
+
+### 14.5 Rate Limiting Configuration
+
+| Endpoint Category | RPS/User | Burst | Purpose |
+|-------------------|----------|-------|---------|
+| **Authentication** | 5/min | 10 | Brute force protection |
+| **OTP Request** | 3/min | 5 | SMS cost control |
+| **Transfer** | 10/min | 20 | Transaction protection |
+| **Balance Inquiry** | 30/min | 50 | High-frequency reads |
+| **Public API** | 100/IP/min | 200 | General protection |
+| **Partner API** | 1000/min | 2000 | B2B high volume |
+
+### 14.6 User Onboarding Flow (Target: 2-3 minutes)
+
+| Step | Action | Target Time |
+|------|--------|-------------|
+| 1 | Phone number input | 5 sec |
+| 2 | OTP verification (4-digit) | 15 sec |
+| 3 | KTP photo capture (AI-guided) | 20 sec |
+| 4 | Selfie with liveness | 15 sec |
+| 5 | Data confirmation (OCR pre-filled) | 30 sec |
+| 6 | PIN setup (6-digit) | 15 sec |
+| 7 | Biometric setup (optional) | 5 sec |
+| **Total** | | **~2 minutes** |
+
+### 14.7 Implementation Phases
+
+```text
+Phase 1: Foundation (Infrastructure)
+├── 1. OpenShift cluster setup + namespaces (5 envs)
+├── 2. PostgreSQL (RDS) + Data Grid deployment
+├── 3. AMQ Streams (Kafka) deployment
+├── 4. Red Hat SSO (Keycloak) setup
+├── 5. HashiCorp Vault deployment
+├── 6. Wazuh + Falco setup
+└── 7. CI/CD pipeline (OpenShift Pipelines + GitOps)
+
+Phase 2: Simulators & Gateway
+├── 1. bi-fast-simulator
+├── 2. dukcapil-simulator
+├── 3. qris-simulator
+└── 4. gateway-service (API Gateway)
+
+Phase 3: Core Banking Services
+├── 1. account-service (user registration, profile)
+├── 2. auth-service (login, MFA, session)
+├── 3. wallet-service (balance, ledger)
+└── 4. transaction-service (transfer, payment)
+
+Phase 4: Supporting Services
+├── 1. kyc-service (eKYC flow, ML)
+├── 2. notification-service (OTP, alerts)
+├── 3. billing-service (bills, top-up)
+└── 4. analytics-service (insights)
+
+Phase 5: Frontend Applications
+├── 1. Web App (Next.js 15)
+├── 2. Mobile App (Expo)
+└── 3. Admin Dashboard (Next.js 15)
+
+Phase 6: Integration (Later)
+├── 1. TokoBapak Partner API
+├── 2. Real BI-FAST integration
+└── 3. Real QRIS integration
+```
 
 ---
 
@@ -1309,16 +1592,16 @@ Payment status = payu.payments().get(payment.getId());
 | Component | Version |
 |-----------|---------|
 | Java | 21 LTS |
-| Spring Boot | 3.4.1 |
+| Spring Boot | 3.4.x |
+| Quarkus | 3.17.x |
 | Python | 3.12 |
 | FastAPI | 0.115.x |
-| Node.js | 22 LTS |
-| NestJS | 10.x |
+| Next.js | 15.x |
+| Expo | 52.x |
 | Kafka | 3.7.x |
 | PostgreSQL | 16.x |
-| MongoDB | 7.x |
-| Redis | 7.x |
-| Kubernetes | 1.30.x |
+| Redis/Data Grid | 7.x / 8.x |
+| OpenShift | 4.20+ |
 | Istio | 1.23.x |
 
 ### B. Compliance Checklist
@@ -1335,14 +1618,16 @@ Payment status = payu.payments().get(payment.getId());
 ### C. References
 
 - [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/)
+- [Quarkus Documentation](https://quarkus.io/guides/)
 - [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
-- [Kubernetes Documentation](https://kubernetes.io/docs/)
+- [Red Hat OpenShift Documentation](https://docs.openshift.com/)
+- [Expo Documentation](https://docs.expo.dev/)
 - [Bank Indonesia BI-FAST](https://www.bi.go.id/id/fungsi-utama/sistem-pembayaran/bi-fast/default.aspx)
 - [OJK Digital Banking Guidelines](https://www.ojk.go.id/)
 
 ---
 
-**Document Version**: 1.0  
+**Document Version**: 2.0  
 **Last Updated**: January 2026  
 **Owner**: Engineering Team PayU  
-**Status**: Production Ready
+**Status**: Lab Configuration Ready

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **External Service Simulators** (Section 12):
+  - BI-FAST Simulator (Quarkus Native) - transfer, inquiry, webhook
+  - Dukcapil Simulator (Quarkus Native) - NIK verification, face matching
+  - QRIS Simulator (Quarkus Native) - QR generation, payment
+  - Test data for each simulator
+- **Frontend Architecture** (Section 13):
+  - Web App: Next.js 15 + Tailwind CSS 4
+  - Mobile App: Expo (React Native)
+  - Admin Dashboard: Next.js 15 + shadcn/ui
+  - Shared layer: TypeScript, Zustand, TanStack Query
+- **Lab Configuration & Decisions** (Section 14):
+  - 5 Environment strategy (DEV, SIT, UAT, PREPROD, PROD)
+  - Infrastructure decisions (AWS ap-southeast-1, OpenShift 4.20+)
+  - Security tools (Vault, RHACS, Falco, Wazuh)
+  - External service strategy (simulators + free tier services)
+  - Rate limiting configuration
+  - User onboarding flow (2-3 min target)
+  - Implementation phases (6 phases)
+
 ### Changed
 
 - **Platform**: Red Hat OpenShift 4.20+ (full ecosystem focus)
@@ -28,9 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - OpenShift Distributed Tracing (Jaeger)
 - **Identity Provider**: Red Hat SSO (Keycloak)
 - **CI/CD**: OpenShift Pipelines + GitOps (Tekton + ArgoCD)
+- **Document Version**: Updated to 2.0
 - Added portability notes for all components (no vendor lock-in)
 
-### Added
+### Initial Setup
 
 - Initial PRD.md with comprehensive digital banking requirements
 - ARCHITECTURE.md with production-ready microservices architecture
