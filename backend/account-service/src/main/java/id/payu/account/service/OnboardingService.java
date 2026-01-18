@@ -7,12 +7,16 @@ import id.payu.account.entity.Profile;
 import id.payu.account.entity.User;
 import id.payu.account.repository.ProfileRepository;
 import id.payu.account.repository.UserRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -20,66 +24,63 @@ import java.util.UUID;
 public class OnboardingService {
 
     private final UserRepository userRepository;
-    private final ProfileRepository profileRepository; // To be created
+    private final ProfileRepository profileRepository;
     private final GatewayClient gatewayClient;
 
     @Transactional
-    public User registerUser(RegisterUserRequest request) {
-        log.info("Starting registration for email: {}", request.email());
+    @CircuitBreaker(name = "gatewayService", fallbackMethod = "kycFallback")
+    @Retry(name = "gatewayService", fallbackMethod = "kycFallback")
+    @TimeLimiter(name = "gatewayService", fallbackMethod = "kycFallback")
+    public CompletableFuture<User> registerUser(RegisterUserRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            log.info("Starting registration for email: {}", request.email());
 
-        if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already registered");
-        }
-        if (userRepository.existsByUsername(request.username())) {
-            throw new IllegalArgumentException("Username already taken");
-        }
+            if (userRepository.existsByEmail(request.email())) {
+                throw new IllegalArgumentException("Email already registered");
+            }
+            if (userRepository.existsByUsername(request.username())) {
+                throw new IllegalArgumentException("Username already taken");
+            }
 
-        // 1. Initial NIK Check via Gateway -> Dukcapil Simulator
-        // Note: In real world, we might do this via async or just check format first.
-        // For simulation, we verify existence immediately.
-        VerifyNikRequest verifyRequest = new VerifyNikRequest(
-            request.nik(), 
-            request.fullName(), 
-            "UNKNOWN", // Simulator doesn't strictly check this for basic verify
-            "2000-01-01" // Default
-        );
-        
-        DukcapilResponse kycResponse;
-        try {
-            kycResponse = gatewayClient.verifyNik(verifyRequest);
-        } catch (Exception e) {
-            log.error("Failed to verify NIK: {}", e.getMessage());
-            // Proceed but mark as PENDING verify if service is down? 
-            // Or fail hard? For now, fail hard to demonstrate integration.
-            throw new IllegalStateException("eKYC Service Unavailable: " + e.getMessage());
-        }
+            VerifyNikRequest verifyRequest = new VerifyNikRequest(
+                request.nik(),
+                request.fullName(),
+                "UNKNOWN",
+                "2000-01-01"
+            );
 
-        if (!kycResponse.verified()) {
-            throw new IllegalArgumentException("NIK Verification Failed: " + kycResponse.responseMessage());
-        }
+            DukcapilResponse kycResponse = gatewayClient.verifyNik(verifyRequest);
 
-        // 2. Create User
-        User user = User.builder()
-                .externalId(request.externalId())
-                .username(request.username())
-                .email(request.email())
-                .phoneNumber(request.phoneNumber())
-                .status(User.UserStatus.ACTIVE) // Auto-activate for Phase 2
-                .kycStatus(User.KycStatus.APPROVED) // Simplified flow
-                .build();
-        
-        user = userRepository.save(user);
+            if (!kycResponse.verified()) {
+                throw new IllegalArgumentException("NIK Verification Failed: " + kycResponse.responseMessage());
+            }
 
-        // 3. Create Profile
-        Profile profile = Profile.builder()
-                .user(user)
-                .fullName(request.fullName())
-                .nik(request.nik())
-                .build();
-        
-        profileRepository.save(profile);
+            User user = User.builder()
+                    .externalId(request.externalId())
+                    .username(request.username())
+                    .email(request.email())
+                    .phoneNumber(request.phoneNumber())
+                    .status(User.UserStatus.ACTIVE)
+                    .kycStatus(User.KycStatus.APPROVED)
+                    .build();
 
-        log.info("User registered successfully: userId={}", user.getId());
-        return user;
+            user = userRepository.save(user);
+
+            Profile profile = Profile.builder()
+                    .user(user)
+                    .fullName(request.fullName())
+                    .nik(request.nik())
+                    .build();
+
+            profileRepository.save(profile);
+
+            log.info("User registered successfully: userId={}", user.getId());
+            return user;
+        });
+    }
+
+    private CompletableFuture<User> kycFallback(RegisterUserRequest request, Exception ex) {
+        log.error("KYC verification failed or circuit opened: {}", ex.getMessage());
+        throw new IllegalStateException("eKYC Service Unavailable. Please try again later.");
     }
 }

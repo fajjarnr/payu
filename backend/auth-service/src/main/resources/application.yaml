@@ -19,10 +19,45 @@ management:
         include: health,info,metrics,prometheus
   tracing:
     sampling:
-      probability: 1.0
+      probability: 0.1
 
-# Keycloak Configuration
+resilience4j:
+  ratelimiter:
+    instances:
+      loginRateLimiter:
+        limit-for-period: 5
+        limit-refresh-period: 1m
+        timeout-duration: 0s
+        register-health-indicator: true
+  circuitbreaker:
+    instances:
+      keycloakService:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    instances:
+      keycloakService:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+
+# Account Lockout Configuration
 payu:
+  security:
+    max-login-attempts: 5
+    lockout-duration-minutes: 15
+    password-policy:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: true
   keycloak:
     server-url: ${KEYCLOAK_URL:http://localhost:8180}
     realm: ${KEYCLOAK_REALM:payu}

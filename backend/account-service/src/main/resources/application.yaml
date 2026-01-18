@@ -11,21 +11,46 @@ spring:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
 
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
 
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
     consumer:
       group-id: account-service-group
       auto-offset-reset: earliest
+      properties:
+        session.timeout.ms: 30000
+        heartbeat.interval.ms: 10000
+    producer:
+      retries: 3
+      acks: all
+      properties:
+        retry.backoff.ms: 1000
 
   security:
     oauth2:
@@ -44,7 +69,37 @@ management:
       show-details: always
   tracing:
     sampling:
-      probability: 1.0
+      probability: 0.1
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      gatewayService:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2000ms
+  retry:
+    instances:
+      gatewayService:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.util.concurrent.TimeoutException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+  timelimiter:
+    instances:
+      gatewayService:
+        timeout-duration: 5s
 
 # Application Configuration
 payu:

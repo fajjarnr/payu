@@ -76,11 +76,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Kafka Producer configuration
   - Registration API (`POST /api/v1/accounts/register`)
 
-- **Auth Service** (Spring Boot 3.4.1):
-  - Keycloak Admin Client Integration
-  - Login Proxy (Password Grant)
-  - User Registration support
-  - OAuth2 Resource Server Security
+ - **Auth Service** (Spring Boot 3.4.1):
+   - Keycloak Admin Client Integration
+   - Login Proxy (Password Grant) with WebClient (Reactive)
+   - User Registration support
+   - OAuth2 Resource Server Security
+   - Account lockout mechanism (5 failed attempts, 15 min duration)
+   - Rate limiting for login endpoint (5 attempts per minute)
+   - Password policy enforcement (8+ chars, uppercase, lowercase, digit, special char)
+   - Resilience4j circuit breaker and retry for Keycloak calls
+
+ - **Account Service** (Spring Boot 3.4.1) - Production Hardening:
+   - Flyway database migrations (replaced hibernate.ddl-auto)
+   - HikariCP connection pooling with production settings
+   - Resilience4j circuit breaker for external gateway calls
+   - Retry logic with exponential backoff
+   - Security configuration with JWT authentication
+   - Audit logging aspect for service methods
+   - Proper SLF4J logging in exception handlers (removed printStackTrace)
+   - JPA batch operations optimization
+   - WebClient support added
+
+ - **Auth Service** (Spring Boot 3.4.1) - Production Hardening:
+   - WebClient replacing RestTemplate (non-blocking, better resource usage)
+   - Rate limiting (5 login attempts per minute)
+   - Account lockout after failed attempts
+   - Password policy enforcement with validation
+   - Resilience4j circuit breaker and retry
+   - Proper SLF4J logging in exception handlers
+   - Reactive endpoint handlers
+
+ - **Docker Production Hardening**:
+   - Non-root user (spring user)
+   - JVM container support with memory percentage limits
+   - G1GC configuration with max pause time
+   - Heap dump on OOM
+   - Health checks for both services
+   - Secure random number generator
+
 
 
 - **External Service Simulators** (Section 12 in ARCHITECTURE.md):
