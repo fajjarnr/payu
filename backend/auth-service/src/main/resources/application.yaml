@@ -1,0 +1,33 @@
+server:
+  port: 8082
+  shutdown: graceful
+
+spring:
+  application:
+    name: auth-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  tracing:
+    sampling:
+      probability: 1.0
+
+# Keycloak Configuration
+payu:
+  keycloak:
+    server-url: ${KEYCLOAK_URL:http://localhost:8180}
+    realm: ${KEYCLOAK_REALM:payu}
+    client-id: ${KEYCLOAK_CLIENT_ID:auth-service}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:secret}
+    admin:
+      username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+      password: ${KEYCLOAK_ADMIN_PASSWORD:admin}

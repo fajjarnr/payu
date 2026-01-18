@@ -76,6 +76,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Kafka Producer configuration
   - Registration API (`POST /api/v1/accounts/register`)
 
+- **Auth Service** (Spring Boot 3.4.1):
+  - Keycloak Admin Client Integration
+  - Login Proxy (Password Grant)
+  - User Registration support
+  - OAuth2 Resource Server Security
+
+
 - **External Service Simulators** (Section 12 in ARCHITECTURE.md):
   - BI-FAST Simulator (Quarkus Native) - transfer, inquiry, webhook
   - Dukcapil Simulator (Quarkus Native) - NIK verification, face matching
