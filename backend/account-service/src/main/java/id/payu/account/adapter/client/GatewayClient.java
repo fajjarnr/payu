@@ -1,4 +1,4 @@
-package id.payu.account.service;
+package id.payu.account.adapter.client;
 
 import id.payu.account.dto.DukcapilResponse;
 import id.payu.account.dto.VerifyNikRequest;

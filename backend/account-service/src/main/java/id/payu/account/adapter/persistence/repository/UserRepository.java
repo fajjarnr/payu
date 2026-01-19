@@ -1,4 +1,4 @@
-package id.payu.account.repository;
+package id.payu.account.adapter.persistence.repository;
 
 import id.payu.account.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

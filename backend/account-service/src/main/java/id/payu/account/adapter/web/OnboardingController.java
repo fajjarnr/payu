@@ -1,8 +1,8 @@
-package id.payu.account.controller;
+package id.payu.account.adapter.web;
 
+import id.payu.account.domain.model.User;
+import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
-import id.payu.account.entity.User;
-import id.payu.account.service.OnboardingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,11 +18,11 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class OnboardingController {
 
-    private final OnboardingService onboardingService;
+    private final RegisterUserUseCase registerUserUseCase;
 
     @PostMapping("/register")
     public CompletableFuture<ResponseEntity<User>> register(@Valid @RequestBody RegisterUserRequest request) {
-        return onboardingService.registerUser(request)
+        return registerUserUseCase.registerUser(request)
                 .thenApply(ResponseEntity::ok);
     }
 }

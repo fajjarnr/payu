@@ -1,9 +1,11 @@
 package id.payu.account.integration;
 
+import id.payu.account.adapter.client.GatewayClient;
+import id.payu.account.adapter.persistence.repository.UserRepository;
+import id.payu.account.application.service.UserApplicationService;
+import id.payu.account.domain.model.User;
+import id.payu.account.dto.DukcapilResponse;
 import id.payu.account.dto.RegisterUserRequest;
-import id.payu.account.entity.User;
-import id.payu.account.repository.UserRepository;
-import id.payu.account.service.OnboardingService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -25,10 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
-/**
- * Integration Test using Testcontainers
- * Verifies full stack from Service to DB
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Testcontainers
 @DisplayName("Onboarding Integration Test")
@@ -40,13 +38,13 @@ class OnboardingIntegrationTest {
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Autowired
-    private OnboardingService onboardingService;
+    private UserApplicationService userApplicationService;
 
     @Autowired
     private UserRepository userRepository;
 
     @MockBean
-    private id.payu.account.service.GatewayClient gatewayClient;
+    private GatewayClient gatewayClient;
 
     @BeforeAll
     static void startContainer() {
@@ -72,7 +70,7 @@ class OnboardingIntegrationTest {
         );
 
         given(gatewayClient.verifyNik(any()))
-                .willReturn(new id.payu.account.dto.DukcapilResponse(
+                .willReturn(new DukcapilResponse(
                         UUID.randomUUID().toString(),
                         request.nik(),
                         true,
@@ -82,25 +80,24 @@ class OnboardingIntegrationTest {
                 ));
 
         // When
-        User savedUser = onboardingService.registerUser(request).get();
+        User savedUser = userApplicationService.registerUser(request).get();
 
         // Then
         assertThat(savedUser).isNotNull();
         assertThat(savedUser.getId()).isNotNull();
 
         // Verify direct DB persistence
-        User userFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
+        id.payu.account.entity.User userFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
         assertThat(userFromDb.getUsername()).isEqualTo("integration-user");
         assertThat(userFromDb.getEmail()).isEqualTo("integration@payu.id");
-        assertThat(userFromDb.getKycStatus()).isEqualTo(User.KycStatus.APPROVED);
+        assertThat(userFromDb.getKycStatus().name()).isEqualTo(User.KycStatus.APPROVED.name());
     }
     
-    // Configure Testcontainers properties manually if @ServiceConnection fails or for specific overrides
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
          registry.add("spring.datasource.url", postgres::getJdbcUrl);
          registry.add("spring.datasource.username", postgres::getUsername);
          registry.add("spring.datasource.password", postgres::getPassword);
-         registry.add("spring.flyway.enabled", () -> "true"); // Enable flyway for real DB
+         registry.add("spring.flyway.enabled", () -> "true");
     }
 }
