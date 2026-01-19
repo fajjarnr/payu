@@ -1,0 +1,45 @@
+# Test configuration for auth-service
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/payu
+
+# Keycloak Config (mocked)
+keycloak:
+  server-url: http://localhost:8080
+  realm: payu
+  client-id: payu-client
+  client-secret: test-secret
+  admin-username: admin
+  admin-password: admin
+
+# Security settings
+payu:
+  security:
+    max-login-attempts: 5
+    lockout-duration-minutes: 15
+    password-policy:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: true
+
+# Resilience4j Rate Limiter
+resilience4j:
+  ratelimiter:
+    instances:
+      loginRateLimiter:
+        limitRefreshPeriod: 60s
+        limitForPeriod: 5
+        timeoutDuration: 0
+
+# Logging
+logging:
+  level:
+    id.payu: DEBUG
