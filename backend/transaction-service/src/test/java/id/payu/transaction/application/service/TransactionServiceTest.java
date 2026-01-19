@@ -63,7 +63,10 @@ class TransactionServiceTest {
         });
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder().success(true).build()
+                ReserveBalanceResponse.builder()
+                        .reservationId("res-123")
+                        .status("RESERVED")
+                        .build()
         );
 
         // When
@@ -84,7 +87,9 @@ class TransactionServiceTest {
         given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder().success(false).message("Insufficient balance").build()
+                ReserveBalanceResponse.builder()
+                        .status("FAILED")
+                        .build()
         );
 
         // When/Then

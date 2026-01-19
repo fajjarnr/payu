@@ -12,6 +12,6 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReserveBalanceRequest {
-    private String transactionId;
     private BigDecimal amount;
+    private String referenceId;
 }

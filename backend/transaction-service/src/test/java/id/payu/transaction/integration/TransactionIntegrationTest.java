@@ -76,7 +76,10 @@ class TransactionIntegrationTest {
         request.setType(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER);
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder().success(true).build()
+                ReserveBalanceResponse.builder()
+                        .reservationId("res-123")
+                        .status("RESERVED")
+                        .build()
         );
 
         // When

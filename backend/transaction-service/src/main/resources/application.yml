@@ -23,7 +23,7 @@ spring:
 
 services:
   wallet:
-    url: http://localhost:8004
+    url: http://localhost:8084
   bifast:
     url: http://localhost:9000
   qris:
@@ -55,3 +55,27 @@ logging:
   level:
     id.payu.transaction: DEBUG
     org.springframework.kafka: INFO
+
+# Resilience4j configuration for wallet-service calls
+resilience4j:
+  circuitbreaker:
+    instances:
+      walletService:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+  retry:
+    instances:
+      walletService:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.net.ConnectException

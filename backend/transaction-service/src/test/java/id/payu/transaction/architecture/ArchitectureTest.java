@@ -28,7 +28,7 @@ public class ArchitectureTest {
     static final ArchRule adapter_layer_should_only_depend_on_domain_and_application =
             classes().that().resideInAPackage("..adapter..")
                     .should().onlyDependOnClassesThat()
-                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.application..", "id.payu.transaction.dto..", "java..", "org.springframework..", "lombok..", "org.slf4j..", "com.fasterxml.jackson..", "jakarta..", "..adapter..");
+                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.application..", "id.payu.transaction.dto..", "java..", "org.springframework..", "lombok..", "org.slf4j..", "com.fasterxml.jackson..", "jakarta..", "..adapter..", "io.github.resilience4j..");
 
     @ArchTest
     static final ArchRule controllers_should_only_depend_on_usecases =

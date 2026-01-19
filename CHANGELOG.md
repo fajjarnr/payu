@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `README.md` to `transaction-service`
   - Updated `GEMINI.md` project structure
 
+- **Inter-Service Integration** (transaction-service → wallet-service):
+  - Updated `WalletServiceAdapter` to call wallet-service REST API
+  - Added Resilience4j circuit breaker and retry for wallet-service calls
+  - Updated DTOs to match wallet-service API (`ReserveBalanceResponse`, `ReserveBalanceRequest`)
+  - Added resilience4j configuration to ArchUnit allowed dependencies
+
 - **TDD Infrastructure** (account-service):
   - Testcontainers for PostgreSQL and Kafka integration testing
   - ArchUnit 1.2.1 for architecture rule enforcement

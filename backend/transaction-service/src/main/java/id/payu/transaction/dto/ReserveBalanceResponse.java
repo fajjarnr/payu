@@ -12,7 +12,13 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReserveBalanceResponse {
-    private boolean success;
-    private String message;
-    private BigDecimal currentBalance;
+    private String reservationId;
+    private String accountId;
+    private String referenceId;
+    private String status;
+    
+    // Helper method for backward compatibility
+    public boolean isSuccess() {
+        return "RESERVED".equals(status);
+    }
 }
