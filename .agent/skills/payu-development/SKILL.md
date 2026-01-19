@@ -1,11 +1,11 @@
 ---
 name: payu-development
-description: Skill untuk mengembangkan PayU Digital Banking Platform - mencakup microservices architecture (Spring Boot, Quarkus, FastAPI), event-driven patterns, PostgreSQL databases, dan integrasi dengan Red Hat OpenShift ecosystem.
+description: High-level development guide for PayU Digital Banking Platform - architecture overview, technology stack, and entry point for specialized skills.
 ---
 
-# PayU Digital Banking Development Skill
+# PayU Digital Banking Development (High-Level)
 
-Skill ini memberikan panduan komprehensif untuk pengembangan **PayU Digital Banking Platform**, sebuah platform digital banking modern dengan arsitektur microservices dan event-driven di atas Red Hat OpenShift.
+This skill provides the architectural overview and entry points for developing the **PayU Digital Banking Platform**. For specific implementation details, refer to the specialized skills.
 
 ## Project Overview
 
@@ -16,23 +16,8 @@ Skill ini memberikan panduan komprehensif untuk pengembangan **PayU Digital Bank
 | **Platform** | Red Hat OpenShift 4.20+ |
 | **Primary Languages** | Java 21 (Core), Python 3.12 (ML) |
 
-### Technology Stack
+### Microservices Map
 
-| Layer               | Technology                | Notes                      |
-| ------------------- | ------------------------- | -------------------------- |
-| **Container**       | OpenShift 4.20+           | Kubernetes-compatible      |
-| **Core Banking**    | Spring Boot 3.4           | Java 21, Axon Framework    |
-| **Supporting**      | Quarkus 3.x Native        | High density, fast startup |
-| **ML Services**     | FastAPI (Python 3.12)     | PyTorch, scikit-learn      |
-| **Database**        | PostgreSQL 16 (Crunchy)   | Unified DB with schemas    |
-| **Cache**           | Data Grid (Redis API)     | RESP protocol mode         |
-| **Events**          | AMQ Streams (Kafka)       | Event sourcing, Sagas      |
-| **Messaging**       | AMQ Broker (ActiveMQ)     | Notifications, Webhooks    |
-| **Identity**        | Red Hat SSO (Keycloak)    | OIDC/OAuth2                |
-
-## Service Architecture
-
-### Service Map
 ```
 payu/backend/
 ├── account-service/      # [Spring Boot] User accounts, eKYC
@@ -46,87 +31,37 @@ payu/backend/
 └── analytics-service/    # [FastAPI]     Insights, TimescaleDB
 ```
 
-### Service Ports
-| Service | Port | Technology |
-|---------|------|------------|
-| Gateway | 8080 | Quarkus |
-| Account | 8001 | Spring Boot |
-| Auth | 8002 | Spring Boot |
-| Transaction | 8003 | Spring Boot |
-| Wallet | 8004 | Spring Boot |
-| Billing | 8005 | Quarkus |
-| Notification | 8006 | Quarkus |
-| KYC | 9001 | FastAPI |
-| Analytics | 9002 | FastAPI |
+## Specialized Skills Map
 
-## Development Guidelines
+| Task Category | Use Skill | Description |
+|---------------|-----------|-------------|
+| **Backend Implementation** | `@backend-engineer` | Frameworks (Spring/Quarkus), DB, API, Kafka patterns |
+| **Testing & QA** | `@qa-expert` | TDD workflow, Testcontainers, Integration tests |
+| **Security & Compliance** | `@security-specialist` | PCI-DSS, Secure Coding, OJK Compliance, PII |
+| **Code Review** | `@code-review` | Code quality checklist, Hygiene, Style guide |
+| **Containers** | `@container-specialist` | Dockerfiles, OpenShift, UBI Images |
 
-### 1. Spring Boot (Core Banking)
-**Focus**: Complex business logic, transactions, consistency.
+## Core Architecture Patterns
 
-```bash
-# Workflow
-./mvnw spring-boot:run   # Run locally
-./mvnw test              # Run unit tests
-./mvnw test -Dtest.excluded.groups=none  # Run integration tests
-```
+### 1. Hexagonal Architecture (Core Banking)
+Used in Account, Auth, Transaction, Wallet services.
+- Decouples domain logic from frameworks.
+- Easier to test business rules in isolation.
 
-**Structure (Hexagonal/Clean Arch):**
-- `domain/` : Entities, Ports, Logic (No Frameworks)
-- `application/` : Use Cases, Sagas
-- `infrastructure/` : Adapters (Persistence, Messaging, Web)
-- `api/` : Controllers
+### 2. Event-Driven Architecture
+- **Broker**: AMQ Streams (Kafka).
+- **Pattern**: Saga for distributed transactions.
+- **Consistency**: Eventual consistency for cross-service operations.
 
-### 2. Quarkus (Supporting Services)
-**Focus**: High performance, simple CRUD, reactive.
+### 3. Polyglot Persistence
+- **PostgreSQL**: Primary transactional storage (isolated schemas).
+- **Redis**: Caching and distributed locks.
+- **TimescaleDB**: Time-series analytics.
 
-```bash
-# Workflow
-./mvnw quarkus:dev       # Live coding
-./mvnw package -Pnative  # Native build check
-```
-
-**Structure:** Standard Layered Architecture or Resource-Service-Repository.
-
-### 3. Python FastAPI (ML/Data)
-**Focus**: Data processing, ML inference.
-
-```bash
-# Workflow
-uvicorn app.main:app --reload
-pytest
-```
-
-## Specialized Skills
-
-Untuk panduan mendalam di area spesifik, gunakan skill berikut:
-
-- **QA & Testing**: Lihat `@qa-expert` untuk strategi testing, TDD, Testcontainers, dan performance metrics.
-- **Security**: Lihat `@security-specialist` untuk standar keamanan, kepatuhan (compliance), dan secure coding.
-- **Containerization**: Lihat `@container-specialist` untuk Dockerfile, OpenShift, dan UBI images.
-
-## Architecture Patterns
-
-### Event-Driven Architecture (Kafka)
-PayU menggunakan Kafka untuk komunikasi asinkron antar service dan Saga Pattern.
-
-**Topic Convention**: `payu.<domain>.<event-type>`
-
-Example:
-- `payu.transactions.initiated`
-- `payu.wallet.balance.reserved`
-- `payu.accounts.created`
-
-### Database Design
-- **One Service One Database**: Isolated schemas (`payu_accounts`, `payu_wallet`).
-- **Migrations**: Gunakan **Flyway** (`V1__description.sql`).
-- **Ledger**: Wallet service menggunakan Double-Entry Ledger pattern.
-
-### Error Handling
-Standardized error codes format: `DOMAIN_CATEGORY_DETAIL`
-- `AUTH_VAL_INVALID_TOKEN` (401)
-- `ACCT_BUS_INSUFFICIENT_FUNDS` (400)
-- `SYS_INT_TIMEOUT` (504)
+### 4. Observability
+- **Logs**: LokiStack (JSON Structured).
+- **Metrics**: Prometheus/Grafana.
+- **Traces**: Jaeger (OpenTelemetry).
 
 ---
-*For detailed code review, testing, or security tasks, verify you are using the appropriate specialist skill.*
+*ALWAYS use the specialized skills for deeper context when performing specific tasks.*
