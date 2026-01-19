@@ -171,6 +171,33 @@ services:
     networks:
       - payu-network
 
+  # ============================================
+  # CORE BANKING SERVICES
+  # ============================================
+
+  transaction-service:
+    build:
+      context: ./backend/transaction-service
+      dockerfile: Dockerfile
+    container_name: payu-transaction-service
+    ports:
+      - "8003:8003"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_transaction
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_WALLET_URL: http://payu-wallet-service:8004
+      SERVICES_BIFAST_URL: http://payu-bifast-simulator:9000
+      SERVICES_QRIS_URL: http://payu-qris-simulator:9001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - payu-network
+
 # ============================================
 # VOLUMES
 # ============================================
