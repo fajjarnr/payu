@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Wallet Service** (Spring Boot 3.4.1 - Hexagonal Architecture):
+  - Domain Layer: `Wallet` and `WalletTransaction` models with business logic
+  - Ports: `WalletUseCase` (input), `WalletPersistencePort`, `WalletEventPublisherPort` (output)
+  - Adapters: JPA persistence, REST controller, Kafka event publisher
+  - Balance management: get balance, reserve, commit, release, credit
+  - Flyway database migrations for wallet tables
+  - Unit tests (WalletServiceTest), Controller tests, ArchUnit architecture tests
+
+- **Project Housekeeping**:
+  - Removed duplicate `AGENTS.md` (content already in `GEMINI.md`)
+  - Added `README.md` to `transaction-service`
+  - Updated `GEMINI.md` project structure
+
 - **TDD Infrastructure** (account-service):
   - Testcontainers for PostgreSQL and Kafka integration testing
   - ArchUnit 1.2.1 for architecture rule enforcement

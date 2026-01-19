@@ -65,18 +65,27 @@
 ```
 payu/
 ├── .agent/              # AI agent skills and workflows
-│   └── skills/payu-development/
+│   ├── skills/payu-development/
+│   └── workflows/
 ├── ARCHITECTURE.md      # Technical architecture documentation
 ├── CHANGELOG.md         # Version history
 ├── GEMINI.md            # This file - AI assistant guidelines
 ├── PRD.md               # Product Requirements Document
 ├── README.md            # Project overview
+├── docker-compose.yml   # Local development infrastructure
 ├── backend/             # Microservices implementation
-│   ├── account-service/       # Java - Spring Boot (with tests)
+│   ├── account-service/       # Java - Spring Boot (Hexagonal)
 │   ├── auth-service/          # Java - Spring Boot
+│   ├── transaction-service/   # Java - Spring Boot (Hexagonal)
+│   ├── wallet-service/        # Java - Spring Boot (Hexagonal)
 │   ├── gateway-service/       # Java - Quarkus
 │   └── simulators/            # External service simulators
+│       ├── bifast-simulator/
+│       ├── dukcapil-simulator/
+│       └── qris-simulator/
 └── infrastructure/      # Kubernetes/OpenShift manifests
+    ├── docker/
+    └── openshift/
 ```
 
 ---
