@@ -23,15 +23,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Quarkus Mailer integration for emails
   - Sender abstraction (EmailSender, SmsSender, PushSender)
 
+- **Wallet Service** (Spring Boot 3.4.1 - Hexagonal Architecture):
+  - Domain Layer: `Wallet`, `WalletTransaction`, and `Card` models
+  - Ports: `WalletUseCase`, `CardUseCase` (input), `WalletPersistencePort`, `CardPersistencePort` (output)
+  - Adapters: JPA persistence, REST controller, Kafka event publisher
+  - Balance management: get balance, reserve, commit, release, credit
+  - **Virtual Debit Card**: Create, list, freeze/unfreeze virtual cards
+  - Flyway database migrations for wallet and cards tables
+  - Unit tests (WalletServiceTest), Controller tests, ArchUnit architecture tests
+
 - **Gateway Service** (Updated):
   - Added routing for all microservices (`/api/v1/accounts`, `/wallets`, `/transactions`, `/billers`, `/notifications`)
   - Configured proxy logic with Vert.x WebClient
   - Removed outdated dependencies and fixing build configuration
-
-  - Adapters: JPA persistence, REST controller, Kafka event publisher
-  - Balance management: get balance, reserve, commit, release, credit
-  - Flyway database migrations for wallet tables
-  - Unit tests (WalletServiceTest), Controller tests, ArchUnit architecture tests
 
 - **Project Housekeeping**:
   - Removed duplicate `AGENTS.md` (content already in `GEMINI.md`)

@@ -124,6 +124,22 @@ public class ApiGatewayResource {
         return proxy("notification-service", "/api/v1/notifications/" + path, request.getMethod(), body, headers);
     }
 
+    // ==================== Card Service (via Wallet Service) ====================
+    @Path("/cards/{path: .*}")
+    @GET
+    @POST
+    @PUT
+    public Uni<Response> cardProxy(@PathParam("path") String path, String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
+        return proxy("wallet-service", "/api/v1/cards/" + path, request.getMethod(), body, headers);
+    }
+    
+    @Path("/cards")
+    @GET
+    @POST
+    public Uni<Response> cardRootProxy(String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
+        return proxy("wallet-service", "/api/v1/cards", request.getMethod(), body, headers);
+    }
+
 
     // ==================== Proxy Logic ====================
     private Uni<Response> proxy(String serviceName, String path, String method, 
