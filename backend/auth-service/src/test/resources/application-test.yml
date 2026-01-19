@@ -9,17 +9,16 @@ spring:
         jwt:
           issuer-uri: http://localhost:8080/realms/payu
 
-# Keycloak Config (mocked)
-keycloak:
-  server-url: http://localhost:8080
-  realm: payu
-  client-id: payu-client
-  client-secret: test-secret
-  admin-username: admin
-  admin-password: admin
-
-# Security settings
+# Keycloak and Security Config (for integration tests)
 payu:
+  keycloak:
+    server-url: http://localhost:8080
+    realm: payu
+    client-id: payu-client
+    client-secret: test-secret
+    admin:
+      username: admin
+      password: admin
   security:
     max-login-attempts: 5
     lockout-duration-minutes: 15

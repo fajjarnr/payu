@@ -11,14 +11,17 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import jakarta.ws.rs.core.Response;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 @Service
 @RequiredArgsConstructor
@@ -68,7 +71,7 @@ public class KeycloakService {
 
         return webClient.post()
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .bodyValue(buildLoginForm(username, password))
+                .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
                 .retrieve()
                 .bodyToMono(LoginResponse.class)
                 .doOnSuccess(response -> {
@@ -159,13 +162,13 @@ public class KeycloakService {
         }
     }
 
-    private Map<String, String> buildLoginForm(String username, String password) {
-        Map<String, String> form = new HashMap<>();
-        form.put("grant_type", "password");
-        form.put("client_id", keycloakConfig.getClientId());
-        form.put("client_secret", keycloakConfig.getClientSecret());
-        form.put("username", username);
-        form.put("password", password);
+    private MultiValueMap<String, String> buildLoginForm(String username, String password) {
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "password");
+        form.add("client_id", keycloakConfig.getClientId());
+        form.add("client_secret", keycloakConfig.getClientSecret());
+        form.add("username", username);
+        form.add("password", password);
         return form;
     }
 

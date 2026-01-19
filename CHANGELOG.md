@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Auth Service Integration Tests** (Testcontainers + Keycloak):
+  - `AuthIntegrationTest.java` - 6 test cases for authentication flow
+  - Uses `testcontainers-keycloak` to spin up real Keycloak 26.0 instance
+  - Tests: container running, endpoint accessibility, invalid credentials, non-existent user, direct Keycloak token, account lockout
+  - Added `SecurityConfig.java` to allow public access to login endpoints
+  - Fixed `KeycloakService.login()` to use `BodyInserters.fromFormData()` for proper form encoding
+  - Added Testcontainers dependencies (`junit-jupiter`, `testcontainers-keycloak`, `rest-assured`)
+  - Configured maven-surefire-plugin and maven-failsafe-plugin for integration test separation
+
 - **ArchUnit Tests for Quarkus Services**:
   - `billing-service/ArchitectureTest.java` - Layered architecture, naming conventions, domain isolation
   - `notification-service/ArchitectureTest.java` - Sender abstraction pattern enforcement
