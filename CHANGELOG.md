@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **ArchUnit Tests for Quarkus Services**:
+  - `billing-service/ArchitectureTest.java` - Layered architecture, naming conventions, domain isolation
+  - `notification-service/ArchitectureTest.java` - Sender abstraction pattern enforcement
+  - Added `archunit-junit5:1.2.1` dependency to both services
+
+- **JaCoCo Coverage for Quarkus Services**:
+  - Added `quarkus-jacoco` extension to billing-service
+  - Added `quarkus-jacoco` extension to notification-service
+
+- **Flyway Migrations for Quarkus Services**:
+  - `V1__create_bill_payments_table.sql` for billing-service
+  - `V1__create_notifications_table.sql` for notification-service
+  - Proper indexes and constraints for performance
+
+- **Domain Exception Hierarchies**:
+  - `AccountDomainException` with ACCT_xxx_xxx error codes (VAL, BUS, EXT, SYS)
+  - `TransactionDomainException` with TXN_xxx_xxx error codes (VAL, BUS, BAL, EXT, SYS)
+  - Updated GlobalExceptionHandlers to use domain exceptions
+  - Indonesian user-friendly error messages
+
+- **Unit Tests for Quarkus Service Layers**:
+  - `PaymentServiceTest` - 6 test cases (payment creation, wallet integration, admin fees)
+  - `NotificationServiceTest` - 8 test cases (multi-channel, failure handling)
+
+- **Dockerfile Standardization (UBI9 + Multi-stage)**:
+  - All services now use `registry.access.redhat.com/ubi9/openjdk-21:1.20` for build
+  - All services now use `registry.access.redhat.com/ubi9/openjdk-21-runtime:1.20` for runtime
+  - Multi-stage builds for smaller and more secure images
+  - Consistent JVM tuning (G1GC, MaxRAMPercentage, HeapDumpOnOutOfMemoryError)
+  - Non-root user (185 - jboss) for security
+  - Health checks for all services
+  - Services updated: account, auth, transaction, wallet, billing, notification, gateway, simulators
+
+- **Container Specialist Skill** (`.agent/skills/container-specialist/SKILL.md`):
+  - Mandatory UBI9 base image requirements
+  - Multi-stage build templates (Spring Boot, Quarkus Fast-JAR, Quarkus Native)
+  - Non-root user enforcement
+  - Label requirements (maintainer, description, version)
+  - Health check patterns for Spring Boot and Quarkus
+  - JVM container-aware settings
+  - Security best practices (no secrets, .dockerignore, pinned versions)
+  - Port assignments for all services
+  - Verification checklist
+
 - **Security Standards Enhancement** (code-review SKILL.md):
   - PCI-DSS compliance checklist for payment systems
   - OJK (Indonesian Financial Regulations) compliance checks

@@ -1,33 +1,60 @@
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.18 AS builder
+####
+# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
+####
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.20 AS build
 
 USER root
-WORKDIR /app
+WORKDIR /build
 
-COPY pom.xml .
+# Install Maven
+RUN microdnf install -y maven && microdnf clean all
+
+# Copy pom.xml first for dependency caching
+COPY pom.xml ./
+
+# Download dependencies (cached layer)
+RUN mvn dependency:go-offline -B
+
+# Copy source code
 COPY src ./src
 
-RUN microdnf install -y maven && \
-    mvn package -DskipTests && \
-    microdnf clean all
+# Build the Quarkus application (fast-jar format)
+RUN mvn package -DskipTests
 
-FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.18
+####
+# Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+####
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.20
 
 LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU Notification Service - Push, SMS, Email"
+LABEL description="PayU Notification Service - Push, SMS, Email, In-App"
+LABEL version="1.0.0"
 
+# Use non-root user (185 is the default jboss user in UBI images)
 USER 185
-WORKDIR /app
 
-COPY --from=builder /app/target/quarkus-app/lib/ ./lib/
-COPY --from=builder /app/target/quarkus-app/*.jar ./
-COPY --from=builder /app/target/quarkus-app/app/ ./app/
-COPY --from=builder /app/target/quarkus-app/quarkus/ ./quarkus/
+WORKDIR /deployments
 
-EXPOSE 8086
+# Copy Quarkus fast-jar structure
+COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build --chown=185 /build/target/quarkus-app/*.jar /deployments/
+COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
+COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
 
-ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+# Expose the service port
+EXPOSE 8006
 
+# JVM configuration for Quarkus
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=100 \
+    -Dquarkus.http.host=0.0.0.0 \
+    -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+
+# Health check using Quarkus health endpoint
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8086/q/health || exit 1
+    CMD curl -f http://localhost:8006/q/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "quarkus-run.jar"]
+# Run the Quarkus application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]
