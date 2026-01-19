@@ -1,0 +1,195 @@
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--------------------< [0;36mid.payu:transaction-service[0;1m >---------------------[m
+[[1;34mINFO[m] [1mBuilding transaction-service 1.0.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-clean-plugin:3.4.0:clean[m [1m(default-clean)[m @ [36mtransaction-service[0;1m ---[m
+[[1;34mINFO[m] Deleting /home/ubuntu/payu/backend/transaction-service/target
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mjacoco-maven-plugin:0.8.11:prepare-agent[m [1m(default)[m @ [36mtransaction-service[0;1m ---[m
+[[1;34mINFO[m] argLine set to -javaagent:/home/ubuntu/.m2/repository/org/jacoco/org.jacoco.agent/0.8.11/org.jacoco.agent-0.8.11-runtime.jar=destfile=/home/ubuntu/payu/backend/transaction-service/target/jacoco.exec
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:3.3.1:resources[m [1m(default-resources)[m @ [36mtransaction-service[0;1m ---[m
+[[1;34mINFO[m] Copying 1 resource from src/main/resources to target/classes
+[[1;34mINFO[m] Copying 1 resource from src/main/resources to target/classes
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.13.0:compile[m [1m(default-compile)[m @ [36mtransaction-service[0;1m ---[m
+[[1;34mINFO[m] Recompiling the module because of [1mchanged source code[m.
+[[1;34mINFO[m] Compiling 29 source files with javac [debug parameters release 21] to target/classes
+[[1;34mINFO[m] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:3.3.1:testResources[m [1m(default-testResources)[m @ [36mtransaction-service[0;1m ---[m
+[[1;34mINFO[m] skip non existing resourceDirectory /home/ubuntu/payu/backend/transaction-service/src/test/resources
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.13.0:testCompile[m [1m(default-testCompile)[m @ [36mtransaction-service[0;1m ---[m
+[[1;34mINFO[m] Recompiling the module because of [1mchanged dependency[m.
+[[1;34mINFO[m] Compiling 3 source files with javac [debug parameters release 21] to target/test-classes
+[[1;34mINFO[m] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[[1;33mWARNING[m] /home/ubuntu/payu/backend/transaction-service/src/test/java/id/payu/transaction/adapter/web/TransactionControllerTest.java:[35,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[[1;33mWARNING[m] /home/ubuntu/payu/backend/transaction-service/src/test/java/id/payu/transaction/adapter/web/TransactionControllerTest.java:[35,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[[1;33mWARNING[m] /home/ubuntu/payu/backend/transaction-service/src/test/java/id/payu/transaction/adapter/web/TransactionControllerTest.java:[35,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[[1;33mWARNING[m] /home/ubuntu/payu/backend/transaction-service/src/test/java/id/payu/transaction/adapter/web/TransactionControllerTest.java:[35,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[[1;33mWARNING[m] /home/ubuntu/payu/backend/transaction-service/src/test/java/id/payu/transaction/adapter/web/TransactionControllerTest.java:[35,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-surefire-plugin:3.5.2:test[m [1m(default-test)[m @ [36mtransaction-service[0;1m ---[m
+[[1;34mINFO[m] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[[1;34mINFO[m] 
+[[1;34mINFO[m] -------------------------------------------------------
+[[1;34mINFO[m]  T E S T S
+[[1;34mINFO[m] -------------------------------------------------------
+Jan 19, 2026 9:51:49 AM org.junit.platform.launcher.core.LauncherConfigurationParameters loadClasspathResource
+WARNING: Discovered 3 'junit-platform.properties' configuration files on the classpath (see below); only the first (*) will be used.
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-clients/3.8.1/kafka-clients-3.8.1-test.jar!/junit-platform.properties (*)
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-server-common/3.8.1/kafka-server-common-3.8.1-test.jar!/junit-platform.properties
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka_2.13/3.8.1/kafka_2.13-3.8.1-test.jar!/junit-platform.properties
+Jan 19, 2026 9:51:49 AM org.junit.platform.launcher.core.LauncherConfigurationParameters loadClasspathResource
+WARNING: Discovered 3 'junit-platform.properties' configuration files on the classpath (see below); only the first (*) will be used.
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-clients/3.8.1/kafka-clients-3.8.1-test.jar!/junit-platform.properties (*)
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-server-common/3.8.1/kafka-server-common-3.8.1-test.jar!/junit-platform.properties
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka_2.13/3.8.1/kafka_2.13-3.8.1-test.jar!/junit-platform.properties
+Jan 19, 2026 9:51:49 AM org.junit.platform.launcher.core.LauncherConfigurationParameters loadClasspathResource
+WARNING: Discovered 3 'junit-platform.properties' configuration files on the classpath (see below); only the first (*) will be used.
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-clients/3.8.1/kafka-clients-3.8.1-test.jar!/junit-platform.properties (*)
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-server-common/3.8.1/kafka-server-common-3.8.1-test.jar!/junit-platform.properties
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka_2.13/3.8.1/kafka_2.13-3.8.1-test.jar!/junit-platform.properties
+Jan 19, 2026 9:51:49 AM org.junit.platform.launcher.core.LauncherConfigurationParameters loadClasspathResource
+WARNING: Discovered 3 'junit-platform.properties' configuration files on the classpath (see below); only the first (*) will be used.
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-clients/3.8.1/kafka-clients-3.8.1-test.jar!/junit-platform.properties (*)
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-server-common/3.8.1/kafka-server-common-3.8.1-test.jar!/junit-platform.properties
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka_2.13/3.8.1/kafka_2.13-3.8.1-test.jar!/junit-platform.properties
+Jan 19, 2026 9:51:49 AM org.junit.platform.launcher.core.LauncherConfigurationParameters loadClasspathResource
+WARNING: Discovered 3 'junit-platform.properties' configuration files on the classpath (see below); only the first (*) will be used.
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-clients/3.8.1/kafka-clients-3.8.1-test.jar!/junit-platform.properties (*)
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka-server-common/3.8.1/kafka-server-common-3.8.1-test.jar!/junit-platform.properties
+- jar:file:/home/ubuntu/.m2/repository/org/apache/kafka/kafka_2.13/3.8.1/kafka_2.13-3.8.1-test.jar!/junit-platform.properties
+[[1;34mINFO[m] Running id.payu.transaction.application.service.[1mTransactionServiceTest[m
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build what is described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (/home/ubuntu/.m2/repository/net/bytebuddy/byte-buddy-agent/1.15.11/byte-buddy-agent-1.15.11.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+[[1;34mINFO[m] [1;32mTests run: [0;1;32m3[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.536 s -- in id.payu.transaction.application.service.[1mTransactionServiceTest[m
+[[1;34mINFO[m] Running id.payu.transaction.adapter.web.[1mTransactionControllerTest[m
+09:51:51.690 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [id.payu.transaction.adapter.web.TransactionControllerTest]: TransactionControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+09:51:51.949 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration id.payu.transaction.TransactionServiceApplication for test class id.payu.transaction.adapter.web.TransactionControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.1)
+
+2026-01-19T09:51:52.716Z  INFO 89251 --- [transaction-service] [           main] [                                                 ] i.p.t.a.web.TransactionControllerTest    : Starting TransactionControllerTest using Java 21.0.9 with PID 89251 (started by ubuntu in /home/ubuntu/payu/backend/transaction-service)
+2026-01-19T09:51:52.719Z DEBUG 89251 --- [transaction-service] [           main] [                                                 ] i.p.t.a.web.TransactionControllerTest    : Running with Spring Boot v3.4.1, Spring v6.2.1
+2026-01-19T09:51:52.720Z  INFO 89251 --- [transaction-service] [           main] [                                                 ] i.p.t.a.web.TransactionControllerTest    : No active profile set, falling back to 1 default profile: "default"
+2026-01-19T09:51:54.498Z  INFO 89251 --- [transaction-service] [           main] [                                                 ] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-01-19T09:51:54.499Z  INFO 89251 --- [transaction-service] [           main] [                                                 ] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-01-19T09:51:54.500Z  INFO 89251 --- [transaction-service] [           main] [                                                 ] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-01-19T09:51:54.622Z  INFO 89251 --- [transaction-service] [           main] [                                                 ] i.p.t.a.web.TransactionControllerTest    : Started TransactionControllerTest in 2.431 seconds (process running for 5.796)
+[[1;34mINFO[m] [1;32mTests run: [0;1;32m1[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.407 s -- in id.payu.transaction.adapter.web.[1mTransactionControllerTest[m
+[[1;34mINFO[m] Running id.payu.transaction.architecture.[1mArchitectureTest[m
+2026-01-19T09:51:54.957Z  INFO 89251 --- [transaction-service] [           main] [                                                 ] com.tngtech.archunit.core.PluginLoader   : Detected Java version 21.0.9
+[[1;31mERROR[m] [1;31mTests [0;1mrun: [0;1m7[m, [1;31mFailures: [0;1;31m2[m, Errors: 0, Skipped: 0, Time elapsed: 1.529 s[1;31m <<< FAILURE![m -- in id.payu.transaction.architecture.[1mArchitectureTest[m
+[[1;31mERROR[m] ArchitectureTest.application_layer_should_only_depend_on_domain -- Time elapsed: 0.010 s <<< FAILURE!
+java.lang.AssertionError: 
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..application..' should only depend on classes that reside in any package ['id.payu.transaction.domain..', 'id.payu.transaction.dto..', 'java..', 'lombok..', 'org.springframework..']' was violated (2 times):
+Field <id.payu.transaction.application.service.TransactionService.log> has type <org.slf4j.Logger> in (TransactionService.java:0)
+Static Initializer <id.payu.transaction.application.service.TransactionService.<clinit>()> calls method <org.slf4j.LoggerFactory.getLogger(java.lang.Class)> in (TransactionService.java:17)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.assertNoViolation(ArchRule.java:94)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.check(ArchRule.java:86)
+	at com.tngtech.archunit.lang.ArchRule$Factory$SimpleArchRule.check(ArchRule.java:165)
+	at com.tngtech.archunit.lang.syntax.ObjectsShouldInternal.check(ObjectsShouldInternal.java:81)
+	at com.tngtech.archunit.junit.internal.ArchUnitTestDescriptor$ArchUnitRuleDescriptor.execute(ArchUnitTestDescriptor.java:166)
+	at com.tngtech.archunit.junit.internal.ArchUnitTestDescriptor$ArchUnitRuleDescriptor.execute(ArchUnitTestDescriptor.java:149)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[[1;31mERROR[m] ArchitectureTest.adapter_layer_should_only_depend_on_domain_and_application -- Time elapsed: 0.009 s <<< FAILURE!
+java.lang.AssertionError: 
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..adapter..' should only depend on classes that reside in any package ['id.payu.transaction.domain..', 'id.payu.transaction.application..', 'id.payu.transaction.dto..', 'java..', 'org.springframework..', 'lombok..']' was violated (16 times):
+Constructor <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.<init>(org.springframework.kafka.core.KafkaTemplate, com.fasterxml.jackson.databind.ObjectMapper)> has parameter of type <com.fasterxml.jackson.databind.ObjectMapper> in (TransactionEventPublisherAdapter.java:0)
+Constructor <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.<init>(id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository)> has parameter of type <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository> in (TransactionPersistenceAdapter.java:0)
+Field <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.log> has type <org.slf4j.Logger> in (TransactionEventPublisherAdapter.java:0)
+Field <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.objectMapper> has type <com.fasterxml.jackson.databind.ObjectMapper> in (TransactionEventPublisherAdapter.java:0)
+Field <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.transactionJpaRepository> has type <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository> in (TransactionPersistenceAdapter.java:0)
+Method <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.publishTransactionCompleted(id.payu.transaction.domain.model.Transaction)> calls method <org.slf4j.Logger.info(java.lang.String, java.lang.Object)> in (TransactionEventPublisherAdapter.java:68)
+Method <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.publishTransactionFailed(id.payu.transaction.domain.model.Transaction, java.lang.String)> calls method <org.slf4j.Logger.info(java.lang.String, java.lang.Object, java.lang.Object)> in (TransactionEventPublisherAdapter.java:85)
+Method <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.publishTransactionInitiated(id.payu.transaction.domain.model.Transaction)> calls method <org.slf4j.Logger.info(java.lang.String, java.lang.Object)> in (TransactionEventPublisherAdapter.java:38)
+Method <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.publishTransactionValidated(id.payu.transaction.domain.model.Transaction)> calls method <org.slf4j.Logger.info(java.lang.String, java.lang.Object)> in (TransactionEventPublisherAdapter.java:51)
+Method <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.findByAccountId(java.util.UUID, int, int)> calls method <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository.findByAccountId(java.util.UUID, org.springframework.data.domain.Pageable)> in (TransactionPersistenceAdapter.java:32)
+Method <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.findById(java.util.UUID)> calls method <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository.findById(java.lang.Object)> in (TransactionPersistenceAdapter.java:27)
+Method <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.findByReferenceNumber(java.lang.String)> calls method <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository.findByReferenceNumber(java.lang.String)> in (TransactionPersistenceAdapter.java:37)
+Method <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.save(id.payu.transaction.domain.model.Transaction)> calls method <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository.save(java.lang.Object)> in (TransactionPersistenceAdapter.java:22)
+Parameter <id.payu.transaction.dto.InitiateTransferRequest> of method <id.payu.transaction.adapter.web.TransactionController.initiateTransfer(id.payu.transaction.dto.InitiateTransferRequest)> is annotated with <jakarta.validation.Valid> in (TransactionController.java:0)
+Parameter <id.payu.transaction.dto.ProcessQrisPaymentRequest> of method <id.payu.transaction.adapter.web.TransactionController.processQrisPayment(id.payu.transaction.dto.ProcessQrisPaymentRequest)> is annotated with <jakarta.validation.Valid> in (TransactionController.java:0)
+Static Initializer <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.<clinit>()> calls method <org.slf4j.LoggerFactory.getLogger(java.lang.Class)> in (TransactionEventPublisherAdapter.java:14)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.assertNoViolation(ArchRule.java:94)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.check(ArchRule.java:86)
+	at com.tngtech.archunit.lang.ArchRule$Factory$SimpleArchRule.check(ArchRule.java:165)
+	at com.tngtech.archunit.lang.syntax.ObjectsShouldInternal.check(ObjectsShouldInternal.java:81)
+	at com.tngtech.archunit.junit.internal.ArchUnitTestDescriptor$ArchUnitRuleDescriptor.execute(ArchUnitTestDescriptor.java:166)
+	at com.tngtech.archunit.junit.internal.ArchUnitTestDescriptor$ArchUnitRuleDescriptor.execute(ArchUnitTestDescriptor.java:149)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[[1;34mINFO[m] 
+[[1;34mINFO[m] Results:
+[[1;34mINFO[m] 
+[[1;31mERROR[m] [1;31mFailures: [m
+[[1;31mERROR[m] [1;31m  Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..adapter..' should only depend on classes that reside in any package ['id.payu.transaction.domain..', 'id.payu.transaction.application..', 'id.payu.transaction.dto..', 'java..', 'org.springframework..', 'lombok..']' was violated (16 times):
+Constructor <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.<init>(org.springframework.kafka.core.KafkaTemplate, com.fasterxml.jackson.databind.ObjectMapper)> has parameter of type <com.fasterxml.jackson.databind.ObjectMapper> in (TransactionEventPublisherAdapter.java:0)
+Constructor <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.<init>(id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository)> has parameter of type <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository> in (TransactionPersistenceAdapter.java:0)
+Field <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.log> has type <org.slf4j.Logger> in (TransactionEventPublisherAdapter.java:0)
+Field <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.objectMapper> has type <com.fasterxml.jackson.databind.ObjectMapper> in (TransactionEventPublisherAdapter.java:0)
+Field <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.transactionJpaRepository> has type <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository> in (TransactionPersistenceAdapter.java:0)
+Method <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.publishTransactionCompleted(id.payu.transaction.domain.model.Transaction)> calls method <org.slf4j.Logger.info(java.lang.String, java.lang.Object)> in (TransactionEventPublisherAdapter.java:68)
+Method <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.publishTransactionFailed(id.payu.transaction.domain.model.Transaction, java.lang.String)> calls method <org.slf4j.Logger.info(java.lang.String, java.lang.Object, java.lang.Object)> in (TransactionEventPublisherAdapter.java:85)
+Method <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.publishTransactionInitiated(id.payu.transaction.domain.model.Transaction)> calls method <org.slf4j.Logger.info(java.lang.String, java.lang.Object)> in (TransactionEventPublisherAdapter.java:38)
+Method <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.publishTransactionValidated(id.payu.transaction.domain.model.Transaction)> calls method <org.slf4j.Logger.info(java.lang.String, java.lang.Object)> in (TransactionEventPublisherAdapter.java:51)
+Method <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.findByAccountId(java.util.UUID, int, int)> calls method <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository.findByAccountId(java.util.UUID, org.springframework.data.domain.Pageable)> in (TransactionPersistenceAdapter.java:32)
+Method <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.findById(java.util.UUID)> calls method <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository.findById(java.lang.Object)> in (TransactionPersistenceAdapter.java:27)
+Method <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.findByReferenceNumber(java.lang.String)> calls method <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository.findByReferenceNumber(java.lang.String)> in (TransactionPersistenceAdapter.java:37)
+Method <id.payu.transaction.adapter.persistence.TransactionPersistenceAdapter.save(id.payu.transaction.domain.model.Transaction)> calls method <id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository.save(java.lang.Object)> in (TransactionPersistenceAdapter.java:22)
+Parameter <id.payu.transaction.dto.InitiateTransferRequest> of method <id.payu.transaction.adapter.web.TransactionController.initiateTransfer(id.payu.transaction.dto.InitiateTransferRequest)> is annotated with <jakarta.validation.Valid> in (TransactionController.java:0)
+Parameter <id.payu.transaction.dto.ProcessQrisPaymentRequest> of method <id.payu.transaction.adapter.web.TransactionController.processQrisPayment(id.payu.transaction.dto.ProcessQrisPaymentRequest)> is annotated with <jakarta.validation.Valid> in (TransactionController.java:0)
+Static Initializer <id.payu.transaction.adapter.messaging.TransactionEventPublisherAdapter.<clinit>()> calls method <org.slf4j.LoggerFactory.getLogger(java.lang.Class)> in (TransactionEventPublisherAdapter.java:14)[m
+[[1;31mERROR[m] [1;31m  Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package '..application..' should only depend on classes that reside in any package ['id.payu.transaction.domain..', 'id.payu.transaction.dto..', 'java..', 'lombok..', 'org.springframework..']' was violated (2 times):
+Field <id.payu.transaction.application.service.TransactionService.log> has type <org.slf4j.Logger> in (TransactionService.java:0)
+Static Initializer <id.payu.transaction.application.service.TransactionService.<clinit>()> calls method <org.slf4j.LoggerFactory.getLogger(java.lang.Class)> in (TransactionService.java:17)[m
+[[1;34mINFO[m] 
+[[1;31mERROR[m] [1;31mTests run: 11, Failures: 2, Errors: 0, Skipped: 0[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;31mBUILD FAILURE[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  11.583 s
+[[1;34mINFO[m] Finished at: 2026-01-19T09:51:56Z
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;31mERROR[m] Failed to execute goal [32morg.apache.maven.plugins:maven-surefire-plugin:3.5.2:test[m [1m(default-test)[m on project [36mtransaction-service[m: [1;31mThere are test failures.[m
+[[1;31mERROR[m] [1;31m[m
+[[1;31mERROR[m] [1;31mSee /home/ubuntu/payu/backend/transaction-service/target/surefire-reports for the individual test results.[m
+[[1;31mERROR[m] [1;31mSee dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.[m
+[[1;31mERROR[m] -> [1m[Help 1][m
+[[1;31mERROR[m] 
+[[1;31mERROR[m] To see the full stack trace of the errors, re-run Maven with the [1m-e[m switch.
+[[1;31mERROR[m] Re-run Maven using the [1m-X[m switch to enable full debug logging.
+[[1;31mERROR[m] 
+[[1;31mERROR[m] For more information about the errors and possible solutions, please read the following articles:
+[[1;31mERROR[m] [1m[Help 1][m http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
