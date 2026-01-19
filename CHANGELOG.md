@@ -26,8 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Domain Exception Hierarchies**:
   - `AccountDomainException` with ACCT_xxx_xxx error codes (VAL, BUS, EXT, SYS)
   - `TransactionDomainException` with TXN_xxx_xxx error codes (VAL, BUS, BAL, EXT, SYS)
+  - `AuthDomainException` with AUTH_xxx_xxx error codes (VAL, BUS, EXT, SYS)
   - Updated GlobalExceptionHandlers to use domain exceptions
   - Indonesian user-friendly error messages
+
+- **Gateway Service Test Suite** (New):
+  - `ArchitectureTest.java` - Layered architecture, naming conventions, Quarkus/Jakarta rules
+  - `CorrelationIdFilterTest.java` - 7 test cases for ID generation and propagation
+  - `HealthResourceTest.java` - Integration tests for health endpoints
+  - Added `archunit-junit5:1.2.1`, `quarkus-junit5-mockito`, `quarkus-jacoco` dependencies
 
 - **Unit Tests for Quarkus Service Layers**:
   - `PaymentServiceTest` - 6 test cases (payment creation, wallet integration, admin fees)
