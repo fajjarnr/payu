@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **TDD Infrastructure** (account-service):
+  - Testcontainers for PostgreSQL and Kafka integration testing
+  - ArchUnit 1.2.1 for architecture rule enforcement
+  - JaCoCo 0.8.11 for code coverage reporting
+  - H2 database for fast unit tests
+  - Spring Security Test for authentication context
+
+- **Test Classes** (account-service):
+  - `OnboardingServiceTest` - Unit tests with Mockito
+  - `OnboardingControllerTest` - WebMvcTest with security
+  - `ArchitectureTest` - Layered architecture enforcement
+
+- **SKILL.md** (Antigravity agent skill):
+  - Created `.agent/skills/payu-development/SKILL.md`
+  - Comprehensive development guidelines
+  - TDD patterns and examples
+
 - **Project Structure**: Complete monorepo setup
   - `backend/` - All microservices
   - `backend/simulators/` - External service simulators

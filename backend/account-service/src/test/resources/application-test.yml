@@ -1,0 +1,44 @@
+# Test configuration for account-service
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  
+  # Use H2 for unit tests (fast)
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  # Disable Flyway for tests
+  flyway:
+    enabled: false
+  
+  # Disable Kafka for unit tests
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      auto-startup: false
+    producer:
+      bootstrap-servers: localhost:9092
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/payu
+
+# Logging
+logging:
+  level:
+    id.payu: DEBUG
+    org.springframework.security: DEBUG

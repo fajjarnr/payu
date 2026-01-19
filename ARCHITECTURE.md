@@ -9,6 +9,7 @@
 1. [Executive Summary](#1-executive-summary)
 2. [System Overview](#2-system-overview)
 3. [Microservices Architecture](#3-microservices-architecture)
+   - 3.4 [Testing Strategy](#34-testing-strategy)
 4. [Event-Driven Architecture](#4-event-driven-architecture)
 5. [Data Architecture](#5-data-architecture)
 6. [Security Architecture](#6-security-architecture)
@@ -380,6 +381,56 @@ CREATE TABLE ledger_entries (
 | Service → Service (query) | gRPC | Sync |
 | Service → Service (command) | Kafka | Async |
 | Service → External | HTTP/REST | Async + Callback |
+
+---
+
+### 3.4 Testing Strategy
+
+#### Testing Stack
+
+| Tool | Purpose | Scope |
+|------|---------|-------|
+| **JUnit 5** | Unit testing framework | All Java services |
+| **Mockito** | Mocking dependencies | Service layer tests |
+| **Testcontainers** | Integration testing | PostgreSQL, Kafka |
+| **ArchUnit** | Architecture rules | Layered architecture enforcement |
+| **JaCoCo** | Code coverage | Coverage reporting |
+| **Spring Security Test** | Security testing | Auth context mocking |
+
+#### Test Types
+
+| Type | Description | Tools |
+|------|-------------|-------|
+| **Unit Tests** | Isolated business logic | Mockito |
+| **Controller Tests** | REST API endpoints | @WebMvcTest |
+| **Architecture Tests** | Enforce layer dependencies | ArchUnit |
+| **Integration Tests** | Full service with real DB | Testcontainers |
+
+#### Test Structure (per service)
+
+```
+src/test/java/id/payu/<service>/
+├── service/           # Unit tests with Mockito
+├── controller/        # WebMvcTest for REST endpoints
+├── architecture/      # ArchUnit rules enforcement
+└── integration/       # Testcontainers-based tests
+```
+
+#### Test Commands
+
+```bash
+mvn test                # Run all tests
+mvn test jacoco:report  # With coverage report
+mvn test -Dtest=*Arch*  # Architecture tests only
+```
+
+#### Clean Architecture Decision
+
+| Service Type | Architecture | Rationale |
+|-------------|--------------|-----------|
+| Core Banking (account, transaction, wallet) | Clean/Hexagonal | Complex domain, high testability needed |
+| Supporting (notification, billing) | Layered | Simple CRUD, no over-engineering |
+| ML Services (kyc, analytics) | Simplified Clean | Focus on ML logic isolation |
 
 ---
 

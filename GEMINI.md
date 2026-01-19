@@ -64,21 +64,19 @@
 
 ```
 payu/
-├── ARCHITECTURE.md     # Technical architecture documentation
-├── CHANGELOG.md        # Version history
-├── GEMINI.md           # This file - AI assistant guidelines
-├── PRD.md              # Product Requirements Document
-├── README.md           # Project overview
-└── backend/            # Microservices implementation
-    ├── account-service/       # Java - Spring Boot
-    ├── auth-service/          # Java - Spring Boot
-    ├── transaction-service/   # Java - Spring Boot
-    ├── wallet-service/        # Java - Spring Boot
-    ├── billing-service/       # Java - Quarkus
-    ├── notification-service/  # Java - Quarkus
-    ├── gateway-service/       # Java - Quarkus
-    ├── kyc-service/           # Python - FastAPI
-    └── analytics-service/     # Python - FastAPI
+├── .agent/              # AI agent skills and workflows
+│   └── skills/payu-development/
+├── ARCHITECTURE.md      # Technical architecture documentation
+├── CHANGELOG.md         # Version history
+├── GEMINI.md            # This file - AI assistant guidelines
+├── PRD.md               # Product Requirements Document
+├── README.md            # Project overview
+├── backend/             # Microservices implementation
+│   ├── account-service/       # Java - Spring Boot (with tests)
+│   ├── auth-service/          # Java - Spring Boot
+│   ├── gateway-service/       # Java - Quarkus
+│   └── simulators/            # External service simulators
+└── infrastructure/      # Kubernetes/OpenShift manifests
 ```
 
 ---
@@ -97,10 +95,17 @@ payu/
 **Commands:**
 ```bash
 cd backend/account-service
-./mvnw spring-boot:run    # Development
-./mvnw clean package      # Build
-./mvnw test               # Run tests
+mvn spring-boot:run     # Development
+mvn clean package       # Build
+mvn test                # Run tests (Unit + Architecture)
+mvn test jacoco:report  # Run tests with coverage
 ```
+
+**Testing Stack:**
+- **JUnit 5 + Mockito** - Unit testing
+- **Testcontainers** - Integration testing (PostgreSQL, Kafka)
+- **ArchUnit** - Architecture rule enforcement
+- **JaCoCo** - Code coverage reporting
 
 ### Quarkus Services (Supporting)
 
@@ -208,6 +213,31 @@ Query: "Quarkus native image with Redis client"
 - **File naming:** kebab-case untuk files
 - **Packages:** `id.payu.<service>.<layer>`
 - **Error Handling:** Always handle errors with proper logging
+
+### Testing Guidelines (TDD)
+
+1. **Write tests first** - Red-Green-Refactor cycle
+2. **Unit Tests** - MockitoExtension for service layer
+3. **Controller Tests** - @WebMvcTest with security context
+4. **Architecture Tests** - ArchUnit for layered architecture enforcement
+5. **Integration Tests** - Testcontainers for PostgreSQL/Kafka
+
+**Test Structure:**
+```
+src/test/java/id/payu/<service>/
+├── service/           # Unit tests (Mockito)
+├── controller/        # WebMvcTest
+├── architecture/      # ArchUnit rules
+└── integration/       # Testcontainers
+```
+
+### Clean Architecture (Hybrid)
+
+| Service Type | Architecture | Reason |
+|-------------|--------------|--------|
+| Core Banking | Clean/Hexagonal | Complex business logic, high testability |
+| Supporting | Layered | Mostly CRUD, simpler |
+| ML Services | Simplified Clean | Focus on ML logic |
 
 ### Git & Changelog Policy ⚠️
 
