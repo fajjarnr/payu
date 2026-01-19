@@ -202,3 +202,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Technical requirements and compliance
   - TokoBapak integration section
 - ARCHITECTURE.md v1.0 with complete microservices design
+- Docker & Integration Test setup complete. Installed docker.io, created docker-compose.yml, added Testcontainers.

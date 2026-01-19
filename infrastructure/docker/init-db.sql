@@ -8,8 +8,8 @@ CREATE DATABASE payu_billing;
 CREATE DATABASE keycloak;
 
 -- Create Users (Simplified for dev)
--- In prod, use separate users for each DB
-CREATE USER payu WITH ENCRYPTED PASSWORD 'payu_secret';
+-- User 'payu' is created via POSTGRES_USER env var
+
 GRANT ALL PRIVILEGES ON DATABASE payu_account TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_auth TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_transaction TO payu;

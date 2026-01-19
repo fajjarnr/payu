@@ -14,7 +14,6 @@ services:
     environment:
       POSTGRES_USER: payu
       POSTGRES_PASSWORD: payu_secret
-      POSTGRES_DB: payu_account
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infrastructure/docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
