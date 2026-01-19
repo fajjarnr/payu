@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Wallet Service Kafka Integration Tests** (Testcontainers):
+  - `WalletKafkaIntegrationTest.java` - 7 test cases for Kafka event publishing
+  - Tests topics: `wallet.created`, `wallet.balance.changed`, `wallet.balance.reserved`, `wallet.reservation.committed`, `wallet.reservation.released`
+  - Created missing port interfaces: `WalletEventPublisherPort`, `WalletPersistencePort`, `CardPersistencePort`
+
+- **Transaction Service Kafka Integration Tests** (Testcontainers):
+  - `TransactionKafkaIntegrationTest.java` - 10 test cases for Kafka event publishing
+  - Tests topics: `payu.transactions.initiated`, `payu.transactions.validated`, `payu.transactions.completed`, `payu.transactions.failed`
+  - Lightweight Kafka-only testing without Spring context
+
+- **QA Expert Skill Update** (`.agent/skills/qa-expert/SKILL.md`):
+  - PayU-specific testing patterns (Testcontainers, Kafka, Hexagonal Architecture)
+  - Financial transaction test requirements (idempotency, BigDecimal, saga compensation)
+  - Test data patterns and test user accounts
+  - Coverage thresholds (80% line, 70% branch)
+  - P0-P3 test priority guidelines
+
 - **Auth Service Integration Tests** (Testcontainers + Keycloak):
   - `AuthIntegrationTest.java` - 6 test cases for authentication flow
   - Uses `testcontainers-keycloak` to spin up real Keycloak 26.0 instance
