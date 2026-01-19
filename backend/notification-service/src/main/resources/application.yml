@@ -1,0 +1,84 @@
+quarkus:
+  application:
+    name: notification-service
+
+  http:
+    port: 8086
+
+  banner:
+    path: banner.txt
+
+  datasource:
+    db-kind: postgresql
+    username: postgres
+    password: postgres
+    jdbc:
+      url: jdbc:postgresql://localhost:5432/notificationdb
+
+  hibernate-orm:
+    database:
+      generation: validate
+    log:
+      sql: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  mailer:
+    from: noreply@payu.id
+    host: smtp.example.com
+    port: 587
+    start-tls: REQUIRED
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    mock: true  # Use mock mailer in dev
+
+  smallrye-openapi:
+    info-title: PayU Notification Service API
+    info-version: 1.0.0
+    info-description: Notification API for Push, SMS, Email
+
+  log:
+    level: INFO
+    category:
+      "id.payu.notification":
+        level: DEBUG
+
+"%dev":
+  quarkus:
+    hibernate-orm:
+      database:
+        generation: drop-and-create
+    mailer:
+      mock: true
+
+"%test":
+  quarkus:
+    datasource:
+      db-kind: h2
+      jdbc:
+        url: jdbc:h2:mem:testdb
+    hibernate-orm:
+      database:
+        generation: drop-and-create
+    mailer:
+      mock: true
+
+mp:
+  messaging:
+    incoming:
+      wallet-events:
+        connector: smallrye-kafka
+        topic: wallet.balance.changed
+        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        auto.offset.reset: earliest
+      transaction-events:
+        connector: smallrye-kafka
+        topic: transaction.completed
+        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        auto.offset.reset: earliest
+      payment-events:
+        connector: smallrye-kafka
+        topic: payment-events
+        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        auto.offset.reset: earliest

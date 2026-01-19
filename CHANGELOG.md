@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Kafka events for payment notifications
   - Hibernate Panache ORM with PostgreSQL
 
+- **Notification Service** (Quarkus 3.17 Native):
+  - Multi-channel: Email, SMS, Push, In-App notifications
+  - REST API: `/api/v1/notifications`
+  - Kafka consumers for wallet, transaction, payment events
+  - Quarkus Mailer integration for emails
+  - Sender abstraction (EmailSender, SmsSender, PushSender)
+
 - **Wallet Service** (Spring Boot 3.4.1 - Hexagonal Architecture):
   - Domain Layer: `Wallet` and `WalletTransaction` models with business logic
   - Ports: `WalletUseCase` (input), `WalletPersistencePort`, `WalletEventPublisherPort` (output)

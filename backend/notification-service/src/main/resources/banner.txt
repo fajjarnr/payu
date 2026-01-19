@@ -1,0 +1,15 @@
+                    ___                         ___     
+      ___          /  /\          __           /  /\    
+     /  /\        /  /::\        |  |\        /  /:/    
+    /  /::\      /  /:/\:\       |  |:|      /  /:/     
+   /  /:/\:\    /  /::\ \:\      |  |:|     /  /:/      
+  /  /::\ \:\  /__/:/\:\_\:\     |__|:|__  /__/:/     /\
+ /__/:/\:\_\:\ \__\/  \:\/:/     /  /::::\ \  \:\    /:/
+ \__\/  \:\/:/      \__\::/     /  /:/~~~~  \  \:\  /:/ 
+      \  \::/       /  /:/     /__/:/        \  \:\/:/  
+       \__\/       /__/:/      \__\/          \  \::/   
+                   \__\/                       \__\/    
+
+ PayU Notification Service
+ Platform digital banking modern untuk generasi digital Indonesia
+ Powered by Quarkus ${quarkus.application.version}
