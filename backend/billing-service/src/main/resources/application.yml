@@ -1,0 +1,62 @@
+quarkus:
+  application:
+    name: billing-service
+
+  http:
+    port: 8085
+
+  datasource:
+    db-kind: postgresql
+    username: postgres
+    password: postgres
+    jdbc:
+      url: jdbc:postgresql://localhost:5432/billingdb
+
+  hibernate-orm:
+    database:
+      generation: validate
+    log:
+      sql: false
+
+  flyway:
+    migrate-at-start: true
+    locations: db/migration
+
+  rest-client:
+    wallet-service:
+      url: http://localhost:8084
+      scope: jakarta.inject.Singleton
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  smallrye-openapi:
+    info-title: PayU Billing Service API
+    info-version: 1.0.0
+    info-description: Bill payment API for PLN, PDAM, Pulsa, etc.
+
+  log:
+    level: INFO
+    category:
+      "id.payu.billing":
+        level: DEBUG
+
+"%dev":
+  quarkus:
+    hibernate-orm:
+      database:
+        generation: drop-and-create
+    flyway:
+      migrate-at-start: false
+
+"%test":
+  quarkus:
+    datasource:
+      db-kind: h2
+      jdbc:
+        url: jdbc:h2:mem:testdb
+    hibernate-orm:
+      database:
+        generation: drop-and-create
+    flyway:
+      migrate-at-start: false

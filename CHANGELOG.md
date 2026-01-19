@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Billing Service** (Quarkus 3.17 Native):
+  - Bill payments for PLN, PDAM, Pulsa, BPJS, etc.
+  - REST API: `/api/v1/billers`, `/api/v1/payments`
+  - Integration with wallet-service for balance debit
+  - Kafka events for payment notifications
+  - Hibernate Panache ORM with PostgreSQL
+
 - **Wallet Service** (Spring Boot 3.4.1 - Hexagonal Architecture):
   - Domain Layer: `Wallet` and `WalletTransaction` models with business logic
   - Ports: `WalletUseCase` (input), `WalletPersistencePort`, `WalletEventPublisherPort` (output)
