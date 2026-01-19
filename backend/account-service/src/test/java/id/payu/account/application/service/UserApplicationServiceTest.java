@@ -2,6 +2,7 @@ package id.payu.account.application.service;
 
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.out.KycVerificationPort;
+import id.payu.account.domain.port.out.UserEventPublisherPort;
 import id.payu.account.domain.port.out.UserPersistencePort;
 import id.payu.account.dto.DukcapilResponse;
 import id.payu.account.dto.RegisterUserRequest;
@@ -35,6 +36,9 @@ class UserApplicationServiceTest {
     @Mock
     private KycVerificationPort kycVerificationPort;
 
+    @Mock
+    private UserEventPublisherPort userEventPublisherPort;
+
     @InjectMocks
     private UserApplicationService userApplicationService;
 
@@ -49,8 +53,7 @@ class UserApplicationServiceTest {
                 "test@example.com",
                 "+6281234567890",
                 "John Doe",
-                "3201234567890001"
-        );
+                "3201234567890001");
 
         successfulKycResponse = new DukcapilResponse(
                 "REQ-001",
@@ -58,8 +61,7 @@ class UserApplicationServiceTest {
                 true,
                 "VERIFIED",
                 "00",
-                "Verification successful"
-        );
+                "Verification successful");
     }
 
     @Nested
@@ -72,8 +74,9 @@ class UserApplicationServiceTest {
             // Given
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
-            given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName())).willReturn(successfulKycResponse);
-            
+            given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName()))
+                    .willReturn(successfulKycResponse);
+
             User savedUser = User.builder()
                     .id(UUID.randomUUID())
                     .externalId(validRequest.externalId())
@@ -101,6 +104,7 @@ class UserApplicationServiceTest {
             verify(userPersistencePort).existsByUsername(validRequest.username());
             verify(kycVerificationPort).verifyNik(validRequest.nik(), validRequest.fullName());
             verify(userPersistencePort).save(any(User.class));
+            verify(userEventPublisherPort).publishUserCreated(any(id.payu.account.dto.UserCreatedEvent.class));
         }
 
         @Test
@@ -120,37 +124,38 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("should set status to REJECTED when KYC verification fails but still save user")
         void shouldSaveUserAsRejectedWhenKycFails() throws ExecutionException, InterruptedException {
-            // In OnboardingService, it threw exception. 
+            // In OnboardingService, it threw exception.
             // In UserApplicationService (refactored), logic was:
             // User.KycStatus kycStatus = kycResponse.verified() ? APPROVED : REJECTED;
             // So it saves user with REJECTED status instead of throwing exception!
             // Wait, let me check UserApplicationService logic again.
-            
+
             // Re-checking UserApplicationService logic I wrote:
             /*
-            DukcapilResponse kycResponse = kycVerificationPort.verifyNik(command.nik(), command.fullName());
-            User.KycStatus kycStatus = kycResponse.verified() ? 
-                    User.KycStatus.APPROVED : User.KycStatus.REJECTED;
-             ...
-            User savedUser = userPersistencePort.save(user);
-            */
+             * DukcapilResponse kycResponse = kycVerificationPort.verifyNik(command.nik(),
+             * command.fullName());
+             * User.KycStatus kycStatus = kycResponse.verified() ?
+             * User.KycStatus.APPROVED : User.KycStatus.REJECTED;
+             * ...
+             * User savedUser = userPersistencePort.save(user);
+             */
             // YES, the new logic saves as REJECTED. The old logic threw exception.
             // This is actually better (audit trail).
-            
+
             DukcapilResponse failedKycResponse = new DukcapilResponse(
                     "REQ-002",
                     "3201234567890001",
                     false,
                     "NOT_FOUND",
                     "01",
-                    "NIK not found"
-            );
-            
+                    "NIK not found");
+
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
-            given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName())).willReturn(failedKycResponse);
-            
-             User savedUser = User.builder()
+            given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName()))
+                    .willReturn(failedKycResponse);
+
+            User savedUser = User.builder()
                     .username(validRequest.username())
                     .status(User.UserStatus.ACTIVE)
                     .kycStatus(User.KycStatus.REJECTED)
@@ -160,7 +165,7 @@ class UserApplicationServiceTest {
             // When
             CompletableFuture<User> result = userApplicationService.registerUser(validRequest);
             User registeredUser = result.get();
-            
+
             // Then
             assertThat(registeredUser.getKycStatus()).isEqualTo(User.KycStatus.REJECTED);
             verify(userPersistencePort).save(any(User.class));

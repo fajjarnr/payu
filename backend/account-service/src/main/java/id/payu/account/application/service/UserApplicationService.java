@@ -25,6 +25,7 @@ public class UserApplicationService implements RegisterUserUseCase {
 
     private final UserPersistencePort userPersistencePort;
     private final KycVerificationPort kycVerificationPort;
+    private final id.payu.account.domain.port.out.UserEventPublisherPort userEventPublisherPort;
 
     @Override
     @Transactional
@@ -44,9 +45,8 @@ public class UserApplicationService implements RegisterUserUseCase {
 
         // Call KYC (Port)
         DukcapilResponse kycResponse = kycVerificationPort.verifyNik(command.nik(), command.fullName());
-        
-        User.KycStatus kycStatus = kycResponse.verified() ? 
-                User.KycStatus.APPROVED : User.KycStatus.REJECTED;
+
+        User.KycStatus kycStatus = kycResponse.verified() ? User.KycStatus.APPROVED : User.KycStatus.REJECTED;
 
         User user = User.builder()
                 .externalId(command.externalId())
@@ -62,8 +62,17 @@ public class UserApplicationService implements RegisterUserUseCase {
                 .build();
 
         User savedUser = userPersistencePort.save(user);
-        
+
         log.info("User registered successfully: {}", savedUser.getId());
+
+        // Publish event
+        userEventPublisherPort.publishUserCreated(new id.payu.account.dto.UserCreatedEvent(
+                savedUser.getId(),
+                savedUser.getExternalId(),
+                savedUser.getEmail(),
+                savedUser.getFullName(),
+                savedUser.getCreatedAt()));
+
         return CompletableFuture.completedFuture(savedUser);
     }
 

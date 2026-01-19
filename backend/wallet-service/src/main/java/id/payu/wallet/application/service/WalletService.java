@@ -40,6 +40,34 @@ public class WalletService implements WalletUseCase {
     }
 
     @Override
+    @Transactional
+    public Wallet createWallet(String accountId) {
+        log.info("Creating wallet for account: {}", accountId);
+
+        if (walletPersistencePort.findByAccountId(accountId).isPresent()) {
+            log.warn("Wallet already exists for account: {}", accountId);
+            return walletPersistencePort.findByAccountId(accountId).get();
+        }
+
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .accountId(accountId)
+                .balance(BigDecimal.ZERO)
+                .reservedBalance(BigDecimal.ZERO)
+                .currency("IDR")
+                .status(Wallet.WalletStatus.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        walletPersistencePort.save(wallet);
+        walletEventPublisher.publishWalletCreated(wallet.getAccountId(), wallet.getId().toString());
+
+        log.info("Wallet created successfully: {}", wallet.getId());
+        return wallet;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public BigDecimal getBalance(String accountId) {
         return getWalletByAccountId(accountId)
@@ -174,7 +202,8 @@ public class WalletService implements WalletUseCase {
     }
 
     // Record for tracking reservations
-    private record ReservationInfo(String accountId, BigDecimal amount, String referenceId) {}
+    private record ReservationInfo(String accountId, BigDecimal amount, String referenceId) {
+    }
 
     // Custom exceptions
     public static class WalletNotFoundException extends RuntimeException {

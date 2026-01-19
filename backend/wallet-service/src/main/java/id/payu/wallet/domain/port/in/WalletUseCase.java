@@ -16,7 +16,18 @@ public interface WalletUseCase {
     /**
      * Get wallet by account ID.
      */
+    /**
+     * Get wallet by account ID.
+     */
     Optional<Wallet> getWalletByAccountId(String accountId);
+
+    /**
+     * Create a new wallet for an account.
+     * 
+     * @param accountId the account ID
+     * @return the created wallet
+     */
+    Wallet createWallet(String accountId);
 
     /**
      * Get current balance for an account.
@@ -31,8 +42,8 @@ public interface WalletUseCase {
     /**
      * Reserve balance for a pending transaction.
      * 
-     * @param accountId the account ID
-     * @param amount the amount to reserve
+     * @param accountId   the account ID
+     * @param amount      the amount to reserve
      * @param referenceId external reference (e.g., transaction ID)
      * @return reservation ID for later commit/release
      */
@@ -55,8 +66,8 @@ public interface WalletUseCase {
     /**
      * Credit amount to wallet (incoming transfer).
      * 
-     * @param accountId the account to credit
-     * @param amount the amount to credit
+     * @param accountId   the account to credit
+     * @param amount      the amount to credit
      * @param referenceId external reference
      * @param description transaction description
      */

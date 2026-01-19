@@ -163,4 +163,36 @@ class WalletServiceTest {
         // Then
         assertThat(available).isEqualByComparingTo(new BigDecimal("800000.00"));
     }
+
+    @Test
+    @DisplayName("Should create wallet successfully")
+    void shouldCreateWallet() {
+        // Given
+        when(walletPersistencePort.findByAccountId("ACC-NEW")).thenReturn(Optional.empty());
+
+        // When
+        Wallet createdWallet = walletService.createWallet("ACC-NEW");
+
+        // Then
+        assertThat(createdWallet).isNotNull();
+        assertThat(createdWallet.getAccountId()).isEqualTo("ACC-NEW");
+        assertThat(createdWallet.getBalance()).isZero();
+
+        verify(walletPersistencePort).save(any(Wallet.class));
+        verify(walletEventPublisher).publishWalletCreated(eq("ACC-NEW"), anyString());
+    }
+
+    @Test
+    @DisplayName("Should return existing wallet if already exists during creation")
+    void shouldReturnExistingWalletIfAlreadyExists() {
+        // Given
+        when(walletPersistencePort.findByAccountId("ACC-001")).thenReturn(Optional.of(testWallet));
+
+        // When
+        Wallet result = walletService.createWallet("ACC-001");
+
+        // Then
+        assertThat(result).isEqualTo(testWallet);
+        verify(walletPersistencePort, never()).save(any(Wallet.class));
+    }
 }

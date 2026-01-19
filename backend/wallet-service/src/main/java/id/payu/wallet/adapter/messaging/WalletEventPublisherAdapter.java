@@ -31,8 +31,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 "accountId", accountId,
                 "newBalance", newBalance,
                 "availableBalance", availableBalance,
-                "timestamp", LocalDateTime.now().toString()
-        );
+                "timestamp", LocalDateTime.now().toString());
         sendEvent(TOPIC_BALANCE_CHANGED, accountId, event);
     }
 
@@ -42,8 +41,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 "accountId", accountId,
                 "reservationId", reservationId,
                 "amount", amount,
-                "timestamp", LocalDateTime.now().toString()
-        );
+                "timestamp", LocalDateTime.now().toString());
         sendEvent(TOPIC_BALANCE_RESERVED, accountId, event);
     }
 
@@ -53,8 +51,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 "accountId", accountId,
                 "reservationId", reservationId,
                 "amount", amount,
-                "timestamp", LocalDateTime.now().toString()
-        );
+                "timestamp", LocalDateTime.now().toString());
         sendEvent(TOPIC_RESERVATION_COMMITTED, accountId, event);
     }
 
@@ -64,9 +61,17 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
                 "accountId", accountId,
                 "reservationId", reservationId,
                 "amount", amount,
-                "timestamp", LocalDateTime.now().toString()
-        );
+                "timestamp", LocalDateTime.now().toString());
         sendEvent(TOPIC_RESERVATION_RELEASED, accountId, event);
+    }
+
+    @Override
+    public void publishWalletCreated(String accountId, String walletId) {
+        Map<String, Object> event = Map.of(
+                "accountId", accountId,
+                "walletId", walletId,
+                "timestamp", LocalDateTime.now().toString());
+        sendEvent("wallet.created", accountId, event);
     }
 
     private void sendEvent(String topic, String key, Object event) {
