@@ -226,6 +226,56 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
+                    <!-- Coverage Threshold Enforcement -->
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <!-- Overall Coverage Rules -->
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <!-- Minimum 80% line coverage -->
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                        <!-- Minimum 70% branch coverage -->
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <!-- Per-Class Rules (no class below 60%) -->
+                                <rule>
+                                    <element>CLASS</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.60</minimum>
+                                        </limit>
+                                    </limits>
+                                    <excludes>
+                                        <!-- Exclude configuration and DTOs -->
+                                        <exclude>*Config</exclude>
+                                        <exclude>*Configuration</exclude>
+                                        <exclude>*Application</exclude>
+                                        <exclude>*Dto</exclude>
+                                        <exclude>*Request</exclude>
+                                        <exclude>*Response</exclude>
+                                    </excludes>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

@@ -9,6 +9,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Security Standards Enhancement** (code-review SKILL.md):
+  - PCI-DSS compliance checklist for payment systems
+  - OJK (Indonesian Financial Regulations) compliance checks
+  - Secrets management guidelines (Vault, OpenShift Secrets)
+  - Audit logging requirements with mandatory fields
+  - Sensitive data handling (PII classification and masking)
+
+- **Testing Standards & Coverage Thresholds**:
+  - JaCoCo coverage thresholds enforced via Maven (80% line, 70% branch)
+  - Per-class minimum coverage (60%) with exclusions for DTOs/configs
+  - Event-driven testing patterns (saga compensation, idempotency, DLQ)
+  - Performance testing guidelines with Gatling/JMeter thresholds
+
+- **ArchUnit Rules Enhancement** (account-service):
+  - Domain isolation rules (domain must not depend on infrastructure)
+  - Service access rules (controllers cannot access repositories directly)
+  - Repository access rules
+  - No field injection enforcement (@Autowired/@Inject on fields prohibited)
+  - Naming convention rules (Service, Controller, Repository suffixes)
+  - Exception handling rules (domain exceptions must extend RuntimeException)
+
+- **Error Handling Taxonomy** (payu-development SKILL.md):
+  - Error code structure: `[DOMAIN]_[CATEGORY]_[SPECIFIC]`
+  - Domain prefixes: AUTH (4xxx), ACCT (5xxx), TXN (6xxx), INTG (7xxx), SYS (9xxx)
+  - Complete error code tables for all domains
+  - Resilience patterns: Retry, Circuit Breaker, Bulkhead with Resilience4j configs
+
+- **Development Workflow Documentation**:
+  - Created `CONTRIBUTING.md` with comprehensive workflow guidelines
+  - Trunk-Based Development branching strategy
+  - Conventional Commits format (feat, fix, docs, refactor, test, chore)
+  - Pull Request process with size guidelines and approval matrix
+  - Definition of Done (DoD) checklist
+  - CI/CD pipeline stages (Build → Test → Scan → Deploy)
+  - Quality gates with thresholds
+
+- **PR Template** (`.github/pull_request_template.md`):
+  - Structured checklist for code quality, testing, documentation
+  - Security checklist (secrets, PII, input validation)
+  - Database migration checklist
+  - Service selection for affected components
+
+- **External Service Simulators Documentation** (payu-development SKILL.md):
+  - BI-FAST, Dukcapil, QRIS simulator guides
+  - Test accounts and NIKs for different scenarios
+  - Simulator configuration (latency, failure rates)
+  - Integration testing patterns with Testcontainers
+  - Contract testing examples with PACT
+  - Failure scenario testing patterns
+
+- **Observability & Monitoring Standards** (payu-development SKILL.md):
+  - Structured JSON logging format with correlation IDs
+  - Distributed tracing with OpenTelemetry/Jaeger
+  - SLI/SLO definitions (99.9% availability, P95 < 200ms)
+  - Micrometer/Prometheus metrics (business + technical)
+  - Alerting rules (critical P1/P2, warning P3)
+  - Error budget calculations
+
+- **Database Migration Guidelines** (payu-development SKILL.md):
+  - Flyway naming convention: `V{version}__{description}.sql`
+  - Migration best practices and structure
+  - Backup & recovery strategy (RTO 4hr, RPO 5min)
+  - Indexing guidelines and query optimization
+  - Anti-patterns to avoid
+
 - **Billing Service** (Quarkus 3.17 Native):
   - Bill payments for PLN, PDAM, Pulsa, BPJS, etc.
   - REST API: `/api/v1/billers`, `/api/v1/payments`
@@ -132,45 +197,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Kafka Producer configuration
   - Registration API (`POST /api/v1/accounts/register`)
 
- - **Auth Service** (Spring Boot 3.4.1):
-   - Keycloak Admin Client Integration
-   - Login Proxy (Password Grant) with WebClient (Reactive)
-   - User Registration support
-   - OAuth2 Resource Server Security
-   - Account lockout mechanism (5 failed attempts, 15 min duration)
-   - Rate limiting for login endpoint (5 attempts per minute)
-   - Password policy enforcement (8+ chars, uppercase, lowercase, digit, special char)
-   - Resilience4j circuit breaker and retry for Keycloak calls
+- **Auth Service** (Spring Boot 3.4.1):
+  - Keycloak Admin Client Integration
+  - Login Proxy (Password Grant) with WebClient (Reactive)
+  - User Registration support
+  - OAuth2 Resource Server Security
+  - Account lockout mechanism (5 failed attempts, 15 min duration)
+  - Rate limiting for login endpoint (5 attempts per minute)
+  - Password policy enforcement (8+ chars, uppercase, lowercase, digit, special char)
+  - Resilience4j circuit breaker and retry for Keycloak calls
 
- - **Account Service** (Spring Boot 3.4.1) - Production Hardening:
-   - Flyway database migrations (replaced hibernate.ddl-auto)
-   - HikariCP connection pooling with production settings
-   - Resilience4j circuit breaker for external gateway calls
-   - Retry logic with exponential backoff
-   - Security configuration with JWT authentication
-   - Audit logging aspect for service methods
-   - Proper SLF4J logging in exception handlers (removed printStackTrace)
-   - JPA batch operations optimization
-   - WebClient support added
+- **Account Service** (Spring Boot 3.4.1) - Production Hardening:
+  - Flyway database migrations (replaced hibernate.ddl-auto)
+  - HikariCP connection pooling with production settings
+  - Resilience4j circuit breaker for external gateway calls
+  - Retry logic with exponential backoff
+  - Security configuration with JWT authentication
+  - Audit logging aspect for service methods
+  - Proper SLF4J logging in exception handlers (removed printStackTrace)
+  - JPA batch operations optimization
+  - WebClient support added
 
- - **Auth Service** (Spring Boot 3.4.1) - Production Hardening:
-   - WebClient replacing RestTemplate (non-blocking, better resource usage)
-   - Rate limiting (5 login attempts per minute)
-   - Account lockout after failed attempts
-   - Password policy enforcement with validation
-   - Resilience4j circuit breaker and retry
-   - Proper SLF4J logging in exception handlers
-   - Reactive endpoint handlers
+- **Auth Service** (Spring Boot 3.4.1) - Production Hardening:
+  - WebClient replacing RestTemplate (non-blocking, better resource usage)
+  - Rate limiting (5 login attempts per minute)
+  - Account lockout after failed attempts
+  - Password policy enforcement with validation
+  - Resilience4j circuit breaker and retry
+  - Proper SLF4J logging in exception handlers
+  - Reactive endpoint handlers
 
- - **Docker Production Hardening**:
-   - Non-root user (spring user)
-   - JVM container support with memory percentage limits
-   - G1GC configuration with max pause time
-   - Heap dump on OOM
-   - Health checks for both services
-   - Secure random number generator
-
-
+- **Docker Production Hardening**:
+  - Non-root user (spring user)
+  - JVM container support with memory percentage limits
+  - G1GC configuration with max pause time
+  - Heap dump on OOM
+  - Health checks for both services
+  - Secure random number generator
 
 - **External Service Simulators** (Section 12 in ARCHITECTURE.md):
   - BI-FAST Simulator (Quarkus Native) - transfer, inquiry, webhook
