@@ -68,8 +68,7 @@ quarkus:
     info-description: API Gateway for PayU Digital Banking Platform
     info-contact-name: PayU Engineering Team
     info-contact-email: engineering@payu.id
-    security-scheme: bearerAuth
-    security-scheme-name: bearerAuth
+    info-contact-email: engineering@payu.id
     path: /q/openapi
 
   # Logging

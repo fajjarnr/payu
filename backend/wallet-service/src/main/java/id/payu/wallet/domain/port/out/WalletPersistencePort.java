@@ -22,4 +22,10 @@ public interface WalletPersistencePort {
     WalletTransaction saveTransaction(WalletTransaction transaction);
     
     List<WalletTransaction> findTransactionsByWalletId(UUID walletId, int page, int size);
+
+    LedgerEntry saveLedgerEntry(LedgerEntry entry);
+
+    List<LedgerEntry> findByAccountIdOrderByCreatedAtDesc(UUID accountId);
+
+    List<LedgerEntry> findByTransactionId(UUID transactionId);
 }

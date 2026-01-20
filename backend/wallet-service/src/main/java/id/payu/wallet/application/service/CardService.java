@@ -18,14 +18,20 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class CardService implements CardUseCase {
+    
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CardService.class);
 
     private final CardPersistencePort cardPersistencePort;
     private final WalletPersistencePort walletPersistencePort;
     private final Random random = new Random();
+
+    public CardService(CardPersistencePort cardPersistencePort, 
+                       WalletPersistencePort walletPersistencePort) {
+        this.cardPersistencePort = cardPersistencePort;
+        this.walletPersistencePort = walletPersistencePort;
+    }
 
     @Override
     @Transactional

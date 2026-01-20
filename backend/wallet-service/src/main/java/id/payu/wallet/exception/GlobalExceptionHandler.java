@@ -1,7 +1,9 @@
 package id.payu.wallet.exception;
 
 import id.payu.wallet.application.service.WalletService;
-import lombok.extern.slf4j.Slf4j;
+import id.payu.wallet.application.exception.WalletNotFoundException;
+import id.payu.wallet.application.service.InsufficientBalanceException;
+import id.payu.wallet.application.service.ReservationNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -13,24 +15,25 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(WalletService.WalletNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleWalletNotFound(WalletService.WalletNotFoundException ex) {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(WalletNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleWalletNotFound(WalletNotFoundException ex) {
         log.warn("Wallet not found: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler(WalletService.InsufficientBalanceException.class)
-    public ResponseEntity<Map<String, Object>> handleInsufficientBalance(WalletService.InsufficientBalanceException ex) {
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientBalance(InsufficientBalanceException ex) {
         log.warn("Insufficient balance: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(WalletService.ReservationNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleReservationNotFound(WalletService.ReservationNotFoundException ex) {
+    @ExceptionHandler(ReservationNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleReservationNotFound(ReservationNotFoundException ex) {
         log.warn("Reservation not found: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }

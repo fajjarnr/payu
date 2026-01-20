@@ -1,13 +1,8 @@
 package id.payu.wallet.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.*;
 import java.math.BigDecimal;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class ReserveBalanceRequest {
 
     @NotNull(message = "Amount is required")
@@ -16,4 +11,28 @@ public class ReserveBalanceRequest {
 
     @NotBlank(message = "Reference ID is required")
     private String referenceId;
+
+    public ReserveBalanceRequest() {
+    }
+
+    public ReserveBalanceRequest(BigDecimal amount, String referenceId) {
+        this.amount = amount;
+        this.referenceId = referenceId;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public String getReferenceId() {
+        return referenceId;
+    }
+
+    public void setReferenceId(String referenceId) {
+        this.referenceId = referenceId;
+    }
 }

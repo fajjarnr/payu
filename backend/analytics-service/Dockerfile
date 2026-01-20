@@ -1,38 +1,23 @@
 ####
-# Build stage - Using Red Hat UBI9 Python 3.12
+# Single Stage Build - Using UBI9 Python 3.11
 ####
-FROM registry.access.redhat.com/ubi9/python-312:1-18 AS build
+FROM registry.access.redhat.com/ubi9/python-311:latest
 
 USER root
-WORKDIR /build
+WORKDIR /app
 
 # Install system dependencies
-RUN microdnf install -y gcc g++ glibc-devel && \
-    microdnf clean all
+RUN dnf install -y gcc g++ glibc-devel && \
+    dnf clean all
 
 # Copy requirements and install dependencies
 COPY requirements.txt ./
-RUN pip install --no-cache-dir --user -r requirements.txt
-
-####
-# Runtime stage - Using minimal UBI9 Python 3.12
-####
-FROM registry.access.redhat.com/ubi9/python-312-minimal:1-18
-
-LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU Analytics Service - User insights, ML recommendations, Time-series analytics"
-LABEL version="1.0.0"
-
-USER 185
-
-WORKDIR /app
-
-# Copy installed packages from build stage
-COPY --from=build /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY src/ /app/src/
+
+USER 185
 
 # Expose service port
 EXPOSE 8008

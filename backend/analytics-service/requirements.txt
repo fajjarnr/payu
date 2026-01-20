@@ -9,7 +9,7 @@ asyncpg==0.29.0
 sqlalchemy[asyncio]==2.0.35
 alembic==1.14.0
 psycopg2-binary==2.9.9
-timescaledb-psycopg2==2.13.0
+# timescaledb-psycopg2==2.13.0
 
 # Kafka
 aiokafka==0.11.0

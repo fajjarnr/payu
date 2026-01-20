@@ -21,12 +21,7 @@ import org.eclipse.microprofile.faulttolerance.Timeout;
 
 import java.net.URI;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
 
-/**
- * Main API Gateway Resource.
- * Routes traffic to microservices.
- */
 @Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -47,99 +42,122 @@ public class ApiGatewayResource {
     }
 
     // ==================== Account Service ====================
-    @Path("/accounts/{path: .*}")
-    @POST
-    @GET
-    @PUT
-    @DELETE
-    @Timeout(value = 30, unit = ChronoUnit.SECONDS)
-    @Retry(maxRetries = 2, delay = 200)
-    public Uni<Response> accountProxy(@PathParam("path") String path, String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("account-service", "/api/v1/accounts/" + path, request.getMethod(), body, headers);
+    @POST @Path("/accounts/{path: .*}")
+    public Uni<Response> accountPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("account-service", "/api/v1/accounts/" + path, "POST", body, headers);
     }
-    
-    // Direct match for /api/v1/accounts (mostly POST)
-    @Path("/accounts")
-    @POST
-    @GET
-    public Uni<Response> accountRootProxy(String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("account-service", "/api/v1/accounts", request.getMethod(), body, headers);
+    @GET @Path("/accounts/{path: .*}")
+    public Uni<Response> accountGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("account-service", "/api/v1/accounts/" + path, "GET", body, headers);
+    }
+    @PUT @Path("/accounts/{path: .*}")
+    public Uni<Response> accountPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("account-service", "/api/v1/accounts/" + path, "PUT", body, headers);
+    }
+    @DELETE @Path("/accounts/{path: .*}")
+    public Uni<Response> accountDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("account-service", "/api/v1/accounts/" + path, "DELETE", body, headers);
+    }
+
+    @POST @Path("/accounts")
+    public Uni<Response> accountRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("account-service", "/api/v1/accounts", "POST", body, headers);
+    }
+    @GET @Path("/accounts")
+    public Uni<Response> accountRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("account-service", "/api/v1/accounts", "GET", body, headers);
     }
 
     // ==================== Wallet Service ====================
-    @Path("/wallets/{path: .*}")
-    @GET
-    @POST
-    @PUT
-    public Uni<Response> walletProxy(@PathParam("path") String path, String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("wallet-service", "/api/v1/wallets/" + path, request.getMethod(), body, headers);
+    @GET @Path("/wallets/{path: .*}")
+    public Uni<Response> walletGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/wallets/" + path, "GET", body, headers);
     }
+    @POST @Path("/wallets/{path: .*}")
+    public Uni<Response> walletPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/wallets/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/wallets/{path: .*}")
+    public Uni<Response> walletPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/wallets/" + path, "PUT", body, headers);
+    }
+    // Wallet service typically doesn't have root /wallets endpoint access directly in this design (usually under accounts), but if needed:
+    // Skipping wallet root for now as not in original code explicitly (wait, original code didn't have wallet root)
 
     // ==================== Transaction Service ====================
-    @Path("/transactions/{path: .*}")
-    @GET
-    @POST
-    public Uni<Response> transactionProxy(@PathParam("path") String path, String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("transaction-service", "/api/v1/transactions/" + path, request.getMethod(), body, headers);
+    @GET @Path("/transactions/{path: .*}")
+    public Uni<Response> transactionGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/transactions/" + path, "GET", body, headers);
     }
-    
-    @Path("/transactions")
-    @GET
-    @POST
-    public Uni<Response> transactionRootProxy(String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("transaction-service", "/api/v1/transactions", request.getMethod(), body, headers);
+    @POST @Path("/transactions/{path: .*}")
+    public Uni<Response> transactionPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/transactions/" + path, "POST", body, headers);
+    }
+
+    @GET @Path("/transactions")
+    public Uni<Response> transactionRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/transactions", "GET", body, headers);
+    }
+    @POST @Path("/transactions")
+    public Uni<Response> transactionRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/transactions", "POST", body, headers);
     }
 
     // ==================== Billing Service ====================
-    @Path("/billers/{path: .*}")
-    @GET
-    public Uni<Response> billerProxy(@PathParam("path") String path, String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("billing-service", "/api/v1/billers/" + path, request.getMethod(), body, headers);
+    @GET @Path("/billers/{path: .*}")
+    public Uni<Response> billerGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/billers/" + path, "GET", body, headers);
     }
-    
-    @Path("/billers")
-    @GET
-    public Uni<Response> billerRootProxy(String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("billing-service", "/api/v1/billers", request.getMethod(), body, headers);
+    @GET @Path("/billers")
+    public Uni<Response> billerRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/billers", "GET", body, headers);
     }
 
-    @Path("/payments/{path: .*}")
-    @GET
-    @POST
-    public Uni<Response> paymentProxy(@PathParam("path") String path, String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("billing-service", "/api/v1/payments/" + path, request.getMethod(), body, headers);
+    @GET @Path("/payments/{path: .*}")
+    public Uni<Response> paymentGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/payments/" + path, "GET", body, headers);
     }
-    
-    @Path("/payments")
-    @POST
-    public Uni<Response> paymentRootProxy(String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("billing-service", "/api/v1/payments", request.getMethod(), body, headers);
+    @POST @Path("/payments/{path: .*}")
+    public Uni<Response> paymentPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/payments/" + path, "POST", body, headers);
+    }
+    @POST @Path("/payments")
+    public Uni<Response> paymentRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/payments", "POST", body, headers);
     }
 
     // ==================== Notification Service ====================
-    @Path("/notifications/{path: .*}")
-    @GET
-    @POST
-    public Uni<Response> notificationProxy(@PathParam("path") String path, String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("notification-service", "/api/v1/notifications/" + path, request.getMethod(), body, headers);
+    @GET @Path("/notifications/{path: .*}")
+    public Uni<Response> notificationGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("notification-service", "/api/v1/notifications/" + path, "GET", body, headers);
+    }
+    @POST @Path("/notifications/{path: .*}")
+    public Uni<Response> notificationPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("notification-service", "/api/v1/notifications/" + path, "POST", body, headers);
     }
 
-    // ==================== Card Service (via Wallet Service) ====================
-    @Path("/cards/{path: .*}")
-    @GET
-    @POST
-    @PUT
-    public Uni<Response> cardProxy(@PathParam("path") String path, String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("wallet-service", "/api/v1/cards/" + path, request.getMethod(), body, headers);
+    // ==================== Card Service ====================
+    @GET @Path("/cards/{path: .*}")
+    public Uni<Response> cardGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/cards/" + path, "GET", body, headers);
     }
-    
-    @Path("/cards")
-    @GET
-    @POST
-    public Uni<Response> cardRootProxy(String body, @Context HttpHeaders headers, @Context jakarta.ws.rs.core.Request request) {
-        return proxy("wallet-service", "/api/v1/cards", request.getMethod(), body, headers);
+    @POST @Path("/cards/{path: .*}")
+    public Uni<Response> cardPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/cards/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/cards/{path: .*}")
+    public Uni<Response> cardPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/cards/" + path, "PUT", body, headers);
     }
 
+    @GET @Path("/cards")
+    public Uni<Response> cardRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/cards", "GET", body, headers);
+    }
+    @POST @Path("/cards")
+    public Uni<Response> cardRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/cards", "POST", body, headers);
+    }
 
     // ==================== Proxy Logic ====================
     private Uni<Response> proxy(String serviceName, String path, String method, 
@@ -164,12 +182,14 @@ public class ApiGatewayResource {
             path
         );
 
-        // Forward matching headers
-        headers.getRequestHeaders().forEach((k, v) -> {
-            if (!k.equalsIgnoreCase("Host") && !k.equalsIgnoreCase("Content-Length")) {
-                request.putHeader(k, v);
-            }
-        });
+        // Forward matching headers (simple version)
+        if (headers != null) {
+            headers.getRequestHeaders().forEach((k, v) -> {
+                if (!k.equalsIgnoreCase("Host") && !k.equalsIgnoreCase("Content-Length")) {
+                    request.putHeader(k, v);
+                }
+            });
+        }
         
         request.putHeader("X-Forwarded-Host", "localhost:8080");
 

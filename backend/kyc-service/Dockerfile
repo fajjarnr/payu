@@ -1,41 +1,28 @@
 ####
-# Build stage - Using Red Hat UBI9 Python 3.12
+# Single Stage Build - Using UBI9 Python 3.11
 ####
-FROM registry.access.redhat.com/ubi9/python-312:1-18 AS build
+FROM registry.access.redhat.com/ubi9/python-311:latest
 
 USER root
-WORKDIR /build
+WORKDIR /app
 
 # Install system dependencies
-RUN microdnf install -y gcc g++ glibc-devel zlib-devel libjpeg-devel libpng-devel && \
-    microdnf clean all
+RUN dnf install -y gcc g++ glibc-devel zlib-devel libjpeg-devel libpng-devel cmake && \
+    dnf clean all
 
 # Copy requirements and install dependencies
 COPY requirements.txt ./
-RUN pip install --no-cache-dir --user -r requirements.txt
-
-####
-# Runtime stage - Using minimal UBI9 Python 3.12
-####
-FROM registry.access.redhat.com/ubi9/python-312-minimal:1-18
-
-LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU KYC Service - eKYC, OCR, Liveness Detection, Face Matching"
-LABEL version="1.0.0"
-
-USER 185
-
-WORKDIR /app
-
-# Copy installed packages from build stage
-COPY --from=build /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+# Install to the active virtualenv (no --user)
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY src/ /app/src/
 
 # Create directories for ML models and temp files
-RUN mkdir -p /app/models /app/temp /app/uploads
+RUN mkdir -p /app/models /app/temp /app/uploads && \
+    chown -R 185:0 /app
+
+USER 185
 
 # Expose service port
 EXPOSE 8007

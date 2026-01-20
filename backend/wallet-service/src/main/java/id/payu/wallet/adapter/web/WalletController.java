@@ -1,37 +1,41 @@
 package id.payu.wallet.adapter.web;
 
-import id.payu.wallet.application.service.WalletService;
+import id.payu.wallet.application.exception.WalletNotFoundException;
 import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.model.WalletTransaction;
 import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.dto.*;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import id.payu.wallet.domain.model.LedgerEntry;
 
 /**
  * REST Controller for wallet operations.
  * Driving adapter in Hexagonal Architecture.
  */
-@Slf4j
 @RestController
 @RequestMapping("/api/v1/wallets")
-@RequiredArgsConstructor
 public class WalletController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WalletController.class);
+
     private final WalletUseCase walletUseCase;
+
+    public WalletController(WalletUseCase walletUseCase) {
+        this.walletUseCase = walletUseCase;
+    }
 
     @GetMapping("/{accountId}/balance")
     public ResponseEntity<BalanceResponse> getBalance(@PathVariable String accountId) {
         log.info("Getting balance for account: {}", accountId);
 
         Wallet wallet = walletUseCase.getWalletByAccountId(accountId)
-                .orElseThrow(() -> new WalletService.WalletNotFoundException(accountId));
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
 
         BalanceResponse response = BalanceResponse.builder()
                 .accountId(accountId)
@@ -99,36 +103,26 @@ public class WalletController {
     @GetMapping("/{accountId}/ledger")
     public ResponseEntity<List<LedgerEntry>> getLedgerEntries(@PathVariable String accountId) {
         log.info("Getting ledger entries for account: {}", accountId);
-        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntries(UUID.fromString(accountId));
+        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByAccountId(UUID.fromString(accountId));
         return ResponseEntity.ok(ledgerEntries);
     }
 
-    @GetMapping("/{accountId}/ledger/{transactionId}")
+    @GetMapping("/{accountId}/ledger/transaction/{transactionId}")
     public ResponseEntity<List<LedgerEntry>> getLedgerEntriesByTransaction(
             @PathVariable String accountId,
             @PathVariable String transactionId) {
         log.info("Getting ledger entries for transaction: {}", transactionId);
-        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntries(UUID.fromString(accountId), UUID.fromString(transactionId));
+        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByTransactionId(UUID.fromString(transactionId));
         return ResponseEntity.ok(ledgerEntries);
     }
 
     @GetMapping("/{accountId}/transactions")
-
-    @GetMapping("/{accountId}/ledger")
-    public ResponseEntity<List<LedgerEntry>> getLedgerEntries(@PathVariable String accountId) {
-        log.info("Getting ledger entries for account: {}", accountId);
-        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntries(accountId);
-        return ResponseEntity.ok(ledgerEntries);
-    }
-
-    @GetMapping("/{accountId}/ledger/{transactionId}")
-    public ResponseEntity<List<LedgerEntry>> getLedgerEntriesByTransaction(
+    public ResponseEntity<List<WalletTransaction>> getTransactionHistory(
             @PathVariable String accountId,
-            @PathVariable String transactionId) {
-        log.info("Getting ledger entries for transaction: {}", transactionId);
-        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntries(UUID.fromString(transactionId));
-        return ResponseEntity.ok(ledgerEntries);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("Getting transaction history for account: {}", accountId);
+        List<WalletTransaction> transactions = walletUseCase.getTransactionHistory(accountId, page, size);
+        return ResponseEntity.ok(transactions);
     }
-
-    @GetMapping("/{accountId}/transactions")
 }

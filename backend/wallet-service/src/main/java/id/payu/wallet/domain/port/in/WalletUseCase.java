@@ -89,27 +89,7 @@ public interface WalletUseCase {
      */
     List<WalletTransaction> getTransactionHistory(String accountId, int page, int size);
     
-    Optional<Wallet> getWalletByAccountId(String accountId);
+    List<LedgerEntry> getLedgerEntriesByAccountId(UUID accountId);
     
-    Wallet getWallet(UUID walletId);
-    
-    Wallet createWallet(String accountId);
-    
-    BigDecimal getBalance(String accountId);
-    
-    BigDecimal getAvailableBalance(String accountId);
-    
-    String reserveBalance(String accountId, BigDecimal amount, String referenceId);
-    
-    void commitReservation(String reservationId);
-    
-    void releaseReservation(String reservationId);
-    
-    void credit(String accountId, BigDecimal amount, String referenceId, String description);
-    
-    List<WalletTransaction> getTransactionHistory(String accountId, int page, int size);
-    
-    List<LedgerEntry> getLedgerEntries(UUID accountId);
-    
-    List<LedgerEntry> getLedgerEntries(UUID transactionId);
+    List<LedgerEntry> getLedgerEntriesByTransactionId(UUID transactionId);
 }

@@ -1,11 +1,7 @@
 package id.payu.wallet.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import jakarta.validation.constraints.*;
 
-@Data
-@AllArgsConstructor
 public class GetLedgerEntriesRequest {
     
     @NotNull(message = "Account ID is required")
@@ -15,4 +11,20 @@ public class GetLedgerEntriesRequest {
     
     @Min(value = 0, message = "Page cannot be negative")
     private Integer size = 20;
+
+    public GetLedgerEntriesRequest() {
+    }
+
+    public GetLedgerEntriesRequest(String accountId, Integer page, Integer size) {
+        this.accountId = accountId;
+        this.page = page;
+        this.size = size;
+    }
+
+    public String getAccountId() { return accountId; }
+    public void setAccountId(String accountId) { this.accountId = accountId; }
+    public Integer getPage() { return page; }
+    public void setPage(Integer page) { this.page = page; }
+    public Integer getSize() { return size; }
+    public void setSize(Integer size) { this.size = size; }
 }

@@ -19,20 +19,30 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class WalletPersistenceAdapter implements WalletPersistencePort {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WalletPersistenceAdapter.class);
 
     private final WalletJpaRepository walletRepository;
     private final WalletTransactionJpaRepository transactionRepository;
     private final LedgerEntryJpaRepository ledgerEntryRepository;
 
+    public WalletPersistenceAdapter(WalletJpaRepository walletRepository,
+                                    WalletTransactionJpaRepository transactionRepository,
+                                    LedgerEntryJpaRepository ledgerEntryRepository) {
+        this.walletRepository = walletRepository;
+        this.transactionRepository = transactionRepository;
+        this.ledgerEntryRepository = ledgerEntryRepository;
+    }
+
     @Override
     public Wallet save(Wallet wallet) {
-        return walletRepository.save(toEntity(wallet));
+        WalletEntity savedEntity = walletRepository.save(toEntity(wallet));
+        return toDomain(savedEntity);
     }
 
     @Override
@@ -47,7 +57,8 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
 
     @Override
     public WalletTransaction saveTransaction(WalletTransaction transaction) {
-        return transactionRepository.save(toTransactionEntity(transaction)).map(this::toTransactionDomain);
+        WalletTransactionEntity savedEntity = transactionRepository.save(toTransactionEntity(transaction));
+        return toTransactionDomain(savedEntity);
     }
 
     @Override
@@ -60,17 +71,24 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
 
     @Override
     public LedgerEntry saveLedgerEntry(LedgerEntry entry) {
-        return ledgerEntryRepository.save(toLedgerEntity(entry));
+        LedgerEntryEntity savedEntity = ledgerEntryRepository.save(toLedgerEntity(entry));
+        return toDomain(savedEntity);
     }
 
     @Override
     public java.util.List<LedgerEntry> findByAccountIdOrderByCreatedAtDesc(UUID accountId) {
-        return ledgerEntryRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+        return ledgerEntryRepository.findByAccountIdOrderByCreatedAtDesc(accountId)
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public java.util.List<LedgerEntry> findByTransactionId(UUID transactionId) {
-        return ledgerEntryRepository.findByTransactionId(transactionId);
+        return ledgerEntryRepository.findByTransactionId(transactionId)
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     private WalletEntity toEntity(Wallet wallet) {
@@ -105,7 +123,7 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
                 .id(entry.getId())
                 .transactionId(entry.getTransactionId())
                 .accountId(entry.getAccountId())
-                .entryType(entry.getEntryType())
+                .entryType(entry.getEntryType().name())
                 .amount(entry.getAmount())
                 .currency(entry.getCurrency())
                 .balanceAfter(entry.getBalanceAfter())
@@ -119,8 +137,8 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
         return WalletEntity.WalletStatus.valueOf(status.name());
     }
 
-    private WalletEntity.TransactionType toEntityType(WalletTransaction.TransactionType type) {
-        return WalletEntity.TransactionType.valueOf(type.name());
+    private WalletTransactionEntity.TransactionType toEntityType(WalletTransaction.TransactionType type) {
+        return WalletTransactionEntity.TransactionType.valueOf(type.name());
     }
 
     private Wallet toDomain(WalletEntity entity) {
@@ -166,86 +184,3 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
     }
 }
 
-    @Override
-    public Optional<Wallet> findById(UUID walletId) {
-        return walletRepository.findById(walletId)
-                .map(this::toDomain);
-    }
-
-    @Override
-    public Wallet save(Wallet wallet) {
-        WalletEntity entity = toEntity(wallet);
-        WalletEntity saved = walletRepository.save(entity);
-        return toDomain(saved);
-    }
-
-    @Override
-    public WalletTransaction saveTransaction(WalletTransaction transaction) {
-        WalletTransactionEntity entity = toTransactionEntity(transaction);
-        WalletTransactionEntity saved = transactionRepository.save(entity);
-        return toTransactionDomain(saved);
-    }
-
-    @Override
-    public List<WalletTransaction> findTransactionsByWalletId(UUID walletId, int page, int size) {
-        return transactionRepository.findByWalletIdOrderByCreatedAtDesc(walletId, PageRequest.of(page, size))
-                .stream()
-                .map(this::toTransactionDomain)
-                .toList();
-    }
-
-    // Mapping methods
-    private Wallet toDomain(WalletEntity entity) {
-        return Wallet.builder()
-                .id(entity.getId())
-                .accountId(entity.getAccountId())
-                .balance(entity.getBalance())
-                .reservedBalance(entity.getReservedBalance())
-                .currency(entity.getCurrency())
-                .status(Wallet.WalletStatus.valueOf(entity.getStatus().name()))
-                .version(entity.getVersion())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
-    }
-
-    private WalletEntity toEntity(Wallet wallet) {
-        return WalletEntity.builder()
-                .id(wallet.getId())
-                .accountId(wallet.getAccountId())
-                .balance(wallet.getBalance())
-                .reservedBalance(wallet.getReservedBalance())
-                .currency(wallet.getCurrency())
-                .status(WalletEntity.WalletStatus.valueOf(wallet.getStatus().name()))
-                .version(wallet.getVersion())
-                .createdAt(wallet.getCreatedAt())
-                .updatedAt(wallet.getUpdatedAt())
-                .build();
-    }
-
-    private WalletTransaction toTransactionDomain(WalletTransactionEntity entity) {
-        return WalletTransaction.builder()
-                .id(entity.getId())
-                .walletId(entity.getWalletId())
-                .referenceId(entity.getReferenceId())
-                .type(WalletTransaction.TransactionType.valueOf(entity.getType().name()))
-                .amount(entity.getAmount())
-                .balanceAfter(entity.getBalanceAfter())
-                .description(entity.getDescription())
-                .createdAt(entity.getCreatedAt())
-                .build();
-    }
-
-    private WalletTransactionEntity toTransactionEntity(WalletTransaction transaction) {
-        return WalletTransactionEntity.builder()
-                .id(transaction.getId())
-                .walletId(transaction.getWalletId())
-                .referenceId(transaction.getReferenceId())
-                .type(WalletTransactionEntity.TransactionType.valueOf(transaction.getType().name()))
-                .amount(transaction.getAmount())
-                .balanceAfter(transaction.getBalanceAfter())
-                .description(transaction.getDescription())
-                .createdAt(transaction.getCreatedAt())
-                .build();
-    }
-}

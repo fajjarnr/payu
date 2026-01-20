@@ -6,24 +6,29 @@ import id.payu.wallet.domain.model.LedgerEntry;
 import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.domain.port.out.WalletEventPublisherPort;
 import id.payu.wallet.domain.port.out.WalletPersistencePort;
+import id.payu.wallet.application.exception.WalletNotFoundException;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class WalletService implements WalletUseCase {
+    
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WalletService.class);
 
     private final WalletPersistencePort walletPersistencePort;
     private final WalletEventPublisherPort walletEventPublisher;
+
+    public WalletService(WalletPersistencePort walletPersistencePort, WalletEventPublisherPort walletEventPublisher) {
+        this.walletPersistencePort = walletPersistencePort;
+        this.walletEventPublisher = walletEventPublisher;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -89,7 +94,8 @@ public class WalletService implements WalletUseCase {
     public String reserveBalance(String accountId, BigDecimal amount, String referenceId) {
         log.info("Reserving {} for account {} with reference {}", amount, accountId, referenceId);
 
-        Wallet wallet = getWalletByAccountId(accountId);
+        Wallet wallet = getWalletByAccountId(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
 
         if (!wallet.hasSufficientBalance(amount)) {
             throw new InsufficientBalanceException(accountId, amount, wallet.getAvailableBalance());
@@ -102,8 +108,8 @@ public class WalletService implements WalletUseCase {
         
         LedgerEntry debitEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
-                .transactionId(reservationId)
-                .accountId(accountId)
+                .transactionId(UUID.fromString(reservationId))
+                .accountId(UUID.fromString(accountId)) // accountId is String in Wallet but often UUID in Ledger
                 .entryType(LedgerEntry.EntryType.DEBIT)
                 .amount(amount)
                 .currency(wallet.getCurrency())
@@ -126,22 +132,23 @@ public class WalletService implements WalletUseCase {
     public void commitReservation(String reservationId) {
         log.info("Committing reservation {} for account", reservationId);
 
-        LedgerEntry debitEntry = walletPersistencePort.findLedgerEntryByTransactionId(UUID.fromString(reservationId))
+        LedgerEntry debitEntry = walletPersistencePort.findByTransactionId(UUID.fromString(reservationId))
                 .stream()
                 .filter(entry -> "RESERVATION".equals(entry.getReferenceType()))
                 .findFirst()
                 .orElseThrow(() -> new ReservationNotFoundException(reservationId));
 
         BigDecimal reservedAmount = debitEntry.getAmount();
-        String accountId = debitEntry.getAccountId();
+        UUID accountId = debitEntry.getAccountId(); // LedgerEntry uses UUID for accountId
 
-        Wallet wallet = getWalletByAccountId(accountId);
+        Wallet wallet = getWalletByAccountId(accountId.toString())
+                .orElseThrow(() -> new WalletNotFoundException(accountId.toString()));
         wallet.commitReservation(reservedAmount);
         walletPersistencePort.save(wallet);
 
         LedgerEntry commitEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
-                .transactionId(reservationId)
+                .transactionId(UUID.fromString(reservationId))
                 .accountId(accountId)
                 .entryType(LedgerEntry.EntryType.DEBIT)
                 .amount(reservedAmount)
@@ -153,8 +160,8 @@ public class WalletService implements WalletUseCase {
 
         walletPersistencePort.saveLedgerEntry(commitEntry);
 
-        walletEventPublisher.publishReservationCommitted(accountId, reservationId, reservedAmount);
-        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishReservationCommitted(accountId.toString(), reservationId, reservedAmount);
+        walletEventPublisher.publishBalanceChanged(accountId.toString(), wallet.getBalance(), wallet.getAvailableBalance());
         
         log.info("Committed reservation {} for account {}, amount: {}", reservationId, reservedAmount);
     }
@@ -164,22 +171,23 @@ public class WalletService implements WalletUseCase {
     public void releaseReservation(String reservationId) {
         log.info("Releasing reservation {} for account", reservationId);
 
-        LedgerEntry releaseEntry = walletPersistencePort.findLedgerEntryByTransactionId(UUID.fromString(reservationId))
+        LedgerEntry releaseEntry = walletPersistencePort.findByTransactionId(UUID.fromString(reservationId))
                 .stream()
                 .filter(entry -> "RESERVATION".equals(entry.getReferenceType()))
                 .findFirst()
                 .orElseThrow(() -> new ReservationNotFoundException(reservationId));
 
         BigDecimal reservedAmount = releaseEntry.getAmount();
-        String accountId = releaseEntry.getAccountId();
+        UUID accountId = releaseEntry.getAccountId();
 
-        Wallet wallet = getWalletByAccountId(accountId);
+        Wallet wallet = getWalletByAccountId(accountId.toString())
+                .orElseThrow(() -> new WalletNotFoundException(accountId.toString()));
         wallet.releaseReservation(reservedAmount);
         walletPersistencePort.save(wallet);
 
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
-                .transactionId(reservationId)
+                .transactionId(UUID.fromString(reservationId))
                 .accountId(accountId)
                 .entryType(LedgerEntry.EntryType.CREDIT)
                 .amount(reservedAmount)
@@ -191,8 +199,8 @@ public class WalletService implements WalletUseCase {
 
         walletPersistencePort.saveLedgerEntry(creditEntry);
 
-        walletEventPublisher.publishReservationReleased(accountId, reservationId, reservedAmount);
-        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishReservationReleased(accountId.toString(), reservationId, reservedAmount);
+        walletEventPublisher.publishBalanceChanged(accountId.toString(), wallet.getBalance(), wallet.getAvailableBalance());
         
         log.info("Released reservation {} for account {}, amount: {}", reservationId, reservedAmount);
     }
@@ -202,14 +210,19 @@ public class WalletService implements WalletUseCase {
     public void credit(String accountId, BigDecimal amount, String referenceId, String description) {
         log.info("Crediting {} to account {} with reference {}", amount, accountId, referenceId);
 
-        Wallet wallet = getWalletByAccountId(accountId);
+        Wallet wallet = getWalletByAccountId(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
+        
+        // Update wallet balance
+        BigDecimal oldBalance = wallet.getBalance();
         wallet.credit(amount);
         walletPersistencePort.save(wallet);
 
+        // Create Ledger Entry
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
-                .transactionId(UUID.randomUUID().toString())
-                .accountId(accountId)
+                .transactionId(UUID.fromString(UUID.randomUUID().toString())) // simplified
+                .accountId(UUID.fromString(accountId))
                 .entryType(LedgerEntry.EntryType.CREDIT)
                 .amount(amount)
                 .currency(wallet.getCurrency())
@@ -218,8 +231,19 @@ public class WalletService implements WalletUseCase {
                 .referenceId(referenceId)
                 .createdAt(LocalDateTime.now())
                 .build();
-
         walletPersistencePort.saveLedgerEntry(creditEntry);
+        
+        // Create Wallet Transaction
+        WalletTransaction walletTransaction = WalletTransaction.builder()
+                .id(UUID.randomUUID())
+                .walletId(wallet.getId())
+                .referenceId(referenceId)
+                .type(WalletTransaction.TransactionType.CREDIT)
+                .amount(amount)
+                .balanceAfter(wallet.getBalance()) // Use balance, not available balance? Depends on logic
+                .description(description)
+                .createdAt(LocalDateTime.now())
+                .build();
         walletPersistencePort.saveTransaction(walletTransaction);
 
         walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
@@ -231,22 +255,21 @@ public class WalletService implements WalletUseCase {
     @Transactional(readOnly = true)
     public List<WalletTransaction> getTransactionHistory(String accountId, int page, int size) {
         log.debug("Getting transaction history for account: {}, page: {}, size: {}", accountId, page, size);
-        return walletPersistencePort.findTransactionsByWalletId(getWalletByAccountId(accountId).getId(), page, size)
-                .stream()
-                .map(WalletTransaction::toDomain)
-                .toList();
+        Wallet wallet = getWalletByAccountId(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
+        return walletPersistencePort.findTransactionsByWalletId(wallet.getId(), page, size);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<LedgerEntry> getLedgerEntries(UUID accountId) {
+    public List<LedgerEntry> getLedgerEntriesByAccountId(UUID accountId) {
         log.debug("Getting ledger entries for account: {}", accountId);
         return walletPersistencePort.findByAccountIdOrderByCreatedAtDesc(accountId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<LedgerEntry> getLedgerEntries(UUID transactionId) {
+    public List<LedgerEntry> getLedgerEntriesByTransactionId(UUID transactionId) {
         log.debug("Getting ledger entries for transaction: {}", transactionId);
         return walletPersistencePort.findByTransactionId(transactionId);
     }
