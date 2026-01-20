@@ -69,16 +69,28 @@ class HealthResourceTest {
     @DisplayName("Custom Health Endpoints")
     class CustomHealthEndpoints {
 
-        @Test
+    @Test
         @DisplayName("should return version info from status endpoint")
         void shouldReturnVersionInfoFromStatusEndpoint() {
             given()
                 .when()
-                    .get("/health/status")
-                .then()
+                    .get("/status")
+                    .then()
                     .statusCode(200)
                     .body("service", equalTo("gateway-service"))
                     .body("status", notNullValue());
+        }
+
+    @Test
+        @DisplayName("should return version info from version endpoint")
+        void shouldReturnVersionInfoFromVersionEndpoint() {
+            given()
+                .when()
+                    .get("/version")
+                    .then()
+                    .statusCode(200)
+                    .body("service", equalTo("gateway-service"))
+                    .body("version", equalTo("1.0.0"));
         }
     }
 }

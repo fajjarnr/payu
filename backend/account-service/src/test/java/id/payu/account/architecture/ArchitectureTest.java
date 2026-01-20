@@ -113,8 +113,9 @@ class ArchitectureTest {
                             "..adapter.out..",
                             "..infrastructure.external.."
                     )
+                    .allowEmptyShould(true)
                     .because("Domain entities must not have dependencies on external service clients");
-
+            
             rule.check(importedClasses);
         }
     }

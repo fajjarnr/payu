@@ -14,6 +14,8 @@ public class KafkaUserEventPublisherAdapter implements UserEventPublisherPort {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private static final String TOPIC = "user.created";
+    private static final String UPDATED_TOPIC = "user.updated";
+    private static final String KYC_COMPLETED_TOPIC = "kyc.completed";
 
     @Override
     public void publishUserCreated(UserCreatedEvent event) {
@@ -22,8 +24,26 @@ public class KafkaUserEventPublisherAdapter implements UserEventPublisherPort {
             kafkaTemplate.send(TOPIC, event.userId().toString(), event);
         } catch (Exception e) {
             log.error("Failed to publish UserCreatedEvent", e);
-            // In a real scenario, we might want to throw an exception or use an outbox
-            // pattern
+        }
+    }
+
+    @Override
+    public void publishUserUpdated(UserCreatedEvent event) {
+        log.info("Publishing UserUpdatedEvent: {}", event);
+        try {
+            kafkaTemplate.send(UPDATED_TOPIC, event.userId().toString(), event);
+        } catch (Exception e) {
+            log.error("Failed to publish UserUpdatedEvent", e);
+        }
+    }
+
+    @Override
+    public void publishKycCompleted(UserCreatedEvent event) {
+        log.info("Publishing KycCompletedEvent: {}", event);
+        try {
+            kafkaTemplate.send(KYC_COMPLETED_TOPIC, event.userId().toString(), event);
+        } catch (Exception e) {
+            log.error("Failed to publish KycCompletedEvent", e);
         }
     }
 }

@@ -53,13 +53,24 @@ class ArchitectureTest {
     }
 
     @Test
-    @DisplayName("Adapters should implement ports")
-    void adaptersShouldImplementPorts() {
+    @DisplayName("Card adapter should implement CardPersistencePort")
+    void cardAdapterShouldImplementCardPersistencePort() {
         classes()
                 .that().resideInAPackage("..adapter.persistence..")
-                .and().haveSimpleNameEndingWith("Adapter")
+                .and().haveSimpleName("CardPersistenceAdapter")
+                .should().implement(id.payu.wallet.domain.port.out.CardPersistencePort.class)
+                .because("CardPersistenceAdapter should implement CardPersistencePort")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("Wallet adapter should implement WalletPersistencePort")
+    void walletAdapterShouldImplementWalletPersistencePort() {
+        classes()
+                .that().resideInAPackage("..adapter.persistence..")
+                .and().haveSimpleName("WalletPersistenceAdapter")
                 .should().implement(id.payu.wallet.domain.port.out.WalletPersistencePort.class)
-                .because("Persistence adapters should implement output ports")
+                .because("WalletPersistenceAdapter should implement WalletPersistencePort")
                 .check(classes);
     }
 

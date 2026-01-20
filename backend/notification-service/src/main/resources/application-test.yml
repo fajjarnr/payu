@@ -1,0 +1,15 @@
+quarkus:
+  application:
+    name: notification-service-test
+  datasource:
+    db-kind: h2
+    jdbc: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+  hibernate-orm:
+    database:
+      dialect: org.hibernate.dialect.H2Dialect
+  mailer:
+    mock: true
+  kafka:
+    enabled: false
+  opentelemetry:
+    enabled: false
