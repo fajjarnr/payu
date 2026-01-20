@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **E2E Tests for KYC Service** (`backend/kyc-service/tests/e2e/`):
+  - `test_kyc_workflow.py` - Complete KYC verification workflow tests
+  - Tests: Start verification, KTP upload, selfie upload, status retrieval
+  - Test scenarios: Success case, liveness failure, face match failure
+  - Mock services: OCR, Liveness, Face Matching, Dukcapil, Kafka
+
+- **E2E Tests for Analytics Service** (`backend/analytics-service/tests/e2e/`):
+  - `test_analytics_workflow.py` - Complete analytics workflow tests
+  - Tests: User metrics, spending trends, cash flow analysis, recommendations
+  - Test scenario: Complete user journey with analytics integration
+
+- **Unit Tests for Both Services**:
+  - KYC Service unit tests (`backend/kyc-service/tests/unit/test_services.py`)
+  - Analytics Service unit tests (`backend/analytics-service/tests/unit/test_services.py`)
+  - Coverage: OCR, Liveness, Face Matching, Dukcapil, Recommendation Engine
+
+- **Test Infrastructure**:
+  - `pyproject.toml` for both services with pytest configuration
+  - `conftest.py` with shared fixtures
+  - `docker-compose.test.yml` - Complete test environment setup
+    - PostgreSQL for KYC Service (port 5433)
+    - TimescaleDB for Analytics Service (port 5434)
+    - Kafka + Zookeeper (port 9092)
+    - Dukcapil Simulator (port 8091)
+    - KYC Service (port 8007)
+    - Analytics Service (port 8008)
+  - `run_tests.sh` - Automated test runner script
+
 - **Billing Service Integration Tests** (Quarkus + Testcontainers):
   - `BillingIntegrationTest.java` - Integration tests for payment creation and event publishing
   - `PostgresTestResource.java` & `KafkaTestResource.java` - Quarkus TestResourceLifecycleManager for containers
