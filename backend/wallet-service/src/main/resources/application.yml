@@ -67,8 +67,16 @@ management:
     tags:
       application: ${spring.application.name}
 
-logging:
-  level:
-    root: INFO
-    id.payu.wallet: DEBUG
-    org.springframework.security: WARN
+  logging:
+    level:
+      root: INFO
+      id.payu.wallet: DEBUG
+      org.springframework.security: WARN
+
+  springdoc:
+    api-docs:
+      path: /api-docs
+    swagger-ui:
+      path: /swagger-ui.html
+    show-actuator: true
+    packages-to-scan: id.payu.wallet

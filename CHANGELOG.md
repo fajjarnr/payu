@@ -9,6 +9,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Billing Service Integration Tests** (Quarkus + Testcontainers):
+  - `BillingIntegrationTest.java` - Integration tests for payment creation and event publishing
+  - `PostgresTestResource.java` & `KafkaTestResource.java` - Quarkus TestResourceLifecycleManager for containers
+  - Added Testcontainers (PostgreSQL, Kafka) and Awaitility dependencies
+  - Mocked `WalletClient` for integration scenarios
+
+- **Wallet Service Ledger Implementation** (Spring Boot 3.4):
+  - Added `LedgerEntry` domain model and JPA entity
+  - Implemented automatic ledger recording for balance change operations
+  - New API Endpoints:
+    - `GET /wallets/{walletId}/ledger` - Get ledger entries for a wallet
+    - `GET /wallets/ledger/transaction/{transactionId}` - Get ledger entries by transaction ID
+  - Flyway migration `V3__create_ledger_entries_table.sql` for ledger persistence
+  - Updated `WalletController`, `WalletService`, and persistence adapters
+
+- **Frontend Development Skill** (`.agent/skills/frontend-development/SKILL.md`):
+  - Expert guidance for Next.js 15 web application development
+  - React Native (Expo) mobile development best practices
+  - Material UI / shadcn/ui design patterns for financial apps
+  - State management (Zustand, TanStack Query) standards
+
+- **Service Hardening & Documentation**:
+  - Added `.dockerignore` files for all major services
+  - OpenApi documentation configuration for Transaction and Wallet services
+  - Structured logging configuration (`logback-spring.xml`) for Spring Boot services
+
+- **KYC Service (FastAPI 0.115.0 + Python 3.12)**:
+  - Full eKYC implementation with OCR, liveness detection, and face matching
+  - **OCR Service**: PaddleOCR for Indonesian KTP scanning with confidence scoring
+  - **Liveness Detection**: Computer vision-based anti-spoofing (eye openness, mouth movement, head pose)
+  - **Face Matching**: Cosine similarity-based KTP vs selfie comparison
+  - **Dukcapil Integration**: Real-time NIK verification with external simulator
+  - **Database**: PostgreSQL with asyncpg and SQLAlchemy 2.0
+  - **Kafka Producer**: Events for KYC status updates (verified/failed/ktp_uploaded)
+  - **API Endpoints**:
+    - `POST /api/v1/kyc/verify/start` - Start new verification
+    - `POST /api/v1/kyc/verify/ktp` - Upload KTP for OCR
+    - `POST /api/v1/kyc/verify/selfie` - Upload selfie for verification
+    - `GET /api/v1/kyc/verify/{id}` - Get verification status
+    - `GET /api/v1/kyc/user/{user_id}` - Get user KYC history
+  - **Dockerfile**: Red Hat UBI9 Python 3.12 minimal base image
+  - **Monitoring**: Prometheus metrics, OpenTelemetry tracing, structured JSON logs
+
+- **Analytics Service (FastAPI 0.115.0 + Python 3.12)**:
+  - Time-series analytics with TimescaleDB (PostgreSQL extension)
+  - **Kafka Consumer**: Real-time event consumption from wallet/transaction/KYC topics
+  - **Hypertables**: Automatic partitioning for transactions, wallet balances, user activities
+  - **User Metrics**: Total transactions, amount, average, account age, KYC status
+  - **Spending Insights**:
+    - Spending trends by category with month-over-month analysis
+    - Top merchant identification
+    - Cash flow analysis (income vs expenses)
+  - **ML Recommendations Engine**:
+    - Savings goal suggestions
+    - Budget alerts for category overruns
+    - Spending trend notifications
+    - Inactivity reminders
+    - Investment suggestions
+  - **API Endpoints**:
+    - `GET /api/v1/analytics/user/{user_id}/metrics` - User metrics
+    - `POST /api/v1/analytics/spending/trends` - Spending patterns
+    - `POST /api/v1/analytics/cashflow` - Cash flow analysis
+    - `GET /api/v1/analytics/user/{user_id}/recommendations` - ML recommendations
+  - **Dockerfile**: Red Hat UBI9 Python 3.12 minimal base image
+  - **Monitoring**: Prometheus metrics, OpenTelemetry tracing, structured JSON logs
+
 - **Wallet Service Kafka Integration Tests** (Testcontainers):
   - `WalletKafkaIntegrationTest.java` - 7 test cases for Kafka event publishing
   - Tests topics: `wallet.created`, `wallet.balance.changed`, `wallet.balance.reserved`, `wallet.reservation.committed`, `wallet.reservation.released`

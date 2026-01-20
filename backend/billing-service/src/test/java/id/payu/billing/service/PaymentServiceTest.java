@@ -7,6 +7,7 @@ import id.payu.billing.dto.CreatePaymentRequest;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,7 @@ class PaymentServiceTest {
     PaymentService paymentService;
 
     @InjectMock
+    @RestClient
     WalletClient walletClient;
 
     @Nested
@@ -47,7 +49,7 @@ class PaymentServiceTest {
             );
 
             when(walletClient.reserveBalance(eq("account-123"), any()))
-                .thenReturn(new WalletClient.ReserveResponse("RESERVED", "ref-123"));
+                .thenReturn(new WalletClient.ReserveResponse("res-123", "account-123", "ref-123", "RESERVED"));
 
             // When
             BillPayment payment = paymentService.createPayment(request);
@@ -76,7 +78,7 @@ class PaymentServiceTest {
             );
 
             when(walletClient.reserveBalance(eq("account-123"), any()))
-                .thenReturn(new WalletClient.ReserveResponse("FAILED", null));
+                .thenReturn(new WalletClient.ReserveResponse(null, "account-123", null, "FAILED"));
 
             // When
             BillPayment payment = paymentService.createPayment(request);
@@ -147,7 +149,7 @@ class PaymentServiceTest {
             );
 
             when(walletClient.reserveBalance(any(), any()))
-                .thenReturn(new WalletClient.ReserveResponse("RESERVED", "ref-123"));
+                .thenReturn(new WalletClient.ReserveResponse("res-123", "account-123", "ref-123", "RESERVED"));
 
             // When
             BillPayment payment = paymentService.createPayment(request);
@@ -169,7 +171,7 @@ class PaymentServiceTest {
             );
 
             when(walletClient.reserveBalance(any(), any()))
-                .thenReturn(new WalletClient.ReserveResponse("RESERVED", "ref-123"));
+                .thenReturn(new WalletClient.ReserveResponse("res-123", "account-123", "ref-123", "RESERVED"));
 
             // When
             BillPayment payment = paymentService.createPayment(request);
@@ -191,7 +193,7 @@ class PaymentServiceTest {
             );
 
             when(walletClient.reserveBalance(any(), any()))
-                .thenReturn(new WalletClient.ReserveResponse("RESERVED", "ref-123"));
+                .thenReturn(new WalletClient.ReserveResponse("res-123", "account-123", "ref-123", "RESERVED"));
 
             // When
             BillPayment payment = paymentService.createPayment(request);

@@ -51,10 +51,18 @@ management:
       prometheus:
         enabled: true
 
-logging:
-  level:
-    id.payu.transaction: DEBUG
-    org.springframework.kafka: INFO
+  logging:
+    level:
+      id.payu.transaction: DEBUG
+      org.springframework.kafka: INFO
+
+  springdoc:
+    api-docs:
+      path: /api-docs
+    swagger-ui:
+      path: /swagger-ui.html
+    show-actuator: true
+    packages-to-scan: id.payu.transaction
 
 # Resilience4j configuration for wallet-service calls
 resilience4j:

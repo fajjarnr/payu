@@ -20,41 +20,45 @@ public class BillPayment extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.UUID)
     public UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "account_id", nullable = false)
     public String accountId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "reference_number", nullable = false, unique = true)
     public String referenceNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "biller_type", nullable = false)
     public BillerType billerType;
 
-    @Column(nullable = false)
+    @Column(name = "customer_id", nullable = false)
     public String customerId; // PLN meter number, phone number, etc.
 
     @Column(nullable = false, precision = 19, scale = 4)
     public BigDecimal amount;
 
-    @Column(precision = 19, scale = 4)
+    @Column(name = "admin_fee", precision = 19, scale = 4)
     public BigDecimal adminFee;
 
-    @Column(precision = 19, scale = 4)
+    @Column(name = "total_amount", precision = 19, scale = 4)
     public BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     public PaymentStatus status;
 
+    @Column(name = "failure_reason")
     public String failureReason;
 
+    @Column(name = "biller_transaction_id")
     public String billerTransactionId;
 
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     public LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     public LocalDateTime updatedAt;
 
+    @Column(name = "completed_at")
     public LocalDateTime completedAt;
 
     @PrePersist

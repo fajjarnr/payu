@@ -2,6 +2,7 @@ package id.payu.wallet.domain.port.out;
 
 import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.model.WalletTransaction;
+import id.payu.wallet.domain.model.LedgerEntry;
 
 import java.util.List;
 import java.util.Optional;
