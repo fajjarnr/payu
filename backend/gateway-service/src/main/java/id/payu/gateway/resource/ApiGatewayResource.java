@@ -169,6 +169,192 @@ public class ApiGatewayResource {
         return proxy("auth-service", "/api/v1/auth/" + path, "GET", body, headers);
     }
 
+    // ==================== Partner Service ====================
+    @GET @Path("/partners/{path: .*}")
+    public Uni<Response> partnerGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("partner-service", "/partners/" + path, "GET", body, headers);
+    }
+    @POST @Path("/partners/{path: .*}")
+    public Uni<Response> partnerPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("partner-service", "/partners/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/partners/{path: .*}")
+    public Uni<Response> partnerPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("partner-service", "/partners/" + path, "PUT", body, headers);
+    }
+    @DELETE @Path("/partners/{path: .*}")
+    public Uni<Response> partnerDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("partner-service", "/partners/" + path, "DELETE", body, headers);
+    }
+
+    @GET @Path("/partners")
+    public Uni<Response> partnerRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("partner-service", "/partners", "GET", body, headers);
+    }
+    @POST @Path("/partners")
+    public Uni<Response> partnerRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("partner-service", "/partners", "POST", body, headers);
+    }
+
+    @POST @Path("/v1/partner/{path: .*}")
+    public Uni<Response> snapPartnerPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("partner-service", "/v1/partner/" + path, "POST", body, headers);
+    }
+    @GET @Path("/v1/partner/{path: .*}")
+    public Uni<Response> snapPartnerGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("partner-service", "/v1/partner/" + path, "GET", body, headers);
+    }
+
+    // ==================== Promotion Service ====================
+    @GET @Path("/promotions/{path: .*}")
+    public Uni<Response> promotionGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/promotions/" + path, "GET", body, headers);
+    }
+    @POST @Path("/promotions/{path: .*}")
+    public Uni<Response> promotionPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/promotions/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/promotions/{path: .*}")
+    public Uni<Response> promotionPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/promotions/" + path, "PUT", body, headers);
+    }
+
+    @GET @Path("/promotions")
+    public Uni<Response> promotionRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/promotions", "GET", body, headers);
+    }
+    @POST @Path("/promotions")
+    public Uni<Response> promotionRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/promotions", "POST", body, headers);
+    }
+
+    // Cashbacks
+    @GET @Path("/cashbacks/{path: .*}")
+    public Uni<Response> cashbackGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/cashbacks/" + path, "GET", body, headers);
+    }
+    @POST @Path("/cashbacks/{path: .*}")
+    public Uni<Response> cashbackPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/cashbacks/" + path, "POST", body, headers);
+    }
+
+    @POST @Path("/cashbacks")
+    public Uni<Response> cashbackRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/cashbacks", "POST", body, headers);
+    }
+
+    // Loyalty Points
+    @GET @Path("/loyalty-points/{path: .*}")
+    public Uni<Response> loyaltyPointsGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/loyalty-points/" + path, "GET", body, headers);
+    }
+    @POST @Path("/loyalty-points/{path: .*}")
+    public Uni<Response> loyaltyPointsPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/loyalty-points/" + path, "POST", body, headers);
+    }
+
+    @POST @Path("/loyalty-points")
+    public Uni<Response> loyaltyPointsRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/loyalty-points", "POST", body, headers);
+    }
+
+    // Rewards
+    @GET @Path("/rewards/{path: .*}")
+    public Uni<Response> rewardGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/rewards/" + path, "GET", body, headers);
+    }
+
+    // Referrals
+    @GET @Path("/referrals/{path: .*}")
+    public Uni<Response> referralGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/referrals/" + path, "GET", body, headers);
+    }
+    @POST @Path("/referrals/{path: .*}")
+    public Uni<Response> referralPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/referrals/" + path, "POST", body, headers);
+    }
+
+    @POST @Path("/referrals")
+    public Uni<Response> referralRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("promotion-service", "/api/v1/referrals", "POST", body, headers);
+    }
+
+    // ==================== Lending Service ====================
+    @GET @Path("/lending/{path: .*}")
+    public Uni<Response> lendingGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("lending-service", "/api/v1/lending/" + path, "GET", body, headers);
+    }
+    @POST @Path("/lending/{path: .*}")
+    public Uni<Response> lendingPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("lending-service", "/api/v1/lending/" + path, "POST", body, headers);
+    }
+
+    // ==================== Investment Service ====================
+    @GET @Path("/investments/{path: .*}")
+    public Uni<Response> investmentGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("investment-service", "/api/v1/investments/" + path, "GET", body, headers);
+    }
+    @POST @Path("/investments/{path: .*}")
+    public Uni<Response> investmentPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("investment-service", "/api/v1/investments/" + path, "POST", body, headers);
+    }
+
+    // ==================== Compliance Service ====================
+    @GET @Path("/compliance/{path: .*}")
+    public Uni<Response> complianceGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("compliance-service", "/api/v1/compliance/" + path, "GET", body, headers);
+    }
+    @POST @Path("/compliance/{path: .*}")
+    public Uni<Response> compliancePost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("compliance-service", "/api/v1/compliance/" + path, "POST", body, headers);
+    }
+
+    // ==================== Backoffice Service ====================
+    @GET @Path("/backoffice/{path: .*}")
+    public Uni<Response> backofficeGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("backoffice-service", "/api/v1/backoffice/" + path, "GET", body, headers);
+    }
+    @POST @Path("/backoffice/{path: .*}")
+    public Uni<Response> backofficePost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("backoffice-service", "/api/v1/backoffice/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/backoffice/{path: .*}")
+    public Uni<Response> backofficePut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("backoffice-service", "/api/v1/backoffice/" + path, "PUT", body, headers);
+    }
+    @DELETE @Path("/backoffice/{path: .*}")
+    public Uni<Response> backofficeDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("backoffice-service", "/api/v1/backoffice/" + path, "DELETE", body, headers);
+    }
+
+    @POST @Path("/backoffice")
+    public Uni<Response> backofficeRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("backoffice-service", "/api/v1/backoffice", "POST", body, headers);
+    }
+
+    // ==================== Support Service ====================
+    @GET @Path("/support/{path: .*}")
+    public Uni<Response> supportGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("support-service", "/api/v1/support/" + path, "GET", body, headers);
+    }
+    @POST @Path("/support/{path: .*}")
+    public Uni<Response> supportPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("support-service", "/api/v1/support/" + path, "POST", body, headers);
+    }
+    @PATCH @Path("/support/{path: .*}")
+    public Uni<Response> supportPatch(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("support-service", "/api/v1/support/" + path, "PATCH", body, headers);
+    }
+
+    @GET @Path("/support")
+    public Uni<Response> supportRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("support-service", "/api/v1/support", "GET", body, headers);
+    }
+    @POST @Path("/support")
+    public Uni<Response> supportRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("support-service", "/api/v1/support", "POST", body, headers);
+    }
+
     // ==================== Proxy Logic ====================
     private Uni<Response> proxy(String serviceName, String path, String method, 
                                  String body, HttpHeaders headers) {

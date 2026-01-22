@@ -113,17 +113,35 @@ gateway:
     partner-service:
       url: ${PARTNER_SERVICE_URL:http://localhost:8089}
       timeout: 30s
+    promotion-service:
+      url: ${PROMOTION_SERVICE_URL:http://localhost:8090}
+      timeout: 30s
+    lending-service:
+      url: ${LENDING_SERVICE_URL:http://localhost:8091}
+      timeout: 30s
+    investment-service:
+      url: ${INVESTMENT_SERVICE_URL:http://localhost:8092}
+      timeout: 30s
+    compliance-service:
+      url: ${COMPLIANCE_SERVICE_URL:http://localhost:8093}
+      timeout: 30s
+    backoffice-service:
+      url: ${BACKOFFICE_SERVICE_URL:http://localhost:8094}
+      timeout: 30s
+    support-service:
+      url: ${SUPPORT_SERVICE_URL:http://localhost:8095}
+      timeout: 30s
 
   # Simulators
   simulators:
     bi-fast:
-      url: ${BIFAST_SIMULATOR_URL:http://localhost:8090}
+      url: ${BIFAST_SIMULATOR_URL:http://localhost:9090}
       timeout: 30s
     dukcapil:
-      url: ${DUKCAPIL_SIMULATOR_URL:http://localhost:8091}
+      url: ${DUKCAPIL_SIMULATOR_URL:http://localhost:9091}
       timeout: 30s
     qris:
-      url: ${QRIS_SIMULATOR_URL:http://localhost:8092}
+      url: ${QRIS_SIMULATOR_URL:http://localhost:9092}
       timeout: 15s
 
   # Rate Limiting

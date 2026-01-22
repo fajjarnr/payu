@@ -38,7 +38,7 @@
 ### 8. Frontend/Web-App Core Implementation
 - [x] Complete UI design system (Premium Emerald rules in `GEMINI.md`).
 - [x] **Localization (Bahasa Indonesia)**: Translated all pages and components.
-- [ ] Implement missing pages with consistent UI:
+- [x] Implement missing pages with consistent UI:
     - [x] **QRIS Payments** (`/qris`) -> Integrate with `transaction-service`.
     - [x] **Virtual Card** (`/cards`) -> Integrate with `account-service` / `wallet-service`.
     - [x] **Investments** (`/investments`) -> Integrate with `investment-service`.

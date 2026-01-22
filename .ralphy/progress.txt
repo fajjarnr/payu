@@ -44,3 +44,5 @@
 - [✓] 2026-01-22 15:39 - Implement `backoffice-service` (Java Quarkus - Layered).
 - [✓] 2026-01-22 15:54 - Features: Dashboard for Manual KYC review, Fraud Monitoring, and Customer Operations.
 - [✓] 2026-01-22 16:00 - Implement `partner-service` (Java Quarkus - Layered).
+- [✓] 2026-01-22 18:16 - Implement real-time updates via WebSocket/Kafka for dashboards (Unchecked: Needs full implementation).
+- [✓] 2026-01-22 18:26 - Implement missing pages with consistent UI:
