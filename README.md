@@ -1,11 +1,15 @@
 # PayU Digital Banking Platform
 
-> Platform digital banking modern untuk generasi digital Indonesia  
-> Built on **Red Hat OpenShift 4.20+** ecosystem
+<div align="center">
+  <img src="frontend/web-app/public/logo.png" alt="PayU Logo" width="120" height="120" />
+  <h1>PayU</h1>
+  <p><strong>Platform digital banking modern untuk generasi digital Indonesia</strong></p>
+  <p>Built on <strong>Red Hat OpenShift 4.20+</strong> ecosystem</p>
 
-[![Platform](https://img.shields.io/badge/platform-OpenShift%204.20+-EE0000?logo=redhat)]()
-[![License](https://img.shields.io/badge/license-Proprietary-red.svg)]()
-[![Status](https://img.shields.io/badge/status-In%20Development-yellow.svg)]()
+  [![Platform](https://img.shields.io/badge/platform-OpenShift%204.20+-EE0000?logo=redhat)]()
+  [![License](https://img.shields.io/badge/license-Proprietary-red.svg)]()
+  [![Status](https://img.shields.io/badge/status-In%20Development-yellow.svg)]()
+</div>
 
 ---
 
