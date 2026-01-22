@@ -126,4 +126,203 @@ class InvestmentApplicationServiceTest {
             verify(investmentEventPublisherPort).publishInvestmentCompleted(any(InvestmentEvent.class));
         }
     }
+
+    @Nested
+    @DisplayName("buyMutualFund")
+    class BuyMutualFund {
+
+        @Test
+        @DisplayName("should buy mutual fund successfully when balance is sufficient")
+        void shouldBuyMutualFundSuccessfully() throws ExecutionException, InterruptedException {
+            String fundCode = "MMF001";
+            InvestmentAccount account = InvestmentAccount.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .totalBalance(BigDecimal.ZERO)
+                    .availableBalance(BigDecimal.ZERO)
+                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
+
+            MutualFund fund = MutualFund.builder()
+                    .id(UUID.randomUUID())
+                    .code(fundCode)
+                    .name("PayU Money Market Fund")
+                    .type(MutualFund.FundType.MONEY_MARKET)
+                    .navPerUnit(new BigDecimal("1500.0000"))
+                    .minimumInvestment(new BigDecimal("10000.0000"))
+                    .managementFee(new BigDecimal("0.0050"))
+                    .redemptionFee(new BigDecimal("0.0020"))
+                    .status(MutualFund.FundStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.getLatestFundPrice(fundCode)).willReturn(fund);
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(true);
+
+            InvestmentTransaction transaction = InvestmentTransaction.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(testAccountId)
+                    .type(InvestmentTransaction.TransactionType.BUY)
+                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .investmentId(fundCode)
+                    .amount(testAmount)
+                    .price(new BigDecimal("1500.0000"))
+                    .units(new BigDecimal("666.6666"))
+                    .fee(new BigDecimal("2000.0000"))
+                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class))).willReturn(transaction);
+
+            CompletableFuture<InvestmentTransaction> result = investmentApplicationService.buyMutualFund(
+                    testAccountId, testUserId, fundCode, testAmount);
+            InvestmentTransaction boughtTransaction = result.get();
+
+            assertThat(boughtTransaction).isNotNull();
+            assertThat(boughtTransaction.getInvestmentId()).isEqualTo(fundCode);
+            verify(walletServicePort).deductBalance(testUserId, testAmount);
+            verify(investmentPersistencePort).saveTransaction(any(InvestmentTransaction.class));
+            verify(investmentEventPublisherPort).publishInvestmentCompleted(any(InvestmentEvent.class));
+        }
+
+        @Test
+        @DisplayName("should throw exception when amount is below minimum investment")
+        void shouldThrowExceptionWhenAmountBelowMinimum() {
+            String fundCode = "MMF001";
+            BigDecimal smallAmount = new BigDecimal("5000.00");
+
+            InvestmentAccount account = InvestmentAccount.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .totalBalance(BigDecimal.ZERO)
+                    .availableBalance(BigDecimal.ZERO)
+                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
+
+            MutualFund fund = MutualFund.builder()
+                    .id(UUID.randomUUID())
+                    .code(fundCode)
+                    .name("PayU Money Market Fund")
+                    .type(MutualFund.FundType.MONEY_MARKET)
+                    .navPerUnit(new BigDecimal("1500.0000"))
+                    .minimumInvestment(new BigDecimal("10000.0000"))
+                    .managementFee(new BigDecimal("0.0050"))
+                    .redemptionFee(new BigDecimal("0.0020"))
+                    .status(MutualFund.FundStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.getLatestFundPrice(fundCode)).willReturn(fund);
+
+            assertThatThrownBy(() -> investmentApplicationService.buyMutualFund(
+                    testAccountId, testUserId, fundCode, smallAmount))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Amount below minimum investment");
+
+            verify(walletServicePort, never()).deductBalance(anyString(), any(BigDecimal.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("sellInvestment")
+    class SellInvestment {
+
+        @Test
+        @DisplayName("should sell mutual fund successfully")
+        void shouldSellMutualFundSuccessfully() throws ExecutionException, InterruptedException {
+            String fundCode = "MMF001";
+            UUID transactionId = UUID.randomUUID();
+
+            InvestmentTransaction existingTransaction = InvestmentTransaction.builder()
+                    .id(transactionId)
+                    .accountId(testAccountId)
+                    .type(InvestmentTransaction.TransactionType.BUY)
+                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .investmentId(fundCode)
+                    .amount(testAmount)
+                    .price(new BigDecimal("1500.0000"))
+                    .units(new BigDecimal("666.6666"))
+                    .fee(new BigDecimal("2000.0000"))
+                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.findTransactionById(transactionId)).willReturn(Optional.of(existingTransaction));
+
+            MutualFund fund = MutualFund.builder()
+                    .id(UUID.randomUUID())
+                    .code(fundCode)
+                    .name("PayU Money Market Fund")
+                    .type(MutualFund.FundType.MONEY_MARKET)
+                    .navPerUnit(new BigDecimal("1600.0000"))
+                    .minimumInvestment(new BigDecimal("10000.0000"))
+                    .managementFee(new BigDecimal("0.0050"))
+                    .redemptionFee(new BigDecimal("0.0020"))
+                    .status(MutualFund.FundStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.getLatestFundPrice(fundCode)).willReturn(fund);
+
+            InvestmentAccount account = InvestmentAccount.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .totalBalance(BigDecimal.ZERO)
+                    .availableBalance(BigDecimal.ZERO)
+                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
+
+            InvestmentTransaction sellTransaction = InvestmentTransaction.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(testAccountId)
+                    .type(InvestmentTransaction.TransactionType.SELL)
+                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .investmentId(fundCode)
+                    .amount(new BigDecimal("800000.00"))
+                    .price(new BigDecimal("1600.0000"))
+                    .units(new BigDecimal("500.0000"))
+                    .fee(new BigDecimal("4000.0000"))
+                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.saveTransaction(any(InvestmentTransaction.class))).willReturn(sellTransaction);
+
+            CompletableFuture<InvestmentTransaction> result = investmentApplicationService.sellInvestment(
+                    testAccountId, transactionId, new BigDecimal("500.0000"));
+            InvestmentTransaction soldTransaction = result.get();
+
+            assertThat(soldTransaction).isNotNull();
+            assertThat(soldTransaction.getType()).isEqualTo(InvestmentTransaction.TransactionType.SELL);
+            verify(walletServicePort).creditBalance(eq(testUserId), any(BigDecimal.class));
+            verify(investmentPersistencePort).saveTransaction(any(InvestmentTransaction.class));
+            verify(investmentEventPublisherPort).publishInvestmentCompleted(any(InvestmentEvent.class));
+        }
+
+        @Test
+        @DisplayName("should throw exception when trying to sell deposit before maturity")
+        void shouldThrowExceptionWhenSellingDeposit() {
+            UUID transactionId = UUID.randomUUID();
+
+            InvestmentTransaction existingTransaction = InvestmentTransaction.builder()
+                    .id(transactionId)
+                    .accountId(testAccountId)
+                    .type(InvestmentTransaction.TransactionType.BUY)
+                    .investmentType(InvestmentTransaction.InvestmentType.DEPOSIT)
+                    .investmentId(UUID.randomUUID().toString())
+                    .amount(testAmount)
+                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .build();
+
+            given(investmentPersistencePort.findTransactionById(transactionId)).willReturn(Optional.of(existingTransaction));
+
+            assertThatThrownBy(() -> investmentApplicationService.sellInvestment(
+                    testAccountId, transactionId, testAmount))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Cannot sell deposit before maturity");
+
+            verify(walletServicePort, never()).creditBalance(anyString(), any(BigDecimal.class));
+        }
+    }
 }
