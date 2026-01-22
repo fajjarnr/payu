@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Native Mobile Apps Boilerplate**:
+  - **iOS App** (Swift/SwiftUI):
+    - Implemented Swift 5.9+ with SwiftUI for iOS 16.0+
+    - MVVM architecture with async/await
+    - Key screens: Home, Accounts, Transfers, Cards, Profile
+    - URLSession-based API client with comprehensive error handling
+    - Balance cards, transaction history, and quick actions
+    - Virtual card management interface
+    - AppState for user session management
+    - Comprehensive unit tests for models and API client
+  - **Android App** (Kotlin/Jetpack Compose):
+    - Implemented Kotlin 1.9.22 with Jetpack Compose
+    - MVVM architecture with Hilt dependency injection
+    - Target SDK 35 (Android 15) with minimum SDK 26
+    - Key screens: Home, Accounts, Transfers, Cards, Profile
+    - Retrofit + OkHttp for networking
+    - DataStore for secure token storage
+    - Material 3 design system with custom theming
+    - Comprehensive unit tests for models and token management
+  - **Shared Features**:
+    - Consistent UI/UX across both platforms
+    - RESTful API integration with PayU backend
+    - Authentication and session management
+    - Error handling and loading states
+    - Modular architecture for easy feature additions
+    - Production-ready configurations
+  - Documentation:
+    - Comprehensive README.md with setup instructions
+    - API configuration guidelines
+    - Testing and build instructions
+    - Security best practices
+
 - **Analytics Service - Real-time Updates (WebSocket/Kafka)**:
   - Enhanced WebSocket connection management with event filtering capabilities
   - Implemented subscription-based event delivery to dashboard clients
