@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **CI/CD Simplification**:
+  - Disabled GitHub Actions workflows (`.github/workflows`) by renaming them to `.yml.disabled` as the project transitions to OpenShift Pipelines (Tekton) and ArgoCD for CI/CD.
+
 ### Added
 
 - **GDPR Compliance Audit System**:
