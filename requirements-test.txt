@@ -17,3 +17,4 @@ pydantic-settings==2.7.0
 aiosqlite==0.20.0
 sqlalchemy==2.0.36
 alembic==1.14.0
+requests==2.32.3

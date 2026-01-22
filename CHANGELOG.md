@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Production Monitoring & Alerting** (LokiStack/Prometheus):
+  - Prometheus server (v2.54.1) with 15-day retention and alerting rules
+  - Loki log aggregation (v2.9.10) with 744h (31 days) retention
+  - Grafana dashboards (v11.1.4) with pre-built monitoring dashboards
+  - Alertmanager (v0.27.0) with Slack and webhook notifications
+  - Promtail (v2.9.10) for log collection from Docker containers
+  - Configuration files in `infrastructure/docker/`:
+    - `loki-config.yml` - Loki server configuration
+    - `promtail-config.yml` - Log collection agent configuration
+    - `prometheus-alerts.yml` - 33 alert rules for services, performance, transactions, databases, and infrastructure
+    - `alertmanager-config.yml` - Alert routing to Slack/PagerDuty
+    - Updated `prometheus.yml` - Service discovery for all PayU services
+  - Grafana dashboards:
+    - Service Health Dashboard - Request rate, error rate, response times, memory/CPU usage
+    - Transaction Dashboard - Transaction volume, success rate, transaction value distribution
+    - Infrastructure Dashboard - PostgreSQL, Redis, Kafka health and performance metrics
+  - Logback XML configuration for structured JSON logging in account-service
+  - Monitoring test suite (`tests/infrastructure/test_monitoring_alerting.py`):
+    - 26 tests covering Prometheus, Loki, Grafana, Alertmanager, Promtail
+    - Tests: Service availability, configuration loading, metrics scraping, alert rules, datasources, dashboards
+
 - **Disaster Recovery Plan (DRP)** (`DISASTER_RECOVERY.md`):
   - Comprehensive backup and restore procedures for all PayU components
   - Recovery objectives: RTO < 15 min, RPO < 1 min (production)

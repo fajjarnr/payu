@@ -1,17 +1,129 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    cluster: 'payu-production'
+    environment: 'development'
 
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'payu-services'
+  # Core Banking Services (Spring Boot)
+  - job_name: 'account-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: 
-        - 'host.docker.internal:8001' # account-service
-        - 'host.docker.internal:8002' # auth-service
-        - 'host.docker.internal:8003' # transaction-service
-        - 'host.docker.internal:8004' # wallet-service
+      - targets: ['account-service:8001']
+        labels:
+          service: 'account-service'
+          tier: 'core'
+
+  - job_name: 'auth-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['auth-service:8002']
+        labels:
+          service: 'auth-service'
+          tier: 'core'
+
+  - job_name: 'transaction-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['transaction-service:8003']
+        labels:
+          service: 'transaction-service'
+          tier: 'core'
+
+  - job_name: 'wallet-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['wallet-service:8004']
+        labels:
+          service: 'wallet-service'
+          tier: 'core'
+
+  # Supporting Services (Quarkus)
+  - job_name: 'billing-service'
+    metrics_path: '/q/metrics'
+    static_configs:
+      - targets: ['billing-service:8080']
+        labels:
+          service: 'billing-service'
+          tier: 'supporting'
+
+  - job_name: 'notification-service'
+    metrics_path: '/q/metrics'
+    static_configs:
+      - targets: ['notification-service:8080']
+        labels:
+          service: 'notification-service'
+          tier: 'supporting'
+
+  - job_name: 'gateway-service'
+    metrics_path: '/q/metrics'
+    static_configs:
+      - targets: ['gateway-service:8080']
+        labels:
+          service: 'gateway-service'
+          tier: 'gateway'
+
+  # ML/Analytics Services (FastAPI)
+  - job_name: 'kyc-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['kyc-service:8007']
+        labels:
+          service: 'kyc-service'
+          tier: 'ml'
+
+  - job_name: 'analytics-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['analytics-service:8008']
+        labels:
+          service: 'analytics-service'
+          tier: 'ml'
+
+  # Infrastructure Components
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+        labels:
+          service: 'postgres'
+          tier: 'data'
+    metrics_path: /metrics
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'redis'
+          tier: 'cache'
+    metrics_path: /metrics
+
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:29092']
+        labels:
+          service: 'kafka'
+          tier: 'messaging'
+    metrics_path: /metrics
+
+  # Alertmanager
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+        labels:
+          service: 'alertmanager'
+          tier: 'monitoring'
+
+# Alerting Configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+# Rule Files
+rule_files:
+  - '/etc/prometheus/prometheus-alerts.yml'

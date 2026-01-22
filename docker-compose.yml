@@ -391,9 +391,114 @@ services:
     networks:
       - payu-network
 
-# ============================================
-# TRAEFIK DASHBOARD (Optional)
-# ============================================
+  # ============================================
+  # MONITORING & ALERTING
+  # ============================================
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: payu-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/docker/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - payu-network
+
+  loki:
+    image: grafana/loki:2.9.10
+    container_name: payu-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infrastructure/docker/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - payu-network
+
+  promtail:
+    image: grafana/promtail:2.9.10
+    container_name: payu-promtail
+    volumes:
+      - ./infrastructure/docker/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - payu-network
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: payu-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_SERVER_ROOT_URL: http://localhost:3000
+    volumes:
+      - ./infrastructure/docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - payu-network
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: payu-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infrastructure/docker/alertmanager-config.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - payu-network
+
+  # ============================================
+  # TRAEFIK DASHBOARD (Optional)
+  # ============================================
   traefik:
     image: traefik:v2.10
     container_name: payu-traefik
@@ -421,3 +526,7 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  prometheus_data:
+  loki_data:
+  grafana_data:
+  alertmanager_data:

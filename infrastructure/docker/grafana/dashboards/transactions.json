@@ -1,0 +1,192 @@
+{
+  "dashboard": {
+    "title": "PayU Transaction Dashboard",
+    "tags": ["payu", "transactions", "business"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "title": "Total Transactions (Last Hour)",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_transactions_total[1h]))",
+            "legendFormat": "Total"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "title": "Transaction Success Rate",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_transactions_total{status=\"success\"}[1h])) / sum(increase(payu_transactions_total[1h]))",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 0.95, "color": "yellow"},
+                {"value": 0.99, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Transaction Rate (TPS)",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(payu_transactions_total[5m]))",
+            "legendFormat": "TPS"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "title": "Total Transaction Value",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_transaction_amount_total[1h]))",
+            "legendFormat": "Total"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyIDR",
+            "decimals": 0
+          }
+        }
+      },
+      {
+        "title": "Transactions Over Time",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(payu_transactions_total[5m]))",
+            "legendFormat": "Total TPS"
+          },
+          {
+            "expr": "sum(rate(payu_transactions_total{status=\"success\"}[5m]))",
+            "legendFormat": "Success TPS"
+          },
+          {
+            "expr": "sum(rate(payu_transactions_total{status=\"failed\"}[5m]))",
+            "legendFormat": "Failed TPS"
+          }
+        ]
+      },
+      {
+        "title": "Transaction Value Over Time",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(payu_transaction_amount_total[5m]))",
+            "legendFormat": "Total Value/Sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyIDR"
+          }
+        }
+      },
+      {
+        "title": "Transactions by Type",
+        "type": "piechart",
+        "gridPos": {"x": 0, "y": 12, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_transactions_total[1h])) by (type)",
+            "legendFormat": "{{type}}"
+          }
+        ]
+      },
+      {
+        "title": "Transactions by Status",
+        "type": "piechart",
+        "gridPos": {"x": 6, "y": 12, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_transactions_total[1h])) by (status)",
+            "legendFormat": "{{status}}"
+          }
+        ]
+      },
+      {
+        "title": "Transaction Amount Distribution",
+        "type": "histogram",
+        "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(payu_transaction_amount_bucket[5m])) by (le))",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(payu_transaction_amount_bucket[5m])) by (le))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(payu_transaction_amount_bucket[5m])) by (le))",
+            "legendFormat": "P99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyIDR"
+          }
+        }
+      },
+      {
+        "title": "Top Accounts by Transaction Count",
+        "type": "table",
+        "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "topk(10, sum(increase(payu_transactions_total[1h])) by (account_id))",
+            "format": "table",
+            "instant": true
+          }
+        ]
+      },
+      {
+        "title": "Failed Transactions by Reason",
+        "type": "table",
+        "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_transactions_total{status=\"failed\"}[1h])) by (error_reason)",
+            "format": "table",
+            "instant": true
+          }
+        ]
+      }
+    ]
+  }
+}

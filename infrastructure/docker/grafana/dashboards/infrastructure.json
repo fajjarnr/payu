@@ -1,0 +1,227 @@
+{
+  "dashboard": {
+    "title": "PayU Infrastructure Dashboard",
+    "tags": ["payu", "infrastructure", "database"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "title": "PostgreSQL Status",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "pg_up",
+            "legendFormat": "Status"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            },
+            "mappings": [
+              {"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}
+            ]
+          }
+        }
+      },
+      {
+        "title": "Redis Status",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "redis_up",
+            "legendFormat": "Status"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            },
+            "mappings": [
+              {"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}
+            ]
+          }
+        }
+      },
+      {
+        "title": "Kafka Status",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "kafka_server_broker_state",
+            "legendFormat": "Status"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            },
+            "mappings": [
+              {"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}
+            ]
+          }
+        }
+      },
+      {
+        "title": "Total Connections",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(pg_stat_activity_count)",
+            "legendFormat": "PostgreSQL"
+          },
+          {
+            "expr": "redis_connected_clients",
+            "legendFormat": "Redis"
+          }
+        ]
+      },
+      {
+        "title": "PostgreSQL Connection Pool Usage",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(pg_stat_activity_count) by (datname) / sum(pg_settings_max_connections)",
+            "legendFormat": "{{datname}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 0.7, "color": "yellow"},
+                {"value": 0.85, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "PostgreSQL Query Rate",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(pg_stat_statements_calls_total[5m])) by (datname)",
+            "legendFormat": "{{datname}} QPS"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "title": "PostgreSQL Database Sizes",
+        "type": "bargauge",
+        "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "pg_database_size_bytes",
+            "legendFormat": "{{datname}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes"
+          }
+        }
+      },
+      {
+        "title": "Redis Memory Usage",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes / redis_memory_max_bytes",
+            "legendFormat": "Memory Usage"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 0.8, "color": "yellow"},
+                {"value": 0.9, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Kafka Messages In/Out",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(kafka_server_BrokerTopicMetrics_BytesIn_PerSec[5m]))",
+            "legendFormat": "Bytes In"
+          },
+          {
+            "expr": "sum(rate(kafka_server_BrokerTopicMetrics_BytesOut_PerSec[5m]))",
+            "legendFormat": "Bytes Out"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "Bps"
+          }
+        }
+      },
+      {
+        "title": "Kafka Consumer Lag",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(kafka_consumergroup_lag) by (consumergroup, topic)",
+            "legendFormat": "{{consumergroup}} - {{topic}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1000, "color": "yellow"},
+                {"value": 5000, "color": "red"}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

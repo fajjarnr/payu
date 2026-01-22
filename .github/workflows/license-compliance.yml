@@ -1,0 +1,53 @@
+name: License Compliance
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'requirements*.txt'
+      - 'pom.xml'
+      - 'package.json'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'requirements*.txt'
+      - 'pom.xml'
+      - 'package.json'
+
+jobs:
+  license-compliance:
+    name: Check Licenses
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Java licenses (Maven)
+        if: runner.os == 'Linux'
+        run: |
+          cd backend
+          find . -name "pom.xml" -exec sh -c 'mvn license:check -f {} -Dlicense.outputDirectory=license-reports' \;
+          if [ -d "license-reports" ] && [ "$(find license-reports -name "*.txt" | wc -l)" -gt 0 ]; then
+            echo "License issues found in Maven projects"
+            exit 1
+          fi
+
+      - name: Check Python licenses (pip)
+        if: runner.os == 'Linux'
+        run: |
+          cd backend
+          find . -name "requirements*.txt" -exec sh -c 'pip-licenses --format=json --output-file=license-reports/pip-licenses.json {} \;' \;
+          if [ -f "license-reports/pip-licenses.json" ] && [ "$(jq length license-reports/pip-licenses.json)" -gt 0 ]; then
+            echo "License issues found in Python projects"
+            jq . license-reports/pip-licenses.json
+            exit 1
+          fi
+
+      - name: Upload license reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: license-reports
+          path: backend/license-reports/

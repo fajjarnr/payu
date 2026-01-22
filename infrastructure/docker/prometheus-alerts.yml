@@ -1,0 +1,273 @@
+groups:
+  - name: payu_service_health
+    interval: 30s
+    rules:
+      # Service Availability Alerts
+      - alert: ServiceDown
+        expr: up{job=~"payu-.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 2 minutes."
+
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job, instance)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (job, instance)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "Error rate on {{ $labels.job }} is {{ $value | humanizePercentage }}"
+
+  - name: payu_performance
+    interval: 30s
+    rules:
+      # Response Time Alerts
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (job, le)
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High response time on {{ $labels.job }}"
+          description: "95th percentile response time is {{ $value }}s"
+
+      - alert: VeryHighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (job, le)
+          ) > 3
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Critical response time on {{ $labels.job }}"
+          description: "95th percentile response time is {{ $value }}s"
+
+      # Memory Alerts
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"}
+            /
+            jvm_memory_max_bytes{area="heap"}
+          ) > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory usage on {{ $labels.job }}"
+          description: "Heap memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: CriticalMemoryUsage
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"}
+            /
+            jvm_memory_max_bytes{area="heap"}
+          ) > 0.95
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Critical memory usage on {{ $labels.job }}"
+          description: "Heap memory usage is {{ $value | humanizePercentage }}"
+
+      # CPU Alerts
+      - alert: HighCPUUsage
+        expr: |
+          (
+            sum(rate(process_cpu_seconds_total[5m])) by (job)
+            *
+            100
+          ) > 80
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High CPU usage on {{ $labels.job }}"
+          description: "CPU usage is {{ $value }}%"
+
+  - name: payu_transactions
+    interval: 30s
+    rules:
+      # Transaction Monitoring
+      - alert: LowTransactionRate
+        expr: |
+          sum(rate(payu_transactions_total[5m])) < 1
+        for: 15m
+        labels:
+          severity: info
+          team: business
+        annotations:
+          summary: "Low transaction rate"
+          description: "Transaction rate is below expected threshold"
+
+      - alert: FailedTransactionRate
+        expr: |
+          (
+            sum(rate(payu_transactions_total{status="failed"}[5m]))
+            /
+            sum(rate(payu_transactions_total[5m]))
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "High failed transaction rate"
+          description: "Failed transaction rate is {{ $value | humanizePercentage }}"
+
+  - name: payu_databases
+    interval: 30s
+    rules:
+      # PostgreSQL Alerts
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database is unreachable"
+
+      - alert: PostgresSlowQueries
+        expr: |
+          sum(rate(pg_stat_statements_calls{datname="payu.*"}[5m])) > 100
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High query rate on PostgreSQL"
+          description: "PostgreSQL is experiencing high query load"
+
+      - alert: PostgresConnectionPoolExhaustion
+        expr: |
+          (
+            sum(pg_stat_activity_count) by (datname)
+            /
+            sum(pg_settings_max_connections)
+          ) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High connection pool usage on {{ $labels.datname }}"
+          description: "Connection pool usage is {{ $value | humanizePercentage }}"
+
+  - name: payu_infrastructure
+    interval: 30s
+    rules:
+      # Redis Alerts
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache is unreachable"
+
+      - alert: RedisHighMemoryUsage
+        expr: |
+          (
+            redis_memory_used_bytes
+            /
+            redis_memory_max_bytes
+          ) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory usage on Redis"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}"
+
+      # Kafka Alerts
+      - alert: KafkaDown
+        expr: kafka_server_broker_state == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Kafka is down"
+          description: "Kafka broker is unreachable"
+
+      - alert: KafkaConsumerLag
+        expr: kafka_consumergroup_lag > 1000
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High consumer lag on {{ $labels.consumergroup }}"
+          description: "Consumer lag is {{ $value }} messages"
+
+      - alert: DiskSpaceLow
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"}
+            /
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Available disk space is {{ $value | humanizePercentage }}"
+
+  - name: payu_business
+    interval: 60s
+    rules:
+      # Business Logic Alerts
+      - alert: AccountBalanceNegative
+        expr: payu_account_balance < 0
+        for: 5m
+        labels:
+          severity: critical
+          team: business
+        annotations:
+          summary: "Negative account balance detected"
+          description: "Account {{ $labels.account_id }} has negative balance"
+
+      - alert: UnusualTransactionVolume
+        expr: |
+          abs(
+            sum(rate(payu_transactions_total[1h]))
+            -
+            avg_over_time(sum(rate(payu_transactions_total[1h]))[24h:1h])
+          )
+          /
+          avg_over_time(sum(rate(payu_transactions_total[1h]))[24h:1h])
+          > 2
+        for: 10m
+        labels:
+          severity: warning
+          team: business
+        annotations:
+          summary: "Unusual transaction volume detected"
+          description: "Transaction volume deviates by more than 200% from 24h average"

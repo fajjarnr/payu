@@ -1,0 +1,137 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'localhost:25'
+  smtp_from: 'alertmanager@payu.com'
+  smtp_require_tls: false
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default-receiver'
+  routes:
+    # Critical alerts go to Slack and PagerDuty
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      continue: false
+
+    # Warning alerts go to Slack only
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      continue: false
+
+    # Info alerts go to a separate channel
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      continue: false
+
+    # Business alerts go to business team
+    - match:
+        team: business
+      receiver: 'business-alerts'
+      continue: false
+
+    # Platform alerts go to platform team
+    - match:
+        team: platform
+      receiver: 'platform-alerts'
+      continue: false
+
+receivers:
+  - name: 'default-receiver'
+    email_configs:
+      - to: 'platform@payu.com'
+        headers:
+          Subject: '[PayU Alert] {{ .GroupLabels.alertname }}'
+
+  - name: 'critical-alerts'
+    webhook_configs:
+      - url: 'http://localhost:8080/alerts/critical'
+        send_resolved: true
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#payu-critical'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Service:* {{ .Labels.job }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+  - name: 'warning-alerts'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#payu-warnings'
+        title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Service:* {{ .Labels.job }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+  - name: 'info-alerts'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#payu-info'
+        title: 'ℹ️ INFO: {{ .GroupLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Service:* {{ .Labels.job }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+  - name: 'business-alerts'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#payu-business'
+        title: '💼 BUSINESS ALERT: {{ .GroupLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Service:* {{ .Labels.job }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+  - name: 'platform-alerts'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#payu-platform'
+        title: '🔧 PLATFORM ALERT: {{ .GroupLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Service:* {{ .Labels.job }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+inhibit_rules:
+  # Inhibit warning alerts if a critical alert exists for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+
+  # Inhibit alerts if the service is down
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['service']
