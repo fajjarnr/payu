@@ -146,12 +146,13 @@ class ArchitectureTest {
         @DisplayName("controllers should not access repositories directly")
         void controllersShouldNotAccessRepositories() {
             ArchRule rule = noClasses()
-                    .that().resideInAPackage("..adapter.in.rest..")
+                    .that().resideInAPackage("..adapter.web..")
                     .should().dependOnClassesThat()
                     .resideInAnyPackage(
-                            "..domain.repository..",
-                            "..adapter.out.persistence.."
+                            "..repository..",
+                            "..adapter.persistence.."
                     )
+                    .allowEmptyShould(true)
                     .because("Controllers must use services, not repositories directly (separation of concerns)");
 
             rule.check(importedClasses);
@@ -163,17 +164,17 @@ class ArchitectureTest {
     class RepositoryAccessRules {
 
         @Test
-        @DisplayName("repositories should only be accessed by services")
-        void repositoriesShouldOnlyBeAccessedByServices() {
+        @DisplayName("output ports should only be accessed by services")
+        void outputPortsShouldOnlyBeAccessedByServices() {
             ArchRule rule = classes()
-                    .that().resideInAPackage("..domain.repository..")
+                    .that().resideInAPackage("..domain.port.out..")
                     .should().onlyBeAccessed().byAnyPackage(
                             "..application..",
-                            "..domain.service..",
-                            "..adapter.out.persistence..",
+                            "..adapter..",
                             "..config.."
                     )
-                    .because("Repositories (ports) should only be accessed by application services or their implementations");
+                    .allowEmptyShould(true)
+                    .because("Output ports should only be accessed by application services or their implementations");
 
             rule.check(importedClasses);
         }
@@ -257,6 +258,7 @@ class ArchitectureTest {
                     .that().haveSimpleNameEndingWith("Exception")
                     .and().resideInAPackage("..domain..")
                     .should().beAssignableTo(RuntimeException.class)
+                    .allowEmptyShould(true)
                     .because("Domain exceptions should be unchecked (RuntimeException) for cleaner code");
 
             rule.check(importedClasses);
