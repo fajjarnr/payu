@@ -18,6 +18,13 @@
 | **bi-fast-simulator** | Java 21 | Quarkus 3.17 | ✅ Complete | BI-FAST API, latency/failure simulation |
 | **dukcapil-simulator** | Java 21 | Quarkus 3.17 | ✅ Complete | NIK verification, face matching simulation |
 | **qris-simulator** | Java 21 | Quarkus 3.17 | ✅ Complete | QR generation, payment simulation |
+| **compliance-service** | Java 21 | Spring Boot 3.4.1 | ✅ Complete | Regulatory audits, PCI-DSS |
+| **support-service** | Java 21 | Quarkus 3.17 | ✅ Complete | Support training mgmt |
+| **investment-service** | Java 21 | Spring Boot 3.4 | ⏳ Planned | Deposits, Funds, Gold |
+| **lending-service** | Java 21 | Spring Boot 3.4 | ⏳ Planned | Loans, PayLater |
+| **promotion-service** | Java 21 | Quarkus 3.x | ⏳ Planned | Rewards, Cashback |
+| **backoffice-service** | Java 21 | Quarkus 3.x | ⏳ Planned | Admin, Fraud Ops |
+| **partner-service** | Java 21 | Quarkus 3.x | ⏳ Planned | Open Banking SNAP BI |
 
 ---
 
@@ -60,9 +67,16 @@
 - ✅ Kafka Events: transactions.initiated, validated, completed, failed
 - ✅ Unit tests (TransactionServiceTest, ArchitectureTest)
 
+#### 5. compliance-service (Port 8087)
+- ✅ Regulatory Compliance & Audit
+- ✅ Kafka integration
+- ✅ PostgreSQL database
+- ✅ Spring Boot 3.4.1
+
+
 ### Supporting Services (Quarkus)
 
-#### 5. billing-service (Port 8005)
+#### 6. billing-service (Port 8005)
 - ✅ Bill Payments for PLN, PDAM, Pulsa, BPJS
 - ✅ REST API: /billers, /payments
 - ✅ Wallet Integration for balance debit
@@ -72,7 +86,8 @@
 - ✅ Architecture Tests
 - ✅ Integration Tests (Testcontainers)
 
-#### 6. notification-service (Port 8006)
+
+#### 7. notification-service (Port 8006)
 - ✅ Multi-channel: Email, SMS, Push, In-App
 - ✅ REST API: /notifications
 - ✅ Kafka Consumer for wallet, transaction, payment events
@@ -82,7 +97,8 @@
 - ✅ Architecture Tests
 - ✅ Integration Tests (Testcontainers)
 
-#### 7. gateway-service (Port 8080)
+
+#### 8. gateway-service (Port 8080)
 - ✅ API Gateway for all backend services
 - ✅ Request Routing to simulators and core services
 - ✅ Distributed Rate Limiting with Redis
@@ -93,9 +109,14 @@
 - ✅ Prometheus Metrics + OpenTelemetry Tracing
 - ✅ Unit tests (ArchitectureTest, CorrelationIdFilterTest, HealthResourceTest)
 
+#### 9. support-service (Port 8086)
+- ✅ Support team training management
+- ✅ Hibernate Panache ORM
+- ✅ Quarkus 3.17
+
 ### ML/Data Services (Python)
 
-#### 8. kyc-service (Port 8007)
+#### 10. kyc-service (Port 8007)
 - ✅ Full eKYC implementation
 - ✅ **OCR Service**: PaddleOCR for Indonesian KTP scanning
 - ✅ **Liveness Detection**: Computer vision-based anti-spoofing
@@ -108,7 +129,9 @@
 - ✅ UBI9 Dockerfile (multi-stage)
 - ✅ Monitoring: Prometheus + OpenTelemetry + structured logs
 
-#### 9. analytics-service (Port 8008)
+- ✅ Monitoring: Prometheus + OpenTelemetry + structured logs
+
+#### 11. analytics-service (Port 8008)
 - ✅ Time-series analytics with TimescaleDB
 - ✅ Kafka Consumer for real-time event consumption
 - ✅ Hypertables: transactions, wallet balances, user activities
@@ -123,7 +146,9 @@
 
 ### External Service Simulators (Quarkus)
 
-#### 10. bi-fast-simulator (Port 8090)
+### External Service Simulators (Quarkus)
+
+#### 12. bi-fast-simulator (Port 8090)
 - ✅ Account Inquiry endpoint
 - ✅ Fund Transfer endpoint
 - ✅ Status Check endpoint
@@ -134,7 +159,9 @@
 - ✅ Health Checks & Prometheus Metrics
 - ✅ OpenTelemetry Tracing
 
-#### 11. dukcapil-simulator (Port 8091)
+- ✅ OpenTelemetry Tracing
+
+#### 13. dukcapil-simulator (Port 8091)
 - ✅ NIK Verification endpoint
 - ✅ Face Matching endpoint
 - ✅ Citizen Data Retrieval
@@ -146,7 +173,9 @@
 - ✅ Verification Audit Logging
 - ✅ Health Checks & Prometheus Metrics
 
-#### 12. qris-simulator (Port 8092)
+- ✅ Health Checks & Prometheus Metrics
+
+#### 14. qris-simulator (Port 8092)
 - ✅ QR Code Generation endpoint
 - ✅ Payment Simulation endpoint
 - ✅ Status Check endpoint
@@ -182,7 +211,7 @@
 
 ## Summary
 
-**Status**: All 12 services are ✅ **COMPLETED** with:
+**Status**: All 14 services are ✅ **COMPLETED** with:
 - Full implementation
 - Dockerfiles (UBI9 compliant)
 - Database migrations

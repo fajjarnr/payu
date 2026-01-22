@@ -307,6 +307,10 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 - [x] Production Monitoring & Alerting (LokiStack/Prometheus) operational
 - [x] Final Penetration Testing (Pentest) Report signed off
 - [x] PCI-DSS & OJK Regulatory Compliance Audit completed
+- [ ] **Production Deployment**: Successful deployment & verification on Red Hat OpenShift
+- [ ] **Mobile App Stores**: iOS App Store & Google Play Store approval obtained
+- [ ] **Legal Readiness**: Terms of Service & Privacy Policy published
+- [ ] **Security Hardening**: Secrets management (Vault) & CI/CD pipelines verified
 
 ### 12.2 Post-Launch Success
 - 100K users within 6 months

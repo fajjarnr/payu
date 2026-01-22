@@ -7,6 +7,8 @@ project:
   language: "Java 21, Python 3.12"
   framework: "Spring Boot 3.4, Quarkus 3.x, FastAPI"
   description: "Standalone Digital Banking Platform on Red Hat OpenShift"
+  auto_process_todo: true # Ralphy will prioritize items in TODO.md automatically
+
 
 # Commands
 commands:

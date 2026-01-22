@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: payu-prod
+data:
+  POSTGRES_HOST: "postgres-primary.payu-prod.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "payu"
+  POSTGRES_MAX_CONNECTIONS: "100"
+  POSTGRES_CONNECTION_TIMEOUT: "10"
+  POSTGRES_STATEMENT_TIMEOUT: "30000"
+  PGDATA: "/var/lib/postgresql/data/pgdata"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: payu-prod
+data:
+  REDIS_HOST: "redis-master.payu-prod.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_MAX_RETRIES: "3"
+  REDIS_COMMAND_TIMEOUT: "5000"
+  REDIS_CONNECTION_POOL_SIZE: "10"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config
+  namespace: payu-prod
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-broker-0.kafka-broker.payu-prod.svc.cluster.local:9092,kafka-broker-1.kafka-broker.payu-prod.svc.cluster.local:9092,kafka-broker-2.kafka-broker.payu-prod.svc.cluster.local:9092"
+  KAFKA_RETRIES: "3"
+  KAFKA_ACKS: "all"
+  KAFKA_COMPRESSION_TYPE: "snappy"
+  KAFKA_REQUEST_TIMEOUT_MS: "30000"
+  KAFKA_SESSION_TIMEOUT_MS: "30000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-config
+  namespace: payu-prod
+data:
+  PROMETHEUS_ENDPOINT: "http://prometheus-operated:9090"
+  GRAFANA_ENDPOINT: "http://grafana:3000"
+  ALERTMANAGER_ENDPOINT: "http://alertmanager-operated:9093"
+  LOKI_ENDPOINT: "http://loki:3100"
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "true"
+  LOGGING_ENABLED: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-prod-config
+  namespace: payu-prod
+data:
+  QUARKUS_PROFILE: "prod"
+  QUARKUS_LOG_LEVEL: "INFO"
+  QUARKUS_LOG_CATEGORY__ID_PAYU__LEVEL: "INFO"
+  QUARKUS_HTTP_AUTH_PERMISSION__PERMITTED__PATHS: "/*"
+  QUARKUS_HTTP_AUTH_PERMISSION__PERMITTED__POLICY: "permit"
+  QUARKUS_HTTP_CORS_ORIGINS: "https://*.payu.id,https://api.payu.id"
+  QUARKUS_HTTP_CORS_METHODS: "GET,POST,PUT,DELETE,PATCH,OPTIONS"
+  QUARKUS_HTTP_CORS_HEADERS: "Authorization,Content-Type,Accept,Origin,X-Requested-With"
+  QUARKUS_HTTP_CORS_CREDENTIALS: "true"
+  QUARKUS_HTTP_CORS_ACCESS_CONTROL_MAX_AGE: "3600"
+  QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: "10M"
+  QUARKUS_REDIS_HOSTS: "redis://${REDIS_HOST}:${REDIS_PORT}"
+  QUARKUS_REDIS_TIMEOUT: "5S"
+  OIDC_AUTH_SERVER_URL: "https://sso.payu.id/realms/payu"
+  OIDC_CLIENT_ID: "payu-gateway"
+  OIDC_ENABLED: "true"
+  ACCOUNT_SERVICE_URL: "http://account-service:8081"
+  AUTH_SERVICE_URL: "http://auth-service:8082"
+  TRANSACTION_SERVICE_URL: "http://transaction-service:8083"
+  WALLET_SERVICE_URL: "http://wallet-service:8084"
+  BILLING_SERVICE_URL: "http://billing-service:8085"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:8086"
+  KYC_SERVICE_URL: "http://kyc-service:8087"
+  ANALYTICS_SERVICE_URL: "http://analytics-service:8088"
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_REQUESTS_PER_MINUTE: "100"
+  RATE_LIMIT_BURST: "20"

@@ -55,6 +55,8 @@
 | `billing-service` | Quarkus 3.x Native | Bill payments, top-ups |
 | `notification-service` | Quarkus 3.x Native | Push, SMS, Email |
 | `gateway-service` | Quarkus 3.x Native | API Gateway |
+| `compliance-service` | Spring Boot 3.4 | Regulatory audits |
+| `support-service` | Quarkus 3.x Native | Support training |
 | `kyc-service` | Python FastAPI | OCR, liveness detection ML |
 | `analytics-service` | Python FastAPI | User insights, ML |
 
@@ -78,8 +80,12 @@ payu/
 │   ├── auth-service/          # Java - Spring Boot
 │   ├── transaction-service/   # Java - Spring Boot (Hexagonal)
 │   ├── wallet-service/        # Java - Spring Boot (Hexagonal)
+│   ├── compliance-service/    # Java - Spring Boot
+│   ├── billing-service/       # Java - Quarkus
+│   ├── notification-service/  # Java - Quarkus
 │   ├── gateway-service/       # Java - Quarkus
-│   └── simulators/            # External service simulators
+│   ├── support-service/       # Java - Quarkus
+│   ├── simulators/            # External service simulators
 │       ├── bifast-simulator/
 │       ├── dukcapil-simulator/
 │       └── qris-simulator/
