@@ -7,17 +7,6 @@ quarkus:
   # HTTP Server
   http:
     port: 8080
-    cors:
-      ~: true
-      origins:
-        - http://localhost:3000
-        - http://localhost:8081
-        - https://payu.id
-      methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
-      headers: "*"
-      exposed-headers: X-Request-Id,X-Correlation-Id
-      access-control-max-age: 24H
-      access-control-allow-credentials: true
 
   # OIDC Configuration (Red Hat SSO / Keycloak)
   oidc:
@@ -144,6 +133,16 @@ gateway:
       url: ${QRIS_SIMULATOR_URL:http://localhost:9092}
       timeout: 15s
 
+  # CORS Configuration (strict mode)
+  cors:
+    enabled: true
+    allowed-origins: https://payu.id,http://localhost:3000,http://localhost:8081
+    allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+    allowed-headers: Content-Type,Authorization,X-Request-Id,X-Correlation-Id,X-Client-Id
+    exposed-headers: X-Request-Id,X-Correlation-Id
+    allow-credentials: true
+    max-age: 3600
+
   # Rate Limiting
   rate-limit:
     enabled: true
@@ -163,6 +162,60 @@ gateway:
       balance:
         requests-per-minute: 30
         burst: 50
+      accounts:
+        requests-per-minute: 40
+        burst: 60
+      wallets:
+        requests-per-minute: 30
+        burst: 50
+      cards:
+        requests-per-minute: 30
+        burst: 50
+      transactions:
+        requests-per-minute: 40
+        burst: 60
+      payments:
+        requests-per-minute: 20
+        burst: 30
+      billers:
+        requests-per-minute: 30
+        burst: 50
+      partners:
+        requests-per-minute: 20
+        burst: 30
+      promotions:
+        requests-per-minute: 40
+        burst: 60
+      lending:
+        requests-per-minute: 20
+        burst: 30
+      investments:
+        requests-per-minute: 20
+        burst: 30
+      compliance:
+        requests-per-minute: 15
+        burst: 25
+      backoffice:
+        requests-per-minute: 30
+        burst: 50
+      support:
+        requests-per-minute: 30
+        burst: 50
+      notifications:
+        requests-per-minute: 40
+        burst: 60
+      cashbacks:
+        requests-per-minute: 30
+        burst: 50
+      loyalty-points:
+        requests-per-minute: 30
+        burst: 50
+      rewards:
+        requests-per-minute: 30
+        burst: 50
+      referrals:
+        requests-per-minute: 20
+        burst: 30
 
   # Circuit Breaker
   circuit-breaker:

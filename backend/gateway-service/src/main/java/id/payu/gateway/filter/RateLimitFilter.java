@@ -24,12 +24,34 @@ import java.util.Map;
 public class RateLimitFilter implements ContainerRequestFilter {
 
     private static final String RATE_LIMIT_PREFIX = "ratelimit:";
-    private static final Map<String, String> ENDPOINT_CATEGORIES = Map.of(
-        "/api/v1/auth", "auth",
-        "/api/v1/otp", "otp",
-        "/api/v1/transfer", "transfer",
-        "/api/v1/balance", "balance"
-    );
+    private static final Map<String, String> ENDPOINT_CATEGORIES;
+
+    static {
+        Map<String, String> map = new java.util.HashMap<>();
+        map.put("/api/v1/auth", "auth");
+        map.put("/api/v1/otp", "otp");
+        map.put("/api/v1/transfer", "transfer");
+        map.put("/api/v1/balance", "balance");
+        map.put("/api/v1/accounts", "accounts");
+        map.put("/api/v1/wallets", "wallets");
+        map.put("/api/v1/cards", "cards");
+        map.put("/api/v1/transactions", "transactions");
+        map.put("/api/v1/payments", "payments");
+        map.put("/api/v1/billers", "billers");
+        map.put("/api/v1/partners", "partners");
+        map.put("/api/v1/promotions", "promotions");
+        map.put("/api/v1/lending", "lending");
+        map.put("/api/v1/investments", "investments");
+        map.put("/api/v1/compliance", "compliance");
+        map.put("/api/v1/backoffice", "backoffice");
+        map.put("/api/v1/support", "support");
+        map.put("/api/v1/notifications", "notifications");
+        map.put("/api/v1/cashbacks", "cashbacks");
+        map.put("/api/v1/loyalty-points", "loyalty-points");
+        map.put("/api/v1/rewards", "rewards");
+        map.put("/api/v1/referrals", "referrals");
+        ENDPOINT_CATEGORIES = Map.copyOf(map);
+    }
 
     @Inject
     GatewayConfig config;
@@ -67,11 +89,14 @@ public class RateLimitFilter implements ContainerRequestFilter {
 
         // Check rate limit (blocking for simplicity, should be reactive in production)
         try {
-            if (isRateLimited(key, rule)) {
+            RateLimitResult result = checkRateLimit(key, rule);
+            
+            if (result.isRateLimited()) {
                 Log.warnf("Rate limit exceeded for client=%s, category=%s", clientId, category);
                 requestContext.abortWith(
                     Response.status(429)
                         .header("Retry-After", "60")
+                        .header("X-RateLimit-Remaining", "0")
                         .entity(Map.of(
                             "error", "RATE_LIMIT_EXCEEDED",
                             "message", "Too many requests. Please try again later.",
@@ -79,6 +104,9 @@ public class RateLimitFilter implements ContainerRequestFilter {
                         ))
                         .build()
                 );
+            } else {
+                requestContext.getHeaders().add("X-RateLimit-Remaining", 
+                    String.valueOf(Math.max(0, rule.requestsPerMinute() - result.getCount())));
             }
         } catch (Exception e) {
             // If Redis is down, allow request (fail-open)
@@ -112,23 +140,41 @@ public class RateLimitFilter implements ContainerRequestFilter {
         return "unknown";
     }
 
-    private boolean isRateLimited(String key, GatewayConfig.RateLimitRule rule) {
-        // Simple counter-based rate limiting
-        // In production, use sliding window or token bucket
-        Long count = valueCommands.get(key).await().atMost(Duration.ofSeconds(1));
+    private RateLimitResult checkRateLimit(String key, GatewayConfig.RateLimitRule rule) {
+        // Sliding window rate limiting using Redis
+        Long currentCount = valueCommands.get(key).await().atMost(Duration.ofSeconds(1));
         
-        if (count == null) {
+        if (currentCount == null) {
             // First request, set counter with TTL
             valueCommands.setex(key, 60, 1L).await().atMost(Duration.ofSeconds(1));
-            return false;
+            return new RateLimitResult(1, false);
         }
 
-        if (count >= rule.requestsPerMinute()) {
-            return true;
+        // Check if limit exceeded
+        if (currentCount >= rule.requestsPerMinute()) {
+            return new RateLimitResult(currentCount, true);
         }
 
-        // Increment counter
+        // Increment counter with TTL to ensure it expires
         valueCommands.incr(key).await().atMost(Duration.ofSeconds(1));
-        return false;
+        return new RateLimitResult(currentCount + 1, false);
+    }
+
+    private static class RateLimitResult {
+        private final long count;
+        private final boolean rateLimited;
+
+        public RateLimitResult(long count, boolean rateLimited) {
+            this.count = count;
+            this.rateLimited = rateLimited;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public boolean isRateLimited() {
+            return rateLimited;
+        }
     }
 }

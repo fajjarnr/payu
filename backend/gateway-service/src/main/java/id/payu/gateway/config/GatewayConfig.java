@@ -35,6 +35,11 @@ public interface GatewayConfig {
     CircuitBreakerConfig circuitBreaker();
 
     /**
+     * CORS configuration.
+     */
+    CorsConfig cors();
+
+    /**
      * Request/Response logging configuration.
      */
     LoggingConfig logging();
@@ -92,5 +97,29 @@ public interface GatewayConfig {
         @WithName("max-body-size")
         @WithDefault("1024")
         int maxBodySize();
+    }
+
+    interface CorsConfig {
+        @WithDefault("true")
+        boolean enabled();
+
+        @WithDefault("")
+        String allowedOrigins();
+
+        @WithDefault("")
+        String allowedMethods();
+
+        @WithDefault("")
+        String allowedHeaders();
+
+        @WithDefault("")
+        String exposedHeaders();
+
+        @WithDefault("false")
+        boolean allowCredentials();
+
+        @WithName("max-age")
+        @WithDefault("3600")
+        int maxAge();
     }
 }

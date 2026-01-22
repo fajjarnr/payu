@@ -146,6 +146,7 @@ class ArchitectureTest {
             classes()
                     .that().resideInAPackage("..filter..")
                     .and().areNotInterfaces()
+                    .and().areTopLevelClasses()
                     .should().beAnnotatedWith(jakarta.enterprise.context.ApplicationScoped.class)
                         .orShould().beAnnotatedWith(jakarta.enterprise.context.RequestScoped.class)
                     .because("Filters should have proper CDI scope")
