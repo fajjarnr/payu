@@ -1,0 +1,34 @@
+quarkus:
+  application:
+    name: backoffice-service
+  http:
+    port: 8099
+    test-port: 0
+  datasource:
+    db-kind: postgresql
+    username: ${DB_USER:payu}
+    password: ${DB_PASSWORD:payu123}
+    jdbc:
+      url: jdbc:postgresql://${DB_HOST:localhost:5432}/${DB_NAME:payu_backoffice}
+  hibernate-orm:
+    database:
+      generation: none
+    physical-naming-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    sql-load-script: no-file
+  flyway:
+    migrate-at-start: true
+    validate-on-migrate: true
+    baseline-on-migrate: true
+  log:
+    category:
+      "id.payu.backoffice":
+        level: INFO
+
+"%test":
+  quarkus:
+    datasource:
+      jdbc:
+        url: 
+    flyway:
+      migrate-at-start: true
+
