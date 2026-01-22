@@ -46,8 +46,8 @@
     - [x] **Security & MFA** (`/security`) -> Integrate with `auth-service`.
     - [x] **Account Settings** (`/settings`) -> Integrate with `account-service`.
     - [x] **Help & Support** (`/support`) -> Integrate with `support-service`.
-- [ ] Implement full API integration via `gateway-service` for all core flows.
-- [ ] Optimize state management (Zustand) and Data fetching (React Query).
+- [x] Implement full API integration via `gateway-service` for all core flows.
+- [x] Optimize state management (Zustand) and Data fetching (React Query).
 
 ### 9. Mobile App Support
 - [ ] Prepare mobile-responsive views for web-app.

@@ -37,19 +37,19 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
         <TransferActivity />
 
         {/* Banner Tambahan */}
-        <div className="bg-gradient-to-r from-bank-green to-bank-emerald rounded-[3rem] p-12 text-white relative overflow-hidden group shadow-2xl shadow-bank-green/10">
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-            <div className="space-y-4">
-              <h3 className="text-4xl font-black italic tracking-tighter">Masa Depan Finansial Anda.</h3>
-              <p className="text-sm font-medium opacity-80 max-w-xl leading-relaxed">
+        <div className="bg-gradient-to-r from-bank-green to-bank-emerald rounded-[1.75rem] sm:rounded-[2rem] md:rounded-[3rem] p-6 sm:p-8 md:p-12 text-white relative overflow-hidden group shadow-2xl shadow-bank-green/10">
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-10">
+            <div className="space-y-3 sm:space-y-4 text-center md:text-left">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black italic tracking-tighter">Masa Depan Finansial Anda.</h3>
+              <p className="text-xs sm:text-sm font-medium opacity-80 max-w-xl leading-relaxed">
                 Bangun portofolio investasi yang kuat langsung dari satu aplikasi. Dari reksa dana hingga emas digital, kami menyediakan instrumen terbaik untuk pertumbuhan aset Anda.
               </p>
             </div>
-            <Link href="/investments" className="bg-white text-bank-green px-10 py-5 rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-gray-50 transition-all active:scale-95 shadow-xl shadow-black/10 flex items-center gap-2">
+            <Link href="/investments" className="bg-white text-bank-green px-6 sm:px-8 md:px-10 py-4 sm:py-5 rounded-[1.5rem] sm:rounded-2xl md:rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-gray-50 transition-all active:scale-95 shadow-xl shadow-black/10 flex items-center gap-2">
               Mulai Berinvestasi <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -z-0 translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full blur-3xl -z-0 translate-x-1/2 -translate-y-1/2" />
         </div>
       </div>
     </DashboardLayout>
