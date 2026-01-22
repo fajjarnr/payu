@@ -93,16 +93,27 @@ function LandingPage() {
              Platform perbankan digital mandiri yang cepat, mudah, dan aman. Infrastruktur pembayaran untuk berbagai proyek Anda.
            </p>
 
-           <div className="pt-4">
+           <div className="pt-4 flex gap-4">
               <button className="bg-black text-white px-6 py-2 rounded-lg flex items-center gap-3 hover:bg-gray-800 transition-colors shadow-xl shadow-gray-200">
-                 <div className="text-2xl">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
-                      <path d="M3.609 1.814L13.792 12 3.61 22.186a.91.91 0 01-.91-.91V2.724a.91.91 0 01.91-.91zM15.209 13.417l2.844 2.846-9.82 5.645-8.233-4.17 15.209-4.32zm.576-1.416l-4.32-4.32 4.32 4.32zM15.209 10.583L4.015 6.25l9.82 5.645-2.844 2.846 4.218-4.158zM18.885 11.21l2.498 1.417a1.04 1.04 0 010 1.748l-2.498 1.416-2.518-2.519 2.518-2.062z"/>
-                    </svg>
+                 <div className="h-8 w-auto">
+                    <Image 
+                      src="/google-play-badge.svg" 
+                      alt="Get it on Google Play" 
+                      width={135} 
+                      height={40}
+                      className="h-8 w-auto"
+                    />
                  </div>
-                 <div className="text-left">
-                    <div className="text-[10px] uppercase font-medium text-gray-300 leading-none mb-0.5">Get it on</div>
-                    <div className="text-lg font-bold leading-none">Google Play</div>
+              </button>
+              <button className="bg-black text-white px-6 py-2 rounded-lg flex items-center gap-3 hover:bg-gray-800 transition-colors shadow-xl shadow-gray-200">
+                 <div className="h-8 w-auto">
+                    <Image 
+                      src="/app-store-badge.svg" 
+                      alt="Download on the App Store" 
+                      width={120} 
+                      height={40}
+                      className="h-8 w-auto"
+                    />
                  </div>
               </button>
            </div>
