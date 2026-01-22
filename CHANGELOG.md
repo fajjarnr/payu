@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Disaster Recovery Plan (DRP)** (`DISASTER_RECOVERY.md`):
+  - Comprehensive backup and restore procedures for all PayU components
+  - Recovery objectives: RTO < 15 min, RPO < 1 min (production)
+  - Coverage: PostgreSQL (11 databases), Redis, Kafka, configuration files
+  - Incident response procedures and communication templates
+  - Environment-specific settings (dev, staging, production)
+
+- **Backup Scripts** (`scripts/`):
+  - `run_backup.sh` - Orchestration script for all backup operations
+  - `backup_postgres.sh` - PostgreSQL logical and physical backups
+  - `restore_postgres.sh` - PostgreSQL restore procedures
+  - `backup_restore_redis.sh` - Redis snapshot backup and restore
+  - `backup_restore_kafka.sh` - Kafka topic backup and restore
+  - `verify_docker_compose.sh` - Docker infrastructure verification
+
+- **Backup-Restore Test Suite** (`tests/infrastructure/test_backup_restore.py`):
+  - 31 tests covering backup scripts, documentation, and DRP scenarios
+  - Tests: Script existence, syntax validation, DRP documentation content
+  - Coverage: PostgreSQL, Redis, Kafka, orchestration, and DRP workflows
+  - All 22 tests passing (9 tests skipped - require running infrastructure)
+
 - **E2E Tests for KYC Service** (`backend/kyc-service/tests/e2e/`):
   - `test_kyc_workflow.py` - Complete KYC verification workflow tests
   - Tests: Start verification, KTP upload, selfie upload, status retrieval
