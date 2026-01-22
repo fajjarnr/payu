@@ -10,10 +10,10 @@ export default function MobileNav() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/', icon: Home, label: 'Home' },
+    { href: '/', icon: Home, label: 'Beranda' },
     { href: '/transfer', icon: Repeat, label: 'Transfer' },
-    { href: '/pockets', icon: Wallet, label: 'Pockets' },
-    { href: '/bills', icon: Receipt, label: 'Bills' },
+    { href: '/pockets', icon: Wallet, label: 'Kantong' },
+    { href: '/bills', icon: Receipt, label: 'Tagihan' },
   ];
 
   // Don't show nav on login or onboarding
@@ -46,7 +46,7 @@ export default function MobileNav() {
               )}>
                 <item.icon className={clsx("h-5 w-5", isActive && "stroke-[2.5px]")} />
               </div>
-              <span className={clsx("text-[10px] font-bold uppercase tracking-widest transition-all", isActive ? "opacity-100" : "opacity-0 h-0")}>
+              <span className={clsx("text-[10px] font-black uppercase tracking-widest transition-all", isActive ? "opacity-100" : "opacity-0 h-0")}>
                 {item.label}
               </span>
             </Link>

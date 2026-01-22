@@ -48,7 +48,7 @@ const SidebarItem = ({ href, icon: Icon, label, active }: SidebarItemProps) => (
             "h-5 w-5",
             active ? "text-bank-green" : "text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200"
         )} />
-        <span>{label}</span>
+        <span className="text-sm font-bold uppercase tracking-tight">{label}</span>
     </Link>
 );
 
@@ -58,25 +58,25 @@ interface DashboardLayoutProps {
     onLogout?: () => void;
 }
 
-export default function DashboardLayout({ children, username = 'User', onLogout }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, username = 'Pengguna', onLogout }: DashboardLayoutProps) {
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const mainMenu = [
-        { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
-        { href: '/pockets', icon: Wallet, label: 'Pockets' },
-        { href: '/transfer', icon: ArrowRightLeft, label: 'Transfers' },
-        { href: '/qris', icon: QrCode, label: 'QRIS Payments' },
-        { href: '/bills', icon: Receipt, label: 'Bills & Top-up' },
-        { href: '/cards', icon: CreditCard, label: 'Virtual Card' },
-        { href: '/investments', icon: TrendingUp, label: 'Investments' },
-        { href: '/analytics', icon: BarChart3, label: 'Financial Analytics' },
+        { href: '/', icon: LayoutDashboard, label: 'Beranda' },
+        { href: '/pockets', icon: Wallet, label: 'Kantong' },
+        { href: '/transfer', icon: ArrowRightLeft, label: 'Transfer' },
+        { href: '/qris', icon: QrCode, label: 'Pembayaran QRIS' },
+        { href: '/bills', icon: Receipt, label: 'Tagihan & Top-up' },
+        { href: '/cards', icon: CreditCard, label: 'Kartu Virtual' },
+        { href: '/investments', icon: TrendingUp, label: 'Investasi' },
+        { href: '/analytics', icon: BarChart3, label: 'Analitik Keuangan' },
     ];
 
     const otherMenu = [
-        { href: '/security', icon: ShieldCheck, label: 'Security & MFA' },
-        { href: '/settings', icon: Settings, label: 'Account Settings' },
-        { href: '/support', icon: LifeBuoy, label: 'Help & Support' },
+        { href: '/security', icon: ShieldCheck, label: 'Keamanan & MFA' },
+        { href: '/settings', icon: Settings, label: 'Pengaturan Akun' },
+        { href: '/support', icon: LifeBuoy, label: 'Bantuan & Support' },
     ];
 
     return (
@@ -84,14 +84,14 @@ export default function DashboardLayout({ children, username = 'User', onLogout 
             {/* Desktop Sidebar */}
             <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-sidebar p-6 h-full overflow-y-auto">
                 <div className="flex items-center gap-2 mb-10 px-2">
-                    <div className="h-10 w-10 bg-bank-green rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                    <div className="h-10 w-10 bg-bank-green rounded-xl flex items-center justify-center text-white font-black text-xl">
                         U
                     </div>
-                    <span className="text-2xl font-bold tracking-tight text-bank-green">PayU</span>
+                    <span className="text-2xl font-black tracking-tighter text-bank-green italic">PayU</span>
                 </div>
 
                 <div className="space-y-1 mb-8">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Main Menu</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 mb-2">Menu Utama</p>
                     {mainMenu.map((item) => (
                         <SidebarItem
                             key={item.href}
@@ -102,7 +102,7 @@ export default function DashboardLayout({ children, username = 'User', onLogout 
                 </div>
 
                 <div className="space-y-1 mt-auto">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Others</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 mb-2">Lainnya</p>
                     {otherMenu.map((item) => (
                         <SidebarItem
                             key={item.href}
@@ -128,10 +128,10 @@ export default function DashboardLayout({ children, username = 'User', onLogout 
             )}>
                 <div className="flex justify-between items-center mb-10 px-2">
                     <div className="flex items-center gap-2">
-                        <div className="h-10 w-10 bg-bank-green rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                        <div className="h-10 w-10 bg-bank-green rounded-xl flex items-center justify-center text-white font-black text-xl">
                             U
                         </div>
-                        <span className="text-2xl font-bold tracking-tight text-bank-green">PayU</span>
+                        <span className="text-2xl font-black tracking-tighter text-bank-green italic">PayU</span>
                     </div>
                     <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
                         <X className="h-6 w-6" />
@@ -139,7 +139,7 @@ export default function DashboardLayout({ children, username = 'User', onLogout 
                 </div>
 
                 <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Main Menu</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 mb-2">Menu Utama</p>
                     {mainMenu.map((item) => (
                         <SidebarItem
                             key={item.href}
@@ -150,7 +150,7 @@ export default function DashboardLayout({ children, username = 'User', onLogout 
 
                     <div className="h-8" />
 
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-2">Others</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 mb-2">Lainnya</p>
                     {otherMenu.map((item) => (
                         <SidebarItem
                             key={item.href}
@@ -172,23 +172,23 @@ export default function DashboardLayout({ children, username = 'User', onLogout 
                             <Menu className="h-6 w-6" />
                         </button>
                         <div className="hidden sm:block">
-                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Welcome, {username}!</h1>
-                            <p className="text-xs text-gray-500">Effortlessly manage your finances with real-time insights</p>
+                            <h1 className="text-xl font-black text-foreground italic tracking-tight">Selamat Datang, {username}!</h1>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Kelola finansial Anda dengan wawasan real-time</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-4">
-                        <div className="hidden md:flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2 w-64 gap-2 border border-transparent focus-within:border-bank-green transition-all">
+                        <div className="hidden md:flex items-center bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-2 w-64 gap-2 border border-border focus-within:border-bank-green transition-all">
                             <Search className="h-4 w-4 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search anything..."
-                                className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-gray-500 text-foreground"
+                                placeholder="Cari apapun..."
+                                className="bg-transparent border-none focus:ring-0 text-xs font-bold w-full placeholder:text-gray-200 text-foreground uppercase tracking-widest"
                             />
                         </div>
 
-                        <button className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full relative">
-                            <div className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
+                        <button className="p-3 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full relative transition-colors">
+                            <div className="absolute top-3 right-3 h-2 w-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
                             <Bell className="h-5 w-5" />
                         </button>
 
@@ -197,16 +197,16 @@ export default function DashboardLayout({ children, username = 'User', onLogout 
                                 <User className="h-6 w-6 text-gray-500" />
                             </button>
 
-                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl py-2 ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50 overflow-hidden">
-                                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 mb-1">
-                                    <p className="text-xs font-bold text-gray-400 uppercase">Account</p>
-                                    <p className="text-sm font-bold truncate">{username}</p>
+                            <div className="absolute right-0 mt-2 w-48 bg-card rounded-2xl shadow-xl py-2 border border-border hidden group-hover:block z-50 overflow-hidden">
+                                <div className="px-4 py-2 border-b border-border mb-1">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Akun</p>
+                                    <p className="text-sm font-black truncate">{username}</p>
                                 </div>
                                 <button
                                     onClick={onLogout}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold flex items-center gap-2 transition-colors"
+                                    className="w-full text-left px-4 py-3 text-[10px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 font-black uppercase tracking-widest flex items-center gap-2 transition-colors"
                                 >
-                                    <LogOut className="h-4 w-4" /> Sign out
+                                    <LogOut className="h-4 w-4" /> Keluar Sesi
                                 </button>
                             </div>
                         </div>

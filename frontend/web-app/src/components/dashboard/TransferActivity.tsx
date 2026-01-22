@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Search, ChevronDown, MoreHorizontal, RotateCcw, ArrowRight } from 'lucide-react';
+import { Search, ChevronDown, MoreHorizontal, RotateCcw, ArrowRight, User } from 'lucide-react';
 import clsx from 'clsx';
-import Image from 'next/image';
 
 interface TransferItem {
     id: string;
@@ -17,20 +16,20 @@ interface TransferItem {
 
 export default function TransferActivity() {
     const transfers: TransferItem[] = [
-        { id: '1', name: 'Alex Johnson', date: 'Feb 2, 2025, 09:30 AM', amount: -7500000, category: 'Transfer to', account: 'Savings (****5678)' },
-        { id: '2', name: 'Netflix Billing', date: 'Feb 4, 2025, 03:45 AM', amount: -159000, category: 'Subscription', account: 'Netflix' },
-        { id: '3', name: 'John Doe', date: 'Feb 3, 2025, 11:10 AM', amount: -4500000, category: 'Transfer to', account: 'Savings (****9876)' },
-        { id: '4', name: 'Maria Garcia', date: 'Feb 1, 2025, 07:45 AM', amount: -350000, category: 'Transfer to', account: 'Savings (****4321)' },
+        { id: '1', name: 'Alex Johnson', date: '22 Jan 2026, 09:30 AM', amount: -7500000, category: 'Transfer ke', account: 'Tabungan (****5678)' },
+        { id: '2', name: 'Tagihan Netflix', date: '21 Jan 2026, 03:45 AM', amount: -159000, category: 'Langganan', account: 'Netflix' },
+        { id: '3', name: 'John Doe', date: '20 Jan 2026, 11:10 AM', amount: -4500000, category: 'Transfer ke', account: 'Tabungan (****9876)' },
+        { id: '4', name: 'Maria Garcia', date: '19 Jan 2026, 07:45 AM', amount: -350000, category: 'Transfer ke', account: 'Tabungan (****4321)' },
     ];
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
             {/* Recent Transfer Activity List */}
-            <div className="lg:col-span-8 bg-card p-6 rounded-3xl border border-border shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold tracking-tight">Recent Transfer Activity</h3>
-                    <div className="flex items-center gap-1 text-sm font-bold text-gray-900 bg-gray-50 dark:bg-gray-800 px-4 py-2 rounded-xl cursor-pointer">
-                        February <ChevronDown className="h-4 w-4" />
+            <div className="lg:col-span-8 bg-card p-10 rounded-[2.5rem] border border-border shadow-sm">
+                <div className="flex justify-between items-center mb-10">
+                    <h3 className="text-xl font-black text-foreground uppercase tracking-tight italic">Aktivitas Transfer Terakhir</h3>
+                    <div className="flex items-center gap-1 text-[10px] font-black text-foreground bg-gray-50 dark:bg-gray-900/50 px-5 py-2.5 rounded-2xl cursor-pointer border border-border hover:bg-gray-100 transition-all uppercase tracking-widest">
+                        Januari <ChevronDown className="h-4 w-4" />
                     </div>
                 </div>
 
@@ -38,36 +37,36 @@ export default function TransferActivity() {
                     <table className="w-full">
                         <thead>
                             <tr className="text-left">
-                                <th className="pb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date & Time</th>
-                                <th className="pb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Description</th>
-                                <th className="pb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Account</th>
-                                <th className="pb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Amount</th>
-                                <th className="pb-4"></th>
+                                <th className="pb-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tanggal & Waktu</th>
+                                <th className="pb-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Deskripsi</th>
+                                <th className="pb-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Rekening</th>
+                                <th className="pb-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Jumlah</th>
+                                <th className="pb-6"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                        <tbody className="divide-y divide-gray-50 dark:divide-gray-900">
                             {transfers.map((item) => (
                                 <tr key={item.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
-                                    <td className="py-4 whitespace-nowrap text-xs font-medium text-gray-500">{item.date}</td>
-                                    <td className="py-4">
-                                        <div className="flex items-center gap-3 justify-center">
-                                            <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                                <span className="text-[10px] font-bold">{item.name[0]}</span>
+                                    <td className="py-5 whitespace-nowrap text-[10px] font-black text-gray-400 uppercase tracking-tight">{item.date}</td>
+                                    <td className="py-5">
+                                        <div className="flex items-center gap-4 justify-center">
+                                            <div className="h-10 w-10 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border border-border shadow-sm group-hover:scale-110 transition-transform">
+                                                <User className="h-5 w-5 text-gray-400" />
                                             </div>
                                             <div className="text-left">
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">{item.category}</p>
-                                                <p className="text-xs font-bold">{item.name}</p>
+                                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{item.category}</p>
+                                                <p className="text-xs font-black text-foreground uppercase tracking-tight">{item.name}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-4 text-center">
-                                        <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{item.account}</p>
+                                    <td className="py-5 text-center">
+                                        <p className="text-[10px] font-black text-foreground uppercase tracking-widest">{item.account}</p>
                                     </td>
-                                    <td className="py-4 text-right">
-                                        <p className="text-xs font-bold tracking-tight">Rp {Math.abs(item.amount).toLocaleString()}</p>
+                                    <td className="py-5 text-right">
+                                        <p className="text-xs font-black tracking-tight text-foreground italic">Rp {Math.abs(item.amount).toLocaleString('id-ID')}</p>
                                     </td>
-                                    <td className="py-4 text-right pl-4">
-                                        <button className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+                                    <td className="py-5 text-right pl-4">
+                                        <button className="p-2 text-gray-400 hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
                                             <MoreHorizontal className="h-4 w-4" />
                                         </button>
                                     </td>
@@ -77,57 +76,61 @@ export default function TransferActivity() {
                     </table>
                 </div>
 
-                <div className="mt-8 flex justify-between items-center text-[10px] font-bold">
-                    <button className="flex items-center gap-2 text-bank-green hover:underline uppercase tracking-widest">
-                        <RotateCcw className="h-4 w-4" /> Repeat Transfer
+                <div className="mt-10 flex justify-between items-center">
+                    <button className="flex items-center gap-2 text-[10px] font-black text-bank-green hover:underline uppercase tracking-widest transition-all">
+                        <RotateCcw className="h-4 w-4" /> Ulangi Transfer
                     </button>
-                    <button className="flex items-center gap-2 text-bank-green hover:underline uppercase tracking-widest">
-                        View Full Transaction History <ArrowRight className="h-4 w-4" />
+                    <button className="flex items-center gap-2 text-[10px] font-black text-bank-green hover:underline uppercase tracking-widest transition-all">
+                        Riwayat Transaksi Lengkap <ArrowRight className="h-4 w-4" />
                     </button>
                 </div>
             </div>
 
             {/* Quick Transfer Section */}
             <div className="lg:col-span-4 flex flex-col gap-6">
-                <div className="bg-card p-6 rounded-3xl border border-border shadow-sm flex-1">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-xl font-bold tracking-tight">Quick Transfer</h3>
-                        <Search className="h-5 w-5 text-gray-400" />
+                <div className="bg-card p-10 rounded-[2.5rem] border border-border shadow-sm flex-1 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-bank-green/5 rounded-full blur-3xl" />
+
+                    <div className="flex justify-between items-center mb-10">
+                        <h3 className="text-xl font-black text-foreground uppercase tracking-tight italic">Kirim Cepat</h3>
+                        <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                            <Search className="h-5 w-5 text-gray-400" />
+                        </div>
                     </div>
 
-                    <div className="space-y-8">
+                    <div className="space-y-10 relative z-10">
                         <div>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Transfer to</p>
-                            <div className="grid grid-cols-4 gap-4">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 text-center">Penerima Favorit</p>
+                            <div className="grid grid-cols-4 gap-6">
                                 {[
-                                    { icon: '🏦', label: 'Bankio' },
-                                    { icon: '📱', label: 'Top Up' },
-                                    { icon: '📄', label: 'Pay Bills' },
-                                    { icon: '•••', label: 'Others' },
+                                    { icon: '🏦', label: 'Bank' },
+                                    { icon: '📱', label: 'E-Wallet' },
+                                    { icon: '📄', label: 'Tagihan' },
+                                    { icon: '•••', label: 'Lainnya' },
                                 ].map((item, i) => (
-                                    <button key={i} className="flex flex-col items-center gap-2 group">
-                                        <div className="h-12 w-12 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-xl group-hover:bg-bank-green/10 group-hover:scale-105 transition-all outline outline-1 outline-gray-200 dark:outline-gray-700 group-hover:outline-bank-green">
+                                    <button key={i} className="flex flex-col items-center gap-3 group">
+                                        <div className="h-14 w-14 rounded-[1.25rem] bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-2xl group-hover:bg-bank-green/10 group-hover:scale-105 transition-all border border-border group-hover:border-bank-green animate-in zoom-in duration-300">
                                             {item.icon}
                                         </div>
-                                        <span className="text-[10px] font-bold text-gray-500 group-hover:text-bank-green">{item.label}</span>
+                                        <span className="text-[10px] font-black text-gray-400 group-hover:text-bank-green uppercase tracking-widest">{item.label}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
 
                         <div>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Recent User Transfer</p>
-                            <div className="flex justify-between items-center">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 text-center">Transfer Terakhir</p>
+                            <div className="flex justify-between items-center px-2">
                                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                                    <div key={i} className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-white dark:border-gray-900 shadow-sm flex items-center justify-center overflow-hidden cursor-pointer hover:scale-110 transition-transform">
-                                        <span className="text-[10px] font-bold">U{i}</span>
+                                    <div key={i} className="h-10 w-10 rounded-2xl bg-white dark:bg-gray-800 border-2 border-border shadow-sm flex items-center justify-center overflow-hidden cursor-pointer hover:scale-110 active:scale-95 transition-all hover:border-bank-green group">
+                                        <User className="h-5 w-5 text-gray-300 group-hover:text-bank-green transition-colors" />
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <button className="w-full bg-bank-green text-white py-4 rounded-2xl font-bold shadow-lg shadow-bank-green/20 hover:bg-bank-emerald transition-all active:scale-[0.98]">
-                            Quick Transfer Now
+                        <button className="w-full bg-bank-green text-white py-6 rounded-[1.25rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-bank-green/20 hover:bg-bank-emerald transition-all active:scale-[0.98]">
+                            Kirim Sekarang
                         </button>
                     </div>
                 </div>
