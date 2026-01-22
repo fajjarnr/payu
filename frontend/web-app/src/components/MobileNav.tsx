@@ -2,11 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Wallet, Repeat, Receipt, User } from 'lucide-react';
+import { Home, Wallet, Repeat, Receipt } from 'lucide-react';
 import clsx from 'clsx';
+import { useEffect, useState } from 'react';
 
 export default function MobileNav() {
   const pathname = usePathname();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check for token to determine auth state
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
+  }, [pathname]);
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
@@ -18,8 +26,14 @@ export default function MobileNav() {
   // Don't show nav on login or onboarding
   if (pathname === '/login' || pathname === '/onboarding') return null;
 
+  // Don't show if not authenticated
+  if (!isAuthenticated) return null;
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 pb-safe pt-2 px-6 z-50">
+    <div className={clsx(
+      "fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 pb-safe pt-2 px-6 z-50",
+      "md:hidden" // Hide on desktop
+    )}>
       <div className="flex justify-between items-center max-w-md mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
