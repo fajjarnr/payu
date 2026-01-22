@@ -45,13 +45,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `backup_restore_kafka.sh` - Kafka topic backup and restore
   - `verify_docker_compose.sh` - Docker infrastructure verification
 
-- **Backup-Restore Test Suite** (`tests/infrastructure/test_backup_restore.py`):
-  - 31 tests covering backup scripts, documentation, and DRP scenarios
-  - Tests: Script existence, syntax validation, DRP documentation content
-  - Coverage: PostgreSQL, Redis, Kafka, orchestration, and DRP workflows
-  - All 22 tests passing (9 tests skipped - require running infrastructure)
+   - **Backup-Restore Test Suite** (`tests/infrastructure/test_backup_restore.py`):
+   - 31 tests covering backup scripts, documentation, and DRP scenarios
+   - Tests: Script existence, syntax validation, DRP documentation content
+   - Coverage: PostgreSQL, Redis, Kafka, orchestration, and DRP workflows
+   - All 22 tests passing (9 tests skipped - require running infrastructure)
 
-- **E2E Tests for KYC Service** (`backend/kyc-service/tests/e2e/`):
+### Fixed
+- **Backup Script Configuration**:
+  - Added `BACKUP_ROOT` environment variable support to all backup scripts
+  - Modified scripts: `backup_postgres.sh`, `backup_restore_redis.sh`, `backup_restore_kafka.sh`, `restore_postgres.sh`
+  - Allows specifying custom backup directory via environment variable
+  - Default location: `/backups` if `BACKUP_ROOT` not set
+  - Fixed backup verification to use stdin for pg_restore (PostgreSQL)
+
+- **Logging Output Redirection**:
+  - Fixed log function in all backup scripts to output to stderr (`>&2`)
+  - Prevents log messages from being captured in command output (e.g., `topics=($(list_topics))`)
+  - Affected scripts: All backup scripts, `run_backup.sh`, `restore_postgres.sh`
+
+- **Kafka Topic List Filtering**:
+  - Fixed `backup_restore_kafka.sh` to filter "Listing" header line from topic list
+  - Prevents log messages from being treated as topic names during backup
+
+- **Verification Script** (`scripts/verify_backup_restore.sh`):
+  - Comprehensive verification script for backup/restore functionality
+  - Tests: Docker/docker-compose availability, script syntax, DRP documentation
+  - Infrastructure tests: PostgreSQL backup/restore, Redis backup, Kafka backup
+  - Generates test report with pass/fail/skip counts
+
+ - **E2E Tests for KYC Service** (`backend/kyc-service/tests/e2e/`):
   - `test_kyc_workflow.py` - Complete KYC verification workflow tests
   - Tests: Start verification, KTP upload, selfie upload, status retrieval
   - Test scenarios: Success case, liveness failure, face match failure

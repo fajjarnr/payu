@@ -22,7 +22,7 @@ class BackupRestoreTest:
         self.script_dir = os.path.join(self.project_root, "scripts")
         self.backup_dir = "/backups"
 
-    def run_command(self, cmd: List[str], cwd: str = None) -> Tuple[int, str, str]:
+    def run_command(self, cmd: List[str], cwd: str | None = None) -> Tuple[int, str, str]:
         """Run a shell command and return exit code, stdout, stderr"""
         try:
             result = subprocess.run(

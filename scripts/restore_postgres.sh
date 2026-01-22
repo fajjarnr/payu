@@ -9,11 +9,12 @@ set -euo pipefail
 # Configuration
 CONTAINER_NAME="payu-postgres"
 POSTGRES_USER="payu"
-BACKUP_DIR="/backups/postgres"
-LOG_FILE="/var/log/payu/restore_postgres_$(date +%Y%m%d_%H%M%S).log"
+BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
+BACKUP_DIR="${BACKUP_ROOT}/postgres"
+LOG_FILE="${BACKUP_ROOT}/logs/restore_postgres_$(date +%Y%m%d_%H%M%S).log"
 
 # Create log directory if it doesn't exist
-mkdir -p "$(dirname ${LOG_FILE})"
+mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
 # Logging function
 log() {
@@ -21,7 +22,7 @@ log() {
     shift
     local message="$*"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}"
+    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}" >&2
 }
 
 # Check if container is running

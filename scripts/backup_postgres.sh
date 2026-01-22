@@ -9,14 +9,15 @@ set -euo pipefail
 # Configuration
 CONTAINER_NAME="payu-postgres"
 POSTGRES_USER="payu"
-BACKUP_DIR="/backups/postgres"
+BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
+BACKUP_DIR="${BACKUP_ROOT}/postgres"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOG_FILE="/var/log/payu/backup_postgres_${TIMESTAMP}.log"
+LOG_FILE="${BACKUP_ROOT}/logs/backup_postgres_${TIMESTAMP}.log"
 
 # Create backup directories if they don't exist
 mkdir -p "${BACKUP_DIR}/daily"
 mkdir -p "${BACKUP_DIR}/weekly"
-mkdir -p "$(dirname ${LOG_FILE})"
+mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
 # List of databases to backup
 DATABASES=(
@@ -39,7 +40,7 @@ log() {
     shift
     local message="$*"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}"
+    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}" >&2
 }
 
 # Check if container is running
@@ -146,15 +147,11 @@ verify_backup() {
 
     # For pg_dump custom format, list contents
     if [[ "${backup_file}" == *.dump.gz ]]; then
-        local temp_file=$(mktemp)
-        gunzip -c "${backup_file}" > "${temp_file}"
-        if docker exec -i "${CONTAINER_NAME}" pg_restore -l "${temp_file}" > /dev/null 2>&1; then
+        if gunzip -c "${backup_file}" | docker exec -i "${CONTAINER_NAME}" pg_restore -l > /dev/null 2>&1; then
             log "INFO" "Backup integrity verified: ${backup_file}"
-            rm -f "${temp_file}"
             return 0
         else
             log "ERROR" "Backup integrity check failed: ${backup_file}"
-            rm -f "${temp_file}"
             return 1
         fi
     fi

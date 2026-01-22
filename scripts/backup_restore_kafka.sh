@@ -9,9 +9,10 @@ set -euo pipefail
 # Configuration
 CONTAINER_NAME="payu-kafka"
 BOOTSTRAP_SERVER="localhost:9092"
-BACKUP_DIR="/backups/kafka"
+BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
+BACKUP_DIR="${BACKUP_ROOT}/kafka"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOG_FILE="/var/log/payu/kafka_backup_restore_${TIMESTAMP}.log"
+LOG_FILE="${BACKUP_ROOT}/logs/kafka_backup_restore_${TIMESTAMP}.log"
 
 # Default topics to backup (empty = backup all topics)
 DEFAULT_TOPICS=""
@@ -19,7 +20,7 @@ DEFAULT_TOPICS=""
 # Create backup directories if they don't exist
 mkdir -p "${BACKUP_DIR}/topics"
 mkdir -p "${BACKUP_DIR}/config"
-mkdir -p "$(dirname ${LOG_FILE})"
+mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
 # Logging function
 log() {
@@ -27,7 +28,7 @@ log() {
     shift
     local message="$*"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}"
+    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}" >&2
 }
 
 # Check if container is running
@@ -60,7 +61,7 @@ list_topics() {
 
     local topics=$(docker exec "${CONTAINER_NAME}" kafka-topics \
         --bootstrap-server "${BOOTSTRAP_SERVER}" \
-        --list 2>/dev/null | grep -v "^__")
+        --list 2>/dev/null | grep -v "^__" | grep -v "^Listing$")
 
     if [[ -z "${topics}" ]]; then
         log "INFO" "No topics found"

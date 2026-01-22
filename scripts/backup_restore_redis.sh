@@ -8,13 +8,14 @@ set -euo pipefail
 
 # Configuration
 CONTAINER_NAME="payu-redis"
-BACKUP_DIR="/backups/redis/snapshots"
+BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
+BACKUP_DIR="${BACKUP_ROOT}/redis/snapshots"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOG_FILE="/var/log/payu/redis_backup_restore_${TIMESTAMP}.log"
+LOG_FILE="${BACKUP_ROOT}/logs/redis_backup_restore_${TIMESTAMP}.log"
 
 # Create backup directory if it doesn't exist
 mkdir -p "${BACKUP_DIR}"
-mkdir -p "$(dirname ${LOG_FILE})"
+mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
 # Logging function
 log() {
@@ -22,7 +23,7 @@ log() {
     shift
     local message="$*"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}"
+    echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}" >&2
 }
 
 # Check if container is running
