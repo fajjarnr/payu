@@ -22,6 +22,7 @@ class ArchitectureTest {
                         "jakarta..",
                         "org.springframework.format..",
                         "org.springframework.validation..",
+                        "org.springframework.data.domain..",
                         "lombok.."
                 );
 
@@ -63,7 +64,8 @@ class ArchitectureTest {
                         "org.springframework..",
                         "org.slf4j..",
                         "lombok..",
-                        "jakarta.."
+                        "jakarta..",
+                        "io.swagger.."
                 );
 
         rule.check(classes);

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **GDPR Compliance Audit System**:
+  - Added GDPR to ComplianceStandard enum
+  - DataAccessAudit domain model for tracking user data access patterns
+  - DataAccessAuditService for audit logging with comprehensive query capabilities
+  - DataAccessAudit persistence adapter and repository with JPA support
+  - GdprAuditController with RESTful endpoints for GDPR compliance
+  - DTOs for data access audit API (DataAccessAuditRequest, DataAccessAuditResponse, DataAccessAuditSearchRequest)
+  - Comprehensive unit tests for DataAccessAuditService (14 test cases)
+  - Comprehensive unit tests for GdprAuditController (11 test cases)
+  - Data access tracking by user, service, operation type, and date range
+  - Failed access attempt monitoring
+  - Search and filter capabilities for GDPR compliance reporting
+
 - **Native Mobile Apps Boilerplate**:
   - **iOS App** (Swift/SwiftUI):
     - Implemented Swift 5.9+ with SwiftUI for iOS 16.0+

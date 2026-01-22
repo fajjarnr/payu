@@ -4,5 +4,6 @@ public enum ComplianceStandard {
     PCI_DSS,
     OJK,
     AML,
-    CFT
+    CFT,
+    GDPR
 }
