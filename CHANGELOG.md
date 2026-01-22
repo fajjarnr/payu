@@ -48,6 +48,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented automatic ledger recording for balance change operations
   - New API Endpoints:
     - `GET /wallets/{walletId}/ledger` - Get ledger entries for a wallet
+
+- **Docker Compose Infrastructure Verification**:
+  - `tests/infrastructure/test_docker_infrastructure.py` - Pytest tests for docker-compose up/down operations
+  - `tests/infrastructure/test_docker_compose_verification.py` - Standalone Python verification script
+  - `scripts/verify_docker_compose.sh` - Shell script for manual infrastructure verification
+  - Tests verify: service startup, health checks, database connectivity, Kafka, Redis, Keycloak, microservices accessibility
+  - Validates all 17 required services are running and healthy
+  - Verifies 11 databases are created in PostgreSQL
+  - Verifies clean shutdown and removal of all containers
     - `GET /wallets/ledger/transaction/{transactionId}` - Get ledger entries by transaction ID
   - Flyway migration `V3__create_ledger_entries_table.sql` for ledger persistence
   - Updated `WalletController`, `WalletService`, and persistence adapters
