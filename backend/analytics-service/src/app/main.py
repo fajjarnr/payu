@@ -13,6 +13,7 @@ from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
 from app.config import get_settings
 from app.api.v1 import analytics_router
+from app.api.v1.websocket import websocket_router
 from app.database import init_db, close_db
 from app.messaging.kafka_consumer import KafkaConsumerService
 
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(analytics_router, prefix="/api/v1")
+    app.include_router(websocket_router)
 
     if settings.enable_metrics:
         metrics_app = make_asgi_app()

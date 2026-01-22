@@ -110,3 +110,53 @@ class ErrorResponse(BaseModel):
     detail: str
     error_code: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class DashboardEventType(str, Enum):
+    TRANSACTION_COMPLETED = "TRANSACTION_COMPLETED"
+    TRANSACTION_INITIATED = "TRANSACTION_INITIATED"
+    WALLET_BALANCE_CHANGED = "WALLET_BALANCE_CHANGED"
+    KYC_VERIFIED = "KYC_VERIFIED"
+    USER_METRICS_UPDATED = "USER_METRICS_UPDATED"
+
+
+class DashboardEvent(BaseModel):
+    event_type: DashboardEventType
+    user_id: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    data: dict = Field(default_factory=dict)
+
+
+class TransactionCompletedEvent(BaseModel):
+    transaction_id: str
+    amount: float
+    currency: str = "IDR"
+    transaction_type: str
+    category: str = "OTHER"
+    recipient_id: Optional[str] = None
+    merchant_id: Optional[str] = None
+
+
+class WalletBalanceChangedEvent(BaseModel):
+    wallet_id: str
+    balance: float
+    currency: str = "IDR"
+    change_amount: float
+    change_type: str = "CREDIT"
+
+
+class KycVerifiedEvent(BaseModel):
+    user_id: str
+    kyc_status: str = "VERIFIED"
+
+
+class UserMetricsUpdatedEvent(BaseModel):
+    total_transactions: int
+    total_amount: float
+    average_transaction: float
+    last_transaction_date: Optional[datetime] = None
+
+
+class WebSocketConnectionRequest(BaseModel):
+    user_id: str
+    dashboard_type: str = "general"

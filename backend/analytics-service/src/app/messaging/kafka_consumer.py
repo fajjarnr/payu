@@ -16,6 +16,15 @@ from app.database import (
     UserActivityEntity,
     UserMetricsEntity
 )
+from app.websocket.connection_manager import manager
+from app.models.schemas import (
+    DashboardEventType,
+    DashboardEvent,
+    TransactionCompletedEvent,
+    WalletBalanceChangedEvent,
+    KycVerifiedEvent,
+    UserMetricsUpdatedEvent
+)
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -125,6 +134,25 @@ class KafkaConsumerService:
 
         await self._update_user_metrics(session, user_id, amount)
 
+        dashboard_event = DashboardEvent(
+            event_type=DashboardEventType.TRANSACTION_COMPLETED,
+            user_id=user_id,
+            timestamp=timestamp,
+            data={
+                "transaction": TransactionCompletedEvent(
+                    transaction_id=transaction_id,
+                    amount=amount,
+                    currency=message.get('currency', 'IDR'),
+                    transaction_type=transaction_type,
+                    category=message.get('category', 'OTHER'),
+                    recipient_id=message.get('recipient_id'),
+                    merchant_id=message.get('merchant_id')
+                ).model_dump()
+            }
+        )
+
+        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id)
+
         logger.info(
             "Transaction analytics recorded",
             transaction_id=transaction_id,
@@ -157,6 +185,7 @@ class KafkaConsumerService:
         balance = float(message.get('balance', 0))
         change_amount = float(message.get('change_amount', 0))
         change_type = message.get('change_type', 'CREDIT')
+        timestamp = datetime.utcnow()
 
         entity = WalletBalanceEntity(
             event_id=event_id,
@@ -166,13 +195,31 @@ class KafkaConsumerService:
             currency=message.get('currency', 'IDR'),
             change_amount=change_amount,
             change_type=change_type,
-            timestamp=datetime.utcnow()
+            timestamp=timestamp
         )
 
         session.add(entity)
 
+        dashboard_event = DashboardEvent(
+            event_type=DashboardEventType.WALLET_BALANCE_CHANGED,
+            user_id=user_id,
+            timestamp=timestamp,
+            data={
+                "wallet_balance": WalletBalanceChangedEvent(
+                    wallet_id=wallet_id,
+                    balance=balance,
+                    currency=message.get('currency', 'IDR'),
+                    change_amount=change_amount,
+                    change_type=change_type
+                ).model_dump()
+            }
+        )
+
+        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id)
+
     async def _handle_kyc_verified(self, session, message):
         user_id = message.get('user_id')
+        timestamp = datetime.utcnow()
 
         metrics = await session.execute(
             select(UserMetricsEntity).where(UserMetricsEntity.user_id == user_id)
@@ -181,7 +228,7 @@ class KafkaConsumerService:
 
         if user_metrics:
             user_metrics.kyc_status = 'VERIFIED'
-            user_metrics.updated_at = datetime.utcnow()
+            user_metrics.updated_at = timestamp
         else:
             new_metrics = UserMetricsEntity(
                 user_id=user_id,
@@ -193,24 +240,55 @@ class KafkaConsumerService:
             )
             session.add(new_metrics)
 
+        dashboard_event = DashboardEvent(
+            event_type=DashboardEventType.KYC_VERIFIED,
+            user_id=user_id,
+            timestamp=timestamp,
+            data={
+                "kyc": KycVerifiedEvent(
+                    user_id=user_id,
+                    kyc_status='VERIFIED'
+                ).model_dump()
+            }
+        )
+
+        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id)
+
     async def _update_user_metrics(self, session, user_id: str, amount: float):
         metrics = await session.execute(
             select(UserMetricsEntity).where(UserMetricsEntity.user_id == user_id)
         )
         user_metrics = metrics.scalar_one_or_none()
+        timestamp = datetime.utcnow()
 
         if user_metrics:
             user_metrics.total_transactions += 1
             user_metrics.total_amount += amount
             user_metrics.average_transaction = user_metrics.total_amount / user_metrics.total_transactions
-            user_metrics.last_transaction_date = datetime.utcnow()
+            user_metrics.last_transaction_date = timestamp
+
+            dashboard_event = DashboardEvent(
+                event_type=DashboardEventType.USER_METRICS_UPDATED,
+                user_id=user_id,
+                timestamp=timestamp,
+                data={
+                    "metrics": UserMetricsUpdatedEvent(
+                        total_transactions=user_metrics.total_transactions,
+                        total_amount=float(user_metrics.total_amount),
+                        average_transaction=float(user_metrics.average_transaction),
+                        last_transaction_date=timestamp
+                    ).model_dump()
+                }
+            )
+
+            await manager.broadcast_to_user(dashboard_event.model_dump(), user_id)
         else:
             new_metrics = UserMetricsEntity(
                 user_id=user_id,
                 total_transactions=1,
                 total_amount=amount,
                 average_transaction=amount,
-                last_transaction_date=datetime.utcnow(),
+                last_transaction_date=timestamp,
                 account_age_days=0,
                 kyc_status=None
             )
