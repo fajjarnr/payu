@@ -1,59 +1,30 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import {
-  ArrowRightLeft,
-  Receipt,
-  Wallet,
-  PlusCircle,
-  History,
-  LogOut,
-  User,
-  Bell,
-  MoreVertical,
-  Send,
-  ShoppingBag,
-  Smartphone,
-  ChevronRight
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { WalletTransaction } from '@/types';
-import WalletService from '@/services/WalletService';
+import { ChevronRight } from 'lucide-react';
+import { useLogout, useBalance } from '@/hooks';
+import { useAuthStore } from '@/stores';
 import DashboardLayout from '@/components/DashboardLayout';
 import BalanceCard from '@/components/dashboard/BalanceCard';
 import StatsCharts from '@/components/dashboard/StatsCharts';
 import TransferActivity from '@/components/dashboard/TransferActivity';
 
 export default function Home() {
-  const router = useRouter();
+  const logout = useLogout();
+  const user = useAuthStore((state) => state.user);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('accountId');
-    router.push('/login');
+    logout.mutate();
   };
 
-  const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-  const user = userStr ? JSON.parse(userStr) : null;
   const username = user?.fullName || 'Pengguna';
 
   return <Dashboard username={username} handleLogout={handleLogout} />;
 }
 
 function Dashboard({ username, handleLogout }: { username: string; handleLogout: () => void }) {
-  const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') || '' : '';
-  const walletService = WalletService;
-
-  const { data: balance, isLoading: balanceLoading } = useQuery({
-    queryKey: ['wallet-balance', accountId],
-    queryFn: () => walletService.getBalance(accountId),
-    enabled: !!accountId
-  });
+  const accountId = useAuthStore((state) => state.accountId);
+  const { data: balance } = useBalance(accountId || undefined);
 
   return (
     <DashboardLayout username={username} onLogout={handleLogout}>

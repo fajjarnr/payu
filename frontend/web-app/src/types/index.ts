@@ -139,3 +139,9 @@ export interface PaymentResponse {
   status: string;
   createdAt: string;
 }
+
+export interface ProcessQrisPaymentRequest {
+  qrCode: string;
+  amount: number;
+  accountId: string;
+}

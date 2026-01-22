@@ -1,20 +1,22 @@
 'use client';
 
 import { Search, ChevronRight, PlusCircle, LifeBuoy } from "lucide-react";
-import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { transferSchema, TransferRequest } from '@/types';
-import api from '@/lib/api';
 import { useState } from 'react';
-import TransactionService from '@/services/TransactionService';
+import { useInitiateTransfer } from '@/hooks';
+import { useAuthStore } from '@/stores';
+import { useUIStore } from '@/stores';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
 
 export default function TransferPage() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [showReview, setShowReview] = useState(false);
-  const transactionService = TransactionService;
+  const accountId = useAuthStore((state) => state.accountId);
+  const addToast = useUIStore((state) => state.addToast);
+  const transferMutation = useInitiateTransfer();
 
   const recentContacts = [
     { name: 'Anya', initial: 'A', color: 'bg-bank-green/10 text-bank-green', accountId: 'acc-any123' },
@@ -32,42 +34,40 @@ export default function TransferPage() {
 
   const amount = watch('amount');
 
-  const transferMutation = useMutation({
-    mutationFn: (data: TransferRequest) => {
-      return transactionService.initiateTransfer({
-        senderAccountId: data.fromAccountId,
-        recipientAccountNumber: data.toAccountId,
-        amount: data.amount,
-        description: data.description || ''
-      });
-    },
-    onSuccess: () => {
-      alert('Transfer berhasil!');
-      setShowReview(false);
-      setSelectedContact(null);
-      setValue('amount', 0);
-      setValue('description', '');
-    },
-    onError: (error) => {
-      console.error('Transfer gagal:', error);
-      alert('Transfer gagal. Silakan coba lagi.');
-    }
-  });
-
   const handleContactSelect = (contact: { name: string; accountId: string }) => {
     setSelectedContact(contact.accountId);
     setValue('toAccountId', contact.accountId);
-    setValue('fromAccountId', localStorage.getItem('accountId') || '');
+    setValue('fromAccountId', accountId || '');
   };
 
   const onSubmit = (data: TransferRequest) => {
-    transferMutation.mutate(data);
+    transferMutation.mutate(
+      {
+        senderAccountId: data.fromAccountId,
+        recipientAccountNumber: data.toAccountId,
+        amount: data.amount,
+        description: data.description || '',
+        type: 'INTERNAL_TRANSFER'
+      },
+      {
+        onSuccess: () => {
+          addToast('Transfer berhasil!', 'success');
+          setShowReview(false);
+          setSelectedContact(null);
+          setValue('amount', 0);
+          setValue('description', '');
+        },
+        onError: () => {
+          addToast('Transfer gagal. Silakan coba lagi.', 'error');
+        }
+      }
+    );
   };
 
   const handleReview = () => {
-    const data = { ...watch(), fromAccountId: localStorage.getItem('accountId') || '' };
+    const data = { ...watch(), fromAccountId: accountId || '' };
     if (!data.toAccountId || data.amount <= 0) {
-      alert('Silakan pilih penerima dan masukkan jumlah transfer');
+      addToast('Silakan pilih penerima dan masukkan jumlah transfer', 'warning');
       return;
     }
     setShowReview(true);
@@ -118,7 +118,7 @@ export default function TransferPage() {
               {watch('description') && (
                 <div className="bg-gray-50 dark:bg-gray-900/50 p-8 rounded-[1.5rem] border border-border">
                   <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-2">Catatan Transfer</p>
-                  <p className="font-black text-foreground italic">"{watch('description')}"</p>
+                  <p className="font-black text-foreground italic">&quot;{watch('description')}&quot;</p>
                 </div>
               )}
             </div>

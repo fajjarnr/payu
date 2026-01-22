@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowUpRight, ArrowDownRight, RefreshCw, MoreVertical } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
 import clsx from 'clsx';
 
 interface BalanceCardProps {
@@ -114,7 +114,7 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
     );
 }
 
-function SummaryItem({ label, amount, change, isPositive, currency }: any) {
+function SummaryItem({ label, amount, change, isPositive, currency }: { label: string; amount: number; change: number; isPositive: boolean; currency: string }) {
     return (
         <div className="bg-card p-6 rounded-[2rem] border border-border shadow-sm flex flex-col justify-between flex-1">
             <div className="flex justify-between items-start">
