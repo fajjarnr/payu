@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Investment Service** (investment-service):
+  - New Spring Boot 3.4 service for digital investments
+  - Hexagonal architecture implementation with ports and adapters
+  - Features: Digital Deposits, Mutual Funds Marketplace, Digital Gold
+  - Investment account management with balance tracking
+  - Database schema with investment_accounts, deposits, mutual_funds, gold_holdings, investment_transactions tables
+  - Kafka event publishing for investment events (created, completed, failed)
+  - Wallet service integration for balance management
+  - Circuit breaker and retry patterns with Resilience4j
+  - Unit tests with TDD approach (Red-Green-Refactor)
+  - JaCoCo code coverage with 80% line and 70% branch thresholds
+
+### Added
+
 - **PCI-DSS & OJK Regulatory Compliance Audit Service** (compliance-service):
   - New Spring Boot 3.4 service for regulatory compliance auditing
   - PCI-DSS compliance checks for card data handling and security
