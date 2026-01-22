@@ -24,15 +24,15 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
                     </div>
 
                     <div className="space-y-1 mb-4">
-                        <h2 className="text-3xl font-bold tracking-tight">
-                            {currency} {balance.toLocaleString()}
+                        <h2 className="text-4xl font-black tracking-tighter text-foreground">
+                            {currency} {balance.toLocaleString('id-ID')}
                         </h2>
                         <div className="flex items-center gap-2">
-                            <span className="flex items-center gap-0.5 text-[10px] font-bold text-bank-green bg-bank-green/10 px-1.5 py-0.5 rounded-md">
+                            <span className="flex items-center gap-0.5 text-[10px] font-black text-bank-green bg-bank-green/10 px-2 py-1 rounded-full uppercase tracking-widest">
                                 <ArrowUpRight className="h-3 w-3" />
                                 +{percentage}%
                             </span>
-                            <span className="text-[10px] text-gray-400 font-medium">from last month</span>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Growth Factor</span>
                         </div>
                     </div>
 
@@ -40,12 +40,12 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
                 </div>
 
                 <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
-                    <p className="text-sm font-medium text-gray-500 mb-1">Current Net Worth</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Net Financial Worth</p>
                     <div className="flex items-end justify-between">
-                        <h3 className="text-2xl font-bold tracking-tight">
-                            {currency} {(balance * 1.5).toLocaleString()}
+                        <h3 className="text-2xl font-black tracking-tight text-foreground italic">
+                            {currency} {(balance * 1.5).toLocaleString('id-ID')}
                         </h3>
-                        <span className="text-[10px] font-bold text-bank-green bg-bank-green/10 px-2 py-1 rounded-full">
+                        <span className="text-[10px] font-black text-bank-green bg-bank-green/10 px-2 py-1 rounded-full uppercase tracking-widest">
                             +18.4%
                         </span>
                     </div>

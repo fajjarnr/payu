@@ -1,13 +1,12 @@
 'use client';
 
-import MobileHeader from "@/components/MobileHeader";
-import { Plus, Target, Lock, TrendingUp, ChevronRight } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Activity } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { BalanceResponse, WalletTransaction } from '@/types';
 import api from '@/lib/api';
-import { useEffect, useState } from 'react';
-
 import DashboardLayout from "@/components/DashboardLayout";
+import clsx from 'clsx';
 
 export default function PocketsPage() {
   const [accountId, setAccountId] = useState('');
@@ -34,16 +33,6 @@ export default function PocketsPage() {
     enabled: !!accountId
   });
 
-  const pockets = balance ? [
-    {
-      id: 'main',
-      name: 'Main Pocket',
-      balance: balance.balance,
-      type: 'MAIN',
-      color: 'from-blue-600 to-blue-800'
-    }
-  ] : [];
-
   const savingGoals = [
     {
       id: 1,
@@ -66,173 +55,240 @@ export default function PocketsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <MobileHeader title="Pockets" />
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto space-y-10 pb-10">
+        {/* Header Area */}
+        <div className="flex justify-between items-end">
+          <div>
+            <h2 className="text-3xl font-black text-foreground uppercase tracking-tight">Pocket Management</h2>
+            <p className="text-sm text-gray-500 font-medium">Organize your funds into separate pockets for better financial clarity.</p>
+          </div>
+          <button className="bg-bank-green text-white px-8 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20 flex items-center gap-2">
+            <Plus className="h-4 w-4" /> Create New Pocket
+          </button>
+        </div>
 
-      <div className="max-w-md mx-auto p-6 space-y-8">
+        {/* Main Pockets Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Main Pocket Card */}
+          <div className="lg:col-span-8">
+            <div className="bg-card rounded-[3rem] p-10 border border-border shadow-sm flex flex-col justify-between h-full relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-bank-green/5 rounded-full blur-3xl -z-0" />
 
-        {/* Main Pockets */}
-        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x">
-          {balanceLoading ? (
-            <div className="snap-center shrink-0 w-[85%] bg-gray-100 dark:bg-gray-800 rounded-3xl p-6 h-48 animate-pulse"></div>
-          ) : pockets.length > 0 ? (
-            pockets.map((pocket) => (
-              <div key={pocket.id} className={`snap-center shrink-0 w-[85%] bg-gradient-to-br ${pocket.color} rounded-3xl p-6 text-white shadow-lg relative overflow-hidden`}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                <div className="relative z-10">
-                  <div className="text-white/80 text-sm mb-1">Main Pocket</div>
-                  <div className="text-3xl font-bold mb-8">Rp {balance?.balance.toLocaleString()}</div>
-                  <div className="flex justify-between items-end">
-                    <div className="text-xs bg-white/20 px-2 py-1 rounded">Daily</div>
-                    <div className="text-xs text-white/80">**** 8829</div>
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-12">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-2 w-2 bg-bank-green rounded-full animate-pulse" />
+                      <p className="text-[10px] font-black text-bank-green uppercase tracking-[0.2em]">Active Wallet</p>
+                    </div>
+                    <h3 className="text-3xl font-black text-foreground uppercase italic tracking-tighter">Main Liquid Pocket.</h3>
+                  </div>
+                  <div className="h-12 w-12 bg-gray-50 dark:bg-gray-900 rounded-2xl flex items-center justify-center border border-border">
+                    <Wallet className="h-6 w-6 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Available Funds</p>
+                  <h4 className="text-6xl md:text-7xl font-black text-foreground tracking-tighter">
+                    {balanceLoading ? (
+                      <span className="opacity-20">Rp ••••••••</span>
+                    ) : (
+                      `Rp ${balance?.balance.toLocaleString()}`
+                    )}
+                  </h4>
+                </div>
+              </div>
+
+              <div className="relative z-10 flex flex-col md:flex-row gap-6 mt-12 pt-10 border-t border-border">
+                <div className="flex-1">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Reserve Protocol</p>
+                  <p className="text-lg font-black text-foreground">Rp {balance?.reservedBalance.toLocaleString() || '0'}</p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Daily Cap Limit</p>
+                  <p className="text-lg font-black text-foreground">Rp 50.000.000</p>
+                </div>
+                <div className="flex-1 flex justify-end">
+                  <button className="p-4 bg-foreground text-background rounded-2xl group-hover:bg-bank-green group-hover:text-white transition-all">
+                    <ArrowUpRight className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pocket Stats Side */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-[3rem] p-10 text-white h-full flex flex-col justify-between relative overflow-hidden group">
+              <div className="relative z-10">
+                <h3 className="text-xl font-black uppercase tracking-tight mb-4">Pocket Security</h3>
+                <div className="space-y-6">
+                  <div className="flex gap-4">
+                    <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                      <ShieldCheck className="h-5 w-5 text-bank-green" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-tight">LPS Guaranteed</p>
+                      <p className="text-[10px] text-gray-400 font-medium">Funds are insured up to Rp 2M per user.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                      <Activity className="h-5 w-5 text-bank-green" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-tight">Real-time Ledger</p>
+                      <p className="text-[10px] text-gray-400 font-medium">Distributed audit log for every balance movement.</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="snap-center shrink-0 w-[85%] bg-gray-100 dark:bg-gray-800 rounded-3xl p-6 text-center text-gray-500">
-              <p>No account found</p>
+              <div className="mt-12">
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Protocol Type: RESP-V3</p>
+              </div>
+              <Wallet className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
             </div>
-          )}
-          <div className="snap-center shrink-0 w-[85%] bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-gray-400 gap-2 border-dashed border-2">
-            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-              <Plus className="h-6 w-6 text-gray-500" />
-            </div>
-            <span className="font-medium text-sm">Create Pocket</span>
           </div>
         </div>
 
-        {/* Balance Details */}
-        {balance && (
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h4 className="font-bold text-gray-900 dark:text-white mb-4">Balance Details</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-500 text-sm">Available Balance</span>
-                <span className="font-bold text-gray-900 dark:text-white">Rp {balance.availableBalance.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 text-sm">Reserved Balance</span>
-                <span className="font-bold text-gray-900 dark:text-white">Rp {balance.reservedBalance.toLocaleString()}</span>
-              </div>
+        {/* Saving Goals & Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Saving Goals Section */}
+          <div className="lg:col-span-7 space-y-8">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Specialized Goals</h3>
+              <button className="text-[10px] font-black text-bank-green uppercase tracking-widest hover:underline">Manage All</button>
             </div>
-          </div>
-        )}
 
-        {/* Saving Goals */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Saving Goals</h3>
-            <button className="text-green-600 text-xs font-bold bg-green-50 px-3 py-1 rounded-full">+ New Goal</button>
-          </div>
-
-          <div className="space-y-4">
-            {savingGoals.map((goal) => {
-              const percentage = Math.round((goal.current / goal.target) * 100);
-              const Icon = goal.icon;
-
-              return (
-                <div key={goal.id} className="bg-white dark:bg-gray-800 p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 ${goal.color} rounded-xl flex items-center justify-center`}>
-                        <Icon className="h-5 w-5" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {savingGoals.map((goal) => {
+                const percentage = Math.round((goal.current / goal.target) * 100);
+                const Icon = goal.icon;
+                return (
+                  <div key={goal.id} className="bg-card rounded-[2.5rem] p-8 border border-border shadow-sm group hover:shadow-xl transition-all">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className={clsx("h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110", goal.color)}>
+                        <Icon className="h-7 w-7" />
                       </div>
                       <div>
-                        <div className="font-bold text-gray-900 dark:text-white">{goal.name}</div>
-                        <div className="text-xs text-gray-400">Target: Rp {goal.target.toLocaleString()}</div>
+                        <h4 className="font-black text-foreground uppercase tracking-tight">{goal.name}</h4>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Target: Rp {goal.target.toLocaleString()}</p>
                       </div>
                     </div>
                     {goal.locked ? (
-                      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">{goal.interestRate}</span>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                          <p className="text-2xl font-black text-foreground tracking-tighter">Rp {goal.current.toLocaleString()}</p>
+                          <div className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">{goal.interestRate}</div>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-black text-bank-green uppercase tracking-widest">
+                          <Lock className="h-3 w-3" /> Fully Funded & Locked
+                        </div>
+                      </div>
                     ) : (
-                      <span className="font-bold text-green-600">{percentage}%</span>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-2xl font-black text-foreground tracking-tighter">Rp {goal.current.toLocaleString()}</p>
+                          <p className="text-[10px] font-black text-bank-green">{percentage}%</p>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-bank-green rounded-full" style={{ width: `${percentage}%` }} />
+                        </div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Left: Rp {(goal.target - goal.current).toLocaleString()}</p>
+                      </div>
                     )}
                   </div>
-                  {!goal.locked && (
-                    <>
-                      <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div className="bg-green-500 h-full rounded-full" style={{ width: `${percentage}%` }}></div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Transaction History Section */}
+          <div className="lg:col-span-5 space-y-8">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Recent Ledger</h3>
+              <div className="h-8 w-8 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center border border-border">
+                <History className="h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="bg-card rounded-[2.5rem] p-8 border border-border shadow-sm min-h-[400px]">
+              {transactionsLoading ? (
+                <div className="space-y-6">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="flex gap-4 animate-pulse">
+                      <div className="h-12 w-12 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
+                        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/4" />
                       </div>
-                      <div className="flex justify-between mt-2 text-xs text-gray-500">
-                        <span>Rp {goal.current.toLocaleString()}</span>
-                        <span>Left: Rp {(goal.target - goal.current).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {transactions?.map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between group">
+                      <div className="flex gap-5">
+                        <div className={clsx(
+                          "h-12 w-12 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110",
+                          tx.type === 'CREDIT' ? "bg-bank-green/10 border-bank-green/20" : "bg-red-50 border-red-100"
+                        )}>
+                          {tx.type === 'CREDIT' ? (
+                            <TrendingUp className="h-5 w-5 text-bank-green" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5 text-red-500 rotate-90" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-foreground uppercase tracking-tight">{tx.description}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(tx.createdAt).toLocaleDateString()} • {tx.type}</p>
+                        </div>
                       </div>
-                    </>
-                  )}
-                  {goal.locked && (
-                    <>
-                      <div className="font-bold text-xl text-gray-900 dark:text-white mb-1">Rp {goal.current.toLocaleString()}</div>
-                      <div className="text-xs text-gray-400">Fully funded</div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Recent Transactions */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="font-bold text-gray-900 dark:text-white">Recent Transactions</h4>
-            {transactions && transactions.length > 0 && (
-              <span className="text-xs text-gray-400">Last {transactions.length}</span>
-            )}
-          </div>
-
-          {transactionsLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4 animate-pulse">
-                  <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-32 mb-2"></div>
-                    <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-24"></div>
-                  </div>
-                  <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-20"></div>
-                </div>
-              ))}
-            </div>
-          ) : transactions && transactions.length > 0 ? (
-            <div className="space-y-3">
-              {transactions.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full ${tx.type === 'CREDIT' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} flex items-center justify-center`}>
-                      {tx.type === 'CREDIT' ? '+' : '-'}
+                      <p className={clsx(
+                        "text-sm font-black tracking-tight",
+                        tx.type === 'CREDIT' ? "text-bank-green" : "text-foreground"
+                      )}>
+                        {tx.type === 'CREDIT' ? '+' : '-'} Rp {tx.amount.toLocaleString()}
+                      </p>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white text-sm">{tx.description}</p>
-                      <p className="text-xs text-gray-500">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                  ))}
+                  {(!transactions || transactions.length === 0) && (
+                    <div className="h-full flex flex-col items-center justify-center text-center py-20">
+                      <History className="h-12 w-12 text-gray-100 dark:text-gray-800 mb-4" />
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No activity detected on this ledger.</p>
                     </div>
-                  </div>
-                  <span className={`font-bold text-sm ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-gray-900 dark:text-white'}`}>
-                    {tx.type === 'CREDIT' ? '+' : '-'} Rp {tx.amount.toLocaleString()}
-                  </span>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm text-center py-4">No transactions yet</p>
-          )}
-        </div>
-
-        {/* Investment Teaser */}
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-5 text-white flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-green-400" />
-            </div>
-            <div>
-              <div className="font-bold">Start Investing</div>
-              <div className="text-xs text-gray-400">Coming soon</div>
+              )}
+              <button className="w-full mt-10 py-4 bg-gray-50 dark:bg-gray-900 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-border hover:bg-gray-100 transition-all">View Full Statement</button>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-gray-400" />
         </div>
 
+        {/* Investment Teaser Upgraded */}
+        <div className="bg-foreground text-background rounded-[2.5rem] p-12 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+            <div className="space-y-4 max-w-xl">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-bank-green rounded-2xl flex items-center justify-center shadow-lg shadow-bank-green/20">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-3xl font-black italic tracking-tighter">Accelerate your Net Worth.</h3>
+              </div>
+              <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                Move your stagnant funds from pockets into high-yield mutual funds or digital gold. Our AI suggests you could be earning up to <span className="text-bank-green font-black">Rp 12,5M</span> more per year.
+              </p>
+            </div>
+            <button className="whitespace-nowrap px-10 py-5 bg-bank-green text-white rounded-3xl font-black uppercase text-xs tracking-widest hover:bg-bank-emerald transition-all active:scale-95 shadow-2xl shadow-bank-green/20">
+              Explore Marketplace
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

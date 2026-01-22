@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Frontend Overhaul (Premium Emerald)**:
   - Implemented **Premium Emerald** design system across all web applications.
   - Added `DashboardLayout` with persistent sidebar, responsive header, and glassmorphism mobile navigation.
-  - Redesigned core pages with high-fidelity UI: Dashboard, Pockets, Transfer, Bills, Login, and Onboarding (eKYC).
+  - Redesigned **Pockets** (`/pockets`) page with Premium Emerald UI standard, including large overview cards and goals trackers.
+  - Refined **Dashboard Components** with premium typography and standardized Rupiah formatting.
+  - Implemented core pages with high-fidelity UI: Dashboard, Transfer, Bills, Login, and Onboarding (eKYC).
   - Implemented new functional pages with consistent UI and backend service mapping:
     - **QRIS Payments** (`/qris`)
     - **Virtual Card Management** (`/cards`)
