@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginRequest } from '@/types';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -21,8 +20,10 @@ export default function LoginPage() {
       return api.post('/auth/login', data);
     },
     onSuccess: (response) => {
-      const { token } = response.data;
+      const { token, user } = response.data;
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('accountId', user.id);
       router.push('/');
     },
     onError: (error) => {

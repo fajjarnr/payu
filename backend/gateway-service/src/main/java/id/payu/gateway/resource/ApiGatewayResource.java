@@ -159,6 +159,16 @@ public class ApiGatewayResource {
         return proxy("wallet-service", "/api/v1/cards", "POST", body, headers);
     }
 
+    // ==================== Auth Service ====================
+    @POST @Path("/auth/{path: .*}")
+    public Uni<Response> authPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("auth-service", "/api/v1/auth/" + path, "POST", body, headers);
+    }
+    @GET @Path("/auth/{path: .*}")
+    public Uni<Response> authGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("auth-service", "/api/v1/auth/" + path, "GET", body, headers);
+    }
+
     // ==================== Proxy Logic ====================
     private Uni<Response> proxy(String serviceName, String path, String method, 
                                  String body, HttpHeaders headers) {

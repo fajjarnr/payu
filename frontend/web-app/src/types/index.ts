@@ -39,3 +39,65 @@ export interface Pocket {
   target: number;
   type: 'MAIN' | 'SAVING' | 'SHARED';
 }
+
+export interface BalanceResponse {
+  accountId: string;
+  balance: number;
+  availableBalance: number;
+  reservedBalance: number;
+  currency: string;
+}
+
+export const transferSchema = z.object({
+  fromAccountId: z.string().min(1, 'Source account is required'),
+  toAccountId: z.string().min(1, 'Destination account is required'),
+  amount: z.number().positive('Amount must be positive'),
+  description: z.string().optional(),
+});
+
+export type TransferRequest = z.infer<typeof transferSchema>;
+
+export interface TransferResponse {
+  transactionId: string;
+  status: string;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: number;
+  currency: string;
+  createdAt: string;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'CREDIT' | 'DEBIT';
+  amount: number;
+  currency: string;
+  description: string;
+  createdAt: string;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+}
+
+export interface Biller {
+  code: string;
+  name: string;
+  category: string;
+  logo: string;
+}
+
+export interface CreatePaymentRequest {
+  billerCode: string;
+  customerId: string;
+  amount: number;
+  referenceNumber?: string;
+}
+
+export interface PaymentResponse {
+  id: string;
+  billerCode: string;
+  customerId: string;
+  amount: number;
+  currency: string;
+  referenceNumber: string;
+  status: string;
+  createdAt: string;
+}

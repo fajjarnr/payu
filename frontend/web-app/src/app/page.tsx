@@ -2,50 +2,54 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  ArrowRightLeft, 
-  Receipt, 
-  Wallet, 
-  PlusCircle, 
+import {
+  ArrowRightLeft,
+  Receipt,
+  Wallet,
+  PlusCircle,
   History,
   LogOut,
   User,
   Bell,
-  Search,
   MoreVertical,
-  ArrowUpRight,
   Send,
-  CreditCard,
   ShoppingBag,
   Smartphone
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { BalanceResponse, Transaction } from '@/types';
+import api from '@/lib/api';
 
 export default function Home() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-      setUsername('User'); 
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) {
+      router.push('/login');
     }
-  }, []);
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setIsAuthenticated(false);
+    localStorage.removeItem('user');
+    localStorage.removeItem('accountId');
     router.push('/login');
   };
 
-  if (isAuthenticated) {
-    return <Dashboard username={username} handleLogout={handleLogout} />;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+  const user = userStr ? JSON.parse(userStr) : null;
+  const username = user?.username || 'User';
+
+  if (!token) {
+    return <LandingPage />;
   }
 
-  return <LandingPage />;
+  return <Dashboard username={username} handleLogout={handleLogout} />;
 }
 
 function LandingPage() {
@@ -232,7 +236,7 @@ function LandingPage() {
   );
 }
 
-function TransactionItem({ icon, color, name, category, amount, isPositive }: any) {
+function TransactionItem({ icon, color, name, category, amount, isPositive }: { icon: React.ReactNode; color: string; name: string; category: string; amount: string; isPositive?: boolean }) {
    return (
       <div className="flex items-center justify-between">
          <div className="flex items-center gap-4">
@@ -252,8 +256,28 @@ function TransactionItem({ icon, color, name, category, amount, isPositive }: an
 }
 
 function Dashboard({ username, handleLogout }: { username: string; handleLogout: () => void }) {
+  const accountId = localStorage.getItem('accountId') || '';
+
+  const { data: balance, isLoading: balanceLoading } = useQuery({
+    queryKey: ['wallet-balance', accountId],
+    queryFn: async () => {
+      const response = await api.get<BalanceResponse>(`/wallets/${accountId}/balance`);
+      return response.data;
+    },
+    enabled: !!accountId
+  });
+
+  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['recent-transactions', accountId],
+    queryFn: async () => {
+      const response = await api.get<Transaction[]>(`/wallets/${accountId}/transactions?size=5`);
+      return response.data;
+    },
+    enabled: !!accountId
+  });
+
    return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <nav className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -270,7 +294,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
                  <span className="text-2xl font-bold text-green-600 dark:text-green-400 tracking-tight">PayU</span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
                   <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
                     <Bell className="h-6 w-6" />
@@ -283,7 +307,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
                       <span className="hidden md:block">Hi, {username}</span>
                     </button>
                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 hidden group-hover:block">
-                      <button 
+                      <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                       >
@@ -302,7 +326,11 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <p className="text-green-100 text-sm font-medium">Total Balance</p>
-                  <h2 className="text-4xl font-bold mt-1">Rp 12.500.000</h2>
+                  {balanceLoading ? (
+                    <h2 className="text-4xl font-bold mt-1">Loading...</h2>
+                  ) : (
+                    <h2 className="text-4xl font-bold mt-1">Rp {balance?.balance.toLocaleString() || '0'}</h2>
+                  )}
                 </div>
                 <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
                   <Wallet className="h-6 w-6 text-white" />
@@ -312,7 +340,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
                 <Link href="/pockets" className="flex items-center gap-2 text-sm bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full backdrop-blur-sm transition-colors">
                    <PlusCircle className="h-4 w-4" /> Top Up
                 </Link>
-                <Link href="/history" className="flex items-center gap-2 text-sm bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full backdrop-blur-sm transition-colors">
+                <Link href="/pockets" className="flex items-center gap-2 text-sm bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full backdrop-blur-sm transition-colors">
                    <History className="h-4 w-4" /> History
                 </Link>
               </div>
@@ -321,22 +349,22 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <QuickActionCard 
-                  href="/transfer" 
-                  icon={<ArrowRightLeft className="h-6 w-6 text-blue-600 dark:text-blue-400" />} 
-                  title="Transfer" 
+                <QuickActionCard
+                  href="/transfer"
+                  icon={<ArrowRightLeft className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
+                  title="Transfer"
                   desc="Send money instantly"
                 />
-                <QuickActionCard 
-                  href="/bills" 
-                  icon={<Receipt className="h-6 w-6 text-orange-600 dark:text-orange-400" />} 
-                  title="Pay Bills" 
+                <QuickActionCard
+                  href="/bills"
+                  icon={<Receipt className="h-6 w-6 text-orange-600 dark:text-orange-400" />}
+                  title="Pay Bills"
                   desc="Electricity, Water, Data"
                 />
-                <QuickActionCard 
-                  href="/pockets" 
-                  icon={<Wallet className="h-6 w-6 text-purple-600 dark:text-purple-400" />} 
-                  title="Pockets" 
+                <QuickActionCard
+                  href="/pockets"
+                  icon={<Wallet className="h-6 w-6 text-purple-600 dark:text-purple-400" />}
+                  title="Pockets"
                   desc="Manage your savings"
                 />
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center text-center justify-center cursor-pointer hover:shadow-md transition-shadow group">
@@ -354,28 +382,49 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
                  <button className="text-sm text-green-600 hover:text-green-700 font-medium">View All</button>
                </div>
-               <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                 {[1, 2, 3].map((i) => (
-                   <div key={i} className="px-6 py-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                          <ArrowRightLeft className="h-5 w-5 text-gray-500" />
+               {transactionsLoading ? (
+                 <div className="p-6 space-y-4">
+                   {[1, 2, 3].map((i) => (
+                     <div key={i} className="flex gap-4 animate-pulse">
+                       <div className="h-10 w-10 bg-gray-100 dark:bg-gray-700 rounded-full"></div>
+                       <div className="flex-1 space-y-2">
+                         <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-32"></div>
+                         <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-24"></div>
+                       </div>
+                       <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-20"></div>
+                     </div>
+                   ))}
+                 </div>
+               ) : transactions && transactions.length > 0 ? (
+                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                   {transactions.map((tx: Transaction) => (
+                     <div key={tx.id} className="px-6 py-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className={`h-10 w-10 rounded-full ${tx.type === 'CREDIT' ? 'bg-green-100 dark:bg-green-900/20 text-green-600' : 'bg-red-100 dark:bg-red-900/20 text-red-600'} flex items-center justify-center`}>
+                            {tx.type === 'CREDIT' ? '+' : '-'}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">{tx.description}</p>
+                            <p className="text-xs text-gray-500">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">Transfer to John Doe</p>
-                          <p className="text-xs text-gray-500">Today, 10:30 AM</p>
-                        </div>
-                      </div>
-                      <span className="font-medium text-gray-900 dark:text-white">- Rp 150.000</span>
-                   </div>
-                 ))}
-               </div>
+                        <span className={`font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-gray-900 dark:text-white'}`}>
+                          {tx.type === 'CREDIT' ? '+' : '-'} Rp {tx.amount.toLocaleString()}
+                        </span>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <div className="p-6 text-center text-gray-500">
+                   No transactions yet
+                 </div>
+               )}
             </div>
           </div>
       </main>
-    </div>
+     </div>
    );
-}
+ }
 
 function QuickActionCard({ href, icon, title, desc }: { href: string; icon: React.ReactNode; title: string; desc: string }) {
   return (

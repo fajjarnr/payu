@@ -4,17 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Wallet, Repeat, Receipt } from 'lucide-react';
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+
 
 export default function MobileNav() {
   const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    // Check for token to determine auth state
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-  }, [pathname]);
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
@@ -27,7 +20,8 @@ export default function MobileNav() {
   if (pathname === '/login' || pathname === '/onboarding') return null;
 
   // Don't show if not authenticated
-  if (!isAuthenticated) return null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (!token) return null;
 
   return (
     <div className={clsx(
