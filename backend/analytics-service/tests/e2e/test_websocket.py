@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+from unittest.mock import AsyncMock
 from httpx import AsyncClient
 from fastapi.testclient import TestClient
 from fastapi import WebSocket, WebSocketDisconnect
@@ -81,7 +82,7 @@ async def test_dashboard_event_broadcasting(reset_manager):
     mock_websocket.receive_json = AsyncMock(return_value={"type": "ping"})
     
     user_id = "test_user_123"
-    await manager.connect(mock_websocket, user_id)
+    await manager.connect(mock_websocket, user_id, {DashboardEventType.TRANSACTION_COMPLETED.value})
     
     event = DashboardEvent(
         event_type=DashboardEventType.TRANSACTION_COMPLETED,
@@ -98,7 +99,7 @@ async def test_dashboard_event_broadcasting(reset_manager):
         }
     )
     
-    await manager.broadcast_to_user(event.model_dump(), user_id)
+    await manager.broadcast_to_user(event.model_dump(), user_id, DashboardEventType.TRANSACTION_COMPLETED.value)
     
     assert mock_websocket.send_json.called
     sent_message = mock_websocket.send_json.call_args[0][0]

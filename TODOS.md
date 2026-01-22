@@ -9,9 +9,9 @@
 
 ### 2. Frontend-Backend API Integration
 - [x] Connect `frontend/web-app` with `gateway-service` for all core flows.
-- [x] Implement API client/services in the frontend using the defined backend specifications.
-- [x] Handle JWT authentication and refresh tokens in the web-app.
-- [x] Implement real-time updates via WebSocket/Kafka if necessary for dashboards.
+- [x] Implement API client/services in frontend using defined backend specifications.
+- [x] Handle JWT authentication and refresh tokens in web-app.
+- [x] Implement real-time updates via WebSocket/Kafka for dashboards (Completed: Full implementation with event filtering and subscriptions).
 
 ### 3. Investment & Wealth Management
 - [x] Implement `investment-service` (Java Spring Boot - Hexagonal).
@@ -37,18 +37,17 @@
 
 ### 8. Frontend/Web-App Core Implementation
 - [x] Complete UI design system (Premium Emerald rules in `GEMINI.md`).
-- [x] **Localization (Bahasa Indonesia)**: Translate all pages and components.
+- [x] **Localization (Bahasa Indonesia)**: Translated all pages and components.
 - [ ] Implement missing pages with consistent UI:
     - [x] **QRIS Payments** (`/qris`) -> Integrate with `transaction-service`.
     - [x] **Virtual Card** (`/cards`) -> Integrate with `account-service` / `wallet-service`.
-    - [x] **Investments** (`/investments`) -> Integrate with `investment-service`. (Implemented via teaser/pockets logic update)
+    - [x] **Investments** (`/investments`) -> Integrate with `investment-service`.
     - [x] **Financial Analytics** (`/analytics`) -> Integrate with `analytics-service`.
     - [x] **Security & MFA** (`/security`) -> Integrate with `auth-service`.
     - [x] **Account Settings** (`/settings`) -> Integrate with `account-service`.
     - [x] **Help & Support** (`/support`) -> Integrate with `support-service`.
 - [ ] Implement full API integration via `gateway-service` for all core flows.
 - [ ] Optimize state management (Zustand) and Data fetching (React Query).
-- [ ] Implement real-time updates via WebSocket/Kafka for dashboards.
 
 ### 9. Mobile App Support
 - [ ] Prepare mobile-responsive views for web-app.
@@ -60,12 +59,37 @@
 - [ ] Replace `permitAll()` with production-ready OAuth2/Keycloak configuration in all services.
 - [ ] Implement strict CORS and rate limiting in `gateway-service`.
 - [ ] Audit user data access patterns for GDPR compliance.
+- [ ] **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
 
-### 11. SNAP BI Full Integration
+### 11. SNAP BI & Partner Integration
 - [ ] Transition `partner-service` from mock to real SNAP BI standard implementation.
 - [ ] Implement signature validation and certificate management for partners.
+- [ ] **TokoBapak Integration**:
+    - [ ] Implement `/v1/partner/auth/token` for TokoBapak authentication.
+    - [ ] Implement `/v1/partner/payments` (Create & Status).
+    - [ ] Implement Webhook system for `payment.completed` notifications.
 
-### 12. Testing & Performance
+## ⚙️ Operations & Infrastructure (OpenShift)
+
+### 12. CI/CD & Automation
+- [x] Implement **Tekton Pipelines** for automated builds and testing.
+- [x] Setup **ArgoCD** for GitOps-based deployment to OpenShift.
+- [x] Configure multi-stage Docker builds using Red Hat UBI9 images.
+
+### 13. Observability & SRE
+- [ ] Deploy **LokiStack** for centralized log management.
+- [ ] Configure **Prometheus & Grafana** dashboards for all microservices.
+- [ ] Implement distributed tracing using **Jaeger/OpenTelemetry**.
+- [ ] **Disaster Recovery**: Verify backup-restore procedures for PostgreSQL and Kafka.
+
+### 14. Legal & Readiness
+- [ ] Create placeholders for **Terms of Service** and **Privacy Policy**.
+- [ ] Prepare technical documentation for OJK/BI regulatory audit.
+
+## 🧪 Testing & Quality Assurance
+
+### 15. Testing Suite
 - [ ] **Cross-Service Integration Tests**: Implement holistic End-to-End test suite covering full user journeys.
-- [ ] **Load Testing**: Establish performance baseline for 100K concurrent users.
-- [ ] **Security Testing**: Run SAST/DAST and verify secret management via Vault.
+- [ ] **TDD Hardening**: Increase test coverage to >80% for all core banking services.
+- [ ] [SKIP] Load Testing: (Postponed as per user request).
+- [ ] [SKIP] Security Testing: (Postponed as per user request).

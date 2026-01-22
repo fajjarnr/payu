@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Analytics Service - Real-time Updates (WebSocket/Kafka)**:
+  - Enhanced WebSocket connection management with event filtering capabilities
+  - Implemented subscription-based event delivery to dashboard clients
+  - Added connection establishment confirmation messages with subscribed events list
+  - Implemented dynamic subscription updates via WebSocket messages
+  - Enhanced ping/pong heartbeat mechanism with timestamps
+  - Added event type filtering based on user subscriptions
+  - Kafka consumer now broadcasts events with proper event type metadata
+  - Fixed Boolean type import in database schema
+  - Fixed AsyncMock import in e2e tests
+  - Added integration tests for Kafka message consumption
+  - Added unit tests for subscription management and event filtering
+
 - **Frontend Overhaul (Premium Emerald)**:
   - Implemented **Premium Emerald** design system across all web applications.
   - Added `DashboardLayout` with persistent sidebar, responsive header, and glassmorphism mobile navigation.

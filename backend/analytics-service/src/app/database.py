@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, String, DateTime, Float, Integer, BigInteger, JSON, Index, Text
+from sqlalchemy import Column, String, DateTime, Float, Integer, BigInteger, JSON, Index, Text, Boolean
 from datetime import datetime
 from typing import Optional
 

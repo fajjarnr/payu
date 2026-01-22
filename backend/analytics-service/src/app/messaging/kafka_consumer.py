@@ -151,7 +151,7 @@ class KafkaConsumerService:
             }
         )
 
-        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id)
+        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id, DashboardEventType.TRANSACTION_COMPLETED.value)
 
         logger.info(
             "Transaction analytics recorded",
@@ -215,7 +215,7 @@ class KafkaConsumerService:
             }
         )
 
-        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id)
+        await manager.broadcast_to_user(dashboard_event.model_dump(), user_id, DashboardEventType.WALLET_BALANCE_CHANGED.value)
 
     async def _handle_kyc_verified(self, session, message):
         user_id = message.get('user_id')
@@ -281,7 +281,7 @@ class KafkaConsumerService:
                 }
             )
 
-            await manager.broadcast_to_user(dashboard_event.model_dump(), user_id)
+            await manager.broadcast_to_user(dashboard_event.model_dump(), user_id, DashboardEventType.USER_METRICS_UPDATED.value)
         else:
             new_metrics = UserMetricsEntity(
                 user_id=user_id,
