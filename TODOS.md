@@ -93,3 +93,19 @@
 - [ ] **TDD Hardening**: Increase test coverage to >80% for all core banking services.
 - [ ] [SKIP] Load Testing: (Postponed as per user request).
 - [ ] [SKIP] Security Testing: (Postponed as per user request).
+
+## 🚀 Backend Feature Extensions (Gap Analysis)
+
+### 16. Transaction & Payment Enhancements
+- [ ] Implement **SKN/RTGS** transfer types in `transaction-service` (currently dummy).
+- [ ] Implement **Scheduled & Recurring Transfers** engine (logic + scheduler).
+- [ ] Implement **Split Bill** logic and notification flow across multiple users.
+
+### 17. Expanded Billing & Top-Up
+- [ ] Implement **E-wallet Top-up** (GoPay, OVO, DANA, LinkAja) in `billing-service`.
+- [ ] Expand biller list to include **TV Cable** (Indovision, etc.) and **Multifinance** (Cicilan).
+
+### 18. Advanced Financial Services
+- [ ] Implement **Robo-Advisory** engine in `analytics-service` for automated portfolio allocation.
+- [ ] Implement **Loan Pre-approval** logic in `lending-service` based on real-time credit scoring.
+- [ ] Implement **Gamification System** (Daily check-in rewards, transaction-based badges/levels) in `promotion-service`.
