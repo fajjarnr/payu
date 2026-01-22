@@ -1,0 +1,40 @@
+# Ralphy Configuration
+# https://github.com/michaelshimeles/ralphy
+
+# Project info
+project:
+  name: "PayU"
+  language: "Java 21, Python 3.12"
+  framework: "Spring Boot 3.4, Quarkus 3.x, FastAPI"
+  description: "Standalone Digital Banking Platform on Red Hat OpenShift"
+
+# Commands
+commands:
+  test: "./scripts/ralph.sh test"
+  build: "./scripts/ralph.sh build"
+  status: "./scripts/ralph.sh status"
+  doctor: "./scripts/ralph.sh doctor"
+  up: "./scripts/ralph.sh up"
+  down: "./scripts/ralph.sh down"
+  logs: "./scripts/ralph.sh logs"
+  quotes: "./scripts/ralph.sh quotes"
+
+# Rules - instructions the AI MUST follow
+rules:
+  - "Core Banking (Java): Use Spring Boot 3.4.x, Java 21, and Hexagonal Architecture."
+  - "Supporting Services: Use Quarkus 3.x for native compilation compatibility."
+  - "ML/Analytics: Use FastAPI and Python 3.12 (UBI-based)."
+  - "Database: Use PostgreSQL (standard SQL) and JSONB for document-like data."
+  - "Events: Use AMQ Streams (Kafka) for event-driven logic."
+  - "Testing: Follow TDD (Red-Green-Refactor). Use Testcontainers for integration tests."
+  - "Git: Use conventional commits (feat, fix, docs, refactor)."
+  - "Lifecycle: Update CHANGELOG.md for any significant code changes."
+
+# Boundaries - files/folders the AI should not modify
+boundaries:
+  never_touch:
+    - ".git/**"
+    - "**/target/**"
+    - "**/build/**"
+    - "**/*.lock"
+    - "**/node_modules/**"
