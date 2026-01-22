@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Lending Service Enhancements** (lending-service):
+  - Enhanced credit underwriting with multi-factor scoring:
+    - KYC verification status integration (50 points for APPROVED, 25 for PENDING)
+    - Account tenure scoring (up to 40 points for 3+ years)
+    - Transaction history scoring based on volume, success rate, and transaction count
+    - Maximum credit score cap at 850
+  - Feign clients for Account and Transaction services integration
+  - Personal Loan Repayment Schedule Management:
+    - Automated repayment schedule generation using amortization formula
+    - Per-installment tracking (principal, interest, outstanding balance)
+    - Repayment processing with partial and full payment support
+    - Status tracking (PENDING, PARTIALLY_PAID, FULLY_PAID, OVERDUE)
+  - PayLater Transaction Management:
+    - Purchase transaction recording with credit limit validation
+    - Payment transaction processing with used/available credit updates
+    - Transaction history retrieval with date ordering
+  - New database tables:
+    - `repayment_schedules` - Installment tracking with foreign key to loans
+    - `paylater_transactions` - Transaction history with purchase/payment types
+  - New domain models:
+    - `RepaymentSchedule` - Installment tracking domain model
+    - `PayLaterTransaction` - Transaction tracking domain model
+  - New service classes:
+    - `EnhancedCreditScoringService` - Multi-factor credit scoring
+    - `LoanManagementService` - Repayment schedule management
+    - `PayLaterTransactionService` - PayLater transaction processing
+  - New controller endpoints:
+    - `POST /api/v1/lending/loans/{loanId}/repayment-schedule` - Create repayment schedule
+    - `GET /api/v1/lending/loans/{loanId}/repayment-schedule` - Get repayment schedules
+    - `POST /api/v1/lending/repayment-schedules/{scheduleId}/pay` - Process repayment
+    - `POST /api/v1/lending/paylater/{userId}/purchase` - Record purchase
+    - `POST /api/v1/lending/paylater/{userId}/payment` - Record payment
+    - `GET /api/v1/lending/paylater/{userId}/transactions` - Get transaction history
+  - New DTOs for external service integration:
+    - `UserResponse` - Account service user data
+    - `TransactionResponse` - Transaction service transaction data
+    - `TransactionSummaryResponse` - Transaction summary for credit scoring
+  - Database migration V2 for new tables with proper indexes
+
+### Added
+
 - **Investment Service** (investment-service):
   - New Spring Boot 3.4 service for digital investments
   - Hexagonal architecture implementation with ports and adapters
