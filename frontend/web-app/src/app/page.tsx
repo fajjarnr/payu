@@ -10,7 +10,14 @@ import {
   History,
   LogOut,
   User,
-  Bell
+  Bell,
+  Search,
+  MoreVertical,
+  ArrowUpRight,
+  Send,
+  CreditCard,
+  ShoppingBag,
+  Smartphone
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -22,10 +29,8 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    // Simple check - in a real app we'd validate the token or decode it
     if (token) {
       setIsAuthenticated(true);
-      // Mock username extraction or fetch
       setUsername('User'); 
     }
   }, []);
@@ -36,9 +41,208 @@ export default function Home() {
     router.push('/login');
   };
 
+  if (isAuthenticated) {
+    return <Dashboard username={username} handleLogout={handleLogout} />;
+  }
+
+  return <LandingPage />;
+}
+
+function LandingPage() {
   return (
+    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-green-100">
+      {/* Navbar */}
+      <nav className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+           <div className="relative h-10 w-10 bg-green-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-green-200">
+              <span className="relative top-[1px]">U</span>
+              <div className="absolute top-2 right-2 h-2 w-2 bg-white rounded-full opacity-50"></div>
+           </div>
+           <span className="text-xl font-bold tracking-tight">PayU</span>
+        </div>
+
+        <div className="hidden md:flex items-center gap-10 text-sm font-medium text-gray-600">
+           <a href="#" className="hover:text-black transition-colors">App</a>
+           <a href="#" className="hover:text-black transition-colors">About</a>
+           <a href="#" className="hover:text-black transition-colors">Support</a>
+           <a href="#" className="hover:text-black transition-colors">Contact</a>
+        </div>
+
+        <div className="flex items-center gap-4">
+           <Link href="/login" className="hidden md:block text-sm font-medium text-gray-900 hover:text-green-600 transition-colors">
+              Log in
+           </Link>
+           <Link href="/onboarding" className="px-6 py-2.5 rounded-full border border-gray-200 text-sm font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all">
+              Get started
+           </Link>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <main className="max-w-7xl mx-auto px-6 pt-12 pb-20 md:pt-20 md:pb-32 grid lg:grid-cols-2 gap-12 items-center">
+        
+        {/* Left Column: Text */}
+        <div className="space-y-8 max-w-xl">
+           <span className="inline-block text-green-500 font-bold tracking-wider text-xs uppercase">Mobile Bank</span>
+           
+           <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] tracking-tight text-black">
+             PayU: Platform Digital Banking yang Mudah, Cepat, dan Aman.
+           </h1>
+
+           <p className="text-lg text-gray-500 leading-relaxed max-w-md">
+             Platform perbankan digital mandiri yang cepat, mudah, dan aman. Infrastruktur pembayaran untuk berbagai proyek Anda.
+           </p>
+
+           <div className="pt-4">
+              <button className="bg-black text-white px-6 py-2 rounded-lg flex items-center gap-3 hover:bg-gray-800 transition-colors shadow-xl shadow-gray-200">
+                 <div className="text-2xl">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
+                      <path d="M3.609 1.814L13.792 12 3.61 22.186a.91.91 0 01-.91-.91V2.724a.91.91 0 01.91-.91zM15.209 13.417l2.844 2.846-9.82 5.645-8.233-4.17 15.209-4.32zm.576-1.416l-4.32-4.32 4.32 4.32zM15.209 10.583L4.015 6.25l9.82 5.645-2.844 2.846 4.218-4.158zM18.885 11.21l2.498 1.417a1.04 1.04 0 010 1.748l-2.498 1.416-2.518-2.519 2.518-2.062z"/>
+                    </svg>
+                 </div>
+                 <div className="text-left">
+                    <div className="text-[10px] uppercase font-medium text-gray-300 leading-none mb-0.5">Get it on</div>
+                    <div className="text-lg font-bold leading-none">Google Play</div>
+                 </div>
+              </button>
+           </div>
+        </div>
+
+        {/* Right Column: Phones Visual */}
+        <div className="relative h-[600px] w-full flex items-center justify-center">
+           {/* Background Circle */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-indigo-50/50 rounded-full blur-3xl -z-10"></div>
+
+           {/* Back Phone (Wallet List) */}
+           <div className="absolute top-10 left-10 md:left-20 w-[280px] h-[550px] bg-black rounded-[2.5rem] border-[8px] border-gray-900 shadow-2xl overflow-hidden transform -rotate-6 scale-95 opacity-90 hidden md:block">
+              <div className="bg-white w-full h-full p-6 pt-12">
+                 <h3 className="text-xl font-bold mb-6">Wallet</h3>
+                 <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                       <div key={i} className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 shadow-sm">
+                          <div className={`w-10 h-10 rounded-lg ${i===1 ? 'bg-green-500' : i===2 ? 'bg-blue-500' : 'bg-yellow-500'}`}></div>
+                          <div>
+                             <div className="h-2 w-20 bg-gray-200 rounded mb-1"></div>
+                             <div className="h-2 w-12 bg-gray-100 rounded"></div>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+           </div>
+
+           {/* Front Phone (Main Dashboard) */}
+           <div className="absolute top-0 right-4 md:right-20 w-[300px] h-[600px] bg-black rounded-[3rem] border-[10px] border-gray-900 shadow-2xl overflow-hidden z-10">
+              {/* Notch */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-black rounded-b-xl z-20"></div>
+              
+              {/* Screen Content */}
+              <div className="bg-gray-50 w-full h-full pt-10 px-5 flex flex-col">
+                 
+                 {/* App Header */}
+                 <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-2">
+                       <ArrowRightLeft className="h-5 w-5 text-gray-500" />
+                       <span className="font-semibold text-gray-700">Cards and accounts</span>
+                    </div>
+                    <MoreVertical className="h-5 w-5 text-gray-400" />
+                 </div>
+
+                 {/* Card */}
+                 <div className="bg-gradient-to-br from-green-500 to-emerald-700 rounded-2xl p-5 text-white shadow-lg mb-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                    
+                    <div className="flex justify-between items-start mb-8">
+                       <div className="flex items-center gap-1 font-bold">
+                          <span>Pay</span><span className="text-green-200">U</span>
+                          <span className="text-[10px] align-top relative -top-1">+</span>
+                       </div>
+                       <div className="flex -space-x-1">
+                          <div className="w-6 h-6 rounded-full bg-red-500/80"></div>
+                          <div className="w-6 h-6 rounded-full bg-yellow-500/80"></div>
+                       </div>
+                    </div>
+
+                    <div className="text-green-100 text-xs mb-1">Main Balance</div>
+                    <div className="text-2xl font-bold tracking-tight mb-4">86 353,23 P</div>
+                    <div className="flex justify-end text-xs text-green-200 tracking-widest">•••• 6273</div>
+                 </div>
+
+                 {/* Action Buttons */}
+                 <div className="grid grid-cols-2 gap-3 mb-8">
+                    <button className="bg-white py-3 rounded-xl shadow-sm border border-gray-100 font-semibold text-sm flex items-center justify-center gap-2 text-gray-700">
+                       <PlusCircle className="h-4 w-4" /> Top up
+                    </button>
+                    <button className="bg-white py-3 rounded-xl shadow-sm border border-gray-100 font-semibold text-sm flex items-center justify-center gap-2 text-gray-700">
+                       <Send className="h-4 w-4" /> Send
+                    </button>
+                 </div>
+
+                 {/* Transactions Sheet */}
+                 <div className="bg-white rounded-t-3xl flex-1 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.05)] p-5">
+                    <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-6"></div>
+                    
+                    <div className="flex justify-between items-center mb-6">
+                       <h4 className="font-bold text-gray-800">Transactions</h4>
+                       <span className="text-gray-400 text-sm">Statistics</span>
+                    </div>
+
+                    <div className="space-y-6">
+                       <TransactionItem 
+                          icon={<ShoppingBag className="h-4 w-4 text-white" />} 
+                          color="bg-blue-600"
+                          name="Metra" 
+                          category="Food"
+                          amount="- 1 354.4 P"
+                       />
+                       <TransactionItem 
+                          icon={<User className="h-4 w-4 text-white" />} 
+                          color="bg-gray-800"
+                          name="Anya" 
+                          category="Transfer"
+                          amount="+ 9 900 P"
+                          isPositive
+                       />
+                       <TransactionItem 
+                          icon={<Smartphone className="h-4 w-4 text-white" />} 
+                          color="bg-red-500"
+                          name="M Video" 
+                          category="Electronics"
+                          amount="- 14 950 P"
+                       />
+                    </div>
+                 </div>
+
+              </div>
+           </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function TransactionItem({ icon, color, name, category, amount, isPositive }: any) {
+   return (
+      <div className="flex items-center justify-between">
+         <div className="flex items-center gap-4">
+            <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center shadow-md`}>
+               {icon}
+            </div>
+            <div>
+               <div className="font-bold text-gray-800 text-sm">{name}</div>
+               <div className="text-xs text-gray-400">{category}</div>
+            </div>
+         </div>
+         <div className={`font-bold text-sm ${isPositive ? 'text-green-600' : 'text-gray-800'}`}>
+            {amount}
+         </div>
+      </div>
+   );
+}
+
+function Dashboard({ username, handleLogout }: { username: string; handleLogout: () => void }) {
+   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header / Navbar */}
       <nav className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -57,8 +261,6 @@ export default function Home() {
             </div>
             
             <div className="flex items-center gap-4">
-              {isAuthenticated ? (
-                <>
                   <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
                     <Bell className="h-6 w-6" />
                   </button>
@@ -69,7 +271,6 @@ export default function Home() {
                       </div>
                       <span className="hidden md:block">Hi, {username}</span>
                     </button>
-                    {/* Dropdown */}
                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 hidden group-hover:block">
                       <button 
                         onClick={handleLogout}
@@ -79,29 +280,13 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
-                </>
-              ) : (
-                <div className="flex gap-2">
-                  <Link href="/login" className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md">
-                    Log in
-                  </Link>
-                  <Link href="/onboarding" className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md shadow-sm">
-                    Sign up
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Welcome Section (for authenticated users) */}
-        {isAuthenticated ? (
           <div className="space-y-8">
-            {/* Balance Card */}
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl shadow-lg p-6 text-white md:p-8">
               <div className="flex justify-between items-start mb-4">
                 <div>
@@ -122,7 +307,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Quick Actions Grid */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -154,7 +338,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Recent Transactions (Placeholder) */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
@@ -178,32 +361,9 @@ export default function Home() {
                </div>
             </div>
           </div>
-        ) : (
-          /* Landing Page Content (Unauthenticated) */
-          <div className="text-center py-20">
-             <div className="relative h-24 w-24 mx-auto mb-6">
-                 <Image src="/logo.png" alt="PayU Logo" fill className="object-contain" />
-             </div>
-             <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-6">
-               Banking for the <span className="text-green-600">Digital Generation</span>
-             </h1>
-             <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
-               Experience seamless transfers, smart savings pockets, and instant bill payments. 
-               All in one secure app.
-             </p>
-             <div className="flex justify-center gap-4">
-                <Link href="/onboarding" className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-lg hover:shadow-green-500/30">
-                   Open Account
-                </Link>
-                <Link href="/login" className="px-8 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-                   Login
-                </Link>
-             </div>
-          </div>
-        )}
       </main>
     </div>
-  );
+   );
 }
 
 function QuickActionCard({ href, icon, title, desc }: { href: string; icon: React.ReactNode; title: string; desc: string }) {
