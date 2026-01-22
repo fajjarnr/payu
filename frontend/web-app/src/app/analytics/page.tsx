@@ -2,7 +2,7 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { BarChart3, TrendingUp, TrendingDown, Calendar, ArrowUpRight, ArrowDownRight, PieChart, Activity } from 'lucide-center';
+import { BarChart3, TrendingUp, TrendingDown, Calendar, ArrowUpRight, ArrowDownRight, PieChart, Activity } from 'lucide-react';
 import clsx from 'clsx';
 // Use local lucide-react imports if provided or correct library
 import { TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon, Calendar as CalendarIcon, ArrowUpRight as ArrowUpRightIcon, Activity as ActivityIcon } from 'lucide-react';
