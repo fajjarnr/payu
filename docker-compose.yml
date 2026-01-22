@@ -322,6 +322,26 @@ services:
     networks:
       - payu-network
 
+  compliance-service:
+    build:
+      context: ./backend/compliance-service
+      dockerfile: Dockerfile
+    container_name: payu-compliance-service
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_compliance
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - payu-network
+
   gateway-service:
     build:
       context: ./backend/gateway-service
@@ -342,6 +362,7 @@ services:
       ROUTES_NOTIFICATION_URL: http://notification-service:8080
       ROUTES_KYC_URL: http://kyc-service:8007
       ROUTES_ANALYTICS_URL: http://analytics-service:8008
+      ROUTES_COMPLIANCE_URL: http://compliance-service:8087/compliance-service
     depends_on:
       redis:
         condition: service_healthy
