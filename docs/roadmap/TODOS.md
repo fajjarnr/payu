@@ -48,6 +48,18 @@
     - [x] **Help & Support** (`/support`) -> Integrate with `support-service`.
 - [x] Implement full API integration via `gateway-service` for all core flows.
 - [x] Optimize state management (Zustand) and Data fetching (React Query).
+- [ ] **Technical Debt & Polish**:
+    *   [ ] Standardize **Skeleton Loaders** for all data-fetching states across all pages.
+    *   [ ] Implement **Dynamic Error Boundaries** with user-friendly Indonesian recovery UI.
+    *   [ ] Add **Micro-animations** (Framer Motion) for page transitions and button interactions.
+    *   [ ] Optimize **SEO Metadata** and OpenGraph tags for banking security (no-index on sensitive pages).
+- [ ] **Feature Enhancements**:
+    *   [ ] **Transfer Evolution**: Add selection for BI-FAST, SKN/RTGS, and Real-time Scheduled transfers.
+    *   [ ] **Live Analytics**: Integrate WebSocket for real-time portfolio updates in `/analytics`.
+    *   [ ] **Shared Pockets**: Implement UI for joint savings pockets with member management.
+- [ ] **Missing Core Modules**:
+    *   [ ] **Lending & Credit Hub** (`/lending`): UI for Personal Loans application and PayLater management.
+    *   [ ] **Rewards & Gamification** (`/rewards`): Implement Points dashboard, Cashback history, and Referral engine.
 
 ### 9. Mobile App Support
 - [x] Prepare mobile-responsive views for web-app.
@@ -91,6 +103,9 @@
 ### 15. Testing Suite
 - [ ] **Cross-Service Integration Tests**: Implement holistic End-to-End test suite covering full user journeys.
 - [ ] **TDD Hardening**: Increase test coverage to >80% for all core banking services.
+- [ ] **Frontend Quality**:
+    *   [ ] Setup **Playwright** for E2E testing of critical financial flows (KYC, Transfer, Bill Pay).
+    *   [ ] Setup **Vitest** for unit testing critical logic in `src/services` and `src/stores`.
 - [x] [SKIP] Load Testing: (Postponed as per user request).
 - [x] [SKIP] Security Testing: (Postponed as per user request).
 
