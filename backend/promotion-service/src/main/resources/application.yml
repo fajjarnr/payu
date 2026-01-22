@@ -1,0 +1,55 @@
+quarkus:
+  application:
+    name: promotion-service
+
+  http:
+    port: 8088
+
+  datasource:
+    db-kind: postgresql
+    username: postgres
+    password: postgres
+    jdbc:
+      url: jdbc:postgresql://localhost:5432/promotiondb
+
+  hibernate-orm:
+    database:
+      generation: validate
+    log:
+      sql: false
+
+  flyway:
+    migrate-at-start: true
+    locations: db/migration
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  smallrye-openapi:
+    info-title: PayU Promotion Service API
+    info-version: 1.0.0
+    info-description: Rewards, Cashback, Referral, and Loyalty Points API
+
+  log:
+    level: INFO
+    category:
+      "id.payu.promotion":
+        level: DEBUG
+
+"%dev":
+  quarkus:
+    hibernate-orm:
+      database:
+        generation: drop-and-create
+    flyway:
+      migrate-at-start: false
+
+"%test":
+  quarkus:
+    datasource:
+      db-kind: postgresql
+    hibernate-orm:
+      database:
+        generation: validate
+    flyway:
+      migrate-at-start: true

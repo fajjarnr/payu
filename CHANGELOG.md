@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Promotion Service** (promotion-service):
+  - Initial implementation of promotion, rewards, cashback, referral, and loyalty points management
+  - Quarkus 3.x with Java 21 layered architecture
+  - Domain models: Promotion, Reward, Cashback, Referral, LoyaltyPoints
+  - Service layer: PromotionService, RewardService, CashbackService, ReferralService, LoyaltyPointsService
+  - REST API: Promotions, Rewards, Cashbacks, Referrals, Loyalty Points endpoints
+  - PostgreSQL with Flyway migrations
+  - Kafka event publishing for promotion, reward, cashback, referral, and loyalty events
+  - Test resources for PostgreSQL and Kafka
+  - Dockerfile with UBI9 for OpenShift deployment
+  - Fixed LoyaltyPointsService.calculateCurrentBalance() to properly query database for current balance
+  - Fixed LoyaltyPointsService.getBalance() to calculate real metrics from database
+  - Added comprehensive unit and integration tests for all services and resources
+  - Fixed database column mapping issues in domain entities (explicit @Column annotations for enums)
+  - Test resources for PostgreSQL and Kafka using Testcontainers
+
 - **Lending Service Enhancements** (lending-service):
   - Enhanced credit underwriting with multi-factor scoring:
     - KYC verification status integration (50 points for APPROVED, 25 for PENDING)
