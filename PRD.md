@@ -238,6 +238,7 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 - Basic bill payment
 - Single pocket system
 - Virtual debit card
+- **TokoBapak Integration (External Payment Provider)**
 
 ### Phase 2 (Month 7-12)
 - Multi-pocket system
@@ -301,6 +302,10 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 - [x] Beta testing with 1000 users completed
 - [x] All core features functional
 - [x] Customer support team trained
+- [ ] Disaster Recovery Plan (DRP) & Backup-Restore verified
+- [ ] Production Monitoring & Alerting (LokiStack/Prometheus) operational
+- [ ] Final Penetration Testing (Pentest) Report signed off
+- [ ] PCI-DSS & OJK Regulatory Compliance Audit completed
 
 ### 12.2 Post-Launch Success
 - 100K users within 6 months
@@ -334,25 +339,29 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 
 | Service | Technology | Domain |
 |---------|------------|--------|
-| `account-service` | Java Spring Boot | User accounts, eKYC, multi-pocket |
-| `auth-service` | Java Spring Boot + Keycloak | Authentication, MFA, OAuth2 |
-| `transaction-service` | Java Spring Boot | Transfers, BI-FAST, QRIS |
-| `wallet-service` | Java Spring Boot | Balance management, ledger |
-| `billing-service` | Java Spring Boot | Bill payments, top-ups |
-| `notification-service` | NestJS | Push, SMS, Email notifications |
-| `kyc-service` | Python FastAPI | OCR, liveness detection ML |
-| `analytics-service` | Python FastAPI | User insights, ML recommendations |
+| `account-service` | Java Spring Boot 3.4 | User accounts, eKYC, multi-pocket (Hexagonal) |
+| `auth-service` | Java Spring Boot 3.4 + Red Hat SSO | Authentication, MFA, OAuth2 |
+| `transaction-service` | Java Spring Boot 3.4 | Transfers, BI-FAST, QRIS (Hexagonal) |
+| `wallet-service` | Java Spring Boot 3.4 | Balance management, ledger (Hexagonal) |
+| `billing-service` | Java Quarkus 3.x Native | Bill payments, top-ups |
+| `notification-service` | Java Quarkus 3.x Native | Push, SMS, Email notifications |
+| `gateway-service` | Java Quarkus 3.x Native | API Gateway, Rate Limiting, Circuit Breaker |
+| `kyc-service` | Python FastAPI 3.12 | OCR, liveness detection ML (UBI-based) |
+| `analytics-service` | Python FastAPI 3.12 | User insights, ML recommendations (UBI-based) |
 
 ### 14.2 Infrastructure
 
 | Component | Technology |
 |-----------|------------|
-| Container Orchestration | Kubernetes (AWS EKS) |
-| Message Broker | Apache Kafka |
-| Databases | PostgreSQL, MongoDB, Redis |
-| Service Mesh | Istio (mTLS) |
-| API Gateway | Spring Cloud Gateway |
-| Identity Provider | Keycloak |
+| Container Orchestration | Red Hat OpenShift 4.20+ (on-prem/multi-cloud) |
+| Message Broker | AMQ Streams (Apache Kafka) |
+| Message Queue | AMQ Broker (ActiveMQ Artemis) |
+| Database | Crunchy PostgreSQL 16 (Standard SQL + JSONB) |
+| Caching | Red Hat Data Grid (RESP mode / Redis API) |
+| Service Mesh | OpenShift Service Mesh (Istio/mTLS) |
+| API Gateway | Quarkus Native Gateway |
+| Identity Provider | Red Hat SSO (Keycloak) |
+| Observability | OpenShift Logging (LokiStack) & Monitoring (Prometheus/Grafana) |
 
 ---
 
