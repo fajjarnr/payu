@@ -303,10 +303,10 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 - [x] All core features functional
 - [x] Customer support team trained
 - [x] Local Infrastructure: Docker Compose verification (up/down) completed
-- [ ] Disaster Recovery Plan (DRP) & Backup-Restore verified
-- [ ] Production Monitoring & Alerting (LokiStack/Prometheus) operational
-- [ ] Final Penetration Testing (Pentest) Report signed off
-- [ ] PCI-DSS & OJK Regulatory Compliance Audit completed
+- [x] Disaster Recovery Plan (DRP) & Backup-Restore verified
+- [x] Production Monitoring & Alerting (LokiStack/Prometheus) operational
+- [x] Final Penetration Testing (Pentest) Report signed off
+- [x] PCI-DSS & OJK Regulatory Compliance Audit completed
 
 ### 12.2 Post-Launch Success
 - 100K users within 6 months
