@@ -18,18 +18,26 @@ export const loginSchema = z.object({
 
 export type LoginRequest = z.infer<typeof loginSchema>;
 
+export type KycStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
+
 export interface User {
   id: string;
   externalId: string;
   username: string;
   email: string;
+  phoneNumber?: string;
   fullName: string;
-  kycStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  nik: string;
+  kycStatus: KycStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LoginResponse {
-  token: string;
-  user: User;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
 }
 
 export interface Pocket {
@@ -48,6 +56,9 @@ export interface BalanceResponse {
   currency: string;
 }
 
+export type TransactionType = 'INTERNAL_TRANSFER' | 'BIFAST_TRANSFER' | 'QRIS_PAYMENT' | 'BILL_PAYMENT' | 'TOP_UP';
+export type TransactionStatus = 'PENDING' | 'VALIDATING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
 export const transferSchema = z.object({
   fromAccountId: z.string().min(1, 'Source account is required'),
   toAccountId: z.string().min(1, 'Destination account is required'),
@@ -57,24 +68,51 @@ export const transferSchema = z.object({
 
 export type TransferRequest = z.infer<typeof transferSchema>;
 
-export interface TransferResponse {
-  transactionId: string;
-  status: string;
-  fromAccountId: string;
-  toAccountId: string;
+export interface InitiateTransferRequest {
+  senderAccountId: string;
+  recipientAccountNumber: string;
   amount: number;
-  currency: string;
-  createdAt: string;
+  currency?: string;
+  description: string;
+  type?: TransactionType;
+  transactionPin?: string;
+  deviceId?: string;
+}
+
+export interface InitiateTransferResponse {
+  transactionId: string;
+  referenceNumber: string;
+  status: string;
+  fee: number;
+  estimatedCompletionTime: string;
 }
 
 export interface Transaction {
   id: string;
-  type: 'CREDIT' | 'DEBIT';
+  referenceNumber: string;
+  senderAccountId: string;
+  recipientAccountId: string;
+  type: TransactionType;
   amount: number;
   currency: string;
   description: string;
+  status: TransactionStatus;
+  failureReason?: string;
+  metadata?: string;
   createdAt: string;
-  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  updatedAt: string;
+  completedAt?: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  walletId: string;
+  referenceId: string;
+  type: 'CREDIT' | 'DEBIT';
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  createdAt: string;
 }
 
 export interface Biller {
