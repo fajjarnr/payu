@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **PCI-DSS & OJK Regulatory Compliance Audit Service** (compliance-service):
+  - New Spring Boot 3.4 service for regulatory compliance auditing
+  - PCI-DSS compliance checks for card data handling and security
+  - OJK regulatory compliance for Indonesian financial operations
+  - Audit report creation and retrieval APIs
+  - Compliance check result tracking (PASS/FAIL/WARNING/NOT_APPLICABLE)
+  - Audit report search by transaction ID and merchant ID
+  - Database migration for audit_reports and compliance_checks tables
+  - Unit tests with TDD approach (Red-Green-Refactor)
+  - ArchUnit architecture tests for hexagonal architecture validation
+  - JaCoCo code coverage with 59% line coverage
+
+### Added
+
 - **Production Monitoring & Alerting** (LokiStack/Prometheus):
   - Prometheus server (v2.54.1) with 15-day retention and alerting rules
   - Loki log aggregation (v2.9.10) with 744h (31 days) retention
