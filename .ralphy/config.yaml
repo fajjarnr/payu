@@ -29,6 +29,9 @@ rules:
   - "Testing: Follow TDD (Red-Green-Refactor). Use Testcontainers for integration tests."
   - "Git: Use conventional commits (feat, fix, docs, refactor)."
   - "Lifecycle: Update CHANGELOG.md for any significant code changes."
+  - "Documentation: Always use Context7 MCP to query latest Spring/Quarkus/Kafka documentation before implementing."
+  - "Infrastucture: Prioritize Red Hat UBI9 (Universal Base Image) for all Dockerfiles. If UBI9 is unavailable or incompatible, use standard Alpine or Debian-slim as alternative and report it."
+  - "Performance: Before running E2E tests or Docker Compose, always perform a host-level pre-build using `mvn clean package -DskipTests -T 1C` in the backend root to warm up Maven cache and speed up the process."
 
 # Boundaries - files/folders the AI should not modify
 boundaries:

@@ -48,5 +48,13 @@ Ralphy dikonfigurasi untuk menggunakan script `./scripts/ralph.sh` sebagai jemba
 | `./scripts/ralph.sh test` | Jalankan semua test unit & integrasi |
 | `./scripts/ralph.sh doctor` | Cek kelengkapan tools pengembangan |
 
+## Tips Performa
+
+Untuk mempercepat proses development dan E2E testing (pemanasan cache Maven), gunakan perintah paralel berikut di level host:
+```bash
+mvn clean package -DskipTests -T 1C
+```
+Rule ini sudah dimasukkan ke dalam konfigurasi Ralphy agar dia melakukan pre-build secara otomatis sebelum menjalankan tes besar.
+
 ## Rules & Konfigurasi
 Semua aturan pengembangan (seperti Hexagonal Architecture, Java 21, dan Spring Boot 3.4) didefinisikan di `.ralphy/config.yaml`. Jangan mengubah file ini kecuali ingin mengubah standar penulisan kode proyek.
