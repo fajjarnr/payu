@@ -350,6 +350,16 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 | `kyc-service` | Python FastAPI 3.12 | OCR, liveness detection ML (UBI-based) |
 | `analytics-service` | Python FastAPI 3.12 | User insights, ML recommendations (UBI-based) |
 
+#### 14.1.2 Upcoming Services (Roadmap)
+
+| Service | Category | Domain | Priority |
+|---------|----------|--------|----------|
+| `investment-service` | Financial | Digital Deposits, Mutual Funds, Gold | Phase 2/3 |
+| `lending-service` | Financial | Personal Loan, PayLater, Credit Underwriting | Phase 3/4 |
+| `promotion-service` | Engagement | Rewards, Cashback, Referral, Loyalty Points | Phase 2 |
+| `backoffice-service` | Operations | Manual KYC Review, Fraud Monitoring, Customer Ops | Operational |
+| `partner-service` | Ecosystem | B2B Standard API (SNAP BI), Merchant Portal | Ecosystem |
+
 ### 14.2 Infrastructure
 
 | Component | Technology |
