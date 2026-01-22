@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Partner Service** (partner-service):
+  - Initial implementation of Partner Management Service
+  - Quarkus 3.x with Java 21 layered architecture
+  - Domain models: Partner
+  - Service layer: PartnerService
+  - REST API: Partner CRUD endpoints
+  - PostgreSQL integration with Hibernate Panache
+  - Unit tests with TDD approach (Red-Green-Refactor)
+
 - **Backoffice Dashboard**:
   - Implemented Next.js Dashboard for Backoffice operations
   - Features: KYC Review, Fraud Monitoring, Customer Operations

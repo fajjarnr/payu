@@ -1,0 +1,49 @@
+quarkus:
+  application:
+    name: partner-service
+
+  http:
+    port: 8087
+
+  datasource:
+    db-kind: postgresql
+    username: postgres
+    password: postgres
+    jdbc:
+      url: jdbc:postgresql://localhost:5432/partnerdb
+
+  hibernate-orm:
+    database:
+      generation: validate
+    log:
+      sql: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  smallrye-openapi:
+    info-title: PayU Partner Service API
+    info-version: 1.0.0
+    info-description: API for managing external partners
+
+  log:
+    level: INFO
+    category:
+      "id.payu.partner":
+        level: DEBUG
+
+"%dev":
+  quarkus:
+    hibernate-orm:
+      database:
+        generation: drop-and-create
+
+"%test":
+  quarkus:
+    datasource:
+      db-kind: h2
+      jdbc:
+        url: jdbc:h2:mem:testdb
+    hibernate-orm:
+      database:
+        generation: drop-and-create
