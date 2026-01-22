@@ -7,6 +7,13 @@ spring:
   application:
     name: compliance-service
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/payu/protocol/openid-connect/certs}
+
   datasource:
     url: jdbc:postgresql://localhost:5432/compliance_db
     username: compliance_user
