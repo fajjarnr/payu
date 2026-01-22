@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Frontend Overhaul (Premium Emerald)**:
+  - Implemented **Premium Emerald** design system across all web applications.
+  - Added `DashboardLayout` with persistent sidebar, responsive header, and glassmorphism mobile navigation.
+  - Redesigned core pages with high-fidelity UI: Dashboard, Pockets, Transfer, Bills, Login, and Onboarding (eKYC).
+  - Implemented new functional pages with consistent UI and backend service mapping:
+    - **QRIS Payments** (`/qris`)
+    - **Virtual Card Management** (`/cards`)
+    - **Financial Analytics & Intelligence** (`/analytics`)
+    - **Wealth Management / Investments** (`/investments`)
+    - **Security & MFA Governance** (`/security`)
+    - **Account Settings & Ecosystem** (`/settings`)
+    - **Help & Support Terminal** (`/support`)
+  - Integrated `GEMINI.md` with official Frontend Design System rules and color palette.
+  - Updated `TODOS.md` with detailed frontend implementation progress and upcoming tasks.
+  - Fixed scroll issues, layout scaling, and bottom white-space gaps in the root layout.
+
+### Added
+
 - **Partner Service** (partner-service):
   - Initial implementation of Partner Management Service
   - Quarkus 3.x with Java 21 layered architecture

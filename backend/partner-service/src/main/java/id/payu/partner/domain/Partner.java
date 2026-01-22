@@ -34,6 +34,12 @@ public class Partner extends PanacheEntityBase {
 
     public String apiKey;
 
+    public String clientId;
+
+    public String clientSecret;
+
+    public String publicKey;
+
     public boolean active;
 
     @CreationTimestamp

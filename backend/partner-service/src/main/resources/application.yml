@@ -3,7 +3,7 @@ quarkus:
     name: partner-service
 
   http:
-    port: 8087
+    port: 8089
 
   datasource:
     db-kind: postgresql

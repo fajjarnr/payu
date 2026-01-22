@@ -20,11 +20,11 @@
 | **qris-simulator** | Java 21 | Quarkus 3.17 | ✅ Complete | QR generation, payment simulation |
 | **compliance-service** | Java 21 | Spring Boot 3.4.1 | ✅ Complete | Regulatory audits, PCI-DSS |
 | **support-service** | Java 21 | Quarkus 3.17 | ✅ Complete | Support training mgmt |
-| **investment-service** | Java 21 | Spring Boot 3.4 | ⏳ Planned | Deposits, Funds, Gold |
-| **lending-service** | Java 21 | Spring Boot 3.4 | ⏳ Planned | Loans, PayLater |
-| **promotion-service** | Java 21 | Quarkus 3.x | ⏳ Planned | Rewards, Cashback |
-| **backoffice-service** | Java 21 | Quarkus 3.x | ⏳ Planned | Admin, Fraud Ops |
-| **partner-service** | Java 21 | Quarkus 3.x | ⏳ Planned | Open Banking SNAP BI |
+| **investment-service**| Java 21 | Spring Boot 3.4.1 | ✅ Complete | Deposits, Funds, Gold |
+| **lending-service** | Java 21 | Spring Boot 3.4.1 | ✅ Complete | Loans, PayLater |
+| **promotion-service** | Java 21 | Quarkus 3.17 | ✅ Complete | Rewards, Cashback |
+| **backoffice-service** | Java 21 | Quarkus 3.17 | ✅ Complete | Admin, Fraud Ops |
+| **partner-service** | Java 21 | Quarkus 3.17 | ✅ Complete | SNAP BI Basic |
 
 ---
 
@@ -211,7 +211,7 @@
 
 ## Summary
 
-**Status**: All 14 services are ✅ **COMPLETED** with:
+**Status**: All 19 services are ✅ **COMPLETED** with:
 - Full implementation
 - Dockerfiles (UBI9 compliant)
 - Database migrations

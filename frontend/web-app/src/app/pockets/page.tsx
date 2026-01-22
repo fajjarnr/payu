@@ -7,6 +7,8 @@ import { BalanceResponse, WalletTransaction } from '@/types';
 import api from '@/lib/api';
 import { useEffect, useState } from 'react';
 
+import DashboardLayout from "@/components/DashboardLayout";
+
 export default function PocketsPage() {
   const [accountId, setAccountId] = useState('');
 

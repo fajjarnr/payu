@@ -21,15 +21,22 @@ public class PartnerDTO {
     
     public boolean active;
 
+    public String clientId;
+    public String clientSecret;
+    public String publicKey;
+
     public PartnerDTO() {
     }
 
-    public PartnerDTO(Long id, String name, String type, String email, String phone, boolean active) {
+    public PartnerDTO(Long id, String name, String type, String email, String phone, boolean active, String clientId, String clientSecret, String publicKey) {
         this.id = id;
         this.name = name;
         this.type = type;
         this.email = email;
         this.phone = phone;
         this.active = active;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.publicKey = publicKey;
     }
 }

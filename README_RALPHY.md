@@ -20,16 +20,16 @@ ralphy --opencode --model zai-coding-plan/glm-4.7 "Tambahkan unit test untuk bal
 ```
 
 ### 2. Menjalankan Secara Otonom (PRD Mode)
-Jika dijalankan dengan flag `--prd`, Ralphy akan otomatis mengecek checklist di file yang ditentukan (direkomendasikan menggunakan `TODO.md`) dan mengerjakannya satu per satu:
+Jika dijalankan dengan flag `--prd`, Ralphy akan otomatis mengecek checklist di file yang ditentukan (direkomendasikan menggunakan `TODOS.md`) dan mengerjakannya satu per satu:
 ```bash
-ralphy --opencode --model zai-coding-plan/glm-4.7 --prd TODO.md
+ralphy --opencode --model zai-coding-plan/glm-4.7 --prd TODOS.md
 ```
 
 ### 3. Menggunakan tmux (Rekomendasi)
 Agar Ralphy tetap berjalan di background meskipun Anda menutup terminal:
 ```bash
 # Membuat session baru
-tmux new -s payu "ralphy --opencode --model zai-coding-plan/glm-4.7 --prd TODO.md"
+tmux new -s payu "ralphy --opencode --model zai-coding-plan/glm-4.7 --prd TODOS.md"
 ```
 
 # Detach (Keluar dari tampilan tapi tetap jalan)

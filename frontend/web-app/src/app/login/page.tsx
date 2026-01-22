@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
-  
+
   const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
     resolver: zodResolver(loginSchema)
   });
@@ -37,61 +37,69 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col p-6">
-      <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
-        
-        <div className="mb-12 text-center">
-           <div className="relative h-16 w-16 mx-auto mb-4 bg-green-500 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-green-200">
-               <span>U</span>
-               <div className="absolute top-3 right-3 h-2 w-2 bg-white rounded-full opacity-50"></div>
-           </div>
-           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">Welcome Back</h1>
-           <p className="text-gray-500 dark:text-gray-400">Sign in to manage your finances</p>
+    <div className="min-h-screen bg-background flex flex-col p-6 items-center justify-center">
+      <div className="max-w-md w-full space-y-12">
+
+        <div className="text-center">
+          <div className="relative h-20 w-20 mx-auto mb-8 bg-bank-green rounded-[1.5rem] flex items-center justify-center text-white text-3xl font-black shadow-2xl shadow-bank-green/30">
+            <span>U</span>
+            <div className="absolute top-4 right-4 h-2 w-2 bg-white rounded-full animate-pulse"></div>
+          </div>
+          <h1 className="text-4xl font-black text-foreground tracking-tighter mb-2 italic">Welcome Back.</h1>
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Secure Digital Banking Portal</p>
         </div>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <input 
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="space-y-6">
+            <div className="group">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block mb-2 group-focus-within:text-bank-green transition-colors">Credential Identifier</label>
+              <input
                 {...register('username')}
-                type="text" 
-                className="w-full rounded-2xl border-0 bg-gray-50 dark:bg-gray-800 p-4 text-gray-900 dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 transition-all font-medium"
-                placeholder="Username"
+                type="text"
+                className="w-full rounded-2xl border-border bg-card p-5 text-foreground placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all font-black text-lg outline-none"
+                placeholder="Username or Account ID"
               />
-              {errors.username && <p className="text-red-500 text-xs mt-2 pl-2 font-medium">{errors.username.message}</p>}
+              {errors.username && <p className="text-red-500 text-[10px] mt-2 pl-2 font-black uppercase tracking-widest">{errors.username.message}</p>}
             </div>
-            
-            <div>
-              <input 
+
+            <div className="group">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block mb-2 group-focus-within:text-bank-green transition-colors">Access Keyphrase</label>
+              <input
                 {...register('password')}
-                type="password" 
-                className="w-full rounded-2xl border-0 bg-gray-50 dark:bg-gray-800 p-4 text-gray-900 dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 transition-all font-medium"
-                placeholder="Password"
+                type="password"
+                className="w-full rounded-2xl border-border bg-card p-5 text-foreground placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all font-black text-lg outline-none"
+                placeholder="••••••••••••"
               />
-              {errors.password && <p className="text-red-500 text-xs mt-2 pl-2 font-medium">{errors.password.message}</p>}
+              {errors.password && <p className="text-red-500 text-[10px] mt-2 pl-2 font-black uppercase tracking-widest">{errors.password.message}</p>}
             </div>
 
             <div className="flex justify-end">
-               <a href="#" className="text-sm font-semibold text-green-600 hover:text-green-700">Forgot Password?</a>
+              <a href="#" className="text-[10px] font-black text-bank-green uppercase tracking-widest hover:underline">Revoke / Reset Access ?</a>
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={mutation.isPending}
-            className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 active:scale-[0.98] transition-all shadow-xl shadow-green-200 disabled:bg-green-400 disabled:shadow-none"
-          >
-            {mutation.isPending ? 'Signing in...' : 'Sign In'}
-          </button>
+          <div className="space-y-4 pt-4">
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="w-full bg-bank-green text-white py-6 rounded-3xl font-black text-xl hover:bg-bank-emerald active:scale-[0.98] transition-all shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50"
+            >
+              {mutation.isPending ? 'Validating Account...' : 'Initialize Access'}
+            </button>
+            <div className="h-0.5 w-full bg-gray-50 dark:bg-gray-900 rounded-full" />
+            <p className="text-center text-gray-500 font-bold uppercase tracking-widest text-[10px]">
+              Authentication Protocol v1.4.2
+            </p>
+          </div>
         </form>
 
-        <div className="mt-12 text-center">
-            <p className="text-gray-500 dark:text-gray-400 font-medium">
-               New to PayU?{' '}
-               <Link href="/onboarding" className="text-green-600 hover:text-green-700 font-bold">
-                  Create Account
-               </Link>
-            </p>
+        <div className="text-center">
+          <p className="text-gray-400 font-bold text-xs">
+            New to the platform?{' '}
+            <Link href="/onboarding" className="text-bank-green hover:underline">
+              Create Account
+            </Link>
+          </p>
         </div>
       </div>
     </div>

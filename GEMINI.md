@@ -254,6 +254,27 @@ src/test/java/id/payu/<service>/
 | Supporting | Layered | Mostly CRUD, simpler |
 | ML Services | Simplified Clean | Focus on ML logic |
 
+### 🎨 Frontend Design System (Premium Emerald)
+
+Untuk menjaga konsistensi UI yang premium dan modern:
+1. **Layout**: Selalu gunakan `DashboardLayout` untuk halaman terautentikasi (main app).
+2. **Color Palette**:
+   - Primary: `bank-green` (#10b981) - Gunakan untuk action buttons dan brand primary.
+   - Secondary: `bank-emerald` (#059669) - Gunakan untuk gradients dan hover states.
+   - Background: `bg-background` (bg-white / dark:bg-gray-950) - Gunakan `bg-card` untuk mobile cards.
+3. **Typography**:
+   - Menggunakan Google Fonts **Inter** atau **Outfit**.
+   - Headers: Gunakan `font-black` (900) dengan `tracking-tighter` untuk kesan premium.
+   - Body: Gunakan `font-medium` (500) untuk readability.
+4. **Components Style**:
+   - Radius: Gunakan `rounded-[2.5rem]` untuk main cards dan `rounded-3xl` untuk modal/small cards.
+   - Border: Gunakan `border-border` yang sangat halus (gray-100/800).
+   - Shadows: Gunakan `shadow-2xl shadow-bank-green/20` untuk primary buttons.
+5. **Data Formatting**:
+   - Mata Uang: Selalu gunakan format Rupiah (`Rp 1.000.000`).
+   - Angka: Gunakan `toLocaleString('id-ID')`.
+6. **Mobile First**: Pastikan layout responsif dengan `MobileNav` dan `MobileHeader` yang konsisten.
+
 ### Git & Changelog Policy ⚠️
 
 Setiap kali melakukan perubahan kode yang signifikan:

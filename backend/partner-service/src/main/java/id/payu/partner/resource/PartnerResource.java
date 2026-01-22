@@ -59,6 +59,16 @@ public class PartnerResource {
         return Response.ok(updatedPartner).build();
     }
 
+    @POST
+    @Path("/{id}/keys/regenerate")
+    public Response regenerateKeys(@PathParam("id") Long id) {
+        PartnerDTO partner = partnerService.regenerateKeys(id);
+        if (partner == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(partner).build();
+    }
+
     @DELETE
     @Path("/{id}")
     public Response deletePartner(@PathParam("id") Long id) {

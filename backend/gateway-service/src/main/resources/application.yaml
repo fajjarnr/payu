@@ -68,7 +68,6 @@ quarkus:
     info-description: API Gateway for PayU Digital Banking Platform
     info-contact-name: PayU Engineering Team
     info-contact-email: engineering@payu.id
-    info-contact-email: engineering@payu.id
     path: /q/openapi
 
   # Logging
@@ -110,6 +109,9 @@ gateway:
       timeout: 60s
     analytics-service:
       url: ${ANALYTICS_SERVICE_URL:http://localhost:8088}
+      timeout: 30s
+    partner-service:
+      url: ${PARTNER_SERVICE_URL:http://localhost:8089}
       timeout: 30s
 
   # Simulators
