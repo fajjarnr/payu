@@ -70,11 +70,12 @@
 
 ```
 payu/
-├── ARCHITECTURE.md     # Technical architecture documentation
+├── docs/               # Documentation (Architecture, Product, Roadmap)
+├── scripts/            # Infrastructure & utility scripts
+├── tests/              # Infrastructure & monitoring tests
 ├── CHANGELOG.md        # Version history
-├── PRD.md              # Product Requirements Document
 ├── README.md           # This file
-└── backend/            # Microservices implementation (TBD)
+└── backend/            # Microservices implementation
     ├── account-service/
     ├── auth-service/
     ├── transaction-service/
@@ -121,8 +122,11 @@ PayU dapat diintegrasikan sebagai **External Banking Provider** untuk project la
 
 | Document | Description |
 |----------|-------------|
-| [PRD.md](./PRD.md) | Product Requirements Document |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Technical Architecture |
+| [PRD.md](./docs/product/PRD.md) | Product Requirements Document |
+| [ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) | Technical Architecture |
+| [Roadmap](./docs/roadmap/TODOS.md) | Project Roadmap |
+| [Disaster Recovery](./docs/operations/DISASTER_RECOVERY.md) | DR & Backup Procedures |
+| [Contributing](./docs/guides/CONTRIBUTING.md) | Development Guidelines |
 | [CHANGELOG.md](./CHANGELOG.md) | Version History |
 
 ## 🛡️ Compliance
@@ -140,8 +144,8 @@ git clone <repository-url>
 cd payu
 
 # View documentation
-cat ARCHITECTURE.md
-cat PRD.md
+cat docs/architecture/ARCHITECTURE.md
+cat docs/product/PRD.md
 ```
 
 ## 📞 Contact

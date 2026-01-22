@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **CI/CD Simplification**:
   - Disabled GitHub Actions workflows (`.github/workflows`) by renaming them to `.yml.disabled` as the project transitions to OpenShift Pipelines (Tekton) and ArgoCD for CI/CD.
+- **Documentation Restructuring**:
+  - Reorganized project documentation into a dedicated `docs/` directory with subdirectories for `architecture`, `product`, `operations`, `security`, `guides`, and `roadmap`.
+  - Updated `README.md` and related files to point to the new documentation paths.
 
 ### Added
 
