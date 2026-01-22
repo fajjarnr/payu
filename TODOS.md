@@ -50,15 +50,15 @@
 - [x] Optimize state management (Zustand) and Data fetching (React Query).
 
 ### 9. Mobile App Support
-- [ ] Prepare mobile-responsive views for web-app.
-- [ ] [Planned] Native mobile boilerplate (iOS/Android).
+- [x] Prepare mobile-responsive views for web-app.
+- [x] [Planned] Native mobile boilerplate (iOS/Android).
 
 ## 🛡️ Backend Technical Debt & Hardening
 
 ### 10. Security Hardening
-- [ ] Replace `permitAll()` with production-ready OAuth2/Keycloak configuration in all services.
-- [ ] Implement strict CORS and rate limiting in `gateway-service`.
-- [ ] Audit user data access patterns for GDPR compliance.
+- [x] Replace `permitAll()` with production-ready OAuth2/Keycloak configuration in all services.
+- [x] Implement strict CORS and rate limiting in `gateway-service`.
+- [x] Audit user data access patterns for GDPR compliance.
 - [ ] **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
 
 ### 11. SNAP BI & Partner Integration

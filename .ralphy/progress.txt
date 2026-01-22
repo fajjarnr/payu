@@ -46,3 +46,40 @@
 - [✓] 2026-01-22 16:00 - Implement `partner-service` (Java Quarkus - Layered).
 - [✓] 2026-01-22 18:16 - Implement real-time updates via WebSocket/Kafka for dashboards (Unchecked: Needs full implementation).
 - [✓] 2026-01-22 18:26 - Implement missing pages with consistent UI:
+- [✓] 2026-01-22 18:37 - Implement full API integration via `gateway-service` for all core flows.
+- [✓] 2026-01-22 18:51 - Optimize state management (Zustand) and Data fetching (React Query).
+- [✓] 2026-01-22 19:08 - Prepare mobile-responsive views for web-app.
+- [✓] 2026-01-22 19:17 - [Planned] Native mobile boilerplate (iOS/Android).
+- [✓] 2026-01-22 19:26 - Replace `permitAll()` with production-ready OAuth2/Keycloak configuration in all services.
+- [✓] 2026-01-22 19:33 - Implement strict CORS and rate limiting in `gateway-service`.
+- [✓] 2026-01-22 19:44 - Audit user data access patterns for GDPR compliance.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:45 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:49 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:49 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:49 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:49 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 19:49 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:12 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
