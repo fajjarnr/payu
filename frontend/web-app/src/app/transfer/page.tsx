@@ -8,10 +8,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { transferSchema, TransferRequest } from '@/types';
 import api from '@/lib/api';
 import { useState } from 'react';
+import TransactionService from '@/services/TransactionService';
 
 export default function TransferPage() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [showReview, setShowReview] = useState(false);
+  const transactionService = TransactionService;
 
   const recentContacts = [
     { name: 'Anya', initial: 'A', color: 'bg-purple-100 text-purple-600', accountId: 'acc-any123' },
@@ -31,7 +33,12 @@ export default function TransferPage() {
 
   const transferMutation = useMutation({
     mutationFn: (data: TransferRequest) => {
-      return api.post('/transactions/transfer', data);
+      return transactionService.initiateTransfer({
+        senderAccountId: data.fromAccountId,
+        recipientAccountNumber: data.toAccountId,
+        amount: data.amount,
+        description: data.description || ''
+      });
     },
     onSuccess: () => {
       alert('Transfer successful!');

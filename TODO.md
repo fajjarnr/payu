@@ -18,19 +18,19 @@
 - [x] Features: Digital Deposits, Mutual Funds marketplace, Digital Gold.
 
 ### 4. Lending & Credit
-- [ ] Implement `lending-service` (Java Spring Boot - Hexagonal).
-- [ ] Features: Personal Loan, PayLater (Buy Now Pay Later), automated Credit Underwriting.
+- [x] Implement `lending-service` (Java Spring Boot - Hexagonal).
+- [x] Features: Personal Loan, PayLater (Buy Now Pay Later), automated Credit Underwriting.
 
 ### 5. Marketing & Engagement
-- [ ] Implement `promotion-service` (Java Quarkus - Layered).
-- [ ] Features: Rewards points, Cashback engine, Referral program.
+- [x] Implement `promotion-service` (Java Quarkus - Layered).
+- [x] Features: Rewards points, Cashback engine, Referral program.
 
 ### 6. Operational Excellence
-- [ ] Implement `backoffice-service` (Java Quarkus - Layered).
-- [ ] Features: Dashboard for Manual KYC review, Fraud Monitoring, and Customer Operations.
+- [x] Implement `backoffice-service` (Java Quarkus - Layered).
+- [x] Features: Dashboard for Manual KYC review, Fraud Monitoring, and Customer Operations.
 
 ### 7. Ecosystem & Open Banking
-- [ ] Implement `partner-service` (Java Quarkus - Layered).
+- [x] Implement `partner-service` (Java Quarkus - Layered).
 - [ ] Features: SNAP BI Standard API integration, Merchant Portal for B2B.
 
 ## ⚙️ Testing & Infrastructure (Lower Priority)

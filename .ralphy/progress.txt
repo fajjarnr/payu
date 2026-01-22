@@ -20,3 +20,27 @@
 - [✓] 2026-01-22 13:23 - Implement real-time updates via WebSocket/Kafka if necessary for dashboards.
 - [✓] 2026-01-22 13:39 - Implement `investment-service` (Java Spring Boot - Hexagonal).
 - [✓] 2026-01-22 13:49 - Features: Digital Deposits, Mutual Funds marketplace, Digital Gold.
+- [✓] 2026-01-22 14:08 - Implement `lending-service` (Java Spring Boot - Hexagonal).
+- [✓] 2026-01-22 14:22 - Features: Personal Loan, PayLater (Buy Now Pay Later), automated Credit Underwriting.
+- [✓] 2026-01-22 14:47 - Implement `promotion-service` (Java Quarkus - Layered).
+- [✓] 2026-01-22 15:09 - Features: Rewards points, Cashback engine, Referral program.
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✗] 2026-01-22 15:14 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✓] 2026-01-22 15:39 - Implement `backoffice-service` (Java Quarkus - Layered).
+- [✓] 2026-01-22 15:54 - Features: Dashboard for Manual KYC review, Fraud Monitoring, and Customer Operations.
+- [✓] 2026-01-22 16:00 - Implement `partner-service` (Java Quarkus - Layered).

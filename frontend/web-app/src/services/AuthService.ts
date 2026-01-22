@@ -15,7 +15,7 @@ export interface LoginResponse {
 export class AuthService {
   private static instance: AuthService;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -27,14 +27,14 @@ export class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>('/auth/login', credentials);
     const { access_token, refresh_token } = response.data;
-    
+
     if (access_token) {
       localStorage.setItem('token', access_token);
     }
     if (refresh_token) {
       localStorage.setItem('refreshToken', refresh_token);
     }
-    
+
     return response.data;
   }
 
@@ -55,6 +55,28 @@ export class AuthService {
 
   getRefreshToken(): string | null {
     return localStorage.getItem('refreshToken');
+  }
+
+  async refreshToken(): Promise<string> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await api.post<LoginResponse>('/auth/refresh', {
+      refresh_token: refreshToken
+    });
+
+    const { access_token, refresh_token: newRefreshToken } = response.data;
+
+    if (access_token) {
+      localStorage.setItem('token', access_token);
+    }
+    if (newRefreshToken) {
+      localStorage.setItem('refreshToken', newRefreshToken);
+    }
+
+    return access_token;
   }
 }
 
