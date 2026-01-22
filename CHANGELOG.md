@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Backoffice Dashboard**:
+  - Implemented Next.js Dashboard for Backoffice operations
+  - Features: KYC Review, Fraud Monitoring, Customer Operations
+  - Integration with Backoffice Service REST API
+  - Pages: Dashboard Overview, KYC List/Detail, Fraud List/Detail, Customer Cases List/Detail
+  - E2E tests for Backoffice backend flow
+
 - **Promotion Service** (promotion-service):
   - Initial implementation of promotion, rewards, cashback, referral, and loyalty points management
   - Quarkus 3.x with Java 21 layered architecture

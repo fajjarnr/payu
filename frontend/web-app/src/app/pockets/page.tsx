@@ -3,11 +3,16 @@
 import MobileHeader from "@/components/MobileHeader";
 import { Plus, Target, Lock, TrendingUp, ChevronRight } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
-import { BalanceResponse, Transaction } from '@/types';
+import { BalanceResponse, WalletTransaction } from '@/types';
 import api from '@/lib/api';
+import { useEffect, useState } from 'react';
 
 export default function PocketsPage() {
-  const accountId = localStorage.getItem('accountId') || '';
+  const [accountId, setAccountId] = useState('');
+
+  useEffect(() => {
+    setAccountId(localStorage.getItem('accountId') || '');
+  }, []);
 
   const { data: balance, isLoading: balanceLoading } = useQuery({
     queryKey: ['wallet-balance', accountId],
@@ -21,7 +26,7 @@ export default function PocketsPage() {
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['wallet-transactions', accountId],
     queryFn: async () => {
-      const response = await api.get<Transaction[]>(`/wallets/${accountId}/transactions`);
+      const response = await api.get<WalletTransaction[]>(`/wallets/${accountId}/transactions`);
       return response.data;
     },
     enabled: !!accountId
