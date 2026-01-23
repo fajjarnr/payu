@@ -72,4 +72,71 @@ class BillerResourceTest {
             .statusCode(200)
             .body("$", hasItems("electricity", "water", "mobile"));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/billers?category=tv_cable - should return TV Cable billers")
+    void shouldReturnTVCableBillers() {
+        given()
+            .queryParam("category", "tv_cable")
+            .when()
+            .get("/api/v1/billers")
+            .then()
+            .statusCode(200)
+            .body("$", hasSize(greaterThan(0)))
+            .body("category", everyItem(equalTo("tv_cable")))
+            .body("code", hasItems("INDOVISION", "TRANSTV", "KVISION", "MNC_VISION"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/billers?category=multifinance - should return Multifinance billers")
+    void shouldReturnMultifinanceBillers() {
+        given()
+            .queryParam("category", "multifinance")
+            .when()
+            .get("/api/v1/billers")
+            .then()
+            .statusCode(200)
+            .body("$", hasSize(greaterThan(0)))
+            .body("category", everyItem(equalTo("multifinance")))
+            .body("code", hasItems("FIFASTRA", "BFI", "ADIRA", "WOM", "MEGA_FINANCE"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/billers/{code} - should return TV Cable biller with correct admin fee")
+    void shouldReturnTVCableBillerWithCorrectAdminFee() {
+        given()
+            .when()
+            .get("/api/v1/billers/INDOVISION")
+            .then()
+            .statusCode(200)
+            .body("code", equalTo("INDOVISION"))
+            .body("displayName", containsString("Indovision"))
+            .body("category", equalTo("tv_cable"))
+            .body("adminFee", equalTo(2500));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/billers/{code} - should return Multifinance biller with correct admin fee")
+    void shouldReturnMultifinanceBillerWithCorrectAdminFee() {
+        given()
+            .when()
+            .get("/api/v1/billers/FIFASTRA")
+            .then()
+            .statusCode(200)
+            .body("code", equalTo("FIFASTRA"))
+            .body("displayName", containsString("FIFASTRA"))
+            .body("category", equalTo("multifinance"))
+            .body("adminFee", equalTo(5000));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/billers/categories - should include tv_cable and multifinance categories")
+    void shouldIncludeNewCategories() {
+        given()
+            .when()
+            .get("/api/v1/billers/categories")
+            .then()
+            .statusCode(200)
+            .body("$", hasItems("electricity", "water", "mobile", "tv_cable", "multifinance"));
+    }
 }

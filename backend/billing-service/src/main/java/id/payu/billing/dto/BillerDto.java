@@ -18,10 +18,13 @@ public record BillerDto(
         BigDecimal fee = switch (type.getCategory()) {
             case "electricity" -> new BigDecimal("2500");
             case "water" -> new BigDecimal("2000");
-            case "mobile" -> BigDecimal.ZERO; // No admin fee for pulsa
+            case "mobile" -> BigDecimal.ZERO;
             case "internet" -> new BigDecimal("2500");
             case "insurance" -> new BigDecimal("2500");
             case "utility" -> new BigDecimal("2500");
+            case "tv_cable" -> new BigDecimal("2500");
+            case "multifinance" -> new BigDecimal("5000");
+            case "ewallet" -> new BigDecimal("1000");
             default -> new BigDecimal("2500");
         };
 

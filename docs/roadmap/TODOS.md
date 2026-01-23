@@ -113,12 +113,12 @@
 
 ### 16. Transaction & Payment Enhancements
 - [x] Implement **SKN/RTGS** transfer types in `transaction-service` (currently dummy).
-- [ ] Implement **Scheduled & Recurring Transfers** engine (logic + scheduler).
-- [ ] Implement **Split Bill** logic and notification flow across multiple users.
+- [x] Implement **Scheduled & Recurring Transfers** engine (logic + scheduler).
+- [x] Implement **Split Bill** logic and notification flow across multiple users.
 
 ### 17. Expanded Billing & Top-Up
-- [ ] Implement **E-wallet Top-up** (GoPay, OVO, DANA, LinkAja) in `billing-service`.
-- [ ] Expand biller list to include **TV Cable** (Indovision, etc.) and **Multifinance** (Cicilan).
+- [x] Implement **E-wallet Top-up** (GoPay, OVO, DANA, LinkAja) in `billing-service`.
+- [x] Expand biller list to include **TV Cable** (Indovision, etc.) and **Multifinance** (Cicilan).
 
 ### 18. Advanced Financial Services
 - [ ] Implement **Robo-Advisory** engine in `analytics-service` for automated portfolio allocation.

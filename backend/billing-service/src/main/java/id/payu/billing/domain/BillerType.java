@@ -17,7 +17,16 @@ public enum BillerType {
     GOPAY("Top-up GoPay", "GOPAY", "ewallet"),
     OVO("Top-up OVO", "OVO", "ewallet"),
     DANA("Top-up DANA", "DANA", "ewallet"),
-    LINKAJA("Top-up LinkAja", "LINKAJA", "ewallet");
+    LINKAJA("Top-up LinkAja", "LINKAJA", "ewallet"),
+    INDOVISION("TV Kabel Indovision", "INDOVISION", "tv_cable"),
+    TRANSTV("TV Kabel Transvision", "TRANSTV", "tv_cable"),
+    KVISION("TV Kabel K-Vision", "KVISION", "tv_cable"),
+    MNC_VISION("TV Kabel MNC Vision", "MNC_VISION", "tv_cable"),
+    FIFASTRA("Cicilan FIFASTRA", "FIFASTRA", "multifinance"),
+    BFI("Cicilan BFI Finance", "BFI", "multifinance"),
+    ADIRA("Cicilan Adira Finance", "ADIRA", "multifinance"),
+    WOM("Cicilan WOM Finance", "WOM", "multifinance"),
+    MEGA_FINANCE("Cicilan Mega Finance", "MEGA_FINANCE", "multifinance");
 
     private final String displayName;
     private final String code;
