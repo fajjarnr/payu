@@ -4,9 +4,12 @@ import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.domain.FraudCase;
 import id.payu.backoffice.domain.KycReview;
 import id.payu.backoffice.dto.*;
+import id.payu.backoffice.dto.UniversalSearchRequest;
+import id.payu.backoffice.dto.UniversalSearchResponse;
 import id.payu.backoffice.service.CustomerCaseService;
 import id.payu.backoffice.service.FraudCaseService;
 import id.payu.backoffice.service.KycReviewService;
+import id.payu.backoffice.service.UniversalSearchService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -33,6 +36,9 @@ public class BackofficeResource {
 
     @Inject
     CustomerCaseService customerCaseService;
+
+    @Inject
+    UniversalSearchService universalSearchService;
 
     @POST
     @Path("/kyc-reviews")
@@ -256,6 +262,36 @@ public class BackofficeResource {
     public Response deleteCustomerCase(@PathParam("id") UUID id) {
         customerCaseService.delete(id);
         return Response.noContent().build();
+    }
+
+    @POST
+    @Path("/search")
+    public Response search(@Valid UniversalSearchRequest request) {
+        LOG.infof("Universal search request: query=%s, entityType=%s", request.query(), request.entityType());
+        var results = universalSearchService.search(
+                request.query(),
+                request.entityType(),
+                request.page(),
+                request.size()
+        );
+        return Response.ok(results).build();
+    }
+
+    @GET
+    @Path("/search")
+    public Response searchGet(
+            @QueryParam("q") String query,
+            @QueryParam("type") String entityType,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("20") int size) {
+        LOG.infof("Universal search GET request: query=%s, entityType=%s", query, entityType);
+        if (query == null || query.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse("Query parameter 'q' is required"))
+                    .build();
+        }
+        var results = universalSearchService.search(query, entityType, page, size);
+        return Response.ok(results).build();
     }
 
     record ErrorResponse(String message) {}

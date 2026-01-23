@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Universal Search** (Backend - Backoffice Service):
+  - Implemented cross-service data lookup for backoffice operations
+  - Search across KYC Reviews, Fraud Cases, and Customer Cases entities
+  - Search by multiple fields: userId, accountNumber, documentNumber, caseNumber, fullName, fraudType, subject
+  - Entity type filtering (kyc, fraud, customer)
+  - Pagination support with configurable page size (default 20, max 100)
+  - REST API endpoints:
+    - POST `/api/v1/backoffice/search` - Universal search via POST request
+    - GET `/api/v1/backoffice/search` - Universal search via GET request
+  - DTOs: `UniversalSearchRequest`, `UniversalSearchResponse`
+  - Search result items include type, id, title, description, userId, accountNumber, status, createdAt, and details
+  - Service layer: `UniversalSearchService` with separate search methods for each entity type
+  - Case-insensitive search using SQL LIKE queries
+  - Prevents duplicate results when same record matches multiple fields
+  - Handles empty/ null queries by returning zero results
+  - Comprehensive unit tests: 12 test cases covering all search scenarios
+  - Integration tests: 11 test cases for REST endpoints
+  - Structured JSON logging for observability
+
 - **Loan Pre-approval** (Backend - Lending Service):
   - Implemented real-time credit scoring based loan pre-approval logic
   - Credit score evaluation with three-tier approval status (APPROVED, CONDITIONALLY_APPROVED, REJECTED)
