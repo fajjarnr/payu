@@ -96,3 +96,8 @@
 - [✓] 2026-01-23 05:08 - **Disaster Recovery**: Verify backup-restore procedures for PostgreSQL and Kafka.
 - [✓] 2026-01-23 05:13 - Create placeholders for **Terms of Service** and **Privacy Policy**.
 - [✓] 2026-01-23 05:27 - Prepare technical documentation for OJK/BI regulatory audit.
+- [✓] 2026-01-23 05:23 - Prepare technical documentation for OJK/BI regulatory audit.
+- [✓] 2026-01-23 05:37 - **Cross-Service Integration Tests**: Implement holistic End-to-End test suite covering full user journeys.
+- [✓] 2026-01-23 05:57 - **TDD Hardening**: Increase test coverage to >80% for all core banking services.
+- [✓] 2026-01-23 06:51 - **Frontend Quality**:
+- [✓] 2026-01-23 07:03 - Implement **SKN/RTGS** transfer types in `transaction-service` (currently dummy).

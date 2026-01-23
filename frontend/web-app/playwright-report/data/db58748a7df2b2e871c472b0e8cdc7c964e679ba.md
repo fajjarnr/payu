@@ -1,0 +1,45 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - link [ref=e7] [cursor=pointer]:
+        - /url: /login
+        - img [ref=e8]
+      - generic [ref=e12]: Protokol Identitas
+    - generic [ref=e13]:
+      - generic [ref=e17]: "1"
+      - generic [ref=e19]: "2"
+      - generic [ref=e21]: "3"
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - heading "Profil Akun." [level=2] [ref=e26]
+        - paragraph [ref=e27]: Petakan identitas unik Anda ke dalam Buku Besar (Ledger) finansial kami.
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]: Nomor NIK (16 Digit)
+          - textbox "3200..." [ref=e31]: "3201010101010001"
+        - generic [ref=e32]:
+          - generic [ref=e33]: Nama Lengkap Sesuai KTP
+          - textbox "NAMA LENGKAP ANDA" [ref=e34]: Test User
+        - generic [ref=e35]:
+          - generic [ref=e36]: Alamat Email Digital
+          - textbox "nama@domain.com" [ref=e37]: test@example.com
+        - generic [ref=e38]:
+          - generic [ref=e39]: Nama Pengguna (Username)
+          - textbox "NAMA_PENGGUNA_UNIK" [ref=e40]: testuser123
+      - button "Konfirmasi Pembuatan Akun" [ref=e42]
+  - generic [ref=e47] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e48]:
+      - img [ref=e49]
+    - generic [ref=e52]:
+      - button "Open issues overlay" [ref=e53]:
+        - generic [ref=e54]:
+          - generic [ref=e55]: "0"
+          - generic [ref=e56]: "1"
+        - generic [ref=e57]: Issue
+      - button "Collapse issues badge" [ref=e58]:
+        - img [ref=e59]
+  - alert [ref=e61]
+```

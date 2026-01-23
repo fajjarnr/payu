@@ -112,7 +112,7 @@
 ## 🚀 Backend Feature Extensions (Gap Analysis)
 
 ### 16. Transaction & Payment Enhancements
-- [ ] Implement **SKN/RTGS** transfer types in `transaction-service` (currently dummy).
+- [x] Implement **SKN/RTGS** transfer types in `transaction-service` (currently dummy).
 - [ ] Implement **Scheduled & Recurring Transfers** engine (logic + scheduler).
 - [ ] Implement **Split Bill** logic and notification flow across multiple users.
 

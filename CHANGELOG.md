@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Scheduled & Recurring Transfers** (Backend - Transaction Service):
+  - Implemented scheduled transfer engine with full lifecycle management
+  - Features: One-time and recurring transfers (daily, weekly, monthly, custom frequency)
+  - Created domain model `ScheduledTransfer` with status tracking (ACTIVE, PAUSED, COMPLETED, CANCELLED, FAILED)
+  - Implemented `ScheduledTransferService` with operations: create, update, cancel, pause, resume
+  - Created `ScheduledTransferScheduler` running every 60 seconds to process due transfers
+  - Added REST API endpoints at `/v1/scheduled-transfers` for CRUD operations
+  - Database migration `V2__Create_scheduled_transfers_table.sql` for persistence
+  - Supports occurrence count limits and end date constraints
+  - Integrates with existing `TransactionUseCase` for actual transfer execution
+  - Added DTOs: `CreateScheduledTransferRequest`, `ScheduledTransferResponse`
+  - Enabled Spring scheduling via `@EnableScheduling` annotation
+
 - **Frontend Quality Assurance** (Frontend):
   - Implemented Vitest unit testing suite for critical frontend components and logic
   - Configured Vitest with jsdom environment, React plugin, and custom setup

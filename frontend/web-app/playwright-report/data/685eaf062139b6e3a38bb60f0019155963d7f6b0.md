@@ -1,0 +1,100 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: U
+        - generic [ref=e6]: PayU
+      - generic [ref=e7]:
+        - paragraph [ref=e8]: Menu Utama
+        - link "Beranda" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - img [ref=e10]
+          - generic [ref=e15]: Beranda
+        - link "Kantong" [ref=e16] [cursor=pointer]:
+          - /url: /pockets
+          - img [ref=e17]
+          - generic [ref=e20]: Kantong
+        - link "Transfer" [ref=e21] [cursor=pointer]:
+          - /url: /transfer
+          - img [ref=e22]
+          - generic [ref=e25]: Transfer
+        - link "Pembayaran QRIS" [ref=e26] [cursor=pointer]:
+          - /url: /qris
+          - img [ref=e27]
+          - generic [ref=e33]: Pembayaran QRIS
+        - link "Tagihan & Top-up" [ref=e34] [cursor=pointer]:
+          - /url: /bills
+          - img [ref=e35]
+          - generic [ref=e38]: Tagihan & Top-up
+        - link "Kartu Virtual" [ref=e39] [cursor=pointer]:
+          - /url: /cards
+          - img [ref=e40]
+          - generic [ref=e42]: Kartu Virtual
+        - link "Investasi" [ref=e43] [cursor=pointer]:
+          - /url: /investments
+          - img [ref=e44]
+          - generic [ref=e47]: Investasi
+        - link "Analitik Keuangan" [ref=e48] [cursor=pointer]:
+          - /url: /analytics
+          - img [ref=e49]
+          - generic [ref=e51]: Analitik Keuangan
+      - generic [ref=e52]:
+        - paragraph [ref=e53]: Lainnya
+        - link "Keamanan & MFA" [ref=e54] [cursor=pointer]:
+          - /url: /security
+          - img [ref=e55]
+          - generic [ref=e58]: Keamanan & MFA
+        - link "Pengaturan Akun" [ref=e59] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e60]
+          - generic [ref=e63]: Pengaturan Akun
+        - link "Bantuan & Support" [ref=e64] [cursor=pointer]:
+          - /url: /support
+          - img [ref=e65]
+          - generic [ref=e72]: Bantuan & Support
+    - generic [ref=e73]:
+      - banner [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e77]:
+            - heading "Selamat Datang, Pengguna!" [level=1] [ref=e78]
+            - paragraph [ref=e79]: Kelola finansial Anda dengan wawasan real-time
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - img [ref=e82]
+              - textbox "Cari apapun..." [ref=e85]
+            - button [ref=e86]:
+              - img [ref=e88]
+            - button [ref=e92]:
+              - img [ref=e93]
+      - main [ref=e96]:
+        - generic [ref=e98]:
+          - generic [ref=e99]:
+            - button [ref=e100]:
+              - img [ref=e101]
+            - heading "Bayar Air (PDAM)" [level=2] [ref=e103]
+          - generic [ref=e104]:
+            - generic [ref=e106]:
+              - img [ref=e108]
+              - generic [ref=e111]:
+                - paragraph [ref=e112]: Penyedia Layanan
+                - heading "Air (PDAM)" [level=3] [ref=e113]
+                - paragraph [ref=e114]: Mitra Pembayaran Resmi
+            - generic [ref=e115]:
+              - generic [ref=e116]:
+                - generic [ref=e117]: ID Pelanggan / Nomor Rekening
+                - textbox "Masukkan ID unik Anda" [ref=e118]
+              - generic [ref=e119]:
+                - generic [ref=e120]: Jumlah Pembayaran (IDR)
+                - generic [ref=e121]:
+                  - generic [ref=e122]: Rp
+                  - spinbutton [ref=e123]
+          - generic [ref=e124]:
+            - button "Konfirmasi & Bayar Sekarang" [ref=e125]
+            - paragraph [ref=e126]: Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU
+  - button "Open Next.js Dev Tools" [ref=e132] [cursor=pointer]:
+    - img [ref=e133]
+  - alert [ref=e136]
+```

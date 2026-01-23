@@ -1,0 +1,189 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e7]:
+      - img [ref=e8]
+    - generic [ref=e11]:
+      - button "Open issues overlay" [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: "2"
+          - generic [ref=e15]: "3"
+        - generic [ref=e16]:
+          - text: Issue
+          - generic [ref=e17]: s
+      - button "Collapse issues badge" [ref=e18]:
+        - img [ref=e19]
+  - generic [ref=e21]:
+    - complementary [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: U
+        - generic [ref=e25]: PayU
+      - generic [ref=e26]:
+        - paragraph [ref=e27]: Menu Utama
+        - link "Beranda" [ref=e28] [cursor=pointer]:
+          - /url: /
+          - img [ref=e29]
+          - generic [ref=e34]: Beranda
+        - link "Kantong" [ref=e35] [cursor=pointer]:
+          - /url: /pockets
+          - img [ref=e36]
+          - generic [ref=e39]: Kantong
+        - link "Transfer" [ref=e40] [cursor=pointer]:
+          - /url: /transfer
+          - img [ref=e41]
+          - generic [ref=e44]: Transfer
+        - link "Pembayaran QRIS" [ref=e45] [cursor=pointer]:
+          - /url: /qris
+          - img [ref=e46]
+          - generic [ref=e52]: Pembayaran QRIS
+        - link "Tagihan & Top-up" [ref=e53] [cursor=pointer]:
+          - /url: /bills
+          - img [ref=e54]
+          - generic [ref=e57]: Tagihan & Top-up
+        - link "Kartu Virtual" [ref=e58] [cursor=pointer]:
+          - /url: /cards
+          - img [ref=e59]
+          - generic [ref=e61]: Kartu Virtual
+        - link "Investasi" [ref=e62] [cursor=pointer]:
+          - /url: /investments
+          - img [ref=e63]
+          - generic [ref=e66]: Investasi
+        - link "Analitik Keuangan" [ref=e67] [cursor=pointer]:
+          - /url: /analytics
+          - img [ref=e68]
+          - generic [ref=e70]: Analitik Keuangan
+      - generic [ref=e71]:
+        - paragraph [ref=e72]: Lainnya
+        - link "Keamanan & MFA" [ref=e73] [cursor=pointer]:
+          - /url: /security
+          - img [ref=e74]
+          - generic [ref=e77]: Keamanan & MFA
+        - link "Pengaturan Akun" [ref=e78] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e79]
+          - generic [ref=e82]: Pengaturan Akun
+        - link "Bantuan & Support" [ref=e83] [cursor=pointer]:
+          - /url: /support
+          - img [ref=e84]
+          - generic [ref=e91]: Bantuan & Support
+    - generic [ref=e92]:
+      - banner [ref=e93]:
+        - generic [ref=e94]:
+          - generic [ref=e96]:
+            - heading "Selamat Datang, Pengguna!" [level=1] [ref=e97]
+            - paragraph [ref=e98]: Kelola finansial Anda dengan wawasan real-time
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - img [ref=e101]
+              - textbox "Cari apapun..." [ref=e104]
+            - button [ref=e105]:
+              - img [ref=e107]
+            - button [ref=e111]:
+              - img [ref=e112]
+      - main [ref=e115]:
+        - generic [ref=e119]:
+          - generic [ref=e121]:
+            - heading "Transfer Instan" [level=2] [ref=e122]
+            - paragraph [ref=e123]: Kirim dana secara aman dalam hitungan detik.
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - generic [ref=e126]:
+                - heading "Pilih Metode Transfer" [level=3] [ref=e127]
+                - generic [ref=e128]:
+                  - button "Transfer Instan Transfer antar rekening PayU seketika Gratis Seketika" [ref=e129]:
+                    - img [ref=e132]
+                    - generic [ref=e135]:
+                      - heading "Transfer Instan" [level=4] [ref=e136]
+                      - paragraph [ref=e137]: Transfer antar rekening PayU seketika
+                      - generic [ref=e138]:
+                        - generic [ref=e139]: Gratis
+                        - generic [ref=e140]: Seketika
+                  - button "BI-FAST Transfer real-time antar bank nasional Rp 5.000 Seketika" [ref=e141]:
+                    - img [ref=e144]
+                    - generic [ref=e146]:
+                      - heading "BI-FAST" [level=4] [ref=e147]
+                      - paragraph [ref=e148]: Transfer real-time antar bank nasional
+                      - generic [ref=e149]:
+                        - generic [ref=e150]: Rp 5.000
+                        - generic [ref=e151]: Seketika
+                  - button "SKN Transfer kliring nasional Rp 2.900 Hari kerja" [ref=e152]:
+                    - img [ref=e155]
+                    - generic [ref=e160]:
+                      - heading "SKN" [level=4] [ref=e161]
+                      - paragraph [ref=e162]: Transfer kliring nasional
+                      - generic [ref=e163]:
+                        - generic [ref=e164]: Rp 2.900
+                        - generic [ref=e165]: Hari kerja
+                  - button "RTGS Transfer real-time gross settlement Rp 25.000 Seketika" [ref=e166]:
+                    - img [ref=e169]
+                    - generic [ref=e172]:
+                      - heading "RTGS" [level=4] [ref=e173]
+                      - paragraph [ref=e174]: Transfer real-time gross settlement
+                      - generic [ref=e175]:
+                        - generic [ref=e176]: Rp 25.000
+                        - generic [ref=e177]: Seketika
+              - generic [ref=e178]:
+                - heading "Jadwal Transfer" [level=3] [ref=e179]
+                - generic [ref=e180]:
+                  - button "Sekarang Proses transfer segera" [ref=e181]:
+                    - generic [ref=e182]:
+                      - heading "Sekarang" [level=4] [ref=e183]
+                      - paragraph [ref=e184]: Proses transfer segera
+                  - button "Terjadwal Tentukan tanggal pengiriman" [active] [ref=e185]:
+                    - img [ref=e188]
+                    - generic [ref=e191]:
+                      - heading "Terjadwal" [level=4] [ref=e192]
+                      - paragraph [ref=e193]: Tentukan tanggal pengiriman
+                  - button "Berulang Pengiriman rutin bulanan" [ref=e194]:
+                    - img [ref=e197]
+                    - generic [ref=e200]:
+                      - heading "Berulang" [level=4] [ref=e201]
+                      - paragraph [ref=e202]: Pengiriman rutin bulanan
+                - generic [ref=e203]:
+                  - generic [ref=e204]: Tanggal Transfer
+                  - textbox [ref=e205]
+              - generic [ref=e206]:
+                - img [ref=e207]
+                - textbox "Masukkan ID Akun atau Nomor Rekening" [ref=e210]
+              - generic [ref=e211]:
+                - generic [ref=e213]:
+                  - generic [ref=e214]: Nominal Transfer
+                  - generic [ref=e217]: Secured IDR
+                - generic [ref=e218]:
+                  - generic [ref=e219]: Rp
+                  - spinbutton [ref=e220]: "0"
+                - generic [ref=e221]:
+                  - paragraph [ref=e222]: Memo Transaksi
+                  - textbox "Apa tujuan transfer ini?" [ref=e223]
+              - button "Tinjau Ringkasan Transfer" [ref=e224]:
+                - button "Tinjau Ringkasan Transfer" [ref=e225]:
+                  - text: Tinjau Ringkasan Transfer
+                  - img [ref=e226]
+            - generic [ref=e229]:
+              - heading "Penerima Favorit" [level=3] [ref=e231]
+              - generic [ref=e233]:
+                - button "A Anya" [ref=e234]:
+                  - generic [ref=e235]: A
+                  - generic [ref=e236]: Anya
+                - button "B Budi" [ref=e237]:
+                  - generic [ref=e238]: B
+                  - generic [ref=e239]: Budi
+                - button "C Citra" [ref=e240]:
+                  - generic [ref=e241]: C
+                  - generic [ref=e242]: Citra
+                - button "D Dodi" [ref=e243]:
+                  - generic [ref=e244]: D
+                  - generic [ref=e245]: Dodi
+                - button "Tambah" [ref=e246]:
+                  - img [ref=e248]
+                  - generic [ref=e250]: Tambah
+              - generic [ref=e252]:
+                - generic [ref=e253]:
+                  - heading "Bantuan?" [level=4] [ref=e254]
+                  - paragraph [ref=e255]: Proteksi & panduan transaksi aman.
+                  - button "Hubungi Kami" [ref=e256]
+                - img [ref=e257]
+  - alert [ref=e264]
+```

@@ -1,5 +1,7 @@
 package id.payu.transaction.dto;
 
+import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.domain.model.Transaction;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,13 +11,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InitiateTransferRequest {
+public class CreateScheduledTransferRequest {
     @NotNull(message = "Sender account ID is required")
     private UUID senderAccountId;
 
@@ -31,15 +34,20 @@ public class InitiateTransferRequest {
     @NotBlank(message = "Description is required")
     private String description;
 
-    private TransactionType type;
+    @NotNull(message = "Transfer type is required")
+    private Transaction.TransactionType transferType;
 
-    private String transactionPin;
-    private String deviceId;
+    @NotNull(message = "Schedule type is required")
+    private ScheduledTransfer.ScheduleType scheduleType;
 
-    public enum TransactionType {
-        INTERNAL_TRANSFER,
-        BIFAST_TRANSFER,
-        SKN_TRANSFER,
-        RTGS_TRANSFER
-    }
+    @NotNull(message = "Start date is required")
+    private Instant startDate;
+
+    private Instant endDate;
+
+    private Integer frequencyDays;
+
+    private Integer dayOfMonth;
+
+    private Integer occurrenceCount;
 }
