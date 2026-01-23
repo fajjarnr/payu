@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Cross-Service Integration Tests** (Testing):
+  - Implemented holistic End-to-End test suite covering full user journeys across all PayU services
+  - Created comprehensive test files in `tests/e2e_blackbox/`:
+    - `test_complete_user_journey.py` - Complete onboarding and transaction flows (registration, login, wallet, topup, transfers, bill payments, QRIS)
+    - `test_investment_flow.py` - Wealth management features (investment accounts, deposits, mutual funds, digital gold)
+    - `test_lending_flow.py` - Credit and lending services (credit score, loans, repayments, PayLater)
+    - `test_promotion_flow.py` - Rewards and gamification (promotions, cashback, loyalty points, referrals)
+    - `test_compliance_flow.py` - Regulatory compliance (AML/CFT audit reports, compliance checks, report search)
+    - `test_support_flow.py` - Support team management (agents, training modules, training assignment, status tracking)
+    - `test_partner_flow.py` - Partner and SNAP BI integration (partner CRUD, API keys, OAuth2, payments)
+    - `test_analytics_flow.py` - Analytics and ML features (user metrics, spending trends, cash flow, recommendations)
+    - `test_backoffice.py` - Operational flows (KYC reviews, fraud cases, customer support cases)
+  - Enhanced `client.py` with improved HTTP client (timeout support, PATCH/DELETE methods, better error handling)
+  - Created comprehensive test infrastructure:
+    - `requirements.txt` - Python dependencies (pytest, requests, faker, pytest-asyncio)
+    - `pytest.ini` - Pytest configuration with markers (smoke, critical, integration, e2e, service-specific)
+    - `conftest.py` - Shared fixtures and test configuration
+    - `Makefile` - Convenience commands for running tests (make test, make test-smoke, etc.)
+    - `run_tests.sh` - Bash script for test execution with options (verbose, coverage, stop-on-fail)
+    - `README.md` - Comprehensive documentation for test suite (setup, usage, troubleshooting, CI/CD integration)
+  - Test architecture:
+    - Holistic approach covering complete user workflows
+    - Cross-service integration verification
+    - Event-driven operation validation with retries
+    - Graceful degradation using pytest.skip() for unavailable services
+    - Realistic test data generation using Faker library
+  - Test coverage:
+    - All 15 PayU microservices (account, auth, wallet, transaction, billing, notification, investment, lending, promotion, compliance, support, partner, analytics, backoffice, kyc)
+    - 50+ test cases across 9 test files
+    - Service-specific test markers for selective execution
+  - Updated TODOS.md to mark cross-service integration tests as complete
+
 - **OJK/BI Regulatory Audit Documentation** (Compliance):
   - Created comprehensive OJK/BI regulatory audit technical documentation at `docs/compliance/OJK_BI_REGULATORY_AUDIT.md`
   - Documentation covers:
