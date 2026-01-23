@@ -3,8 +3,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { locales } from '@/i18n/config';
 import { Inter, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Providers from "./providers";
+import "../globals.css";
+import Providers from "../providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const inter = Inter({
