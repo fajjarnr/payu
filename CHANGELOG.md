@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Biometric Edge Authentication Bridge** (Backend - Auth Service):
+  - Implemented biometric authentication bridge for mobile app using asymmetric cryptography (ECDSA)
+  - REST API endpoints for biometric authentication flow:
+    - GET `/api/v1/biometric/challenge` - Generate challenge for biometric verification
+    - POST `/api/v1/biometric/register` - Register device biometric credentials
+    - POST `/api/v1/biometric/authenticate` - Authenticate using biometric signature
+    - GET `/api/v1/biometric/registrations/{username}` - List user's registered devices
+    - DELETE `/api/v1/biometric/registrations/{registrationId}` - Revoke biometric registration
+  - Challenge-based authentication with configurable expiry (default: 5 minutes)
+  - Device registration limits (max 5 devices per user, configurable)
+  - Device uniqueness validation per user
+  - Public key storage as Base64-encoded strings for JSON serialization
+  - Signature verification using SHA256withECDSA algorithm
+  - Support for iOS (FaceID/TouchID) and Android (BiometricPrompt)
+  - BiometricRegistration and BiometricAuthenticationResponse DTOs
+  - Comprehensive unit tests (11 test cases) covering all biometric operations
+  - Controller tests (7 test cases) for REST endpoints
+  - Error handling with custom BiometricException (error codes BIO_001 through BIO_007)
+  - Structured JSON logging for observability
+
 - **Real-time AI Fraud Detection Scoring** (Backend - Analytics Service):
   - Implemented ML-based fraud detection engine with configurable risk factors
   - Real-time transaction scoring based on multiple risk factors:

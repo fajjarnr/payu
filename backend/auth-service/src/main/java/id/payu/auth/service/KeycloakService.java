@@ -87,7 +87,7 @@ public class KeycloakService {
 
     public Mono<LoginResponse> refreshToken(String refreshToken) {
         String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
-                keycloakConfig.serverUrl(), keycloakConfig.realm());
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
 
         WebClient webClient = webClientBuilder
                 .baseUrl(tokenEndpoint)
@@ -183,8 +183,8 @@ public class KeycloakService {
     private MultiValueMap<String, String> buildLoginForm(String username, String password) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "password");
-        form.add("client_id", keycloakConfig.clientId());
-        form.add("client_secret", keycloakConfig.clientSecret());
+        form.add("client_id", keycloakConfig.getClientId());
+        form.add("client_secret", keycloakConfig.getClientSecret());
         form.add("username", username);
         form.add("password", password);
         return form;
@@ -193,8 +193,8 @@ public class KeycloakService {
     private MultiValueMap<String, String> buildRefreshForm(String refreshToken) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "refresh_token");
-        form.add("client_id", keycloakConfig.clientId());
-        form.add("client_secret", keycloakConfig.clientSecret());
+        form.add("client_id", keycloakConfig.getClientId());
+        form.add("client_secret", keycloakConfig.getClientSecret());
         form.add("refresh_token", refreshToken);
         return form;
     }

@@ -81,6 +81,9 @@ payu:
       require-lowercase: true
       require-digit: true
       require-special-char: true
+  biometric:
+    challenge-expiry-seconds: 300
+    max-registrations-per-user: 5
   keycloak:
     server-url: ${KEYCLOAK_URL:http://localhost:8180}
     realm: ${KEYCLOAK_REALM:payu}
