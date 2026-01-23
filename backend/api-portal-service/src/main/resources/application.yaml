@@ -1,0 +1,93 @@
+quarkus:
+  application:
+    name: api-portal-service
+    version: 1.0.0
+
+  http:
+    port: 8099
+
+  smallrye-openapi:
+    info-title: PayU API Portal
+    info-version: 1.0.0
+    info-description: Centralized API Portal for all PayU services
+    info-contact-name: PayU Engineering Team
+    info-contact-email: engineering@payu.id
+    path: /q/openapi
+
+  smallrye-health:
+    ui:
+      enable: true
+
+  log:
+    level: INFO
+    category:
+      "id.payu.portal":
+        level: DEBUG
+    console:
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e%n"
+
+portal:
+  services:
+    account-service:
+      name: Account Service
+      url: http://localhost:8081
+      openapi-path: /q/openapi
+    auth-service:
+      name: Auth Service
+      url: http://localhost:8082
+      openapi-path: /q/openapi
+    transaction-service:
+      name: Transaction Service
+      url: http://localhost:8083
+      openapi-path: /q/openapi
+    wallet-service:
+      name: Wallet Service
+      url: http://localhost:8084
+      openapi-path: /q/openapi
+    billing-service:
+      name: Billing Service
+      url: http://localhost:8085
+      openapi-path: /q/openapi
+    notification-service:
+      name: Notification Service
+      url: http://localhost:8086
+      openapi-path: /q/openapi
+    kyc-service:
+      name: KYC Service
+      url: http://localhost:8087
+      openapi-path: /openapi.json
+    analytics-service:
+      name: Analytics Service
+      url: http://localhost:8088
+      openapi-path: /openapi.json
+    partner-service:
+      name: Partner Service
+      url: http://localhost:8089
+      openapi-path: /q/openapi
+    promotion-service:
+      name: Promotion Service
+      url: http://localhost:8090
+      openapi-path: /q/openapi
+    lending-service:
+      name: Lending Service
+      url: http://localhost:8091
+      openapi-path: /q/openapi
+    investment-service:
+      name: Investment Service
+      url: http://localhost:8092
+      openapi-path: /q/openapi
+    compliance-service:
+      name: Compliance Service
+      url: http://localhost:8093
+      openapi-path: /q/openapi
+    backoffice-service:
+      name: Backoffice Service
+      url: http://localhost:8094
+      openapi-path: /q/openapi
+    support-service:
+      name: Support Service
+      url: http://localhost:8095
+      openapi-path: /q/openapi
+
+  cache:
+    ttl: 5m

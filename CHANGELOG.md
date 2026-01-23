@@ -6,8 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
+ 
 ### Added
+- **Centralized API Portal** (Backend - API Portal Service):
+  - Implemented new Quarkus-based `api-portal-service` for centralized API documentation
+  - OpenAPI specification aggregation from all 16 microservices
+  - RESTful API endpoints:
+    - GET `/api/v1/portal/services` - List all registered services with health status
+    - GET `/api/v1/portal/services/{serviceId}/openapi` - Get OpenAPI spec for specific service
+    - GET `/api/v1/portal/openapi` - Get aggregated OpenAPI specs for all services
+    - POST `/api/v1/portal/refresh` - Force refresh of all OpenAPI spec caches
+  - Swagger UI integration with service selector:
+    - GET `/` - Dashboard with all services and their health status
+    - GET `/service/{serviceId}` - Interactive Swagger UI for specific service
+  - Caching mechanism with configurable TTL (default: 5 minutes)
+  - Service health checks via `/q/health/live` and `/q/health/ready` endpoints
+  - Docker configuration using Red Hat UBI9 OpenJDK 21 image
+  - Non-root user (UID 185) for OpenShift compatibility
+  - Integrated with all services via environment variables in docker-compose.yml
+  - Tests for API aggregation, REST endpoints, and health checks
+  - Support for both Quarkus (`/q/openapi`) and FastAPI (`/openapi.json`) services
 
 - **Internationalization (i18n) Support** (Frontend - Web App):
   - Implemented next-intl for comprehensive i18n support

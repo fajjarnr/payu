@@ -426,6 +426,64 @@ services:
     networks:
       - payu-network
 
+  api-portal-service:
+    build:
+      context: ./backend/api-portal-service
+      dockerfile: Dockerfile
+    container_name: payu-api-portal-service
+    ports:
+      - "8099:8099"
+    environment:
+      QUARKUS_HTTP_PORT: 8099
+      ACCOUNT_SERVICE_URL: http://account-service:8001
+      AUTH_SERVICE_URL: http://auth-service:8002
+      TRANSACTION_SERVICE_URL: http://transaction-service:8003
+      WALLET_SERVICE_URL: http://wallet-service:8004
+      BILLING_SERVICE_URL: http://billing-service:8080
+      NOTIFICATION_SERVICE_URL: http://notification-service:8080
+      KYC_SERVICE_URL: http://kyc-service:8007
+      ANALYTICS_SERVICE_URL: http://analytics-service:8008
+      PARTNER_SERVICE_URL: http://partner-service:8080
+      PROMOTION_SERVICE_URL: http://promotion-service:8080
+      LENDING_SERVICE_URL: http://lending-service:8087
+      INVESTMENT_SERVICE_URL: http://investment-service:8080
+      COMPLIANCE_SERVICE_URL: http://compliance-service:8087
+      BACKOFFICE_SERVICE_URL: http://backoffice-service:8080
+      SUPPORT_SERVICE_URL: http://support-service:8080
+    depends_on:
+      account-service:
+        condition: service_started
+      auth-service:
+        condition: service_started
+      transaction-service:
+        condition: service_started
+      wallet-service:
+        condition: service_started
+      billing-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      kyc-service:
+        condition: service_started
+      analytics-service:
+        condition: service_started
+      partner-service:
+        condition: service_started
+      promotion-service:
+        condition: service_started
+      lending-service:
+        condition: service_started
+      investment-service:
+        condition: service_started
+      compliance-service:
+        condition: service_started
+      backoffice-service:
+        condition: service_started
+      support-service:
+        condition: service_started
+    networks:
+      - payu-network
+
   # ============================================
   # ML SERVICES
   # ============================================

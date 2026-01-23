@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayU API Portal</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; }
+        .header { background: #2c3e50; color: white; padding: 1rem 2rem; }
+        .header h1 { margin: 0; }
+        .content { padding: 2rem; }
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .service-card { 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 1rem; 
+            cursor: pointer; 
+            transition: transform 0.2s; 
+        }
+        .service-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .service-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .service-status { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+        .status-up { background: #2ecc71; color: white; }
+        .status-down { background: #e74c3c; color: white; }
+        .status-unknown { background: #f39c12; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PayU API Portal</h1>
+        <p>Centralized API Documentation for All Services</p>
+    </div>
+    <div class="content">
+        <h2>Available Services</h2>
+        <div class="services-grid">
+            {#for service in services}
+            <a href="/service/{service.id}" class="service-card" style="text-decoration: none; color: inherit;">
+                <div class="service-name">{service.name}</div>
+                <div>
+                    <span class="service-status status-{service.status.toLowerCase()}">{service.status}</span>
+                </div>
+                <div style="margin-top: 0.5rem; color: #666;">
+                    {service.url}
+                </div>
+            </a>
+            {/for}
+        </div>
+        <div style="margin-top: 2rem;">
+            <h3>Aggregated OpenAPI Specification</h3>
+            <p>Download all OpenAPI specifications:</p>
+            <a href="/api/v1/portal/openapi" style="display: inline-block; padding: 0.5rem 1rem; background: #3498db; color: white; text-decoration: none; border-radius: 4px;">
+                Download OpenAPI JSON
+            </a>
+        </div>
+    </div>
+</body>
+</html>
