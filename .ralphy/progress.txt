@@ -101,3 +101,10 @@
 - [✓] 2026-01-23 05:57 - **TDD Hardening**: Increase test coverage to >80% for all core banking services.
 - [✓] 2026-01-23 06:51 - **Frontend Quality**:
 - [✓] 2026-01-23 07:03 - Implement **SKN/RTGS** transfer types in `transaction-service` (currently dummy).
+- [✓] 2026-01-23 07:31 - Implement **Scheduled & Recurring Transfers** engine (logic + scheduler).
+- [✓] 2026-01-23 07:50 - Implement **Split Bill** logic and notification flow across multiple users.
+- [✓] 2026-01-23 08:02 - Implement **E-wallet Top-up** (GoPay, OVO, DANA, LinkAja) in `billing-service`.
+- [✓] 2026-01-23 08:08 - Expand biller list to include **TV Cable** (Indovision, etc.) and **Multifinance** (Cicilan).
+- [✓] 2026-01-23 08:28 - Implement **Robo-Advisory** engine in `analytics-service` for automated portfolio allocation.
+- [✓] 2026-01-23 08:45 - Implement **Loan Pre-approval** logic in `lending-service` based on real-time credit scoring.
+- [✓] 2026-01-23 09:24 - Implement **Gamification System** (Daily check-in rewards, transaction-based badges/levels) in `promotion-service`.

@@ -60,6 +60,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added DTOs: `CreateScheduledTransferRequest`, `ScheduledTransferResponse`
   - Enabled Spring scheduling via `@EnableScheduling` annotation
 
+ - **Gamification System** (Backend - Promotion Service):
+   - Daily check-in rewards with consecutive day tracking
+   - Streak-based loyalty point rewards (5-200 points based on streak length)
+   - Transaction-based XP system (1 XP per 10,000 IDR)
+   - 10-level progression system with Indonesian level names
+   - Automatic badge earning for transactions, amounts, and achievements
+   - Level rewards with loyalty points at each milestone
+   - Domain models: `DailyCheckin`, `Badge`, `UserBadge`, `UserLevel`, `XpTransaction`, `LevelReward`
+   - REST API endpoints at `/api/v1/gamification/`
+   - Database migration `V2__create_gamification_tables.sql`
+   - DTOs for all gamification operations
+   - Comprehensive unit tests with 20 test cases
+   - Integration tests for REST endpoints
+
 - **Frontend Quality Assurance** (Frontend):
   - Implemented Vitest unit testing suite for critical frontend components and logic
   - Configured Vitest with jsdom environment, React plugin, and custom setup
