@@ -135,7 +135,7 @@
 ### 20. Advanced Security & AI
 - [x] Implement **Real-time AI Fraud Detection** Scoring for all transactions.
 - [x] Implement **Biometric Edge Authentication** bridge for Mobile App.
-- [ ] Implement **Dynamic Risk-based MFA** (trigger MFA only for suspicious login patterns).
+- [x] Implement **Dynamic Risk-based MFA** (trigger MFA only for suspicious login patterns).
 
 ### 21. Global Readiness
 - [ ] Implement **Internationalization (i18n)** support for English.

@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Internationalization (i18n) Support** (Frontend - Web App):
+  - Implemented next-intl for comprehensive i18n support
+  - Added English (en) and Indonesian (id) translation files
+  - Created language switcher component in dashboard header
+  - Restructured app directory to support locale-based routing
+  - Updated key pages to use translation keys
+  - Translation files include comprehensive coverage for:
+    - Common UI elements
+    - Navigation items
+    - Dashboard components
+    - Accounts, transactions, transfers
+    - Bills, cards, investments
+    - Rewards, analytics, security
+    - Support, legal pages, auth flows
+  - Unit tests for language switcher and translation validation
+  - Default locale: Indonesian (id)
+  - Supported locales: id, en
+
 - **Dynamic Risk-based MFA** (Backend - Auth Service):
   - Implemented risk-based Multi-Factor Authentication that triggers MFA only for suspicious login patterns
   - Risk evaluation engine with configurable risk factors:

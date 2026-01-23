@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface SidebarItemProps {
   href: string;
@@ -179,19 +180,21 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="hidden md:flex items-center bg-muted/50 rounded-xl px-4 py-2.5 w-64 gap-3 border border-transparent focus-within:border-primary/30 focus-within:bg-card focus-within:shadow-sm transition-all">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Cari apapun..."
-                  className="bg-transparent border-none focus:ring-0 text-xs font-semibold w-full placeholder:text-muted-foreground/60 text-foreground tracking-widest"
-                />
-              </div>
+               <LanguageSwitcher />
 
-              <button className="p-3 text-muted-foreground hover:bg-muted rounded-full relative transition-colors">
-                <div className="absolute top-3.5 right-3.5 h-2 w-2 bg-destructive rounded-full border-2 border-card" />
-                <Bell className="h-5 w-5" />
-              </button>
+               <div className="hidden md:flex items-center bg-muted/50 rounded-xl px-4 py-2.5 w-64 gap-3 border border-transparent focus-within:border-primary/30 focus-within:bg-card focus-within:shadow-sm transition-all">
+                 <Search className="h-4 w-4 text-muted-foreground" />
+                 <input
+                   type="text"
+                   placeholder="Cari apapun..."
+                   className="bg-transparent border-none focus:ring-0 text-xs font-semibold w-full placeholder:text-muted-foreground/60 text-foreground tracking-widest"
+                 />
+               </div>
+
+               <button className="p-3 text-muted-foreground hover:bg-muted rounded-full relative transition-colors">
+                 <div className="absolute top-3.5 right-3.5 h-2 w-2 bg-destructive rounded-full border-2 border-card" />
+                 <Bell className="h-5 w-5" />
+               </button>
 
               <div className="relative group">
                 <button className="h-10 w-10 bg-accent rounded-full flex items-center justify-center border-2 border-card shadow-sm overflow-hidden group-hover:ring-2 ring-primary transition-all">
