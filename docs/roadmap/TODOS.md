@@ -48,7 +48,7 @@
     - [x] **Help & Support** (`/support`) -> Integrate with `support-service`.
 - [x] Implement full API integration via `gateway-service` for all core flows.
 - [x] Optimize state management (Zustand) and Data fetching (React Query).
-- [ ] **Technical Debt & Polish**:
+- [x] **Technical Debt & Polish**:
     *   [ ] Standardize **Skeleton Loaders** for all data-fetching states across all pages.
     *   [ ] Implement **Dynamic Error Boundaries** with user-friendly Indonesian recovery UI.
     *   [ ] Add **Micro-animations** (Framer Motion) for page transitions and button interactions.
