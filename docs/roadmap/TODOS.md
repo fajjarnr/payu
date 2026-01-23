@@ -91,7 +91,7 @@
 ### 13. Observability & SRE
 - [x] Deploy **LokiStack** for centralized log management.
 - [x] Configure **Prometheus & Grafana** dashboards for all microservices.
-- [ ] Implement distributed tracing using **Jaeger/OpenTelemetry**.
+- [x] Implement distributed tracing using **Jaeger/OpenTelemetry**.
 - [ ] **Disaster Recovery**: Verify backup-restore procedures for PostgreSQL and Kafka.
 
 ### 14. Legal & Readiness

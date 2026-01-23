@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Disaster Recovery Verification** (Testing):
+  - Added comprehensive integration test suite for PostgreSQL backup-restore procedures
+  - Added comprehensive integration test suite for Kafka backup-restore procedures
+  - Created `test_backup_restore_integration.py` with 13 test cases verifying:
+    - PostgreSQL container accessibility and connectivity
+    - PostgreSQL test data creation and backup generation
+    - PostgreSQL backup integrity verification
+    - Kafka container accessibility and topic management
+    - Kafka message production and verification
+    - Complete disaster recovery workflow scenarios for both PostgreSQL and Kafka
+  - Updated existing `test_backup_restore.py` to use correct DRP documentation path (`docs/operations/DISASTER_RECOVERY.md`)
+  - Fixed DRP documentation path references across 6 test classes
+  - All disaster recovery procedures for PostgreSQL and Kafka verified through automated testing
+
 - **Distributed Tracing with Jaeger/OpenTelemetry** (Observability):
   - Added Jaeger all-in-one container to docker-compose.yml (port 16686 for UI, port 4317 for OTLP)
   - Configured OTLP trace export for all 15 PayU microservices:
