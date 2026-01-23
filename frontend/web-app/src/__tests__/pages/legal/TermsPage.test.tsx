@@ -1,27 +1,21 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import TermsPage from '@/app/legal/terms/page';
 
-jest.mock('@/components/DashboardLayout', () => {
-  const MockDashboardLayout = ({ children }: { children: React.ReactNode }) => <div data-testid="dashboard-layout">{children}</div>;
-  MockDashboardLayout.displayName = 'DashboardLayout';
-  return MockDashboardLayout;
-});
+vi.mock('@/components/DashboardLayout', () => ({
+  default: ({ children }: { children: React.ReactNode }) => <div data-testid="dashboard-layout">{children}</div>,
+}));
 
-jest.mock('@/components/ui/Motion', () => {
-  const MockPageTransition = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-  const MockStaggerContainer = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-  const MockStaggerItem = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-  return {
-    PageTransition: MockPageTransition,
-    StaggerContainer: MockStaggerContainer,
-    StaggerItem: MockStaggerItem,
-  };
-});
+vi.mock('@/components/ui/Motion', () => ({
+  PageTransition: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  StaggerContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  StaggerItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
 
 describe('TermsPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the page title', () => {

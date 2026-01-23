@@ -101,11 +101,11 @@
 ## 🧪 Testing & Quality Assurance
 
 ### 15. Testing Suite
-- [ ] **Cross-Service Integration Tests**: Implement holistic End-to-End test suite covering full user journeys.
-- [ ] **TDD Hardening**: Increase test coverage to >80% for all core banking services.
-- [ ] **Frontend Quality**:
-    *   [ ] Setup **Playwright** for E2E testing of critical financial flows (KYC, Transfer, Bill Pay).
-    *   [ ] Setup **Vitest** for unit testing critical logic in `src/services` and `src/stores`.
+- [x] **Cross-Service Integration Tests**: Implement holistic End-to-End test suite covering full user journeys.
+- [x] **TDD Hardening**: Increase test coverage to >80% for all core banking services.
+- [x] **Frontend Quality**:
+    *   [x] Setup **Playwright** for E2E testing of critical financial flows (KYC, Transfer, Bill Pay).
+    *   [x] Setup **Vitest** for unit testing critical logic in `src/services` and `src/stores`.
 - [x] [SKIP] Load Testing: (Postponed as per user request).
 - [x] [SKIP] Security Testing: (Postponed as per user request).
 

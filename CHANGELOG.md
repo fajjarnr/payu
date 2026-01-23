@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Frontend Quality Assurance** (Frontend):
+  - Implemented Vitest unit testing suite for critical frontend components and logic
+  - Configured Vitest with jsdom environment, React plugin, and custom setup
+  - Created comprehensive unit tests for:
+    - Components (BalanceCard, TransferActivity, StatsCharts, Skeleton, ErrorBoundary, Motion)
+    - Hooks (useWebSocket, useAnalyticsWebSocket)
+    - Services (TransactionService, WalletService, AuthService)
+    - Stores (authStore, uiStore)
+    - Pages (TermsPage, PrivacyPage)
+  - Updated all test files to use Vitest (vi) instead of Jest
+  - Fixed type annotation in vitest.setup.ts to use proper TypeScript typing
+  - All 115 unit tests pass successfully (15 test files)
+  - ESLint passes with 0 errors, 28 warnings only
+  - Playwright E2E tests configured and operational:
+    - 17 tests passing across critical financial flows (KYC, Transfer, Bill Pay)
+    - Configured for Chromium, Firefox, WebKit, and mobile browsers
+    - Tracing, screenshots, and video capture enabled for failed tests
+  - Test coverage configured with v8 provider (text, json, html reporters)
+  - Updated package.json with test scripts (test, test:watch, test:coverage, test:ui, test:e2e, test:e2e:ui)
+  - Updated TODOS.md to mark Frontend Quality task as complete
+
 - **Cross-Service Integration Tests** (Testing):
   - Implemented holistic End-to-End test suite covering full user journeys across all PayU services
   - Created comprehensive test files in `tests/e2e_blackbox/`:

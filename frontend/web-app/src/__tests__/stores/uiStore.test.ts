@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useUIStore } from '@/stores';
 
 describe('useUIStore', () => {
@@ -81,7 +82,7 @@ describe('useUIStore', () => {
 
   test('should add toast with custom duration', () => {
     const { result } = renderHook(() => useUIStore());
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     act(() => {
       result.current.addToast('Test message', 'error', 10000);
@@ -90,12 +91,12 @@ describe('useUIStore', () => {
     expect(result.current.toasts).toHaveLength(1);
 
     act(() => {
-      jest.advanceTimersByTime(10000);
+      vi.advanceTimersByTime(10000);
     });
 
     expect(result.current.toasts).toHaveLength(0);
 
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('should remove toast', () => {
@@ -135,7 +136,7 @@ describe('useUIStore', () => {
 
   test('should auto-remove toast after duration', () => {
     const { result } = renderHook(() => useUIStore());
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     act(() => {
       result.current.addToast('Auto-remove message', 'info', 5000);
@@ -144,11 +145,11 @@ describe('useUIStore', () => {
     expect(result.current.toasts).toHaveLength(1);
 
     act(() => {
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
     });
 
     expect(result.current.toasts).toHaveLength(0);
 
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 });

@@ -1,7 +1,8 @@
 import { useWebSocket, useAnalyticsWebSocket } from '@/hooks';
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 
-jest.mock('@/stores', () => ({
+vi.mock('@/stores', () => ({
   useAuthStore: () => ({
     token: 'test-token'
   })
@@ -63,7 +64,7 @@ global.WebSocket = MockWebSocketClass as unknown as typeof WebSocket;
 describe('useWebSocket hook', () => {
   beforeEach(() => {
     mockWebSocketInstances.length = 0;
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('hook should be defined', () => {
@@ -71,10 +72,10 @@ describe('useWebSocket hook', () => {
   });
 
   test('hook should create WebSocket connection when enabled', () => {
-    const onMessage = jest.fn();
-    const { result } = renderHook(() => useWebSocket('ws://localhost:8080/test', { 
+    const onMessage = vi.fn();
+    const { result } = renderHook(() => useWebSocket('ws://localhost:8080/test', {
       onMessage,
-      enabled: true 
+      enabled: true
     }));
 
     expect(result.current.ws).toBeDefined();
@@ -89,7 +90,7 @@ describe('useWebSocket hook', () => {
   });
 
   test('hook should handle incoming messages', () => {
-    const onMessage = jest.fn();
+    const onMessage = vi.fn();
     renderHook(() => useWebSocket('ws://localhost:8080/test', { onMessage }));
 
     act(() => {
@@ -129,7 +130,7 @@ describe('useWebSocket hook', () => {
 describe('useAnalyticsWebSocket hook', () => {
   beforeEach(() => {
     mockWebSocketInstances.length = 0;
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('hook should be defined', () => {

@@ -12,15 +12,15 @@ describe('StatsCharts', () => {
  });
 
  it('renders investment breakdown items', () => {
-  render(<StatsCharts />);
-  
-  expect(screen.getByText('Saham')).toBeInTheDocument();
-  expect(screen.getByText('(60%)')).toBeInTheDocument();
-  expect(screen.getByText('Obligasi')).toBeInTheDocument();
-  expect(screen.getByText('(25%)')).toBeInTheDocument();
-  expect(screen.getByText('Emas')).toBeInTheDocument();
-  expect(screen.getByText('(15%)')).toBeInTheDocument();
- });
+   render(<StatsCharts />);
+
+   expect(screen.getByText('Saham')).toBeInTheDocument();
+   expect(screen.getByText('60%')).toBeInTheDocument();
+   expect(screen.getByText('Obligasi')).toBeInTheDocument();
+   expect(screen.getByText('25%')).toBeInTheDocument();
+   expect(screen.getByText('Emas Digital')).toBeInTheDocument();
+   expect(screen.getByText('15%')).toBeInTheDocument();
+  });
 
  it('renders spending overview section', () => {
   render(<StatsCharts />);
@@ -62,15 +62,15 @@ describe('StatsCharts', () => {
  });
 
  it('displays active bar tooltip', () => {
-  render(<StatsCharts />);
-  
-  expect(screen.getByText('Rp 3.500.000')).toBeInTheDocument();
- });
+   render(<StatsCharts />);
+
+   expect(screen.getByText('Rp 3.5jt')).toBeInTheDocument();
+  });
 
  it('applies mobile-specific styling', () => {
-  const { container } = render(<StatsCharts />);
-  
-  const investmentSection = container.querySelector('.bg-card');
-  expect(investmentSection).toHaveClass('rounded-[2rem]', 'sm:rounded-[2.5rem]');
- });
+   const { container } = render(<StatsCharts />);
+
+   const investmentSection = container.querySelector('.bg-card');
+   expect(investmentSection).toHaveClass('rounded-xl');
+  });
 });

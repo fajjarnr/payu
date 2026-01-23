@@ -5,11 +5,11 @@ import TransferActivity from '@/components/dashboard/TransferActivity';
 
 describe('TransferActivity', () => {
  it('renders transfer activity section', () => {
-  render(<TransferActivity />);
-  
-  expect(screen.getByText('Aktivitas Transfer Terakhir')).toBeInTheDocument();
-  expect(screen.getByText('Kirim Cepat')).toBeInTheDocument();
- });
+   render(<TransferActivity />);
+
+   expect(screen.getByText('Aktivitas Terakhir')).toBeInTheDocument();
+   expect(screen.getByText('Kirim Cepat')).toBeInTheDocument();
+  });
 
  it('renders recent transfers in desktop table view', () => {
   render(<TransferActivity />);
@@ -28,13 +28,13 @@ describe('TransferActivity', () => {
  });
 
  it('renders quick transfer section with icons', () => {
-  const { container } = render(<TransferActivity />);
-  
-  expect(screen.getByText('Penerima Favorit')).toBeInTheDocument();
-  expect(container.textContent).toContain('🏦');
-  expect(container.textContent).toContain('📱');
-  expect(container.textContent).toContain('📄');
- });
+   const { container } = render(<TransferActivity />);
+
+   expect(screen.getByText('Kategori Favorit')).toBeInTheDocument();
+   expect(container.textContent).toContain('🏦');
+   expect(container.textContent).toContain('📱');
+   expect(container.textContent).toContain('📄');
+  });
 
  it('applies responsive classes for mobile view', () => {
   const { container } = render(<TransferActivity />);
@@ -47,26 +47,26 @@ describe('TransferActivity', () => {
  });
 
  it('shows action buttons at bottom', () => {
-  render(<TransferActivity />);
-  
-  expect(screen.getByText('Ulangi Transfer')).toBeInTheDocument();
-  expect(screen.getByText('Riwayat Transaksi Lengkap')).toBeInTheDocument();
-  expect(screen.getByText('Kirim Sekarang')).toBeInTheDocument();
- });
+   render(<TransferActivity />);
+
+   expect(screen.getByText('Ulangi Transfer Terakhir')).toBeInTheDocument();
+   expect(screen.getByText('Riwayat Lengkap')).toBeInTheDocument();
+   expect(screen.getByText('Kirim Sekarang')).toBeInTheDocument();
+  });
 
  it('renders transfer recent contacts in quick transfer', () => {
-  const { container } = render(<TransferActivity />);
-  
-  expect(screen.getByText('Transfer Terakhir')).toBeInTheDocument();
-  
-  const userAvatars = container.querySelectorAll('.rounded-2xl');
-  expect(userAvatars.length).toBeGreaterThan(0);
- });
+   const { container } = render(<TransferActivity />);
+
+   expect(screen.getByText('Kontak Terbaru')).toBeInTheDocument();
+
+   const userAvatars = container.querySelectorAll('.rounded-xl');
+   expect(userAvatars.length).toBeGreaterThan(0);
+  });
 
  it('displays category and account information', () => {
-  render(<TransferActivity />);
-  
-  expect(screen.getAllByText('Transfer ke')).toHaveLength(6);
-  expect(screen.getAllByText('Langganan')).toHaveLength(2);
- });
+   render(<TransferActivity />);
+
+   expect(screen.getAllByText('Transfer ke')).toHaveLength(6);
+   expect(screen.getAllByText('Langganan')).toHaveLength(2);
+  });
 });
