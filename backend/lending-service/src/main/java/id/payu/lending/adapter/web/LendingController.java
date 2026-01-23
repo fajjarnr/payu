@@ -31,6 +31,7 @@ public class LendingController {
     private final LendingApplicationService lendingApplicationService;
     private final LoanManagementService loanManagementService;
     private final PayLaterTransactionService payLaterTransactionService;
+    private final id.payu.lending.application.service.LoanPreApprovalService preApprovalService;
 
     @PostMapping("/loans")
     public CompletableFuture<ResponseEntity<Loan>> applyLoan(@Valid @RequestBody LoanApplicationRequest request) {
@@ -129,6 +130,29 @@ public class LendingController {
     public ResponseEntity<id.payu.lending.domain.model.CreditScore> getCreditScore(@PathVariable UUID userId) {
         log.info("Fetching credit score for user: {}", userId);
         return lendingApplicationService.getCreditScoreByUserId(userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/pre-approval/check")
+    public ResponseEntity<id.payu.lending.dto.LoanPreApprovalResponse> checkPreApproval(
+            @Valid @RequestBody id.payu.lending.dto.LoanPreApprovalRequest request) {
+        log.info("Checking loan pre-approval for user: {}", request.userId());
+        return ResponseEntity.ok(preApprovalService.checkPreApproval(request));
+    }
+
+    @GetMapping("/pre-approval/{preApprovalId}")
+    public ResponseEntity<id.payu.lending.domain.model.LoanPreApproval> getPreApproval(@PathVariable UUID preApprovalId) {
+        log.info("Fetching pre-approval by ID: {}", preApprovalId);
+        return preApprovalService.getPreApprovalById(preApprovalId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/pre-approval/user/{userId}/active")
+    public ResponseEntity<id.payu.lending.domain.model.LoanPreApproval> getActivePreApproval(@PathVariable UUID userId) {
+        log.info("Fetching active pre-approval for user: {}", userId);
+        return preApprovalService.getActivePreApprovalByUserId(userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Loan Pre-approval** (Backend - Lending Service):
+  - Implemented real-time credit scoring based loan pre-approval logic
+  - Credit score evaluation with three-tier approval status (APPROVED, CONDITIONALLY_APPROVED, REJECTED)
+  - Eligibility criteria based on credit score thresholds (>=650 APPROVED, >=600 CONDITIONALLY, <600 REJECTED)
+  - Dynamic interest rate calculation: 12% (Excellent), 14% (Good), 16% (Fair), 18% (Poor)
+  - Conditional approval with reduced loan amounts for scores 600-649
+  - Estimated monthly payment calculation using PMT formula
+  - Pre-approval validity period of 30 days
+  - Domain model `LoanPreApproval` with comprehensive loan terms
+  - Persistence layer: `LoanPreApprovalEntity`, `LoanPreApprovalRepository`, `LoanPreApprovalPersistenceAdapter`
+  - Database migration `V3__Add_loan_pre_approvals_table.sql` with indexed queries
+  - REST API endpoints:
+    - POST `/api/v1/lending/pre-approval/check` - Check loan pre-approval eligibility
+    - GET `/api/v1/lending/pre-approval/{preApprovalId}` - Get pre-approval by ID
+    - GET `/api/v1/lending/pre-approval/user/{userId}/active` - Get active pre-approval
+  - DTOs: `LoanPreApprovalRequest`, `LoanPreApprovalResponse`
+  - Comprehensive unit tests: 11 test cases covering all approval scenarios
+  - Hexagonal architecture with ports (in/out) pattern
+  - Integration with `EnhancedCreditScoringService` for real-time score calculation
+  - Structured JSON logging for observability
+
 - **Robo-Advisory Engine** (Backend - Analytics Service):
   - Implemented automated portfolio allocation based on risk assessment
   - Risk profiles: Conservative, Moderate, and Aggressive
