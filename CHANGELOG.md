@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Distributed Tracing with Jaeger/OpenTelemetry** (Observability):
+  - Added Jaeger all-in-one container to docker-compose.yml (port 16686 for UI, port 4317 for OTLP)
+  - Configured OTLP trace export for all 15 PayU microservices:
+    - Spring Boot services (account, auth, transaction, wallet, compliance, investment, lending) with management.tracing and management.otlptracing configuration
+    - Quarkus services (gateway, billing, notification, backoffice, partner, promotion, support) with quarkus.otel configuration
+    - Python FastAPI services (analytics, kyc) with existing OpenTelemetry instrumentation
+  - Added OTEL_ENDPOINT environment variable to all services in docker-compose.yml (pointing to http://jaeger:4317)
+  - Added TracingConfigurationTest.java for account-service to verify tracing instrumentation
+  - Enabled 10% sampling probability for production trace optimization
+  - Configured service name and version attributes for proper trace identification in Jaeger UI
+  - Added health check dependency for Jaeger to ensure tracing backend is ready before services start
+
 - **Grafana Dashboards for All Microservices** (Monitoring):
   - Created comprehensive Grafana dashboards for all 15 PayU microservices organized by service category:
     - Core Banking Services Dashboard (account, auth, transaction, wallet)

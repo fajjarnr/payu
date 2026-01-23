@@ -61,6 +61,17 @@ management:
   endpoint:
     health:
       show-details: always
+  tracing:
+    sampling:
+      probability: 0.1
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+    headers:
+      Authorization:
+  zipkin:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans
   metrics:
     export:
       prometheus:

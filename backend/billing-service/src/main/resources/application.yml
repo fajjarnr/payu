@@ -5,6 +5,17 @@ quarkus:
   http:
     port: 8085
 
+  otel:
+    service:
+      name: billing-service
+    exporter:
+      otlp:
+        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+    resource:
+      attributes:
+        - service.name=billing-service
+        - service.version=1.0.0
+
   datasource:
     db-kind: postgresql
     username: postgres

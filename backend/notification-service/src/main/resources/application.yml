@@ -5,6 +5,17 @@ quarkus:
   http:
     port: 8086
 
+  otel:
+    service:
+      name: notification-service
+    exporter:
+      otlp:
+        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
+    resource:
+      attributes:
+        - service.name=notification-service
+        - service.version=1.0.0
+
   banner:
     path: banner.txt
 

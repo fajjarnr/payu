@@ -226,6 +226,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_DUKCAPIL_URL: http://dukcapil-simulator:8080
       SERVICES_AUTH_URL: http://auth-service:8002
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
@@ -233,6 +234,8 @@ services:
         condition: service_healthy
       dukcapil-simulator:
         condition: service_started
+      jaeger:
+        condition: service_healthy
     networks:
       - payu-network
 
@@ -251,10 +254,13 @@ services:
       KEYCLOAK_REALM: payu
       KEYCLOAK_CLIENT_ID: payu-backend
       KEYCLOAK_CLIENT_SECRET: secret
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       keycloak:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -274,10 +280,13 @@ services:
       SERVICES_WALLET_URL: http://wallet-service:8004
       SERVICES_BIFAST_URL: http://bi-fast-simulator:8080
       SERVICES_QRIS_URL: http://qris-simulator:8080
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -294,10 +303,13 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: payu_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -319,10 +331,13 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: payu_secret
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_WALLET_URL: http://wallet-service:8004
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -339,10 +354,13 @@ services:
       QUARKUS_DATASOURCE_USERNAME: payu
       QUARKUS_DATASOURCE_PASSWORD: payu_secret
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -359,10 +377,13 @@ services:
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: payu_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -378,6 +399,7 @@ services:
       QUARKUS_REDIS_HOSTS: redis:6379
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_URL: http://keycloak:8080
+      OTEL_ENDPOINT: http://jaeger:4317
       # Route configuration
       ROUTES_ACCOUNT_URL: http://account-service:8001
       ROUTES_AUTH_URL: http://auth-service:8002
@@ -399,6 +421,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     networks:
       - payu-network
 
@@ -417,10 +441,13 @@ services:
       DATABASE_URL: postgresql+asyncpg://payu:payu_secret@postgres:5432/payu_kyc
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       DUKCAPIL_URL: http://dukcapil-simulator:8080/api/v1
+      OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -435,10 +462,13 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://payu:payu_secret@postgres:5432/payu_analytics
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTLP_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -460,10 +490,13 @@ services:
       SPRING_DATASOURCE_PASSWORD: payu_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       WALLET_SERVICE_URL: http://wallet-service:8004
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -482,12 +515,15 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
       keycloak:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -506,10 +542,13 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_KYC_URL: http://kyc-service:8007
       SERVICES_WALLET_URL: http://wallet-service:8004
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -526,10 +565,13 @@ services:
       QUARKUS_DATASOURCE_USERNAME: payu
       QUARKUS_DATASOURCE_PASSWORD: payu_secret
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -546,10 +588,13 @@ services:
       QUARKUS_DATASOURCE_USERNAME: payu
       QUARKUS_DATASOURCE_PASSWORD: payu_secret
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -566,10 +611,13 @@ services:
       QUARKUS_DATASOURCE_USERNAME: payu
       QUARKUS_DATASOURCE_PASSWORD: payu_secret
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
     networks:
       - payu-network
@@ -577,6 +625,32 @@ services:
   # ============================================
   # MONITORING & ALERTING
   # ============================================
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.58
+    container_name: payu-jaeger
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "4317:4317"
+      - "4318:4318"
+      - "9411:9411"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    command:
+      - "--collector.otlp.enabled=true"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/api/services"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - payu-network
 
   prometheus:
     image: prom/prometheus:v2.54.1
