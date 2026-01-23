@@ -106,7 +106,7 @@ class RecommendationEntity(Base):
     action_url = Column(String, nullable=True)
     priority = Column(Integer, default=0)
     is_dismissed = Column(Boolean, default=False, index=True)
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column("metadata", JSON, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     expires_at = Column(DateTime, nullable=True)

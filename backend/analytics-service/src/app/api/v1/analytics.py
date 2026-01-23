@@ -10,9 +10,12 @@ from app.models.schemas import (
     UserMetricsResponse,
     SpendingTrendResponse,
     CashFlowAnalysis,
-    GetRecommendationsResponse
+    GetRecommendationsResponse,
+    GetRoboAdvisoryRequest,
+    RoboAdvisoryResponse
 )
 from app.services.analytics_service import AnalyticsService
+from app.ml.robo_advisory import RoboAdvisoryEngine
 
 logger = get_logger(__name__)
 analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
@@ -125,4 +128,26 @@ async def get_recommendations(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error_code": "ANA_SYS_004", "detail": str(e)}
+        )
+
+
+@analytics_router.post("/robo-advisory", response_model=RoboAdvisoryResponse)
+async def get_robo_advisory(request: GetRoboAdvisoryRequest):
+    log = logger.bind(user_id=request.user_id)
+    log.info("Generating robo-advisory recommendations")
+
+    try:
+        robo_advisory_engine = RoboAdvisoryEngine()
+        advisory = robo_advisory_engine.generate_robo_advisory(
+            user_id=request.user_id,
+            questions=request.risk_questions,
+            monthly_investment_amount=request.monthly_investment_amount
+        )
+
+        return advisory
+    except Exception as e:
+        log.error("Failed to generate robo-advisory recommendations", exc_info=e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error_code": "ANA_SYS_005", "detail": str(e)}
         )

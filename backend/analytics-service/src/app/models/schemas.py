@@ -160,3 +160,66 @@ class UserMetricsUpdatedEvent(BaseModel):
 class WebSocketConnectionRequest(BaseModel):
     user_id: str
     dashboard_type: str = "general"
+
+
+class RiskProfile(str, Enum):
+    CONSERVATIVE = "CONSERVATIVE"
+    MODERATE = "MODERATE"
+    AGGRESSIVE = "AGGRESSIVE"
+
+
+class InvestmentTimeHorizon(str, Enum):
+    SHORT_TERM = "SHORT_TERM"
+    MEDIUM_TERM = "MEDIUM_TERM"
+    LONG_TERM = "LONG_TERM"
+
+
+class AssetClass(str, Enum):
+    CASH = "CASH"
+    FIXED_INCOME = "FIXED_INCOME"
+    MUTUAL_FUNDS = "MUTUAL_FUNDS"
+    DIGITAL_GOLD = "DIGITAL_GOLD"
+    STOCKS = "STOCKS"
+    BONDS = "BONDS"
+
+
+class PortfolioAllocation(BaseModel):
+    asset_class: AssetClass
+    allocation_percentage: float = Field(ge=0, le=100, description="Allocation in percentage")
+    expected_return: float = Field(ge=0, description="Expected annual return in percentage")
+    risk_level: RiskProfile
+    description: str
+
+
+class RiskAssessmentQuestions(BaseModel):
+    age: int = Field(ge=18, le=100, description="User's age")
+    monthly_income: float = Field(gt=0, description="Monthly income in IDR")
+    monthly_expenses: float = Field(gt=0, description="Monthly expenses in IDR")
+    total_savings: float = Field(ge=0, description="Total savings in IDR")
+    investment_experience: int = Field(ge=0, le=10, description="Years of investment experience (0-10)")
+    risk_tolerance: str = Field(..., description="Risk tolerance: low, medium, or high")
+    investment_goal: str = Field(..., description="Investment goal: retirement, wealth_growth, or emergency_fund")
+    time_horizon: InvestmentTimeHorizon
+
+
+class RiskAssessmentResult(BaseModel):
+    risk_profile: RiskProfile
+    risk_score: float = Field(ge=0, le=100, description="Risk score out of 100")
+    description: str
+    suitable_asset_classes: List[AssetClass]
+
+
+class RoboAdvisoryResponse(BaseModel):
+    user_id: str
+    risk_assessment: RiskAssessmentResult
+    portfolio_allocation: List[PortfolioAllocation]
+    investment_recommendations: List[str]
+    monthly_investment_amount: float
+    expected_annual_return: float
+    recommended_investment_products: List[dict]
+
+
+class GetRoboAdvisoryRequest(BaseModel):
+    user_id: str
+    risk_questions: RiskAssessmentQuestions
+    monthly_investment_amount: float = Field(gt=0, description="Monthly amount to invest in IDR")

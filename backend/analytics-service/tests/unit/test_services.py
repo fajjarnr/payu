@@ -8,7 +8,7 @@ class TestRecommendationEngine:
     """Unit tests for Recommendation engine"""
 
     @pytest.fixture
-    def recommendation_engine():
+    def recommendation_engine(self):
         from app.ml.recommendation_engine import RecommendationEngine
         return RecommendationEngine()
 
