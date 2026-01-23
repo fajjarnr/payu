@@ -81,7 +81,7 @@ export default function MerchantDashboard() {
              <div>
                <label className="block text-gray-500 text-sm">Client Secret</label>
                <code className="block bg-gray-100 p-2 rounded mt-1">{partner.clientSecret}</code>
-               <p className="text-xs text-red-500 mt-1">Keep this secret safe! It won't be shown again.</p>
+                <p className="text-xs text-red-500 mt-1">Keep this secret safe! It won&apos;t be shown again.</p>
              </div>
           )}
           <div>

@@ -43,7 +43,7 @@ export default function MerchantRegisterPage() {
       alert('Registrasi merchant berhasil! Silakan tunggu verifikasi.');
       router.push('/merchant');
     },
-    onError: (error: Error) => {
+    onError: () => {
       alert('Registrasi gagal. Silakan coba lagi.');
     }
   });
@@ -52,7 +52,7 @@ export default function MerchantRegisterPage() {
     const result = merchantSchema.safeParse(formData);
     if (!result.success) {
       const newErrors: Partial<Record<keyof MerchantFormData, string>> = {};
-      result.success === false && result.error.issues.forEach((err) => {
+      result.error.issues.forEach((err) => {
         if (err.path[0]) {
           newErrors[err.path[0] as keyof MerchantFormData] = err.message;
         }
