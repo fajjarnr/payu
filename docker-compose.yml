@@ -12,8 +12,8 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: payu
-      POSTGRES_PASSWORD: payu_secret
+      POSTGRES_USER: ${DB_USERNAME:payu}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:payu_secret}
       # Multiple databases creation
       POSTGRES_DB: payu_account
     volumes:
@@ -97,6 +97,31 @@ services:
       - payu-network
 
   # ============================================
+  # SECRETS MANAGEMENT
+  # ============================================
+
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: payu-vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-only-token
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault_data:/vault/data
+      - ./infrastructure/docker/vault-config.json:/vault/config/vault-config.json:ro
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - payu-network
+
+  # ============================================
   # IDENTITY & ACCESS MANAGEMENT
   # ============================================
   
@@ -106,12 +131,12 @@ services:
     ports:
       - "8099:8080" # Changed port to avoid conflict with gateway/services default
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:admin}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: payu
-      KC_DB_PASSWORD: payu_secret
+      KC_DB_USERNAME: ${DB_USERNAME:payu}
+      KC_DB_PASSWORD: ${DB_PASSWORD:payu_secret}
       KC_HEALTH_ENABLED: "true"
     command: start-dev
     depends_on:
@@ -476,8 +501,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_INSTALL_PLUGINS: grafana-piechart-panel
       GF_SERVER_ROOT_URL: http://localhost:3000
@@ -547,6 +572,7 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  vault_data:
   prometheus_data:
   loki_data:
   grafana_data:

@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Vault Integration** (Secrets Management):
+  - Added HashiCorp Vault service to docker-compose.yml for secure secrets management
+  - Migrated hardcoded secrets to Vault KV secrets engine (db, keycloak, kafka, redis, grafana)
+  - Updated docker-compose.yml to use environment variables with fallback defaults
+  - Added Spring Cloud Vault dependencies to account-service and auth-service
+  - Configured Vault integration in application.yaml files with enabled/disabled flag
+  - Created Vault initialization script (`infrastructure/docker/init-vault.sh`) for populating secrets
+  - Created Vault configuration file (`infrastructure/docker/vault-config.json`)
+  - Added Vault configuration tests for both services
+  - Updated test profiles to disable Vault for unit tests
+  - Created comprehensive Vault integration guide (`docs/guides/VAULT.md`)
+
+- **Frontend Feature Enhancements** (web-app):
+  - **Transfer Evolution**: Added BI-FAST, SKN, RTGS transfer type selection to transfer page with fee information and processing times
+  - **Scheduled Transfers**: Implemented transfer scheduling options (now, scheduled date, recurring monthly transfers)
+  - **Live Analytics**: Integrated WebSocket for real-time portfolio updates with connection status indicator
+  - **Shared Pockets**: Added joint savings pockets UI with member management, role-based access (OWNER, ADMIN, MEMBER)
+  - **WebSocket Infrastructure**: Created reusable WebSocket hook with reconnection logic and event handling
+  - **Type Updates**: Extended types to support new transfer types, scheduling options, and shared pocket members
+  - **Tests**: Added comprehensive unit tests for WebSocket hooks (10 test cases passing)
+  - **Code Quality**: Fixed linting errors and improved type safety across all new components
+
 - **UI Standardization & Cleanup (Premium Emerald)**:
   - **Refined Typography**: Removed all italic fonts and reduced excessive use of uppercase and tracking-tighter for a cleaner, more professional look across the entire application.
   - **Standardized Spacing**: Applied consistent vertical spacing (`space-y-12`, `mt-12`) and `rounded-xl` borders to all major pages (`/pockets`, `/cards`, `/investments`, `/transfer`, `/support`, `/security`, `/settings`).

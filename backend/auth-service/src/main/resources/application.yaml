@@ -5,6 +5,21 @@ server:
 spring:
   application:
     name: auth-service
+  config:
+    import: vault://
+
+  cloud:
+    vault:
+      enabled: ${VAULT_ENABLED:true}
+      uri: ${VAULT_URI:http://localhost:8200}
+      token: ${VAULT_TOKEN:dev-only-token}
+      scheme: http
+      connection-timeout: 5000
+      read-timeout: 15000
+      kv:
+        enabled: true
+        backend: secret
+        application-name: auth-service
 
   security:
     oauth2:

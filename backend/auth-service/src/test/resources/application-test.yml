@@ -2,6 +2,11 @@
 spring:
   main:
     allow-bean-definition-overriding: true
+  config:
+    import: optional:vault://
+  cloud:
+    vault:
+      enabled: false
 
   security:
     oauth2:

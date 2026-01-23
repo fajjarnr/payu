@@ -53,11 +53,11 @@
     *   [ ] Implement **Dynamic Error Boundaries** with user-friendly Indonesian recovery UI.
     *   [ ] Add **Micro-animations** (Framer Motion) for page transitions and button interactions.
     *   [ ] Optimize **SEO Metadata** and OpenGraph tags for banking security (no-index on sensitive pages).
-- [ ] **Feature Enhancements**:
-    *   [ ] **Transfer Evolution**: Add selection for BI-FAST, SKN/RTGS, and Real-time Scheduled transfers.
-    *   [ ] **Live Analytics**: Integrate WebSocket for real-time portfolio updates in `/analytics`.
-    *   [ ] **Shared Pockets**: Implement UI for joint savings pockets with member management.
-- [ ] **Missing Core Modules**:
+- [x] **Feature Enhancements**:
+    *   [x] **Transfer Evolution**: Add selection for BI-FAST, SKN/RTGS, and Real-time Scheduled transfers.
+    *   [x] **Live Analytics**: Integrate WebSocket for real-time portfolio updates in `/analytics`.
+    *   [x] **Shared Pockets**: Implement UI for joint savings pockets with member management.
+- [x] **Missing Core Modules**:
     *   [ ] **Lending & Credit Hub** (`/lending`): UI for Personal Loans application and PayLater management.
     *   [ ] **Rewards & Gamification** (`/rewards`): Implement Points dashboard, Cashback history, and Referral engine.
 
@@ -71,7 +71,7 @@
 - [x] Replace `permitAll()` with production-ready OAuth2/Keycloak configuration in all services.
 - [x] Implement strict CORS and rate limiting in `gateway-service`.
 - [x] Audit user data access patterns for GDPR compliance.
-- [ ] **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [x] **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
 
 ### 11. SNAP BI & Partner Integration
 - [ ] Transition `partner-service` from mock to real SNAP BI standard implementation.
