@@ -1,5 +1,6 @@
 package id.payu.wallet.adapter.persistence.entity;
 
+import id.payu.wallet.multitenancy.TenantAware;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -13,13 +14,18 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "wallets", indexes = {
-    @Index(name = "idx_wallet_account_id", columnList = "accountId", unique = true)
+    @Index(name = "idx_wallet_account_id", columnList = "accountId", unique = true),
+    @Index(name = "idx_wallet_tenant_id", columnList = "tenantId")
 })
+@TenantAware
 public class WalletEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(nullable = false)
+    private String tenantId;
 
     @Column(nullable = false, unique = true)
     private String accountId;

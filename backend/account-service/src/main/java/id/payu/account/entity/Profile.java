@@ -1,5 +1,6 @@
 package id.payu.account.entity;
 
+import id.payu.account.multitenancy.TenantAware;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,10 +16,14 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
+@TenantAware
 public class Profile {
 
     @Id
     private UUID id; // Same as User ID
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     @OneToOne
     @MapsId

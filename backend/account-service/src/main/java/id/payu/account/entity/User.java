@@ -1,5 +1,6 @@
 package id.payu.account.entity;
 
+import id.payu.account.multitenancy.TenantAware;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,11 +14,15 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
+@TenantAware
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     @Column(name = "external_id", unique = true, nullable = false)
     private String externalId; // Keycloak ID or other IAM ID

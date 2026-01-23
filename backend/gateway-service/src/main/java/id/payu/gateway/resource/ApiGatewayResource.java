@@ -1,6 +1,7 @@
 package id.payu.gateway.resource;
 
 import id.payu.gateway.config.GatewayConfig;
+import id.payu.gateway.filter.TenantFilter;
 import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
@@ -356,9 +357,9 @@ public class ApiGatewayResource {
     }
 
     // ==================== Proxy Logic ====================
-    private Uni<Response> proxy(String serviceName, String path, String method, 
+    private Uni<Response> proxy(String serviceName, String path, String method,
                                  String body, HttpHeaders headers) {
-        
+
         GatewayConfig.ServiceConfig serviceConfig = config.services().get(serviceName);
         if (serviceConfig == null) {
             String errorMsg = String.format("Service %s not configured in gateway", serviceName);
@@ -386,7 +387,13 @@ public class ApiGatewayResource {
                 }
             });
         }
-        
+
+        // Forward tenant ID from filter context
+        String tenantId = headers.getHeaderString(TenantFilter.TENANT_ID_HEADER);
+        if (tenantId != null && !tenantId.isBlank()) {
+            request.putHeader(TenantFilter.TENANT_ID_HEADER, tenantId);
+        }
+
         request.putHeader("X-Forwarded-Host", "localhost:8080");
 
         Uni<HttpResponse<Buffer>> responseUni;

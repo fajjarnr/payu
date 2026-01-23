@@ -231,3 +231,10 @@ gateway:
     enabled: true
     log-body: false
     max-body-size: 1024
+
+  # Tenant Configuration (Multitenancy)
+  tenant:
+    enabled: true
+    default-tenant-id: "default"
+    strict-mode: false
+    header-name: "X-Tenant-Id"

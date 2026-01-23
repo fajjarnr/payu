@@ -44,6 +44,12 @@ public interface GatewayConfig {
      */
     LoggingConfig logging();
 
+    /**
+     * Tenant configuration for multitenancy support.
+     */
+    @WithName("tenant")
+    TenantConfig tenant();
+
     interface ServiceConfig {
         String url();
 
@@ -121,5 +127,22 @@ public interface GatewayConfig {
         @WithName("max-age")
         @WithDefault("3600")
         int maxAge();
+    }
+
+    interface TenantConfig {
+        @WithDefault("true")
+        boolean enabled();
+
+        @WithName("default-tenant-id")
+        @WithDefault("default")
+        String defaultTenantId();
+
+        @WithDefault("false")
+        @WithName("strict-mode")
+        boolean strictMode();
+
+        @WithName("header-name")
+        @WithDefault("X-Tenant-Id")
+        String headerName();
     }
 }
