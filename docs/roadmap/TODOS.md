@@ -138,8 +138,8 @@
 - [x] Implement **Dynamic Risk-based MFA** (trigger MFA only for suspicious login patterns).
 
 ### 21. Global Readiness
-- [ ] Implement **Internationalization (i18n)** support for English.
-- [ ] Support for **Multi-currency Pockets** and real-time FX (Foreign Exchange) engine.
+- [x] Implement **Internationalization (i18n)** support for English.
+- [x] Support for **Multi-currency Pockets** and real-time FX (Foreign Exchange) engine.
 
 ### 22. Developer Experience & Partner Portal
 - [ ] Implement **Centralized API Portal** (Swagger/OpenAPI aggregator for all services).
