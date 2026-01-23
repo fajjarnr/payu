@@ -95,8 +95,8 @@
 - [x] **Disaster Recovery**: Verify backup-restore procedures for PostgreSQL and Kafka.
 
 ### 14. Legal & Readiness
-- [ ] Create placeholders for **Terms of Service** and **Privacy Policy**.
-- [ ] Prepare technical documentation for OJK/BI regulatory audit.
+- [x] Create placeholders for **Terms of Service** and **Privacy Policy**.
+- [x] Prepare technical documentation for OJK/BI regulatory audit.
 
 ## 🧪 Testing & Quality Assurance
 

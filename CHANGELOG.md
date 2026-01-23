@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **OJK/BI Regulatory Audit Documentation** (Compliance):
+  - Created comprehensive OJK/BI regulatory audit technical documentation at `docs/compliance/OJK_BI_REGULATORY_AUDIT.md`
+  - Documentation covers:
+    - Executive Summary with licensing status and compliance matrix
+    - System Architecture Overview (technology stack, microservices, data architecture)
+    - Regulatory Compliance Framework (OJK and BI regulations compliance matrices)
+    - Information Security Management (security architecture, encryption, IAM, AML/CFT)
+    - Data Privacy & Protection (UU PDP No. 27/2022 compliance, data subject rights)
+    - Anti-Money Laundering (AML/CFT program, transaction monitoring, STR reporting)
+    - Transaction Monitoring & Fraud Detection (multi-layered detection, transaction limits)
+    - Business Continuity & Disaster Recovery (RTO/RPO, backup strategy, procedures)
+    - Audit Trails & Logging (comprehensive audit logging, immutable logging)
+    - Risk Management Framework (risk identification, assessment matrix, KRIs)
+    - Testing & Certification Evidence (security audits, performance testing)
+    - Compliance Gap Analysis (current status, mitigation timeline)
+  - Includes references to existing documentation (ARCHITECTURE.md, PENTEST_REPORT.md, DISASTER_RECOVERY.md)
+  - Provides complete evidence for OJK/BI regulatory audit submission
+  - Maps all requirements from POJK and BI regulations to technical implementations
+  - Updated TODOS.md to mark regulatory audit documentation as complete
+
 - **Disaster Recovery Verification** (Testing):
   - Added comprehensive integration test suite for PostgreSQL backup-restore procedures
   - Added comprehensive integration test suite for Kafka backup-restore procedures

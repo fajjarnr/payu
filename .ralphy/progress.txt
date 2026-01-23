@@ -91,3 +91,8 @@
 - [✓] 2026-01-23 04:13 - Implement signature validation and certificate management for partners.
 - [✓] 2026-01-23 04:23 - **TokoBapak Integration**:
 - [✓] 2026-01-23 04:30 - Deploy **LokiStack** for centralized log management.
+- [✓] 2026-01-23 04:45 - Configure **Prometheus & Grafana** dashboards for all microservices.
+- [✓] 2026-01-23 04:54 - Implement distributed tracing using **Jaeger/OpenTelemetry**.
+- [✓] 2026-01-23 05:08 - **Disaster Recovery**: Verify backup-restore procedures for PostgreSQL and Kafka.
+- [✓] 2026-01-23 05:13 - Create placeholders for **Terms of Service** and **Privacy Policy**.
+- [✓] 2026-01-23 05:27 - Prepare technical documentation for OJK/BI regulatory audit.
