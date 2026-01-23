@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **TV Cable and Multifinance Billers** (Backend - Billing Service):
+  - Added TV Cable billers: Indovision, Transvision, K-Vision, MNC Vision
+  - Added Multifinance (Cicilan) billers: FIFASTRA, BFI Finance, Adira Finance, WOM Finance, Mega Finance
+  - Updated BillerDto to handle admin fees for new categories (tv_cable: 2500, multifinance: 5000, ewallet: 1000)
+  - Added comprehensive tests for new biller categories and admin fee validation
+  - All 51 tests pass including new tests for TV Cable and Multifinance billers
+
 - **Scheduled & Recurring Transfers** (Backend - Transaction Service):
   - Implemented scheduled transfer engine with full lifecycle management
   - Features: One-time and recurring transfers (daily, weekly, monthly, custom frequency)
