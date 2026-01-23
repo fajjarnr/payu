@@ -90,3 +90,4 @@
 - [✓] 2026-01-23 04:04 - Transition `partner-service` from mock to real SNAP BI standard implementation.
 - [✓] 2026-01-23 04:13 - Implement signature validation and certificate management for partners.
 - [✓] 2026-01-23 04:23 - **TokoBapak Integration**:
+- [✓] 2026-01-23 04:30 - Deploy **LokiStack** for centralized log management.

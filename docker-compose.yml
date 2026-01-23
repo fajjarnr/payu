@@ -12,8 +12,8 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: ${DB_USERNAME:payu}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:payu_secret}
+      POSTGRES_USER: payu
+      POSTGRES_PASSWORD: payu_secret
       # Multiple databases creation
       POSTGRES_DB: payu_account
     volumes:
@@ -131,12 +131,12 @@ services:
     ports:
       - "8099:8080" # Changed port to avoid conflict with gateway/services default
     environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: ${DB_USERNAME:payu}
-      KC_DB_PASSWORD: ${DB_PASSWORD:payu_secret}
+      KC_DB_USERNAME: payu
+      KC_DB_PASSWORD: payu_secret
       KC_HEALTH_ENABLED: "true"
     command: start-dev
     depends_on:
@@ -388,6 +388,12 @@ services:
       ROUTES_KYC_URL: http://kyc-service:8007
       ROUTES_ANALYTICS_URL: http://analytics-service:8008
       ROUTES_COMPLIANCE_URL: http://compliance-service:8087/compliance-service
+      ROUTES_INVESTMENT_URL: http://investment-service:8080
+      ROUTES_LENDING_URL: http://lending-service:8087
+      ROUTES_BACKOFFICE_URL: http://backoffice-service:8080
+      ROUTES_PARTNER_URL: http://partner-service:8080
+      ROUTES_PROMOTION_URL: http://promotion-service:8080
+      ROUTES_SUPPORT_URL: http://support-service:8080
     depends_on:
       redis:
         condition: service_healthy
@@ -428,6 +434,137 @@ services:
       - "8008:8008"
     environment:
       DATABASE_URL: postgresql+asyncpg://payu:payu_secret@postgres:5432/payu_analytics
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - payu-network
+
+  # ============================================
+  # BUSINESS & OPERATIONS SERVICES
+  # ============================================
+
+  investment-service:
+    build:
+      context: ./backend/investment-service
+      dockerfile: Dockerfile
+    container_name: payu-investment-service
+    ports:
+      - "8009:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_investment
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      WALLET_SERVICE_URL: http://wallet-service:8004
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - payu-network
+
+  lending-service:
+    build:
+      context: ./backend/lending-service
+      dockerfile: Dockerfile
+    container_name: payu-lending-service
+    ports:
+      - "8010:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_lending
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - payu-network
+
+  backoffice-service:
+    build:
+      context: ./backend/backoffice-service
+      dockerfile: Dockerfile
+    container_name: payu-backoffice-service
+    ports:
+      - "8011:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_backoffice
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_KYC_URL: http://kyc-service:8007
+      SERVICES_WALLET_URL: http://wallet-service:8004
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - payu-network
+
+  partner-service:
+    build:
+      context: ./backend/partner-service
+      dockerfile: Dockerfile
+    container_name: payu-partner-service
+    ports:
+      - "8012:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_partner
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - payu-network
+
+  promotion-service:
+    build:
+      context: ./backend/promotion-service
+      dockerfile: Dockerfile
+    container_name: payu-promotion-service
+    ports:
+      - "8013:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_promotion
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - payu-network
+
+  support-service:
+    build:
+      context: ./backend/support-service
+      dockerfile: Dockerfile
+    container_name: payu-support-service
+    ports:
+      - "8014:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_support
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: payu_secret
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on:
       postgres:
@@ -501,8 +638,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:admin}
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_INSTALL_PLUGINS: grafana-piechart-panel
       GF_SERVER_ROOT_URL: http://localhost:3000

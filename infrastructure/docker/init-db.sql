@@ -12,6 +12,12 @@ CREATE DATABASE payu_compliance;
 CREATE DATABASE payu_bifast;
 CREATE DATABASE payu_dukcapil;
 CREATE DATABASE payu_qris;
+CREATE DATABASE payu_investment;
+CREATE DATABASE payu_lending;
+CREATE DATABASE payu_backoffice;
+CREATE DATABASE payu_partner;
+CREATE DATABASE payu_promotion;
+CREATE DATABASE payu_support;
 
 -- Create Users (Simplified for dev)
 -- User 'payu' is created via POSTGRES_USER env var
@@ -29,3 +35,9 @@ GRANT ALL PRIVILEGES ON DATABASE payu_compliance TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_bifast TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_dukcapil TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_qris TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_investment TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_lending TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_backoffice TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_partner TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_promotion TO payu;
+GRANT ALL PRIVILEGES ON DATABASE payu_support TO payu;

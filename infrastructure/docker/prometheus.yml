@@ -85,6 +85,55 @@ scrape_configs:
           service: 'analytics-service'
           tier: 'ml'
 
+  # Business & Operations Services
+  - job_name: 'investment-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['investment-service:8080']
+        labels:
+          service: 'investment-service'
+          tier: 'business'
+
+  - job_name: 'lending-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['lending-service:8087']
+        labels:
+          service: 'lending-service'
+          tier: 'business'
+
+  - job_name: 'backoffice-service'
+    metrics_path: '/q/metrics'
+    static_configs:
+      - targets: ['backoffice-service:8080']
+        labels:
+          service: 'backoffice-service'
+          tier: 'operations'
+
+  - job_name: 'partner-service'
+    metrics_path: '/q/metrics'
+    static_configs:
+      - targets: ['partner-service:8080']
+        labels:
+          service: 'partner-service'
+          tier: 'operations'
+
+  - job_name: 'promotion-service'
+    metrics_path: '/q/metrics'
+    static_configs:
+      - targets: ['promotion-service:8080']
+        labels:
+          service: 'promotion-service'
+          tier: 'operations'
+
+  - job_name: 'support-service'
+    metrics_path: '/q/metrics'
+    static_configs:
+      - targets: ['support-service:8080']
+        labels:
+          service: 'support-service'
+          tier: 'operations'
+
   # Infrastructure Components
   - job_name: 'postgres'
     static_configs:

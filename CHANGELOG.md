@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Grafana Dashboards for All Microservices** (Monitoring):
+  - Created comprehensive Grafana dashboards for all 15 PayU microservices organized by service category:
+    - Core Banking Services Dashboard (account, auth, transaction, wallet)
+    - Supporting Services Dashboard (billing, notification, gateway, compliance)
+    - ML & Analytics Services Dashboard (kyc, analytics)
+    - Business & Operations Services Dashboard (investment, lending, backoffice, partner, promotion, support)
+    - Infrastructure Monitoring Dashboard (postgres, redis, kafka, prometheus, grafana, loki)
+  - Updated Prometheus configuration to include all 15 microservices with correct metrics paths:
+    - Spring Boot services: `/actuator/prometheus`
+    - Quarkus services: `/q/metrics`
+    - FastAPI services: `/metrics`
+  - Added business and operations services to docker-compose.yml:
+    - investment-service (port 8009)
+    - lending-service (port 8010)
+    - backoffice-service (port 8011)
+    - partner-service (port 8012)
+    - promotion-service (port 8013)
+    - support-service (port 8014)
+  - Created PostgreSQL databases for new services (investment, lending, backoffice, partner, promotion, support)
+  - Updated gateway-service routing configuration to include all new services
+  - Created comprehensive test suite with 9 test cases validating dashboard JSON structure and service targets
+  - Configured health, performance, and resource monitoring panels for each service category
+  - Added JVM metrics for Java services, memory usage for Python services
+  - Included Kafka integration metrics, database connection pooling, and GC statistics
+
+### Added
+
 - **LokiStack for Centralized Log Management** (Infrastructure):
   - Deployed LokiStack operator for OpenShift-native centralized log aggregation
   - Created logging namespaces (openshift-logging, openshift-operators-redhat)
