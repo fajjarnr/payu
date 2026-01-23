@@ -118,3 +118,5 @@
 - [✓] 2026-01-23 15:44 - Support for **Multi-currency Pockets** and real-time FX (Foreign Exchange) engine.
 - [✗] 2026-01-23 15:57 - Implement **Centralized API Portal** (Swagger/OpenAPI aggregator for all services).
 - [✓] 2026-01-23 16:01 - Implement **Centralized API Portal** (Swagger/OpenAPI aggregator for all services).
+- [✓] 2026-01-23 16:07 - Implement **Partner Sandbox Environment** with mock data and simulated latencies.
+- [✓] 2026-01-23 16:19 - Build **Developer Documentation Site** with integration guides and SDK examples.

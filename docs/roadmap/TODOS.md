@@ -144,7 +144,7 @@
 ### 22. Developer Experience & Partner Portal
 - [x] Implement **Centralized API Portal** (Swagger/OpenAPI aggregator for all services).
 - [x] Implement **Partner Sandbox Environment** with mock data and simulated latencies.
-- [ ] Build **Developer Documentation Site** with integration guides and SDK examples.
+- [x] Build **Developer Documentation Site** with integration guides and SDK examples.
 
 ### 23. Advanced Customer Services
 - [ ] Implement **E-Statement Engine** (Generate monthly transaction PDFs).
