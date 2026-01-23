@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **UI Standardization & Cleanup (Premium Emerald)**:
+  - **Refined Typography**: Removed all italic fonts and reduced excessive use of uppercase and tracking-tighter for a cleaner, more professional look across the entire application.
+  - **Standardized Spacing**: Applied consistent vertical spacing (`space-y-12`, `mt-12`) and `rounded-xl` borders to all major pages (`/pockets`, `/cards`, `/investments`, `/transfer`, `/support`, `/security`, `/settings`).
+  - **Page Refactoring**:
+    - **Pockets**: Standardized "Main Balance", "Savings Goals", and "Recent History" cards.
+    - **Cards**: Implemented glassmorphism aesthetics for virtual cards and standardized control panels.
+    - **Transfer**: Cleaned up the "Instant Transfer" and "Review" flows with consistent input fields and motion transitions.
+    - **Investments**: Refactored the marketplace grid and portfolio overview for better data visualization.
+    - **Settings/Support/Security**: Unified sidebar layouts, profile summaries, and status indicators.
+  - **Mobile Responsiveness**: Fixed bottom padding issues in `DashboardLayout` to prevent content from being obscured by the fixed mobile navigation bar (`pb-40` for mobile).
+  - **Global Theme**: Resolved inconsistent styling tokens in `globals.css` and ensured full compliance with the Emerald Green design system.
+
 - **CI/CD Simplification**:
   - Disabled GitHub Actions workflows (`.github/workflows`) by renaming them to `.yml.disabled` as the project transitions to OpenShift Pipelines (Tekton) and ArgoCD for CI/CD.
 - **Documentation Restructuring**:
