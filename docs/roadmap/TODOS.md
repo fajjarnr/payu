@@ -92,7 +92,7 @@
 - [x] Deploy **LokiStack** for centralized log management.
 - [x] Configure **Prometheus & Grafana** dashboards for all microservices.
 - [x] Implement distributed tracing using **Jaeger/OpenTelemetry**.
-- [ ] **Disaster Recovery**: Verify backup-restore procedures for PostgreSQL and Kafka.
+- [x] **Disaster Recovery**: Verify backup-restore procedures for PostgreSQL and Kafka.
 
 ### 14. Legal & Readiness
 - [ ] Create placeholders for **Terms of Service** and **Privacy Policy**.
