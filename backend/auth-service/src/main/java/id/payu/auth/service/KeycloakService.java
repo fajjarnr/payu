@@ -1,7 +1,9 @@
 package id.payu.auth.service;
 
 import id.payu.auth.config.KeycloakConfig;
+import id.payu.auth.dto.LoginContext;
 import id.payu.auth.dto.LoginResponse;
+import id.payu.auth.exception.MFAException;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,8 @@ public class KeycloakService {
     private final Keycloak keycloakAdmin;
     private final KeycloakConfig keycloakConfig;
     private final WebClient.Builder webClientBuilder;
+    private final RiskEvaluationService riskEvaluationService;
+    private final MFATokenService mfaTokenService;
 
     private final Map<String, FailedAttempt> failedAttempts = new ConcurrentHashMap<>();
 
@@ -79,10 +83,34 @@ public class KeycloakService {
                     log.info("Successful login for user: {}", username);
                 })
                 .doOnError(error -> {
-                    recordFailedAttempt(username);
+                    recordFailedAttemptInternal(username);
                     log.error("Login failed for user {}: {}", username, error.getMessage());
                 })
                 .onErrorMap(error -> new IllegalArgumentException("Invalid credentials or login failed"));
+    }
+
+    public Mono<Boolean> validateCredentials(String username, String password) {
+        if (isAccountLocked(username)) {
+            return Mono.just(false);
+        }
+
+        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
+
+        WebClient webClient = webClientBuilder
+                .baseUrl(tokenEndpoint)
+                .build();
+
+        return webClient.post()
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
+                .retrieve()
+                .bodyToMono(LoginResponse.class)
+                .map(response -> true)
+                .onErrorResume(error -> {
+                    recordFailedAttemptInternal(username);
+                    return Mono.just(false);
+                });
     }
 
     public Mono<LoginResponse> refreshToken(String refreshToken) {
@@ -106,6 +134,64 @@ public class KeycloakService {
     public Mono<LoginResponse> rateLimitFallback(String username, String password, Throwable t) {
         log.warn("Rate limit exceeded for login attempts");
         return Mono.error(new IllegalArgumentException("Too many login attempts. Please try again later."));
+    }
+
+    public Mono<LoginResponse> verifyMFAAndCompleteLogin(String mfaToken, String otpCode, String username, String password, LoginContext context) {
+        if (!mfaTokenService.validateAndConsumeMFAToken(mfaToken, username)) {
+            return Mono.error(new MFAException("MFA_001", "Invalid or expired MFA token"));
+        }
+
+        if (!mfaTokenService.validateOTP(username, otpCode)) {
+            mfaTokenService.consumeOTP(username);
+            recordFailedAttemptInternal(username);
+            return Mono.error(new MFAException("MFA_002", "Invalid OTP code"));
+        }
+
+        mfaTokenService.consumeOTP(username);
+        riskEvaluationService.recordSuccessfulLogin(username, context);
+
+        return loginInternal(username, password);
+    }
+
+    private Mono<LoginResponse> loginInternal(String username, String password) {
+        if (isAccountLocked(username)) {
+            log.warn("Login attempt for locked account: {}", username);
+            return Mono.error(new IllegalArgumentException("Account temporarily locked due to too many failed attempts"));
+        }
+
+        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
+
+        WebClient webClient = webClientBuilder
+                .baseUrl(tokenEndpoint)
+                .build();
+
+        return webClient.post()
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
+                .retrieve()
+                .bodyToMono(LoginResponse.class)
+                .doOnSuccess(response -> {
+                    clearFailedAttempts(username);
+                    log.info("Successful login for user: {}", username);
+                })
+                .doOnError(error -> {
+                    recordFailedAttemptInternal(username);
+                    log.error("Login failed for user {}: {}", username, error.getMessage());
+                })
+                .onErrorMap(error -> new IllegalArgumentException("Invalid credentials or login failed"));
+    }
+
+    private void recordFailedAttemptInternal(String username) {
+        FailedAttempt attempt = failedAttempts.computeIfAbsent(username,
+                k -> new FailedAttempt(0, 0L));
+        attempt.increment();
+        if (attempt.getCount() >= maxLoginAttempts) {
+            attempt.setLockUntil(System.currentTimeMillis() + Duration.ofMinutes(lockoutDurationMinutes).toMillis());
+            log.warn("Account locked: {} until {}", username, attempt.getLockUntil());
+        }
+        failedAttempts.put(username, attempt);
+        riskEvaluationService.recordFailedAttempt(username);
     }
 
     public void createUser(String username, String email, String password) {
@@ -147,19 +233,9 @@ public class KeycloakService {
                 System.currentTimeMillis() < attempt.getLockUntil();
     }
 
-    private void recordFailedAttempt(String username) {
-        FailedAttempt attempt = failedAttempts.computeIfAbsent(username,
-                k -> new FailedAttempt(0, 0L));
-        attempt.increment();
-        if (attempt.getCount() >= maxLoginAttempts) {
-            attempt.setLockUntil(System.currentTimeMillis() + Duration.ofMinutes(lockoutDurationMinutes).toMillis());
-            log.warn("Account locked: {} until {}", username, attempt.getLockUntil());
-        }
-        failedAttempts.put(username, attempt);
-    }
-
     private void clearFailedAttempts(String username) {
         failedAttempts.remove(username);
+        riskEvaluationService.clearFailedAttempts(username);
     }
 
     private void validatePassword(String password) {

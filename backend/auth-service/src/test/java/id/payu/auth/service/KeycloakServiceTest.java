@@ -1,7 +1,9 @@
 package id.payu.auth.service;
 
 import id.payu.auth.config.KeycloakConfig;
+import id.payu.auth.dto.LoginContext;
 import id.payu.auth.dto.LoginResponse;
+import id.payu.auth.exception.MFAException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -11,8 +13,10 @@ import org.keycloak.admin.client.Keycloak;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -23,7 +27,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for KeycloakService
- * Tests authentication, password validation, and account lockout logic
+ * Tests authentication, password validation, account lockout logic, and MFA integration
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("KeycloakService")
@@ -37,6 +41,27 @@ class KeycloakServiceTest {
 
     @Mock
     private WebClient.Builder webClientBuilder;
+
+    @Mock
+    private WebClient webClient;
+
+    @Mock
+    private WebClient.RequestHeadersUriSpec requestHeadersUriSpec;
+
+    @Mock
+    private WebClient.RequestBodySpec requestBodySpec;
+
+    @Mock
+    private WebClient.ResponseSpec responseSpec;
+
+    @Mock
+    private ClientResponse clientResponse;
+
+    @Mock
+    private RiskEvaluationService riskEvaluationService;
+
+    @Mock
+    private MFATokenService mfaTokenService;
 
     @InjectMocks
     private KeycloakService keycloakService;
@@ -206,7 +231,7 @@ class KeycloakServiceTest {
         }
 
         private void invokeRecordFailedAttempt(String username) throws Exception {
-            java.lang.reflect.Method method = KeycloakService.class.getDeclaredMethod("recordFailedAttempt", String.class);
+            java.lang.reflect.Method method = KeycloakService.class.getDeclaredMethod("recordFailedAttemptInternal", String.class);
             method.setAccessible(true);
             method.invoke(keycloakService, username);
         }
@@ -234,6 +259,96 @@ class KeycloakServiceTest {
                         error instanceof IllegalArgumentException &&
                         error.getMessage().contains("Too many login attempts"))
                     .verify();
+        }
+    }
+
+    @Nested
+    @DisplayName("MFA Verification")
+    class MFATokenVerification {
+
+        @Test
+        @DisplayName("should reject invalid MFA token")
+        void shouldRejectInvalidMFAToken() {
+            // Given
+            String mfaToken = "invalid-token";
+            String otpCode = "123456";
+            String username = "testuser";
+            String password = "password";
+            LoginContext context = new LoginContext(username, "192.168.1.1", "device-123", "Mozilla", System.currentTimeMillis());
+
+            when(mfaTokenService.validateAndConsumeMFAToken(mfaToken, username)).thenReturn(false);
+
+            // When
+            Mono<LoginResponse> result = keycloakService.verifyMFAAndCompleteLogin(
+                    mfaToken, otpCode, username, password, context);
+
+            // Then
+            StepVerifier.create(result)
+                    .expectErrorMatches(error ->
+                        error instanceof MFAException &&
+                        error.getMessage().contains("Invalid or expired MFA token"))
+                    .verify();
+
+            verifyNoInteractions(riskEvaluationService);
+        }
+
+        @Test
+        @DisplayName("should reject invalid OTP code")
+        void shouldRejectInvalidOTPCode() {
+            // Given
+            String mfaToken = "valid-mfa-token";
+            String otpCode = "000000";
+            String username = "testuser";
+            String password = "password";
+            LoginContext context = new LoginContext(username, "192.168.1.1", "device-123", "Mozilla", System.currentTimeMillis());
+
+            when(mfaTokenService.validateAndConsumeMFAToken(mfaToken, username)).thenReturn(true);
+            when(mfaTokenService.validateOTP(username, otpCode)).thenReturn(false);
+
+            // When
+            Mono<LoginResponse> result = keycloakService.verifyMFAAndCompleteLogin(
+                    mfaToken, otpCode, username, password, context);
+
+            // Then
+            StepVerifier.create(result)
+                    .expectErrorMatches(error ->
+                        error instanceof MFAException &&
+                        error.getMessage().contains("Invalid OTP code"))
+                    .verify();
+
+            verify(mfaTokenService).consumeOTP(username);
+        }
+    }
+
+    @Nested
+    @DisplayName("Credential Validation")
+    class CredentialValidation {
+
+        @Test
+        @DisplayName("should return false for locked account")
+        void shouldReturnFalseForLockedAccount() throws Exception {
+            // Given
+            String username = "testuser";
+            String password = "password";
+            
+            // Simulate 5 failed attempts to lock account
+            for (int i = 0; i < 5; i++) {
+                invokeRecordFailedAttempt(username);
+            }
+            
+            // When
+            Mono<Boolean> result = keycloakService.validateCredentials(username, password);
+            
+            // Then
+            StepVerifier.create(result)
+                    .expectNext(false)
+                    .verifyComplete();
+        }
+
+        private void invokeRecordFailedAttempt(String username) throws Exception {
+            java.lang.reflect.Method method = KeycloakService.class.getDeclaredMethod("recordFailedAttemptInternal", String.class);
+            method.setAccessible(true);
+            method.invoke(keycloakService, username);
         }
     }
 }

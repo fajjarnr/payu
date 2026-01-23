@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Dynamic Risk-based MFA** (Backend - Auth Service):
+  - Implemented risk-based Multi-Factor Authentication that triggers MFA only for suspicious login patterns
+  - Risk evaluation engine with configurable risk factors:
+    - New device detection (configurable risk score: 40)
+    - New IP address detection (configurable risk score: 30)
+    - Failed login attempts tracking (configurable risk score: 20 per attempt)
+    - Unusual login time detection (configurable risk score: 25, default hours: 22:00-06:00)
+  - MFA threshold configuration (default: 50)
+  - Token management service:
+    - MFA token generation with configurable expiry (default: 5 minutes)
+    - 6-digit OTP generation with configurable expiry (default: 5 minutes)
+    - Token validation and consumption
+    - Automatic cleanup of expired tokens
+  - REST API endpoints:
+    - POST `/api/v1/auth/login` - Enhanced login endpoint with risk evaluation
+    - POST `/api/v1/auth/mfa/verify` - MFA verification endpoint
+  - Integration with existing Keycloak authentication flow
+  - User risk profile tracking per username:
+    - Known devices storage
+    - Known IP addresses storage
+    - Failed attempts tracking
+  - DTOs for MFA flows (MFAResponse, MFAVerifyRequest, LoginContext)
+  - MFAException for MFA-specific errors (MFA_001, MFA_002)
+  - Comprehensive unit tests:
+    - RiskEvaluationServiceTest (23 test cases)
+    - MFATokenServiceTest (23 test cases)
+    - KeycloakServiceTest (13 test cases including MFA flows)
+  - Structured JSON logging for audit trail
+
+
 - **Biometric Edge Authentication Bridge** (Backend - Auth Service):
   - Implemented biometric authentication bridge for mobile app using asymmetric cryptography (ECDSA)
   - REST API endpoints for biometric authentication flow:
