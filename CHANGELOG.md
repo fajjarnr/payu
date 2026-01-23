@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Robo-Advisory Engine** (Backend - Analytics Service):
+  - Implemented automated portfolio allocation based on risk assessment
+  - Risk profiles: Conservative, Moderate, and Aggressive
+  - Indonesian-specific investment products (SBR, ORI, Reksadana, Digital Gold, Stocks, Bonds)
+  - Portfolio allocation templates adjusted by time horizon (Short, Medium, Long Term)
+  - Risk assessment algorithm considering: age, experience, savings ratio, risk tolerance, investment goal
+  - Added GET endpoint `/api/v1/analytics/robo-advisory` for personalized recommendations
+  - Fixed SQLAlchemy 'metadata' reserved word conflict in RecommendationEntity
+  - Comprehensive unit tests: 18 test cases covering all risk profiles and scenarios
+
 - **TV Cable and Multifinance Billers** (Backend - Billing Service):
   - Added TV Cable billers: Indovision, Transvision, K-Vision, MNC Vision
   - Added Multifinance (Cicilan) billers: FIFASTRA, BFI Finance, Adira Finance, WOM Finance, Mega Finance
