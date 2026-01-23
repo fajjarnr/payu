@@ -1,9 +1,9 @@
 'use client';
 
-import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight } from "lucide-react";
+import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar, Zap, Truck } from "lucide-react";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { transferSchema, TransferRequest } from '@/types';
+import { transferSchema, TransferRequest, TransactionType, TransferScheduleType } from '@/types';
 import { useState } from 'react';
 import { useInitiateTransfer } from '@/hooks';
 import { useAuthStore } from '@/stores';
@@ -11,6 +11,63 @@ import { useUIStore } from '@/stores';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+
+const TRANSFER_TYPES: { type: TransactionType; label: string; description: string; icon: React.ComponentType<{ className?: string }>; fee: string; maxLimit: string; processingTime: string }[] = [
+  {
+    type: 'INTERNAL_TRANSFER',
+    label: 'Transfer Instan',
+    description: 'Transfer antar rekening PayU seketika',
+    icon: Zap,
+    fee: 'Gratis',
+    maxLimit: 'Rp 100.000.000',
+    processingTime: 'Seketika'
+  },
+  {
+    type: 'BIFAST_TRANSFER',
+    label: 'BI-FAST',
+    description: 'Transfer real-time antar bank nasional',
+    icon: Zap,
+    fee: 'Rp 5.000',
+    maxLimit: 'Rp 250.000.000',
+    processingTime: 'Seketika'
+  },
+  {
+    type: 'SKN_TRANSFER',
+    label: 'SKN',
+    description: 'Transfer kliring nasional',
+    icon: Truck,
+    fee: 'Rp 2.900',
+    maxLimit: 'Rp 100.000.000',
+    processingTime: 'Hari kerja'
+  },
+  {
+    type: 'RTGS_TRANSFER',
+    label: 'RTGS',
+    description: 'Transfer real-time gross settlement',
+    icon: Clock,
+    fee: 'Rp 25.000',
+    maxLimit: 'Tidak terbatas',
+    processingTime: 'Seketika'
+  }
+];
+
+const SCHEDULE_TYPES: { type: TransferScheduleType; label: string; description: string }[] = [
+  {
+    type: 'NOW',
+    label: 'Sekarang',
+    description: 'Proses transfer segera'
+  },
+  {
+    type: 'SCHEDULED',
+    label: 'Terjadwal',
+    description: 'Tentukan tanggal pengiriman'
+  },
+  {
+    type: 'RECURRING',
+    label: 'Berulang',
+    description: 'Pengiriman rutin bulanan'
+  }
+];
 
 export default function TransferPage() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
@@ -30,10 +87,14 @@ export default function TransferPage() {
     resolver: zodResolver(transferSchema),
     defaultValues: {
       amount: 0,
+      transferType: 'INTERNAL_TRANSFER',
+      scheduleType: 'NOW'
     }
   });
 
   const amount = watch('amount');
+  const transferType = watch('transferType');
+  const scheduleType = watch('scheduleType');
 
   const handleContactSelect = (contact: { name: string; accountId: string }) => {
     setSelectedContact(contact.accountId);
@@ -42,17 +103,36 @@ export default function TransferPage() {
   };
 
   const onSubmit = (data: TransferRequest) => {
+    let scheduledAt = undefined;
+    let recurringDay = undefined;
+    let recurringMonth = undefined;
+
+    if (data.scheduleType === 'SCHEDULED' && data.scheduledAt) {
+      scheduledAt = data.scheduledAt;
+    } else if (data.scheduleType === 'RECURRING') {
+      recurringDay = data.recurringDay;
+      recurringMonth = data.recurringMonth;
+    }
+
     transferMutation.mutate(
       {
         senderAccountId: data.fromAccountId,
         recipientAccountNumber: data.toAccountId,
         amount: data.amount,
         description: data.description || '',
-        type: 'INTERNAL_TRANSFER'
+        type: data.transferType,
+        scheduledAt,
+        recurringDay,
+        recurringMonth
       },
       {
         onSuccess: () => {
-          addToast('Transfer berhasil!', 'success');
+          const message = data.scheduleType === 'NOW' 
+            ? 'Transfer berhasil!' 
+            : data.scheduleType === 'SCHEDULED'
+            ? 'Transfer terjadwal berhasil diset!'
+            : 'Transfer berulang berhasil diset!';
+          addToast(message, 'success');
           setShowReview(false);
           setSelectedContact(null);
           setValue('amount', 0);
@@ -71,11 +151,27 @@ export default function TransferPage() {
       addToast('Silakan pilih penerima dan masukkan jumlah transfer', 'warning');
       return;
     }
+
+    if (data.scheduleType === 'SCHEDULED' && !data.scheduledAt) {
+      addToast('Silakan tentukan tanggal transfer', 'warning');
+      return;
+    }
+
+    if (data.scheduleType === 'RECURRING' && (!data.recurringDay || !data.recurringMonth)) {
+      addToast('Silakan tentukan tanggal dan bulan transfer', 'warning');
+      return;
+    }
+
     setShowReview(true);
   };
 
+  const selectedTransferType = TRANSFER_TYPES.find(t => t.type === transferType);
+
   if (showReview) {
     const selectedContactData = recentContacts.find(c => c.accountId === selectedContact);
+    const selectedScheduleType = SCHEDULE_TYPES.find(s => s.type === scheduleType);
+    const TransferTypeIcon = selectedTransferType?.icon || Zap;
+
     return (
       <DashboardLayout>
         <PageTransition>
@@ -112,6 +208,34 @@ export default function TransferPage() {
                       <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-1">Jumlah Transfer</p>
                       <p className="text-4xl sm:text-5xl font-black text-foreground">Rp {amount.toLocaleString('id-ID')}</p>
                       <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mt-2">Mata Uang IDR</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 relative z-10">
+                    <div className="bg-muted p-6 rounded-xl border border-border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TransferTypeIcon className="h-4 w-4 text-primary" />
+                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Tipe Transfer</p>
+                      </div>
+                      <p className="font-black text-foreground text-sm">{selectedTransferType?.label}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">{selectedTransferType?.processingTime}</p>
+                    </div>
+                    <div className="bg-muted p-6 rounded-xl border border-border">
+                      <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-2">Biaya Transfer</p>
+                      <p className="font-black text-foreground text-sm">{selectedTransferType?.fee}</p>
+                    </div>
+                    <div className="bg-muted p-6 rounded-xl border border-border">
+                      <div className="flex items-center gap-2 mb-2">
+                        {scheduleType !== 'NOW' && <Calendar className="h-4 w-4 text-primary" />}
+                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Jadwal</p>
+                      </div>
+                      <p className="font-black text-foreground text-sm">{selectedScheduleType?.label}</p>
+                      {scheduleType === 'SCHEDULED' && watch('scheduledAt') && (
+                        <p className="text-[10px] text-muted-foreground mt-1">{new Date(watch('scheduledAt')).toLocaleDateString('id-ID')}</p>
+                      )}
+                      {scheduleType === 'RECURRING' && (
+                        <p className="text-[10px] text-muted-foreground mt-1">Tanggal {watch('recurringDay')}-{watch('recurringMonth') || 'setiap bulan'}</p>
+                      )}
                     </div>
                   </div>
 
@@ -163,6 +287,117 @@ export default function TransferPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <StaggerItem className="lg:col-span-8 space-y-8">
+                <div className="bg-card rounded-2xl p-8 border border-border shadow-card">
+                  <h3 className="text-sm font-black text-foreground mb-6 tracking-widest uppercase">Pilih Metode Transfer</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {TRANSFER_TYPES.map((t) => {
+                      const Icon = t.icon;
+                      const isSelected = transferType === t.type;
+                      return (
+                        <button
+                          key={t.type}
+                          onClick={() => setValue('transferType', t.type)}
+                          className={clsx(
+                            "flex flex-col gap-4 p-6 rounded-xl border-2 transition-all group",
+                            isSelected
+                              ? "bg-primary/5 border-primary shadow-lg shadow-primary/10"
+                              : "bg-muted border-transparent hover:border-border hover:bg-card"
+                          )}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className={clsx("h-12 w-12 rounded-xl flex items-center justify-center", isSelected ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground")}>
+                              <Icon className="h-6 w-6" />
+                            </div>
+                            {isSelected && <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />}
+                          </div>
+                          <div className="text-left">
+                            <h4 className="font-black text-foreground text-sm mb-1">{t.label}</h4>
+                            <p className="text-[10px] text-muted-foreground mb-2">{t.description}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/50 px-2 py-1 rounded">{t.fee}</span>
+                              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/50 px-2 py-1 rounded">{t.processingTime}</span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="bg-card rounded-2xl p-8 border border-border shadow-card">
+                  <h3 className="text-sm font-black text-foreground mb-6 tracking-widest uppercase">Jadwal Transfer</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {SCHEDULE_TYPES.map((s) => {
+                      const isSelected = scheduleType === s.type;
+                      return (
+                        <button
+                          key={s.type}
+                          onClick={() => setValue('scheduleType', s.type)}
+                          className={clsx(
+                            "flex flex-col gap-3 p-6 rounded-xl border-2 transition-all group",
+                            isSelected
+                              ? "bg-primary/5 border-primary shadow-lg shadow-primary/10"
+                              : "bg-muted border-transparent hover:border-border hover:bg-card"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            {s.type !== 'NOW' && (
+                              <div className={clsx("h-10 w-10 rounded-lg flex items-center justify-center", isSelected ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground")}>
+                                {s.type === 'SCHEDULED' ? <Calendar className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                              </div>
+                            )}
+                            {isSelected && <div className="ml-auto h-2 w-2 bg-primary rounded-full animate-pulse" />}
+                          </div>
+                          <div className="text-left">
+                            <h4 className="font-black text-foreground text-sm mb-1">{s.label}</h4>
+                            <p className="text-[10px] text-muted-foreground">{s.description}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {scheduleType === 'SCHEDULED' && (
+                    <div className="mt-6 bg-muted/50 p-6 rounded-xl border border-border">
+                      <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-2 block">Tanggal Transfer</label>
+                      <input
+                        {...register('scheduledAt')}
+                        type="datetime-local"
+                        className="w-full px-4 py-3 rounded-lg border border-border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold"
+                        min={new Date().toISOString().slice(0, 16)}
+                      />
+                      {errors.scheduledAt && <p className="text-destructive text-[10px] mt-2 font-bold tracking-widest uppercase">{errors.scheduledAt.message}</p>}
+                    </div>
+                  )}
+
+                  {scheduleType === 'RECURRING' && (
+                    <div className="mt-6 grid grid-cols-2 gap-4">
+                      <div className="bg-muted/50 p-6 rounded-xl border border-border">
+                        <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-2 block">Tanggal Bulanan</label>
+                        <input
+                          {...register('recurringDay', { valueAsNumber: true })}
+                          type="number"
+                          min="1"
+                          max="31"
+                          placeholder="1-31"
+                          className="w-full px-4 py-3 rounded-lg border border-border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold"
+                        />
+                      </div>
+                      <div className="bg-muted/50 p-6 rounded-xl border border-border">
+                        <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-2 block">Bulan (Opsional)</label>
+                        <input
+                          {...register('recurringMonth', { valueAsNumber: true })}
+                          type="number"
+                          min="1"
+                          max="12"
+                          placeholder="1-12"
+                          className="w-full px-4 py-3 rounded-lg border border-border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="relative group">
                   <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <input

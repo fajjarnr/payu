@@ -1,17 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Activity, Landmark, Coins } from "lucide-react";
+import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Activity, Landmark, Coins, Users, UserPlus, MoreVertical } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
-import { BalanceResponse, WalletTransaction } from '@/types';
+import { BalanceResponse, WalletTransaction, Pocket, SharedMember } from '@/types';
 import api from '@/lib/api';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { SkeletonBalance, SkeletonTransaction } from '@/components/ui/Skeleton';
 
+interface SharedPocket extends Pocket {
+  sharedMembers?: SharedMember[];
+  isShared?: boolean;
+}
+
 export default function PocketsPage() {
     const [accountId] = useState(() => localStorage.getItem('accountId') || '');
+    const [selectedPocket, setSelectedPocket] = useState<string | null>(null);
+    const [showMemberModal, setShowMemberModal] = useState(false);
 
     const { data: balance, isLoading: balanceLoading } = useQuery({
         queryKey: ['wallet-balance', accountId],
@@ -38,7 +45,8 @@ export default function PocketsPage() {
             target: 10000000,
             current: 2500000,
             color: 'bank-green',
-            icon: Target
+            icon: Target,
+            isShared: false
         },
         {
             id: 2,
@@ -48,15 +56,47 @@ export default function PocketsPage() {
             color: 'bank-emerald',
             icon: Lock,
             interestRate: '4.5% p.a',
-            locked: true
+            locked: true,
+            isShared: false
         }
     ];
+
+    const sharedPockets: SharedPocket[] = [
+        {
+            id: 'shared-1',
+            name: 'Tabungan Keluarga',
+            balance: 15000000,
+            target: 50000000,
+            type: 'SHARED',
+            isShared: true,
+            sharedMembers: [
+                { accountId: 'acc-any123', fullName: 'Anya', role: 'OWNER', joinedAt: '2026-01-01T00:00:00Z' },
+                { accountId: 'acc-bud456', fullName: 'Budi', role: 'ADMIN', joinedAt: '2026-01-02T00:00:00Z' },
+                { accountId: 'acc-cit789', fullName: 'Citra', role: 'MEMBER', joinedAt: '2026-01-05T00:00:00Z' }
+            ]
+        },
+        {
+            id: 'shared-2',
+            name: 'Dana Rekreasi Kantor',
+            balance: 8500000,
+            target: 30000000,
+            type: 'SHARED',
+            isShared: true,
+            sharedMembers: [
+                { accountId: 'acc-any123', fullName: 'Anya', role: 'ADMIN', joinedAt: '2026-01-10T00:00:00Z' },
+                { accountId: 'acc-dod012', fullName: 'Dodi', role: 'OWNER', joinedAt: '2026-01-10T00:00:00Z' }
+            ]
+        }
+    ];
+
+    const activePocket = selectedPocket 
+        ? sharedPockets.find(p => p.id === selectedPocket)
+        : null;
 
     return (
         <DashboardLayout>
             <PageTransition>
                 <div className="space-y-12">
-                    {/* Header Section */}
                     <StaggerContainer>
                         <StaggerItem>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
@@ -64,15 +104,24 @@ export default function PocketsPage() {
                                     <h2 className="text-3xl font-black text-foreground">Manajemen Kantong</h2>
                                     <p className="text-sm text-muted-foreground font-medium mt-1">Kelola dan alokasikan dana Anda dengan presisi tinggi.</p>
                                 </div>
-                                <ButtonMotion>
-                                    <button className="bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-primary/20 flex items-center gap-2 hover:bg-bank-emerald transition-all">
-                                        <Plus className="h-4 w-4" /> Tambah Kantong
-                                    </button>
-                                </ButtonMotion>
+                                <div className="flex gap-3">
+                                    <ButtonMotion>
+                                        <button 
+                                            onClick={() => setShowMemberModal(true)}
+                                            className="bg-muted text-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest border border-border shadow-lg hover:bg-muted/80 transition-all flex items-center gap-2"
+                                        >
+                                            <Users className="h-4 w-4" /> Kantong Bersama
+                                        </button>
+                                    </ButtonMotion>
+                                    <ButtonMotion>
+                                        <button className="bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-primary/20 flex items-center gap-2 hover:bg-bank-emerald transition-all">
+                                            <Plus className="h-4 w-4" /> Tambah Kantong
+                                        </button>
+                                    </ButtonMotion>
+                                </div>
                             </div>
                         </StaggerItem>
 
-                        {/* Main Balance & Protocol Section */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                             <StaggerItem className="lg:col-span-8">
                                 <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card flex flex-col justify-between h-full relative overflow-hidden group">
@@ -140,9 +189,7 @@ export default function PocketsPage() {
                             </StaggerItem>
                         </div>
 
-                        {/* Sub Content Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-12">
-                            {/* Savings Goals */}
                             <div className="lg:col-span-7 space-y-8">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-black text-foreground">Tujuan Khusus</h3>
@@ -196,7 +243,6 @@ export default function PocketsPage() {
                                 </div>
                             </div>
 
-                            {/* Recent History */}
                             <div className="lg:col-span-5 space-y-8">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-black text-foreground">Buku Besar Terakhir</h3>
@@ -259,7 +305,94 @@ export default function PocketsPage() {
                             </div>
                         </div>
 
-                        {/* Promotional Banner */}
+                        <div className="mt-12">
+                            <div className="flex justify-between items-center mb-8">
+                                <h3 className="text-xl font-black text-foreground flex items-center gap-3">
+                                    <Users className="h-5 w-5 text-primary" />
+                                    Kantong Bersama
+                                </h3>
+                                <ButtonMotion>
+                                    <button className="bg-primary/10 text-primary px-6 py-3 rounded-xl font-bold text-xs tracking-widest border border-primary/10 hover:bg-primary/20 transition-all flex items-center gap-2">
+                                        <UserPlus className="h-4 w-4" /> Buat Kantong Baru
+                                    </button>
+                                </ButtonMotion>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {sharedPockets.map((pocket) => {
+                                    const percentage = Math.round((pocket.balance / pocket.target) * 100);
+                                    const isSelected = selectedPocket === pocket.id;
+
+                                    return (
+                                        <div key={pocket.id} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden group">
+                                            <div 
+                                                onClick={() => setSelectedPocket(isSelected ? null : pocket.id)}
+                                                className="p-6 cursor-pointer transition-colors hover:bg-muted/30"
+                                            >
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                                                            <Users className="h-5 w-5 text-primary" />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-black text-foreground text-sm">{pocket.name}</h4>
+                                                            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">{pocket.sharedMembers?.length} Anggota</p>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronRight className={clsx("h-5 w-5 text-muted-foreground transition-transform", isSelected ? "rotate-90" : "")} />
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-end">
+                                                        <p className="text-2xl font-black text-foreground">Rp {pocket.balance.toLocaleString('id-ID')}</p>
+                                                        <span className="text-xs font-bold text-primary">{percentage}%</span>
+                                                    </div>
+                                                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                                        <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${percentage}%` }} />
+                                                    </div>
+                                                    <p className="text-[10px] font-bold text-muted-foreground tracking-widest text-right uppercase">Target: Rp {pocket.target.toLocaleString('id-ID')}</p>
+                                                </div>
+                                            </div>
+
+                                            {isSelected && pocket.sharedMembers && (
+                                                <div className="border-t border-border p-4 bg-muted/20">
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Anggota</p>
+                                                        <button className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1">
+                                                            <UserPlus className="h-3 w-3" /> Undang
+                                                        </button>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        {pocket.sharedMembers.map((member, i) => (
+                                                            <div key={i} className="flex items-center justify-between p-2 bg-background rounded-lg border border-border">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center text-[10px] font-bold text-primary">
+                                                                        {member.fullName.charAt(0)}
+                                                                    </div>
+                                                                    <span className="text-xs font-bold text-foreground">{member.fullName}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={clsx(
+                                                                        "text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider",
+                                                                        member.role === 'OWNER' ? "bg-primary/10 text-primary" : member.role === 'ADMIN' ? "bg-bank-emerald/10 text-bank-emerald" : "bg-muted/50 text-muted-foreground"
+                                                                    )}>
+                                                                        {member.role}
+                                                                    </span>
+                                                                    <button className="p-1 hover:bg-muted rounded transition-colors">
+                                                                        <MoreVertical className="h-3 w-3 text-muted-foreground" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                         <StaggerItem className="mt-12">
                             <div className="bg-foreground text-background rounded-xl p-8 sm:p-12 relative overflow-hidden group shadow-card">
                                 <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />

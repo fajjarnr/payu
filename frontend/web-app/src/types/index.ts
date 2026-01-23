@@ -46,6 +46,18 @@ export interface Pocket {
   balance: number;
   target: number;
   type: 'MAIN' | 'SAVING' | 'SHARED';
+  sharedMembers?: SharedMember[];
+  isShared?: boolean;
+  ownerAccountId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SharedMember {
+  accountId: string;
+  fullName: string;
+  role: 'OWNER' | 'ADMIN' | 'MEMBER';
+  joinedAt: string;
 }
 
 export interface BalanceResponse {
@@ -56,14 +68,20 @@ export interface BalanceResponse {
   currency: string;
 }
 
-export type TransactionType = 'INTERNAL_TRANSFER' | 'BIFAST_TRANSFER' | 'QRIS_PAYMENT' | 'BILL_PAYMENT' | 'TOP_UP';
+export type TransactionType = 'INTERNAL_TRANSFER' | 'BIFAST_TRANSFER' | 'SKN_TRANSFER' | 'RTGS_TRANSFER' | 'QRIS_PAYMENT' | 'BILL_PAYMENT' | 'TOP_UP';
 export type TransactionStatus = 'PENDING' | 'VALIDATING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type TransferScheduleType = 'NOW' | 'SCHEDULED' | 'RECURRING';
 
 export const transferSchema = z.object({
   fromAccountId: z.string().min(1, 'Source account is required'),
   toAccountId: z.string().min(1, 'Destination account is required'),
   amount: z.number().positive('Amount must be positive'),
   description: z.string().optional(),
+  transferType: z.enum(['INTERNAL_TRANSFER', 'BIFAST_TRANSFER', 'SKN_TRANSFER', 'RTGS_TRANSFER']).default('INTERNAL_TRANSFER'),
+  scheduleType: z.enum(['NOW', 'SCHEDULED', 'RECURRING']).default('NOW'),
+  scheduledAt: z.string().optional(),
+  recurringDay: z.number().min(1).max(31).optional(),
+  recurringMonth: z.number().min(1).max(12).optional(),
 });
 
 export type TransferRequest = z.infer<typeof transferSchema>;
@@ -74,9 +92,12 @@ export interface InitiateTransferRequest {
   amount: number;
   currency?: string;
   description: string;
-  type?: TransactionType;
+  type: TransactionType;
   transactionPin?: string;
   deviceId?: string;
+  scheduledAt?: string;
+  recurringDay?: number;
+  recurringMonth?: number;
 }
 
 export interface InitiateTransferResponse {
@@ -144,4 +165,29 @@ export interface ProcessQrisPaymentRequest {
   qrCode: string;
   amount: number;
   accountId: string;
+}
+
+export interface AnalyticsData {
+  totalIncome: number;
+  totalExpenses: number;
+  monthlySavings: number;
+  investmentRoi: number;
+  incomeChange: number;
+  expenseChange: number;
+  savingsChange: number;
+  roiChange: number;
+  spendingBreakdown: SpendingCategory[];
+}
+
+export interface SpendingCategory {
+  label: string;
+  amount: number;
+  percentage: number;
+  color: string;
+}
+
+export interface PortfolioUpdate {
+  type: 'BALANCE_UPDATE' | 'TRANSACTION' | 'INVESTMENT';
+  data: AnalyticsData;
+  timestamp: string;
 }
