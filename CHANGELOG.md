@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Developer Documentation Site** (Frontend):
+  - Built comprehensive developer documentation site with Next.js 16 and TypeScript
+  - Integration guides for Partner payments, QRIS, and BI-FAST
+  - SDK examples in Java, Python, and TypeScript with code samples
+  - i18n support for Bahasa Indonesia (primary) and English
+  - Premium Emerald design system with consistent styling
+  - Static site generation for optimal performance
+  - Complete testing infrastructure with Vitest
+  - Location: `/frontend/developer-docs/`
+  - Documentation sections:
+    - Quick Start guide with 3-step integration
+    - Partner Payments integration with webhook handling
+    - QRIS payments with static/dynamic QR codes
+    - BI-FAST transfers with bank support
+    - SDK pages with installation and code examples
+  - Test suite with 8 test cases for utilities and i18n configuration
+  - Build passes successfully with static export to `out/` directory
+
 - **Partner Sandbox Environment** (Backend - API Portal Service):
   - Implemented sandbox environment for partner testing with mock data and simulated latencies
   - REST API endpoints:

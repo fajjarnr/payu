@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-border: hsl(var(--border));
+  --color-ring: hsl(var(--ring));
+
+  --color-bank-green: hsl(var(--primary));
+  --color-bank-emerald: hsl(145 50% 35%);
+  --color-success-light: hsl(var(--success-light));
+
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  --background: 140 20% 96%;
+  --foreground: 160 10% 10%;
+
+  --primary: 145 63% 42%;
+  --primary-foreground: 0 0% 100%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 160 10% 10%;
+
+  --accent: 145 30% 90%;
+  --accent-foreground: 145 63% 30%;
+
+  --muted: 140 15% 92%;
+  --muted-foreground: 160 10% 45%;
+
+  --destructive: 0 84% 60%;
+  --success-light: 145 40% 90%;
+  --warning: 45 93% 47%;
+  --info: 199 89% 48%;
+
+  --border: 140 15% 90%;
+  --ring: 145 63% 42%;
+}
+
+.dark {
+  --background: 160 10% 5%;
+  --foreground: 140 20% 96%;
+
+  --card: 160 10% 8%;
+  --card-foreground: 140 20% 96%;
+
+  --accent: 145 63% 15%;
+  --accent-foreground: 145 30% 90%;
+
+  --muted: 160 10% 12%;
+  --muted-foreground: 160 10% 65%;
+
+  --border: 160 10% 15%;
+}
+
+@layer base {
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .card-gradient {
+    background: linear-gradient(135deg,
+        hsl(145, 63%, 42%) 0%,
+        hsl(145, 50%, 35%) 50%,
+        hsl(150, 60%, 30%) 100%);
+  }
+
+  .code-block {
+    background: hsl(var(--muted));
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .code-block code {
+    color: hsl(var(--foreground));
+  }
+}
+
+pre {
+  background: hsl(var(--muted));
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+pre code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
