@@ -22,6 +22,8 @@ public class TransactionService implements TransactionUseCase {
     private final TransactionPersistencePort transactionPersistencePort;
     private final WalletServicePort walletServicePort;
     private final BifastServicePort bifastServicePort;
+    private final SknServicePort sknServicePort;
+    private final RgsServicePort rgsServicePort;
     private final QrisServicePort qrisServicePort;
     private final TransactionEventPublisherPort eventPublisherPort;
 
@@ -68,7 +70,7 @@ public class TransactionService implements TransactionUseCase {
                 .referenceNumber(referenceNumber)
                 .status("PENDING")
                 .fee(calculateFee(request.getType(), request.getAmount()))
-                .estimatedCompletionTime("2 seconds")
+                .estimatedCompletionTime(getEstimatedCompletionTime(request.getType()))
                 .build();
     }
 
@@ -133,6 +135,16 @@ public class TransactionService implements TransactionUseCase {
         return switch (type) {
             case INTERNAL_TRANSFER -> BigDecimal.ZERO;
             case BIFAST_TRANSFER -> new BigDecimal("2500");
+            case SKN_TRANSFER -> new BigDecimal("5000");
+            case RTGS_TRANSFER -> new BigDecimal("25000");
+        };
+    }
+
+    private String getEstimatedCompletionTime(InitiateTransferRequest.TransactionType type) {
+        return switch (type) {
+            case INTERNAL_TRANSFER, BIFAST_TRANSFER -> "2 seconds";
+            case SKN_TRANSFER -> "Same day";
+            case RTGS_TRANSFER -> "Real-time";
         };
     }
 }

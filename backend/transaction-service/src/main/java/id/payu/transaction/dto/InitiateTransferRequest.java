@@ -32,6 +32,8 @@ public class InitiateTransferRequest {
 
     public enum TransactionType {
         INTERNAL_TRANSFER,
-        BIFAST_TRANSFER
+        BIFAST_TRANSFER,
+        SKN_TRANSFER,
+        RTGS_TRANSFER
     }
 }
