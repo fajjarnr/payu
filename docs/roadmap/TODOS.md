@@ -49,17 +49,17 @@
 - [x] Implement full API integration via `gateway-service` for all core flows.
 - [x] Optimize state management (Zustand) and Data fetching (React Query).
 - [x] **Technical Debt & Polish**:
-    *   [ ] Standardize **Skeleton Loaders** for all data-fetching states across all pages.
-    *   [ ] Implement **Dynamic Error Boundaries** with user-friendly Indonesian recovery UI.
-    *   [ ] Add **Micro-animations** (Framer Motion) for page transitions and button interactions.
-    *   [ ] Optimize **SEO Metadata** and OpenGraph tags for banking security (no-index on sensitive pages).
+    *   [x] Standardize **Skeleton Loaders** for all data-fetching states across all pages.
+    *   [x] Implement **Dynamic Error Boundaries** with user-friendly Indonesian recovery UI.
+    *   [x] Add **Micro-animations** (Framer Motion) for page transitions and button interactions.
+    *   [x] Optimize **SEO Metadata** and OpenGraph tags for banking security (no-index on sensitive pages).
 - [x] **Feature Enhancements**:
     *   [x] **Transfer Evolution**: Add selection for BI-FAST, SKN/RTGS, and Real-time Scheduled transfers.
     *   [x] **Live Analytics**: Integrate WebSocket for real-time portfolio updates in `/analytics`.
     *   [x] **Shared Pockets**: Implement UI for joint savings pockets with member management.
 - [x] **Missing Core Modules**:
-    *   [ ] **Lending & Credit Hub** (`/lending`): UI for Personal Loans application and PayLater management.
-    *   [ ] **Rewards & Gamification** (`/rewards`): Implement Points dashboard, Cashback history, and Referral engine.
+    *   [x] **Lending & Credit Hub** (`/lending`): UI for Personal Loans application and PayLater management.
+    *   [x] **Rewards & Gamification** (`/rewards`): Implement Points dashboard, Cashback history, and Referral engine.
 
 ### 9. Mobile App Support
 - [x] Prepare mobile-responsive views for web-app.
@@ -77,9 +77,9 @@
 - [x] Transition `partner-service` from mock to real SNAP BI standard implementation.
 - [x] Implement signature validation and certificate management for partners.
 - [x] **TokoBapak Integration**:
-    - [ ] Implement `/v1/partner/auth/token` for TokoBapak authentication.
-    - [ ] Implement `/v1/partner/payments` (Create & Status).
-    - [ ] Implement Webhook system for `payment.completed` notifications.
+    - [x] Implement `/v1/partner/auth/token` for TokoBapak authentication.
+    - [x] Implement `/v1/partner/payments` (Create & Status).
+    - [x] Implement Webhook system for `payment.completed` notifications.
 
 ## ⚙️ Operations & Infrastructure (OpenShift)
 
@@ -121,6 +121,6 @@
 - [x] Expand biller list to include **TV Cable** (Indovision, etc.) and **Multifinance** (Cicilan).
 
 ### 18. Advanced Financial Services
-- [ ] Implement **Robo-Advisory** engine in `analytics-service` for automated portfolio allocation.
-- [ ] Implement **Loan Pre-approval** logic in `lending-service` based on real-time credit scoring.
-- [ ] Implement **Gamification System** (Daily check-in rewards, transaction-based badges/levels) in `promotion-service`.
+- [x] Implement **Robo-Advisory** engine in `analytics-service` for automated portfolio allocation.
+- [x] Implement **Loan Pre-approval** logic in `lending-service` based on real-time credit scoring.
+- [x] Implement **Gamification System** (Daily check-in rewards, transaction-based badges/levels) in `promotion-service`.
