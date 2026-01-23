@@ -51,6 +51,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **TokoBapak Integration** (partner-service):
+  - Implemented `/v1/partner/payments/{id}/refund` endpoint for payment refunds
+  - Added RefundRequest and RefundResponse DTOs for refund API
+  - Enhanced SnapBiPaymentService with refund processing logic and RefundRecord storage
+  - Extended webhook events to support `payment.failed`, `payment.expired`, and `refund.completed` notifications
+  - Added `@Blocking` annotation to Uni-returning Resource methods for proper thread management
+  - Implemented comprehensive TokoBapak integration tests (3 test cases):
+    - Full flow test (payment creation, completion, and refund)
+    - Refund non-existent payment error handling
+    - Refund pending payment validation (should fail)
+  - All 50 tests passing with proper test coverage
+
 - **GDPR Compliance Audit System**:
   - Added GDPR to ComplianceStandard enum
   - DataAccessAudit domain model for tracking user data access patterns

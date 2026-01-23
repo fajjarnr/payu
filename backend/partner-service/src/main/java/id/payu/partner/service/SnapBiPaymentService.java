@@ -3,6 +3,8 @@ package id.payu.partner.service;
 import id.payu.partner.dto.snap.PaymentRequest;
 import id.payu.partner.dto.snap.PaymentResponse;
 import id.payu.partner.dto.snap.PaymentStatusResponse;
+import id.payu.partner.dto.snap.RefundRequest;
+import id.payu.partner.dto.snap.RefundResponse;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -21,6 +23,7 @@ public class SnapBiPaymentService {
     private static final Logger LOG = Logger.getLogger(SnapBiPaymentService.class);
 
     private final Map<String, PaymentRecord> paymentStore = new ConcurrentHashMap<>();
+    private final Map<String, RefundRecord> refundStore = new ConcurrentHashMap<>();
 
     @Inject
     @Channel("payment-events")
@@ -133,14 +136,99 @@ public class SnapBiPaymentService {
             }
 
             if ("COMPLETED".equals(status)) {
-                sendWebhookNotification(record);
+                sendWebhookNotification(record, "payment.completed");
+            } else if ("FAILED".equals(status)) {
+                sendWebhookNotification(record, "payment.failed");
+            } else if ("EXPIRED".equals(status)) {
+                sendWebhookNotification(record, "payment.expired");
             }
         }
     }
 
-    private void sendWebhookNotification(PaymentRecord record) {
+    public Uni<RefundResponse> createRefund(String partnerId, String referenceNo, RefundRequest request) {
+        PaymentRecord record = paymentStore.values().stream()
+            .filter(p -> p.partnerId.equals(partnerId) && 
+                          (p.payuReferenceNo.equals(referenceNo) || p.partnerReferenceNo.equals(referenceNo)))
+            .findFirst()
+            .orElse(null);
+
+        if (record == null) {
+            RefundResponse response = new RefundResponse(
+                "4042500",
+                "Payment not found",
+                null,
+                null,
+                null,
+                null
+            );
+            return Uni.createFrom().item(response);
+        }
+
+        if (!"COMPLETED".equals(record.status)) {
+            RefundResponse response = new RefundResponse(
+                "4002502",
+                "Payment cannot be refunded. Payment status: " + record.status,
+                null,
+                null,
+                null,
+                null
+            );
+            return Uni.createFrom().item(response);
+        }
+
+        String payuRefundNo = "REFUND-" + UUID.randomUUID().toString();
+        
+        RefundRecord refundRecord = new RefundRecord(
+            payuRefundNo,
+            partnerId,
+            record.payuReferenceNo,
+            record.partnerReferenceNo,
+            request.partnerRefundNo,
+            request.amount.value,
+            request.amount.currency,
+            request.reason,
+            "COMPLETED",
+            Instant.now()
+        );
+
+        refundStore.put(payuRefundNo, refundRecord);
+
+        RefundEvent event = new RefundEvent(
+            payuRefundNo,
+            record.payuReferenceNo,
+            partnerId,
+            request.partnerRefundNo,
+            request.amount.value,
+            "REFUND_COMPLETED"
+        );
+
+        try {
+            String eventJson = toJson(event);
+            paymentEventEmitter.send(eventJson).toCompletableFuture().get();
+            
+            LOG.infof("Refund processed payuRefund=%s paymentRef=%s amount=%s", 
+                payuRefundNo, record.payuReferenceNo, request.amount.value);
+        } catch (Exception e) {
+            LOG.errorf("Failed to send refund event: %s", e.getMessage());
+        }
+
+        sendRefundWebhookNotification(refundRecord);
+
+        RefundResponse response = new RefundResponse(
+            "2002500",
+            "Successful",
+            request.partnerRefundNo,
+            payuRefundNo,
+            record.payuReferenceNo,
+            "COMPLETED"
+        );
+
+        return Uni.createFrom().item(response);
+    }
+
+    private void sendWebhookNotification(PaymentRecord record, String eventType) {
         WebhookEvent webhookEvent = new WebhookEvent(
-            "payment.completed",
+            eventType,
             record.payuReferenceNo,
             record.partnerReferenceNo,
             record.amount,
@@ -149,7 +237,21 @@ public class SnapBiPaymentService {
             Instant.now()
         );
 
-        LOG.infof("Webhook notification sent for completed payment payuRef=%s", record.payuReferenceNo);
+        LOG.infof("Webhook notification sent for payment event payuRef=%s eventType=%s", record.payuReferenceNo, eventType);
+    }
+
+    private void sendRefundWebhookNotification(RefundRecord refundRecord) {
+        WebhookEvent webhookEvent = new WebhookEvent(
+            "refund.completed",
+            refundRecord.payuRefundNo,
+            refundRecord.partnerReferenceNo,
+            refundRecord.amount,
+            refundRecord.currency,
+            refundRecord.status,
+            Instant.now()
+        );
+
+        LOG.infof("Webhook notification sent for completed refund refundRef=%s", refundRecord.payuRefundNo);
     }
 
     private String toJson(Object obj) {
@@ -231,6 +333,53 @@ public class SnapBiPaymentService {
             this.currency = currency;
             this.status = status;
             this.timestamp = timestamp;
+        }
+    }
+
+    static class RefundRecord {
+        public String payuRefundNo;
+        public String partnerId;
+        public String payuReferenceNo;
+        public String partnerReferenceNo;
+        public String partnerRefundNo;
+        public BigDecimal amount;
+        public String currency;
+        public String reason;
+        public String status;
+        public Instant createdAt;
+
+        RefundRecord(String payuRefundNo, String partnerId, String payuReferenceNo, String partnerReferenceNo,
+                     String partnerRefundNo, BigDecimal amount, String currency, String reason,
+                     String status, Instant createdAt) {
+            this.payuRefundNo = payuRefundNo;
+            this.partnerId = partnerId;
+            this.payuReferenceNo = payuReferenceNo;
+            this.partnerReferenceNo = partnerReferenceNo;
+            this.partnerRefundNo = partnerRefundNo;
+            this.amount = amount;
+            this.currency = currency;
+            this.reason = reason;
+            this.status = status;
+            this.createdAt = createdAt;
+        }
+    }
+
+    static class RefundEvent {
+        public String payuRefundNo;
+        public String payuReferenceNo;
+        public String partnerId;
+        public String partnerRefundNo;
+        public BigDecimal amount;
+        public String status;
+
+        RefundEvent(String payuRefundNo, String payuReferenceNo, String partnerId, String partnerRefundNo,
+                    BigDecimal amount, String status) {
+            this.payuRefundNo = payuRefundNo;
+            this.payuReferenceNo = payuReferenceNo;
+            this.partnerId = partnerId;
+            this.partnerRefundNo = partnerRefundNo;
+            this.amount = amount;
+            this.status = status;
         }
     }
 }

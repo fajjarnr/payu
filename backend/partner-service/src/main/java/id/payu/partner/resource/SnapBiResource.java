@@ -4,12 +4,15 @@ import id.payu.partner.domain.Partner;
 import id.payu.partner.dto.snap.PaymentRequest;
 import id.payu.partner.dto.snap.PaymentResponse;
 import id.payu.partner.dto.snap.PaymentStatusResponse;
+import id.payu.partner.dto.snap.RefundRequest;
+import id.payu.partner.dto.snap.RefundResponse;
 import id.payu.partner.dto.snap.TokenRequest;
 import id.payu.partner.dto.snap.TokenResponse;
 import id.payu.partner.repository.PartnerRepository;
 import id.payu.partner.service.SnapBiPaymentService;
 import id.payu.partner.service.SnapBiSignatureService;
 import id.payu.partner.service.SnapBiTokenService;
+import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -97,6 +100,7 @@ public class SnapBiResource {
 
     @POST
     @Path("/payments")
+    @Blocking
     public Uni<Response> createPayment(@HeaderParam("Authorization") String authorization,
                                        @HeaderParam("X-EXTERNAL-ID") String externalId,
                                        @HeaderParam("X-TIMESTAMP") String timestamp,
@@ -149,6 +153,7 @@ public class SnapBiResource {
 
     @GET
     @Path("/payments/{id}")
+    @Blocking
     public Uni<Response> getPaymentStatus(@HeaderParam("Authorization") String authorization,
                                           @HeaderParam("X-TIMESTAMP") String timestamp,
                                           @HeaderParam("X-SIGNATURE") String signature,
@@ -195,6 +200,59 @@ public class SnapBiResource {
         }
 
         return paymentService.getPaymentStatus(partner.id.toString(), referenceNo)
+            .onItem().transform(response -> Response.ok(response).build());
+    }
+
+    @POST
+    @Path("/payments/{id}/refund")
+    @Blocking
+    public Uni<Response> createRefund(@HeaderParam("Authorization") String authorization,
+                                      @HeaderParam("X-TIMESTAMP") String timestamp,
+                                      @HeaderParam("X-SIGNATURE") String signature,
+                                      @PathParam("id") String referenceNo,
+                                      RefundRequest request) {
+        
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+             return Uni.createFrom().item(Response.status(Response.Status.UNAUTHORIZED)
+                 .entity(createErrorResponse("4012505", "Missing or Invalid Authorization Header")).build());
+        }
+
+        String token = authorization.substring(7);
+        String clientId = tokenService.getClientIdFromToken(token);
+        
+        if (clientId == null) {
+            return Uni.createFrom().item(Response.status(Response.Status.UNAUTHORIZED)
+                .entity(createErrorResponse("4012506", "Invalid or Expired Token")).build());
+        }
+
+        Partner partner = partnerRepository.find("clientId", clientId).firstResult();
+        if (partner == null || !partner.active) {
+            return Uni.createFrom().item(Response.status(Response.Status.UNAUTHORIZED)
+                .entity(createErrorResponse("4012507", "Partner not found or inactive")).build());
+        }
+
+        try {
+            String requestBody = objectMapper.writeValueAsString(request);
+            boolean signatureValid = signatureService.validateSignature(
+                partner.clientSecret, 
+                "POST", 
+                "/v1/partner/payments/" + referenceNo + "/refund", 
+                token, 
+                requestBody, 
+                timestamp, 
+                signature
+            );
+
+            if (!signatureValid) {
+                return Uni.createFrom().item(Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(createErrorResponse("4012504", "Invalid Signature")).build());
+            }
+        } catch (Exception e) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
+                .entity(createErrorResponse("4002501", "Invalid Request Body")).build());
+        }
+
+        return paymentService.createRefund(partner.id.toString(), referenceNo, request)
             .onItem().transform(response -> Response.ok(response).build());
     }
 
