@@ -1,0 +1,43 @@
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: payu-log-forwarder
+  namespace: openshift-logging
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  outputs:
+    - name: loki-output
+      type: loki
+      url: https://loki-gateway-http.openshift-logging.svc:3100/loki/api/v1/push
+      secret:
+        name: loki-token
+      tls:
+        insecureSkipVerify: false
+  pipelines:
+    - name: payu-app-logs
+      inputRefs:
+        - application
+      outputRefs:
+        - loki-output
+      parse: json
+      labels:
+        app.kubernetes.io/part-of: payu
+        environment: production
+    - name: payu-infrastructure-logs
+      inputRefs:
+        - infrastructure
+      outputRefs:
+        - loki-output
+      labels:
+        app.kubernetes.io/part-of: payu
+        environment: production
+    - name: payu-audit-logs
+      inputRefs:
+        - audit
+      outputRefs:
+        - loki-output
+      labels:
+        app.kubernetes.io/part-of: payu
+        environment: production
+        type: audit

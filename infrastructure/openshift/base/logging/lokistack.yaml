@@ -1,0 +1,76 @@
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: loki
+  namespace: openshift-logging
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  size: 1x.small
+  storage:
+    secret:
+      name: loki-storage
+      type: s3
+  storageClassName: standard
+  tenants:
+    mode: openshift-logging
+  managementState: Managed
+  replicationFactor: 1
+  rules:
+    enabled: true
+    namespaceLabels:
+      - matchLabels:
+          app.kubernetes.io/part-of: payu
+  limits:
+    global:
+      ingestion:
+        ingestionBurstSize: 16MB
+        ingestionRate: 16MB
+      retention:
+        days: 30
+    perStreamRateLimit: 16MB
+    perTenant:
+      ingestionRate: 16MB
+      ingestionBurstSize: 32MB
+      maxStreamsPerUser: 0
+  template:
+    compactor:
+      replicas: 1
+    distributor:
+      replicas: 1
+    gateway:
+      replicas: 1
+      route:
+        enabled: true
+        termination:
+          insecureEdgeTerminationPolicy: Redirect
+          tls:
+            insecureEdgeTerminationPolicy: Redirect
+    indexGateway:
+      replicas: 1
+    ingester:
+      replicas: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    querier:
+      replicas: 1
+    queryFrontend:
+      replicas: 1
+    ruler:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+  visualization:
+    type: grafana
+    grafana:
+      enabled: false

@@ -74,9 +74,9 @@
 - [x] **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
 
 ### 11. SNAP BI & Partner Integration
-- [ ] Transition `partner-service` from mock to real SNAP BI standard implementation.
-- [ ] Implement signature validation and certificate management for partners.
-- [ ] **TokoBapak Integration**:
+- [x] Transition `partner-service` from mock to real SNAP BI standard implementation.
+- [x] Implement signature validation and certificate management for partners.
+- [x] **TokoBapak Integration**:
     - [ ] Implement `/v1/partner/auth/token` for TokoBapak authentication.
     - [ ] Implement `/v1/partner/payments` (Create & Status).
     - [ ] Implement Webhook system for `payment.completed` notifications.
@@ -89,7 +89,7 @@
 - [x] Configure multi-stage Docker builds using Red Hat UBI9 images.
 
 ### 13. Observability & SRE
-- [ ] Deploy **LokiStack** for centralized log management.
+- [x] Deploy **LokiStack** for centralized log management.
 - [ ] Configure **Prometheus & Grafana** dashboards for all microservices.
 - [ ] Implement distributed tracing using **Jaeger/OpenTelemetry**.
 - [ ] **Disaster Recovery**: Verify backup-restore procedures for PostgreSQL and Kafka.

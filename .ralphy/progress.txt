@@ -84,3 +84,9 @@
 - [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
 - [✗] 2026-01-22 20:15 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
 - [✓] 2026-01-23 01:56 - **Technical Debt & Polish**:
+- [✓] 2026-01-23 03:34 - **Feature Enhancements**:
+- [✓] 2026-01-23 03:43 - **Missing Core Modules**:
+- [✓] 2026-01-23 03:49 - **Vault Integration**: Migrate hardcoded secrets to HashiCorp Vault.
+- [✓] 2026-01-23 04:04 - Transition `partner-service` from mock to real SNAP BI standard implementation.
+- [✓] 2026-01-23 04:13 - Implement signature validation and certificate management for partners.
+- [✓] 2026-01-23 04:23 - **TokoBapak Integration**:

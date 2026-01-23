@@ -1,0 +1,20 @@
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogging
+metadata:
+  name: instance
+  namespace: openshift-logging
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  managementState: Managed
+  logStore:
+    type: lokistack
+    lokistack:
+      name: loki
+  collection:
+    logs:
+      type: vector
+      vector: {}
+  visualization:
+    type: ocp-console
+    ocpConsole: {}

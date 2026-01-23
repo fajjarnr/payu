@@ -1,0 +1,16 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: loki-gateway
+  namespace: openshift-logging
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  to:
+    kind: Service
+    name: loki-gateway-http
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

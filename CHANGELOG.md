@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **LokiStack for Centralized Log Management** (Infrastructure):
+  - Deployed LokiStack operator for OpenShift-native centralized log aggregation
+  - Created logging namespaces (openshift-logging, openshift-operators-redhat)
+  - Configured ClusterLogForwarder to forward application, infrastructure, and audit logs
+  - Set up LokiStack with S3 storage backend and 30-day retention
+  - Implemented Vector-based log collection for all PayU microservices
+  - Added Loki alert rules for error rate, latency, database connections, and service downtime
+  - Created OpenShift Route for external Loki gateway access
+  - Configured RBAC permissions for log collection (loki-promtail)
+  - Added comprehensive LokiStack deployment script (`scripts/deploy_lokistack.sh`)
+  - Created test suite with 19 test cases validating LokiStack infrastructure
+  - Documented LokiStack deployment, configuration, and usage (`docs/operations/LOKISTACK.md`)
+
 ### Changed
 
 - **Vault Integration** (Secrets Management):
