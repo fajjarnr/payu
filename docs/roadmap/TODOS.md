@@ -142,8 +142,8 @@
 - [x] Support for **Multi-currency Pockets** and real-time FX (Foreign Exchange) engine.
 
 ### 22. Developer Experience & Partner Portal
-- [ ] Implement **Centralized API Portal** (Swagger/OpenAPI aggregator for all services).
-- [ ] Implement **Partner Sandbox Environment** with mock data and simulated latencies.
+- [x] Implement **Centralized API Portal** (Swagger/OpenAPI aggregator for all services).
+- [x] Implement **Partner Sandbox Environment** with mock data and simulated latencies.
 - [ ] Build **Developer Documentation Site** with integration guides and SDK examples.
 
 ### 23. Advanced Customer Services

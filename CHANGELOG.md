@@ -6,8 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
- 
+
 ### Added
+- **Partner Sandbox Environment** (Backend - API Portal Service):
+  - Implemented sandbox environment for partner testing with mock data and simulated latencies
+  - REST API endpoints:
+    - POST `/api/v1/sandbox/payments` - Create sandbox payments with mock data
+    - GET `/api/v1/sandbox/payments/{paymentReferenceNo}` - Get sandbox payment status
+    - POST `/api/v1/sandbox/payments/{paymentReferenceNo}/refund` - Create sandbox refunds
+    - DELETE `/api/v1/sandbox/data` - Clear all sandbox data
+    - GET `/api/v1/sandbox/stats` - Get sandbox statistics
+    - GET `/api/v1/sandbox/mock-data/examples` - Get example payloads for testing
+  - SandboxService with mock data storage using ConcurrentHashMap
+  - Simulated latency with configurable min/max delay (200-800ms default)
+  - Latency can be enabled/disabled via configuration
+  - DTOs for sandbox operations:
+    - SandboxPaymentRequest - Payment request with amount, account details
+    - SandboxPaymentResponse - Payment response with reference numbers
+    - SandboxPaymentStatusResponse - Payment status query response
+    - SandboxRefundRequest - Refund request with reason
+    - SandboxRefundResponse - Refund response with amount
+  - Sandbox configuration in application.yaml under `sandbox.latency.*`
+  - Comprehensive unit tests: 7 test cases for SandboxService
+  - Comprehensive integration tests: 8 test cases for SandboxResource REST endpoints
+  - All 22 tests in api-portal-service passing
+  - Structured JSON logging for sandbox operations
+
 - **Centralized API Portal** (Backend - API Portal Service):
   - Implemented new Quarkus-based `api-portal-service` for centralized API documentation
   - OpenAPI specification aggregation from all 16 microservices

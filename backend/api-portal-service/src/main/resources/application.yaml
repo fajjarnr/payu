@@ -91,3 +91,9 @@ portal:
 
   cache:
     ttl: 5m
+
+sandbox:
+  latency:
+    enabled: true
+    min: 200
+    max: 800
