@@ -13,7 +13,11 @@ public enum BillerType {
     SMARTFREN("Pulsa Smartfren", "SMARTFREN", "mobile"),
     TELKOM("Telepon & Internet Telkom", "TELKOM", "internet"),
     BPJS("BPJS Kesehatan", "BPJS", "insurance"),
-    PGAS("Gas PGN", "PGAS", "utility");
+    PGAS("Gas PGN", "PGAS", "utility"),
+    GOPAY("Top-up GoPay", "GOPAY", "ewallet"),
+    OVO("Top-up OVO", "OVO", "ewallet"),
+    DANA("Top-up DANA", "DANA", "ewallet"),
+    LINKAJA("Top-up LinkAja", "LINKAJA", "ewallet");
 
     private final String displayName;
     private final String code;

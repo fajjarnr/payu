@@ -4,6 +4,7 @@ import id.payu.billing.client.WalletClient;
 import id.payu.billing.domain.BillPayment;
 import id.payu.billing.domain.BillerType;
 import id.payu.billing.dto.CreatePaymentRequest;
+import id.payu.billing.dto.TopUpRequest;
 import io.smallrye.reactive.messaging.kafka.KafkaRecord;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -37,7 +38,7 @@ public class PaymentService {
 
     @Transactional
     public BillPayment createPayment(CreatePaymentRequest request) {
-        LOG.infof("Creating payment: biller=%s, customerId=%s, amount=%s", 
+        LOG.infof("Creating payment: biller=%s, customerId=%s, amount=%s",
             request.billerCode(), request.customerId(), request.amount());
 
         // Validate biller
@@ -89,17 +90,76 @@ public class PaymentService {
         return payment;
     }
 
+    @Transactional
+    public BillPayment createTopUp(TopUpRequest request) {
+        LOG.infof("Creating top-up: provider=%s, walletNumber=%s, amount=%s",
+            request.provider(), request.walletNumber(), request.amount());
+
+        // Validate e-wallet provider
+        BillerType billerType = getBillerType(request.provider())
+            .orElseThrow(() -> new IllegalArgumentException("Unknown e-wallet provider: " + request.provider()));
+
+        // Calculate admin fee (lower for e-wallet top-ups)
+        BigDecimal adminFee = calculateTopUpFee(request.amount());
+
+        // Create payment record
+        BillPayment payment = new BillPayment();
+        payment.accountId = request.accountId();
+        payment.billerType = billerType;
+        payment.customerId = request.walletNumber();
+        payment.amount = request.amount();
+        payment.adminFee = adminFee;
+        payment.totalAmount = request.amount().add(adminFee);
+        payment.status = BillPayment.PaymentStatus.PENDING;
+
+        payment.persist();
+        LOG.infof("Top-up created: id=%s, reference=%s", payment.id, payment.referenceNumber);
+
+        // Reserve balance from wallet
+        try {
+            var reserveResponse = walletClient.reserveBalance(
+                request.accountId(),
+                new WalletClient.ReserveRequest(payment.totalAmount, payment.referenceNumber)
+            );
+
+            if ("RESERVED".equals(reserveResponse.status())) {
+                payment.status = BillPayment.PaymentStatus.PROCESSING;
+                // Simulate e-wallet provider processing (in production, call actual e-wallet API)
+                processWithEwalletProvider(payment);
+            } else {
+                payment.status = BillPayment.PaymentStatus.FAILED;
+                payment.failureReason = "Failed to reserve balance";
+            }
+        } catch (Exception e) {
+            LOG.errorf("Failed to reserve balance: %s", e.getMessage());
+            payment.status = BillPayment.PaymentStatus.FAILED;
+            payment.failureReason = "Wallet service unavailable";
+        }
+
+        payment.persist();
+
+        // Publish event
+        publishPaymentEvent(payment);
+
+        return payment;
+    }
+
     public Optional<BillPayment> getPayment(UUID id) {
         return BillPayment.findByIdOptional(id);
     }
 
     private void processWithBiller(BillPayment payment) {
-        // Simulate biller API call (success for demo)
-        // In production, integrate with actual biller APIs
         payment.status = BillPayment.PaymentStatus.COMPLETED;
         payment.completedAt = LocalDateTime.now();
         payment.billerTransactionId = "BILLER-" + System.currentTimeMillis();
         LOG.infof("Payment completed: id=%s", payment.id);
+    }
+
+    private void processWithEwalletProvider(BillPayment payment) {
+        payment.status = BillPayment.PaymentStatus.COMPLETED;
+        payment.completedAt = LocalDateTime.now();
+        payment.billerTransactionId = "EWALLET-" + System.currentTimeMillis();
+        LOG.infof("E-wallet top-up completed: id=%s", payment.id);
     }
 
     private Optional<BillerType> getBillerType(String code) {
@@ -121,6 +181,16 @@ public class PaymentService {
             case "utility" -> new BigDecimal("2500");
             default -> new BigDecimal("2500");
         };
+    }
+
+    private BigDecimal calculateTopUpFee(BigDecimal amount) {
+        if (amount.compareTo(new BigDecimal("100000")) <= 0) {
+            return new BigDecimal("1000");
+        } else if (amount.compareTo(new BigDecimal("500000")) <= 0) {
+            return new BigDecimal("1500");
+        } else {
+            return new BigDecimal("2000");
+        }
     }
 
     private void publishPaymentEvent(BillPayment payment) {
