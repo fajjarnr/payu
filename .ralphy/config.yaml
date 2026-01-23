@@ -31,12 +31,13 @@ rules:
   - "Testing: Follow TDD (Red-Green-Refactor). Use Testcontainers for integration tests."
   - "Git: Use conventional commits (feat, fix, docs, refactor)."
   - "Lifecycle: Update CHANGELOG.md for any significant code changes."
-  - "Documentation: Always use Context7 MCP to query latest Spring/Quarkus/Kafka documentation before implementing."
-  - "Infrastucture: Prioritize Red Hat UBI9 (Universal Base Image) for all Dockerfiles. For OpenShift compatibility, explicitly set a non-root User ID (e.g., `USER 1001`) and ensure necessary folders have root-group (GID 0) permissions."
-  - "Performance: Before running E2E tests or Docker Compose, always perform a host-level pre-build using `mvn clean package -DskipTests -T 1C` in the backend root to warm up Maven cache."
-  - "Frontend: Use Next.js (App Router), TypeScript, and Tailwind CSS. Use TanStack Query (React Query) for data fetching. All API calls MUST go through the service layer in `src/services` using the centralized `api.ts` client."
-  - "API Standards: Follow RESTful conventions (kebab-case URLs). Add comprehensive validation (Java Bean Validation or Pydantic) and consistent error response structures."
-  - "Observability: Implement Micrometer (Java) or Prometheus client (Python) metrics for all new services. Use structured logging (JSON format) where possible."
+  - "Project Structure: Documentation is located in the `docs/` directory. Use `docs/roadmap/TODOS.md` as the primary source of tasks."
+  - "Specialized Skills: ALWAYS check `.agent/skills/` for detailed instructions on Backend, Frontend, QA, and Security before starting a task."
+  - "Frontend & UI: Follow the **Premium Emerald** design system in `docs/guides/GEMINI.md`. Primary language for UI is **Bahasa Indonesia**."
+  - "Infrastucture: Prioritize Red Hat UBI9 for all Dockerfiles. For OpenShift compatibility, explicitly set a non-root User ID and ensure root-group permissions for necessary folders."
+  - "Performance: Before running E2E tests, warm up Maven cache using `mvn clean package -DskipTests -T 1C` in the backend root."
+  - "API Standards: Follow RESTful conventions. All API calls MUST go through the service layer in `src/services` using the centralized `api.ts` client."
+  - "Observability: Implement Micrometer (Java) or Prometheus client (Python) metrics. Use structured JSON logging."
 
 # Boundaries - files/folders the AI should not modify
 boundaries:
