@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, String, DateTime, Float, Integer, BigInteger, JSON, Index, Text, Boolean
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from app.config import get_settings
 import structlog
@@ -117,6 +117,30 @@ class RecommendationEntity(Base):
     )
 
 
+class FraudScoreEntity(Base):
+    __tablename__ = "fraud_scores"
+
+    score_id = Column(String, primary_key=True)
+    transaction_id = Column(String, nullable=False, index=True)
+    user_id = Column(String, nullable=False, index=True)
+    risk_score = Column(Float, nullable=False)
+    risk_level = Column(String, nullable=False, index=True)
+    risk_factors = Column(JSON, nullable=True)
+    is_suspicious = Column(Boolean, default=False, index=True)
+    recommended_action = Column(String, nullable=True)
+    is_blocked = Column(Boolean, default=False, index=True)
+    requires_review = Column(Boolean, default=False)
+    rule_triggers = Column(JSON, nullable=True)
+
+    scored_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    __table_args__ = (
+        Index('idx_fraud_scores_user_time', 'user_id', 'scored_at'),
+        Index('idx_fraud_scores_risk_level', 'risk_level'),
+        Index('idx_fraud_scores_suspicious', 'is_suspicious'),
+    )
+
+
 async def init_db():
     global engine, async_session_maker
     engine = create_async_engine(
@@ -156,10 +180,16 @@ async def _create_hypertables():
                 chunk_time_interval => interval '7 days');
         """)
 
+        create_fraud_hypertable = text("""
+            SELECT create_hypertable('fraud_scores', 'scored_at',
+                chunk_time_interval => interval '7 days');
+        """)
+
         try:
             await session.execute(create_timescale)
             await session.execute(create_wallet_hypertable)
             await session.execute(create_activity_hypertable)
+            await session.execute(create_fraud_hypertable)
             await session.commit()
             logger.info("TimescaleDB hypertables created")
         except Exception as e:

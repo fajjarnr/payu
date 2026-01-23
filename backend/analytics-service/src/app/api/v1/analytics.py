@@ -12,10 +12,13 @@ from app.models.schemas import (
     CashFlowAnalysis,
     GetRecommendationsResponse,
     GetRoboAdvisoryRequest,
-    RoboAdvisoryResponse
+    RoboAdvisoryResponse,
+    GetFraudScoreRequest,
+    FraudDetectionResult
 )
 from app.services.analytics_service import AnalyticsService
 from app.ml.robo_advisory import RoboAdvisoryEngine
+from app.ml.fraud_detection import FraudDetectionEngine
 
 logger = get_logger(__name__)
 analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
@@ -150,4 +153,120 @@ async def get_robo_advisory(request: GetRoboAdvisoryRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error_code": "ANA_SYS_005", "detail": str(e)}
+        )
+
+
+@analytics_router.post("/fraud/score", response_model=FraudDetectionResult)
+async def calculate_fraud_score(request: GetFraudScoreRequest):
+    log = logger.bind(transaction_id=request.transaction_id, user_id=request.user_id)
+    log.info("Calculating fraud score")
+
+    try:
+        fraud_engine = FraudDetectionEngine()
+        transaction_data = {
+            "transaction_id": request.transaction_id,
+            "user_id": request.user_id,
+            "amount": request.amount,
+            "currency": request.currency,
+            "type": request.transaction_type,
+            "metadata": request.metadata
+        }
+
+        result = await fraud_engine.calculate_fraud_score(transaction_data)
+
+        return result
+    except Exception as e:
+        log.error("Failed to calculate fraud score", exc_info=e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error_code": "ANA_SYS_006", "detail": str(e)}
+        )
+
+
+@analytics_router.get("/fraud/transaction/{transaction_id}", response_model=FraudDetectionResult)
+async def get_transaction_fraud_score(
+    transaction_id: str,
+    db: AsyncSession = Depends(get_db_session)
+):
+    log = logger.bind(transaction_id=transaction_id)
+    log.info("Fetching transaction fraud score")
+
+    try:
+        from sqlalchemy import select
+        from app.database import FraudScoreEntity
+
+        query = select(FraudScoreEntity).where(FraudScoreEntity.transaction_id == transaction_id)
+        result = await db.execute(query)
+        fraud_entity = result.scalar_one_or_none()
+
+        if not fraud_entity:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error_code": "ANA_VAL_002", "detail": "Fraud score not found"}
+            )
+
+        return FraudDetectionResult(
+            fraud_score={
+                "transaction_id": fraud_entity.transaction_id,
+                "user_id": fraud_entity.user_id,
+                "risk_score": fraud_entity.risk_score,
+                "risk_level": fraud_entity.risk_level,
+                "risk_factors": fraud_entity.risk_factors,
+                "is_suspicious": fraud_entity.is_suspicious,
+                "recommended_action": fraud_entity.recommended_action,
+                "scored_at": fraud_entity.scored_at
+            },
+            is_blocked=fraud_entity.is_blocked,
+            requires_review=fraud_entity.requires_review,
+            rule_triggers=fraud_entity.rule_triggers
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error("Failed to fetch fraud score", exc_info=e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error_code": "ANA_SYS_007", "detail": str(e)}
+        )
+
+
+@analytics_router.get("/fraud/user/{user_id}/high-risk", response_model=list)
+async def get_user_high_risk_transactions(
+    user_id: str,
+    db: AsyncSession = Depends(get_db_session)
+):
+    log = logger.bind(user_id=user_id)
+    log.info("Fetching high-risk transactions")
+
+    try:
+        from sqlalchemy import select
+        from app.database import FraudScoreEntity
+        from datetime import timedelta
+
+        cutoff_date = datetime.utcnow() - timedelta(days=30)
+
+        query = (
+            select(FraudScoreEntity)
+            .where(FraudScoreEntity.user_id == user_id)
+            .where(FraudScoreEntity.is_suspicious == True)
+            .where(FraudScoreEntity.scored_at > cutoff_date)
+            .order_by(FraudScoreEntity.scored_at.desc())
+        )
+        result = await db.execute(query)
+        high_risk_transactions = result.scalars().all()
+
+        return [
+            {
+                "transaction_id": txn.transaction_id,
+                "risk_score": txn.risk_score,
+                "risk_level": txn.risk_level,
+                "scored_at": txn.scored_at
+            }
+            for txn in high_risk_transactions
+        ]
+    except Exception as e:
+        log.error("Failed to fetch high-risk transactions", exc_info=e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error_code": "ANA_SYS_008", "detail": str(e)}
         )

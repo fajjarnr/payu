@@ -14,7 +14,8 @@ from app.database import (
     TransactionAnalyticsEntity,
     WalletBalanceEntity,
     UserActivityEntity,
-    UserMetricsEntity
+    UserMetricsEntity,
+    FraudScoreEntity
 )
 from app.websocket.connection_manager import manager
 from app.models.schemas import (
@@ -23,8 +24,10 @@ from app.models.schemas import (
     TransactionCompletedEvent,
     WalletBalanceChangedEvent,
     KycVerifiedEvent,
-    UserMetricsUpdatedEvent
+    UserMetricsUpdatedEvent,
+    FraudDetectionResult
 )
+from app.ml.fraud_detection import FraudDetectionEngine
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -35,6 +38,7 @@ class KafkaConsumerService:
         self.consumer: AIOKafkaConsumer | None = None
         self._running = False
         self._task: asyncio.Task | None = None
+        self.fraud_engine = FraudDetectionEngine()
 
     async def start(self):
         if self._running:
@@ -76,7 +80,7 @@ class KafkaConsumerService:
 
             async for msg in self.consumer:
                 try:
-                    await self._process_message(msg.topic, msg.value)
+                    await self._process_message(msg.topic, msg.value or {})
                 except Exception as e:
                     logger.error(
                         "Failed to process message",
@@ -92,14 +96,19 @@ class KafkaConsumerService:
         except Exception as e:
             logger.error("Unexpected error in consumer loop", exc_info=e)
 
-    async def _process_message(self, topic: str, message: Dict[str, Any]):
+    async def _process_message(self, topic: str, message: Dict[str, Any] | None):
         logger.info("Processing Kafka message", topic=topic)
+
+        if not message:
+            logger.warning("Empty message received", topic=topic)
+            return
 
         async with async_session_maker() as session:
             if topic == "payu.transactions.completed":
                 await self._handle_transaction_completed(session, message)
             elif topic == "payu.transactions.initiated":
                 await self._handle_transaction_initiated(session, message)
+                await self._handle_fraud_detection(session, message)
             elif topic == "payu.wallet.balance.changed":
                 await self._handle_wallet_balance_changed(session, message)
             elif topic == "payu.kyc.verified":
@@ -293,3 +302,97 @@ class KafkaConsumerService:
                 kyc_status=None
             )
             session.add(new_metrics)
+
+    async def _handle_fraud_detection(self, session, message):
+        transaction_id = message.get('transactionId')
+        user_id = message.get('senderAccountId')
+
+        try:
+            user_history = await self._get_user_history(session, user_id)
+
+            fraud_result = await self.fraud_engine.calculate_fraud_score(
+                transaction_data=message,
+                user_history=user_history
+            )
+
+            fraud_entity = FraudScoreEntity(
+                score_id=str(uuid4()),
+                transaction_id=transaction_id,
+                user_id=user_id,
+                risk_score=fraud_result.fraud_score.risk_score,
+                risk_level=fraud_result.fraud_score.risk_level.value,
+                risk_factors=fraud_result.fraud_score.risk_factors,
+                is_suspicious=fraud_result.fraud_score.is_suspicious,
+                recommended_action=fraud_result.fraud_score.recommended_action,
+                is_blocked=fraud_result.is_blocked,
+                requires_review=fraud_result.requires_review,
+                rule_triggers=fraud_result.rule_triggers,
+                scored_at=datetime.utcnow()
+            )
+
+            session.add(fraud_entity)
+
+            if fraud_result.is_blocked:
+                logger.warning(
+                    "Transaction blocked due to high fraud risk",
+                    transaction_id=transaction_id,
+                    user_id=user_id,
+                    risk_score=fraud_result.fraud_score.risk_score
+                )
+
+            if fraud_result.requires_review:
+                logger.info(
+                    "Transaction flagged for manual review",
+                    transaction_id=transaction_id,
+                    user_id=user_id,
+                    risk_score=fraud_result.fraud_score.risk_score
+                )
+
+        except Exception as e:
+            logger.error(
+                "Failed to calculate fraud score",
+                transaction_id=transaction_id,
+                error=str(e),
+                exc_info=e
+            )
+
+    async def _get_user_history(self, session, user_id: str) -> Dict[str, Any]:
+        from sqlalchemy import select, func
+
+        try:
+            metrics = await session.execute(
+                select(UserMetricsEntity).where(UserMetricsEntity.user_id == user_id)
+            )
+            user_metrics = metrics.scalar_one_or_none()
+
+            recent_txns = await session.execute(
+                select(TransactionAnalyticsEntity)
+                .where(TransactionAnalyticsEntity.user_id == user_id)
+                .where(TransactionAnalyticsEntity.timestamp > datetime.utcnow() - timedelta(hours=24))
+                .order_by(TransactionAnalyticsEntity.timestamp.desc())
+                .limit(50)
+            )
+            recent_transactions = recent_txns.scalars().all()
+
+            user_history = {
+                "total_transactions": user_metrics.total_transactions if user_metrics else 0,
+                "total_amount": float(user_metrics.total_amount) if user_metrics else 0.0,
+                "average_transaction": float(user_metrics.average_transaction) if user_metrics else 0.0,
+                "account_created_at": "2025-01-01T00:00:00",
+                "recent_transactions": [
+                    {
+                        "transaction_id": txn.transaction_id,
+                        "amount": txn.amount,
+                        "type": txn.transaction_type,
+                        "timestamp": txn.timestamp.isoformat(),
+                        "recipient_id": txn.recipient_id
+                    }
+                    for txn in recent_transactions
+                ]
+            }
+
+            return user_history
+
+        except Exception as e:
+            logger.error("Failed to fetch user history", user_id=user_id, error=str(e))
+            return {}

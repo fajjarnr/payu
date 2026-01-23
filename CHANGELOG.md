@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Real-time AI Fraud Detection Scoring** (Backend - Analytics Service):
+  - Implemented ML-based fraud detection engine with configurable risk factors
+  - Real-time transaction scoring based on multiple risk factors:
+    - Amount anomaly detection (high-value transactions)
+    - Velocity checking (rapid transaction frequency)
+    - Behavioral pattern analysis (deviation from historical patterns)
+    - Location anomaly detection (suspicious IPs, location changes)
+    - Account age risk assessment (new account protection)
+  - Risk levels: MINIMAL, LOW, MEDIUM, HIGH, CRITICAL
+  - Automated action recommendations: BLOCK, REVIEW, MONITOR, ALLOW
+  - REST API endpoints:
+    - POST `/api/v1/analytics/fraud/score` - Calculate fraud score for a transaction
+    - GET `/api/v1/analytics/fraud/transaction/{transaction_id}` - Retrieve fraud score for a transaction
+    - GET `/api/v1/analytics/fraud/user/{user_id}/high-risk` - Get high-risk transactions for a user
+  - Kafka integration:
+    - Real-time fraud scoring for transaction-initiated events
+    - Automatic storage of fraud scores in TimescaleDB
+    - Support for suspicious transaction blocking and manual review flags
+  - Fraud database entity with hypertable for time-series analysis
+  - 25+ comprehensive unit tests covering all fraud detection scenarios
+
 - **Universal Search** (Backend - Backoffice Service):
   - Implemented cross-service data lookup for backoffice operations
   - Search across KYC Reviews, Fraud Cases, and Customer Cases entities

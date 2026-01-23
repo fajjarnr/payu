@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -217,6 +217,41 @@ class RoboAdvisoryResponse(BaseModel):
     monthly_investment_amount: float
     expected_annual_return: float
     recommended_investment_products: List[dict]
+
+
+class FraudRiskLevel(str, Enum):
+    MINIMAL = "MINIMAL"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class FraudScore(BaseModel):
+    transaction_id: str = Field(min_length=1)
+    user_id: str = Field(min_length=1)
+    risk_score: float = Field(ge=0, le=100, description="Fraud risk score from 0 to 100")
+    risk_level: FraudRiskLevel
+    risk_factors: Dict[str, float] = Field(default_factory=dict)
+    is_suspicious: bool = Field(default=False)
+    recommended_action: str
+    scored_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class FraudDetectionResult(BaseModel):
+    fraud_score: FraudScore
+    is_blocked: bool = Field(default=False)
+    requires_review: bool = Field(default=False)
+    rule_triggers: List[str] = Field(default_factory=list)
+
+
+class GetFraudScoreRequest(BaseModel):
+    transaction_id: str
+    user_id: str
+    amount: float
+    currency: str = "IDR"
+    transaction_type: str = "TRANSFER"
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class GetRoboAdvisoryRequest(BaseModel):
