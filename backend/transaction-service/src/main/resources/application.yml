@@ -83,6 +83,14 @@ management:
     show-actuator: true
     packages-to-scan: id.payu.transaction
 
+# Data Archival Configuration
+archival:
+  enabled: true
+  retention-months: 12
+  batch-size: 1000
+  schedule:
+    cron: "0 0 2 * * ?"
+
 # Resilience4j configuration for wallet-service calls
 resilience4j:
   circuitbreaker:
