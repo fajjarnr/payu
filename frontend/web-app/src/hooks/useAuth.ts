@@ -52,3 +52,8 @@ export const useRefreshToken = () => {
     }
   });
 };
+
+// Convenience hook to access auth state
+export const useAuth = () => {
+  return useAuthStore();
+};

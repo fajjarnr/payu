@@ -32,6 +32,29 @@
         <appender-ref ref="FILE"/>
     </appender>
 
+    <!-- Audit Logger for Security Events -->
+    <appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/var/log/payu/audit.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5level | %logger{36} | %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/var/log/payu/audit-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>365</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Security and Audit Logger -->
+    <logger name="id.payu.security" level="INFO" additivity="false">
+        <appender-ref ref="AUDIT"/>
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <!-- Resilience Logger -->
+    <logger name="id.payu.resilience" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
     <springProfile name="!prod">
         <root level="INFO">
             <appender-ref ref="STDOUT"/>

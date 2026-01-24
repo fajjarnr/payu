@@ -1,0 +1,129 @@
+apiVersion: cluster.autoscaling.k8s.io/v1
+kind: ClusterAutoscaler
+metadata:
+  name: payu-cluster-autoscaler
+  namespace: openshift-machine-api
+  labels:
+    app: payu
+    type: autoscaling
+spec:
+  scaleDown:
+    enabled: true
+    delayAfterAdd: 10m
+    delayAfterDelete: 10m
+    delayAfterFailure: 3m
+    unneededTime: 30m
+    utilizationThreshold: 0.5
+  skipNodesWithLocalStorage: false
+  skipNodesWithSystemPods: true
+  maxNodeProvisionTime: 15m
+  maxNodesTotal: 50
+  minNodes: 3
+  maxNodes: 20
+  resourceLimits:
+    maxNodesTotal: 50
+    cores:
+      min: 24
+      max: 500
+    memory:
+      min: 96Gi
+      max: 2000Gi
+  balanceSimilarNodeGroups: true
+  expander: "least-waste"
+---
+# MachineSet for autoscaling
+apiVersion: machine.openshift.io/v1
+kind: MachineSet
+metadata:
+  name: payu-worker-us-east-1a
+  namespace: openshift-machine-api
+  labels:
+    app: payu
+    type: machineset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: payu-cluster
+      machine.openshift.io/cluster-api-machine-role: worker
+      machine.openshift.io/cluster-api-machine-type: worker
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: payu-cluster
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: payu-worker-us-east-1a
+    spec:
+      metadata: {}
+      providerSpec:
+        value:
+          ami:
+            id: ami-0123456789abcdef0
+          apiVersion: machine.openshift.io/v1alpha1
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: payu-worker-profile
+          instanceType: m5.xlarge
+          kind: AWSMachineProviderConfig
+          placement:
+            availabilityZone: us-east-1a
+            region: us-east-1
+          securityGroups:
+            - filters:
+                - name: tag:Name
+                  values:
+                    - payu-worker-sg
+          subnet:
+            filters:
+              - name: tag:Name
+                values:
+                  - payu-worker-subnet-us-east-1a
+          tags:
+            - name: kubernetes.io/cluster/payu-cluster
+              value: owned
+            - name: "k8s.io/cluster-autoscaler/enabled"
+              value: "true"
+            - name: "k8s.io/cluster-autoscaler/node-template/labels/"
+              value: "node-role.kubernetes.io/worker="
+            - name: "k8s.io/cluster-autoscaler/node-template/labels/"
+              value: "node.kubernetes.io/worker="
+          userDataSecret:
+            name: worker-user-data
+---
+# Node template for autoscaling
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-autoscaler-policy
+  namespace: openshift-machine-api
+  labels:
+    app: payu
+    type: autoscaling-config
+data:
+  policy.json: |
+    {
+      "NodeGroupAutoScalingProvisioningAllowed": true,
+      "SkipNodesWithLocalStorage": false,
+      "SkipNodesWithSystemPods": true,
+      "MaxNodeProvisionTime": "15m",
+      "OkTotalUnreadyPercentage": 20,
+      "MaxPodGracePeriodSeconds": 60,
+      "PodPriorityThreshold": -10,
+      "IgnoreDaemonsetsUtilization": false,
+      "MaxEmptyBulkDeleteFlag": 10,
+      "MaxTotalUnreadyPercentage": 45,
+      "MaxGracefulTerminationSeconds": 600,
+      "MinNodes": 3,
+      "MaxNodes": 20,
+      "ScaleDownUnneededTime": "30m",
+      "ScaleDownUtilizationThreshold": "0.5",
+      "ScaleDownGpuUtilizationThreshold": "0.5",
+      "ScaleDownUnreadyTime": "20m",
+      "ScaleDownDelayAfterAdd": "10m",
+      "ScaleDownDelayAfterDelete": "10m",
+      "ScaleDownDelayAfterFailure": "3m",
+      "ClusterAutoscalerOptIn": "true"
+    }

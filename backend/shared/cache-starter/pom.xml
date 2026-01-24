@@ -78,6 +78,13 @@
             <artifactId>micrometer-core</artifactId>
         </dependency>
 
+        <!-- Spring Kafka for cache invalidation -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>

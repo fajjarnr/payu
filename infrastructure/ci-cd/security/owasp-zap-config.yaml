@@ -1,0 +1,97 @@
+# OWASP ZAP Configuration for DAST (Dynamic Application Security Testing)
+# Used in CI/CD pipeline for automated security scanning of staging environment
+
+zap:
+  # ZAP Proxy Configuration
+  proxy:
+    port: 8080
+    address: "0.0.0.0"
+
+  # Spider configuration for crawling
+  spider:
+    depth: 5
+    max_duration: 60  # minutes
+    max_pages: 500
+
+  # Active Scan configuration
+  active_scan:
+    # Strength: LOW, MEDIUM, HIGH, INSANE
+    strength: "MEDIUM"
+    max_duration: 120  # minutes
+    # Policy for active scan
+    policy:
+      - "Default Policy"
+
+  # Authentication (if required)
+  authentication:
+    enabled: true
+    type: "form-based"
+    login_url: "${LOGIN_URL}"
+    username: "${TEST_USERNAME}"
+    password: "${TEST_PASSWORD}"
+    logout_url: "${LOGOUT_URL}"
+
+  # Contexts to scan
+  contexts:
+    - name: "PayU API Context"
+      urls:
+        include:
+          - "^https://staging-api\\.payu\\.id.*"
+        exclude:
+          - ".*\\.css"
+          - ".*\\.js"
+          - ".*\\.png"
+          - ".*\\.jpg"
+          - ".*\\.jpeg"
+          - ".*\\.gif"
+          - ".*\\.svg"
+
+  # Alert thresholds
+  alert_thresholds:
+    high:
+      - "SQL Injection"
+      - "Cross-Site Scripting (Reflected)"
+      - "Cross-Site Scripting (Stored)"
+      - "Remote Code Execution"
+      - "Path Traversal"
+      - "Authentication Bypass"
+    medium:
+      - "Cookie Without Secure Flag"
+      - "Cookie Without SameSite Attribute"
+      - "Missing Anti-CSRF Token"
+      - "Information Disclosure"
+
+  # Reporting
+  report:
+    format: ["HTML", "XML", "JSON"]
+    output_dir: "target/zap-reports"
+
+---
+# Docker Compose configuration for running ZAP in CI/CD
+version: '3.8'
+
+services:
+  owasp-zap:
+    image: zaproxy/zap-stable:latest
+    container_name: payu-zap-scanner
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    command: >
+      zap.sh
+      -daemon
+      -host 0.0.0.0
+      -port 8080
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+      -config api.disablekey=true
+    networks:
+      - security-testing
+    volumes:
+      - ./zap-reports:/zap/wrk
+    environment:
+      - ZAP_PORT=8080
+
+networks:
+  security-testing:
+    driver: bridge

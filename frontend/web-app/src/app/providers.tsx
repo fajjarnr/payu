@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
+import { ExperimentProvider } from '@/contexts/ExperimentContext';
 
 const createQueryClient = () => new QueryClient({
  defaultOptions: {
@@ -38,7 +39,9 @@ export default function Providers({ children }: { children: ReactNode }) {
 
  return (
   <QueryClientProvider client={queryClient}>
-   {children}
+   <ExperimentProvider>
+    {children}
+   </ExperimentProvider>
   </QueryClientProvider>
  );
 }

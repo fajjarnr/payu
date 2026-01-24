@@ -238,3 +238,174 @@ gateway:
     default-tenant-id: "default"
     strict-mode: false
     header-name: "X-Tenant-Id"
+
+  # API Versioning
+  versioning:
+    enabled: true
+    default-version: "v1"
+    supported-versions:
+      - "v1"
+      - "v2"
+    header-name: "X-API-Version"
+    deprecated-versions: []
+
+  # Request Validation
+  validation:
+    enabled: true
+    schema-validation: true
+    max-request-size: 10485760  # 10MB
+    strict-mode: false
+
+  # Response Compression
+  compression:
+    enabled: true
+    min-size: 1024  # Only compress responses larger than 1KB
+    algorithms:
+      - "gzip"
+      - "br"  # Brotli (if available)
+    level: 6  # Compression level (1-9)
+    mime-types:
+      - "application/json"
+      - "application/xml"
+      - "text/html"
+      - "text/plain"
+      - "text/css"
+      - "text/javascript"
+      - "application/javascript"
+
+  # API Analytics
+  analytics:
+    enabled: true
+    retention-days: 90
+    batch-size: 100
+    flush-interval: 60s  # Flush metrics every minute
+    track:
+      - "request-count"
+      - "response-time"
+      - "error-rate"
+      - "status-codes"
+      - "user-agents"
+      - "endpoints"
+
+  # Enhanced Rate Limiting with bucket4j
+  rate-limit-v2:
+    enabled: true
+    algorithm: "token-bucket"  # token-bucket, leaky-bucket, fixed-window
+    default:
+      capacity: 100
+      refill-tokens: 60
+      refill-duration: "60s"
+    per-user:
+      enabled: true
+      capacity: 1000
+      refill-tokens: 100
+      refill-duration: "60s"
+    per-ip:
+      enabled: true
+      capacity: 200
+      refill-tokens: 20
+      refill-duration: "60s"
+    endpoints:
+      auth:
+        capacity: 10
+        refill-tokens: 5
+        refill-duration: "60s"
+      otp:
+        capacity: 5
+        refill-tokens: 3
+        refill-duration: "60s"
+      transfer:
+        capacity: 20
+        refill-tokens: 10
+        refill-duration: "60s"
+
+  # API Key Management
+  api-keys:
+    enabled: true
+    rotation:
+      enabled: true
+      auto-rotate-days: 90
+      warning-days: 7
+      grace-period-days: 30
+    header-name: "X-API-Key"
+    bypass-paths:
+      - "/health"
+      - "/q/"
+      - "/api/v1/auth/login"
+
+  # Request Signing (HMAC-SHA256)
+  request-signing:
+    enabled: true
+    algorithm: "HmacSHA256"
+    header-name: "X-Signature"
+    timestamp-header: "X-Timestamp"
+    tolerance-seconds: 300  # 5 minutes
+    required-paths:
+      - "/v1/partner/*"
+      - "/api/v1/partners/*"
+    partner-keys:
+      # Partner ID: Secret Key (base64 encoded)
+      # In production, these should be stored securely (e.g., Vault)
+      partner-1: "c2VjcmV0LWtleS0x"
+
+  # IP Whitelisting
+  ip-whitelist:
+    enabled: true
+    mode: "allow"  # allow or deny
+    paths:
+      - pattern: "/v1/partner/*"
+        ips:
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+          - "192.168.0.0/16"
+      - pattern: "/api/v1/backoffice/*"
+        ips:
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+    bypass-headers:
+      - "X-Bypass-IP-Check"
+
+  # Retry Policies
+  retry:
+    enabled: true
+    default:
+      max-retries: 3
+      initial-interval: "1s"
+      max-interval: "10s"
+      multiplier: 2.0
+      jitter: "0.2"
+    per-service:
+      account-service:
+        max-retries: 3
+        initial-interval: "500ms"
+      transaction-service:
+        max-retries: 5
+        initial-interval: "1s"
+      notification-service:
+        max-retries: 2  # Fewer retries for notifications
+        initial-interval: "2s"
+
+  # Timeout Policies
+  timeout:
+    enabled: true
+    default: "30s"
+    per-service:
+      account-service: "30s"
+      auth-service: "10s"
+      transaction-service: "30s"
+      wallet-service: "15s"
+      billing-service: "30s"
+      notification-service: "10s"
+      kyc-service: "60s"
+      analytics-service: "30s"
+
+  # Idempotency
+  idempotency:
+    enabled: true
+    header-name: "X-Idempotency-Key"
+    ttl: "24h"  # Keep idempotency records for 24 hours
+    applicable-methods:
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"

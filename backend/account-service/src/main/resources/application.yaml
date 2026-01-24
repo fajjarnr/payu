@@ -22,17 +22,51 @@ spring:
         application-name: account-service
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5435/account_db}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 10
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      connection-timeout: 30000
-      connection-test-query: SELECT 1
+    # Primary datasource for write operations
+    primary:
+      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5435/account_db}
+      username: ${DB_USERNAME:postgres}
+      password: ${DB_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        # Pool configuration - Formula: cores * 2 + effective_spindle_count
+        maximum-pool-size: 20
+        minimum-idle: 10
+        # Connection timeout
+        connection-timeout: 30000
+        # Idle timeout (10 minutes)
+        idle-timeout: 600000
+        # Max lifetime (30 minutes)
+        max-lifetime: 1800000
+        # Connection validation
+        connection-test-query: SELECT 1
+        validation-timeout: 5000
+        # Performance tuning
+        auto-commit: false
+        # Leak detection (60 seconds)
+        leak-detection-threshold: 60000
+        pool-name: primary-pool
+
+    # Read replica datasource for reporting/analytics queries
+    read-replica:
+      enabled: ${READ_REPLICA_ENABLED:false}
+      jdbc-url: ${READ_REPLICA_URL:jdbc:postgresql://localhost:5436/account_db_replica}
+      username: ${READ_REPLICA_USERNAME:postgres}
+      password: ${READ_REPLICA_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        # Larger pool for reads (typically 2x primary)
+        maximum-pool-size: 40
+        minimum-idle: 20
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+        connection-test-query: SELECT 1
+        validation-timeout: 5000
+        auto-commit: true
+        leak-detection-threshold: 60000
+        pool-name: read-replica-pool
+        read-only: true
 
   jpa:
     open-in-view: false
@@ -46,6 +80,16 @@ spring:
           batch_size: 20
           order_inserts: true
           order_updates: true
+        # Query optimization
+        generate_statistics: false
+        use_sql_comments: true
+        # Connection pool optimization
+        connection:
+          provider_disables_autocommit: true
+        # Second-level cache (optional)
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
 
   flyway:
     enabled: true
@@ -82,6 +126,22 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+      db:
+        enabled: true
+      redis:
+        enabled: true
+      kafka:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    # Deep health checks with timeouts
+    readinessstate:
+      enabled: true
   tracing:
     sampling:
       probability: 0.1
@@ -130,12 +190,107 @@ payu:
     url: ${GATEWAY_URL:http://localhost:8080}
   kyc:
     auto-approve-score: 80
+
+  # Resilience Configuration
+  resilience:
+    enabled: true
+    circuit-breaker:
+      failure-rate-threshold: 50
+      wait-duration-in-open-state: 30s
+      permitted-number-of-calls-in-half-open-state: 5
+      sliding-window-size: 100
+      minimum-number-of-calls: 10
+      sliding-window-type: COUNT_BASED
+      automatic-transition-from-open-to-half-open-enabled: true
+    retry:
+      max-attempts: 3
+      wait-duration: 500ms
+      enable-exponential-backoff: true
+      exponential-backoff-multiplier: 2.0
+      randomize-wait: true
+    bulkhead:
+      max-concurrent-calls: 25
+      max-wait-duration: 1s
+    time-limiter:
+      timeout-duration: 5s
+      cancel-running-future: true
+    services:
+      gateway-service:
+        circuit-breaker:
+          failure-rate-threshold: 60
+          wait-duration-in-open-state: 20s
+        retry:
+          max-attempts: 3
+        bulkhead:
+          max-concurrent-calls: 20
+
+  # Security Configuration
+  security:
+    enabled: true
+    encryption-enabled: true
+    masking-enabled: true
+    audit-enabled: true
+    encryption:
+      algorithm: PBEWITHHMACSHA512ANDAES_256
+      password: ${ENCRYPTION_KEY:default-encryption-key-change-in-production}
+      fields:
+        - .*password.*
+        - .*ssn.*
+        - .*creditCard.*
+        - .*accountNumber.*
+        - .*idCard.*
+        - .*nik.*
+        - .*secret.*
+    masking:
+      pattern: (?<=.{4}).
+      mask-char: '*'
+      fields:
+        - password
+        - ssn
+        - creditCard
+        - accountNumber
+        - idCard
+        - nik
+        - email
+        - phoneNumber
+        - token
+        - secret
+    audit:
+      enabled: true
+      retention-days: 365
+      operations:
+        - CREATE
+        - UPDATE
+        - DELETE
+        - TRANSFER
+        - LOGIN
+        - LOGOUT
+        - KYC_APPROVE
+        - KYC_REJECT
+
   cache:
     enabled: true
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      pool-size: 20
+      timeout: 5s
+      command-timeout: 3s
     default-ttl: 5m
+    cache-warming:
+      enabled: true
+      startup-delay: 10s
+      async: true
+      thread-pool-size: 4
+    invalidation:
+      enabled: true
+      topic: cache-invalidation
+      consumer-group: account-cache-invalidation-group
+    local-cache:
+      enabled: true
+      max-size: 1000
+      ttl: 1m
+      record-stats: true
     caches:
       accounts:
         ttl: 10m
@@ -143,7 +298,8 @@ payu:
       profiles:
         ttl: 5m
         stale-while-revalidate: false
-    local-cache:
+    metrics:
       enabled: true
-      max-size: 1000
-      ttl: 1m
+      prefix: cache
+      percentiles: true
+      histogram: true

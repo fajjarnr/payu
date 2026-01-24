@@ -3,6 +3,7 @@
 import React from 'react';
 import { ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
 import clsx from 'clsx';
+import { VIPBadge } from '@/components/personalization';
 
 interface BalanceCardProps {
   balance: number;
@@ -18,7 +19,10 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
         <div className="bg-card p-6 rounded-xl shadow-card border border-border">
           <div className="flex justify-between items-start mb-4">
             <p className="text-xs font-semibold text-muted-foreground tracking-wider">Saldo Utama</p>
-            <div className="h-2 w-2 bg-primary rounded-full shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
+            <div className="flex items-center gap-2">
+              <VIPBadge size="sm" variant="badge" />
+              <div className="h-2 w-2 bg-primary rounded-full shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
+            </div>
           </div>
 
           <div className="space-y-1 mb-4">

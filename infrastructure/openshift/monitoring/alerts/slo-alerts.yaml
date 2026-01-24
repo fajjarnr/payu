@@ -1,0 +1,192 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slo-alert-rules
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: slo-alerts
+data:
+  slo-alerts.yaml: |
+    groups:
+      - name: payu_slo_alerts
+        interval: 30s
+        rules:
+          # Availability SLO: 99.9% (43.2 minutes downtime per month)
+          - alert: SLOAvailabilityBreached
+            expr: |
+              (
+                sum(rate(up{job=~"payu-.*"}[30d]))
+                /
+                count(up{job=~"payu-.*"})
+              ) < 0.999
+            for: 5m
+            labels:
+              severity: critical
+              slo_type: availability
+              team: platform
+            annotations:
+              summary: "Availability SLO breached (99.9%)"
+              description: "Service availability has dropped below 99.9% over the last 30 days. Current value: {{ $value | humanizePercentage }}"
+              runbook: "https://docs.payu.internal/runbooks/slo-availability"
+
+          # Error Budget Remaining
+          - alert: ErrorBudgetExhausted
+            expr: |
+              (
+                (1 - avg(rate(up{job=~"payu-.*"}[30d]))) / 0.001
+              ) * 100 < 10
+            for: 5m
+            labels:
+              severity: critical
+              slo_type: error_budget
+              team: platform
+            annotations:
+              summary: "Error budget nearly exhausted"
+              description: "Less than 10% error budget remaining. Immediate action required!"
+              runbook: "https://docs.payu.internal/runbooks/error-budget"
+
+          # Latency SLO: p95 < 1s
+          - alert: SLOLatencyBreached
+            expr: |
+              (
+                histogram_quantile(0.95,
+                  sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*",status!~"5.."}[7d])) by (job, le)
+                )
+              ) > 1
+            for: 10m
+            labels:
+              severity: warning
+              slo_type: latency
+              team: platform
+            annotations:
+              summary: "Latency SLO breached (p95 < 1s)"
+              description: "95th percentile latency has exceeded 1 second over the last 7 days. Current: {{ $value }}s"
+              runbook: "https://docs.payu.internal/runbooks/slo-latency"
+
+          # Freshness SLO for critical data
+          - alert: SLOFreshnessBreached
+            expr: |
+              time() - payu_last_successful_update_seconds{critical="true"} > 300
+            for: 5m
+            labels:
+              severity: warning
+              slo_type: freshness
+              team: backend
+            annotations:
+              summary: "Data freshness SLO breached"
+              description: "Critical data has not been updated for more than 5 minutes. Last update: {{ $value | humanizeDuration }} ago"
+              runbook: "https://docs.payu.internal/runbooks/data-freshness"
+
+          # Correctness SLO: Transaction reconciliation
+          - alert: SLOCorrectnessBreached
+            expr: |
+              (
+                sum(rate(payu_transactions_reconciled_total{status="mismatch"}[1h]))
+                /
+                sum(rate(payu_transactions_total[1h]))
+              ) > 0.001
+            for: 5m
+            labels:
+              severity: critical
+              slo_type: correctness
+              team: backend
+            annotations:
+              summary: "Correctness SLO breached"
+              description: "Transaction mismatch rate exceeds 0.1%. Current: {{ $value | humanizePercentage }}"
+              runbook: "https://docs.payu.internal/runbooks/transaction-reconciliation"
+
+          # API Success Rate SLO: 99.9%
+          - alert: SLOAPISuccessRateBreached
+            expr: |
+              (
+                sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status!~"5.."}[24h]))
+                /
+                sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[24h]))
+              ) < 0.999
+            for: 10m
+            labels:
+              severity: critical
+              slo_type: api_success_rate
+              team: platform
+            annotations:
+              summary: "API Success Rate SLO breached (99.9%)"
+              description: "API success rate has dropped below 99.9% over the last 24 hours. Current: {{ $value | humanizePercentage }}"
+              runbook: "https://docs.payu.internal/runbooks/api-success-rate"
+
+          # SLO Tracking - Monthly Burn Rate
+          - alert: SLOBurnRateHigh
+            expr: |
+              (
+                (1 - avg(rate(up{job=~"payu-.*"}[1h])))
+                /
+                (1 - 0.999)
+              ) > 720  # 30 days * 24 hours
+            for: 1h
+            labels:
+              severity: critical
+              slo_type: burn_rate
+              team: platform
+            annotations:
+              summary: "SLO burn rate is critical"
+              description: "At current burn rate, error budget will be exhausted in less than 1 hour!"
+              runbook: "https://docs.payu.internal/runbooks/slo-burn-rate"
+
+      - name: payu_slo_performance
+        interval: 1m
+        rules:
+          # Response Time Budget Tracking
+          - alert: ResponseTimeBudgetWarning
+            expr: |
+              (
+                histogram_quantile(0.95,
+                  sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*"}[1h])) by (job, le)
+                )
+              ) > 0.8
+            for: 15m
+            labels:
+              severity: warning
+              slo_type: latency_budget
+              team: platform
+            annotations:
+              summary: "Response time approaching SLO limit"
+              description: "95th percentile response time is approaching the 1s SLO limit. Current: {{ $value }}s"
+              runbook: "https://docs.payu.internal/runbooks/response-time-budget"
+
+          # Throughput SLO Tracking
+          - alert: ThroughputSLOWarning
+            expr: |
+              sum(rate(payu_transactions_total[5m])) < 10
+            for: 10m
+            labels:
+              severity: warning
+              slo_type: throughput
+              team: backend
+            annotations:
+              summary: "Transaction throughput below SLO target"
+              description: "Transaction throughput has dropped below minimum target of 10 TPS. Current: {{ $value }} TPS"
+              runbook: "https://docs.payu.internal/runbooks/throughput"
+
+      - name: payu_slo_composite
+        interval: 5m
+        rules:
+          # Composite SLO Score
+          - record: payu_slo_composite_score
+            expr: |
+              (
+                (avg(rate(up{job=~"payu-.*"}[30d])) * 0.4) +
+                (avg(http_server_requests_seconds_count{job=~"payu-.*",status!~"5.."} / http_server_requests_seconds_count{job=~"payu-.*"}) * 0.3) +
+                (1 - (histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*"}[1h])) by (job, le)) / 1)) * 0.3
+              ) * 100
+
+          - alert: CompositeSLOLow
+            expr: payu_slo_composite_score < 90
+            for: 15m
+            labels:
+              severity: warning
+              slo_type: composite
+              team: platform
+            annotations:
+              summary: "Composite SLO score is below target"
+              description: "Overall SLO score is {{ $value }}%, below the 90% target"
+              runbook: "https://docs.payu.internal/runbooks/composite-slo"

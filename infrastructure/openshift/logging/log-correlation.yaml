@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: log-correlation-config
+  namespace: openshift-logging
+  labels:
+    app: payu
+    type: log-correlation
+data:
+  log4j2.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Configuration status="WARN" monitorInterval="30">
+      <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+          <PatternLayout
+            pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId=%X{traceId}, spanId=%X{spanId}, userId=%X{userId}] %logger{36} - %msg%n" />
+        </Console>
+        <Kafka name="Kafka" topic="payu-logs">
+          <PatternLayout
+            pattern='{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","thread":"%t","level":"%p","traceId":"%X{traceId}","spanId":"%X{spanId}","userId":"%X{userId}","service":"${spring.application.name}","logger":"%logger","message":"%msg","exception":"%ex"}' />
+          <Property name="bootstrap.servers">kafka.payu.svc:9092</Property>
+        </Kafka>
+      </Appenders>
+      <Loggers>
+        <Root level="info">
+          <AppenderRef ref="Console" />
+          <AppenderRef ref="Kafka" />
+        </Root>
+        <Logger name="id.payu" level="debug" additivity="false">
+          <AppenderRef ref="Console" />
+          <AppenderRef ref="Kafka" />
+        </Logger>
+      </Loggers>
+    </Configuration>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-config
+  namespace: openshift-logging
+  labels:
+    app: payu
+    type: log-aggregation
+data:
+  vector.toml: |
+    # Vector configuration for PayU log aggregation with trace correlation
+
+    [sources]
+      # OpenShift log source
+      [sources.ocp_logs]
+        type = "kubernetes_logs"
+        max_read_bytes = 1048576 # 1MB
+
+      # Application logs from Kafka
+      [sources.kafka_logs]
+        type = "kafka"
+        bootstrap_servers = "kafka.payu.svc:9092"
+        group_id = "vector-log-aggregator"
+        topics = ["payu-logs"]
+        decoding.codec = "json"
+
+    [transforms]
+      # Add trace context to all logs
+      [transforms.add_trace_context]
+        type = "remap"
+        inputs = ["ocp_logs", "kafka_logs"]
+        source = '''
+          .trace_id = exists(.trace_id) ? .trace_id : "unknown"
+          .span_id = exists(.span_id) ? .span_id : "unknown"
+          .user_id = exists(.user_id) ? .user_id : "anonymous"
+          .service = exists(.service) ? .service : .kubernetes.pod_name
+          .namespace = .kubernetes.namespace_name
+          .pod = .kubernetes.pod_name
+          .node = .kubernetes.node_name
+          .timestamp = exists(.timestamp) ? .timestamp : now()
+        '''
+
+      # Parse JSON logs
+      [transforms.parse_json]
+        type = "remap"
+        inputs = ["add_trace_context"]
+        source = '''
+          if exists(.message) {
+            structured = parse_json(.message)
+            . = merge(., structured)
+          }
+        '''
+
+      # Add sampling for high-volume services
+      [transforms.sample_logs]
+        type = "sample"
+        inputs = ["parse_json"]
+        rate = 100 # Sample 1% of logs for high-volume services
+        exclude =
+          '''
+          .level == "ERROR"
+          || .level == "WARN"
+          || .namespace == "payu-prod"
+          '''
+
+      # Add enrichment
+      [transforms.enrich_logs]
+        type = "remap"
+        inputs = ["sample_logs"]
+        source = '''
+          .environment = get_env_var!("ENVIRONMENT", "production")
+          .cluster_id = get_env_var!("CLUSTER_ID", "primary")
+          .region = get_env_var!("REGION", "id-jkt")
+        '''
+
+    [sinks]
+      # Send to Loki
+      [sinks.loki]
+        type = "loki"
+        inputs = ["enrich_logs"]
+        endpoint = "http://loki.openshift-logging.svc:3100"
+        encoding.codec = "json"
+        batch.max_events = 1000
+        batch.timeout_secs = 5
+
+        [sinks.loki.labels]
+          service = "{{ service }}"
+          namespace = "{{ namespace }}"
+          environment = "{{ environment }}"
+          level = "{{ level }}"
+
+        [sinks.loki.label_keys]
+          trace_id = "trace_id"
+          span_id = "span_id"
+          user_id = "user_id"
+
+      # Export critical logs to S3 for compliance
+      [sinks.s3_compliance]
+        type = "aws_s3"
+        inputs = ["enrich_logs"]
+        region = "ap-southeast-1"
+        bucket = "payu-logs-compliance"
+
+        [sinks.s3_compliance.key_prefix]
+          date = "%Y-%m-%d"
+          service = "{{ service }}"
+          type = "critical"
+
+        [sinks.s3_compression]
+          type = "gzip"
+
+        encoding.codec = "json"
+
+        # Only send critical logs
+        condition = '''
+          .level == "ERROR"
+          || .message =~ /(?i)failed|timeout|exception|error|critical/
+        '''
+
+      # Alert on critical errors
+      [sinks.alerts]
+        type = "http"
+        inputs = ["enrich_logs"]
+        uri = "http://alertmanager.openshift-monitoring.svc:9093/api/v1/alerts"
+        method = "post"
+        encoding.codec = "json"
+
+        # Only alert on critical errors
+        condition = '''
+          .level == "ERROR"
+          && (.namespace == "payu-prod" || .namespace == "payu-staging")
+        '''
+
+        [sinks.alerts.batch]
+          max_events = 10
+          timeout_secs = 10

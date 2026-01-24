@@ -116,6 +116,12 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
 
+        <!-- Security: Vault for secrets -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-vault</artifactId>
+        </dependency>
+
         <!-- Validation -->
         <dependency>
             <groupId>io.quarkus</groupId>

@@ -4,7 +4,9 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,6 +25,12 @@ import java.util.Map;
  *     stale-while-revalidate:
  *       enabled: true
  *       soft-ttl-multiplier: 0.5
+ *     cache-warming:
+ *       enabled: true
+ *       startup-delay: 10s
+ *     invalidation:
+ *       enabled: true
+ *       kafka-topic: cache-invalidation
  *     caches:
  *       account:
  *         ttl: 10m
@@ -65,6 +73,21 @@ public class CacheProperties {
      * Local fallback cache configuration.
      */
     private LocalCache localCache = new LocalCache();
+
+    /**
+     * Cache warming configuration.
+     */
+    private CacheWarming cacheWarming = new CacheWarming();
+
+    /**
+     * Cache invalidation via Kafka configuration.
+     */
+    private Invalidation invalidation = new Invalidation();
+
+    /**
+     * Metrics configuration.
+     */
+    private Metrics metrics = new Metrics();
 
     @Data
     public static class Redis {
@@ -164,6 +187,11 @@ public class CacheProperties {
          * Enable local cache fallback.
          */
         private Boolean localFallback;
+
+        /**
+         * Cache keys to warm on startup.
+         */
+        private List<String> warmKeys = new ArrayList<>();
     }
 
     @Data
@@ -182,5 +210,79 @@ public class CacheProperties {
          * TTL for local cache entries.
          */
         private Duration ttl = Duration.ofMinutes(1);
+
+        /**
+         * Enable cache stats recording.
+         */
+        private boolean recordStats = true;
+    }
+
+    @Data
+    public static class CacheWarming {
+        /**
+         * Enable cache warming on startup.
+         */
+        private boolean enabled = false;
+
+        /**
+         * Delay before starting cache warming.
+         */
+        private Duration startupDelay = Duration.ofSeconds(10);
+
+        /**
+         * Enable async cache warming.
+         */
+        private boolean async = true;
+
+        /**
+         * Thread pool size for cache warming.
+         */
+        private int threadPoolSize = 4;
+    }
+
+    @Data
+    public static class Invalidation {
+        /**
+         * Enable cache invalidation via Kafka.
+         */
+        private boolean enabled = false;
+
+        /**
+         * Kafka topic for cache invalidation events.
+         */
+        private String topic = "cache-invalidation";
+
+        /**
+         * Consumer group for cache invalidation.
+         */
+        private String consumerGroup = "cache-invalidation-group";
+
+        /**
+         * Enable auto-commit for invalidation events.
+         */
+        private boolean autoCommit = true;
+    }
+
+    @Data
+    public static class Metrics {
+        /**
+         * Enable cache metrics.
+         */
+        private boolean enabled = true;
+
+        /**
+         * Metrics prefix.
+         */
+        private String prefix = "cache";
+
+        /**
+         * Enable percentile metrics.
+         */
+        private boolean percentiles = true;
+
+        /**
+         * Enable histogram metrics.
+         */
+        private boolean histogram = true;
     }
 }

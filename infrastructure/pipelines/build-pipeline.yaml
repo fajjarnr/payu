@@ -1,0 +1,249 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: payu-build-pipeline
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: build
+spec:
+  description: |
+    Build pipeline for PayU services with Maven and Quarkus builds.
+    Supports both Spring Boot (Java) services and Python ML services.
+  params:
+    - name: service-name
+      type: string
+      description: Name of the service to build (e.g., account-service, billing-service)
+    - name: git-url
+      type: string
+      description: Git repository URL
+    - name: git-revision
+      type: string
+      description: Git revision to build
+      default: main
+    - name: service-type
+      type: string
+      description: Type of service (spring-boot, quarkus, python)
+      default: spring-boot
+    - name: build-image-tag
+      type: string
+      description: Tag for the container image
+      default: latest
+    - name: registry-url
+      type: string
+      description: Container registry URL
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: registry-namespace
+      type: string
+      description: Registry namespace/project
+      default: payu
+    - name: maven-mirror-url
+      type: string
+      description: Maven mirror URL for caching
+      default: ""
+  workspaces:
+    - name: source
+      description: Workspace for source code
+    - name: maven-settings
+      description: Maven settings configuration
+      optional: true
+    - name: dockerconfig
+      description: Docker registry credentials
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: deleteExisting
+          value: "true"
+
+    - name: lint-code
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: golang-lint
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: package
+          value: ./backend/$(params.service-name)
+
+    - name: build-spring-boot
+      runAfter:
+        - lint-code
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot"]
+      workspaces:
+        - name: source
+          workspace: source
+        - name: maven-settings
+          workspace: maven-settings
+          optional: true
+      params:
+        - name: GOALS
+          value:
+            - clean
+            - package
+            - -DskipTests
+            - -T1C
+            - -Dmaven.test.skip=true
+        - name: MAVEN_MIRROR_URL
+          value: $(params.maven-mirror-url)
+        - name: CONTEXT_DIR
+          value: backend/$(params.service-name)
+
+    - name: build-quarkus
+      runAfter:
+        - lint-code
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+        - name: maven-settings
+          workspace: maven-settings
+          optional: true
+      params:
+        - name: GOALS
+          value:
+            - package
+            - -DskipTests
+            - -Dquarkus.container-image.build=true
+            - -Dquarkus.container-image.push=true
+            - -Dquarkus.container-image.image=$(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: MAVEN_MIRROR_URL
+          value: $(params.maven-mirror-url)
+        - name: CONTEXT_DIR
+          value: backend/$(params.service-name)
+
+    - name: build-python
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["python"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: CONTEXT
+          value: backend/$(params.service-name)
+        - name: DOCKERFILE
+          value: Dockerfile
+        - name: TLSVERIFY
+          value: "false"
+
+    - name: build-image-spring-boot
+      runAfter:
+        - build-spring-boot
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot"]
+      workspaces:
+        - name: source
+          workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: CONTEXT
+          value: backend/$(params.service-name)
+        - name: DOCKERFILE
+          value: src/main/docker/Dockerfile.jvm
+        - name: TLSVERIFY
+          value: "false"
+
+    - name: scan-image-security
+      runAfter:
+        - build-image-spring-boot
+        - build-quarkus
+        - build-python
+      taskRef:
+        name: trivy
+        kind: ClusterTask
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: IMAGE_URL
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: FORMAT
+          value: json
+        - name: SEVERITY
+          value: "CRITICAL,HIGH"
+        - name: EXIT_CODE
+          value: "1"
+
+    - name: create-sbom
+      runAfter:
+        - build-image-spring-boot
+        - build-quarkus
+        - build-python
+      taskRef:
+        name: syft
+        kind: ClusterTask
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: IMAGE_URL
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: OUTPUT
+          value: spdx-json
+
+    - name: tag-image
+      runAfter:
+        - scan-image-security
+        - create-sbom
+      taskRef:
+        name: openshift-client
+        kind: ClusterTask
+      params:
+        - name: SCRIPT
+          value: |
+            oc tag $(params.registry-namespace)/$(params.service-name):$(params.build-image-tag) \
+                   $(params.registry-namespace)/$(params.service-name):stable \
+                   --reference-only
+
+  finally:
+    - name: cleanup
+      taskRef:
+        name: cleanup
+      params:
+        - name: workspace
+          value: source

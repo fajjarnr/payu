@@ -1,9 +1,8 @@
 package id.payu.cache.config;
 
 import id.payu.cache.aspect.CacheWithTTLAspect;
-import id.payu.cache.service.CacheService;
-import id.payu.cache.service.DistributedCacheService;
-import id.payu.cache.service.LocalCacheService;
+import id.payu.cache.service.*;
+import id.payu.cache.properties.CacheProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -14,6 +13,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
@@ -27,7 +27,11 @@ import java.util.concurrent.Executor;
  *   <li>DistributedCacheService - Redis-based cache service</li>
  *   <li>LocalCacheService - Caffeine-based local cache fallback</li>
  *   <li>CacheWithTTLAspect - Aspect for @CacheWithTTL annotation</li>
+ *   <li>CacheWarmingService - Cache warming on startup</li>
+ *   <li>CacheInvalidationPublisher - Kafka-based cache invalidation publisher</li>
+ *   <li>CacheInvalidationConsumer - Kafka-based cache invalidation consumer</li>
  *   <li>Async refresh executor for stale-while-revalidate</li>
+ *   <li>Cache warming executor</li>
  * </ul>
  */
 @AutoConfiguration
@@ -77,5 +81,59 @@ public class CacheAutoConfiguration {
         executor.setThreadNamePrefix("cache-refresh-");
         executor.initialize();
         return executor;
+    }
+
+    @Bean(name = "cacheWarmExecutor")
+    @ConditionalOnMissingBean(name = "cacheWarmExecutor")
+    @ConditionalOnProperty(
+        prefix = "payu.cache.cache-warming",
+        name = "enabled",
+        havingValue = "true"
+    )
+    public Executor cacheWarmExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(properties.getCacheWarming().getThreadPoolSize());
+        executor.setMaxPoolSize(properties.getCacheWarming().getThreadPoolSize() * 2);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("cache-warm-");
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(
+        prefix = "payu.cache.cache-warming",
+        name = "enabled",
+        havingValue = "true"
+    )
+    public CacheWarmingService cacheWarmingService(
+            CacheService cacheService,
+            Executor cacheWarmExecutor) {
+        return new CacheWarmingService(cacheService, properties, cacheWarmExecutor);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(
+        prefix = "payu.cache.invalidation",
+        name = "enabled",
+        havingValue = "true"
+    )
+    public CacheInvalidationPublisher cacheInvalidationPublisher(
+            KafkaTemplate<String, Object> kafkaTemplate) {
+        return new CacheInvalidationPublisher(kafkaTemplate, properties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(
+        prefix = "payu.cache.invalidation",
+        name = "enabled",
+        havingValue = "true"
+    )
+    public CacheInvalidationConsumer cacheInvalidationConsumer(
+            CacheService cacheService) {
+        return new CacheInvalidationConsumer(cacheService, properties);
     }
 }

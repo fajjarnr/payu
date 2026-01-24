@@ -12,7 +12,9 @@
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:a11y": "vitest --run --reporter=verbose src/__tests__/components/dashboard",
+    "a11y:audit": "tsx scripts/a11y-audit.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -33,7 +35,12 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@axe-core/react": "^4.11.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@playwright/test": "^1.57.0",
+    "@radix-ui/react-visually-hidden": "^1.2.4",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -47,6 +54,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "jest": "^30.2.0",
+    "jest-axe": "^10.0.0",
     "jest-environment-jsdom": "^30.2.0",
     "jsdom": "^25.0.1",
     "tailwindcss": "^4",

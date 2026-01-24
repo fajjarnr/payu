@@ -1,5 +1,6 @@
 server:
   port: 8003
+  shutdown: graceful
 
 spring:
   application:
@@ -13,10 +14,46 @@ spring:
           jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/payu/protocol/openid-connect/certs}
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/payu_transactions
-    username: payu
-    password: payu123
-    driver-class-name: org.postgresql.Driver
+    # Primary datasource for write operations
+    primary:
+      jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/payu_transactions
+      username: ${DB_USERNAME:payu}
+      password: ${DB_PASSWORD:payu123}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        # Pool configuration
+        maximum-pool-size: 20
+        minimum-idle: 10
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+        connection-test-query: SELECT 1
+        validation-timeout: 5000
+        auto-commit: false
+        leak-detection-threshold: 60000
+        pool-name: primary-pool
+
+    # Read replica datasource for reporting/analytics queries
+    read-replica:
+      enabled: ${READ_REPLICA_ENABLED:false}
+      jdbc-url: jdbc:postgresql://${READ_REPLICA_HOST:localhost}:${READ_REPLICA_PORT:5433}/payu_transactions_replica
+      username: ${READ_REPLICA_USERNAME:payu}
+      password: ${READ_REPLICA_PASSWORD:payu123}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        # Larger pool for reads (typically 2x primary)
+        maximum-pool-size: 40
+        minimum-idle: 20
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+        connection-test-query: SELECT 1
+        validation-timeout: 5000
+        auto-commit: true
+        leak-detection-threshold: 60000
+        pool-name: read-replica-pool
+        read-only: true
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -24,6 +61,17 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+        # Query optimization
+        generate_statistics: false
+        use_sql_comments: true
+        # Connection pool optimization
+        connection:
+          provider_disables_autocommit: true
+
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -38,22 +86,52 @@ services:
     url: http://localhost:9001
 
 kafka:
-  bootstrap-servers: localhost:9092
+  bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
     value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    # Improved producer settings
+    retries: 3
+    acks: all
+    linger-ms: 10
+    batch-size: 16384
+    buffer-memory: 33554432
+    properties:
+      retry.backoff.ms: 1000
+      max.in.flight.requests.per.connection: 5
+      enable.idempotence: true
   consumer:
     group-id: transaction-service
     key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     properties:
       spring.json.trusted.packages: "*"
+      session.timeout.ms: 30000
+      heartbeat.interval.ms: 10000
+      max.poll.interval.ms: 300000
+      max.poll.records: 500
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+      db:
+        enabled: true
+      redis:
+        enabled: true
+      kafka:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
   tracing:
     sampling:
       probability: 0.1
@@ -70,18 +148,18 @@ management:
       prometheus:
         enabled: true
 
-  logging:
-    level:
-      id.payu.transaction: DEBUG
-      org.springframework.kafka: INFO
+logging:
+  level:
+    id.payu.transaction: DEBUG
+    org.springframework.kafka: INFO
 
-  springdoc:
-    api-docs:
-      path: /api-docs
-    swagger-ui:
-      path: /swagger-ui.html
-    show-actuator: true
-    packages-to-scan: id.payu.transaction
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  show-actuator: true
+  packages-to-scan: id.payu.transaction
 
 # Data Archival Configuration
 archival:
@@ -124,3 +202,41 @@ resilience4j:
         retry-exceptions:
           - org.springframework.web.client.HttpServerErrorException
           - java.net.ConnectException
+
+# PayU Configuration
+payu:
+  cache:
+    enabled: true
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      pool-size: 20
+      timeout: 5s
+      command-timeout: 3s
+    default-ttl: 5m
+    cache-warming:
+      enabled: true
+      startup-delay: 10s
+      async: true
+      thread-pool-size: 4
+    invalidation:
+      enabled: true
+      topic: cache-invalidation
+      consumer-group: transaction-cache-invalidation-group
+    local-cache:
+      enabled: true
+      max-size: 1000
+      ttl: 1m
+      record-stats: true
+    caches:
+      transactions:
+        ttl: 5m
+        stale-while-revalidate: true
+      rates:
+        ttl: 30m
+        stale-while-revalidate: false
+    metrics:
+      enabled: true
+      prefix: cache
+      percentiles: true
+      histogram: true

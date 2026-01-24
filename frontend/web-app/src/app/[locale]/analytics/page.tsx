@@ -10,7 +10,7 @@ import { PageTransition } from '@/components/ui/Motion';
 
 export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
-  const { analytics, isConnected } = useAnalyticsWebSocket(accountId);
+  const { analytics, isConnected } = useAnalyticsWebSocket(accountId || undefined);
 
   const analyticsData = analytics || {
     totalIncome: 42500000,

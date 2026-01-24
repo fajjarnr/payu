@@ -1,0 +1,339 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cost-allocation-config
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: cost-allocation
+data:
+  cost-allocation-rules.yaml: |
+    # Cost allocation rules for PayU services
+    # Based on resource usage and business units
+
+    namespace_cost_allocation:
+      payu-prod:
+        business_unit: "core_banking"
+        cost_center: "CC-1001"
+        environment: "production"
+        owner: "platform-team@payu.id"
+
+      payu-staging:
+        business_unit: "platform"
+        cost_center: "CC-2001"
+        environment: "staging"
+        owner: "platform-team@payu.id"
+
+      payu-dev:
+        business_unit: "platform"
+        cost_center: "CC-3001"
+        environment: "development"
+        owner: "platform-team@payu.id"
+
+      payu-ml:
+        business_unit: "data_science"
+        cost_center: "CC-4001"
+        environment: "production"
+        owner: "ml-team@payu.id"
+
+    service_cost_allocation:
+      account-service:
+        business_unit: "core_banking"
+        cost_center: "CC-1001"
+        criticality: "high"
+
+      transaction-service:
+        business_unit: "core_banking"
+        cost_center: "CC-1001"
+        criticality: "high"
+
+      wallet-service:
+        business_unit: "core_banking"
+        cost_center: "CC-1001"
+        criticality: "high"
+
+      auth-service:
+        business_unit: "platform"
+        cost_center: "CC-2001"
+        criticality: "critical"
+
+      gateway-service:
+        business_unit: "platform"
+        cost_center: "CC-2001"
+        criticality: "critical"
+
+      notification-service:
+        business_unit: "customer_service"
+        cost_center: "CC-5001"
+        criticality: "medium"
+
+      billing-service:
+        business_unit: "billing"
+        cost_center: "CC-6001"
+        criticality: "high"
+
+      compliance-service:
+        business_unit: "risk"
+        cost_center: "CC-7001"
+        criticality: "high"
+
+      kyc-service:
+        business_unit: "onboarding"
+        cost_center: "CC-8001"
+        criticality: "high"
+
+      analytics-service:
+        business_unit: "data_science"
+        cost_center: "CC-4001"
+        criticality: "low"
+
+      support-service:
+        business_unit: "customer_service"
+        cost_center: "CC-5001"
+        criticality: "medium"
+
+    shared_infrastructure_allocation:
+      # Allocate shared infrastructure costs based on usage
+      postgresql:
+        allocation_method: "usage_based"
+        metric: "storage_usage"
+        min_allocation: 0.1
+
+      redis:
+        allocation_method: "usage_based"
+        metric: "memory_usage"
+        min_allocation: 0.1
+
+      kafka:
+        allocation_method: "usage_based"
+        metric: "throughput"
+        min_allocation: 0.1
+
+      monitoring:
+        allocation_method: "equal_share"
+        exclude_namespaces: ["openshift-*", "kube-*"]
+
+      logging:
+        allocation_method: "log_volume"
+        metric: "log_entry_count"
+        min_allocation: 0.05
+
+    cost_report_schedule:
+      frequency: "monthly"
+      day_of_month: 1
+      recipients:
+        - "finance@payu.id"
+        - "platform-team@payu.id"
+        - "cto@payu.id"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cost-exporter-config
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: cost-export
+data:
+  config.yaml: |
+    # Cost exporter configuration for PayU
+    prometheus:
+      url: "http://prometheus-operated.openshift-monitoring.svc:9090"
+      query_timeout: "5m"
+
+    pricing:
+      region: "ap-southeast-1"
+      currency: "USD"
+
+      on_demand_pricing:
+        cpu:
+          m5_large: 0.096
+          m5_xlarge: 0.192
+          m5_2xlarge: 0.384
+          m5_4xlarge: 0.768
+          c5_large: 0.085
+          c5_xlarge: 0.17
+          c5_2xlarge: 0.34
+          c5_4xlarge: 0.68
+
+        memory:
+          per_gb: 0.00765
+
+        storage:
+          gp2: 0.10
+          gp3: 0.08
+          io1: 0.125
+
+        network:
+          inbound: 0
+          outbound: 0.09
+
+    reporting:
+      output_formats:
+        - csv
+        - json
+        - html
+
+      export_locations:
+        - type: s3
+          bucket: payu-cost-reports
+          prefix: "cost-reports/"
+
+        - type: email
+          recipients:
+            - "finance@payu.id"
+            - "platform-team@payu.id"
+
+    cost_categories:
+      - name: compute
+        description: "Compute resources (CPU, Memory)"
+        resources:
+          - cpu
+          - memory
+
+      - name: storage
+        description: "Storage resources"
+        resources:
+          - persistent-volume-claim
+          - ephemeral-storage
+
+      - name: network
+        description: "Network resources"
+        resources:
+          - network-ingress
+          - network-egress
+
+      - name: shared_services
+        description: "Shared platform services"
+        resources:
+          - monitoring
+          - logging
+          - tracing
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cost-report-generator
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: cost-reporting
+spec:
+  schedule: "0 0 1 * *" # Monthly on the 1st at midnight
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: cost-reporter-sa
+          containers:
+          - name: cost-reporter
+            image: prom/prometheus:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              #!/bin/bash
+              set -e
+
+              REPORT_DATE=$(date +%Y-%m)
+              REPORT_FILE="/tmp/cost-report-${REPORT_DATE}.json"
+
+              echo "Generating cost report for ${REPORT_DATE}"
+
+              # Query resource usage
+              cat > $REPORT_FILE <<EOF
+              {
+                "report_date": "$REPORT_DATE",
+                "report_generated_at": "$(date -Iseconds)",
+                "currency": "USD",
+                "namespaces": [
+              EOF
+
+              # Get list of PayU namespaces
+              NAMESPACES=$(oc get namespaces -l app=payu -o jsonpath='{.items[*].metadata.name}')
+
+              for namespace in $NAMESPACES; do
+                # Get CPU usage
+                CPU_USAGE=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
+                  -d "query=sum(rate(container_cpu_usage_seconds_total{namespace='$namespace'}[30d]))" | \
+                  jq -r '.data.result[0].value[1]')
+
+                # Get memory usage
+                MEM_USAGE=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
+                  -d "query=sum(avg_over_time(container_memory_working_set_bytes{namespace='$namespace'}[30d]))" | \
+                  jq -r '.data.result[0].value[1]')
+
+                # Calculate costs
+                CPU_COST=$(echo "$CPU_USAGE * 720 * 0.192" | bc -l)
+                MEM_COST=$(echo "($MEM_USAGE / 1073741824) * 720 * 0.00765" | bc -l)
+                TOTAL_COST=$(echo "$CPU_COST + $MEM_COST" | bc -l)
+
+                # Add to report
+                cat >> $REPORT_FILE <<EOF
+                  {
+                    "namespace": "$namespace",
+                    "cpu_usage_core_hours": "$CPU_USAGE",
+                    "memory_usage_gb_hours": "$(echo "scale=2; $MEM_USAGE / 1073741824" | bc)",
+                    "cpu_cost": "$CPU_COST",
+                    "memory_cost": "$MEM_COST",
+                    "total_cost": "$TOTAL_COST"
+                  },
+              EOF
+              done
+
+              # Close JSON array
+              sed -i '$ s/,$//' $REPORT_FILE
+              echo "]" >> $REPORT_FILE
+              echo "}" >> $REPORT_FILE
+
+              # Upload to S3
+              aws s3 cp $REPORT_FILE \
+                s3://payu-cost-reports/monthly/cost-report-${REPORT_DATE}.json
+
+              # Send email notification
+              curl -X POST "$MAILGUN_API_URL" \
+                -u "api:$MAILGUN_API_KEY" \
+                -F from="cost-reports@payu.internal" \
+                -F to="finance@payu.id,platform-team@payu.id" \
+                -F subject="Monthly Cost Report - ${REPORT_DATE}" \
+                -F text="Cost report is available at https://s3.amazonaws.com/payu-cost-reports/monthly/cost-report-${REPORT_DATE}.json"
+
+              # Cleanup
+              rm -f $REPORT_FILE
+
+              echo "Cost report generation completed"
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: access_key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: secret_key
+            - name: MAILGUN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mailgun-credentials
+                  key: api_key
+            - name: MAILGUN_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mailgun-credentials
+                  key: api_url
+          restartPolicy: OnFailure
+          backoffLimit: 3
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cost-reporter-sa
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: cost-reporting

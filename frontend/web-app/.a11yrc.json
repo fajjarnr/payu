@@ -1,0 +1,166 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dequelabs/axe-core/master/doc/axe-schema.json",
+  "description": "Accessibility rules configuration for PayU Web App - WCAG 2.1 Level AA compliance",
+  "rules": {
+    "color-contrast": {
+      "enabled": true,
+      "description": "Ensures the contrast between foreground and background colors meets WCAG AA standards (4.5:1 for normal text, 3:1 for large text)",
+      "impact": "serious"
+    },
+    "image-alt": {
+      "enabled": true,
+      "description": "Ensures <img> elements have alternate text or are marked as decorative",
+      "impact": "serious"
+    },
+    "label": {
+      "enabled": true,
+      "description": "Ensures every form element has a label",
+      "impact": "serious"
+    },
+    "button-name": {
+      "enabled": true,
+      "description": "Ensures buttons have discernible text",
+      "impact": "serious"
+    },
+    "link-name": {
+      "enabled": true,
+      "description": "Ensures links have discernible text",
+      "impact": "serious"
+    },
+    "aria-labels": {
+      "enabled": true,
+      "description": "Ensures ARIA labels are correctly used",
+      "impact": "serious"
+    },
+    "aria-allowed-attr": {
+      "enabled": true,
+      "description": "Ensures ARIA attributes are allowed for an element's role",
+      "impact": "serious"
+    },
+    "aria-required-attr": {
+      "enabled": true,
+      "description": "Ensures elements with ARIA roles have all required attributes",
+      "impact": "serious"
+    },
+    "aria-required-children": {
+      "enabled": true,
+      "description": "Ensures elements with ARIA roles have required children",
+      "impact": "serious"
+    },
+    "aria-roles": {
+      "enabled": true,
+      "description": "Ensures elements with ARIA roles use valid, non-abstract ARIA roles",
+      "impact": "serious"
+    },
+    "aria-valid-attr-value": {
+      "enabled": true,
+      "description": "Ensures all ARIA attributes have valid values",
+      "impact": "serious"
+    },
+    "heading-order": {
+      "enabled": true,
+      "description": "Ensures the order of headings is semantically correct",
+      "impact": "moderate"
+    },
+    "html-has-lang": {
+      "enabled": true,
+      "description": "Ensures every HTML document has a lang attribute",
+      "impact": "serious"
+    },
+    "valid-lang": {
+      "enabled": true,
+      "description": "Ensures lang attributes have valid values",
+      "impact": "serious"
+    },
+    "landmark-one-main": {
+      "enabled": true,
+      "description": "Ensures the document has a main landmark",
+      "impact": "serious"
+    },
+    "landmark-unique": {
+      "enabled": true,
+      "description": "Ensures landmarks are unique",
+      "impact": "moderate"
+    },
+    "region": {
+      "enabled": true,
+      "description": "Ensures all content is contained within a landmark region",
+      "impact": "moderate"
+    },
+    "skip-link": {
+      "enabled": true,
+      "description": "Ensures the page has a skip link for keyboard navigation",
+      "impact": "serious"
+    },
+    "focus-order-semantics": {
+      "enabled": true,
+      "description": "Ensures elements in the focus order have an appropriate role",
+      "impact": "moderate"
+    },
+    "tabindex": {
+      "enabled": true,
+      "description": "Ensures tabindex is not used to change the tab order",
+      "impact": "serious"
+    },
+    "duplicate-id": {
+      "enabled": true,
+      "description": "Ensures ids are unique",
+      "impact": "serious"
+    },
+    "valid-id": {
+      "enabled": true,
+      "description": "Ensures id attribute values are valid",
+      "impact": "serious"
+    },
+    "scope-attr-valid": {
+      "enabled": true,
+      "description": "Ensures scope attributes are used correctly on table headers",
+      "impact": "serious"
+    },
+    "td-headers-attr": {
+      "enabled": true,
+      "description": "Ensures the headers attribute on td elements refers to th elements",
+      "impact": "serious"
+    },
+    "th-has-data-cells": {
+      "enabled": true,
+      "description": "Ensures each th element has data cells it describes",
+      "impact": "serious"
+    },
+    "aria-hidden-body": {
+      "enabled": true,
+      "description": "Ensures aria-hidden is not present on the document body",
+      "impact": "serious"
+    },
+    "aria-hidden-focus": {
+      "enabled": true,
+      "description": "Ensures aria-hidden elements are not focusable",
+      "impact": "serious"
+    },
+    "role-img-alt": {
+      "enabled": true,
+      "description": "Ensures elements with role=img have an alt text",
+      "impact": "serious"
+    },
+    "form-field-multiple-labels": {
+      "enabled": true,
+      "description": "Ensures form fields do not have multiple labels",
+      "impact": "moderate"
+    },
+    "input-button-name": {
+      "enabled": true,
+      "description": "Ensures input buttons have discernible text",
+      "impact": "serious"
+    }
+  },
+  "tags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21aa",
+    "best-practice"
+  ],
+  "exclude": [
+    ["#storybook-root"],
+    ["[data-testid]"]
+  ]
+}

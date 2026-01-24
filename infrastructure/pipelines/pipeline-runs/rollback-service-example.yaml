@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: account-service-rollback-$(TIMESTAMP)
+  namespace: payu-cicd
+  labels:
+    app: payu
+    service: account-service
+    type: rollback
+spec:
+  pipelineRef:
+    name: payu-rollback-pipeline
+  params:
+    - name: service-name
+      value: account-service
+    - name: namespace
+      value: payu-prod
+    - name: rollback-to
+      value: ""
+    - name: create-backup
+      value: "true"
+    - name: notify-slack
+      value: "true"
+  timeout: 30m

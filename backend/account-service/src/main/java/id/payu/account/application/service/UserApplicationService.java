@@ -6,6 +6,8 @@ import id.payu.account.domain.port.out.KycVerificationPort;
 import id.payu.account.domain.port.out.UserPersistencePort;
 import id.payu.account.dto.DukcapilResponse;
 import id.payu.account.dto.RegisterUserRequest;
+import id.payu.security.annotation.Audited;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
@@ -33,6 +35,8 @@ public class UserApplicationService implements RegisterUserUseCase {
     @CircuitBreaker(name = "dukcapilService", fallbackMethod = "registerFallback")
     @Retry(name = "dukcapilService")
     @TimeLimiter(name = "dukcapilService")
+    @Bulkhead(name = "dukcapilService", fallbackMethod = "registerFallback")
+    @Audited(operation = Audited.Operation.CREATE, entityType = "User")
     public CompletableFuture<User> registerUser(RegisterUserRequest command) {
         log.info("Processing registration for user: {}", command.username());
 

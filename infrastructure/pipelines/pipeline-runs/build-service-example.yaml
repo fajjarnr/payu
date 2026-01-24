@@ -1,0 +1,39 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: account-service-build-$(TIMESTAMP)
+  namespace: payu-cicd
+  labels:
+    app: payu
+    service: account-service
+    type: build
+spec:
+  pipelineRef:
+    name: payu-build-pipeline
+  params:
+    - name: service-name
+      value: account-service
+    - name: git-url
+      value: https://github.com/payu-digital/payu-platform.git
+    - name: git-revision
+      value: main
+    - name: service-type
+      value: spring-boot
+    - name: build-image-tag
+      value: latest
+    - name: registry-url
+      value: image-registry.openshift-image-registry.svc:5000
+    - name: registry-namespace
+      value: payu
+  workspaces:
+    - name: source
+      persistentVolumeClaim:
+        claimName: tekton-workspace-pvc
+      subPath: source
+    - name: maven-settings
+      configMap:
+        name: maven-settings
+    - name: dockerconfig
+      secret:
+        secretName: registry-credentials
+  timeout: 1h30m

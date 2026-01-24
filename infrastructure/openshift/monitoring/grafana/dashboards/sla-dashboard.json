@@ -1,0 +1,297 @@
+{
+  "dashboard": {
+    "title": "PayU SLA & Availability Dashboard",
+    "tags": ["payu", "sla", "availability", "slo"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "1m",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Overall Availability (30d)",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "avg_over_time(avg(rate(up{job=~\"payu-.*\"}[5m]))[30d:1h]) * 100",
+            "legendFormat": "Availability",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 3,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 99.5, "color": "yellow"},
+                {"value": 99.9, "color": "green"}
+              ]
+            },
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "99.9": {"text": "SLA Met", "color": "green"},
+                  "99.5": {"text": "Warning", "color": "yellow"},
+                  "0": {"text": "SLA Breach", "color": "red"}
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Error Budget Remaining",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+        "targets": [
+          {
+            "expr": "(100 - (avg(rate(up{job=~\"payu-.*\"}[30d])) * 100)) / 0.1 * 100",
+            "legendFormat": "Error Budget",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 20, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "MTTR (Mean Time To Recover)",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+        "targets": [
+          {
+            "expr": "avg(payu_incident_recovery_time_seconds) / 60",
+            "legendFormat": "MTTR (minutes)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 15, "color": "yellow"},
+                {"value": 30, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Service Uptime (24h)",
+        "type": "bargauge",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "avg_over_time(rate(up{job=~\"payu-.*\"}[5m])[24h:1h]) * 100",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 95,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 99, "color": "yellow"},
+                {"value": 99.9, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Request Success Rate SLO",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{job=~\"payu-.*\",status!~\"5..\"}[5m])) by (job) / sum(rate(http_server_requests_seconds_count{job=~\"payu-.*\"}[5m])) by (job) * 100",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          },
+          {
+            "expr": "99.9",
+            "legendFormat": "SLO Target (99.9%)",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "custom": {
+              "lineStyle": {"fill": "solid", "lineWidth": 2}
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Response Time SLO (p95)",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 18},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"payu-.*\"}[5m])) by (job, le))",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          },
+          {
+            "expr": "1.0",
+            "legendFormat": "SLO Target (1s)",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "line",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 1.0, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Incident Count (7d)",
+        "type": "stat",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 18},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_incident_total[7d]))",
+            "legendFormat": "Incidents",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 3, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "API Endpoint Availability",
+        "type": "table",
+        "gridPos": {"h": 12, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{job=~\"payu-.*\"}[5m])) by (endpoint, method, status)",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"__name__": true, "Time": true},
+              "renameByName": {
+                "endpoint": "Endpoint",
+                "method": "Method",
+                "status": "Status",
+                "Value": "Rate"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "SLA Breach History",
+        "type": "table",
+        "gridPos": {"h": 12, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "payu_sla_breach_total",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"__name__": true, "Time": true},
+              "renameByName": {
+                "service": "Service",
+                "slo_type": "SLO Type",
+                "breach_time": "Breach Time",
+                "Value": "Count"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Dependency Health",
+        "type": "bargauge",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 40},
+        "targets": [
+          {
+            "expr": "up{job=~\"postgres.*|redis.*|kafka.*\"} * 100",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 99, "color": "yellow"},
+                {"value": 99.9, "color": "green"}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

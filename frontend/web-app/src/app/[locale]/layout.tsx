@@ -6,6 +6,7 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import Providers from "../providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { EmergencyAlert } from "@/components/cms";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -26,11 +27,13 @@ export function generateStaticParams() {
 
 export default async function RootLayout({
   children,
-  params: { locale }
+  params
 }: Readonly<{
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }>) {
+  const { locale } = await params;
+
   if (!locales.includes(locale as (typeof locales)[number])) {
     notFound();
   }
@@ -48,6 +51,8 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ErrorBoundary>
             <Providers>
+              {/* Emergency Alert Banner */}
+              <EmergencyAlert />
               {children}
             </Providers>
           </ErrorBoundary>

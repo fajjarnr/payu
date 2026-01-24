@@ -1,0 +1,185 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: budget-alert-rules
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: budget-alerts
+data:
+  budget-alerts.yaml: |
+    groups:
+      - name: payu_budget_alerts
+        interval: 1h
+        rules:
+          # Monthly budget alert
+          - alert: BudgetExceeded
+            expr: |
+              (
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+              ) > 15000
+            for: 5m
+            labels:
+              severity: warning
+              budget_type: monthly
+              team: finance
+            annotations:
+              summary: "Monthly budget exceeded"
+              description: "Estimated monthly cost (${{ $value | humanize }}) has exceeded the budget of $15,000"
+              runbook: "https://docs.payu.internal/runbooks/budget-exceeded"
+
+          # Budget warning at 80%
+          - alert: BudgetWarning80
+            expr: |
+              (
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+              ) / 15000 > 0.8
+            for: 10m
+            labels:
+              severity: info
+              budget_type: monthly
+              team: finance
+            annotations:
+              summary: "Monthly budget at 80%"
+              description: "Estimated monthly cost is {{ $value | humanizePercentage }} of the $15,000 budget"
+
+          # Budget warning at 90%
+          - alert: BudgetWarning90
+            expr: |
+              (
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+              ) / 15000 > 0.9
+            for: 10m
+            labels:
+              severity: warning
+              budget_type: monthly
+              team: finance
+            annotations:
+              summary: "Monthly budget at 90%"
+              description: "Estimated monthly cost is {{ $value | humanizePercentage }} of the $15,000 budget. Take action to reduce costs."
+
+          # Namespace-specific budget alerts
+          - alert: NamespaceBudgetExceeded
+            expr: |
+              (
+                sum(kube_pod_container_resource_requests{namespace="payu-prod", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace="payu-prod", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+              ) > 10000
+            for: 5m
+            labels:
+              severity: warning
+              budget_type: namespace
+              namespace: payu-prod
+              team: platform
+            annotations:
+              summary: "Production namespace budget exceeded"
+              description: "Production namespace estimated cost (${{ $value | humanize }}) has exceeded the $10,000 budget"
+
+          # Service-specific budget alerts
+          - alert: ServiceBudgetExceeded
+            expr: |
+              (
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"} * 30 * 24 * 0.192) +
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824 * 30 * 24 * 0.00765)
+              ) by (namespace) > 3000
+            for: 5m
+            labels:
+              severity: warning
+              budget_type: service
+              team: platform
+            annotations:
+              summary: "Service budget exceeded for {{ $labels.namespace }}"
+              description: "Service {{ $labels.namespace }} estimated cost (${{ $value | humanize }}) has exceeded the $3,000 budget"
+
+          # Cost anomaly detection
+          - alert: CostAnomalyDetected
+            expr: |
+              abs(
+                (
+                  sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) +
+                  sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824)
+                ) -
+                avg_over_time(
+                  (
+                    sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) +
+                    sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824)
+                  )[7d:1h]
+                )
+              ) / avg_over_time(
+                (
+                  sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) +
+                  sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824)
+                )[7d:1h]
+              ) > 0.5
+            for: 1h
+            labels:
+              severity: warning
+              budget_type: anomaly
+              team: platform
+            annotations:
+              summary: "Cost anomaly detected"
+              description: "Current resource allocation has deviated by more than 50% from the 7-day average"
+
+          # Idle resource alert
+          - alert: IdleResourcesDetected
+            expr: |
+              sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu"}) -
+              sum(rate(container_cpu_usage_seconds_total{namespace=~"payu-.*"}[1h])) * 1.5 > 10
+            for: 1d
+            labels:
+              severity: info
+              budget_type: idle_resources
+              team: platform
+            annotations:
+              summary: "Idle resources detected"
+              description: "More than 10 CPU cores are allocated but not used. Consider scaling down."
+              runbook: "https://docs.payu.internal/runbooks/idle-resources"
+
+      - name: payu_forecast_alerts
+        interval: 6h
+        rules:
+          # Monthly cost forecast
+          - record: payu_monthly_cost_forecast
+            expr: |
+              (
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) * 720 * 0.192 +
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824) * 720 * 0.00765
+              ) * 30
+
+          # Budget burn rate
+          - record: payu_budget_burn_rate
+            expr: |
+              (
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu", unit="core"}) * 24 * 0.192 +
+                sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory", unit="byte"} / 1073741824) * 24 * 0.00765
+              ) / 15000
+
+          # Days until budget exhaustion
+          - alert: BudgetWillExhaustSoon
+            expr: |
+              (1 - payu_budget_burn_rate) / payu_budget_burn_rate < 7
+            for: 1h
+            labels:
+              severity: critical
+              budget_type: forecast
+              team: finance
+            annotations:
+              summary: "Budget will be exhausted in less than 7 days"
+              description: "At current burn rate, the monthly budget will be exhausted in {{ $value | humanize }} days"
+              runbook: "https://docs.payu.internal/runbooks/budget-exhaustion"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cost-alert-secrets
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: budget-alerts
+stringData:
+  SLACK_WEBHOOK_URL: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+  EMAIL_RECIPIENTS: "finance@payu.id,platform-team@payu.id,cto@payu.id"
+type: Opaque

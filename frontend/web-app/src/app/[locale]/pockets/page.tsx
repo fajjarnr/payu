@@ -69,6 +69,8 @@ export default function PocketsPage() {
             target: 50000000,
             type: 'SHARED',
             isShared: true,
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-24T00:00:00Z',
             sharedMembers: [
                 { accountId: 'acc-any123', fullName: 'Anya', role: 'OWNER', joinedAt: '2026-01-01T00:00:00Z' },
                 { accountId: 'acc-bud456', fullName: 'Budi', role: 'ADMIN', joinedAt: '2026-01-02T00:00:00Z' },
@@ -82,6 +84,8 @@ export default function PocketsPage() {
             target: 30000000,
             type: 'SHARED',
             isShared: true,
+            createdAt: '2026-01-10T00:00:00Z',
+            updatedAt: '2026-01-24T00:00:00Z',
             sharedMembers: [
                 { accountId: 'acc-any123', fullName: 'Anya', role: 'ADMIN', joinedAt: '2026-01-10T00:00:00Z' },
                 { accountId: 'acc-dod012', fullName: 'Dodi', role: 'OWNER', joinedAt: '2026-01-10T00:00:00Z' }

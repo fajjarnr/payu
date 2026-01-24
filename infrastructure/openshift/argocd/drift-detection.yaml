@@ -1,0 +1,248 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ConfigManagementPlugin
+metadata:
+  name: payu-drift-detection
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: drift-detection
+spec:
+  version: v1.0
+  init:
+    command:
+      - /bin/bash
+      - -c
+      - |
+        # Initialize drift detection
+        echo "Initializing drift detection..."
+        mkdir -p /tmp/drift-detection
+  generate:
+    command:
+      - /bin/bash
+      -c
+      - |
+        # Drift Detection Script
+        set -e
+
+        # Colors for output
+        RED='\033[0;31m'
+        GREEN='\033[0;32m'
+        YELLOW='\033[1;33m'
+        NC='\033[0m' # No Color
+
+        echo "=== PayU Drift Detection ==="
+        echo "Timestamp: $(date)"
+        echo ""
+
+        # Function to check for drift
+        check_drift() {
+          local resource=$1
+          local namespace=$2
+
+          echo "Checking $resource in namespace $namespace..."
+
+          # Get live resource
+          local live=$(oc get $resource -n $namespace -o json 2>/dev/null || echo "{}")
+          local git=$(cat /tmp/git-resource.json 2>/dev/null || echo "{}")
+
+          # Compare
+          local drift=$(jq -n \
+            --argjson live "$live" \
+            --argjson git "$git" \
+            '$live != $git')
+
+          if [ "$drift" == "true" ]; then
+            echo -e "${RED}DRIFT DETECTED${NC}: $resource in $namespace"
+            return 1
+          else
+            echo -e "${GREEN}NO DRIFT${NC}: $resource in $namespace"
+            return 0
+          fi
+        }
+
+        # Check critical resources
+        check_drift deploymentconfig account-service payu-prod
+        check_drift deploymentconfig transaction-service payu-prod
+        check_drift deploymentconfig wallet-service payu-prod
+        check_drift deploymentconfig auth-service payu-prod
+        check_drift deploymentconfig gateway-service payu-prod
+
+        # Check Secrets
+        check_drift secret db-credentials payu-prod
+        check_drift secret oauth-client-secret payu-prod
+
+        # Check ConfigMaps
+        check_drift configmap application-config payu-prod
+        check_drift configmap feature-flags payu-prod
+
+        echo ""
+        echo "=== Drift Detection Complete ==="
+  validate:
+    command:
+      - /bin/bash
+      -c
+      - |
+        # Validation Script
+        set -e
+
+        echo "Validating resources against policies..."
+
+        # Check for disallowed changes
+        if oc get deploymentconfig -n payu-prod -o json | jq -e '.items[] | select(.spec.replicas < 2)' > /dev/null; then
+          echo "ERROR: Deployment with replicas < 2 detected in production"
+          exit 1
+        fi
+
+        # Check for missing labels
+        if oc get pods -n payu-prod -l app!=payu --no-headers 2>/dev/null | grep -q .; then
+          echo "WARNING: Found pods without required app=payu label"
+        fi
+
+        # Check resource limits
+        if oc get deploymentconfig -n payu-prod -o json | \
+           jq -e '.items[] | select(.spec.template.spec.containers[]?.resources.limits == null)' > /dev/null; then
+          echo "ERROR: Deployment without resource limits detected"
+          exit 1
+        fi
+
+        echo "Validation passed"
+        exit 0
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: drift-detection-scanner
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: drift-detection
+spec:
+  schedule: "*/30 * * * *" # Every 30 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: argocd-application-controller
+          containers:
+          - name: drift-scanner
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              #!/bin/bash
+              set -e
+
+              echo "=== PayU Drift Detection Scan ==="
+              echo "Scan Time: $(date)"
+              echo ""
+
+              # Get all ArgoCD applications
+              apps=$(oc get applications -n openshift-gitops -l app=payu -o jsonpath='{.items[*].metadata.name}')
+
+              drift_detected=false
+
+              for app in $apps; do
+                echo "Checking drift for: $app"
+
+                # Check sync status
+                sync_status=$(oc get application $app -n openshift-gitops -o jsonpath='{.status.sync.status}')
+                health_status=$(oc get application $app -n openshift-gitops -o jsonpath='{.status.health.status}')
+
+                echo "  Sync Status: $sync_status"
+                echo "  Health Status: $health_status"
+
+                if [ "$sync_status" != "Synced" ]; then
+                  echo "  ⚠️  OutOfSync detected"
+                  drift_detected=true
+                fi
+
+                if [ "$health_status" != "Healthy" ]; then
+                  echo "  ⚠️  Unhealthy detected"
+                  drift_detected=true
+                fi
+
+                # Check for operation state
+                operation_state=$(oc get application $app -n openshift-gitops -o jsonpath='{.status.operationState.phase}')
+
+                if [ -n "$operation_state" ] && [ "$operation_state" != "Succeeded" ]; then
+                  echo "  ⚠️  Operation in progress: $operation_state"
+                fi
+
+                echo ""
+              done
+
+              # Send alert if drift detected
+              if [ "$drift_detected" = true ]; then
+                echo "🚨 DRIFT DETECTED - Sending alert"
+                # Send to Slack/PagerDuty
+                curl -X POST $SLACK_WEBHOOK_URL \
+                  -H 'Content-Type: application/json' \
+                  -d '{"text":"🚨 Drift detected in PayU cluster. Check ArgoCD for details."}' || true
+              else
+                echo "✅ No drift detected"
+              fi
+            env:
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: slack-webhook
+                  key: url
+          restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: drift-detection-webhook
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: drift-detection
+stringData:
+  url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+type: Opaque
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: drift-detection-scanner
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: drift-detection
+rules:
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - applications
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: drift-detection-scanner
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: drift-detection
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: drift-detection-scanner
+subjects:
+  - kind: ServiceAccount
+    name: drift-detection-scanner
+    namespace: openshift-gitops

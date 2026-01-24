@@ -51,7 +51,10 @@
       "Bash(ln *)",
       "Bash(source *)",
       "Bash(export *)",
-      "Bash(env *)"
+      "Bash(env *)",
+      "Bash(test:*)",
+      "Bash(npm run test:a11y:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": []
   }

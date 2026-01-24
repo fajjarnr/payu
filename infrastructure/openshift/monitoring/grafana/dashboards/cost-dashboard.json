@@ -1,0 +1,265 @@
+{
+  "dashboard": {
+    "title": "PayU Cost Optimization Dashboard",
+    "tags": ["payu", "cost", "optimization", "resources"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "5m",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Monthly Cost Estimate",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(kube_pod_container_resource_requests{resource=\"cpu\", unit=\"core\"} * 30 * 24) * 0.05 + sum(kube_pod_container_resource_requests{resource=\"memory\", unit=\"byte\"} / 1073741824 * 30 * 24) * 0.01",
+            "legendFormat": "Monthly Cost",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "decimals": 2,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5000, "color": "yellow"},
+                {"value": 10000, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Cost per Service",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(kube_pod_container_resource_requests{namespace=~\"payu-.*\", resource=\"cpu\", unit=\"core\"} * 30 * 24 * 0.05 + kube_pod_container_resource_requests{namespace=~\"payu-.*\", resource=\"memory\", unit=\"byte\"} / 1073741824 * 30 * 24 * 0.01) by (namespace)",
+            "legendFormat": "{{namespace}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Budget Utilization",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+        "targets": [
+          {
+            "expr": "(sum(kube_pod_container_resource_requests{resource=\"cpu\", unit=\"core\"} * 30 * 24) * 0.05 + sum(kube_pod_container_resource_requests{resource=\"memory\", unit=\"byte\"} / 1073741824 * 30 * 24) * 0.01) / 15000 * 100",
+            "legendFormat": "Budget Used",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "CPU Allocation vs Usage",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"payu-.*\"}[5m])) by (namespace)",
+            "legendFormat": "{{namespace}} - Used",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(kube_pod_container_resource_requests{namespace=~\"payu-.*\", resource=\"cpu\"}) by (namespace)",
+            "legendFormat": "{{namespace}} - Requested",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "cores",
+            "custom": {
+              "stacking": "normal"
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Memory Allocation vs Usage",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(container_memory_working_set_bytes{namespace=~\"payu-.*\"}) by (namespace) / 1024 / 1024 / 1024",
+            "legendFormat": "{{namespace}} - Used",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(kube_pod_container_resource_requests{namespace=~\"payu-.*\", resource=\"memory\"}) by (namespace) / 1024 / 1024 / 1024",
+            "legendFormat": "{{namespace}} - Requested",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytesGB",
+            "custom": {
+              "stacking": "normal"
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Resource Utilization by Service",
+        "type": "table",
+        "gridPos": {"h": 12, "w": 12, "x": 0, "y": 18},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"payu-.*\"}[5m])) by (pod) / sum(kube_pod_container_resource_requests{namespace=~\"payu-.*\", resource=\"cpu\"}) by (pod) * 100",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"__name__": true, "Time": true},
+              "renameByName": {
+                "pod": "Service",
+                "Value": "CPU Utilization %"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 20, "color": "yellow"},
+                {"value": 50, "color": "green"},
+                {"value": 80, "color": "yellow"},
+                {"value": 95, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Idle Resources (Low Utilization)",
+        "type": "table",
+        "gridPos": {"h": 12, "w": 12, "x": 12, "y": 18},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"payu-.*\"}[5m])) by (pod) / sum(kube_pod_container_resource_requests{namespace=~\"payu-.*\", resource=\"cpu\"}) by (pod) * 100 < 20",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"__name__": true, "Time": true},
+              "renameByName": {
+                "pod": "Service",
+                "Value": "CPU Utilization %"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 20, "color": "red"}
+              ]
+            },
+            "custom": {
+              "align": "left"
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Pod Count Over Time",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 30},
+        "targets": [
+          {
+            "expr": "sum(kube_pod_status_phase{namespace=~\"payu-.*\", phase=\"Running\"}) by (namespace)",
+            "legendFormat": "{{namespace}} - Running",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Cost Trend (30d)",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 30},
+        "targets": [
+          {
+            "expr": "sum(kube_pod_container_resource_requests{resource=\"cpu\", unit=\"core\"} * 30 * 24) * 0.05 + sum(kube_pod_container_resource_requests{resource=\"memory\", unit=\"byte\"} / 1073741824 * 30 * 24) * 0.01",
+            "legendFormat": "Daily Cost",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Recommendations",
+        "type": "text",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40},
+        "options": {
+          "mode": "markdown",
+          "content": "# Cost Optimization Recommendations\n\n## High Priority\n\n- **Right-size underutilized pods**: Services with < 20% CPU usage can have requests reduced\n- **Enable Cluster Autoscaler**: Automatically scale nodes based on workload\n- **Use Spot/Preemptible instances**: For fault-tolerant workloads\n\n## Medium Priority\n\n- **Implement VPA**: Use Vertical Pod Autoscaler to adjust resource requests\n- **Review HPA thresholds**: Optimize autoscaling triggers\n- **Cleanup unused resources**: Remove old deployments, images, and PVs\n\n## Low Priority\n\n- **Consolidate namespaces**: Merge similar workloads\n- **Use resource quotas**: Prevent over-provisioning\n- **Monitor reserved instances**: Ensure commitment matches usage"
+        }
+      }
+    ]
+  }
+}

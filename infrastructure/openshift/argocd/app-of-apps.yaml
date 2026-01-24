@@ -1,0 +1,198 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: payu-app-of-apps
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: app-of-apps
+    tier: root
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: payu
+  source:
+    repoURL: https://github.com/payu-digital/payu-platform.git
+    targetRevision: main
+    path: infrastructure/openshift/argocd/apps
+  destination:
+    namespace: openshift-gitops
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 10
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: argocd-config
+data:
+  # Application resource tracking
+  application.instanceLabelKey: argocd.argoproj.io/instance
+
+  # Disable admin access for security
+  exec.enabled: "false"
+  # Helms specific config
+  helm.diff.album.enable: "true"
+
+  # Resource tracking
+  resource.customizations.health.argoproj.io_Application: |
+    hs = {}
+    if obj.status ~= nil and obj.status.health ~= nil then
+      if obj.status.health.status == "Healthy" then
+        hs.status = "Healthy"
+        hs.message = obj.status.health.message
+      elseif obj.status.health.status == "Progressing" then
+        hs.status = "Progressing"
+        hs.message = obj.status.health.message
+      else
+        hs.status = "Degraded"
+        hs.message = obj.status.health.message
+      end
+    end
+    return hs
+
+  # Custom health checks for OpenShift resources
+  resource.customizations.health.apps.openshift.io_DeploymentConfig: |
+    hs = {}
+    if obj.status ~= nil and obj.status.readyReplicas ~= nil then
+      if obj.status.readyReplicas == obj.spec.replicas then
+        hs.status = "Healthy"
+        hs.message = "DeploymentConfig is healthy"
+      else
+        hs.status = "Progressing"
+        hs.message = "Waiting for replicas to be ready"
+      end
+    else
+      hs.status = "Progressing"
+      hs.message = "Waiting for DeploymentConfig to be ready"
+    end
+    return hs
+
+  # Route health checks
+  resource.customizations.health.route.openshift.io_Route: |
+    hs = {}
+    if obj.status ~= nil and obj.status.ingress ~= nil then
+      local conditions = obj.status.ingress[1].conditions
+      for _, condition in ipairs(conditions) do
+        if condition.type == "Admitted" and condition.status == "True" then
+          hs.status = "Healthy"
+          hs.message = "Route is admitted"
+          return hs
+        end
+      end
+      hs.status = "Progressing"
+      hs.message = "Route is not yet admitted"
+    else
+      hs.status = "Progressing"
+      hs.message = "Waiting for Route status"
+    end
+    return hs
+
+  # BuildConfig health checks
+  resource.customizations.health.build.openshift.io_BuildConfig: |
+    hs = {}
+    if obj.status ~= nil and obj.status.lastVersion ~= nil then
+      hs.status = "Healthy"
+      hs.message = "BuildConfig is healthy"
+    else
+      hs.status = "Progressing"
+      hs.message = "BuildConfig is initializing"
+    end
+    return hs
+
+  # Repositories configuration
+  repositories: |
+    - type: git
+      url: https://github.com/payu-digital/payu-platform.git
+      name: payu-platform
+    - type: helm
+      url: https://charts.bitnami.com/bitnami
+      name: bitnami
+
+  # URL configuration
+  url: https://argocd.payu.internal
+
+  # OIDC configuration
+  oidc.config: |
+    name: PayU SSO
+    issuer: https://sso.payu.internal/auth/realms/payu
+    clientId: argocd
+    clientSecret: $oidc.clientSecret
+    requestedScopes: ["openid", "profile", "email", "groups"]
+    requestedIDTokenClaims: {"groups": {"essential": true}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: argocd-rbac
+data:
+  policy.csv: |
+    # Admin role
+    p, role:admin, applications, *, */*, allow
+    p, role:admin, clusters, get, *, allow
+    p, role:admin, repositories, *, *, allow
+    p, role:admin, logs, get, *, allow
+    p, role:admin, exec, create, */*, allow
+
+    # Platform team - full access to all resources
+    g, platform-team, role:admin
+
+    # Backend team - access to backend services only
+    p, role:backend-dev, applications, get, payu-staging/*, allow
+    p, role:backend-dev, applications, create, payu-staging/*, allow
+    p, role:backend-dev, applications, update, payu-staging/*, allow
+    p, role:backend-dev, applications, sync, payu-staging/*, allow
+    p, role:backend-dev, applications, override, payu-staging/*, allow
+    p, role:backend-dev, applications, deploy, delete, payu-staging/*, deny
+    g, backend-team, role:backend-dev
+
+    # QA team - read-only access to all environments
+    p, role:qa-dev, applications, get, */*, allow
+    p, role:qa-dev, applications, sync, payu-staging/*, allow
+    g, qa-team, role:qa-dev
+
+    # DevOps team - full access
+    g, devops-team, role:admin
+
+    # Read-only role for audit
+    p, role:readonly, applications, get, */*, allow
+    p, role:readonly, applications, list, */*, allow
+    p, role:readonly, clusters, get, *, allow
+    p, role:readonly, repositories, get, *, allow
+    g, auditors, role:readonly
+
+  policy.default: role:''
+  scopes: '[groups,cn]'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-secret
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: argocd-secret
+stringData:
+  # Admin password (bcrypt hash of "admin" - change this!)
+  admin.password: '$2a$10$do6.sI1x.pUYx1XiQMj0qexX9c0R8nIX0v/v8jG0.3QK9yGYQUcVS'
+  # OIDC client secret
+  oidc.clientSecret: 'your-client-secret-here'
+type: Opaque

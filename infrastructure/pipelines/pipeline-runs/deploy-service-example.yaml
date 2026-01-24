@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: account-service-deploy-staging-$(TIMESTAMP)
+  namespace: payu-cicd
+  labels:
+    app: payu
+    service: account-service
+    type: deploy
+    environment: staging
+spec:
+  pipelineRef:
+    name: payu-deploy-pipeline
+  params:
+    - name: service-name
+      value: account-service
+    - name: environment
+      value: staging
+    - name: image-tag
+      value: latest
+    - name: namespace
+      value: payu-staging
+    - name: replicas
+      value: "3"
+    - name: deployment-strategy
+      value: bluegreen
+    - name: rollback-on-failure
+      value: "true"
+  workspaces:
+    - name: manifest-dir
+      persistentVolumeClaim:
+        claimName: tekton-manifests-pvc
+      subPath: manifests
+  timeout: 45m

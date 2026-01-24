@@ -27,6 +27,7 @@ import {
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
 import LanguageSwitcher from './LanguageSwitcher';
+import { PersonalizedGreeting } from './personalization';
 
 interface SidebarItemProps {
   href: string;
@@ -44,11 +45,13 @@ const SidebarItem = ({ href, icon: Icon, label, active }: SidebarItemProps) => (
         ? "bg-accent text-accent-foreground shadow-sm"
         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
     )}
+    aria-label={label}
+    aria-current={active ? 'page' : undefined}
   >
     <Icon className={clsx(
       "h-5 w-5 transition-colors",
       active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
-    )} />
+    )} aria-hidden="true" />
     <span className="tracking-tight">{label}</span>
   </Link>
 );
@@ -134,8 +137,8 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
             </div>
             <span className="text-2xl font-black text-primary">PayU</span>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors">
-            <X className="h-6 w-6" />
+          <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors" aria-label="Tutup menu navigasi">
+            <X className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
 
@@ -170,11 +173,13 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="lg:hidden p-2 -ml-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
+                aria-label="Buka menu navigasi"
+                aria-expanded={isSidebarOpen}
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="h-6 w-6" aria-hidden="true" />
               </button>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-black text-foreground">Selamat Datang, {username}!</h1>
+                <PersonalizedGreeting showTimeBased={true} showSegment={true} />
                 <p className="text-[10px] text-muted-foreground font-bold tracking-widest">Kelola finansial Anda dengan wawasan real-time</p>
               </div>
             </div>
@@ -191,14 +196,14 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                  />
                </div>
 
-               <button className="p-3 text-muted-foreground hover:bg-muted rounded-full relative transition-colors">
-                 <div className="absolute top-3.5 right-3.5 h-2 w-2 bg-destructive rounded-full border-2 border-card" />
-                 <Bell className="h-5 w-5" />
+               <button className="p-3 text-muted-foreground hover:bg-muted rounded-full relative transition-colors" aria-label="Notifikasi">
+                 <div className="absolute top-3.5 right-3.5 h-2 w-2 bg-destructive rounded-full border-2 border-card" aria-label="Notifikasi baru" />
+                 <Bell className="h-5 w-5" aria-hidden="true" />
                </button>
 
               <div className="relative group">
-                <button className="h-10 w-10 bg-accent rounded-full flex items-center justify-center border-2 border-card shadow-sm overflow-hidden group-hover:ring-2 ring-primary transition-all">
-                  <User className="h-5 w-5 text-primary" />
+                <button className="h-10 w-10 bg-accent rounded-full flex items-center justify-center border-2 border-card shadow-sm overflow-hidden group-hover:ring-2 ring-primary transition-all" aria-label="Menu profil pengguna" aria-haspopup="true" aria-expanded="false">
+                  <User className="h-5 w-5 text-primary" aria-hidden="true" />
                 </button>
 
                 <div className="absolute right-0 mt-3 w-52 bg-card rounded-xl shadow-xl py-2 border border-border hidden group-hover:block z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">

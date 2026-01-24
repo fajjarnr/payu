@@ -1,0 +1,269 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sync-wave-config
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: argocd-config
+data:
+  sync-waves.yaml: |
+    # Sync Waves for PayU Services
+    # Lower numbers deploy first, higher numbers deploy later
+    #
+    # Wave -10: Infrastructure and Namespaces
+    # Wave -5:  Dependencies (PostgreSQL, Redis, Kafka)
+    # Wave 0:   Base Services (ConfigMaps, Secrets)
+    # Wave 5:   Core Services (Auth, Account)
+    # Wave 10:  Business Services (Transaction, Wallet)
+    # Wave 15:  Supporting Services (Notification, Billing)
+    # Wave 20:  Edge Services (Gateway, Simulator)
+    # Wave 25:  Monitoring and Observability
+
+    services:
+      # Infrastructure
+      - name: namespaces
+        wave: -10
+        annotations:
+          argocd.argoproj.io/sync-wave: "-10"
+
+      - name: secrets
+        wave: -5
+        annotations:
+          argocd.argoproj.io/sync-wave: "-5"
+
+      # Core Dependencies
+      - name: postgresql
+        wave: -5
+        annotations:
+          argocd.argoproj.io/sync-wave: "-5"
+          argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+
+      - name: redis
+        wave: -5
+        annotations:
+          argocd.argoproj.io/sync-wave: "-5"
+
+      - name: kafka
+        wave: -5
+        annotations:
+          argocd.argoproj.io/sync-wave: "-5"
+
+      # Core Services (Authentication)
+      - name: auth-service
+        wave: 5
+        dependencies:
+          - postgresql
+          - redis
+        annotations:
+          argocd.argoproj.io/sync-wave: "5"
+
+      # Core Banking Services
+      - name: account-service
+        wave: 10
+        dependencies:
+          - auth-service
+          - postgresql
+        annotations:
+          argocd.argoproj.io/sync-wave: "10"
+
+      - name: wallet-service
+        wave: 10
+        dependencies:
+          - auth-service
+          - account-service
+          - postgresql
+        annotations:
+          argocd.argoproj.io/sync-wave: "10"
+
+      # Transaction Services
+      - name: transaction-service
+        wave: 10
+        dependencies:
+          - auth-service
+          - account-service
+          - wallet-service
+          - kafka
+        annotations:
+          argocd.argoproj.io/sync-wave: "10"
+
+      # Supporting Services
+      - name: notification-service
+        wave: 15
+        dependencies:
+          - kafka
+        annotations:
+          argocd.argoproj.io/sync-wave: "15"
+
+      - name: billing-service
+        wave: 15
+        dependencies:
+          - account-service
+          - transaction-service
+        annotations:
+          argocd.argoproj.io/sync-wave: "15"
+
+      - name: compliance-service
+        wave: 15
+        dependencies:
+          - transaction-service
+        annotations:
+          argocd.argoproj.io/sync-wave: "15"
+
+      - name: support-service
+        wave: 15
+        dependencies:
+          - account-service
+        annotations:
+          argocd.argoproj.io/sync-wave: "15"
+
+      # ML Services
+      - name: kyc-service
+        wave: 15
+        dependencies:
+          - account-service
+          - kafka
+        annotations:
+          argocd.argoproj.io/sync-wave: "15"
+
+      - name: analytics-service
+        wave: 15
+        dependencies:
+          - kafka
+          - postgresql
+        annotations:
+          argocd.argoproj.io/sync-wave: "15"
+
+      # Edge Services
+      - name: gateway-service
+        wave: 20
+        dependencies:
+          - auth-service
+          - account-service
+          - transaction-service
+        annotations:
+          argocd.argoproj.io/sync-wave: "20"
+
+      # External Integrations
+      - name: bi-fast-simulator
+        wave: 20
+        annotations:
+          argocd.argoproj.io/sync-wave: "20"
+
+      - name: qris-simulator
+        wave: 20
+        annotations:
+          argocd.argoproj.io/sync-wave: "20"
+
+      - name: dukcapil-simulator
+        wave: 20
+        annotations:
+          argocd.argoproj.io/sync-wave: "20"
+
+      # Monitoring and Observability
+      - name: monitoring
+        wave: 25
+        annotations:
+          argocd.argoproj.io/sync-wave: "25"
+
+      - name: logging
+        wave: 25
+        annotations:
+          argocd.argoproj.io/sync-wave: "25"
+
+      - name: tracing
+        wave: 25
+        annotations:
+          argocd.argoproj.io/sync-wave: "25"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu
+  namespace: openshift-gitops
+  labels:
+    app: payu
+spec:
+  description: PayU Digital Banking Platform
+  sourceRepos:
+    - https://github.com/payu-digital/payu-platform.git
+    - https://github.com/payu-digital/payu-infrastructure.git
+
+  destinations:
+    - namespace: 'payu-*'
+      server: https://kubernetes.default.svc
+    - namespace: openshift-*
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  namespaceResourceWhitelist:
+    - group: apps.openshift.io
+      kind: DeploymentConfig
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: apps
+      kind: DaemonSet
+    - group: route.openshift.io
+      kind: Route
+    - group: image.openshift.io
+      kind: ImageStream
+    - group: build.openshift.io
+      kind: BuildConfig
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: autoscaling.k8s.io
+      kind: VerticalPodAutoscaler
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: PersistentVolumeClaim
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: policy
+      kind: PodDisruptionBudget
+
+  orphanedResources:
+    warn: false
+
+  syncWindows:
+    - kind: allow
+      schedule: '0 22 * * *'
+      duration: 2h
+      applications:
+        - '*-prod'
+        - '*-production'
+      manualSync: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payu-preview
+  namespace: openshift-gitops
+  labels:
+    app: payu
+    type: preview
+spec:
+  description: PayU PR Preview Environments
+  sourceRepos:
+    - https://github.com/payu-digital/payu-platform.git
+
+  destinations:
+    - namespace: 'payu-pr-*'
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  orphanedResources:
+    warn: false
+    prune: true

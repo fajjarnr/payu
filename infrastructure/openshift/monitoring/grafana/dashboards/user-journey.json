@@ -1,0 +1,357 @@
+{
+  "dashboard": {
+    "title": "PayU User Journey Dashboard",
+    "tags": ["payu", "ux", "analytics", "funnel"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "1m",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Users (24h)",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "count(count(increase(payu_user_events_total[24h])) by (user_id))",
+            "legendFormat": "Active Users",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5000, "color": "yellow"},
+                {"value": 10000, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "New Registrations (24h)",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_user_registered_total[24h]))",
+            "legendFormat": "New Users",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Session Duration (avg)",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "avg(payu_session_duration_seconds)",
+            "legendFormat": "Duration",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 300, "color": "yellow"},
+                {"value": 600, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Bounce Rate",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(payu_page_view_total{session_length=1}[5m])) / sum(rate(payu_page_view_total[5m])) * 100",
+            "legendFormat": "Bounce Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 40, "color": "yellow"},
+                {"value": 60, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "User Journey Funnel",
+        "type": "bargauge",
+        "gridPos": {"h": 12, "w": 12, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_page_view_total[1h]))",
+            "legendFormat": "1. Page Views",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(increase(payu_login_completed_total[1h]))",
+            "legendFormat": "2. Logins",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(increase(payu_account_viewed_total[1h]))",
+            "legendFormat": "3. Account Views",
+            "refId": "C"
+          },
+          {
+            "expr": "sum(increase(payu_transfer_initiated_total[1h]))",
+            "legendFormat": "4. Transfer Initiated",
+            "refId": "D"
+          },
+          {
+            "expr": "sum(increase(payu_transfer_completed_total[1h]))",
+            "legendFormat": "5. Transfer Completed",
+            "refId": "E"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "fillOpacity": 80,
+              "orientation": "horizontal",
+              "displayMode": "gradient"
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Funnel Conversion Rate",
+        "type": "gauge",
+        "gridPos": {"h": 12, "w": 12, "x": 12, "y": 6},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_transfer_completed_total[1h])) / sum(increase(payu_page_view_total[1h])) * 100",
+            "legendFormat": "Overall Conversion",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 10, "color": "yellow"},
+                {"value": 25, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "User Sessions Over Time",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 18},
+        "targets": [
+          {
+            "expr": "sum(rate(payu_session_started_total[5m]))",
+            "legendFormat": "Sessions Started",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(payu_session_ended_total[5m]))",
+            "legendFormat": "Sessions Ended",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Most Used Features",
+        "type": "piechart",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 18},
+        "targets": [
+          {
+            "expr": "topk(10, sum(increase(payu_feature_used_total[1h])) by (feature))",
+            "legendFormat": "{{feature}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "User Retention (Cohort)",
+        "type": "heatmap",
+        "gridPos": {"h": 12, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_user_returned_total{cohort_day=~\".*\"}[1d])) by (cohort_day)",
+            "legendFormat": "{{cohort_day}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "scaleDistribution": {
+                "type": "linear"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "User Flow: After Login",
+        "type": "sankey",
+        "gridPos": {"h": 12, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(increase(payu_login_completed_total[1h]))",
+            "legendFormat": "Login",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(increase(payu_account_viewed_total[1h]))",
+            "legendFormat": "Account",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(increase(payu_transfer_viewed_total[1h]))",
+            "legendFormat": "Transfer",
+            "refId": "C"
+          },
+          {
+            "expr": "sum(increase(payu_bill_payment_viewed_total[1h]))",
+            "legendFormat": "Bill Payment",
+            "refId": "D"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Top Drop-off Points",
+        "type": "table",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 40},
+        "targets": [
+          {
+            "expr": "topk(10, sum(increase(payu_journey_abandoned_total[1h])) by (abandoned_at))",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"__name__": true, "Time": true},
+              "renameByName": {
+                "abandoned_at": "Journey Step",
+                "Value": "Abandonments"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "align": "left"
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "User Satisfaction (NPS)",
+        "type": "gauge",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 40},
+        "targets": [
+          {
+            "expr": "avg(payu_nps_score)",
+            "legendFormat": "NPS Score",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "min": -100,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 0, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "Error Rate by User Action",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 50},
+        "targets": [
+          {
+            "expr": "sum(rate(payu_user_action_error_total[5m])) by (action) / sum(rate(payu_user_action_total[5m])) by (action) * 100",
+            "legendFormat": "{{action}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "line",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

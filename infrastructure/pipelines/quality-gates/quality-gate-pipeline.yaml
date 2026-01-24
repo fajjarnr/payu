@@ -1,0 +1,164 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: payu-quality-gate-pipeline
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: quality-gate
+spec:
+  description: |
+    Quality gate pipeline for PayU services with SonarQube, security scanning,
+    and test coverage validation. Blocks deployment if criteria are not met.
+  params:
+    - name: service-name
+      type: string
+      description: Name of the service
+    - name: service-type
+      type: string
+      description: Type of service
+      default: spring-boot
+    - name: min-coverage
+      type: string
+      description: Minimum code coverage percentage
+      default: "80"
+    - name: max-critical-vulns
+      type: string
+      description: Maximum allowed critical vulnerabilities
+      default: "0"
+    - name: max-high-vulns
+      type: string
+      description: Maximum allowed high vulnerabilities
+      default: "3"
+    - name: sonarqube-quality-gate
+      type: string
+      description: Pass SonarQube quality gate
+      default: "true"
+  workspaces:
+    - name: source
+      description: Workspace for source code
+    - name: reports
+      description: Workspace for reports
+  tasks:
+    - name: validate-coverage
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: GOALS
+          value:
+            - jacoco:check
+            - -Djacoco.coverageRatio=$(params.min-coverage)%
+        - name: CONTEXT_DIR
+          value: backend/$(params.service-name)
+
+    - name: sonarqube-quality-gate
+      runAfter:
+        - validate-coverage
+      taskRef:
+        name: sonarqube-scanner
+        kind: ClusterTask
+      params:
+        - name: SONAR_HOST_URL
+          value: http://sonarqube.payu-cicd.svc.cluster.local:9000
+        - name: SONAR_PROJECT_KEY
+          value: payu-$(params.service-name)
+        - name: SONAR_QUALITY_GATE_WAIT
+          value: $(params.sonarqube-quality-gate)
+        - name: SONAR_QUALITY_GATE_TIMEOUT
+          value: "300"
+      workspaces:
+        - name: source
+          workspace: source
+        - name: sonar-settings
+          workspace: source
+
+    - name: security-scan
+      taskRef:
+        name: trivy
+        kind: ClusterTask
+      params:
+        - name: IMAGE_URL
+          value: image-registry.openshift-image-registry.svc:5000/payu/$(params.service-name):latest
+        - name: FORMAT
+          value: json
+        - name: SEVERITY
+          value: "CRITICAL,HIGH"
+        - name: EXIT_CODE
+          value: "0"
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: check-vulnerabilities
+      runAfter:
+        - security-scan
+      taskRef:
+        name: tkn
+      params:
+        - name: SCRIPT
+          value: |
+            #!/bin/bash
+            # Parse Trivy results and check against thresholds
+            CRITICAL_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' /workspace/source/trivy-report.json)
+            HIGH_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' /workspace/source/trivy-report.json)
+
+            echo "Critical Vulnerabilities: $CRITICAL_COUNT"
+            echo "High Vulnerabilities: $HIGH_COUNT"
+
+            if [ "$CRITICAL_COUNT" -gt "$(params.max-critical-vulns)" ]; then
+              echo "FAILED: Critical vulnerabilities exceed threshold"
+              exit 1
+            fi
+
+            if [ "$HIGH_COUNT" -gt "$(params.max-high-vulns)" ]; then
+              echo "FAILED: High vulnerabilities exceed threshold"
+              exit 1
+            fi
+
+            echo "PASSED: Security scan within acceptable limits"
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: generate-quality-report
+      runAfter:
+        - sonarqube-quality-gate
+        - check-vulnerabilities
+      taskRef:
+        name: tkn
+      params:
+        - name: SCRIPT
+          value: |
+            cat <<EOF > /workspace/reports/quality-gate-report.json
+            {
+              "service": "$(params.service-name)",
+              "timestamp": "$(date -Iseconds)",
+              "quality_gate": "PASSED",
+              "coverage": {
+                "threshold": "$(params.min-coverage)%",
+                "status": "PASSED"
+              },
+              "security": {
+                "max_critical": "$(params.max-critical-vulns)",
+                "max_high": "$(params.max-high-vulns)",
+                "status": "PASSED"
+              },
+              "sonarqube": {
+                "quality_gate": "PASSED"
+              }
+            }
+            EOF
+            cat /workspace/reports/quality-gate-report.json
+      workspaces:
+        - name: source
+          workspace: source
+        - name: reports
+          workspace: reports

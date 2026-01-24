@@ -5,6 +5,50 @@ quarkus:
   http:
     port: 8085
 
+  # Vault Configuration for Secrets
+  vault:
+    url: ${VAULT_URL:http://localhost:8200}
+    authentication:
+      token:
+        token: ${VAULT_TOKEN:dev-only-token}
+    secrets:
+      - path: secret/billing-service
+        key: encryption.key
+
+  # Fault Tolerance Configuration
+  fault-tolerance:
+    enabled: true
+
+    # Circuit Breaker
+    circuit-breaker:
+      wallet-service:
+        request-volume-threshold: 20
+        failure-ratio: 0.5
+        delay: 30000
+        success-threshold: 5
+
+    # Retry
+    retry:
+      wallet-service:
+        max-retries: 3
+        delay: 1000
+        max-duration: 10000
+        jitter: 500
+        retry-on:
+          - java.io.IOException
+          - java.net.ConnectException
+
+    # Timeout
+    timeout:
+      wallet-service:
+        duration: 5000
+
+    # Bulkhead
+    bulkhead:
+      wallet-service:
+        value: 20
+        waiting-queue: 10
+
   otel:
     service:
       name: billing-service

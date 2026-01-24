@@ -1,0 +1,232 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: security-scan
+  labels:
+    app: payu-ci-cd
+spec:
+  description: >-
+    Comprehensive security scanning task that includes:
+    - SpotBugs (SAST) for Java code
+    - OWASP Dependency Check
+    - Security unit tests
+  workspaces:
+    - name: source
+      description: Source code workspace
+    - name: maven-settings
+      description: Maven settings configuration
+      optional: true
+
+  params:
+    - name: CONTEXT_DIR
+      description: Context directory within source
+      type: string
+      default: "."
+
+    - name: MAVEN_IMAGE
+      description: Maven image to use
+      type: string
+      default: "maven:3.9-eclipse-temurin-21"
+
+    - name: FAILURE_THRESHOLD
+      description: Security issue threshold for failing the build
+      type: string
+      default: "high"
+
+  results:
+    - name: security-report-path
+      description: Path to security scan report
+    - name: high-severity-count
+      description: Number of high severity issues found
+    - name: medium-severity-count
+      description: Number of medium severity issues found
+
+  steps:
+    - name: spotbugs-sast
+      image: $(params.MAVEN_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
+      script: |
+        #!/bin/bash
+        set -e
+
+        echo "Running SpotBugs SAST scan..."
+
+        # Copy Maven settings if provided
+        if [ -f "$(workspaces.maven-settings.path)/settings.xml" ]; then
+          mkdir -p ~/.m2
+          cp $(workspaces.maven-settings.path)/settings.xml ~/.m2/
+        fi
+
+        # Run SpotBugs with FindSecBugs plugin
+        mvn spotbugs:check \
+          -Dspotbugs.effort=Max \
+          -Dspotbugs.threshold=Low \
+          -Dspotbugs.failOnError=true \
+          -Dspotbugs.includeFilterFile=../../infrastructure/ci-cd/security/spotbugs-filter.xml
+
+        # Copy report to output
+        mkdir -p $(workspaces.source.path)/reports
+        cp -r target/spotbugs* $(workspaces.source.path)/reports/ || true
+
+        echo "SpotBugs scan completed"
+        echo -n "$(workspaces.source.path)/reports/spotbugs-report.html" > $(results.security-report-path.path)
+
+    - name: dependency-check
+      image: $(params.MAVEN_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
+      script: |
+        #!/bin/bash
+        set -e
+
+        echo "Running OWASP Dependency Check..."
+
+        # Run OWASP Dependency Check
+        mvn org.owasp:dependency-check-maven:check \
+          -DfailBuildOnCVSS=7 \
+          -DsuppressionFiles=../../infrastructure/ci-cd/security/dependency-check-suppressions.xml
+
+        # Copy report to output
+        mkdir -p $(workspaces.source.path)/reports
+        cp target/dependency-check-report.html $(workspaces.source.path)/reports/ || true
+
+        echo "Dependency check completed"
+
+    - name: security-unit-tests
+      image: $(params.MAVEN_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
+      script: |
+        #!/bin/bash
+        set -e
+
+        echo "Running security-focused unit tests..."
+
+        # Run tests with security profile
+        mvn test -Dsecurity-tests=true
+
+        echo "Security tests completed"
+
+    - name: aggregate-results
+      image: alpine:3.19
+      script: |
+        #!/bin/sh
+        set -e
+
+        REPORTS_DIR="$(workspaces.source.path)/reports"
+
+        echo "Aggregating security scan results..."
+
+        # Count high severity issues
+        HIGH_COUNT=0
+        MEDIUM_COUNT=0
+
+        if [ -f "$REPORTS_DIR/spotbugs-report.xml" ]; then
+          HIGH_COUNT=$(grep -c 'High"' "$REPORTS_DIR/spotbugs-report.xml" 2>/dev/null || echo "0")
+          MEDIUM_COUNT=$(grep -c 'Medium"' "$REPORTS_DIR/spotbugs-report.xml" 2>/dev/null || echo "0")
+        fi
+
+        echo -n "$HIGH_COUNT" > $(results.high-severity-count.path)
+        echo -n "$MEDIUM_COUNT" > $(results.medium-severity-count.path)
+
+        echo "Security Scan Results:"
+        echo "  High Severity: $HIGH_COUNT"
+        echo "  Medium Severity: $MEDIUM_COUNT"
+        echo "  Report: $(cat $(results.security-report-path.path))"
+
+        # Fail if threshold exceeded
+        FAILURE_THRESHOLD="$(params.FAILURE_THRESHOLD)"
+        if [ "$FAILURE_THRESHOLD" = "high" ] && [ "$HIGH_COUNT" -gt 0 ]; then
+          echo "FAIL: Found $HIGH_COUNT high severity issues"
+          exit 1
+        fi
+
+        if [ "$FAILURE_THRESHOLD" = "medium" ] && [ "$HIGH_COUNT" -gt 0 ] || [ "$MEDIUM_COUNT" -gt 0 ]; then
+          echo "FAIL: Found security issues exceeding threshold"
+          exit 1
+        fi
+
+        echo "SUCCESS: Security scan passed threshold"
+
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: security-scan-pipeline
+  labels:
+    app: payu-ci-cd
+spec:
+  description: >-
+    Pipeline for comprehensive security scanning of backend services
+
+  workspaces:
+    - name: source
+    - name: maven-settings
+      optional: true
+
+  params:
+    - name: git-url
+      type: string
+      description: Git repository URL
+    - name: git-revision
+      type: string
+      description: Git revision to checkout
+      default: main
+
+    - name: services
+      type: array
+      description: List of services to scan
+      default:
+        - "account-service"
+        - "transaction-service"
+        - "wallet-service"
+        - "auth-service"
+        - "compliance-service"
+
+    - name: failure-threshold
+      type: string
+      description: Security issue threshold for failing the build
+      default: "high"
+
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+
+    - name: security-scan-all
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: security-scan
+      matrix:
+        params:
+          - name: CONTEXT_DIR
+            value: $(params.services[*])
+      workspaces:
+        - name: source
+          workspace: source
+        - name: maven-settings
+          workspace: maven-settings
+      params:
+        - name: CONTEXT_DIR
+          value: $(params.services[*])
+        - name: FAILURE_THRESHOLD
+          value: $(params.failure-threshold)
+
+  finally:
+    - name: aggregate-security-reports
+      taskRef:
+        name: aggregate-reports
+      params:
+        - name: services
+          value: $(params.services[*])
+      workspaces:
+        - name: source
+          workspace: source

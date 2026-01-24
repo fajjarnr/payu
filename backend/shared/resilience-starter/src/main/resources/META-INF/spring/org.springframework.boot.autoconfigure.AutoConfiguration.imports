@@ -1,0 +1,3 @@
+id.payu.resilience.config.ResilienceAutoConfiguration
+id.payu.resilience.fallback.FallbackHandler
+id.payu.resilience.aspect.ResilienceAspect

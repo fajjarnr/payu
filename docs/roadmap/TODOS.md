@@ -309,197 +309,197 @@
 ## 📱 Phase 4: Mobile & Frontend Evolution
 
 ### 27. Mobile App (Expo) - Core Implementation
-- [ ] **Project Setup**:
-    - [ ] Initialize Expo project with `npx create-expo-app mobile --template tabs`.
-    - [ ] Configure TypeScript, ESLint, and Prettier.
-    - [ ] Setup NativeWind (TailwindCSS) for styling consistency.
-    - [ ] Configure Expo Router for file-based navigation.
-- [ ] **Authentication Flow**:
-    - [ ] Build **Login Screen** with phone number + OTP.
-    - [ ] Build **Registration Screen** with progressive form.
-    - [ ] Implement **JWT Token Management** with `expo-secure-store`.
-    - [ ] Add **Biometric Authentication** (FaceID/TouchID) via `expo-local-authentication`.
-- [ ] **Dashboard & Home**:
-    - [ ] Build **Home Screen** with balance card and quick actions.
-    - [ ] Implement **Pull-to-Refresh** for balance updates.
-    - [ ] Display **Recent Transactions** list with pagination.
-    - [ ] Add **Notification Bell** with unread count badge.
-- [ ] **Transfer Flow**:
-    - [ ] Build **Recipient Selection** screen with contact search.
-    - [ ] Build **Amount Input** with IDR formatting and keyboard.
-    - [ ] Implement **Transfer Type Selection** (BI-FAST, SKN, RTGS).
-    - [ ] Build **Review & Confirm** screen with PIN/Biometric.
-    - [ ] Display **Success/Failure** screen with share receipt.
-- [ ] **QRIS Payments**:
-    - [ ] Implement **QR Scanner** using `expo-camera`.
-    - [ ] Parse QRIS dynamic/static codes.
-    - [ ] Build **Payment Review** screen.
-    - [ ] Handle **Offline QR** caching.
-- [ ] **Bill Payments**:
-    - [ ] Build **Biller Category** grid (PLN, Pulsa, Internet, etc.).
-    - [ ] Build **Bill Inquiry** form with customer ID input.
-    - [ ] Display **Bill Details** and payment confirmation.
-- [ ] **Virtual Cards**:
-    - [ ] Display **Card List** with flip animation.
-    - [ ] Implement **Show/Hide CVV** with biometric verification.
-    - [ ] Add **Freeze/Unfreeze** toggle.
-    - [ ] Build **Card Settings** (limits, notifications).
-- [ ] **Profile & Settings**:
-    - [ ] Build **Profile Screen** with avatar and user info.
-    - [ ] Implement **Change PIN** flow.
-    - [ ] Add **Notification Preferences** toggles.
-    - [ ] Build **Language Selector** (ID/EN).
-    - [ ] Add **App Version** and support links.
+- [x] **Project Setup**:
+    - [x] Initialize Expo project with `npx create-expo-app mobile --template tabs`.
+    - [x] Configure TypeScript, ESLint, and Prettier.
+    - [x] Setup NativeWind (TailwindCSS) for styling consistency.
+    - [x] Configure Expo Router for file-based navigation.
+- [x] **Authentication Flow**:
+    - [x] Build **Login Screen** with phone number + OTP.
+    - [x] Build **Registration Screen** with progressive form.
+    - [x] Implement **JWT Token Management** with `expo-secure-store`.
+    - [x] Add **Biometric Authentication** (FaceID/TouchID) via `expo-local-authentication`.
+- [x] **Dashboard & Home**:
+    - [x] Build **Home Screen** with balance card and quick actions.
+    - [x] Implement **Pull-to-Refresh** for balance updates.
+    - [x] Display **Recent Transactions** list with pagination.
+    - [x] Add **Notification Bell** with unread count badge.
+- [x] **Transfer Flow**:
+    - [x] Build **Recipient Selection** screen with contact search.
+    - [x] Build **Amount Input** with IDR formatting and keyboard.
+    - [x] Implement **Transfer Type Selection** (BI-FAST, SKN, RTGS).
+    - [x] Build **Review & Confirm** screen with PIN/Biometric.
+    - [x] Display **Success/Failure** screen with share receipt.
+- [x] **QRIS Payments**:
+    - [x] Implement **QR Scanner** using `expo-camera`.
+    - [x] Parse QRIS dynamic/static codes.
+    - [x] Build **Payment Review** screen.
+    - [x] Handle **Offline QR** caching.
+- [x] **Bill Payments**:
+    - [x] Build **Biller Category** grid (PLN, Pulsa, Internet, etc.).
+    - [x] Build **Bill Inquiry** form with customer ID input.
+    - [x] Display **Bill Details** and payment confirmation.
+- [x] **Virtual Cards**:
+    - [x] Display **Card List** with flip animation.
+    - [x] Implement **Show/Hide CVV** with biometric verification.
+    - [x] Add **Freeze/Unfreeze** toggle.
+    - [x] Build **Card Settings** (limits, notifications).
+- [x] **Profile & Settings**:
+    - [x] Build **Profile Screen** with avatar and user info.
+    - [x] Implement **Change PIN** flow.
+    - [x] Add **Notification Preferences** toggles.
+    - [x] Build **Language Selector** (ID/EN).
+    - [x] Add **App Version** and support links.
 
 ### 28. Mobile App - Advanced Features
-- [ ] **Push Notifications**:
-    - [ ] Configure `expo-notifications` with Firebase Cloud Messaging.
-    - [ ] Handle **Transaction Alerts** notifications.
-    - [ ] Handle **Promotional** notifications from CMS.
-    - [ ] Implement **Notification History** screen.
-- [ ] **Offline Support**:
-    - [ ] Implement **Offline Detection** with user feedback.
-    - [ ] Cache **Recent Transactions** locally.
-    - [ ] Queue **Pending Transfers** for retry.
-- [ ] **Security Features**:
-    - [ ] Implement **App Lock** when backgrounded.
-    - [ ] Add **Screenshot Prevention** for sensitive screens.
-    - [ ] Implement **Jailbreak/Root Detection** warning.
-    - [ ] Add **Session Timeout** with re-authentication.
-- [ ] **Analytics & Feedback**:
-    - [ ] Integrate **In-app Feedback Widget**.
-    - [ ] Track **Screen Views** with analytics service.
-    - [ ] Implement **Crash Reporting** integration.
+- [x] **Push Notifications**:
+    - [x] Configure `expo-notifications` with Firebase Cloud Messaging.
+    - [x] Handle **Transaction Alerts** notifications.
+    - [x] Handle **Promotional** notifications from CMS.
+    - [x] Implement **Notification History** screen.
+- [x] **Offline Support**:
+    - [x] Implement **Offline Detection** with user feedback.
+    - [x] Cache **Recent Transactions** locally.
+    - [x] Queue **Pending Transfers** for retry.
+- [x] **Security Features**:
+    - [x] Implement **App Lock** when backgrounded.
+    - [x] Add **Screenshot Prevention** for sensitive screens.
+    - [x] Implement **Jailbreak/Root Detection** warning.
+    - [x] Add **Session Timeout** with re-authentication.
+- [x] **Analytics & Feedback**:
+    - [x] Integrate **In-app Feedback Widget**.
+    - [x] Track **Screen Views** with analytics service.
+    - [x] Implement **Crash Reporting** integration.
 
 ### 29. Frontend Web-App Enhancements
-- [ ] **CMS Integration**:
-    - [ ] Create `useCmsContent` hook to fetch banners/promos from `cms-service`.
-    - [ ] Build **Banner Carousel** component for dashboard.
-    - [ ] Build **Promo Modal** for targeted offers.
-    - [ ] Implement **Emergency Alert** banner for system messages.
-- [ ] **A/B Testing Integration**:
-    - [ ] Create `useExperiment` hook to get variant from `ab-testing-service`.
-    - [ ] Implement **Feature Flags** for gradual rollout.
-    - [ ] Track **Conversion Events** back to AB service.
-    - [ ] Build **Variant Preview** mode for QA testing.
-- [ ] **Customer Segmentation**:
-    - [ ] Fetch user segment from `promotion-service`.
-    - [ ] Display **Personalized Offers** based on segment.
-    - [ ] Show **Loyalty Tier** badge on profile.
-    - [ ] Implement **Segment-based Routing** for premium features.
-- [ ] **Dashboard Improvements**:
-    - [ ] Add **Financial Health Score** widget.
-    - [ ] Implement **Spending Insights** chart with categories.
-    - [ ] Add **Budget Tracking** progress bars.
-    - [ ] Build **Quick Actions** customization.
-- [ ] **Accessibility (A11y) Compliance**:
-    - [ ] Audit all pages with **axe-core**.
-    - [ ] Fix **Color Contrast** issues.
-    - [ ] Add **ARIA Labels** to interactive elements.
-    - [ ] Implement **Keyboard Navigation** for all modals.
-    - [ ] Test with **Screen Readers** (NVDA/VoiceOver).
+- [x] **CMS Integration**:
+    - [x] Create `useCmsContent` hook to fetch banners/promos from `cms-service`.
+    - [x] Build **Banner Carousel** component for dashboard.
+    - [x] Build **Promo Modal** for targeted offers.
+    - [x] Implement **Emergency Alert** banner for system messages.
+- [x] **A/B Testing Integration**:
+    - [x] Create `useExperiment` hook to get variant from `ab-testing-service`.
+    - [x] Implement **Feature Flags** for gradual rollout.
+    - [x] Track **Conversion Events** back to AB service.
+    - [x] Build **Variant Preview** mode for QA testing.
+- [x] **Customer Segmentation**:
+    - [x] Fetch user segment from `promotion-service`.
+    - [x] Display **Personalized Offers** based on segment.
+    - [x] Show **Loyalty Tier** badge on profile.
+    - [x] Implement **Segment-based Routing** for premium features.
+- [x] **Dashboard Improvements**:
+    - [x] Add **Financial Health Score** widget.
+    - [x] Implement **Spending Insights** chart with categories.
+    - [x] Add **Budget Tracking** progress bars.
+    - [x] Build **Quick Actions** customization.
+- [x] **Accessibility (A11y) Compliance**:
+    - [x] Audit all pages with **axe-core**.
+    - [x] Fix **Color Contrast** issues.
+    - [x] Add **ARIA Labels** to interactive elements.
+    - [x] Implement **Keyboard Navigation** for all modals.
+    - [x] Test with **Screen Readers** (NVDA/VoiceOver).
 
 ---
 
 ## 🔧 Phase 4: Backend Improvements
 
 ### 30. API & Performance Optimization
-- [ ] **API Gateway Enhancements**:
-    - [ ] Implement **API Versioning** strategy (v1, v2).
-    - [ ] Add **Request Validation** middleware.
-    - [ ] Implement **Response Compression** (gzip/brotli).
-    - [ ] Add **API Analytics** for usage tracking.
-- [ ] **Database Optimization**:
-    - [ ] Add **Read Replicas** for reporting queries.
-    - [ ] Implement **Connection Pooling** tuning per service.
-    - [ ] Create **Materialized Views** for analytics dashboards.
-    - [ ] Implement **Query Optimization** for slow endpoints.
-- [ ] **Caching Strategy**:
-    - [ ] Implement **Cache Warming** on service startup.
-    - [ ] Add **Cache Invalidation** events via Kafka.
-    - [ ] Implement **Cache Metrics** dashboard.
-    - [ ] Add **Local Cache** fallback for Redis failures.
+- [x] **API Gateway Enhancements**:
+    - [x] Implement **API Versioning** strategy (v1, v2).
+    - [x] Add **Request Validation** middleware.
+    - [x] Implement **Response Compression** (gzip/brotli).
+    - [x] Add **API Analytics** for usage tracking.
+- [x] **Database Optimization**:
+    - [x] Add **Read Replicas** for reporting queries.
+    - [x] Implement **Connection Pooling** tuning per service.
+    - [x] Create **Materialized Views** for analytics dashboards.
+    - [x] Implement **Query Optimization** for slow endpoints.
+- [x] **Caching Strategy**:
+    - [x] Implement **Cache Warming** on service startup.
+    - [x] Add **Cache Invalidation** events via Kafka.
+    - [x] Implement **Cache Metrics** dashboard.
+    - [x] Add **Local Cache** fallback for Redis failures.
 
 ### 31. Service Reliability
-- [ ] **Circuit Breaker Tuning**:
-    - [ ] Configure **Resilience4j** thresholds per service.
-    - [ ] Add **Fallback Responses** for degraded mode.
-    - [ ] Implement **Bulkhead Pattern** for critical services.
-- [ ] **Retry & Timeout Policies**:
-    - [ ] Standardize **Retry Strategies** across services.
-    - [ ] Configure **Timeout Policies** for external calls.
-    - [ ] Add **Idempotency Keys** for all write operations.
-- [ ] **Health Check Improvements**:
-    - [ ] Add **Liveness** vs **Readiness** probe separation.
-    - [ ] Implement **Deep Health Checks** (DB, Kafka, Redis).
-    - [ ] Add **Dependency Health** reporting.
+- [x] **Circuit Breaker Tuning**:
+    - [x] Configure **Resilience4j** thresholds per service.
+    - [x] Add **Fallback Responses** for degraded mode.
+    - [x] Implement **Bulkhead Pattern** for critical services.
+- [x] **Retry & Timeout Policies**:
+    - [x] Standardize **Retry Strategies** across services.
+    - [x] Configure **Timeout Policies** for external calls.
+    - [x] Add **Idempotency Keys** for all write operations.
+- [x] **Health Check Improvements**:
+    - [x] Add **Liveness** vs **Readiness** probe separation.
+    - [x] Implement **Deep Health Checks** (DB, Kafka, Redis).
+    - [x] Add **Dependency Health** reporting.
 
 ### 32. Security Enhancements
-- [ ] **API Security**:
-    - [ ] Implement **Rate Limiting** per user/IP.
-    - [ ] Add **Request Signing** for partner APIs.
-    - [ ] Implement **API Key Rotation** automation.
-    - [ ] Add **IP Whitelisting** for B2B endpoints.
-- [ ] **Data Protection**:
-    - [ ] Implement **Field-level Encryption** for PII.
-    - [ ] Add **Data Masking** in logs and responses.
-    - [ ] Implement **Audit Logging** for sensitive operations.
-    - [ ] Configure **Data Retention Policies** automation.
-- [ ] **Penetration Testing**:
-    - [ ] Schedule **Quarterly Pentest** with external vendor.
-    - [ ] Implement **SAST** (Static Analysis) in CI/CD.
-    - [ ] Add **DAST** (Dynamic Analysis) for staging.
-    - [ ] Create **Security Runbook** for incident response.
+- [x] **API Security**:
+    - [x] Implement **Rate Limiting** per user/IP.
+    - [x] Add **Request Signing** for partner APIs.
+    - [x] Implement **API Key Rotation** automation.
+    - [x] Add **IP Whitelisting** for B2B endpoints.
+- [x] **Data Protection**:
+    - [x] Implement **Field-level Encryption** for PII.
+    - [x] Add **Data Masking** in logs and responses.
+    - [x] Implement **Audit Logging** for sensitive operations.
+    - [x] Configure **Data Retention Policies** automation.
+- [x] **Penetration Testing**:
+    - [x] Schedule **Quarterly Pentest** with external vendor.
+    - [x] Implement **SAST** (Static Analysis) in CI/CD.
+    - [x] Add **DAST** (Dynamic Analysis) for staging.
+    - [x] Create **Security Runbook** for incident response.
 
 ---
 
 ## 🏗️ Phase 4: Infrastructure & DevOps
 
 ### 33. CI/CD Pipeline Enhancements
-- [ ] **Tekton Pipeline Tasks**:
-    - [ ] Create **Build Pipeline** for all services.
-    - [ ] Create **Test Pipeline** with parallel execution.
-    - [ ] Create **Deploy Pipeline** with blue-green deployment.
-    - [ ] Add **Rollback Pipeline** for quick recovery.
-- [ ] **ArgoCD Configuration**:
-    - [ ] Setup **ApplicationSet** for multi-environment.
-    - [ ] Configure **Sync Waves** for dependency order.
-    - [ ] Implement **PR Preview Environments**.
-    - [ ] Add **Drift Detection** alerts.
-- [ ] **Quality Gates**:
-    - [ ] Add **SonarQube** integration for code quality.
-    - [ ] Implement **Test Coverage** thresholds (80%+).
-    - [ ] Add **Security Scanning** (Trivy/Snyk).
-    - [ ] Block deploys on **Critical Vulnerabilities**.
+- [x] **Tekton Pipeline Tasks**:
+    - [x] Create **Build Pipeline** for all services.
+    - [x] Create **Test Pipeline** with parallel execution.
+    - [x] Create **Deploy Pipeline** with blue-green deployment.
+    - [x] Add **Rollback Pipeline** for quick recovery.
+- [x] **ArgoCD Configuration**:
+    - [x] Setup **ApplicationSet** for multi-environment.
+    - [x] Configure **Sync Waves** for dependency order.
+    - [x] Implement **PR Preview Environments**.
+    - [x] Add **Drift Detection** alerts.
+- [x] **Quality Gates**:
+    - [x] Add **SonarQube** integration for code quality.
+    - [x] Implement **Test Coverage** thresholds (80%+).
+    - [x] Add **Security Scanning** (Trivy/Snyk).
+    - [x] Block deploys on **Critical Vulnerabilities**.
 
 ### 34. Monitoring & Alerting
-- [ ] **Grafana Dashboards**:
-    - [ ] Create **Business Metrics** dashboard (TPV, conversions).
-    - [ ] Create **SLA Dashboard** with uptime tracking.
-    - [ ] Create **Cost Dashboard** for resource optimization.
-    - [ ] Create **User Journey** dashboard with funnel analysis.
-- [ ] **Alerting Rules**:
-    - [ ] Define **SLO-based Alerts** (99.9% availability).
-    - [ ] Add **Error Budget** tracking.
-    - [ ] Implement **PagerDuty/OpsGenie** integration.
-    - [ ] Create **Runbooks** for each alert type.
-- [ ] **Log Management**:
-    - [ ] Implement **Log Correlation** with trace IDs.
-    - [ ] Add **Log Sampling** for high-volume services.
-    - [ ] Create **Log-based Alerts** for critical errors.
-    - [ ] Implement **Log Export** to S3 for compliance.
+- [x] **Grafana Dashboards**:
+    - [x] Create **Business Metrics** dashboard (TPV, conversions).
+    - [x] Create **SLA Dashboard** with uptime tracking.
+    - [x] Create **Cost Dashboard** for resource optimization.
+    - [x] Create **User Journey** dashboard with funnel analysis.
+- [x] **Alerting Rules**:
+    - [x] Define **SLO-based Alerts** (99.9% availability).
+    - [x] Add **Error Budget** tracking.
+    - [x] Implement **PagerDuty/OpsGenie** integration.
+    - [x] Create **Runbooks** for each alert type.
+- [x] **Log Management**:
+    - [x] Implement **Log Correlation** with trace IDs.
+    - [x] Add **Log Sampling** for high-volume services.
+    - [x] Create **Log-based Alerts** for critical errors.
+    - [x] Implement **Log Export** to S3 for compliance.
 
 ### 35. Cost Optimization
-- [ ] **Resource Right-sizing**:
-    - [ ] Analyze **CPU/Memory Usage** patterns.
-    - [ ] Implement **VPA** (Vertical Pod Autoscaler).
-    - [ ] Configure **HPA** thresholds per service.
-    - [ ] Add **Cluster Autoscaler** for nodes.
-- [ ] **Cost Visibility**:
-    - [ ] Implement **Cost Allocation** by namespace.
-    - [ ] Create **Cost Reports** for stakeholders.
-    - [ ] Set **Budget Alerts** for cost overruns.
-    - [ ] Identify **Idle Resources** for cleanup.
+- [x] **Resource Right-sizing**:
+    - [x] Analyze **CPU/Memory Usage** patterns.
+    - [x] Implement **VPA** (Vertical Pod Autoscaler).
+    - [x] Configure **HPA** thresholds per service.
+    - [x] Add **Cluster Autoscaler** for nodes.
+- [x] **Cost Visibility**:
+    - [x] Implement **Cost Allocation** by namespace.
+    - [x] Create **Cost Reports** for stakeholders.
+    - [x] Set **Budget Alerts** for cost overruns.
+    - [x] Identify **Idle Resources** for cleanup.
 
 ---
 

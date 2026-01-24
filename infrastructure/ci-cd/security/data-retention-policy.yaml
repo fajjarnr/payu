@@ -1,0 +1,260 @@
+# Data Retention Policy Configuration
+# Automated data retention enforcement for PayU Digital Banking Platform
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data-retention-config
+  namespace: payu
+data:
+  retention-policy.yaml: |
+    # Data Retention Policies by Data Type
+    retention_policies:
+      # Audit Logs - 1 year (OJK requirement)
+      audit_logs:
+        retention_days: 365
+        archive: true
+        archive_after_days: 90
+        storage_class: standard
+        archive_storage_class: glacier
+
+      # Transaction Logs - 7 years (Tax requirement)
+      transaction_logs:
+        retention_days: 2555  # 7 years
+        archive: true
+        archive_after_days: 365
+        storage_class: standard
+        archive_storage_class: glacier
+
+      # KYC Documents - 5 years after account closure
+      kyc_documents:
+        retention_days: 1825  # 5 years
+        archive: true
+        archive_after_days: 365
+        storage_class: standard
+        archive_storage_class: glacier
+
+      # Session Logs - 90 days
+      session_logs:
+        retention_days: 90
+        archive: false
+        storage_class: standard
+
+      # Application Logs - 30 days
+      application_logs:
+        retention_days: 30
+        archive: false
+        storage_class: standard
+
+      # Security Events - 1 year
+      security_events:
+        retention_days: 365
+        archive: true
+        archive_after_days: 90
+        storage_class: standard
+        archive_storage_class: glacier
+
+      # Monitoring Metrics - 90 days
+      monitoring_metrics:
+        retention_days: 90
+        archive: false
+        storage_class: standard
+
+      # Distributed Traces - 7 days
+      distributed_traces:
+        retention_days: 7
+        archive: false
+        storage_class: standard
+
+    # Schedules for Data Cleanup
+    cleanup_schedules:
+      # Daily cleanup for application logs
+      daily_cleanup:
+        schedule: "0 2 * * *"  # 2 AM daily
+        policies:
+          - application_logs
+          - session_logs
+          - distributed_traces
+
+      # Weekly cleanup for security events
+      weekly_cleanup:
+        schedule: "0 3 * * 0"  # 3 AM Sunday
+        policies:
+          - security_events
+          - audit_logs
+
+      # Monthly cleanup for transaction data
+      monthly_cleanup:
+        schedule: "0 4 1 * *"  # 4 AM 1st of month
+        policies:
+          - transaction_logs
+          - kyc_documents
+
+    # Data Classification
+    data_classification:
+      PII:
+        - customer_email
+        - customer_phone
+        - customer_nik
+        - customer_address
+        - customer_account_number
+
+      Sensitive:
+        - customer_ssn
+        - credit_card_number
+        - bank_account_number
+        - password_hash
+        - otp_secret
+
+      Financial:
+        - transaction_amount
+        - account_balance
+        - transfer_records
+        - payment_history
+
+      Public:
+        - product_catalog
+        - public_rates
+        - marketing_content
+
+    # Masking Rules for Different Access Levels
+    masking_rules:
+      full_access:
+        roles:
+          - admin
+          - compliance_officer
+          - auditor
+        mask_all: false
+
+      limited_access:
+        roles:
+          - customer_support
+          - operations
+        mask_all: true
+        mask_rules:
+          PII: partial  # Show first 4 characters
+          Sensitive: full
+          Financial: partial
+
+      customer_access:
+        roles:
+          - customer
+        mask_all: true
+        mask_rules:
+          PII: own_only
+          Sensitive: full
+          Financial: own_only
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: data-retention-cleanup
+  namespace: payu
+spec:
+  schedule: "0 2 * * *"  # Run daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: retention-cleanup
+            image: postgres:16-alpine
+            command:
+              - /bin/sh
+              - -c
+              - |
+                #!/bin/sh
+                set -e
+
+                echo "Starting data retention cleanup..."
+
+                # Load retention policies
+                # This would typically be loaded from a config file or API
+
+                # Cleanup old audit logs (after 1 year)
+                psql $DATABASE_URL -c "
+                  DELETE FROM audit_logs
+                  WHERE created_at < NOW() - INTERVAL '365 days';
+                "
+
+                # Archive old transaction logs (after 1 year, keep for 7 years)
+                psql $DATABASE_URL -c "
+                  INSERT INTO transaction_logs_archive
+                  SELECT * FROM transaction_logs
+                  WHERE created_at < NOW() - INTERVAL '365 days'
+                  AND created_at >= NOW() - INTERVAL '2555 days';
+                "
+
+                psql $DATABASE_URL -c "
+                  DELETE FROM transaction_logs
+                  WHERE created_at < NOW() - INTERVAL '365 days';
+                "
+
+                # Cleanup old application logs (after 30 days)
+                # This is handled by Logstash/Loki retention policies
+                echo "Application logs cleanup handled by log retention policy"
+
+                # Cleanup old monitoring metrics (after 90 days)
+                # This is handled by Prometheus retention policies
+                echo "Metrics cleanup handled by Prometheus retention policy"
+
+                echo "Data retention cleanup completed successfully"
+
+            env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: url
+
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+
+          restartPolicy: OnFailure
+
+---
+# Security: RBAC for Data Retention Job
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: data-retention-role
+  namespace: payu
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: data-retention-rolebinding
+  namespace: payu
+subjects:
+- kind: ServiceAccount
+  name: data-retention-sa
+  namespace: payu
+roleRef:
+  kind: Role
+  name: data-retention-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: data-retention-sa
+  namespace: payu

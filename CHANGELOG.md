@@ -9,6 +9,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Circuit Breaker Tuning and Data Protection**:
+  - Created shared `resilience-starter` module for Spring Boot with Resilience4j
+    - Configurable Circuit Breaker, Retry, Bulkhead, and Time Limiter patterns
+    - Per-service resilience configuration via `payu.resilience.*` properties
+    - Automatic metric publishing to Prometheus
+    - Event logging for circuit state transitions and retry attempts
+    - Location: `/backend/shared/resilience-starter/`
+  - Created shared `security-starter` module for Spring Boot
+    - Field-level encryption with Jasypt (AES-GCM)
+    - Data masking in logs and API responses
+    - Audit logging for sensitive operations with Kafka publishing
+    - PII field patterns: password, ssn, creditCard, accountNumber, nik, secret
+    - Location: `/backend/shared/security-starter/`
+  - Applied resilience and security dependencies to core banking services
+    - account-service, transaction-service, wallet-service, auth-service, compliance-service
+    - Added `@CircuitBreaker`, `@Retry`, `@Bulkhead`, `@Audited` annotations
+    - Configured application.yaml with resilience and security properties
+  - Quarkus services updated with Vault integration and fault tolerance
+    - billing-service, gateway-service, notification-service
+    - SmallRye Fault Tolerance configuration for Circuit Breaker, Retry, Timeout, Bulkhead
+  - SAST (Static Application Security Testing) configuration
+    - SpotBugs with FindSecBugs plugin for Java security scanning
+    - OWASP Dependency Check for vulnerable dependencies
+    - Security filter configuration: `/infrastructure/ci-cd/security/spotbugs-filter.xml`
+  - DAST (Dynamic Application Security Testing) setup
+    - OWASP ZAP configuration for automated scanning
+    - ZAP scan script for CI/CD integration: `/infrastructure/ci-cd/security/zap-scan-script.sh`
+  - Security Runbook for incident response
+    - P0-P3 severity levels with response times
+    - Incident scenarios: Data Breach, DDoS, Authentication Bypass, Circuit Breaker Failures
+    - Post-mortem template and action items tracking
+    - Location: `/docs/security/SECURITY_RUNBOOK.md`
+  - Tekton Security Scan Pipeline task
+    - Automated SAST scanning in CI/CD pipeline
+    - Location: `/infrastructure/ci-cd/tekton/tasks/security-scan-task.yaml`
+  - Data Retention Policy automation
+    - Audit logs: 1 year, Transaction logs: 7 years, KYC docs: 5 years
+    - CronJob for automated cleanup
+    - Location: `/infrastructure/ci-cd/security/data-retention-policy.yaml`
+  - Logback configuration with audit logger
+    - Separate audit log file with 1-year retention
+    - Location: `/backend/account-service/src/main/resources/logback-spring.xml`
+
+- **CI/CD Pipelines & Monitoring Infrastructure**:
+  - Tekton pipelines for Build, Test, Deploy, and Rollback operations
+  - Build pipeline with Maven/Quarkus/Python support, parallel compilation, security scanning
+  - Test pipeline with parallel execution, coverage validation (80%), SonarQube integration
+  - Deploy pipeline with blue-green strategy, health checks, HPA integration, auto-rollback
+  - Rollback pipeline with backup creation, history tracking, Slack notifications
+  - ArgoCD ApplicationSet for multi-environment GitOps with PR preview environments
+  - Sync waves for dependency ordering (infrastructure → core → business → edge → monitoring)
+  - Drift detection with automated scanning every 30 minutes
+  - Grafana dashboards: Business Metrics (TPV, conversions, funnel analysis)
+  - SLA Dashboard with availability tracking, error budget, MTTR metrics
+  - Cost Dashboard with monthly estimates, per-service costs, budget utilization
+  - User Journey Dashboard with active users, session analytics, retention cohorts
+  - SLO alerts for availability (99.9%), latency (p95 < 1s), freshness, correctness
+  - PagerDuty integration with 24/7 on-call for critical and SLO breaches
+  - Runbooks for SLO availability breach and error budget exhaustion
+  - Log correlation with trace ID injection, structured JSON logging
+  - Log alerts for critical errors, security incidents, PII leakage
+  - Automated log export to S3 Glacier every 6 hours for compliance (7-year retention)
+  - Vertical Pod Autoscaler (VPA) for CPU/memory right-sizing (100m-4 cores, 256Mi-8Gi)
+  - Horizontal Pod Autoscaler (HPA) with CPU, memory, and custom metric scaling
+  - Cluster Autoscaler for node provisioning (3-20 nodes, 30m scale-down delay)
+  - Cost allocation by business unit with monthly automated reporting
+  - Budget alerts at 80%, 90%, and 100% thresholds ($15K monthly budget)
+  - Idle resource detector scanning every 6 hours for underutilized resources
+  - Location: `/infrastructure/pipelines/`, `/infrastructure/openshift/argocd/`, `/infrastructure/openshift/monitoring/`, `/infrastructure/openshift/logging/`, `/infrastructure/openshift/cost-optimization/`
+
+- **Customer Segmentation Frontend Integration**:
+  - SegmentationService for API communication with backend segmentation endpoints
+  - React Query hooks: useUserSegment, useSegmentedOffers, useVIPStatus
+  - Personalization components: SegmentedOffers, VIPBadge, TargetedPromos, PersonalizedGreeting
+  - Segment tier system: BRONZE, SILVER, GOLD, PLATINUM, DIAMOND, VIP
+  - VIP status detection and premium benefits display
+  - Personalized greeting based on time of day and segment tier
+  - Offer type filtering: CASHBACK, DISCOUNT, REWARD_POINTS, FREE_TRANSFER, BONUS_INTEREST
+  - Dashboard integration with BalanceCard VIP badge and SegmentedOffers section
+  - Types exported in central types/index.ts
+  - Location: `/frontend/web-app/src/`
+
 - **Mobile App - Expo (React Native)**:
   - Complete transition from Native (Swift/Kotlin) to Expo 52+ with React Native
   - Cross-platform iOS & Android from single TypeScript codebase

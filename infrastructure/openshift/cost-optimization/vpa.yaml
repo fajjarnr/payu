@@ -1,0 +1,85 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: account-service-vpa
+  namespace: payu-prod
+  labels:
+    app: payu
+    service: account-service
+    type: vpa
+spec:
+  targetRef:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    name: account-service
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        minAllowed:
+          cpu: 100m
+          memory: 256Mi
+        maxAllowed:
+          cpu: 4000m
+          memory: 8Gi
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsAndLimits
+  Recommenders:
+    - name: optimizer.recommender.kubernetes.io
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: transaction-service-vpa
+  namespace: payu-prod
+  labels:
+    app: payu
+    service: transaction-service
+    type: vpa
+spec:
+  targetRef:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    name: transaction-service
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        minAllowed:
+          cpu: 100m
+          memory: 256Mi
+        maxAllowed:
+          cpu: 4000m
+          memory: 8Gi
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsAndLimits
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: billing-service-vpa
+  namespace: payu-prod
+  labels:
+    app: payu
+    service: billing-service
+    type: vpa
+spec:
+  targetRef:
+    apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    name: billing-service
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        minAllowed:
+          cpu: 50m
+          memory: 128Mi
+        maxAllowed:
+          cpu: 2000m
+          memory: 4Gi
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsAndLimits

@@ -1,0 +1,178 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: idle-resource-detector
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: cost-optimization
+spec:
+  schedule: "0 */6 * * *" # Every 6 hours
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: idle-resource-detector-sa
+          containers:
+          - name: detector
+            image: prom/prometheus:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              #!/bin/bash
+              set -e
+
+              echo "=== PayU Idle Resource Detection ==="
+              echo "Scan Time: $(date)"
+              echo ""
+
+              # Detect underutilized CPU resources
+              echo "Checking for underutilized CPU resources..."
+              CPU_UNDERUTILIZED=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
+                -d 'query=sum(rate(container_cpu_usage_seconds_total{namespace=~"payu-.*"}[1h])) by (pod) / sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="cpu"}) by (pod) < 0.2' | \
+                jq -r '.data.result[] | "\(.metric.pod): \(.value[1])"')
+
+              if [ -n "$CPU_UNDERUTILIZED" ]; then
+                echo "⚠️  Underutilized CPU resources found:"
+                echo "$CPU_UNDERUTILIZED"
+                echo ""
+              else
+                echo "✅ No underutilized CPU resources found"
+                echo ""
+              fi
+
+              # Detect underutilized memory resources
+              echo "Checking for underutilized memory resources..."
+              MEM_UNDERUTILIZED=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
+                -d 'query=sum(container_memory_working_set_bytes{namespace=~"payu-.*"}) by (pod) / sum(kube_pod_container_resource_requests{namespace=~"payu-.*", resource="memory"}) by (pod) < 0.3' | \
+                jq -r '.data.result[] | "\(.metric.pod): \(.value[1])"')
+
+              if [ -n "$MEM_UNDERUTILIZED" ]; then
+                echo "⚠️  Underutilized memory resources found:"
+                echo "$MEM_UNDERUTILIZED"
+                echo ""
+              else
+                echo "✅ No underutilized memory resources found"
+                echo ""
+              fi
+
+              # Detect idle deployments (no traffic in 24h)
+              echo "Checking for idle deployments..."
+              IDLE_DEPLOYMENTS=$(curl -s "http://prometheus-operated.openshift-monitoring.svc:9090/api/v1/query" \
+                -d 'query(sum(rate(http_server_requests_seconds_count{namespace=~"payu-.*"}[24h])) by (job) < 0.0001)' | \
+                jq -r '.data.result[] | "\(.metric.job): \(.value[1]) req/s"')
+
+              if [ -n "$IDLE_DEPLOYMENTS" ]; then
+                echo "⚠️  Idle deployments found (no traffic in 24h):"
+                echo "$IDLE_DEPLOYMENTS"
+                echo ""
+              else
+                echo "✅ No idle deployments found"
+                echo ""
+              fi
+
+              # Detect unused PVCs
+              echo "Checking for unused PVCs..."
+              UNUSED_PVCS=$(oc get pvc -n payu-prod -o json | \
+                jq -r '.items[] | select(.status.phase == "Bound") | select(.metadata.annotations."pv.kubernetes.io/bind-completed" == "true") | "\(.metadata.name): \(.status.capacity.storage)"')
+
+              if [ -n "$UNUSED_PVCS" ]; then
+                echo "⚠️  Potentially unused PVCs found:"
+                echo "$UNUSED_PVCS"
+                echo ""
+              else
+                echo "✅ No unused PVCs found"
+                echo ""
+              fi
+
+              # Generate optimization recommendations
+              echo "=== Optimization Recommendations ==="
+              echo ""
+              echo "1. Scale down underutilized services:"
+              echo "   oc scale dc/<service-name> --replicas=<lower-replica-count>"
+              echo ""
+              echo "2. Reduce resource requests for idle pods:"
+              echo "   oc set resources dc/<service-name> --requests=cpu=<lower-value>,memory=<lower-value>"
+              echo ""
+              echo "3. Consider scaling HPA min replicas:"
+              echo "   oc patch hpa/<hpa-name> -p '{\"spec\":{\"minReplicas\":<lower-value>}}'"
+              echo ""
+              echo "4. Review and delete unused PVCs:"
+              echo "   oc delete pvc/<pvc-name>"
+              echo ""
+
+              # Send alert if critical issues found
+              if [ -n "$CPU_UNDERUTILIZED" ] || [ -n "$IDLE_DEPLOYMENTS" ]; then
+                echo "🚨 Sending idle resource alert to Slack..."
+                curl -X POST $SLACK_WEBHOOK_URL \
+                  -H 'Content-Type: application/json' \
+                  -d "{
+                    \"text\": \"🚨 Idle Resources Detected\",
+                    \"attachments\": [{
+                      \"color\": \"warning\",
+                      \"title\": \"Idle Resource Alert\",
+                      \"text\": \"Idle resources have been detected in the PayU cluster. Review the optimization recommendations.\",
+                      \"fields\": [
+                        {\"title\": \"Scan Time\", \"value\": \"$(date)\", \"short\": true},
+                        {\"title\": \"Cluster\", \"value\": \"payu-prod\", \"short\": true}
+                      ]
+                    }]
+                  }" || true
+              fi
+
+              echo "=== Idle Resource Detection Complete ==="
+            env:
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cost-alert-secrets
+                  key: SLACK_WEBHOOK_URL
+          restartPolicy: OnFailure
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: idle-resource-detector
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: cost-optimization
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: idle-resource-detector
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: cost-optimization
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: idle-resource-detector
+subjects:
+  - kind: ServiceAccount
+    name: idle-resource-detector-sa
+    namespace: openshift-monitoring
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: idle-resource-detector-sa
+  namespace: openshift-monitoring
+  labels:
+    app: payu
+    type: cost-optimization

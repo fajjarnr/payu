@@ -1,0 +1,98 @@
+apiVersion: triggers.tekton.dev/v1
+kind: TriggerTemplate
+metadata:
+  name: payu-build-template
+  namespace: payu-cicd
+spec:
+  params:
+    - name: git-repo-url
+      description: The git repository url
+    - name: git-revision
+      description: The git revision
+      default: main
+    - name: git-repo-name
+      description: The name of the repository
+    - name: service-type
+      description: The type of service (spring-boot, quarkus, python)
+    - name: service-name
+      description: The name of the service
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: $(tt.params.service-name)-build-
+        namespace: payu-cicd
+        labels:
+          app: payu
+          service: $(tt.params.service-name)
+          type: build
+          trigger: webhook
+      spec:
+        pipelineRef:
+          name: payu-build-pipeline
+        params:
+          - name: service-name
+            value: $(tt.params.service-name)
+          - name: git-url
+            value: $(tt.params.git-repo-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: service-type
+            value: $(tt.params.service-type)
+        workspaces:
+          - name: source
+            persistentVolumeClaim:
+              claimName: tekton-workspace-pvc
+            subPath: source
+          - name: maven-settings
+            configMap:
+              name: maven-settings
+          - name: dockerconfig
+            secret:
+              secretName: registry-credentials
+        timeout: 1h30m
+---
+apiVersion: triggers.tekton.dev/v1
+kind: TriggerBinding
+metadata:
+  name: payu-build-binding
+  namespace: payu-cicd
+spec:
+  params:
+    - name: git-repo-url
+      value: $(body.repository.clone_url)
+    - name: git-revision
+      value: $(body.ref)
+    - name: git-repo-name
+      value: $(body.repository.name)
+    - name: service-type
+      value: spring-boot
+    - name: service-name
+      value: $(body.repository.name)
+---
+apiVersion: triggers.tekton.dev/v1
+kind: EventListener
+metadata:
+  name: payu-build-listener
+  namespace: payu-cicd
+spec:
+  serviceAccountName: tekton-triggers-sa
+  triggers:
+    - name: build-on-push
+      bindings:
+        - ref: payu-build-binding
+      template:
+        ref: payu-build-template
+      interceptors:
+        - name: filter-push-events
+          ref:
+            name: github
+          params:
+            - name: eventTypes
+              value: ["push"]
+        - name: filter-main-branch
+          ref:
+            name: cel
+          params:
+            - name: filter
+              value: body.ref.startsWith('refs/heads/main')

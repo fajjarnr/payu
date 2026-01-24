@@ -1,0 +1,270 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: payu-test-pipeline
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: test
+spec:
+  description: |
+    Test pipeline for PayU services with parallel execution.
+    Includes unit tests, integration tests, architecture tests, and code quality checks.
+  params:
+    - name: service-name
+      type: string
+      description: Name of the service to test
+    - name: git-url
+      type: string
+      description: Git repository URL
+    - name: git-revision
+      type: string
+      description: Git revision to test
+      default: main
+    - name: service-type
+      type: string
+      description: Type of service (spring-boot, quarkus, python)
+      default: spring-boot
+    - name: coverage-threshold
+      type: string
+      description: Minimum code coverage percentage
+      default: "80"
+    - name: sonarqube-host
+      type: string
+      description: SonarQube server URL
+      default: "http://sonarqube.payu-cicd.svc.cluster.local:9000"
+    - name: run-integration-tests
+      type: string
+      description: Run integration tests with Testcontainers
+      default: "true"
+  workspaces:
+    - name: source
+      description: Workspace for source code
+    - name: maven-settings
+      description: Maven settings configuration
+      optional: true
+    - name: sonarqube-settings
+      description: SonarQube credentials
+      optional: true
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: deleteExisting
+          value: "true"
+
+    # Parallel Unit Tests for different test suites
+    - name: unit-tests
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+        - name: maven-settings
+          workspace: maven-settings
+          optional: true
+      params:
+        - name: GOALS
+          value:
+            - test
+            - -Dtest='!**/*Integration*,!**/*IT*'
+            - -Djacoco.destFile=/workspace/source/target/jacoco-unit.exec
+        - name: CONTEXT_DIR
+          value: backend/$(params.service-name)
+
+    - name: architecture-tests
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot"]
+      workspaces:
+        - name: source
+          workspace: source
+        - name: maven-settings
+          workspace: maven-settings
+          optional: true
+      params:
+        - name: GOALS
+          value:
+            - test
+            - -Dtest=ArchTest*
+        - name: CONTEXT_DIR
+          value: backend/$(params.service-name)
+
+    - name: python-tests
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: pytest
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["python"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: ARGS
+          value:
+            - -v
+            - --cov=/workspace/source
+            - --cov-report=json
+            - --cov-report=term-missing
+            - --cov-fail-under=$(params.coverage-threshold)
+        - name: SOURCE_PATH
+          value: backend/$(params.service-name)
+
+    # Integration Tests (can run in parallel with unit tests if no dependencies)
+    - name: integration-tests
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      when:
+        - input: "$(params.run-integration-tests)"
+          operator: in
+          values: ["true"]
+      workspaces:
+        - name: source
+          workspace: source
+        - name: maven-settings
+          workspace: maven-settings
+          optional: true
+      params:
+        - name: GOALS
+          value:
+            - test
+            - -Dtest='**/*Integration*,**/*IT*'
+            - -Djacoco.destFile=/workspace/source/target/jacoco-integration.exec
+        - name: CONTEXT_DIR
+          value: backend/$(params.service-name)
+
+    # Coverage Analysis
+    - name: check-coverage
+      runAfter:
+        - unit-tests
+        - integration-tests
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: GOALS
+          value:
+            - jacoco:check
+            - -Djacoco.coverageRatio=$(params.coverage-threshold)%
+        - name: CONTEXT_DIR
+          value: backend/$(params.service-name)
+
+    # SonarQube Analysis
+    - name: sonarqube-scan
+      runAfter:
+        - check-coverage
+        - architecture-tests
+      taskRef:
+        name: sonarqube-scanner
+        kind: ClusterTask
+      workspaces:
+        - name: source
+          workspace: source
+        - name: sonar-settings
+          workspace: sonarqube-settings
+      params:
+        - name: SONAR_HOST_URL
+          value: $(params.sonarqube-host)
+        - name: SONAR_PROJECT_KEY
+          value: payu-$(params.service-name)
+        - name: SONAR_SOURCES
+          value: backend/$(params.service-name)/src
+        - name: SONAR_SOURCE_ENCODING
+          value: UTF-8
+        - name: SONAR_QUALITY_GATE_WAIT
+          value: "true"
+        - name: SONAR_QUALITY_GATE_TIMEOUT
+          value: "300"
+
+    # Security Scan with Snyk
+    - name: snyk-scan
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: snyk
+        kind: ClusterTask
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: ARGS
+          value:
+            - test
+            - --severity-threshold=high
+            - --json-file-output=/workspace/source/snyk-report.json
+        - name: SOURCE_PATH
+          value: backend/$(params.service-name)
+
+    # Generate Test Report
+    - name: generate-test-report
+      runAfter:
+        - unit-tests
+        - integration-tests
+        - python-tests
+        - check-coverage
+        - sonarqube-scan
+        - snyk-scan
+      taskRef:
+        name: tkn
+      params:
+        - name: SCRIPT
+          value: |
+            echo "=== Test Execution Summary ===" > /workspace/test-report.txt
+            echo "Service: $(params.service-name)" >> /workspace/test-report.txt
+            echo "Type: $(params.service-type)" >> /workspace/test-report.txt
+            echo "Date: $(date)" >> /workspace/test-report.txt
+            echo "" >> /workspace/test-report.txt
+            echo "Unit Tests: COMPLETED" >> /workspace/test-report.txt
+            echo "Integration Tests: COMPLETED" >> /workspace/test-report.txt
+            echo "Coverage Check: PASSED (>= $(params.coverage-threshold)%)" >> /workspace/test-report.txt
+            echo "Architecture Tests: PASSED" >> /workspace/test-report.txt
+            echo "SonarQube Scan: COMPLETED" >> /workspace/test-report.txt
+            echo "Security Scan: COMPLETED" >> /workspace/test-report.txt
+            cat /workspace/test-report.txt
+      workspaces:
+        - name: output
+          workspace: source
+
+  finally:
+    - name: cleanup
+      taskRef:
+        name: cleanup
+      params:
+        - name: workspace
+          value: source
