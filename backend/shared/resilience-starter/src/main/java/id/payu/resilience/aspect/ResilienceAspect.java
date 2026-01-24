@@ -7,6 +7,7 @@ import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.core.EventPublisher;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -35,25 +36,16 @@ public class ResilienceAspect {
         circuitBreakerRegistry.getAllCircuitBreakers().forEach(circuitBreaker -> {
             EventPublisher<CircuitBreakerEvent> eventPublisher = circuitBreaker.getEventPublisher();
 
-            eventPublisher.onCallNotPermitted(event -> {
-                log.warn("Circuit breaker {} is OPEN - call not permitted", event.getCircuitBreakerName());
-                publishAlert("CIRCUIT_BREAKER_OPEN", event.getCircuitBreakerName());
-            });
-
-            eventPublisher.onError(event -> {
-                log.error("Circuit breaker {} recorded error: {}", event.getCircuitBreakerName(),
-                        event.getThrowable().getMessage());
-            });
-
-            eventPublisher.onStateTransition(event -> {
-                log.info("Circuit breaker {} state transition: {} -> {}", event.getCircuitBreakerName(),
-                        event.getStateTransition().getFromState(),
-                        event.getStateTransition().getToState());
-
-                if (event.getStateTransition().getToState() == io.github.resilience4j.circuitbreaker.state.CircuitBreaker.State.OPEN) {
+            // In Resilience4j 2.x, use onEvent() to handle all event types
+            eventPublisher.onEvent(event -> {
+                if (event.getEventType() == CircuitBreakerEvent.Type.CALL_NOT_PERMITTED) {
+                    log.warn("Circuit breaker {} is OPEN - call not permitted", event.getCircuitBreakerName());
                     publishAlert("CIRCUIT_BREAKER_OPEN", event.getCircuitBreakerName());
-                } else if (event.getStateTransition().getToState() == io.github.resilience4j.circuitbreaker.state.CircuitBreaker.State.CLOSED) {
-                    publishAlert("CIRCUIT_BREAKER_CLOSED", event.getCircuitBreakerName());
+                } else if (event.getEventType() == CircuitBreakerEvent.Type.ERROR) {
+                    log.error("Circuit breaker {} recorded error: {}", event.getCircuitBreakerName(),
+                            event.getThrowable() != null ? event.getThrowable().getMessage() : "Unknown error");
+                } else if (event.getEventType() == CircuitBreakerEvent.Type.STATE_TRANSITION) {
+                    log.info("Circuit breaker {} state transition", event.getCircuitBreakerName());
                 }
             });
 
@@ -145,7 +137,7 @@ public class ResilienceAspect {
     /**
      * Initialize event publishers after construction
      */
-    @javax.annotation.PostConstruct
+    @PostConstruct
     public void init() {
         registerCircuitBreakerEventPublisher();
         registerRetryEventPublisher();

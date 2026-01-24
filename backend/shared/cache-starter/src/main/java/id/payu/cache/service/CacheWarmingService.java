@@ -7,10 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,7 +36,7 @@ public class CacheWarmingService implements ApplicationListener<ApplicationReady
 
     private final CacheService cacheService;
     private final CacheProperties properties;
-    private final ThreadPoolTaskExecutor cacheWarmExecutor;
+    private final Executor cacheWarmExecutor;
 
     private final io.micrometer.core.instrument.Counter warmedCounter;
     private final io.micrometer.core.instrument.Counter failedCounter;
@@ -45,7 +45,7 @@ public class CacheWarmingService implements ApplicationListener<ApplicationReady
     public CacheWarmingService(
             CacheService cacheService,
             CacheProperties properties,
-            ThreadPoolTaskExecutor cacheWarmExecutor) {
+            Executor cacheWarmExecutor) {
         this.cacheService = cacheService;
         this.properties = properties;
         this.cacheWarmExecutor = cacheWarmExecutor;

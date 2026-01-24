@@ -218,9 +218,10 @@ public class CacheWithTTLAspect {
         java.time.Duration hardTtl = java.time.Duration.ofSeconds(hardTtlSeconds);
 
         // Try to get from cache with stale-while-revalidate
+        @SuppressWarnings("unchecked")
         Object result = cacheService.getWithStaleWhileRevalidate(
                 cacheKey,
-                returnType,
+                (Class<Object>) returnType,
                 () -> {
                     try {
                         return joinPoint.proceed();

@@ -37,8 +37,8 @@ public class CacheInvalidationConsumer {
     private final CacheService cacheService;
     private final CacheProperties properties;
 
-    private final AtomicLong processedCounter = Metrics.counter("cache.invalidation.processed");
-    private final AtomicLong failedCounter = Metrics.counter("cache.invalidation.failed");
+    private final io.micrometer.core.instrument.Counter processedCounter = Metrics.counter("cache.invalidation.processed");
+    private final io.micrometer.core.instrument.Counter failedCounter = Metrics.counter("cache.invalidation.failed");
 
     /**
      * Listen for cache invalidation events.
@@ -74,10 +74,10 @@ public class CacheInvalidationConsumer {
                     break;
             }
 
-            processedCounter.incrementAndGet();
+            processedCounter.increment();
         } catch (Exception e) {
             log.error("Error processing cache invalidation event: {}", e.getMessage(), e);
-            failedCounter.incrementAndGet();
+            failedCounter.increment();
         }
     }
 
@@ -86,7 +86,7 @@ public class CacheInvalidationConsumer {
      */
     private void invalidateKey(CacheInvalidationEvent event) {
         String key = buildCacheKey(event.getCacheName(), event.getKey());
-        cacheService.evict(key);
+        cacheService.invalidate(key);
         log.debug("Invalidated cache key: {}", key);
     }
 

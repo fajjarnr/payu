@@ -17,6 +17,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Main auto-configuration for PayU Cache Starter.
@@ -67,8 +68,10 @@ public class CacheAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public CacheWithTTLAspect cacheWithTTLAspect(CacheService cacheService) {
-        return new CacheWithTTLAspect(cacheService);
+    public CacheWithTTLAspect cacheWithTTLAspect(
+            CacheService cacheService,
+            @Qualifier("cacheRefreshExecutor") Executor cacheRefreshExecutor) {
+        return new CacheWithTTLAspect(cacheService, cacheRefreshExecutor);
     }
 
     @Bean(name = "cacheRefreshExecutor")
@@ -109,7 +112,7 @@ public class CacheAutoConfiguration {
     )
     public CacheWarmingService cacheWarmingService(
             CacheService cacheService,
-            Executor cacheWarmExecutor) {
+            @Qualifier("cacheWarmExecutor") Executor cacheWarmExecutor) {
         return new CacheWarmingService(cacheService, properties, cacheWarmExecutor);
     }
 
@@ -121,7 +124,7 @@ public class CacheAutoConfiguration {
         havingValue = "true"
     )
     public CacheInvalidationPublisher cacheInvalidationPublisher(
-            KafkaTemplate<String, Object> kafkaTemplate) {
+            KafkaTemplate<String, id.payu.cache.model.CacheInvalidationEvent> kafkaTemplate) {
         return new CacheInvalidationPublisher(kafkaTemplate, properties);
     }
 

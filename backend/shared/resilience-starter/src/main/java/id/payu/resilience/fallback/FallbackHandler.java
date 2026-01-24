@@ -1,7 +1,6 @@
 package id.payu.resilience.fallback;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -68,9 +67,9 @@ public class FallbackHandler {
     /**
      * Handle Timeout Exception
      */
-    @ExceptionHandler(io.github.resilience4j.timelimiter.TimeLimiterInvocationException.class)
+    @ExceptionHandler({java.util.concurrent.TimeoutException.class, java.util.concurrent.TimeoutException.class})
     @ResponseStatus(HttpStatus.REQUEST_TIMEOUT)
-    public Map<String, Object> handleTimeout(io.github.resilience4j.timelimiter.TimeLimiterInvocationException ex) {
+    public Map<String, Object> handleTimeout(Exception ex) {
         log.warn("Request timeout: {}", ex.getMessage());
 
         Map<String, Object> response = new HashMap<>();

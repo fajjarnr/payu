@@ -47,8 +47,8 @@ public class DataSourceConfiguration {
         config.setMaximumPoolSize(properties.getPool().getMaximumPoolSize());
         config.setMinimumIdle(properties.getPool().getMinimumIdle());
         config.setConnectionTimeout(properties.getPool().getConnectionTimeout());
-        config.setIdleTimeout(properties.getPool().getIdleTimeout());
-        config.setMaxLifetime(properties.getPool().getMaxLifetime());
+        config.setIdleTimeout((int) properties.getPool().getIdleTimeout().toMillis());
+        config.setMaxLifetime((int) properties.getPool().getMaxLifetime().toMillis());
 
         // Connection testing
         config.setConnectionTestQuery(properties.getPool().getConnectionTestQuery());
@@ -59,7 +59,7 @@ public class DataSourceConfiguration {
         config.setReadOnly(false);
 
         // Leak detection
-        if (properties.getPool().isLeakDetectionThreshold() > 0) {
+        if (properties.getPool().getLeakDetectionThreshold() > 0) {
             config.setLeakDetectionThreshold(properties.getPool().getLeakDetectionThreshold());
         }
 
@@ -95,8 +95,8 @@ public class DataSourceConfiguration {
         config.setMaximumPoolSize(properties.getReadReplica().getMaximumPoolSize());
         config.setMinimumIdle(properties.getReadReplica().getMinimumIdle());
         config.setConnectionTimeout(properties.getReadReplica().getConnectionTimeout());
-        config.setIdleTimeout(properties.getReadReplica().getIdleTimeout());
-        config.setMaxLifetime(properties.getReadReplica().getMaxLifetime());
+        config.setIdleTimeout((int) properties.getReadReplica().getIdleTimeout().toMillis());
+        config.setMaxLifetime((int) properties.getReadReplica().getMaxLifetime().toMillis());
 
         // Connection testing
         config.setConnectionTestQuery(properties.getReadReplica().getConnectionTestQuery());
@@ -107,7 +107,7 @@ public class DataSourceConfiguration {
         config.setReadOnly(true);
 
         // Leak detection
-        if (properties.getReadReplica().isLeakDetectionThreshold() > 0) {
+        if (properties.getReadReplica().getLeakDetectionThreshold() > 0) {
             config.setLeakDetectionThreshold(properties.getReadReplica().getLeakDetectionThreshold());
         }
 

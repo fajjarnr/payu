@@ -62,7 +62,7 @@ public class LocalCacheService {
             this.hitCounter = Metrics.counter(prefix + ".hits");
             this.missCounter = Metrics.counter(prefix + ".misses");
             this.evictionCounter = Metrics.counter(prefix + ".evictions");
-            this.sizeGauge = Metrics.gauge(prefix + ".size", this, LocalCacheService::getCurrentSize);
+            this.sizeGauge = io.micrometer.core.instrument.Gauge.builder(prefix + ".size", this, LocalCacheService::getCurrentSize).register(Metrics.globalRegistry);
 
             log.info("Local cache enabled with maxSize={}, ttl={}, stats={}",
                     properties.getLocalCache().getMaxSize(),
@@ -244,7 +244,7 @@ public class LocalCacheService {
      */
     public CacheHealth getHealth() {
         if (!enabled) {
-            return new CacheHealth(false, 0, 0.0, 0.0);
+            return new CacheHealth(false, 0, 0.0, 0L);
         }
 
         CacheStats stats = recordStats ? cache.stats() : null;
@@ -252,7 +252,7 @@ public class LocalCacheService {
             true,
             cache.estimatedSize(),
             stats != null ? stats.hitRate() : 0.0,
-            stats != null ? stats.evictionCount() : 0
+            stats != null ? stats.evictionCount() : 0L
         );
     }
 
