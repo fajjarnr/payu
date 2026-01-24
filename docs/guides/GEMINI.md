@@ -23,7 +23,7 @@
 
 | Action | Command |
 |--------|---------|
-| **Build All** | `mvn clean package -DskipTests` |
+| **Build All** | `mvn clean package -DskipTests -T 1C` |
 | **Run Tests** | `mvn test` |
 | **Local Dev** | `docker-compose up -d` |
 | **Check Logs** | `docker-compose logs -f [service-name]` |
