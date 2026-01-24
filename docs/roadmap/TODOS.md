@@ -60,10 +60,10 @@
 - [x] **Missing Core Modules**:
     *   [x] **Lending & Credit Hub** (`/lending`): UI for Personal Loans application and PayLater management.
     *   [x] **Rewards & Gamification** (`/rewards`): Implement Points dashboard, Cashback history, and Referral engine.
-- [ ] **Integrated Service Wiring**:
-    *   [ ] **CMS Integration**: Connect `frontend/web-app` to `cms-service` for dynamic banners and emergency alerts.
-    *   [ ] **A/B Testing Wiring**: Implement `useExperiment` hook in frontend to consume variants from `ab-testing-service`.
-    *   [ ] **Customer Segmentation**: Display personalized offers based on user segment fetched from `promotion-service`.
+- [x] **Integrated Service Wiring**:
+    *   [x] **CMS Integration**: Connect `frontend/web-app` to `cms-service` for dynamic banners and emergency alerts.
+    *   [x] **A/B Testing Wiring**: Implement `useExperiment` hook in frontend to consume variants from `ab-testing-service`.
+    *   [x] **Customer Segmentation**: Display personalized offers based on user segment fetched from `promotion-service`.
 
 ### 9. Mobile App Support
 - [x] Prepare mobile-responsive views for web-app.
@@ -74,16 +74,16 @@
     - [x] Target: Cross-platform iOS & Android from single codebase.
 
 ### 26. Mobile App Feature Parity (React Native)
-- [ ] **Core Banking Implementation**:
-    - [ ] Build **Dashboard** with balance overview and quick actions.
-    - [ ] Build **Transfer** flow with recipient search and BI-FAST support.
-    - [ ] Build **QRIS Scanner** with dynamic payment handling.
-    - [ ] Build **Virtual Cards** management (Freeze, Unfreeze, Show CVV).
-- [ ] **Enterprise Integration**:
-    - [ ] Integrate **In-app Feedback Widget** for mobile bug reporting.
-    - [ ] Integrate **A/B Testing Hook** to toggle mobile features.
-    - [ ] Implement **Push Notifications** via Expo Notifications (Firebase/APNs).
-    - [ ] Add **Biometric Auth** (FaceID/Fingerprint) for transaction signing.
+- [x] **Core Banking Implementation**:
+    - [x] Build **Dashboard** with balance overview and quick actions.
+    - [x] Build **Transfer** flow with recipient search and BI-FAST support.
+    - [x] Build **QRIS Scanner** with dynamic payment handling.
+    - [x] Build **Virtual Cards** management (Freeze, Unfreeze, Show CVV).
+- [x] **Enterprise Integration**:
+    - [x] Integrate **In-app Feedback Widget** for mobile bug reporting.
+    - [x] Integrate **A/B Testing Hook** to toggle mobile features.
+    - [x] Implement **Push Notifications** via Expo Notifications (Firebase/APNs).
+    - [x] Add **Biometric Auth** (FaceID/Fingerprint) for transaction signing.
 
 ## 🛡️ Backend Technical Debt & Hardening
 
@@ -120,7 +120,7 @@
 
 ## 🧪 Testing & Quality Assurance
 
-### 15. Testing Suite
+### 15. Testing Suite (Existing)
 - [x] **Cross-Service Integration Tests**: Implement holistic End-to-End test suite covering full user journeys.
 - [x] **TDD Hardening**: Increase test coverage to >80% for all core banking services.
 - [x] **Frontend Quality**:
@@ -128,6 +128,120 @@
     *   [x] Setup **Vitest** for unit testing critical logic in `src/services` and `src/stores`.
 - [x] [SKIP] Load Testing: (Postponed as per user request).
 - [x] [SKIP] Security Testing: (Postponed as per user request).
+
+### 36. Comprehensive Testing Infrastructure (NEW)
+- [ ] **Docker Compose Test Environment**:
+    - [ ] Verify `docker-compose up -d` starts all 20+ services successfully.
+    - [ ] Add **health check script** to validate all services are healthy before running tests.
+    - [ ] Create `docker-compose.test.yml` for isolated test environment with clean databases.
+    - [ ] Add **test data seeding** script (`scripts/seed-test-data.sh`).
+    - [ ] Configure **test user accounts** with known credentials for automation.
+    - [ ] Add **cleanup script** to reset databases between test runs.
+
+- [ ] **Backend Unit Tests (Local)**:
+    - [ ] Verify all `account-service` tests pass: `cd backend/account-service && mvn test`.
+    - [ ] Verify all `auth-service` tests pass: `cd backend/auth-service && mvn test`.
+    - [ ] Verify all `transaction-service` tests pass: `cd backend/transaction-service && mvn test`.
+    - [ ] Verify all `wallet-service` tests pass: `cd backend/wallet-service && mvn test`.
+    - [ ] Verify all `billing-service` tests pass: `cd backend/billing-service && ./mvnw test`.
+    - [ ] Verify all `notification-service` tests pass: `cd backend/notification-service && ./mvnw test`.
+    - [ ] Verify all `gateway-service` tests pass: `cd backend/gateway-service && ./mvnw test`.
+    - [ ] Verify all `kyc-service` tests pass: `cd backend/kyc-service && pytest`.
+    - [ ] Verify all `analytics-service` tests pass: `cd backend/analytics-service && pytest`.
+    - [ ] Create **test coverage report** for each service (JaCoCo/coverage.py).
+    - [ ] Enforce **minimum 80% coverage** threshold in CI/CD.
+
+- [ ] **Backend Integration Tests (Docker)**:
+    - [ ] Run `account-service` integration tests with Testcontainers (PostgreSQL, Kafka).
+    - [ ] Run `auth-service` integration tests with Keycloak Testcontainer.
+    - [ ] Run `transaction-service` integration tests with PostgreSQL Testcontainer.
+    - [ ] Run `wallet-service` integration tests verifying Kafka event publishing.
+    - [ ] Run `billing-service` integration tests with mocked wallet-service.
+    - [ ] Verify **inter-service communication** between gateway and backend services.
+    - [ ] Test **Kafka event flow**: transaction → wallet → notification.
+    - [ ] Test **database migrations** (Flyway) run successfully on fresh DB.
+
+- [ ] **API Contract Tests (Postman/Newman)**:
+    - [ ] Create **Postman collection** for all API endpoints.
+    - [ ] Add **environment files** for local, docker, and staging.
+    - [ ] Run `newman run` against docker-compose environment.
+    - [ ] Validate **OpenAPI specs** match actual API responses.
+    - [ ] Test **authentication flows** (login, token refresh, logout).
+    - [ ] Test **error responses** match documented error codes.
+
+- [ ] **E2E Tests - Full User Journeys (Docker)**:
+    - [ ] **User Onboarding**: Register → eKYC → Wallet Creation.
+    - [ ] **Transfer Flow**: Login → Check Balance → Transfer → Verify Debit.
+    - [ ] **Bill Payment**: Login → Select Biller → Pay → Verify Transaction.
+    - [ ] **QRIS Payment**: Scan QR → Confirm → Pay → Verify.
+    - [ ] **Investment Journey**: Open Account → Deposit → View Portfolio.
+    - [ ] **Lending Journey**: Check Eligibility → Apply Loan → View Status.
+    - [ ] Create **Playwright test suite** targeting docker-compose frontend.
+    - [ ] Generate **E2E test report** with screenshots on failure.
+
+- [ ] **Frontend Tests (Local)**:
+    - [ ] Run `cd frontend/web-app && npm run test` for Vitest unit tests.
+    - [ ] Run `cd frontend/web-app && npm run test:e2e` for Playwright E2E.
+    - [ ] Verify **type checking** passes: `npm run type-check`.
+    - [ ] Verify **lint** passes: `npm run lint`.
+    - [ ] Verify **build** succeeds: `npm run build`.
+
+- [ ] **Mobile Tests (Local)**:
+    - [ ] Run `cd mobile && npm run test` for Jest unit tests.
+    - [ ] Run `cd mobile && npm run lint` for ESLint checks.
+    - [ ] Verify **TypeScript compilation**: `npx tsc --noEmit`.
+    - [ ] Test on **iOS Simulator** via `npm run ios`.
+    - [ ] Test on **Android Emulator** via `npm run android`.
+    - [ ] Manual testing of **biometric authentication** flows.
+    - [ ] Manual testing of **push notification** handling.
+
+- [ ] **Regression Test Suite (Automated)**:
+    - [ ] Create `tests/regression/` directory structure.
+    - [ ] Implement **nightly regression** run via cron/GitHub Actions.
+    - [ ] Test **backward compatibility** of API changes.
+    - [ ] Test **database rollback** scenarios.
+    - [ ] Generate **regression report** with pass/fail summary.
+
+- [ ] **Performance Smoke Tests (Docker)**:
+    - [ ] Run **basic load test** (50 users) against docker-compose.
+    - [ ] Verify **response times** < 500ms for critical endpoints.
+    - [ ] Verify **no memory leaks** after 1000 requests.
+    - [ ] Verify **database connection pooling** works under load.
+    - [ ] Generate **performance baseline** metrics.
+
+### 37. Test Automation Scripts
+- [ ] Create `scripts/run-all-tests.sh`:
+    - [ ] Start docker-compose if not running.
+    - [ ] Wait for all services to be healthy.
+    - [ ] Run backend unit tests.
+    - [ ] Run backend integration tests.
+    - [ ] Run API contract tests.
+    - [ ] Run E2E tests.
+    - [ ] Generate consolidated test report.
+    - [ ] Exit with proper error code for CI/CD.
+- [ ] Create `scripts/test-single-service.sh <service-name>`:
+    - [ ] Run tests for specified service only.
+    - [ ] Support both Java (Maven) and Python (pytest) services.
+- [ ] Create `Makefile` with test targets:
+    - [ ] `make test` - Run all tests.
+    - [ ] `make test-unit` - Unit tests only.
+    - [ ] `make test-integration` - Integration tests only.
+    - [ ] `make test-e2e` - E2E tests only.
+    - [ ] `make test-coverage` - Generate coverage report.
+
+### 38. CI/CD Test Integration
+- [ ] **GitHub Actions Workflow**:
+    - [ ] Create `.github/workflows/test.yml` for PR testing.
+    - [ ] Run unit tests on every push.
+    - [ ] Run integration tests on PR to main.
+    - [ ] Run E2E tests nightly.
+    - [ ] Block merge if tests fail.
+- [ ] **Test Reports**:
+    - [ ] Publish **JUnit XML** reports to GitHub Actions.
+    - [ ] Publish **coverage reports** to Codecov/SonarQube.
+    - [ ] Display **test badge** in README.
+    - [ ] Send **Slack notification** on test failure.
+
 
 ## 🚀 Backend Feature Extensions (Gap Analysis)
 
