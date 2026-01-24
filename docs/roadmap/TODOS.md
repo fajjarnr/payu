@@ -130,26 +130,30 @@
 - [x] [SKIP] Security Testing: (Postponed as per user request).
 
 ### 36. Comprehensive Testing Infrastructure (NEW)
-- [ ] **Docker Compose Test Environment**:
-    - [ ] Verify `docker-compose up -d` starts all 20+ services successfully.
-    - [ ] Add **health check script** to validate all services are healthy before running tests.
-    - [ ] Create `docker-compose.test.yml` for isolated test environment with clean databases.
-    - [ ] Add **test data seeding** script (`scripts/seed-test-data.sh`).
-    - [ ] Configure **test user accounts** with known credentials for automation.
-    - [ ] Add **cleanup script** to reset databases between test runs.
+- [x] **Docker Compose Test Environment**:
+    - [x] Verify `docker-compose up -d` starts all 20+ services successfully.
+    - [x] Add **health check script** to validate all services are healthy before running tests (`scripts/test-health-check.sh`).
+    - [x] Create `docker-compose.test.yml` for isolated test environment with clean databases.
+    - [x] Add **test data seeding** script (`scripts/seed-test-data.sh`).
+    - [x] Configure **test user accounts** with known credentials for automation.
+    - [x] Add **cleanup script** to reset databases between test runs (`scripts/cleanup-test-db.sh`).
 
 - [ ] **Backend Unit Tests (Local)**:
-    - [ ] Verify all `account-service` tests pass: `cd backend/account-service && mvn test`.
-    - [ ] Verify all `auth-service` tests pass: `cd backend/auth-service && mvn test`.
-    - [ ] Verify all `transaction-service` tests pass: `cd backend/transaction-service && mvn test`.
-    - [ ] Verify all `wallet-service` tests pass: `cd backend/wallet-service && mvn test`.
-    - [ ] Verify all `billing-service` tests pass: `cd backend/billing-service && ./mvnw test`.
-    - [ ] Verify all `notification-service` tests pass: `cd backend/notification-service && ./mvnw test`.
-    - [ ] Verify all `gateway-service` tests pass: `cd backend/gateway-service && ./mvnw test`.
-    - [ ] Verify all `kyc-service` tests pass: `cd backend/kyc-service && pytest`.
-    - [ ] Verify all `analytics-service` tests pass: `cd backend/analytics-service && pytest`.
+    - [x] Add `scripts/run-all-tests.sh` for automated test execution.
+    - [x] Add `scripts/test-single-service.sh` for testing individual services.
+    - [x] Add `Makefile` with convenient test targets.
+    - [ ] Verify all `account-service` tests pass: `cd backend/account-service && mvn test`. (Blocked: shared libs)
+    - [ ] Verify all `auth-service` tests pass: `cd backend/auth-service && mvn test`. (Blocked: shared libs)
+    - [ ] Verify all `transaction-service` tests pass: `cd backend/transaction-service && mvn test`. (Blocked: shared libs)
+    - [ ] Verify all `wallet-service` tests pass: `cd backend/wallet-service && mvn test`. (Blocked: shared libs)
+    - [ ] Verify all `billing-service` tests pass: `cd backend/billing-service && ./mvnw test`. (Blocked: shared libs)
+    - [ ] Verify all `notification-service` tests pass: `cd backend/notification-service && ./mvnw test`. (Blocked: shared libs)
+    - [ ] Verify all `gateway-service` tests pass: `cd backend/gateway-service && ./mvnw test`. (Blocked: shared libs)
+    - [ ] Verify all `kyc-service` tests pass: `cd backend/kyc-service && pytest`. (Blocked: shared libs)
+    - [ ] Verify all `analytics-service` tests pass: `cd backend/analytics-service && pytest`. (Blocked: shared libs)
     - [ ] Create **test coverage report** for each service (JaCoCo/coverage.py).
     - [ ] Enforce **minimum 80% coverage** threshold in CI/CD.
+    - [ ] Note: `cache-starter` now compiles successfully. `resilience-starter` needs Resilience4j 2.x API updates.
 
 - [ ] **Backend Integration Tests (Docker)**:
     - [ ] Run `account-service` integration tests with Testcontainers (PostgreSQL, Kafka).
