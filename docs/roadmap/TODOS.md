@@ -63,7 +63,11 @@
 
 ### 9. Mobile App Support
 - [x] Prepare mobile-responsive views for web-app.
-- [x] [Planned] Native mobile boilerplate (iOS/Android).
+- [ ] **Transition to Expo (React Native)**:
+    - [ ] Remove current Native (Swift/Kotlin) boilerplate from `mobile/` (Inconsistent with stack).
+    - [ ] Initialize new Expo project with TypeScript and Expo Router.
+    - [ ] Implement core banking flows (Onboarding, Transfer, QRIS) using React Native.
+    - [ ] Target: Cross-platform iOS & Android from single codebase.
 
 ## 🛡️ Backend Technical Debt & Hardening
 
