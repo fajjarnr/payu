@@ -19,6 +19,16 @@
 | **Primary Languages** | Java 21, Python 3.12 |
 | **Last Updated** | January 2026 |
 
+## ⚡ Quick Commands (for AI Agents)
+
+| Action | Command |
+|--------|---------|
+| **Build All** | `mvn clean package -DskipTests` |
+| **Run Tests** | `mvn test` |
+| **Local Dev** | `docker-compose up -d` |
+| **Check Logs** | `docker-compose logs -f [service-name]` |
+| **Infrastructure** | `oc get pods` |
+
 ---
 
 ## 🏗️ Architecture Overview

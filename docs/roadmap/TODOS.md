@@ -147,18 +147,26 @@
 - [x] Build **Developer Documentation Site** with integration guides and SDK examples.
 
 ### 23. Advanced Customer Services
-- [ ] Implement **E-Statement Engine** (Generate monthly transaction PDFs).
-- [ ] Implement **Web Accessibility (A11y)** compliance as per OJK/WCAG standards.
-- [ ] Implement **In-app Feedback System** with screenshot/log attachment capabilities.
+- [x] Implement **E-Statement Engine** (Generate monthly transaction PDFs).
+- [x] Implement **Web Accessibility (A11y)** compliance as per OJK/WCAG standards.
+- [x] Implement **In-app Feedback System** with screenshot/log attachment capabilities.
 
 ### 24. CMS & Marketing Automation
-- [ ] Implement **Dynamic Content Management (CMS)** for banners, promos, and alerts.
-- [ ] Implement **A/B Testing Framework** for UI features and promotional offers.
+- [ ] Implement **Dynamic Content Management (CMS)** for banners, promos, and alerts (Scaffold exists in `cms-service`, needs logic).
+- [ ] Implement **A/B Testing Framework** for UI features and promotional offers (Scaffold exists in `ab-testing-service`, needs logic).
 - [ ] Integrate **Customer Segmentation Engine** for personalized notification campaigns.
 
 ## 🛠️ Operational Polish & Stability
 
 ### 22. Infrastructure Hardening
-- [ ] Optimize **Docker Resource Limits** (CPU/RAM) across all 20+ containers.
-- [ ] Implement **Automated Regression Testing** in CI/CD for critical financial logic.
-- [ ] Fine-tune **Inter-service Health Checks** for faster recovery in OpenShift.
+- [x] Optimize **Docker Resource Limits** (CPU/RAM) across all 20+ containers.
+- [ ] Implement **Automated Regression Testing** in CI/CD (Scripts exist in `tests/regression`, but CI/CD pipelines are missing).
+- [x] Fine-tune **Inter-service Health Checks** for faster recovery in OpenShift.
+- [ ] Deploy **Red Hat OpenShift Service Mesh (Istio)** for mTLS and advanced traffic management.
+- [ ] Implement **Distributed Caching Strategy** (Redis/Data Grid) with stale-while-revalidate patterns.
+
+### 25. High Availability & Scalability
+- [ ] Implement **Database Sharding/Partitioning** for `transaction-service` to support billions of records.
+- [ ] Setup **Multi-region Active-Passive Failover** configuration manifests for OpenShift.
+- [ ] Execute **Performance Load Testing** (Gatling/JMeter) to identify microservice bottlenecks.
+

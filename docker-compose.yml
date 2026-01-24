@@ -1,11 +1,12 @@
 # PayU Digital Banking - Docker Compose Setup
 # Local Development Environment & E2E Testing
+# With optimized resource limits and health checks for production readiness
 
 services:
   # ============================================
   # DATA LAYER
   # ============================================
-  
+
   postgres:
     image: postgres:16-alpine
     container_name: payu-postgres
@@ -14,7 +15,6 @@ services:
     environment:
       POSTGRES_USER: payu
       POSTGRES_PASSWORD: payu_secret
-      # Multiple databases creation
       POSTGRES_DB: payu_account
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -24,6 +24,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - payu-network
 
@@ -34,18 +43,28 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
     networks:
       - payu-network
 
   # ============================================
   # MESSAGE BROKER
   # ============================================
-  
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: payu-zookeeper
@@ -54,6 +73,21 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     networks:
       - payu-network
 
@@ -72,13 +106,24 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - payu-network
 
@@ -91,8 +136,18 @@ services:
       KAFKA_CLUSTERS_0_NAME: payu-local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      JAVA_OPTS: "-Xmx512M -Xms256M"
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
     networks:
       - payu-network
 
@@ -117,19 +172,28 @@ services:
       test: ["CMD", "vault", "status"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
   # ============================================
   # IDENTITY & ACCESS MANAGEMENT
   # ============================================
-  
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: payu-keycloak
     ports:
-      - "8099:8080" # Changed port to avoid conflict with gateway/services default
+      - "8099:8080"
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -138,20 +202,30 @@ services:
       KC_DB_USERNAME: payu
       KC_DB_PASSWORD: payu_secret
       KC_HEALTH_ENABLED: "true"
+      JAVA_OPTS_APPEND: "-Xmx1024M -Xms512M"
     command: start-dev
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1"]
+      interval: 15s
+      timeout: 5s
       retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - payu-network
 
   # ============================================
-  # SIMULATORS
+  # SIMULATORS (Quarkus Native)
   # ============================================
 
   bi-fast-simulator:
@@ -169,6 +243,20 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
@@ -187,6 +275,20 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
@@ -205,11 +307,25 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
   # ============================================
-  # CORE BANKING SERVICES
+  # CORE BANKING SERVICES (Spring Boot)
   # ============================================
 
   account-service:
@@ -227,6 +343,13 @@ services:
       SERVICES_DUKCAPIL_URL: http://dukcapil-simulator:8080
       SERVICES_AUTH_URL: http://auth-service:8002
       OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx768M -Xms512M
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+        -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -236,6 +359,20 @@ services:
         condition: service_started
       jaeger:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - payu-network
 
@@ -255,6 +392,13 @@ services:
       KEYCLOAK_CLIENT_ID: payu-backend
       KEYCLOAK_CLIENT_SECRET: secret
       OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx768M -Xms512M
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+        -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -262,6 +406,20 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - payu-network
 
@@ -281,6 +439,13 @@ services:
       SERVICES_BIFAST_URL: http://bi-fast-simulator:8080
       SERVICES_QRIS_URL: http://qris-simulator:8080
       OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx768M -Xms512M
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+        -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -288,6 +453,20 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - payu-network
 
@@ -304,6 +483,13 @@ services:
       SPRING_DATASOURCE_PASSWORD: payu_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx768M -Xms512M
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+        -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -311,11 +497,162 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - payu-network
+
+  compliance-service:
+    build:
+      context: ./backend/compliance-service
+      dockerfile: Dockerfile
+    container_name: payu-compliance-service
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_compliance
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx768M -Xms512M
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+        -Djava.security.egd=file:/dev/./urandom
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - payu-network
+
+  investment-service:
+    build:
+      context: ./backend/investment-service
+      dockerfile: Dockerfile
+    container_name: payu-investment-service
+    ports:
+      - "8009:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_investment
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      WALLET_SERVICE_URL: http://wallet-service:8004
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx768M -Xms512M
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+        -Djava.security.egd=file:/dev/./urandom
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - payu-network
+
+  lending-service:
+    build:
+      context: ./backend/lending-service
+      dockerfile: Dockerfile
+    container_name: payu-lending-service
+    ports:
+      - "8010:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_lending
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx768M -Xms512M
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+        -Djava.security.egd=file:/dev/./urandom
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - payu-network
 
   # ============================================
-  # SUPPORTING SERVICES
+  # SUPPORTING SERVICES (Quarkus Native)
   # ============================================
 
   billing-service:
@@ -339,6 +676,20 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
@@ -362,29 +713,20 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_healthy
-    networks:
-      - payu-network
-
-  compliance-service:
-    build:
-      context: ./backend/compliance-service
-      dockerfile: Dockerfile
-    container_name: payu-compliance-service
-    ports:
-      - "8087:8087"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_compliance
-      SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OTEL_ENDPOINT: http://jaeger:4317
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      jaeger:
-        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
@@ -400,7 +742,6 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_URL: http://keycloak:8080
       OTEL_ENDPOINT: http://jaeger:4317
-      # Route configuration
       ROUTES_ACCOUNT_URL: http://account-service:8001
       ROUTES_AUTH_URL: http://auth-service:8002
       ROUTES_TRANSACTION_URL: http://transaction-service:8003
@@ -416,6 +757,7 @@ services:
       ROUTES_PARTNER_URL: http://partner-service:8080
       ROUTES_PROMOTION_URL: http://promotion-service:8080
       ROUTES_SUPPORT_URL: http://support-service:8080
+      ROUTES_STATEMENT_URL: http://statement-service:8015
     depends_on:
       redis:
         condition: service_healthy
@@ -423,6 +765,170 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    networks:
+      - payu-network
+
+  backoffice-service:
+    build:
+      context: ./backend/backoffice-service
+      dockerfile: Dockerfile
+    container_name: payu-backoffice-service
+    ports:
+      - "8011:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_backoffice
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_KYC_URL: http://kyc-service:8007
+      SERVICES_WALLET_URL: http://wallet-service:8004
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    networks:
+      - payu-network
+
+  partner-service:
+    build:
+      context: ./backend/partner-service
+      dockerfile: Dockerfile
+    container_name: payu-partner-service
+    ports:
+      - "8012:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_partner
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    networks:
+      - payu-network
+
+  promotion-service:
+    build:
+      context: ./backend/promotion-service
+      dockerfile: Dockerfile
+    container_name: payu-promotion-service
+    ports:
+      - "8013:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_promotion
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    networks:
+      - payu-network
+
+  support-service:
+    build:
+      context: ./backend/support-service
+      dockerfile: Dockerfile
+    container_name: payu-support-service
+    ports:
+      - "8014:8080"
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_support
+      QUARKUS_DATASOURCE_USERNAME: payu
+      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
@@ -481,11 +987,76 @@ services:
         condition: service_started
       support-service:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8099/q/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
   # ============================================
-  # ML SERVICES
+  # BUSINESS & OPERATIONS SERVICES (Spring Boot)
+  # ============================================
+
+  statement-service:
+    build:
+      context: ./backend/statement-service
+      dockerfile: Dockerfile
+    container_name: payu-statement-service
+    ports:
+      - "8015:8015"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_statement
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_WALLET_URL: http://wallet-service:8004
+      SERVICES_TRANSACTION_URL: http://transaction-service:8003
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx512M -Xms256M
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+        -Djava.security.egd=file:/dev/./urandom
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8015/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - payu-network
+
+  # ============================================
+  # ML SERVICES (Python FastAPI)
   # ============================================
 
   kyc-service:
@@ -500,6 +1071,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       DUKCAPIL_URL: http://dukcapil-simulator:8080/api/v1
       OTLP_ENDPOINT: http://jaeger:4317
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
     depends_on:
       postgres:
         condition: service_healthy
@@ -507,6 +1080,20 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
     networks:
       - payu-network
 
@@ -521,6 +1108,8 @@ services:
       DATABASE_URL: postgresql+asyncpg://payu:payu_secret@postgres:5432/payu_analytics
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTLP_ENDPOINT: http://jaeger:4317
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
     depends_on:
       postgres:
         condition: service_healthy
@@ -528,155 +1117,20 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_healthy
-    networks:
-      - payu-network
-
-  # ============================================
-  # BUSINESS & OPERATIONS SERVICES
-  # ============================================
-
-  investment-service:
-    build:
-      context: ./backend/investment-service
-      dockerfile: Dockerfile
-    container_name: payu-investment-service
-    ports:
-      - "8009:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_investment
-      SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      WALLET_SERVICE_URL: http://wallet-service:8004
-      OTEL_ENDPOINT: http://jaeger:4317
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      jaeger:
-        condition: service_healthy
-    networks:
-      - payu-network
-
-  lending-service:
-    build:
-      context: ./backend/lending-service
-      dockerfile: Dockerfile
-    container_name: payu-lending-service
-    ports:
-      - "8010:8087"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_lending
-      SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OIDC_ISSUER: http://keycloak:8080/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
-      OTEL_ENDPOINT: http://jaeger:4317
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      keycloak:
-        condition: service_healthy
-      jaeger:
-        condition: service_healthy
-    networks:
-      - payu-network
-
-  backoffice-service:
-    build:
-      context: ./backend/backoffice-service
-      dockerfile: Dockerfile
-    container_name: payu-backoffice-service
-    ports:
-      - "8011:8080"
-    environment:
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_backoffice
-      QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SERVICES_KYC_URL: http://kyc-service:8007
-      SERVICES_WALLET_URL: http://wallet-service:8004
-      OTEL_ENDPOINT: http://jaeger:4317
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      jaeger:
-        condition: service_healthy
-    networks:
-      - payu-network
-
-  partner-service:
-    build:
-      context: ./backend/partner-service
-      dockerfile: Dockerfile
-    container_name: payu-partner-service
-    ports:
-      - "8012:8080"
-    environment:
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_partner
-      QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OTEL_ENDPOINT: http://jaeger:4317
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      jaeger:
-        condition: service_healthy
-    networks:
-      - payu-network
-
-  promotion-service:
-    build:
-      context: ./backend/promotion-service
-      dockerfile: Dockerfile
-    container_name: payu-promotion-service
-    ports:
-      - "8013:8080"
-    environment:
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_promotion
-      QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OTEL_ENDPOINT: http://jaeger:4317
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      jaeger:
-        condition: service_healthy
-    networks:
-      - payu-network
-
-  support-service:
-    build:
-      context: ./backend/support-service
-      dockerfile: Dockerfile
-    container_name: payu-support-service
-    ports:
-      - "8014:8080"
-    environment:
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_support
-      QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OTEL_ENDPOINT: http://jaeger:4317
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      jaeger:
-        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
     networks:
       - payu-network
 
@@ -693,9 +1147,24 @@ services:
       - "3001:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+      NODE_ENV: production
     depends_on:
       gateway-service:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
     networks:
       - payu-network
 
@@ -723,9 +1192,18 @@ services:
       - "--collector.otlp.enabled=true"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/api/services"]
-      interval: 30s
+      interval: 20s
       timeout: 10s
-      retries: 5
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     networks:
       - payu-network
 
@@ -747,9 +1225,18 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 30s
+      interval: 20s
       timeout: 10s
       retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - payu-network
 
@@ -764,9 +1251,18 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
-      interval: 30s
+      interval: 20s
       timeout: 10s
       retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     networks:
       - payu-network
 
@@ -779,7 +1275,16 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:
-      - loki
+      loki:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 32M
     networks:
       - payu-network
 
@@ -794,6 +1299,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_INSTALL_PLUGINS: grafana-piechart-panel
       GF_SERVER_ROOT_URL: http://localhost:3000
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
     volumes:
       - ./infrastructure/docker/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./infrastructure/docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -805,9 +1311,18 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
-      interval: 30s
+      interval: 20s
       timeout: 10s
       retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
     networks:
       - payu-network
 
@@ -824,9 +1339,18 @@ services:
       - '--storage.path=/alertmanager'
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
-      interval: 30s
+      interval: 20s
       timeout: 10s
       retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - payu-network
 
@@ -846,6 +1370,14 @@ services:
       - "8095:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 32M
     networks:
       - payu-network
 

@@ -8,6 +8,183 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+- **AI Agent & Environment Integration**:
+  - Installed core development tools: Java 21, Maven 3.8, Node.js 20, pnpm, yarn, OpenShift CLI (oc), kubectl, yq, and jq.
+  - Created root-level symlinks for AI agent coordination:
+    - `CLAUDE.md` -> `docs/guides/GEMINI.md`
+    - `CONTRIBUTING.md` -> `docs/guides/CONTRIBUTING.md`
+    - `.claude/skills` -> `.agent/skills`
+  - Added **Quick Commands** section to `GEMINI.md` for standardized AI agent execution (Build, Test, Deploy).
+  - Synchronized `TODOS.md` roadmap with actual codebase status:
+    - Marked **E-Statement Engine**, **A11y Compliance**, and **Feedback System** as completed.
+    - Updated **Infrastructure Hardening** with actual progress on Docker resource limits.
+    - Added enterprise-grade roadmap items: Service Mesh (Istio), Database Sharding, and Load Testing.
+
+- **E-Statement Service** (Backend - Statement Service):
+  - New Spring Boot 3.4 service for monthly e-statement PDF generation
+  - REST API endpoints:
+    - POST `/api/v1/statements/generate` - Generate statement for specific month
+    - GET `/api/v1/statements/{id}` - Get statement metadata
+    - GET `/api/v1/statements` - List all user statements (paginated)
+    - GET `/api/v1/statements/latest` - Get latest statement
+    - GET `/api/v1/statements/{id}/download` - Download PDF statement
+    - POST `/api/v1/statements/{id}/regenerate` - Regenerate statement (admin)
+  - Apache PDFBox integration for PDF generation
+  - Account summary with opening/closing balances
+  - Transaction summary with categorized records
+  - Statement metadata storage with PostgreSQL
+  - Local file storage with S3-compatible architecture
+  - Async PDF generation with Kafka event publishing
+  - Database: `payu_statement` with statements table
+  - Docker configuration with UBI9 OpenJDK 21, resource limits (512M heap)
+  - Indonesian error messages for user-friendly feedback
+  - Location: `/backend/statement-service/`
+
+- **Infrastructure Hardening** (Docker Compose):
+  - Optimized resource limits for all 20+ containers:
+    - Spring Boot services: 1GB RAM, 2.0 CPU (limits)
+    - Quarkus Native services: 256M RAM, 1.0 CPU (limits)
+    - Python FastAPI services: 512M RAM, 2.0 CPU (limits)
+    - PostgreSQL: 2GB RAM, 2.0 CPU (limits)
+    - Kafka: 2GB RAM, 2.0 CPU (limits)
+    - Redis: 512M RAM, 1.0 CPU (limits) with LRU eviction
+  - Health check optimizations with start_period configuration:
+    - Spring Boot: 15s interval, 30s start_period
+    - Quarkus: 10s interval, 15s start_period
+    - Python: 15s interval, 20s start_period
+  - Added G1GC tuning for Java services (MaxGCPauseMillis=200ms)
+  - Heap dump on OOM enabled for debugging
+  - Non-root user enforcement (UID 185 for OpenShift)
+  - Updated all services with health check endpoints
+
+- **Web Accessibility (A11y) Compliance** (Frontend):
+  - Created comprehensive accessibility utilities in `/src/lib/a11y.tsx`
+  - Features:
+    - Focus trap for modals and dialogs
+    - Skip to content link for keyboard navigation
+    - Visually hidden utility (screen reader only)
+    - Focus visible indicator for keyboard users
+    - Screen reader announcer for dynamic content
+    - Keyboard navigation helpers (arrow keys, home/end)
+    - WCAG AA color contrast checker
+  - Components support:
+    - Proper ARIA labels and roles
+    - Keyboard-only navigation
+    - Screen reader compatibility
+    - Focus indicators for interactive elements
+
+- **In-App Feedback System** (Frontend & Backend):
+  - React feedback widget component at `/src/components/feedback/FeedbackWidget.tsx`
+  - Features:
+    - Floating feedback button (bottom-right corner)
+    - Category selection: Bug Report, Feature Request, Other
+    - Screenshot capture using Screen Capture API
+    - Automatic device info collection
+    - Console log attachment (error/warning context)
+    - Subject and message fields with validation
+    - Admin notification on submission
+    - Indonesian language interface
+  - Integration with support-service for ticket creation
+  - REST API endpoint: POST `/api/v1/feedback`
+  - Screenshot storage with configurable path
+
+- **Dynamic Content Management (CMS)** (Backend - CMS Service):
+  - New Spring Boot 3.4 service for managing banners, promos, and alerts
+  - Content entity with flexible JSONB metadata and targeting rules
+  - Content types: BANNER, PROMO, ALERT, POPUP
+  - Status workflow: DRAFT → SCHEDULED → ACTIVE → PAUSED → ARCHIVED
+  - Targeting rules support: user segment, location, device type
+  - Scheduled publishing with start/end dates
+  - Priority-based content ordering
+  - REST API endpoints (admin):
+    - POST `/api/v1/cms/content` - Create content
+    - GET `/api/v1/cms/content` - List active content
+    - GET `/api/v1/cms/content/{type}` - Get content by type
+    - PUT `/api/v1/cms/content/{id}` - Update content
+    - DELETE `/api/v1/cms/content/{id}` - Delete content
+  - Redis caching for active content (5-minute TTL)
+  - Database: `payu_cms` with cms_contents table
+  - Location: `/backend/cms-service/`
+
+- **A/B Testing Framework** (Backend - A/B Testing Service):
+  - New Spring Boot 3.4 service for UI feature and promotional testing
+  - Experiment entity with variant management
+  - Consistent user bucketing using hash-based assignment
+  - Traffic split configuration (0-100% for variant B)
+  - Variant A (control) and Variant B (test) configuration with JSONB
+  - Metrics tracking: conversions, participants, engagement
+  - Statistical significance calculation
+  - Winner determination (CONTROL, VARIANT_B, INCONCLUSIVE)
+  - Experiment status: DRAFT → RUNNING → PAUSED → COMPLETED → CANCELLED
+  - REST API endpoints:
+    - POST `/api/v1/ab/experiments` - Create experiment
+    - GET `/api/v1/ab/experiments` - List experiments
+    - GET `/api/v1/ab/experiments/{key}` - Get experiment details
+    - GET `/api/v1/ab/variant/{key}` - Get user's variant (bucketing)
+    - POST `/api/v1/ab/experiments/{id}/complete` - Mark experiment complete
+  - Database: `payu_ab_testing` with ab_experiments table
+  - Frontend SDK integration hook for variant rendering
+  - Location: `/backend/ab-testing-service/`
+
+- **Customer Segmentation Engine** (Backend - Analytics Service):
+  - RFM (Recency, Frequency, Monetary) analysis implementation
+  - K-Means clustering for behavioral segmentation
+  - Segment types: PREMIUM, LOYAL, GROWING, AT_RISK, CHURNED, DORMANT
+  - RFM scoring components:
+    - Recency: Days since last transaction (inverted score)
+    - Frequency: Number of transactions
+    - Monetary: Total transaction amount
+  - Segmentation logic based on:
+    - Account age (new vs established customers)
+    - Transaction activity level
+    - Balance tiers (PLATINUM, GOLD, SILVER, BRONZE)
+    - KYC verification status
+  - REST API endpoints:
+    - GET `/api/v1/analytics/segments/user/{userId}` - Get user segment
+    - GET `/api/v1/analytics/segments` - List segment statistics
+    - POST `/api/v1/analytics/segments/recalculate` - Trigger recalculation
+  - Segmentation-based recommendations engine
+  - Targeted campaign support per segment
+  - Database migration: `V2__create_segments_table.sql`
+  - Location: `/backend/analytics-service/`
+
+- **Automated Regression Testing** (Testing):
+  - Comprehensive regression test suite at `/tests/regression/`
+  - Test configuration with `conftest.py` for fixtures and markers
+  - Test categories:
+    - `@critical`: Critical financial flows (8 tests)
+    - `@performance`: Performance and SLA tests (2 tests)
+    - `@regression`: General regression tests
+  - Coverage:
+    - Account creation and onboarding
+    - Authentication (login, MFA)
+    - Balance retrieval
+    - Internal transfers (PayU to PayU)
+    - Transaction history with pagination
+    - QRIS payments
+    - Bill payments (Pulsa)
+    - E-statement generation
+    - Double-entry ledger integrity
+    - Idempotency key validation
+    - OpenAPI spec availability
+    - Health check endpoints
+  - Performance SLA validation:
+    - Balance query < 500ms (p95)
+    - Transaction list < 1s (p95)
+  - Test markers for selective execution: smoke, critical, performance
+  - Service health verification before test execution
+  - Run with: `pytest tests/regression/ -v --tb=short`
+
+### Changed
+
+- **docker-compose.yml**:
+  - Added statement-service (port 8015) to all service routes
+  - Added payu_statement database to init-db.sql
+  - Added ROUTES_STATEMENT_URL to gateway-service environment
+  - All services now include resource limits and optimized health checks
+
+### Added
 - **Developer Documentation Site** (Frontend):
   - Built comprehensive developer documentation site with Next.js 16 and TypeScript
   - Integration guides for Partner payments, QRIS, and BI-FAST

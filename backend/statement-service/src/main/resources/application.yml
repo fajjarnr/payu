@@ -1,0 +1,111 @@
+spring:
+  application:
+    name: statement-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/payu_statement}
+    username: ${SPRING_DATASOURCE_USERNAME:payu}
+    password: ${SPRING_DATASOURCE_PASSWORD:payu_secret}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 600000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}/realms/payu
+          jwk-set-uri: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}/realms/payu/protocol/openid-connect/certs
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: statement-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "*"
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+
+# Statement Service Configuration
+statement:
+  storage:
+    path: ${STATEMENT_STORAGE_PATH:/tmp/statements}
+  company:
+    name: ${STATEMENT_COMPANY_NAME:PayU Digital Banking}
+    address: ${STATEMENT_COMPANY_ADDRESS:Jakarta, Indonesia}
+
+# Service URLs
+services:
+  wallet:
+    url: ${SERVICES_WALLET_URL:http://wallet-service:8004}
+  transaction:
+    url: ${SERVICES_TRANSACTION_URL:http://transaction-service:8003}
+
+# OpenTelemetry Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 0.10
+
+# Logging
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    id.payu.statement: INFO
+    org.springframework.kafka: WARN
+    org.hibernate.SQL: WARN
+
+# Server Configuration
+server:
+  port: 8015
+  shutdown: graceful

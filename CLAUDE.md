@@ -1,0 +1,1 @@
+docs/guides/GEMINI.md
