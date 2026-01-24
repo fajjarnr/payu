@@ -1,209 +1,91 @@
-# PayU Mobile Apps
+# PayU Mobile App (Expo)
 
-Native mobile applications for the PayU Digital Banking Platform.
+Digital banking mobile application for the PayU Platform built with Expo and React Native.
 
-## Architecture
+## 🚀 Architecture
 
-### iOS (Swift/SwiftUI)
-- **Language**: Swift 5.9+
-- **UI Framework**: SwiftUI
-- **Minimum iOS Version**: iOS 16.0+
-- **Architecture**: MVVM with SwiftUI
-- **Networking**: URLSession with async/await
+- **Framework**: [Expo](https://expo.dev/) (SDK 52+)
+- **Language**: TypeScript
+- **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/) (File-based routing)
+- **Styling**: NativeWind (Tailwind CSS for React Native)
+- **State Management**: Zustand
+- **API Client**: Axios with interceptors for JWT management
+- **Design System**: Premium Emerald (Emerald Green #10b981)
 
-### Android (Kotlin/Jetpack Compose)
-- **Language**: Kotlin 1.9.22
-- **UI Framework**: Jetpack Compose
-- **Minimum SDK**: API 26 (Android 8.0)
-- **Target SDK**: API 35 (Android 15)
-- **Architecture**: MVVM with Hilt DI
-- **Networking**: Retrofit + OkHttp
+## 📁 Project Structure
 
-## Features
-
-- **Home Dashboard**: View balance, quick actions, and recent transactions
-- **Accounts Management**: View and manage multiple accounts
-- **Transfers**: Send money to other accounts
-- **Virtual Cards**: Manage virtual payment cards
-- **Profile**: User settings and preferences
-
-## Project Structure
-
-```
+```text
 mobile/
-├── ios/
-│   ├── PayU/                    # iOS App
-│   │   ├── PayUApp.swift       # App entry point
-│   │   ├── ContentView.swift   # Main view
-│   │   ├── Views/               # SwiftUI Views
-│   │   │   ├── HomeView.swift
-│   │   │   ├── AccountsView.swift
-│   │   │   ├── TransfersView.swift
-│   │   │   ├── CardsView.swift
-│   │   │   └── ProfileView.swift
-│   │   ├── Models/             # Data Models
-│   │   │   └── Models.swift
-│   │   ├── Services/           # Business Logic
-│   │   │   ├── APIClient.swift
-│   │   │   └── AppState.swift
-│   │   └── Info.plist
-│   └── PayUTests/              # Unit Tests
-│
-└── android/
-    ├── app/
-    │   └── src/
-    │       ├── main/
-    │       │   ├── java/com/payu/mobile/
-    │       │   │   ├── MainActivity.kt
-    │       │   │   ├── PayUApplication.kt
-    │       │   │   ├── data/
-    │       │   │   │   ├── api/
-    │       │   │   │   ├── model/
-    │       │   │   │   └── repository/
-    │       │   │   ├── di/
-    │       │   │   ├── ui/
-    │       │   │   │   ├── screens/
-    │       │   │   │   ├── theme/
-    │       │   │   │   └── viewmodel/
-    │       │   │   └── PayUNavigation.kt
-    │       │   ├── res/
-    │       │   └── AndroidManifest.xml
-    │       ├── test/            # Unit Tests
-    │       └── androidTest/     # Instrumentation Tests
-    ├── build.gradle.kts
-    └── settings.gradle.kts
+├── app/                  # Expo Router directory (screens & layouts)
+│   ├── (auth)/           # Authentication flow (Login, Register, eKYC)
+│   ├── (tabs)/           # Main dashboard tabs (Home, Transfers, Cards, History)
+│   ├── _layout.tsx       # Root layout & providers
+│   └── index.tsx          # Initial entry point
+├── components/           # Reusable UI components (Emerald Design System)
+│   ├── ui/               # Primary UI elements (Buttons, Inputs, Cards)
+│   └── shared/           # Business-specific shared components
+├── constants/            # Theme, Colors, and Config
+├── hooks/                # Custom React hooks (useAuth, useWallet)
+├── services/             # API services (api.ts, auth.service.ts)
+├── store/                # Global state (authStore, walletStore)
+├── types/                # TypeScript definitions
+└── utils/                # Helper functions (formatting, validation)
 ```
 
-## Getting Started
+## 🛠️ Getting Started
 
-### iOS Prerequisites
-- Xcode 15.0+
-- iOS 16.0+ Simulator or Device
-- CocoaPods (if using pods)
+### Prerequisites
 
-### Android Prerequisites
-- Android Studio Hedgehog | 2023.1.1 or later
-- JDK 17
-- Android SDK API 35
+- Node.js 20+
+- pnpm or yarn
+- [Expo Go](https://expo.dev/go) app on your mobile device OR Android/iOS Emulator
 
-### Running iOS App
+### Installation
+
+1. Navigate to the mobile directory:
+   ```bash
+   cd mobile
+   ```
+
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+
+3. Start the development server:
+   ```bash
+   pnpm start
+   ```
+
+4. Open the app:
+   - Scan the QR code with **Expo Go** (Android/iOS)
+   - Press `i` for iOS simulator
+   - Press `a` for Android emulator
+
+## 🔒 Security Features
+
+- **Secure Storage**: JWT and sensitive data stored via `expo-secure-store`.
+- **Bio-Authentication**: Ready for FaceID/Fingerprint integration via `expo-local-authentication`.
+- **SSL Pinning**: Configured for production environments.
+
+## 🎨 Design System
+
+Following the **PayU Premium Emerald** guidelines:
+- **Primary**: `#10b981` (bank-green)
+- **Secondary**: `#059669` (bank-emerald)
+- **Background**: White (Light) / Gray-950 (Dark)
+- **Typography**: Inter / Outfit via Google Fonts
+
+## 🧪 Testing
 
 ```bash
-cd mobile/ios/PayU
-open PayU.xcodeproj
+# Run unit tests
+pnpm test
+
+# Run linting
+pnpm lint
 ```
 
-Or using Xcode command line:
-```bash
-xcodebuild -scheme PayU -destination 'platform=iOS Simulator,name=iPhone 15' build
-```
+---
 
-### Running Android App
-
-```bash
-cd mobile/android
-./gradlew assembleDebug
-```
-
-Or run directly:
-```bash
-./gradlew installDebug
-```
-
-## API Configuration
-
-### iOS
-Set the API base URL in `Info.plist`:
-```xml
-<key>api_base_url</key>
-<string>http://localhost:8080/api/v1</string>
-```
-
-Or configure at runtime:
-```swift
-UserDefaults.standard.set("http://your-api-url", forKey: "api_base_url")
-```
-
-### Android
-Configure in `NetworkModule.kt`:
-```kotlin
-.baseUrl("http://10.0.2.2:8080/api/v1/")
-```
-
-Note: Use `10.0.2.2` for Android emulator to access localhost.
-
-## Testing
-
-### iOS Tests
-```bash
-xcodebuild test -scheme PayU -destination 'platform=iOS Simulator,name=iPhone 15'
-```
-
-### Android Tests
-```bash
-# Unit tests
-./gradlew test
-
-# Instrumentation tests
-./gradlew connectedAndroidTest
-```
-
-## Building for Production
-
-### iOS
-```bash
-xcodebuild -scheme PayU -configuration Release archive -archivePath build/PayU.xcarchive
-xcodebuild -exportArchive -archivePath build/PayU.xcarchive -exportPath build/export
-```
-
-### Android
-```bash
-./gradlew assembleRelease
-```
-
-## Dependencies
-
-### iOS
-- SwiftUI (native)
-- URLSession (native)
-
-### Android
-- Jetpack Compose
-- Hilt for DI
-- Retrofit for networking
-- OkHttp for HTTP client
-- DataStore for preferences
-- Kotlinx Coroutines
-
-## Security Best Practices
-
-1. **Certificate Pinning**: Implement SSL pinning for production
-2. **Token Storage**: Use Keychain (iOS) / EncryptedSharedPreferences (Android)
-3. **Biometric Auth**: Face ID / Touch ID (iOS), BiometricPrompt (Android)
-4. **Root/Jailbreak Detection**: Detect compromised devices
-5. **Code Obfuscation**: ProGuard/R8 for Android
-
-## Observability
-
-Both apps are configured to emit metrics:
-
-### iOS
-- Structured logging with JSON format
-- Custom metrics for API calls
-- Crash reporting integration ready
-
-### Android
-- Micrometer integration ready
-- Structured logging with Timber/logcat
-- Crashlytics integration ready
-
-## Contributing
-
-1. Follow platform-specific coding standards
-2. Ensure all tests pass before submitting PR
-3. Add tests for new features
-4. Update documentation
-
-## License
-
-© 2026 PayU Digital Banking | Proprietary
+© 2026 PayU Digital Banking | All Rights Reserved
