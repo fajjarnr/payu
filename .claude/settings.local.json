@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(mvn:*)",
+      "Bash(docker-compose:*)",
+      "Bash(oc:*)",
+      "Bash(kubectl:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm:*)",
+      "Bash(yarn:*)",
+      "Bash(chmod:*)",
+      "Bash(tree:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)"
+    ]
+  }
+}
