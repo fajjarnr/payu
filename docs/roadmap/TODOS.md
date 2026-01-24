@@ -60,6 +60,10 @@
 - [x] **Missing Core Modules**:
     *   [x] **Lending & Credit Hub** (`/lending`): UI for Personal Loans application and PayLater management.
     *   [x] **Rewards & Gamification** (`/rewards`): Implement Points dashboard, Cashback history, and Referral engine.
+- [ ] **Integrated Service Wiring**:
+    *   [ ] **CMS Integration**: Connect `frontend/web-app` to `cms-service` for dynamic banners and emergency alerts.
+    *   [ ] **A/B Testing Wiring**: Implement `useExperiment` hook in frontend to consume variants from `ab-testing-service`.
+    *   [ ] **Customer Segmentation**: Display personalized offers based on user segment fetched from `promotion-service`.
 
 ### 9. Mobile App Support
 - [x] Prepare mobile-responsive views for web-app.
@@ -68,6 +72,18 @@
     - [x] Initialize new Expo project with TypeScript and Expo Router.
     - [x] Implement core banking flows (Onboarding, Transfer, QRIS) using React Native.
     - [x] Target: Cross-platform iOS & Android from single codebase.
+
+### 26. Mobile App Feature Parity (React Native)
+- [ ] **Core Banking Implementation**:
+    - [ ] Build **Dashboard** with balance overview and quick actions.
+    - [ ] Build **Transfer** flow with recipient search and BI-FAST support.
+    - [ ] Build **QRIS Scanner** with dynamic payment handling.
+    - [ ] Build **Virtual Cards** management (Freeze, Unfreeze, Show CVV).
+- [ ] **Enterprise Integration**:
+    - [ ] Integrate **In-app Feedback Widget** for mobile bug reporting.
+    - [ ] Integrate **A/B Testing Hook** to toggle mobile features.
+    - [ ] Implement **Push Notifications** via Expo Notifications (Firebase/APNs).
+    - [ ] Add **Biometric Auth** (FaceID/Fingerprint) for transaction signing.
 
 ## 🛡️ Backend Technical Debt & Hardening
 
