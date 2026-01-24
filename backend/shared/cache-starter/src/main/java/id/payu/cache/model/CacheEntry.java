@@ -22,7 +22,6 @@ import java.time.Instant;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class CacheEntry<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
