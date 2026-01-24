@@ -77,7 +77,6 @@
 ```
 payu/
 ├── .agent/              # AI agent skills and workflows
-├── .ralphy/             # Ralphy agent configuration
 ├── docs/                # Project documentation
 │   ├── architecture/    # ARCHITECTURE.md
 │   ├── product/         # PRD.md

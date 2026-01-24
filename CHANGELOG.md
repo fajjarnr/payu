@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `.claude/skills` -> `.agent/skills`
   - Added **Quick Commands** section to `GEMINI.md` for standardized AI agent execution (Build, Test, Deploy).
     - Optimized build command: `mvn clean package -DskipTests -T 1C` (Parallel execution).
+  - Cleaned up **Ralphy** integration resources (Removed .ralphy/, scripts/ralph.sh, and related docs).
   - Synchronized `TODOS.md` roadmap with actual codebase status:
     - Marked **E-Statement Engine**, **A11y Compliance**, and **Feedback System** as completed.
     - Updated **Infrastructure Hardening** with actual progress on Docker resource limits.
