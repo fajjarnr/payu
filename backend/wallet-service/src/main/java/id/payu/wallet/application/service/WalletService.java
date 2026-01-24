@@ -1,5 +1,6 @@
 package id.payu.wallet.application.service;
 
+import id.payu.cache.service.CacheService;
 import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.model.WalletTransaction;
 import id.payu.wallet.domain.model.LedgerEntry;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,30 +21,55 @@ import java.util.UUID;
 
 @Service
 public class WalletService implements WalletUseCase {
-    
+
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WalletService.class);
 
     private final WalletPersistencePort walletPersistencePort;
     private final WalletEventPublisherPort walletEventPublisher;
+    private final CacheService cacheService;
 
-    public WalletService(WalletPersistencePort walletPersistencePort, WalletEventPublisherPort walletEventPublisher) {
+    public WalletService(
+            WalletPersistencePort walletPersistencePort,
+            WalletEventPublisherPort walletEventPublisher,
+            CacheService cacheService) {
         this.walletPersistencePort = walletPersistencePort;
         this.walletEventPublisher = walletEventPublisher;
+        this.cacheService = cacheService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Wallet> getWalletByAccountId(String accountId) {
         log.debug("Getting wallet for account: {}", accountId);
-        return walletPersistencePort.findByAccountId(accountId);
+        String cacheKey = "wallet:account:" + accountId;
+
+        return cacheService.get(
+                cacheKey,
+                Wallet.class,
+                () -> {
+                    Optional<Wallet> wallet = walletPersistencePort.findByAccountId(accountId);
+                    wallet.ifPresent(w -> cacheService.put(cacheKey, w, Duration.ofMinutes(10)));
+                    return wallet;
+                }
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Wallet getWallet(UUID walletId) {
         log.debug("Getting wallet by ID: {}", walletId);
-        return walletPersistencePort.findById(walletId)
-                .orElseThrow(() -> new WalletNotFoundException(walletId.toString()));
+        String cacheKey = "wallet:id:" + walletId;
+
+        return cacheService.get(
+                cacheKey,
+                Wallet.class,
+                () -> {
+                    Wallet wallet = walletPersistencePort.findById(walletId)
+                            .orElseThrow(() -> new WalletNotFoundException(walletId.toString()));
+                    cacheService.put(cacheKey, wallet, Duration.ofMinutes(10));
+                    return wallet;
+                }
+        );
     }
 
     @Override
@@ -76,17 +103,35 @@ public class WalletService implements WalletUseCase {
     @Override
     @Transactional(readOnly = true)
     public BigDecimal getBalance(String accountId) {
-        return getWalletByAccountId(accountId)
-                .map(Wallet::getBalance)
-                .orElseThrow(() -> new WalletNotFoundException(accountId));
+        log.debug("Getting balance for account: {}", accountId);
+        String cacheKey = "balance:account:" + accountId;
+
+        return cacheService.getWithStaleWhileRevalidate(
+                cacheKey,
+                BigDecimal.class,
+                () -> getWalletByAccountId(accountId)
+                        .map(Wallet::getBalance)
+                        .orElseThrow(() -> new WalletNotFoundException(accountId)),
+                Duration.ofSeconds(15),  // Soft TTL - serve stale data
+                Duration.ofSeconds(30)   // Hard TTL - must refresh
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public BigDecimal getAvailableBalance(String accountId) {
-        return getWalletByAccountId(accountId)
-                .map(Wallet::getAvailableBalance)
-                .orElseThrow(() -> new WalletNotFoundException(accountId));
+        log.debug("Getting available balance for account: {}", accountId);
+        String cacheKey = "balance:available:account:" + accountId;
+
+        return cacheService.getWithStaleWhileRevalidate(
+                cacheKey,
+                BigDecimal.class,
+                () -> getWalletByAccountId(accountId)
+                        .map(Wallet::getAvailableBalance)
+                        .orElseThrow(() -> new WalletNotFoundException(accountId)),
+                Duration.ofSeconds(15),  // Soft TTL
+                Duration.ofSeconds(30)   // Hard TTL
+        );
     }
 
     @Override
@@ -105,7 +150,12 @@ public class WalletService implements WalletUseCase {
         wallet.reserve(amount);
 
         walletPersistencePort.save(wallet);
-        
+
+        // Invalidate balance cache
+        cacheService.invalidate("balance:account:" + accountId);
+        cacheService.invalidate("balance:available:account:" + accountId);
+        cacheService.invalidate("wallet:account:" + accountId);
+
         LedgerEntry debitEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
                 .transactionId(UUID.fromString(reservationId))
@@ -146,6 +196,11 @@ public class WalletService implements WalletUseCase {
         wallet.commitReservation(reservedAmount);
         walletPersistencePort.save(wallet);
 
+        // Invalidate balance cache
+        cacheService.invalidate("balance:account:" + accountId.toString());
+        cacheService.invalidate("balance:available:account:" + accountId.toString());
+        cacheService.invalidate("wallet:account:" + accountId.toString());
+
         LedgerEntry commitEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
                 .transactionId(UUID.fromString(reservationId))
@@ -185,6 +240,11 @@ public class WalletService implements WalletUseCase {
         wallet.releaseReservation(reservedAmount);
         walletPersistencePort.save(wallet);
 
+        // Invalidate balance cache
+        cacheService.invalidate("balance:account:" + accountId.toString());
+        cacheService.invalidate("balance:available:account:" + accountId.toString());
+        cacheService.invalidate("wallet:account:" + accountId.toString());
+
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
                 .transactionId(UUID.fromString(reservationId))
@@ -217,6 +277,11 @@ public class WalletService implements WalletUseCase {
         BigDecimal oldBalance = wallet.getBalance();
         wallet.credit(amount);
         walletPersistencePort.save(wallet);
+
+        // Invalidate balance cache
+        cacheService.invalidate("balance:account:" + accountId);
+        cacheService.invalidate("balance:available:account:" + accountId);
+        cacheService.invalidate("wallet:account:" + accountId);
 
         // Create Ledger Entry
         LedgerEntry creditEntry = LedgerEntry.builder()

@@ -9,6 +9,155 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Mobile App - Expo (React Native)**:
+  - Complete transition from Native (Swift/Kotlin) to Expo 52+ with React Native
+  - Cross-platform iOS & Android from single TypeScript codebase
+  - Expo Router for file-based navigation with tabs and stack navigation
+  - Premium Emerald design system with bank-green (#10b981) theme
+  - Core banking screens: Dashboard, Transfers, Cards, Profile, QRIS, Login
+  - JWT authentication with token refresh logic
+  - API client with fetch and interceptors
+  - TypeScript types for all API models
+  - Location: `/mobile/`
+
+- **CMS (Content Management) Service**:
+  - Complete Content Management Service for banners, promos, alerts, and popups
+  - Content types: BANNER, PROMO, ALERT, POPUP with scheduling support
+  - Targeting rules (JSONB) for user segmentation (segment, location, device)
+  - Status management: DRAFT → SCHEDULED → ACTIVE → PAUSED/ARCHIVED
+  - Scheduled tasks for automatic content activation and archival
+  - Redis caching with 30-minute TTL
+  - Kafka event publishing for real-time updates
+  - Role-based security with Keycloak OAuth2
+  - Location: `/backend/cms-service/`
+
+- **A/B Testing Framework**:
+  - Complete A/B Testing Service for UI features and promotional offers
+  - Experiment management with status workflow (DRAFT → RUNNING → COMPLETED)
+  - Consistent hashing for deterministic variant assignment per user
+  - Traffic split configuration (0-100% for variant B)
+  - Conversion tracking with metrics (participants, conversions, rates)
+  - Redis caching for variant assignments (24-hour TTL)
+  - Kafka events for experiment lifecycle and conversions
+  - Statistical significance calculation (confidence level)
+  - Location: `/backend/ab-testing-service/`
+
+- **Customer Segmentation Engine**:
+  - CustomerSegment entity for defining user segments with rules (JSONB)
+  - SegmentMembership entity tracking user-segment relationships
+  - Dynamic segment evaluation based on account age, transaction volume, KYC status, loyalty level
+  - REST API for segment CRUD operations
+  - Service methods for evaluating user segments and getting segment members
+  - Integration with promotion-service for targeted campaigns
+  - Location: `/backend/promotion-service/`
+
+- **Automated Regression Testing (CI/CD)**:
+  - Tekton pipeline for automated regression testing
+  - Integration with existing pytest test suite in `/tests/regression/`
+  - Pipeline triggers on PR to main branch
+  - Steps: checkout services, start docker-compose, run pytest, cleanup
+  - Test reports generation and pipeline failure on critical test failures
+  - Location: `/infrastructure/pipelines/`
+
+- **OpenShift Service Mesh (Istio)**:
+  - ServiceMeshControlPlane v2.6 with mTLS, telemetry, and tracing
+  - Ingress Gateway with HTTPS/TLS termination and JWT authentication
+  - VirtualServices for all PayU microservices
+  - DestinationRules with traffic policies, load balancing, and circuit breakers
+  - STRICT mTLS for production, PERMISSIVE for dev/sit
+  - AuthorizationPolicies for Zero Trust security model
+  - Kustomization configuration and automated deployment script
+  - Location: `/infrastructure/openshift/service-mesh/`
+
+- **Distributed Caching Strategy**:
+  - Shared cache-starter module at `/backend/shared/cache-starter/`
+  - Stale-while-revalidate pattern with soft TTL and hard TTL
+  - Multi-layer caching: Redis (distributed) + Caffeine (local fallback)
+  - @CacheWithTTL annotation for method-level caching with custom TTL
+  - CacheService for programmatic cache operations
+  - Integration with wallet-service (balance caching) and account-service
+  - Metrics integration with Micrometer
+  - Location: `/backend/shared/cache-starter/`
+
+- **Database Sharding for Transaction Service**:
+  - PostgreSQL declarative partitioning by HASH (sender_account_id)
+  - 8 partitions (configurable: 4, 8, 16, or 32)
+  - Zero-downtime migration path with auto-migration support
+  - ShardRouter service for partition-aware queries
+  - Cross-partition query support for recipient lookups
+  - Monitoring functions for migration status and partition distribution
+  - Location: `/backend/transaction-service/`
+
+- **Performance Load Testing (Gatling)**:
+  - Complete performance testing infrastructure with Gatling 3.11.5
+  - Test scenarios: Login, Transfer, QRIS Payment, Balance Query, All Services
+  - Ramp-up from 10 to 1000 concurrent users over 15 minutes
+  - Performance assertions: p95 < 1s for critical operations
+  - Test data: 100 test users and accounts with realistic balances
+  - BaseSimulation class with reusable HTTP protocol and load profiles
+  - Multiple execution methods: Maven, Gradle, Docker, convenience script
+  - HTML reports with metrics, charts, and request statistics
+  - Location: `/tests/performance/`
+
+- **Multi-Region Active-Passive Failover**:
+  - Complete disaster recovery configuration for cross-region failover on OpenShift 4.20+
+  - **Primary Region** (`infrastructure/openshift/multi-region/primary/deployment.yaml`):
+    - All 10 microservices deployed at full capacity (3 replicas Spring Boot, 2 replicas Quarkus)
+    - PostgreSQL primary with logical replication enabled
+    - Kafka 3-node cluster with MirrorMaker2
+    - Redis/Data Grid master
+  - **Secondary Region** (`infrastructure/openshift/multi-region/secondary/deployment.yaml`):
+    - All services deployed but scaled to 0 (hot standby)
+    - PostgreSQL hot standby with continuous replication
+    - Kafka 3-node cluster receiving mirrored data
+    - Redis replica
+  - **PostgreSQL Replication** (`replication/postgres-replication.yaml`):
+    - Logical replication from primary to secondary
+    - Publication/subscription configuration
+    - Replication monitoring CronJob (5-minute intervals)
+    - PostgreSQL exporter for Prometheus metrics
+  - **Kafka Mirroring** (`replication/kafka-mirroring.yaml`):
+    - MirrorMaker2 for cross-region replication
+    - IdentityReplicationPolicy for topic name preservation
+    - Topic and group offset synchronization (5-second intervals)
+    - Health check CronJob
+    - Prometheus alerting rules for replication lag
+  - **Failover Automation** (`failover/failover-job.yaml`):
+    - Automated failover job (Primary → Secondary)
+    - Automated failback job (Secondary → Primary)
+    - Pre-flight checks and post-failover verification
+    - RBAC configuration (ServiceAccount, ClusterRole, ClusterRoleBinding)
+    - DNS update integration
+  - **Monitoring & Alerting** (`monitoring/replication-lag-service-monitor.yaml`):
+    - ServiceMonitors for PostgreSQL, Kafka, and applications
+    - PrometheusRule with 10+ alerting rules
+    - Grafana dashboard for replication monitoring
+    - NetworkPolicy for monitoring access
+  - **Documentation** (`README.md`):
+    - Complete architecture overview and diagrams
+    - Deployment guide with step-by-step instructions
+    - Troubleshooting procedures
+    - Disaster recovery playbooks
+    - Cost optimization strategies (~70% savings with passive standby)
+  - Location: `/infrastructure/openshift/multi-region/`
+
+- **OpenShift Service Mesh (Istio)**:
+  - Complete Service Mesh configuration for Red Hat OpenShift 4.20+
+  - ServiceMeshControlPlane (v2.6) with mTLS, telemetry, and tracing enabled
+  - Ingress Gateway configuration with HTTPS/TLS termination
+  - VirtualServices for routing external traffic to internal services
+  - DestinationRules with traffic policies, load balancing, and circuit breakers
+  - PeerAuthentication policies enforcing STRICT mTLS for production
+  - AuthorizationPolicies for Zero Trust security model
+  - RequestAuthentication for JWT validation with Keycloak integration
+  - ServiceMeshMemberRoll for all PayU namespaces (dev, sit, uat, preprod, prod)
+  - High availability configuration with HPA and PodDisruptionBudget
+  - Kustomization configuration for environment-specific deployments
+  - Automated deployment script with dry-run support
+  - Certificate management guide with Let's Encrypt integration
+  - Comprehensive README with architecture, operations, and troubleshooting
+  - Location: `/infrastructure/openshift/service-mesh/`
+
 - **AI Agent & Environment Integration**:
   - Installed core development tools: Java 21, Maven 3.8, Node.js 20, pnpm, yarn, OpenShift CLI (oc), kubectl, yq, and jq.
   - Created root-level symlinks for AI agent coordination:
@@ -48,6 +197,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Spring Boot services: 1GB RAM, 2.0 CPU (limits)
     - Quarkus Native services: 256M RAM, 1.0 CPU (limits)
     - Python FastAPI services: 512M RAM, 2.0 CPU (limits)
+
+- **Database Sharding** (Backend - Transaction Service):
+  - Implemented PostgreSQL declarative partitioning by hash on `sender_account_id`
+  - Created `ShardingConfig` configuration class with partition calculation
+  - Created `ShardRouter` service for partition routing and cross-partition queries
+  - Added Flyway migration `V5__sharding_init.sql` for partitioned table setup
+  - Updated `TransactionPersistenceAdapter` with shard-aware query logging
+  - Enhanced `TransactionJpaRepository` with partition-aware query methods
+  - Added `application-sharding.properties` for standalone sharding configuration
+  - Updated `application.yml` with sharding properties
+  - Created comprehensive `SHARDING.md` documentation with migration guide
+  - Partition strategy: 8 partitions (configurable: 4, 8, 16, 32) with hash distribution
+  - Supports sender queries (single partition, fast) and recipient queries (cross-partition)
+  - Location: `/backend/transaction-service/`
     - PostgreSQL: 2GB RAM, 2.0 CPU (limits)
     - Kafka: 2GB RAM, 2.0 CPU (limits)
     - Redis: 512M RAM, 1.0 CPU (limits) with LRU eviction

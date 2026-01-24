@@ -1,0 +1,300 @@
+---
+# PostgreSQL Logical Replication Configuration
+# Primary region to Secondary region replication
+
+---
+# Publication on Primary
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-primary-replication-config
+  namespace: payu-prod
+data:
+  postgresql.conf: |
+    # PostgreSQL Configuration for Logical Replication
+    listen_addresses = '*'
+    max_connections = 200
+    shared_buffers = 4GB
+    effective_cache_size = 12GB
+    maintenance_work_mem = 1GB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    work_mem = 4194kB
+    min_wal_size = 2GB
+    max_wal_size = 8GB
+
+    # Logical Replication Settings
+    wal_level = logical
+    max_replication_slots = 10
+    max_wal_senders = 10
+    max_logical_replication_workers = 8
+    max_sync_workers_per_subscription = 4
+
+    # Logging
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = '/var/lib/pgsql/data/log'
+    log_filename = 'postgresql-%a.log'
+    log_truncate_on_rotation = on
+    log_rotation_age = 1d
+    log_rotation_size = 100MB
+    log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    log_lock_waits = on
+    log_min_duration_statement = 1000
+
+  replication-setup.sql: |
+    -- Create replication user
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_user WHERE usename = 'replicator') THEN
+        CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '<REPLICATION_PASSWORD>';
+      END IF;
+    END
+    $$;
+
+    -- Create publication for all tables
+    CREATE PUBLICATION IF NOT EXISTS payu_publication FOR ALL TABLES;
+
+    -- Grant necessary permissions
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO replicator;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO replicator;
+
+    -- Enable required extensions
+    CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+    CREATE EXTENSION IF NOT EXISTS pg_buffercache;
+
+---
+# Subscription configuration on Secondary
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-secondary-replication-config
+  namespace: payu-prod
+data:
+  postgresql.conf: |
+    # PostgreSQL Configuration for Standby/Replica
+    listen_addresses = '*'
+    max_connections = 200
+    shared_buffers = 4GB
+    effective_cache_size = 12GB
+    maintenance_work_mem = 1GB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    work_mem = 4194kB
+    min_wal_size = 2GB
+    max_wal_size = 8GB
+
+    # Standby settings (for physical replication fallback)
+    hot_standby = on
+    max_standby_streaming_delay = 30s
+    max_standby_archive_delay = 30s
+
+    # Logical replication as subscriber
+    wal_level = logical
+    max_replication_slots = 10
+    max_wal_senders = 10
+    max_logical_replication_workers = 8
+    max_sync_workers_per_subscription = 4
+
+    # Logging
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = '/var/lib/pgsql/data/log'
+    log_filename = 'postgresql-%a.log'
+    log_truncate_on_rotation = on
+    log_rotation_age = 1d
+    log_rotation_size = 100MB
+    log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    log_lock_waits = on
+    log_min_duration_statement = 1000
+
+  subscription-setup.sql: |
+    -- Create subscription to primary
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_subscription WHERE subname = 'payu_subscription') THEN
+        CREATE SUBSCRIPTION payu_subscription
+        CONNECTION 'host=postgres-primary.payu-prod.svc.cluster.local port=5432 dbname=payudb user=replicator password=<REPLICATION_PASSWORD>'
+        PUBLICATION payu_publication
+        WITH (create_slot = false, slot_name = 'payu_slot');
+      END IF;
+    END
+    $$;
+
+    -- Enable monitoring
+    CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+    CREATE EXTENSION IF NOT EXISTS pg_buffercache;
+
+---
+# Replication monitoring CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-replication-monitor
+  namespace: payu-prod
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: replication-monitor
+            image: registry.redhat.io/rhel8/postgresql-16:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              #!/bin/bash
+              set -e
+
+              # Check replication lag on secondary
+              PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-secondary -U payu -d payudb <<EOF
+              DO \$\$
+              DECLARE
+                lag_bytes bigint;
+                lag_seconds numeric;
+              BEGIN
+                -- Get replication lag from pg_stat_subscription
+                SELECT COALESCE(MAX(lag_bytes), 0) INTO lag_bytes
+                FROM pg_stat_subscription;
+
+                -- Convert to seconds (approximate)
+                lag_seconds := lag_bytes / 1024.0 / 1024.0 / 10.0;  -- Assume 10 MB/s
+
+                -- Alert if lag is too high (> 5 minutes worth of data)
+                IF lag_seconds > 300 THEN
+                  RAISE WARNING 'Replication lag is high: % seconds', lag_seconds;
+                END IF;
+
+                -- Log metrics
+                RAISE NOTICE 'Replication lag: % bytes (% seconds)', lag_bytes, lag_seconds;
+              END
+              \$\$;
+              EOF
+
+              echo "Replication check completed at $(date)"
+            env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+          restartPolicy: OnFailure
+
+---
+# Replication status Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-replication-metrics
+  namespace: payu-prod
+  labels:
+    app: postgres
+    component: replication
+spec:
+  selector:
+    app: postgres
+    role: secondary
+  ports:
+  - name: metrics
+    port: 9187
+    targetPort: 9187
+    protocol: TCP
+
+---
+# PostgreSQL Exporter for replication metrics
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-exporter
+  namespace: payu-prod
+  labels:
+    app: postgres-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-exporter
+  template:
+    metadata:
+      labels:
+        app: postgres-exporter
+    spec:
+      containers:
+      - name: postgres-exporter
+        image: quay.io/prometheuscommunity/postgres-exporter:latest
+        ports:
+        - containerPort: 9187
+          name: metrics
+        env:
+        - name: DATA_SOURCE_NAME
+          value: "postgresql://payu:$(password)@postgres-secondary:5432/payudb?sslmode=disable"
+        - name: PG_EXPORTER_EXTEND_QUERY_PATH
+          value: /etc/postgres-exporter/queries.yaml
+        envFrom:
+        - secretRef:
+            name: postgres-secret
+        volumeMounts:
+        - name: queries
+          mountPath: /etc/postgres-exporter
+          readOnly: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+      volumes:
+      - name: queries
+        configMap:
+          name: postgres-exporter-queries
+
+---
+# Custom queries for replication monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-exporter-queries
+  namespace: payu-prod
+data:
+  queries.yaml: |
+    pg_replication:
+      query: |
+        SELECT
+          CASE WHEN NOT pg_is_in_recovery() THEN 0 ELSE 1 END as is_replica,
+          (SELECT count(1) FROM pg_stat_subscription) as subscription_count,
+          COALESCE((SELECT sum(lag_bytes) FROM pg_stat_subscription), 0) as total_lag_bytes,
+          COALESCE((SELECT avg(lag_bytes) FROM pg_stat_subscription), 0) as avg_lag_bytes
+      metrics:
+        - is_replica:
+            usage: "GAUGE"
+            description: "1 if this is a replica, 0 otherwise"
+        - subscription_count:
+            usage: "GAUGE"
+            description: "Number of subscriptions"
+        - total_lag_bytes:
+            usage: "GAUGE"
+            description: "Total replication lag in bytes"
+        - avg_lag_bytes:
+            usage: "GAUGE"
+            description: "Average replication lag in bytes"
+
+    pg_stat_replication:
+      query: |
+        SELECT
+          count(*) as replication_connections
+        FROM pg_stat_replication
+      metrics:
+        - replication_connections:
+            usage: "GAUGE"
+            description: "Number of replication connections"

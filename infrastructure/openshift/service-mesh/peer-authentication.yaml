@@ -1,0 +1,603 @@
+# Peer Authentication and Authorization Policies for PayU Digital Banking Platform
+# This manifest configures mTLS enforcement and authorization policies
+#
+# Resources:
+# - PeerAuthentication: Enforces mTLS modes (STRICT, PERMISSIVE, DISABLE)
+# - AuthorizationPolicy: Defines who can access what
+# - RequestAuthentication: JWT validation for incoming requests
+
+---
+# Root Namespace PeerAuthentication (istio-system)
+# This sets the default for the entire mesh
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: mesh-wide-mtls
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      # Apply to all namespaces in the mesh
+      app: istio-ingressgateway
+  mtls:
+    mode: STRICT  # Enforce mTLS for all service-to-service communication
+---
+# Namespace-wide STRICT mTLS for Production
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      # Apply to all pods in the namespace
+      app.kubernetes.io/part-of: payu
+  mtls:
+    mode: STRICT  # Only allow mTLS connections
+---
+# Namespace-wide PERMISSIVE mTLS for Development
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: permissive-mtls
+  namespace: payu-dev
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  mtls:
+    mode: PERMISSIVE  # Allow both mTLS and plain text (for debugging)
+---
+# Namespace-wide PERMISSIVE mTLS for SIT
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: permissive-mtls
+  namespace: payu-sit
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  mtls:
+    mode: PERMISSIVE
+---
+# Namespace-wide STRICT mTLS for UAT
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-mtls
+  namespace: payu-uat
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  mtls:
+    mode: STRICT
+---
+# Namespace-wide STRICT mTLS for Pre-Production
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-mtls
+  namespace: payu-preprod
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  mtls:
+    mode: STRICT
+---
+# Service-specific PeerAuthentication for Account Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: account-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: account-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8081
+      mode: STRICT
+---
+# Service-specific PeerAuthentication for Auth Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: auth-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: auth-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8082
+      mode: STRICT
+---
+# Service-specific PeerAuthentication for Transaction Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: transaction-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: transaction-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8083
+      mode: STRICT
+---
+# Service-specific PeerAuthentication for Wallet Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: wallet-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: wallet-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8084
+      mode: STRICT
+---
+# Service-specific PeerAuthentication for Billing Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: billing-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: billing-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8085
+      mode: STRICT
+---
+# Service-specific PeerAuthentication for Notification Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: notification-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: notification-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8086
+      mode: STRICT
+---
+# Service-specific PeerAuthentication for KYC Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: kyc-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: kyc-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8087
+      mode: STRICT
+---
+# Service-specific PeerAuthentication for Analytics Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: analytics-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: analytics-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8088
+      mode: STRICT
+---
+# Service-specific PeerAuthentication for Gateway Service
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: gateway-service-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: gateway-service
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    - port:
+        number: 8080
+      mode: STRICT
+---
+# DISABLE mTLS for External Simulators (they don't have sidecars)
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: bi-fast-simulator-no-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: bi-fast-simulator
+  mtls:
+    mode: DISABLE  # External simulators don't support mTLS
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: dukcapil-simulator-no-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: dukcapil-simulator
+  mtls:
+    mode: DISABLE
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: qris-simulator-no-mtls
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: qris-simulator
+  mtls:
+    mode: DISABLE
+---
+# AuthorizationPolicy: Deny All by Default (Zero Trust)
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  action: DENY
+  rules:
+    - {}
+---
+# AuthorizationPolicy: Allow Same Namespace
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-same-namespace
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces:
+              - payu-prod
+---
+# AuthorizationPolicy: Allow from Istio System (control plane)
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-istio-system
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces:
+              - istio-system
+            principals:
+              - cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account
+              - cluster.local/ns/istio-system/sa/istiod-service-account
+---
+# AuthorizationPolicy: Allow Gateway to Access All Services
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-gateway
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces:
+              - istio-system
+            principals:
+              - cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account
+---
+# AuthorizationPolicy: Account Service Specific Rules
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: account-service-policy
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: account-service
+  action: ALLOW
+  rules:
+    # Allow from gateway
+    - from:
+        - source:
+            namespaces:
+              - istio-system
+              - payu-prod
+      to:
+        - operation:
+            methods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+            paths:
+              - /v1/accounts/*
+    # Allow from auth-service (for account verification)
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/payu-prod/sa/auth-service
+      to:
+        - operation:
+            methods:
+              - GET
+            paths:
+              - /v1/accounts/*/verify
+---
+# AuthorizationPolicy: Transaction Service Specific Rules
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: transaction-service-policy
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: transaction-service
+  action: ALLOW
+  rules:
+    # Allow from gateway
+    - from:
+        - source:
+            namespaces:
+              - istio-system
+      to:
+        - operation:
+            methods:
+              - POST
+              - GET
+            paths:
+              - /v1/transactions/*
+    # Allow from wallet-service (for balance operations)
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/payu-prod/sa/wallet-service
+      to:
+        - operation:
+            methods:
+              - POST
+            paths:
+              - /v1/transactions/internal/*
+    # Allow from account-service (for account validation)
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/payu-prod/sa/account-service
+      to:
+        - operation:
+            methods:
+              - GET
+            paths:
+              - /v1/transactions/internal/accounts/*
+---
+# AuthorizationPolicy: Wallet Service Specific Rules
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: wallet-service-policy
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: wallet-service
+  action: ALLOW
+  rules:
+    # Allow from gateway
+    - from:
+        - source:
+            namespaces:
+              - istio-system
+      to:
+        - operation:
+            methods:
+              - GET
+              - POST
+            paths:
+              - /v1/wallet/*
+    # Allow from transaction-service (for balance updates)
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/payu-prod/sa/transaction-service
+      to:
+        - operation:
+            methods:
+              - POST
+              - PUT
+            paths:
+              - /v1/wallet/internal/*
+---
+# AuthorizationPolicy: Auth Service Specific Rules
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: auth-service-policy
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: auth-service
+  action: ALLOW
+  rules:
+    # Allow from gateway (public endpoints)
+    - from:
+        - source:
+            namespaces:
+              - istio-system
+      to:
+        - operation:
+            methods:
+              - POST
+              - GET
+            paths:
+              - /v1/auth/*
+    # Allow from any service (for token validation)
+    - from:
+        - source:
+            namespaces:
+              - payu-prod
+      to:
+        - operation:
+            methods:
+              - POST
+            paths:
+              - /v1/auth/validate
+              - /v1/auth/introspect
+---
+# AuthorizationPolicy: KYC Service Specific Rules
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: kyc-service-policy
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: kyc-service
+  action: ALLOW
+  rules:
+    # Allow from gateway
+    - from:
+        - source:
+            namespaces:
+              - istio-system
+      to:
+        - operation:
+            methods:
+              - POST
+              - GET
+            paths:
+              - /v1/kyc/*
+    # Allow from account-service (for KYC verification)
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/payu-prod/sa/account-service
+      to:
+        - operation:
+            methods:
+              - POST
+              - GET
+            paths:
+              - /v1/kyc/internal/*
+---
+# RequestAuthentication: JWT Validation for Account Service
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: account-service-jwt
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: account-service
+  jwtRules:
+    - issuer: "https://keycloak.payu.local/auth/realms/payu"
+      jwksUri: https://keycloak.payu.local/auth/realms/payu/protocol/openid-connect/certs
+      forwardOriginalToken: true
+      fromHeaders:
+        - name: Authorization
+          prefix: "Bearer "
+      outputPayloadToHeader: x-jwt-payload-account
+---
+# RequestAuthentication: JWT Validation for Transaction Service
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: transaction-service-jwt
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: transaction-service
+  jwtRules:
+    - issuer: "https://keycloak.payu.local/auth/realms/payu"
+      jwksUri: https://keycloak.payu.local/auth/realms/payu/protocol/openid-connect/certs
+      forwardOriginalToken: true
+      fromHeaders:
+        - name: Authorization
+          prefix: "Bearer "
+      outputPayloadToHeader: x-jwt-payload-transaction
+---
+# RequestAuthentication: JWT Validation for Wallet Service
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: wallet-service-jwt
+  namespace: payu-prod
+spec:
+  selector:
+    matchLabels:
+      app: wallet-service
+  jwtRules:
+    - issuer: "https://keycloak.payu.local/auth/realms/payu"
+      jwksUri: https://keycloak.payu.local/auth/realms/payu/protocol/openid-connect/certs
+      forwardOriginalToken: true
+      fromHeaders:
+        - name: Authorization
+          prefix: "Bearer "
+      outputPayloadToHeader: x-jwt-payload-wallet

@@ -63,11 +63,11 @@
 
 ### 9. Mobile App Support
 - [x] Prepare mobile-responsive views for web-app.
-- [ ] **Transition to Expo (React Native)**:
-    - [ ] Remove current Native (Swift/Kotlin) boilerplate from `mobile/` (Inconsistent with stack).
-    - [ ] Initialize new Expo project with TypeScript and Expo Router.
-    - [ ] Implement core banking flows (Onboarding, Transfer, QRIS) using React Native.
-    - [ ] Target: Cross-platform iOS & Android from single codebase.
+- [x] **Transition to Expo (React Native)**:
+    - [x] Remove current Native (Swift/Kotlin) boilerplate from `mobile/` (Inconsistent with stack).
+    - [x] Initialize new Expo project with TypeScript and Expo Router.
+    - [x] Implement core banking flows (Onboarding, Transfer, QRIS) using React Native.
+    - [x] Target: Cross-platform iOS & Android from single codebase.
 
 ## 🛡️ Backend Technical Debt & Hardening
 
@@ -156,21 +156,21 @@
 - [x] Implement **In-app Feedback System** with screenshot/log attachment capabilities.
 
 ### 24. CMS & Marketing Automation
-- [ ] Implement **Dynamic Content Management (CMS)** for banners, promos, and alerts (Scaffold exists in `cms-service`, needs logic).
-- [ ] Implement **A/B Testing Framework** for UI features and promotional offers (Scaffold exists in `ab-testing-service`, needs logic).
-- [ ] Integrate **Customer Segmentation Engine** for personalized notification campaigns.
+- [x] Implement **Dynamic Content Management (CMS)** for banners, promos, and alerts (Full implementation in `cms-service`).
+- [x] Implement **A/B Testing Framework** for UI features and promotional offers (Full implementation in `ab-testing-service`).
+- [x] Integrate **Customer Segmentation Engine** for personalized notification campaigns.
 
 ## 🛠️ Operational Polish & Stability
 
 ### 22. Infrastructure Hardening
 - [x] Optimize **Docker Resource Limits** (CPU/RAM) across all 20+ containers.
-- [ ] Implement **Automated Regression Testing** in CI/CD (Scripts exist in `tests/regression`, but CI/CD pipelines are missing).
+- [x] Implement **Automated Regression Testing** in CI/CD (Tekton pipelines in `infrastructure/pipelines/`).
 - [x] Fine-tune **Inter-service Health Checks** for faster recovery in OpenShift.
-- [ ] Deploy **Red Hat OpenShift Service Mesh (Istio)** for mTLS and advanced traffic management.
-- [ ] Implement **Distributed Caching Strategy** (Redis/Data Grid) with stale-while-revalidate patterns.
+- [x] Deploy **Red Hat OpenShift Service Mesh (Istio)** for mTLS and advanced traffic management.
+- [x] Implement **Distributed Caching Strategy** (Redis/Data Grid) with stale-while-revalidate patterns.
 
 ### 25. High Availability & Scalability
-- [ ] Implement **Database Sharding/Partitioning** for `transaction-service` to support billions of records.
-- [ ] Setup **Multi-region Active-Passive Failover** configuration manifests for OpenShift.
-- [ ] Execute **Performance Load Testing** (Gatling/JMeter) to identify microservice bottlenecks.
+- [x] Implement **Database Sharding/Partitioning** for `transaction-service` to support billions of records.
+- [x] Setup **Multi-region Active-Passive Failover** configuration manifests for OpenShift.
+- [x] Execute **Performance Load Testing** (Gatling/JMeter) to identify microservice bottlenecks.
 

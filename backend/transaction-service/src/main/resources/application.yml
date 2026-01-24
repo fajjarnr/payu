@@ -91,6 +91,16 @@ archival:
   schedule:
     cron: "0 0 2 * * ?"
 
+# Database Sharding/Partitioning Configuration
+sharding:
+  enabled: false  # Set to true after running V5 migration and migrating data
+  partition-count: 8  # Must be a power of 2: 4, 8, 16, or 32
+  auto-migrate: true
+  migration-batch-size: 1000
+  enable-cross-partition-queries: true
+  max-query-parallelism: 4
+  partition-key: senderAccountId
+
 # Resilience4j configuration for wallet-service calls
 resilience4j:
   circuitbreaker:

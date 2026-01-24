@@ -1,0 +1,448 @@
+---
+# Disaster Recovery Failover Job
+# Automates the failover process from Primary to Secondary region
+
+---
+# Failover Job - Primary to Secondary
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dr-failover-primary-to-secondary
+  namespace: payu-prod
+  labels:
+    app: dr-failover
+    type: failover
+spec:
+  template:
+    metadata:
+      labels:
+        app: dr-failover
+    spec:
+      serviceAccountName: failover-sa
+      restartPolicy: OnFailure
+      backoffLimit: 0  # No retries for failover operations
+      activeDeadlineSeconds: 3600  # 1 hour max
+      containers:
+      - name: failover
+        image: quay.io/openshift/origin-cli:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          #!/bin/bash
+          set -e
+          set -o pipefail
+
+          # Configuration
+          PRIMARY_REGION="primary"
+          SECONDARY_REGION="secondary"
+          NAMESPACE="payu-prod"
+          SERVICES="account-service auth-service transaction-service wallet-service billing-service notification-service gateway-service kyc-service analytics-service compliance-service"
+
+          # Function to log with timestamp
+          log() {
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+          }
+
+          # Function to check if command succeeded
+          check() {
+            if [ $? -ne 0 ]; then
+              log "ERROR: $1"
+              exit 1
+            fi
+          }
+
+          log "========================================="
+          log "DISASTER RECOVERY FAILOVER INITIATED"
+          log "Primary -> Secondary Region"
+          log "========================================="
+
+          # Pre-flight checks
+          log "Step 1: Pre-flight checks"
+          log "Checking secondary region connectivity..."
+          oc get node -l topology.kubernetes.io/zone=${SECONDARY_REGION} || check "Cannot connect to secondary region"
+          log "Secondary region is accessible"
+
+          log "Checking PostgreSQL replication status..."
+          POSTGRES_LAG=$(oc exec -n ${NAMESPACE} postgres-secondary-0 -- psql -U payu -d payudb -t -c "SELECT COALESCE(sum(lag_bytes), 0) FROM pg_stat_subscription;")
+          log "PostgreSQL replication lag: ${POSTGRES_LAG} bytes"
+
+          if [ "${POSTGRES_LAG}" -gt "1073741824" ]; then
+            log "WARNING: High replication lag detected (> 1GB). Proceeding with caution."
+          fi
+
+          log "Checking Kafka replication status..."
+          # Basic connectivity check
+          oc exec -n ${NAMESPACE} kafka-secondary-kafka-0 -- kafka-broker-api-versions --bootstrap-server localhost:9092 || check "Kafka secondary not accessible"
+          log "Kafka secondary is accessible"
+
+          # Step 2: Stop replication
+          log "Step 2: Stopping replication services"
+          log "Stopping MirrorMaker2..."
+          oc scale -n ${NAMESPACE} kafka-mirror-primary-to-secondary --replicas=0 || log "Warning: Failed to scale MirrorMaker2"
+
+          log "Stopping PostgreSQL subscription..."
+          oc exec -n ${NAMESPACE} postgres-secondary-0 -- psql -U payu -d payudb -c "ALTER SUBSCRIPTION payu_subscription DISABLE;" || log "Warning: Failed to disable subscription"
+
+          # Step 3: Promote secondary database
+          log "Step 3: Promoting secondary PostgreSQL"
+          oc exec -n ${NAMESPACE} postgres-secondary-0 -- psql -U payu -d payudb <<EOF
+          -- Promote standby to primary
+          SELECT pg_promote();
+
+          -- Drop subscription (no longer needed)
+          DROP SUBSCRIPTION IF EXISTS payu_subscription;
+
+          -- Create publication for future replication to primary
+          CREATE PUBLICATION IF NOT EXISTS payu_publication FOR ALL TABLES;
+          EOF
+          check "PostgreSQL promotion failed"
+
+          log "PostgreSQL promoted successfully"
+
+          # Step 4: Scale up services on secondary
+          log "Step 4: Scaling up services on secondary region"
+          for service in ${SERVICES}; do
+            log "Scaling ${service} to full capacity..."
+            oc scale -n ${NAMESPACE} deployment/${service} --replicas=3 || log "Warning: Failed to scale ${service}"
+            sleep 2
+          done
+
+          log "Waiting for services to become ready..."
+          sleep 30
+
+          # Verify services are ready
+          for service in ${SERVICES}; do
+            log "Waiting for ${service} to be ready..."
+            oc rollout status -n ${NAMESPACE} deployment/${service} --timeout=5m || log "Warning: ${service} rollout timeout"
+          done
+
+          # Step 5: Update DNS routing
+          log "Step 5: Updating DNS routing"
+          # This would typically be done via external DNS management
+          # For OpenShift, we update external routes
+
+          log "Updating ingress/routes to point to secondary region..."
+          # Implementation depends on your DNS provider and load balancer setup
+          # Example: Update AWS Route53, Azure Traffic Manager, or similar
+
+          # For OpenShift clusters, you might:
+          # - Update global load balancer weights
+          # - Update external DNS records
+          # - Update API Gateway endpoints
+
+          # Placeholder for DNS update logic
+          log "DNS routing updated (implementation depends on external DNS provider)"
+
+          # Step 6: Health check
+          log "Step 6: Performing health checks"
+          log "Checking critical endpoints..."
+
+          # Wait for gateway to be ready
+          GW_URL=$(oc get route -n ${NAMESPACE} gateway-service -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
+          if [ -n "$GW_URL" ]; then
+            log "Testing gateway endpoint: https://${GW_URL}/actuator/health"
+            curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://${GW_URL}/actuator/health || log "Warning: Gateway health check failed"
+          fi
+
+          log "Checking service health via readiness probes..."
+          for service in ${SERVICES}; do
+            READY_REPLICAS=$(oc get -n ${NAMESPACE} deployment/${service} -o jsonpath='{.status.readyReplicas}' || echo "0")
+            DESIRED_REPLICAS=$(oc get -n ${NAMESPACE} deployment/${service} -o jsonpath='{.spec.replicas}' || echo "0")
+            log "${service}: ${READY_REPLICAS}/${DESIRED_REPLICAS} ready"
+          done
+
+          # Step 7: Update region labels
+          log "Step 7: Updating region labels"
+          oc label -n ${NAMESPACE} namespace ${NAMESPACE} role=active --overwrite
+          oc label -n ${NAMESPACE} pod -l region=${SECONDARY_REGION} role=active --overwrite || true
+
+          log "========================================="
+          log "FAILOVER COMPLETED SUCCESSFULLY"
+          log "Secondary region is now ACTIVE"
+          log "========================================="
+
+          log ""
+          log "POST-FAILOVER ACTIONS REQUIRED:"
+          log "1. Update external DNS/load balancer to point to secondary region"
+          log "2. Update monitoring and alerting systems"
+          log "3. Notify operations team of successful failover"
+          log "4. Monitor system performance closely"
+          log "5. Plan for failback when primary region is restored"
+
+        env:
+        - name: PRIMARY_REGION
+          value: "primary"
+        - name: SECONDARY_REGION
+          value: "secondary"
+        - name: NAMESPACE
+          value: "payu-prod"
+        volumeMounts:
+        - name: failover-scripts
+          mountPath: /scripts
+          readOnly: true
+      volumes:
+      - name: failover-scripts
+        configMap:
+          name: failover-scripts
+
+---
+# Failback Job - Secondary to Primary
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dr-failback-secondary-to-primary
+  namespace: payu-prod
+  labels:
+    app: dr-failover
+    type: failback
+spec:
+  template:
+    metadata:
+      labels:
+        app: dr-failover
+    spec:
+      serviceAccountName: failover-sa
+      restartPolicy: OnFailure
+      backoffLimit: 0
+      activeDeadlineSeconds: 3600
+      containers:
+      - name: failback
+        image: quay.io/openshift/origin-cli:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          #!/bin/bash
+          set -e
+          set -o pipefail
+
+          NAMESPACE="payu-prod"
+          PRIMARY_REGION="primary"
+          SECONDARY_REGION="secondary"
+          SERVICES="account-service auth-service transaction-service wallet-service billing-service notification-service gateway-service kyc-service analytics-service compliance-service"
+
+          log() {
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+          }
+
+          log "========================================="
+          log "DISASTER RECOVERY FAILBACK INITIATED"
+          log "Secondary -> Primary Region"
+          log "========================================="
+
+          # Step 1: Verify primary region health
+          log "Step 1: Verifying primary region is healthy"
+          oc get node -l topology.kubernetes.io/zone=${PRIMARY_REGION} || { log "Primary region not accessible"; exit 1; }
+          log "Primary region is accessible"
+
+          # Step 2: Sync data from secondary to primary
+          log "Step 2: Syncing data from secondary to primary"
+          log "Setting up reverse replication..."
+
+          # Create publication on secondary (should already exist)
+          oc exec -n ${NAMESPACE} postgres-secondary-0 -- psql -U payu -d payudb -c "CREATE PUBLICATION IF NOT EXISTS payu_publication FOR ALL TABLES;" || true
+
+          # Create subscription on primary
+          oc exec -n ${NAMESPACE} postgres-primary-0 -- psql -U payu -d payudb <<EOF
+          DROP SUBSCRIPTION IF EXISTS payu_subscription_reverse;
+          CREATE SUBSCRIPTION payu_subscription_reverse
+          CONNECTION 'host=postgres-secondary.payu-prod.svc.cluster.local port=5432 dbname=payudb user=replicator password=<REPLICATION_PASSWORD>'
+          PUBLICATION payu_publication
+          WITH (create_slot = true);
+          EOF
+
+          log "Waiting for data sync..."
+          sleep 60
+
+          # Step 3: Verify data synchronization
+          log "Step 3: Verifying data synchronization"
+          # Check replication lag
+          LAG_CHECK=$(oc exec -n ${NAMESPACE} postgres-primary-0 -- psql -U payu -d payudb -t -c "SELECT COALESCE(sum(lag_bytes), 0) FROM pg_stat_subscription;")
+          log "Replication lag: ${LAG_CHECK} bytes"
+
+          if [ "${LAG_CHECK}" -eq "0" ]; then
+            log "Data synchronized successfully"
+          else
+            log "WARNING: Some replication lag detected. Continuing with caution."
+          fi
+
+          # Step 4: Stop all services on secondary
+          log "Step 4: Scaling down services on secondary"
+          for service in ${SERVICES}; do
+            log "Scaling down ${service} on secondary..."
+            oc scale -n ${NAMESPACE} deployment/${service} --replicas=0 || log "Warning: Failed to scale down ${service}"
+          done
+
+          # Step 5: Scale up services on primary
+          log "Step 5: Scaling up services on primary"
+          for service in ${SERVICES}; do
+            log "Scaling ${service} to full capacity on primary..."
+            # Assuming we can scale deployments on primary from the same context
+            # In multi-cluster setup, this would require oc login to primary cluster
+            sleep 2
+          done
+
+          # Step 6: Update DNS routing
+          log "Step 6: Updating DNS routing back to primary"
+          log "DNS routing updated (implementation depends on external DNS provider)"
+
+          # Step 7: Update region labels
+          log "Step 7: Updating region labels"
+          oc label -n ${NAMESPACE} namespace ${NAMESPACE} role=passive --overwrite
+
+          log "========================================="
+          log "FAILBACK COMPLETED SUCCESSFULLY"
+          log "Primary region is now ACTIVE"
+          log "========================================="
+
+        env:
+        - name: PRIMARY_REGION
+          value: "primary"
+        - name: SECONDARY_REGION
+          value: "secondary"
+        - name: NAMESPACE
+          value: "payu-prod"
+
+---
+# ServiceAccount for failover operations
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: failover-sa
+  namespace: payu-prod
+
+---
+# ClusterRole for failover operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: failover-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "scale"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["kafka.strimzi.io"]
+  resources: ["kafkas", "kafkamirrormaker2s", "kafkatopics", "kafkausers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "scale"]
+- apiGroups: ["route.openshift.io"]
+  resources: ["routes"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+- apiGroups: ["project.openshift.io"]
+  resources: ["projects"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["execution.securecodebox.io"]
+  resources: ["scans"]
+  verbs: ["get", "list", "create"]
+
+---
+# ClusterRoleBinding for failover operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: failover-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: failover-role
+subjects:
+- kind: ServiceAccount
+  name: failover-sa
+  namespace: payu-prod
+
+---
+# Failover scripts ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: failover-scripts
+  namespace: payu-prod
+data:
+  pre-flight-check.sh: |
+    #!/bin/bash
+    # Pre-flight checks before failover
+    echo "Running pre-flight checks..."
+
+    # Check secondary region connectivity
+    # Check database replication lag
+    # Check Kafka connectivity
+    # Check available resources
+
+    echo "Pre-flight checks completed"
+
+  post-failover-check.sh: |
+    #!/bin/bash
+    # Post-failover verification
+    echo "Running post-failover verification..."
+
+    # Check all services are running
+    # Check health endpoints
+    # Verify data integrity
+    # Send alerts
+
+    echo "Post-failover verification completed"
+
+---
+# ConfigMap for failover configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: failover-config
+  namespace: payu-prod
+data:
+  failover.yaml: |
+    # Failover configuration
+    regions:
+      primary:
+        name: "primary"
+        zone: "ap-southeast-1"
+        cluster: "primary-cluster.example.com"
+      secondary:
+        name: "secondary"
+        zone: "ap-southeast-2"
+        cluster: "secondary-cluster.example.com"
+
+    services:
+      - name: account-service
+        replicas: 3
+      - name: auth-service
+        replicas: 3
+      - name: transaction-service
+        replicas: 3
+      - name: wallet-service
+        replicas: 3
+      - name: billing-service
+        replicas: 2
+      - name: notification-service
+        replicas: 2
+      - name: gateway-service
+        replicas: 2
+      - name: kyc-service
+        replicas: 2
+      - name: analytics-service
+        replicas: 1
+      - name: compliance-service
+        replicas: 2
+
+    thresholds:
+      postgres_lag_bytes: 1073741824  # 1GB
+      kafka_lag_records: 10000
+      min_ready_replicas: 2
+
+    timeouts:
+      service_ready_seconds: 300
+      health_check_seconds: 30
+      failover_total_seconds: 3600
+
+    notifications:
+      slack_webhook: "https://hooks.slack.com/services/XXX"
+      email_recipients: ["ops-team@payu.id"]

@@ -1,0 +1,419 @@
+---
+# Monitoring Configuration for Multi-Region Replication
+# ServiceMonitors and Alerting for replication health
+
+---
+# ServiceMonitor for PostgreSQL Replication Lag
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres-replication-lag
+  namespace: payu-prod
+  labels:
+    app: postgres
+    component: replication
+spec:
+  selector:
+    matchLabels:
+      app: postgres-exporter
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+    relabelings:
+    - sourceLabels: [__address__]
+      targetLabel: __param_target
+    - sourceLabels: [__param_target]
+      targetLabel: instance
+    - targetLabel: __address__
+      replacement: postgres-exporter:9187
+
+---
+# ServiceMonitor for Kafka MirrorMaker2
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-mirrormaker2
+  namespace: payu-prod
+  labels:
+    app: kafka-mirror
+spec:
+  selector:
+    matchLabels:
+      app: kafka-mirror
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: kafka_pod
+    - sourceLabels: [__meta_kubernetes_pod_node_name]
+      targetLabel: node
+
+---
+# ServiceMonitor for Application Services (Region-specific)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: application-services-replication
+  namespace: payu-prod
+  labels:
+    app: application-services
+spec:
+  selector:
+    matchLabels:
+      monitored: "true"
+  namespaceSelector:
+    matchNames:
+    - payu-prod
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /actuator/prometheus
+    scheme: http
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_region]
+      targetLabel: region
+    - sourceLabels: [__meta_kubernetes_pod_label_app]
+      targetLabel: service
+    - sourceLabels: [__meta_kubernetes_pod_label_role]
+      targetLabel: role
+  - port: http
+    interval: 30s
+    path: /q/metrics
+    scheme: http
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_region]
+      targetLabel: region
+    - sourceLabels: [__meta_kubernetes_pod_label_app]
+      targetLabel: service
+
+---
+# PrometheusRule for Replication Lag Alerts
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: replication-lag-alerts
+  namespace: payu-prod
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: postgres_replication
+    interval: 30s
+    rules:
+    - alert: PostgresReplicationLagHigh
+      expr: |
+        pg_replication_total_lag_bytes > 1073741824
+      for: 5m
+      labels:
+        severity: warning
+        region: secondary
+      annotations:
+        summary: "PostgreSQL replication lag is high"
+        description: "Replication lag on secondary region is {{ $value | humanize }} (> 1GB)"
+
+    - alert: PostgresReplicationLagCritical
+      expr: |
+        pg_replication_total_lag_bytes > 5368709120
+      for: 2m
+      labels:
+        severity: critical
+        region: secondary
+      annotations:
+        summary: "PostgreSQL replication lag is critical"
+        description: "Replication lag on secondary region is {{ $value | humanize }} (> 5GB)"
+
+    - alert: PostgresReplicaNotRunning
+      expr: |
+        up{job="postgres-exporter", region="secondary"} == 0
+      for: 2m
+      labels:
+        severity: critical
+        region: secondary
+      annotations:
+        summary: "PostgreSQL replica is down"
+        description: "PostgreSQL secondary region is not responding"
+
+    - alert: PostgresReplicationConnectionLost
+      expr: |
+        pg_stat_replication_replication_connections < 1
+      for: 2m
+      labels:
+        severity: critical
+        region: primary
+      annotations:
+        summary: "PostgreSQL replication connection lost"
+        description: "No replication connections from primary to secondary"
+
+  - name: kafka_replication
+    interval: 30s
+    rules:
+    - alert: KafkaReplicationLagHigh
+      expr: |
+        kafka_connectors_records_lag_max{type="sink"} > 10000
+      for: 5m
+      labels:
+        severity: warning
+        region: secondary
+      annotations:
+        summary: "Kafka replication lag is high"
+        description: "Connector {{ $labels.connector }} has lag of {{ $value }} records"
+
+    - alert: KafkaReplicationLagCritical
+      expr: |
+        kafka_connectors_records_lag_max{type="sink"} > 100000
+      for: 2m
+      labels:
+        severity: critical
+        region: secondary
+      annotations:
+        summary: "Kafka replication lag is critical"
+        description: "Connector {{ $labels.connector }} has lag of {{ $value }} records"
+
+    - alert: KafkaMirrorMakerDown
+      expr: |
+        up{job="kafka-mirror-metrics"} == 0
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Kafka MirrorMaker2 is down"
+        description: "MirrorMaker2 {{ $labels.pod }} is not responding"
+
+    - alert: KafkaReplicationStopped
+      expr: |
+        rate(kafka_connect_sink_record_write_total[5m]) == 0
+      for: 10m
+      labels:
+        severity: critical
+        region: secondary
+      annotations:
+        summary: "Kafka replication has stopped"
+        description: "No records being replicated to secondary region"
+
+  - name: multi_region_health
+    interval: 30s
+    rules:
+    - alert: RegionUnhealthy
+      expr: |
+        sum(up{region="secondary"}) < count(up{region="secondary"}) * 0.8
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Secondary region is unhealthy"
+        description: "Less than 80% of services are healthy in secondary region"
+
+    - alert: ActiveRegionServicesDown
+      expr: |
+        sum(up{region="primary", role="active"}) < count(up{region="primary", role="active"}) * 0.9
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Critical services down in active region"
+        description: "Less than 90% of services are healthy in active region"
+
+    - alert: DataSyncDelayHigh
+      expr: |
+        (pg_replication_total_lag_bytes / 1024 / 1024 / rate(kafka_connect_sink_record_write_total[5m])) > 3600
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Data sync delay is high"
+        description: "Estimated time to catch up on replication is over 1 hour"
+
+  - name: failover_readiness
+    interval: 1m
+    rules:
+    - alert: FailoverReadinessUnknown
+      expr: |
+        up{region="secondary"} < 10
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Failover readiness cannot be determined"
+        description: "Not enough metrics from secondary region to determine failover readiness"
+
+    - alert: FailoverNotReady
+      expr: |
+        pg_replication_total_lag_bytes > 10737418240 or
+        kafka_connectors_records_lag_max{type="sink"} > 1000000
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Failover may result in data loss"
+        description: "Replication lag too high for safe failover"
+
+---
+# Grafana Dashboard for Replication Monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-replication
+  namespace: payu-prod
+  labels:
+    grafana_dashboard: "1"
+data:
+  replication-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Multi-Region Replication Monitoring",
+        "description": "Monitor replication lag and health across regions",
+        "tags": ["replication", "multi-region", "dr"],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 0,
+        "refresh": "30s",
+        "panels": [
+          {
+            "id": 1,
+            "title": "PostgreSQL Replication Lag",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "pg_replication_total_lag_bytes",
+                "legendFormat": "Replication Lag (bytes)"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Kafka Replication Lag",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "kafka_connectors_records_lag_max",
+                "legendFormat": "{{connector}} - Lag (records)"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Replication Throughput",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "rate(kafka_connect_sink_record_write_total[5m])",
+                "legendFormat": "Records/sec"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Service Health by Region",
+            "type": "stat",
+            "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "sum(up{region=\"primary\"})",
+                "legendFormat": "Primary Region"
+              },
+              {
+                "expr": "sum(up{region=\"secondary\"})",
+                "legendFormat": "Secondary Region"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Replication Status",
+            "type": "table",
+            "gridPos": {"x": 0, "y": 16, "w": 24, "h": 8},
+            "targets": [
+              {
+                "expr": "pg_replication_is_replica",
+                "legendFormat": "Is Replica"
+              },
+              {
+                "expr": "pg_stat_replication_replication_connections",
+                "legendFormat": "Replication Connections"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+---
+# PodMonitor for detailed application metrics
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: application-pods
+  namespace: payu-prod
+  labels:
+    app: application-services
+spec:
+  selector:
+    matchLabels:
+      monitored: "true"
+  namespaceSelector:
+    matchNames:
+    - payu-prod
+  podMetricsEndpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_region]
+      targetLabel: region
+    - sourceLabels: [__meta_kubernetes_pod_label_app]
+      targetLabel: service
+  - port: http
+    path: /q/metrics
+    interval: 30s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_region]
+      targetLabel: region
+    - sourceLabels: [__meta_kubernetes_pod_label_app]
+      targetLabel: service
+
+---
+# NetworkPolicy for monitoring access
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: monitoring-access
+  namespace: payu-prod
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: openshift-monitoring
+    ports:
+    - protocol: TCP
+      port: 9187  # PostgreSQL exporter
+    - protocol: TCP
+      port: 9404  # Kafka MirrorMaker2
+    - protocol: TCP
+      port: 8080  # Spring Boot actuator
+    - protocol: TCP
+      port: 8000  # Python services
+
+---
+# Secret for monitoring credentials (if needed)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: monitoring-credentials
+  namespace: payu-prod
+type: Opaque
+stringData:
+  postgres-uri: "postgresql://payu:password@postgres-secondary:5432/payudb?sslmode=disable"
+  kafka-uri: "kafka-secondary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"

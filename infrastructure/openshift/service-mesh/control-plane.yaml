@@ -1,0 +1,379 @@
+# ServiceMeshControlPlane - Istio Control Plane Configuration
+# This configures the Istio control plane for Red Hat OpenShift Service Mesh 2.6+
+# Compatible with OpenShift 4.20+ and Istio 1.23+
+#
+# This manifest sets up:
+# - Istiod (control plane component)
+# - mTLS (mutual TLS) for service-to-service communication
+# - Telemetry (metrics, logs, traces)
+# - Tracing integration with Jaeger
+# - High availability configuration
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  labels:
+    istio-operator-managed: Reconcile
+    mesh.admission.kubernetes.io/enabled: "true"
+---
+# ServiceMeshControlPlane defines the Istio control plane configuration
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+  name: basic
+  namespace: istio-system
+spec:
+  version: v2.6
+  tracing:
+    type: Jaeger
+    sampling: 10000  # 10% sampling for production
+  proxy:
+    networking:
+      # Configure proxy networking
+      namespace: payu-prod
+  policy:
+    type: Istiod  # Use Istiod for policy enforcement
+  telemetry:
+    type: Istiod  # Use Istiod for telemetry
+  # Istiod global configuration
+  istio:
+    global:
+      proxy:
+        # Enable auto-injection of sidecar proxies
+        autoInject: enabled
+        # Proxy resources
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      # Use Istio CNI plugin for better performance and security
+      istioNamespace: istio-system
+      # Enable mutual TLS
+      mtls:
+        # Automatically configure mTLS for all services
+        enabled: true
+      # Pod annotations for sidecar injection
+      podAnnotations:
+        sidecar.istio.io/inject: "true"
+    # Pilot configuration (discovery service)
+    pilot:
+      resources:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+        limits:
+          cpu: 1000m
+          memory: 4Gi
+      env:
+        # Enable mesh configuration protocols
+        - name: PILOT_ENABLE_CONFIG_DISTRIBUTION_TRACKING
+          value: "true"
+        # EnableIstio Config protocol
+        - name: PILOT_ENABLE_ANALYSIS
+          value: "true"
+    # Citadel configuration (certificate authority)
+    citadel:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+      # Certificate configuration
+      env:
+        - name: CITADEL_SELF_SIGNED_CA_ORG_EXPIRATION
+          value: "87600h"  # 10 years
+    # Galley configuration (configuration validation)
+    galley:
+      enabled: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+    # Sidecar injector configuration
+    sidecarInjectorWebhook:
+      enabled: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+    # Policy and telemetry mixer (legacy, replaced by v2)
+    mixer:
+      policy:
+        enabled: false
+      telemetry:
+        enabled: false
+    # Base configuration for mesh-wide settings
+    base:
+      enableIstioConfigCRDs: true
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    # Mesh policy configuration
+    meshConfig:
+      # Enable service-to-service authentication
+      trustDomain: "payu.local"
+      trustDomainAliases:
+        - "payu.local"
+      # Default service configuration
+      defaultConfig:
+        # Proxy configuration
+        proxyMetadata:
+          # Enable DNS proxying
+          ISTIO_META_DNS_CAPTURE: "true"
+          # Enable DNS auto allocation
+          ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+        # Statistics configuration
+        statistics:
+          - name: websocket_success
+            recommended: true
+          - name: upstream_rq_pending_failure_ejection_active
+            recommended: true
+        # Tracing configuration
+        tracing:
+          customTags:
+            # Add custom headers to traces
+            - name: x-request-id
+              environment:
+                name: X_REQUEST_ID
+              defaultValue: unknown
+            - name: user-id
+              header:
+                name: x-user-id
+                defaultValue: anonymous
+        # Remote address configuration
+        proxyStatsMatcher:
+          inclusionRegexps:
+            - ".*_cx_.*"  # Connection metrics
+            - ".*_rq_.*"  # Request metrics
+            - ".*_rs_.*"  # Response metrics
+      # Access logging configuration
+      accessLogFile: "/dev/stdout"
+      accessLogEncoding: JSON
+      accessLogFormat: |
+        {
+          "start_time": "%START_TIME%",
+          "method": "%REQ(:METHOD)%",
+          "path": "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%",
+          "protocol": "%PROTOCOL%",
+          "response_code": "%RESPONSE_CODE%",
+          "response_flags": "%RESPONSE_FLAGS%",
+          "bytes_received": "%BYTES_RECEIVED%",
+          "bytes_sent": "%BYTES_SENT%",
+          "duration": "%DURATION%",
+          "upstream_service_time": "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%",
+          "x_forwarded_for": "%REQ(X-FORWARDED-FOR)%",
+          "user_agent": "%REQ(USER-AGENT)%",
+          "request_id": "%REQ(X-REQUEST-ID)%",
+          "authority": "%REQ(:AUTHORITY)%",
+          "upstream_host": "%UPSTREAM_HOST%",
+          "upstream_cluster": "%UPSTREAM_CLUSTER%",
+          "upstream_local_address": "%UPSTREAM_LOCAL_ADDRESS%",
+          "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%",
+          "downstream_remote_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
+          "requested_server_name": "%REQUESTED_SERVER_NAME%",
+          "route_name": "%ROUTE_NAME%",
+          "response_code_details": "%RESPONSE_CODE_DETAILS%"
+        }
+    # Gateway configuration
+    gateways:
+      istio-ingressgateway:
+        # Ingress gateway configuration
+        enabled: true
+        # Service configuration
+        service:
+          type: LoadBalancer  # Use NodePort for bare metal, LoadBalancer for cloud
+          ports:
+            - name: http2
+              port: 80
+              targetPort: 8080
+            - name: https
+              port: 443
+              targetPort: 8443
+            - name: status
+              port: 15021
+              targetPort: 15021
+            - name: tls
+              port: 15443
+              targetPort: 15443
+            - name: tls-istiod
+              port: 15012
+              targetPort: 15012
+            - name: tls-webhook
+              port: 15017
+              targetPort: 15017
+        # Replicas for high availability
+        replicas: 2
+        # Pod configuration
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/path: "/stats/prometheus"
+          prometheus.io/port: "15020"
+        # Resources
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        # Rollout configuration
+        rolloutMaxSurge: 100%
+        rolloutMaxUnavailable: 25%
+      # Egress gateway (for external traffic)
+      istio-egressgateway:
+        enabled: true
+        service:
+          type: ClusterIP
+          ports:
+            - name: http2
+              port: 80
+              targetPort: 8080
+            - name: https
+              port: 443
+              targetPort: 8443
+        replicas: 1
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+    # Enable performance
+    performance:
+      # Enable readiness probe for service discovery
+      readinessProbe:
+        enabled: true
+---
+# ServiceMeshMemberRoll - Defines which namespaces are part of the service mesh
+apiVersion: maistra.io/v1
+kind: ServiceMeshMemberRoll
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  members:
+    # Core banking namespaces
+    - payu-dev
+    - payu-sit
+    - payu-uat
+    - payu-preprod
+    - payu-prod
+    # Infrastructure namespace (if needed for mesh-wide services)
+    # - payu-infrastructure
+---
+# NetworkPolicies for Istio control plane
+# These policies ensure proper communication with the control plane
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: istio-control-plane
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      app.istio.io/Component: Pilot
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        # Allow traffic from mesh namespaces
+        - namespaceSelector:
+            matchLabels:
+              maistra.io/member-of: istio-system
+      ports:
+        - protocol: TCP
+          port: 15012  # Pilot webhook
+        - protocol: TCP
+          port: 15014  # Pilot discovery
+        - protocol: TCP
+          port: 15010  # Pilot XDS
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443  # Kubernetes API
+        - protocol: TCP
+          port: 6443  # Kubernetes API secure
+---
+# HorizontalPodAutoscaler for Istio Ingress Gateway
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: istio-ingressgateway
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+---
+# PodDisruptionBudget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+---
+# PodDisruptionBudget for Istiod
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: istiod
+  namespace: istio-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: istiod

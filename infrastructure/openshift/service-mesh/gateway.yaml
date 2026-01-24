@@ -1,0 +1,482 @@
+# Gateway Configuration for PayU Digital Banking Platform
+# This manifest configures the Istio Ingress Gateway for external traffic
+#
+# Resources:
+# - Gateway: Defines the ingress gateway with TLS termination
+# - VirtualServices: Route external traffic to internal services
+# - AuthorizationPolicy: Enforce access control at the gateway
+
+---
+# Main Ingress Gateway - HTTP/HTTPS Entry Point
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: payu-ingress-gateway
+  namespace: istio-system
+spec:
+  # Gateway selector - targets the default ingress gateway
+  selector:
+    istio: ingressgateway
+  # Server configuration
+  servers:
+    # HTTP Server (redirects to HTTPS)
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+      tls:
+        httpsRedirect: true  # Redirect HTTP to HTTPS
+    # HTTPS Server (main ingress)
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - api.payu.local       # Local development
+        - api.payu.dev         # Development environment
+        - api.payu.sit         # SIT environment
+        - api.payu.uat         # UAT environment
+        - api.payu.preprod     # Pre-production environment
+        - api.payu.id          # Production environment
+      tls:
+        mode: SIMPLE  # Simple TLS (server-side only)
+        credentialName: payu-ingress-cert  # TLS certificate secret
+        # For mTLS at the gateway, use:
+        # mode: MUTUAL
+        # credentialName: payu-ingress-cert
+        # caCertificates: /etc/istio/ingressgateway-ca/ca.crt
+---
+# VirtualService for API routing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: payu-gateway
+  namespace: istio-system
+spec:
+  hosts:
+    - "api.payu.local"
+    - "api.payu.dev"
+    - "api.payu.sit"
+    - "api.payu.uat"
+    - "api.payu.preprod"
+    - "api.payu.id"
+  gateways:
+    - payu-ingress-gateway
+  http:
+    # Health check endpoint
+    - match:
+        - uri:
+            exact: /health
+      route:
+        - destination:
+            host: gateway-service
+            port:
+              number: 8080
+            subset: v1
+      timeout: 5s
+
+    # Gateway Service routes
+    - match:
+        - uri:
+            prefix: /v1/auth/
+      rewrite:
+        uri: /v1/auth/
+      route:
+        - destination:
+            host: gateway-service.payu-prod.svc.cluster.local
+            port:
+              number: 8080
+            subset: v1
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: 5xx,reset,connect-failure,refused-stream
+
+    # Account Service routes
+    - match:
+        - uri:
+            prefix: /v1/accounts
+      rewrite:
+        uri: /v1/accounts
+      route:
+        - destination:
+            host: account-service.payu-prod.svc.cluster.local
+            port:
+              number: 8081
+            subset: v1
+          weight: 100
+      timeout: 10s
+      retries:
+        attempts: 2
+        perTryTimeout: 5s
+        retryOn: 5xx,connect-failure
+
+    # Auth Service routes (bypass gateway for auth)
+    - match:
+        - uri:
+            prefix: /v1/auth
+      rewrite:
+        uri: /v1/auth
+      route:
+        - destination:
+            host: auth-service.payu-prod.svc.cluster.local
+            port:
+              number: 8082
+            subset: v1
+          weight: 100
+      timeout: 15s
+
+    # Transaction Service routes
+    - match:
+        - uri:
+            prefix: /v1/transactions
+      rewrite:
+        uri: /v1/transactions
+      route:
+        - destination:
+            host: transaction-service.payu-prod.svc.cluster.local
+            port:
+              number: 8083
+            subset: v1
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 2
+        perTryTimeout: 15s
+        retryOn: 5xx,connect-failure,cancelled
+
+    # Wallet Service routes
+    - match:
+        - uri:
+            prefix: /v1/wallet
+      rewrite:
+        uri: /v1/wallet
+      route:
+        - destination:
+            host: wallet-service.payu-prod.svc.cluster.local
+            port:
+              number: 8084
+            subset: v1
+          weight: 100
+      timeout: 10s
+
+    # Billing Service routes
+    - match:
+        - uri:
+            prefix: /v1/billing
+      rewrite:
+        uri: /v1/billing
+      route:
+        - destination:
+            host: billing-service.payu-prod.svc.cluster.local
+            port:
+              number: 8085
+            subset: v1
+          weight: 100
+      timeout: 15s
+
+    # Notification Service routes
+    - match:
+        - uri:
+            prefix: /v1/notifications
+      rewrite:
+        uri: /v1/notifications
+      route:
+        - destination:
+            host: notification-service.payu-prod.svc.cluster.local
+            port:
+              number: 8086
+            subset: v1
+          weight: 100
+      timeout: 10s
+
+    # KYC Service routes
+    - match:
+        - uri:
+            prefix: /v1/kyc
+      rewrite:
+        uri: /v1/kyc
+      route:
+        - destination:
+            host: kyc-service.payu-prod.svc.cluster.local
+            port:
+              number: 8087
+            subset: v1
+          weight: 100
+      timeout: 60s  # Longer timeout for image processing
+
+    # Analytics Service routes
+    - match:
+        - uri:
+            prefix: /v1/analytics
+      rewrite:
+        uri: /v1/analytics
+      route:
+        - destination:
+            host: analytics-service.payu-prod.svc.cluster.local
+            port:
+              number: 8088
+            subset: v1
+          weight: 100
+      timeout: 30s
+
+    # Partner API routes (external integrations)
+    - match:
+        - uri:
+            prefix: /v1/partner
+      rewrite:
+        uri: /v1/partner
+      route:
+        - destination:
+            host: gateway-service.payu-prod.svc.cluster.local
+            port:
+              number: 8080
+            subset: v1
+          weight: 100
+      timeout: 30s
+      corsPolicy:
+        allowOrigins:
+          - regex: "https://.*\\.tokobapak\\.id"
+        allowMethods:
+          - POST
+          - GET
+          - OPTIONS
+        allowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Idempotency-Key
+          - X-Request-ID
+        exposeHeaders:
+          - X-Request-ID
+          - X-RateLimit-Remaining
+        maxAge: "24h"
+---
+# VirtualService for internal service-to-service communication via gateway
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: internal-services
+  namespace: payu-prod
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - mesh  # Internal mesh gateway
+  http:
+    # Account Service
+    - match:
+        - uri:
+            prefix: /api/account
+      route:
+        - destination:
+            host: account-service
+            port:
+              number: 8081
+            subset: v1
+          weight: 100
+
+    # Auth Service
+    - match:
+        - uri:
+            prefix: /api/auth
+      route:
+        - destination:
+            host: auth-service
+            port:
+              number: 8082
+            subset: v1
+          weight: 100
+
+    # Transaction Service
+    - match:
+        - uri:
+            prefix: /api/transaction
+      route:
+        - destination:
+            host: transaction-service
+            port:
+              number: 8083
+            subset: v1
+          weight: 100
+
+    # Wallet Service
+    - match:
+        - uri:
+            prefix: /api/wallet
+      route:
+        - destination:
+            host: wallet-service
+            port:
+              number: 8084
+            subset: v1
+          weight: 100
+---
+# AuthorizationPolicy for gateway access control
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: payu-ingress-authz
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  action: CUSTOM
+  provider:
+    name: oauth2-proxy  # Use OAuth2/Keycloak for authentication
+  rules:
+    # Public endpoints (no auth required)
+    - to:
+        - operation:
+            paths:
+              - /health
+              - /v1/auth/login
+              - /v1/auth/register
+              - /v1/auth/forgot-password
+    # Authenticated endpoints
+    - to:
+        - operation:
+            notPaths:
+              - /health
+              - /v1/auth/login
+              - /v1/auth/register
+              - /v1/auth/forgot-password
+      when:
+        - key: request.auth.claims[iss]
+          values:
+            - https://keycloak.payu.local/auth/realms/payu
+---
+# AuthorizationPolicy for Partner API
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: partner-api-authz
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths:
+              - /v1/partner/*
+      when:
+        # Require API key for partner endpoints
+        - key: request.headers[x-api-key]
+          values:
+            - pk_live_*  # Production keys
+            - pk_test_*  # Test keys
+        # Require client certificate for production
+        - key: source.namespace
+          values:
+            - payu-prod
+---
+# Rate Limiting at Gateway (using Envoy's rate limit service)
+apiVersion: networking.istio.io/v1beta1
+kind: EnvoyFilter
+metadata:
+  name: payu-rate-limit
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      app: istio-ingressgateway
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.rate_limit
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.rate_limit.v3.RateLimit
+            domain: payu-ratelimit
+            rate_limit_service:
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: rate_limit_cluster
+              transport_api_version: V3
+    - applyTo: CLUSTER
+      match:
+        context: GATEWAY
+        cluster:
+          service: ratelimit.istio-system.svc.cluster.local
+      patch:
+        operation: ADD
+        value:
+          name: rate_limit_cluster
+          type: STRICT_DNS
+          connect_timeout: 10s
+          http2_protocol_options: {}
+          load_assignment:
+            cluster_name: rate_limit_cluster
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: ratelimit.istio-system.svc.cluster.local
+                          port_value: 8081
+---
+# Request Authentication for JWT validation
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: payu-jwt-authn
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  jwtRules:
+    - issuer: "https://keycloak.payu.local/auth/realms/payu"
+      jwks: |
+        {
+          "keys": [
+            {
+              "kty": "RSA",
+              "use": "sig",
+              "kid": "payu-key-id",
+              "n": "...",
+              "e": "AQAB"
+            }
+          ]
+        }
+      forwardOriginalToken: true
+      fromHeaders:
+        - name: Authorization
+          prefix: "Bearer "
+      outputPayloadToHeader: x-jwt-payload
+---
+# TLS Certificate Secret (placeholder - replace with actual certificates)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payu-ingress-cert
+  namespace: istio-system
+type: kubernetes.io/tls
+data:
+  # Replace with actual certificate and key
+  tls.crt: LS0tLS1CRUdJTi...
+  tls.key: LS0tLS1CRUdJTi...
+---
+# CA Certificate Secret for mTLS (if using mutual TLS)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payu-ingress-ca
+  namespace: istio-system
+type: Opaque
+data:
+  ca.crt: LS0tLS1CRUdJTi...

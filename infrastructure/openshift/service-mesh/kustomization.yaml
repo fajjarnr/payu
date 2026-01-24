@@ -1,0 +1,78 @@
+# Kustomization for OpenShift Service Mesh Deployment
+# This file defines the order of resource application for service mesh
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace for service mesh resources
+namespace: istio-system
+
+# Resources in order of application
+resources:
+  # 1. Control plane (must be first)
+  - control-plane.yaml
+  # 2. Gateway configuration (depends on control plane)
+  - gateway.yaml
+  # 3. Destination rules (depends on control plane)
+  - destination-rules.yaml
+  # 4. Peer authentication (depends on services being deployed)
+  - peer-authentication.yaml
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/part-of: payu
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/component: service-mesh
+
+# ConfigMap generator for mesh configuration
+configMapGenerator:
+  - name: mesh-config
+    literals:
+      - MESH_ID=mesh1
+      - TRUST_DOMAIN=payu.local
+      - ENABLE_AUTO_MTLS=true
+      - ENABLE_TRACING=true
+      - TRACING_SAMPLING=10000
+
+# Secret generator (placeholder - replace with actual secrets)
+secretGenerator:
+  - name: payu-ingress-cert
+    type: kubernetes.io/tls
+    files:
+      - tls.crt=certs/tls.crt
+      - tls.key=certs/tls.key
+  - name: payu-ingress-ca
+    type: Opaque
+    files:
+      - ca.crt=certs/ca.crt
+
+# Patches for environment-specific configuration
+patches:
+  # Patch for production (STRICT mTLS)
+  - patch: |-
+      - op: replace
+        path: /spec/mode
+        value: STRICT
+    target:
+      kind: PeerAuthentication
+      name: strict-mtls
+      namespace: payu-prod
+
+  # Patch for development (PERMISSIVE mTLS)
+  - patch: |-
+      - op: replace
+        path: /spec/mode
+        value: PERMISSIVE
+    target:
+      kind: PeerAuthentication
+      name: permissive-mtls
+      namespace: payu-dev
+
+# Images configuration
+images:
+  - name: gcr.io/istio-testing/pilot
+    newName: registry.redhat.io/openshift-service-mesh/istio-pilot-rhel8
+    newTag: 2.6.0
+  - name: gcr.io/istio-testing/proxyv2
+    newName: registry.redhat.io/openshift-service-mesh/istio-proxyv2-rhel8
+    newTag: 2.6.0

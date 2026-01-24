@@ -1,0 +1,446 @@
+# Destination Rules Configuration for PayU Digital Banking Platform
+# This manifest configures traffic policies, load balancing, and mTLS for services
+#
+# Resources:
+# - DestinationRule: Defines traffic policies for each service
+# - Subset: Creates service subsets for traffic splitting (canary, blue-green)
+# - TrafficPolicy: Connection pool, circuit breaker, and load balancing settings
+
+---
+# DestinationRule for Account Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: account-service
+  namespace: payu-prod
+spec:
+  host: account-service
+  # Traffic policy for account-service
+  trafficPolicy:
+    # Load balancing configuration
+    loadBalancer:
+      simple: LEAST_CONN  # Least connection for stateful services
+    # Connection pool settings
+    connectionPool:
+      tcp:
+        maxConnections: 100  # Max concurrent connections
+        connectTimeout: 30s
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+      http:
+        http2MaxRequests: 1000  # Max HTTP/2 requests
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 10
+        idleTimeout: 60s
+        h2UpgradePolicy: UPGRADE  # Use HTTP/2
+    # Outlier detection (circuit breaker)
+    outlierDetection:
+      consecutive5xxErrors: 5  # Eject after 5 consecutive 5xx
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50  # Eject max 50% of hosts
+      minHealthPercent: 40  # Minimum healthy hosts
+    # TLS settings for mTLS
+    tls:
+      mode: ISTIO_MUTUAL  # Enforce mTLS
+  # Service subsets for traffic splitting
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2  # Canary deployment
+      labels:
+        version: v2
+---
+# DestinationRule for Auth Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: auth-service
+  namespace: payu-prod
+spec:
+  host: auth-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN  # Round robin for stateless auth
+    connectionPool:
+      tcp:
+        maxConnections: 200  # More connections for auth (high frequency)
+        connectTimeout: 10s
+      http:
+        http2MaxRequests: 2000
+        maxRequestsPerConnection: 5
+        idleTimeout: 30s
+    outlierDetection:
+      consecutive5xxErrors: 3  # More aggressive circuit breaker for auth
+      interval: 20s
+      baseEjectionTime: 20s
+      maxEjectionPercent: 30
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+---
+# DestinationRule for Transaction Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: transaction-service
+  namespace: payu-prod
+spec:
+  host: transaction-service
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN  # Least connection for transaction consistency
+    connectionPool:
+      tcp:
+        maxConnections: 150
+        connectTimeout: 20s
+        tcpKeepalive:
+          time: 3600s
+          interval: 60s
+      http:
+        http2MaxRequests: 500
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 3  # Fewer requests per connection for consistency
+        idleTimeout: 90s
+        h2UpgradePolicy: UPGRADE
+    outlierDetection:
+      consecutive5xxErrors: 3  # Aggressive circuit breaker for transactions
+      interval: 15s
+      baseEjectionTime: 60s  # Longer ejection time for stability
+      maxEjectionPercent: 40
+      minHealthPercent: 60  # Require 60% healthy hosts
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: canary  # For testing new transaction versions
+      labels:
+        version: canary
+---
+# DestinationRule for Wallet Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: wallet-service
+  namespace: payu-prod
+spec:
+  host: wallet-service
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        httpCookie:
+          name: user_id  # Sticky sessions by user ID
+          ttl: 60s
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 15s
+      http:
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 10
+        idleTimeout: 60s
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+---
+# DestinationRule for Billing Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: billing-service
+  namespace: payu-prod
+spec:
+  host: billing-service
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM  # Random for billing jobs
+    connectionPool:
+      tcp:
+        maxConnections: 50
+        connectTimeout: 30s
+      http:
+        http1MaxPendingRequests: 20
+        maxRequestsPerConnection: 5
+        idleTimeout: 120s  # Longer timeout for billing operations
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 60s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+---
+# DestinationRule for Notification Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: notification-service
+  namespace: payu-prod
+spec:
+  host: notification-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 10s
+      http:
+        http2MaxRequests: 2000
+        maxRequestsPerConnection: 20
+        idleTimeout: 30s
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+---
+# DestinationRule for KYC Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kyc-service
+  namespace: payu-prod
+spec:
+  host: kyc-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 50
+        connectTimeout: 30s
+      http:
+        http1MaxPendingRequests: 10
+        maxRequestsPerConnection: 1  # One request per connection for large files
+        idleTimeout: 300s  # 5 minutes for image processing
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 60s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+---
+# DestinationRule for Analytics Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: analytics-service
+  namespace: payu-prod
+spec:
+  host: analytics-service
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 30
+        connectTimeout: 60s
+      http:
+        http1MaxPendingRequests: 10
+        maxRequestsPerConnection: 1
+        idleTimeout: 600s  # 10 minutes for analytics queries
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 60s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+---
+# DestinationRule for Gateway Service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: gateway-service
+  namespace: payu-prod
+spec:
+  host: gateway-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 200  # More connections for gateway
+        connectTimeout: 10s
+      http:
+        http2MaxRequests: 5000
+        http1MaxPendingRequests: 500
+        maxRequestsPerConnection: 50
+        idleTimeout: 30s
+        h2UpgradePolicy: UPGRADE
+    outlierDetection:
+      consecutive5xxErrors: 3  # Aggressive circuit breaker
+      interval: 20s
+      baseEjectionTime: 20s
+      maxEjectionPercent: 30
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+---
+# DestinationRule for External Services (Simulators)
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: bi-fast-simulator
+  namespace: payu-prod
+spec:
+  host: bi-fast-simulator
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 20
+        connectTimeout: 30s
+      http:
+        http1MaxPendingRequests: 10
+        maxRequestsPerConnection: 5
+        idleTimeout: 60s
+    # No mTLS for external simulators (PERMISSIVE)
+    tls:
+      mode: DISABLE  # External services don't have Istio sidecars
+  subsets:
+    - name: v1
+      labels:
+        app: bi-fast-simulator
+---
+# DestinationRule for Dukcapil Simulator
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: dukcapil-simulator
+  namespace: payu-prod
+spec:
+  host: dukcapil-simulator
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 10
+        connectTimeout: 30s
+      http:
+        http1MaxPendingRequests: 5
+        maxRequestsPerConnection: 1
+        idleTimeout: 60s
+    tls:
+      mode: DISABLE
+  subsets:
+    - name: v1
+      labels:
+        app: dukcapil-simulator
+---
+# DestinationRule for QRIS Simulator
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: qris-simulator
+  namespace: payu-prod
+spec:
+  host: qris-simulator
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 20
+        connectTimeout: 30s
+      http:
+        http1MaxPendingRequests: 10
+        maxRequestsPerConnection: 5
+        idleTimeout: 60s
+    tls:
+      mode: DISABLE
+  subsets:
+    - name: v1
+      labels:
+        app: qris-simulator
+---
+# Global TrafficPolicy for all services in the namespace
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: global-default
+  namespace: payu-prod
+spec:
+  host: "*.payu-prod.svc.cluster.local"
+  trafficPolicy:
+    # Default mTLS for all services
+    tls:
+      mode: ISTIO_MUTUAL
+    # Default connection pool
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+      http:
+        http2MaxRequests: 1000
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 10
+        idleTimeout: 60s
+        h2UpgradePolicy: UPGRADE
+    # Default outlier detection
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 40
+---
+# DestinationRule for Egress (external services)
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: egress-services
+  namespace: istio-system
+spec:
+  host: "*./*"
+  trafficPolicy:
+    tls:
+      mode: DISABLE  # External services don't support mTLS
+    connectionPool:
+      tcp:
+        maxConnections: 50
+        connectTimeout: 45s
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+        idleTimeout: 90s

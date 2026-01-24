@@ -1,0 +1,115 @@
+plugins {
+    id 'scala'
+    id 'io.gatling.gradle' version '3.11.5'
+}
+
+group = 'id.payu'
+version = '1.0.0'
+
+description = 'PayU Performance Load Testing with Gatling'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.scala-lang:scala-library:2.13.14'
+
+    // Gatling
+    gatling 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
+    gatling 'io.gatling:gatling-app:3.11.5'
+}
+
+scala {
+    targetPlatform = 2.13
+}
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.additionalParameters = [
+        '-deprecation',
+        '-feature',
+        '-unchecked',
+        '-Xlint'
+    ]
+}
+
+// Gatling configuration
+gatling {
+    // Log level
+    logLevel = 'WARN'
+
+    // JVM args
+    jvmArgs = [
+        '-Xms1024m',
+        '-Xmx2048m'
+    ]
+
+    // Simulation to run
+    simulations = {
+        include "**/simulations/*.scala"
+    }
+
+    // Output directory
+    results = file('build/reports/gatling')
+}
+
+// Custom tasks for running individual simulations
+task runLoginSimulation(type: JavaExec) {
+    dependsOn 'compileScala'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.gatling.app.Gatling'
+    args = [
+        '--simulations', 'id.payu.simulations.LoginSimulation',
+        '--results-folder', 'build/reports/gatling',
+        '--binaries-folder', 'build/scala/classes'
+    ]
+    jvmArgs = ['-Xmx2048m']
+}
+
+task runTransferSimulation(type: JavaExec) {
+    dependsOn 'compileScala'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.gatling.app.Gatling'
+    args = [
+        '--simulations', 'id.payu.simulations.TransferSimulation',
+        '--results-folder', 'build/reports/gatling',
+        '--binaries-folder', 'build/scala/classes'
+    ]
+    jvmArgs = ['-Xmx2048m']
+}
+
+task runQRISPaymentSimulation(type: JavaExec) {
+    dependsOn 'compileScala'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.gatling.app.Gatling'
+    args = [
+        '--simulations', 'id.payu.simulations.QRISPaymentSimulation',
+        '--results-folder', 'build/reports/gatling',
+        '--binaries-folder', 'build/scala/classes'
+    ]
+    jvmArgs = ['-Xmx2048m']
+}
+
+task runBalanceQuerySimulation(type: JavaExec) {
+    dependsOn 'compileScala'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.gatling.app.Gatling'
+    args = [
+        '--simulations', 'id.payu.simulations.BalanceQuerySimulation',
+        '--results-folder', 'build/reports/gatling',
+        '--binaries-folder', 'build/scala/classes'
+    ]
+    jvmArgs = ['-Xmx2048m']
+}
+
+task runAllServicesSimulation(type: JavaExec) {
+    dependsOn 'compileScala'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.gatling.app.Gatling'
+    args = [
+        '--simulations', 'id.payu.simulations.AllServicesSimulation',
+        '--results-folder', 'build/reports/gatling',
+        '--binaries-folder', 'build/scala/classes'
+    ]
+    jvmArgs = ['-Xmx2048m']
+}

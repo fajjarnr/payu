@@ -1,0 +1,2 @@
+id.payu.cache.config.RedisCacheConfig
+id.payu.cache.config.CacheAutoConfiguration

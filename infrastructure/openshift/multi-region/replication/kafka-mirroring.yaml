@@ -1,0 +1,345 @@
+---
+# Kafka MirrorMaker2 Configuration for Cross-Region Replication
+# Replicates topics from Primary to Secondary region
+
+---
+# MirrorMaker2 Configuration
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  name: kafka-mirror-primary-to-secondary
+  namespace: payu-prod
+  labels:
+    region: primary
+  annotations:
+    strimzi.io/use-connector-resources: "true"
+spec:
+  version: 3.7.0
+  replicas: 2
+  connectCluster: "secondary"
+  clusters:
+    - alias: "primary"
+      bootstrapServers: "kafka-primary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"
+      config:
+        config.storage.replication.factor: 3
+        offset.storage.replication.factor: 3
+        status.storage.replication.factor: 3
+      authentication:
+        type: scram-sha-512
+        username:
+          secretKeyRef:
+            name: kafka-mirror-user
+            key: username
+        password:
+          secretKeyRef:
+            name: kafka-mirror-user
+            key: password
+      tls:
+        trustedCertificates:
+          - secretName: kafka-primary-cluster-ca-cert
+            certificate: ca.crt
+
+    - alias: "secondary"
+      bootstrapServers: "kafka-secondary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"
+      config:
+        config.storage.replication.factor: 3
+        offset.storage.replication.factor: 3
+        status.storage.replication.factor: 3
+      authentication:
+        type: scram-sha-512
+        username:
+          secretKeyRef:
+            name: kafka-mirror-user
+            key: username
+        password:
+          secretKeyRef:
+            name: kafka-mirror-user
+            key: password
+      tls:
+        trustedCertificates:
+          - secretName: kafka-secondary-cluster-ca-cert
+            certificate: ca.crt
+
+  mirrors:
+    - sourceCluster: "primary"
+      targetCluster: "secondary"
+      sourcePrefix: "primary."
+      targetPrefix: ""
+      topics:
+        - ".*"  # Mirror all topics
+      topicsPattern: ".*"
+      topicsExclude:
+        - "__.*"  # Exclude internal topics
+
+      # Replication policy options:
+      # - "IdentityReplicationPolicy": Use original topic names
+      # - "DefaultReplicationPolicy": Add prefix to mirrored topics
+      replicationPolicy.class: "org.apache.kafka.connect.mirror.IdentityReplicationPolicy"
+
+      # Replication flow configuration
+      replicationPolicy.separator: "."
+      syncTopicOffsetsEnabled: true
+      syncTopicOffsetsIntervalSeconds: 5
+      syncGroupOffsetsEnabled: true
+      syncGroupOffsetsIntervalSeconds: 5
+      emitHeartbeatsEnabled: true
+      emitHeartbeatsIntervalSeconds: 5
+      refreshTopicsIntervalSeconds: 60
+      refreshGroupsIntervalSeconds: 60
+
+---
+# MirrorMaker2 Configuration (Reverse for failback)
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  name: kafka-mirror-secondary-to-primary
+  namespace: payu-prod
+  labels:
+    region: secondary
+  annotations:
+    strimzi.io/use-connector-resources: "true"
+spec:
+  version: 3.7.0
+  replicas: 2
+  connectCluster: "primary"
+  clusters:
+    - alias: "secondary"
+      bootstrapServers: "kafka-secondary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"
+      config:
+        config.storage.replication.factor: 3
+        offset.storage.replication.factor: 3
+        status.storage.replication.factor: 3
+      authentication:
+        type: scram-sha-512
+        username:
+          secretKeyRef:
+            name: kafka-mirror-user
+            key: username
+        password:
+          secretKeyRef:
+            name: kafka-mirror-user
+            key: password
+      tls:
+        trustedCertificates:
+          - secretName: kafka-secondary-cluster-ca-cert
+            certificate: ca.crt
+
+    - alias: "primary"
+      bootstrapServers: "kafka-primary-kafka-bootstrap.payu-prod.svc.cluster.local:9092"
+      config:
+        config.storage.replication.factor: 3
+        offset.storage.replication.factor: 3
+        status.storage.replication.factor: 3
+      authentication:
+        type: scram-sha-512
+        username:
+          secretKeyRef:
+            name: kafka-mirror-user
+            key: username
+        password:
+          secretKeyRef:
+            name: kafka-mirror-user
+            key: password
+      tls:
+        trustedCertificates:
+          - secretName: kafka-primary-cluster-ca-cert
+            certificate: ca.crt
+
+  mirrors:
+    - sourceCluster: "secondary"
+      targetCluster: "primary"
+      sourcePrefix: "secondary."
+      targetPrefix: ""
+      topics:
+        - ".*"
+      topicsPattern: ".*"
+      topicsExclude:
+        - "__.*"
+      replicationPolicy.class: "org.apache.kafka.connect.mirror.IdentityReplicationPolicy"
+      syncTopicOffsetsEnabled: true
+      syncTopicOffsetsIntervalSeconds: 5
+      syncGroupOffsetsEnabled: true
+      syncGroupOffsetsIntervalSeconds: 5
+
+---
+# MirrorMaker2 Health Check Job
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: kafka-mirror-health-check
+  namespace: payu-prod
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mirror-health-check
+            image: quay.io/strimzi/kafka:0.41.0-kafka-3.7.0
+            command:
+            - /bin/bash
+            - -c
+            - |
+              #!/bin/bash
+              set -e
+
+              # Check MirrorMaker2 connectivity
+              echo "Checking MirrorMaker2 replication status..."
+
+              # Check if MirrorMaker2 pods are running
+              MIRROR_PODS=$(oc get pods -n payu-prod -l strimzi.io/kind=KafkaMirrorMaker2 -o name)
+              if [ -z "$MIRROR_PODS" ]; then
+                echo "ERROR: No MirrorMaker2 pods found"
+                exit 1
+              fi
+
+              # Check replication lag using Kafka consumer lag checking
+              # This is a simplified check - in production, use Burrow or similar tools
+
+              # List mirrored topics
+              echo "Checking mirrored topics on secondary cluster..."
+              kafka-topics.sh \
+                --bootstrap-server kafka-secondary-kafka-bootstrap.payu-prod.svc.cluster.local:9092 \
+                --list \
+                --command-config /tmp/mirror-client.properties | grep -v "^__" || true
+
+              echo "MirrorMaker2 health check completed at $(date)"
+            volumeMounts:
+            - name: mirror-client-config
+              mountPath: /tmp/mirror-client.properties
+              subPath: mirror-client.properties
+          volumes:
+          - name: mirror-client-config
+            configMap:
+              name: kafka-mirror-client-config
+          restartPolicy: OnFailure
+
+---
+# MirrorMaker2 client configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-mirror-client-config
+  namespace: payu-prod
+data:
+  mirror-client.properties: |
+    security.protocol=SASL_SSL
+    sasl.mechanism=SCRAM-SHA-512
+    sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_MIRROR_USER}" password="${KAFKA_MIRROR_PASSWORD}";
+
+---
+# Kafka Topic Replication Monitor Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-mirror-metrics
+  namespace: payu-prod
+  labels:
+    app: kafka-mirror
+spec:
+  selector:
+    strimzi.io/kind: KafkaMirrorMaker2
+    strimzi.io/cluster: kafka-mirror-primary-to-secondary
+  ports:
+  - name: metrics
+    port: 9404
+    targetPort: 9404
+    protocol: TCP
+
+---
+# ServiceMonitor for Kafka MirrorMaker2
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-mirror-metrics
+  namespace: payu-prod
+  labels:
+    app: kafka-mirror
+spec:
+  selector:
+    matchLabels:
+      app: kafka-mirror
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+
+---
+# NetworkPolicy for MirrorMaker2
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kafka-mirrormaker2-netpol
+  namespace: payu-prod
+spec:
+  podSelector:
+    matchLabels:
+      strimzi.io/kind: KafkaMirrorMaker2
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          strimzi.io/kind: Kafka
+    ports:
+    - protocol: TCP
+      port: 9092
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          strimzi.io/kind: Kafka
+    ports:
+    - protocol: TCP
+      port: 9092
+
+---
+# Alerting rules for replication lag
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kafka-replication-alerts
+  namespace: payu-prod
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: kafka-replication
+    interval: 30s
+    rules:
+    - alert: KafkaReplicationLagHigh
+      expr: |
+        kafka_connectors{}.records_lag_max > 10000
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Kafka replication lag is high"
+        description: "Replication lag for connector {{ $labels.connector }} is {{ $value }} records"
+
+    - alert: KafkaMirrorMakerDown
+      expr: |
+        up{job="kafka-mirrormaker2"} == 0
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Kafka MirrorMaker2 is down"
+        description: "MirrorMaker2 instance {{ $labels.pod }} is not responding"
+
+    - alert: KafkaMirrorMakerReplicationStopped
+      expr: |
+        rate(kafka_connect_connector_sink_record_write_total[5m]) == 0
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Kafka replication has stopped"
+        description: "No records are being written to target cluster"

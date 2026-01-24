@@ -1,0 +1,832 @@
+---
+# Primary Region Deployment - Active Region
+# All services running at full capacity
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-prod
+  labels:
+    env: prod
+    region: primary
+    role: active
+
+---
+# Account Service - Primary
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-service
+  namespace: payu-prod
+  labels:
+    app: account-service
+    region: primary
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: account-service
+  template:
+    metadata:
+      labels:
+        app: account-service
+        region: primary
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - account-service
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: account-service
+        image: image-registry.apps.primary.example.com/payu/account-service:latest
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod,primary"
+        - name: REGION
+          value: "primary"
+        - name: DB_HOST
+          value: "postgres-primary.payu-prod.svc.cluster.local"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+        - name: REDIS_HOST
+          value: "redis-primary.payu-prod.svc.cluster.local"
+        - name: JAVA_OPTS
+          value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: account-service-config
+
+---
+# Auth Service - Primary
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: payu-prod
+  labels:
+    app: auth-service
+    region: primary
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+        region: primary
+    spec:
+      containers:
+      - name: auth-service
+        image: image-registry.apps.primary.example.com/payu/auth-service:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod,primary"
+        - name: REGION
+          value: "primary"
+        - name: DB_HOST
+          value: "postgres-primary.payu-prod.svc.cluster.local"
+        - name: KEYCLOAK_URL
+          value: "https://sso-primary.example.com"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+
+---
+# Transaction Service - Primary
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service
+  namespace: payu-prod
+  labels:
+    app: transaction-service
+    region: primary
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: transaction-service
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+        region: primary
+    spec:
+      containers:
+      - name: transaction-service
+        image: image-registry.apps.primary.example.com/payu/transaction-service:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod,primary"
+        - name: REGION
+          value: "primary"
+        - name: DB_HOST
+          value: "postgres-primary.payu-prod.svc.cluster.local"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+
+---
+# Wallet Service - Primary
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wallet-service
+  namespace: payu-prod
+  labels:
+    app: wallet-service
+    region: primary
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wallet-service
+  template:
+    metadata:
+      labels:
+        app: wallet-service
+        region: primary
+    spec:
+      containers:
+      - name: wallet-service
+        image: image-registry.apps.primary.example.com/payu/wallet-service:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod,primary"
+        - name: REGION
+          value: "primary"
+        - name: DB_HOST
+          value: "postgres-primary.payu-prod.svc.cluster.local"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+        - name: REDIS_HOST
+          value: "redis-primary.payu-prod.svc.cluster.local"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+
+---
+# Billing Service - Primary (Quarkus Native)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-service
+  namespace: payu-prod
+  labels:
+    app: billing-service
+    region: primary
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: billing-service
+  template:
+    metadata:
+      labels:
+        app: billing-service
+        region: primary
+    spec:
+      containers:
+      - name: billing-service
+        image: image-registry.apps.primary.example.com/payu/billing-service:latest-native
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: QUARKUS_PROFILE
+          value: "prod,primary"
+        - name: REGION
+          value: "primary"
+        - name: DB_HOST
+          value: "postgres-primary.payu-prod.svc.cluster.local"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 5
+
+---
+# Notification Service - Primary (Quarkus Native)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: payu-prod
+  labels:
+    app: notification-service
+    region: primary
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+        region: primary
+    spec:
+      containers:
+      - name: notification-service
+        image: image-registry.apps.primary.example.com/payu/notification-service:latest-native
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: QUARKUS_PROFILE
+          value: "prod,primary"
+        - name: REGION
+          value: "primary"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-primary.payu-prod.svc.cluster.local:9092"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 5
+
+---
+# Gateway Service - Primary (Quarkus Native)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: payu-prod
+  labels:
+    app: gateway-service
+    region: primary
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+        region: primary
+    spec:
+      containers:
+      - name: gateway-service
+        image: image-registry.apps.primary.example.com/payu/gateway-service:latest-native
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: QUARKUS_PROFILE
+          value: "prod,primary"
+        - name: REGION
+          value: "primary"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1500m"
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 5
+
+---
+# KYC Service - Primary (Python)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kyc-service
+  namespace: payu-prod
+  labels:
+    app: kyc-service
+    region: primary
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kyc-service
+  template:
+    metadata:
+      labels:
+        app: kyc-service
+        region: primary
+    spec:
+      containers:
+      - name: kyc-service
+        image: image-registry.apps.primary.example.com/payu/kyc-service:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: REGION
+          value: "primary"
+        - name: DB_HOST
+          value: "postgres-primary.payu-prod.svc.cluster.local"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+
+---
+# Analytics Service - Primary (Python)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: payu-prod
+  labels:
+    app: analytics-service
+    region: primary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-service
+  template:
+    metadata:
+      labels:
+        app: analytics-service
+        region: primary
+    spec:
+      containers:
+      - name: analytics-service
+        image: image-registry.apps.primary.example.com/payu/analytics-service:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: REGION
+          value: "primary"
+        - name: DB_HOST
+          value: "postgres-primary.payu-prod.svc.cluster.local"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "3000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+
+---
+# Compliance Service - Primary
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compliance-service
+  namespace: payu-prod
+  labels:
+    app: compliance-service
+    region: primary
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: compliance-service
+  template:
+    metadata:
+      labels:
+        app: compliance-service
+        region: primary
+    spec:
+      containers:
+      - name: compliance-service
+        image: image-registry.apps.primary.example.com/payu/compliance-service:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod,primary"
+        - name: REGION
+          value: "primary"
+        - name: DB_HOST
+          value: "postgres-primary.payu-prod.svc.cluster.local"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+
+---
+# PostgreSQL - Primary
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-primary
+  namespace: payu-prod
+  labels:
+    app: postgres
+    role: primary
+    region: primary
+spec:
+  serviceName: postgres-primary
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+      role: primary
+  template:
+    metadata:
+      labels:
+        app: postgres
+        role: primary
+        region: primary
+    spec:
+      containers:
+      - name: postgres
+        image: registry.redhat.io/rhel8/postgresql-16:latest
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRESQL_USER
+          value: "payu"
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: POSTGRESQL_DATABASE
+          value: "payudb"
+        - name: POSTGRESQL_REPLICATION_MODE
+          value: "master"
+        - name: POSTGRESQL_REPLICATION_USER
+          value: "replicator"
+        - name: POSTGRESQL_REPLICATION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: replication-password
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/pgsql/data
+        - name: postgres-config
+          mountPath: /opt/app-root/src/postgresql-cfg
+          readOnly: true
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - payu
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - payu
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-primary-config
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: gp3-csi
+      resources:
+        requests:
+          storage: 500Gi
+
+---
+# Kafka - Primary
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: kafka-primary
+  namespace: payu-prod
+  labels:
+    region: primary
+spec:
+  kafka:
+    version: 3.7.0
+    replicas: 3
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+      inter.broker.protocol.version: "3.7"
+      log.retention.hours: 168
+      log.segment.bytes: 1073741824
+      log.retention.check.interval.ms: 300000
+    storage:
+      type: jbod
+      volumes:
+      - id: 0
+        type: persistent-claim
+        size: 500Gi
+        storageClassName: gp3-csi
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: "2000m"
+      limits:
+        memory: "8Gi"
+        cpu: "4000m"
+  zookeeper:
+    replicas: 3
+    storage:
+      type: persistent-claim
+      size: 100Gi
+      storageClassName: gp3-csi
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+
+---
+# Redis/Data Grid - Primary
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-primary
+  namespace: payu-prod
+  labels:
+    app: redis
+    role: primary
+    region: primary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+      role: primary
+  template:
+    metadata:
+      labels:
+        app: redis
+        role: primary
+        region: primary
+    spec:
+      containers:
+      - name: redis
+        image: registry.redhat.io/rhel8/redis-6:latest
+        ports:
+        - containerPort: 6379
+          name: redis
+        command:
+        - redis-server
+        - /etc/redis/redis.conf
+        - --replica-announce-ip
+        - $(POD_IP)
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: password
+        volumeMounts:
+        - name: redis-config
+          mountPath: /etc/redis
+          readOnly: true
+        - name: redis-data
+          mountPath: /var/lib/redis/data
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-primary-config
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-primary-data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-primary-data
+  namespace: payu-prod
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: gp3-csi
+  resources:
+    requests:
+      storage: 100Gi

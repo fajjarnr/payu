@@ -1,0 +1,46 @@
+# Gatling performance test outputs
+target/
+build/
+results/
+
+# Gatling reports
+gatling-results/
+
+# Test logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Gradle
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# Scala
+*.class
+*.cache
+*.swp
+*~
+
+# Gatling simulation log
+simulation.log
+
+# Temporary files
+*.tmp
+*.bak

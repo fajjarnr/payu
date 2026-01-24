@@ -1,0 +1,85 @@
+# Docker Compose for Gatling Performance Tests
+version: '3.8'
+
+services:
+  gatling:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: payu-gatling
+    environment:
+      # Base URL for the services under test
+      - BASE_URL=${BASE_URL:-http://gateway-service:8080}
+      # Individual service URLs (optional)
+      - AUTH_URL=${AUTH_URL:-http://auth-service:8081}
+      - TRANSACTION_URL=${TRANSACTION_URL:-http://transaction-service:8082}
+      - WALLET_URL=${WALLET_URL:-http://wallet-service:8083}
+      # Java options
+      - JAVA_OPTS=-Xms2048m -Xmx4096m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+    volumes:
+      # Mount results directory to persist reports
+      - ./results:/gatling/results
+      # Mount resources for test data
+      - ./src/test/resources:/gatling/resources:ro
+    networks:
+      - payu-network
+    # Depends on services being tested
+    depends_on:
+      - gateway-service
+      - auth-service
+      - transaction-service
+      - wallet-service
+    # Command override to run specific simulation
+    command: >
+      sh -c "
+        java $$JAVA_OPTS
+        -cp lib/*:$(find . -name '*.jar' | tr '\n' ':')
+        io.gatling.app.Gatling
+        -s ${SIMULATION:-id.payu.simulations.AllServicesSimulation}
+        -rf /gatling/results
+      "
+
+  # Optional: Grafana for monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: payu-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - payu-network
+    profiles:
+      - monitoring
+
+  # Optional: Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: payu-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - payu-network
+    profiles:
+      - monitoring
+
+networks:
+  payu-network:
+    external: true
+    name: payu-network
+
+volumes:
+  grafana-data:
+  prometheus-data:

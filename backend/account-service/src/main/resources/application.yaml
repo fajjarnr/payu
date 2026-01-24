@@ -130,3 +130,20 @@ payu:
     url: ${GATEWAY_URL:http://localhost:8080}
   kyc:
     auto-approve-score: 80
+  cache:
+    enabled: true
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+    default-ttl: 5m
+    caches:
+      accounts:
+        ttl: 10m
+        stale-while-revalidate: true
+      profiles:
+        ttl: 5m
+        stale-while-revalidate: false
+    local-cache:
+      enabled: true
+      max-size: 1000
+      ttl: 1m
