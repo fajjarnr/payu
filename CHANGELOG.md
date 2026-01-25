@@ -26,6 +26,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Tests run: 40, Failures: 0, Errors: 0, Skipped: 1
     - 100% pass rate (excluding expected skipped test)
     - All infrastructure-dependent tests now properly mocked
+
+- **Auth-Service Unit Tests - Major Progress**:
+  - Fixed POM error (empty Jasypt dependency block)
+  - Added Spring Kafka test dependency for cache-starter compatibility
+  - Fixed VaultConfigurationTest assertion for unit test environment
+  - Fixed BiometricService bug: registration was created but never stored in map
+  - Fixed BiometricServiceTest test logic issues
+  - Added missing mocks to AuthControllerTest (RiskEvaluationService, MFATokenService)
+  - Updated AuthControllerTest to use MockMvc instead of WebFluxTest
+  - **Test Results**: 67 tests, 3 failures (55% improvement from 9 failures + 1 error)
+  - **Remaining Issue**: 3 tests in AuthControllerTest have reactive/servlet API mismatch
+    - AuthController uses HttpServletRequest but returns Mono<?>
+    - Requires controller refactoring to fully resolve
 - **Shared Libraries Auto-Configuration**:
   - Added META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports files
     - security-starter: Registered SecurityAutoConfiguration for encryption, masking, and audit
