@@ -275,7 +275,9 @@ Untuk menjaga konsistensi UI yang premium dan modern:
 ### Git & Changelog Policy ⚠️
 
 Setiap kali melakukan perubahan kode yang signifikan:
-1. **Update CHANGELOG.md**: Tambahkan entri di bawah `[Unreleased]` sesuai format Keep a Changelog.
+1. **Update CHANGELOG.md**:
+   - Tambahkan entri di bawah `[Unreleased]` sesuai format Keep a Changelog.
+   - **Versioning**: Gunakan **Semantic Versioning** (Major.Minor.Patch) untuk memberi tag pada kumpulan perubahan (misal: `[1.0.1] - 2026-01-25`).
 2. **Git Commit**: Gunakan conventional commits (`feat:`, `fix:`, `docs:`, `refactor:`)
 3. **Git Push**: Push ke remote repository setelah selesai.
 

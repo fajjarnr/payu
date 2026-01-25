@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Account-Service Unit Tests - Major Progress**:
+  - Created MonitoringTestConfiguration for isolated actuator endpoint testing
+    - Minimal Spring Boot configuration excluding database, security, Kafka, and shared libraries
+    - Location: `/backend/account-service/src/test/java/id/payu/account/monitoring/MonitoringTestConfiguration.java`
+  - Fixed MonitoringConfigurationTest and TracingConfigurationTest infrastructure dependencies
+    - Added PrometheusMeterRegistry bean configuration for actuator metrics
+    - Excluded shared library auto-configurations (cache, resilience, security) from test context
+    - Location: `/backend/account-service/src/test/java/id/payu/account/monitoring/`
+  - Progress: account-service tests improved from 14 errors (100% failure) to 4 failures + 4 passing (50% success)
+    - Passing: metrics endpoint, info endpoint, HTTP metrics, JVM memory metrics
+    - Remaining: Prometheus endpoint (404), health endpoint (503), JVM metrics endpoint (404)
+    - Note: Remaining failures require actuator configuration tuning or integration test approach
+- **Shared Libraries Auto-Configuration**:
+  - Added META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports files
+    - security-starter: Registered SecurityAutoConfiguration for encryption, masking, and audit
+    - resilience-starter: Registered ResilienceAutoConfiguration for circuit breaker, retry, bulkhead
+    - Location: `/backend/shared/*/src/main/resources/META-INF/spring/`
+  - Fixed DataMaskingAspect infinite recursion bug by adding cycle detection with IdentityHashMap
+    - ThreadLocal tracking of visited objects prevents StackOverflowError on circular references
+    - Location: `/backend/shared/security-starter/src/main/java/id/payu/security/masking/DataMaskingAspect.java`
+
+## [1.0.1] - 2026-01-25
+
 ### Added
 - **Testing Infrastructure**:
   - Fixed compilation issues in account-service by replacing Lombok annotations with explicit code
@@ -15,9 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Fixed SensitiveUserData entity (removed nested Repository interface)
     - Fixed domain models (User, Account) and entities (Profile) with explicit code
     - Fixed application.yaml (removed duplicate readinessstate key)
-    - Fixed logback-spring.xml (use SizeAndTimeBasedRollingPolicy)
+    - Fixed logback-spring.xml (use SizeAndBasedRollingPolicy)
     - Reset pom.xml to default Spring Boot configuration for Lombok
     - Location: `/backend/account-service/`
+
+## [1.0.0] - 2026-01-24
 
 ### Changed
 

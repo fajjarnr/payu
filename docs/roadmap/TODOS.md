@@ -138,24 +138,26 @@
     - [x] Configure **test user accounts** with known credentials for automation.
     - [x] Add **cleanup script** to reset databases between test runs (`scripts/cleanup-test-db.sh`).
 
-- [ ] **Backend Unit Tests (Local)**:
+- [ ] **[CRITICAL] Backend Unit Tests (Local)**:
     - [x] Add `scripts/run-all-tests.sh` for automated test execution.
     - [x] Add `scripts/test-single-service.sh` for testing individual services.
     - [x] Add `Makefile` with convenient test targets.
-    - [ ] Verify all `account-service` tests pass: `cd backend/account-service && mvn test`. (Blocked: shared libs)
-    - [ ] Verify all `auth-service` tests pass: `cd backend/auth-service && mvn test`. (Blocked: shared libs)
-    - [ ] Verify all `transaction-service` tests pass: `cd backend/transaction-service && mvn test`. (Blocked: shared libs)
-    - [ ] Verify all `wallet-service` tests pass: `cd backend/wallet-service && mvn test`. (Blocked: shared libs)
-    - [ ] Verify all `billing-service` tests pass: `cd backend/billing-service && ./mvnw test`. (Blocked: shared libs)
-    - [ ] Verify all `notification-service` tests pass: `cd backend/notification-service && ./mvnw test`. (Blocked: shared libs)
-    - [ ] Verify all `gateway-service` tests pass: `cd backend/gateway-service && ./mvnw test`. (Blocked: shared libs)
-    - [ ] Verify all `kyc-service` tests pass: `cd backend/kyc-service && pytest`. (Blocked: shared libs)
-    - [ ] Verify all `analytics-service` tests pass: `cd backend/analytics-service && pytest`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `account-service` tests pass: `cd backend/account-service && mvn test`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `auth-service` tests pass: `cd backend/auth-service && mvn test`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `transaction-service` tests pass: `cd backend/transaction-service && mvn test`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `wallet-service` tests pass: `cd backend/wallet-service && mvn test`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `billing-service` tests pass: `cd backend/billing-service && ./mvnw test`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `notification-service` tests pass: `cd backend/notification-service && ./mvnw test`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `gateway-service` tests pass: `cd backend/gateway-service && ./mvnw test`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `kyc-service` tests pass: `cd backend/kyc-service && pytest`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Verify all `analytics-service` tests pass: `cd backend/analytics-service && pytest`. (Blocked: shared libs)
+    - [ ] **[CRITICAL]** Fix `shared/security-starter` EncryptionService bean configuration.
+    - [ ] **[CRITICAL]** Fix `shared/resilience-starter` compatibility issues.
     - [ ] Create **test coverage report** for each service (JaCoCo/coverage.py).
     - [ ] Enforce **minimum 80% coverage** threshold in CI/CD.
     - [ ] Note: `cache-starter` now compiles successfully. `resilience-starter` needs Resilience4j 2.x API updates.
 
-- [ ] **Backend Integration Tests (Docker)**:
+- [ ] **[HIGH] Backend Integration Tests (Docker)**:
     - [ ] Run `account-service` integration tests with Testcontainers (PostgreSQL, Kafka).
     - [ ] Run `auth-service` integration tests with Keycloak Testcontainer.
     - [ ] Run `transaction-service` integration tests with PostgreSQL Testcontainer.
@@ -165,7 +167,7 @@
     - [ ] Test **Kafka event flow**: transaction → wallet → notification.
     - [ ] Test **database migrations** (Flyway) run successfully on fresh DB.
 
-- [ ] **API Contract Tests (Postman/Newman)**:
+- [ ] **[MEDIUM] API Contract Tests (Postman/Newman)**:
     - [ ] Create **Postman collection** for all API endpoints.
     - [ ] Add **environment files** for local, docker, and staging.
     - [ ] Run `newman run` against docker-compose environment.
@@ -173,7 +175,7 @@
     - [ ] Test **authentication flows** (login, token refresh, logout).
     - [ ] Test **error responses** match documented error codes.
 
-- [ ] **E2E Tests - Full User Journeys (Docker)**:
+- [ ] **[HIGH] E2E Tests - Full User Journeys (Docker)**:
     - [ ] **User Onboarding**: Register → eKYC → Wallet Creation.
     - [ ] **Transfer Flow**: Login → Check Balance → Transfer → Verify Debit.
     - [ ] **Bill Payment**: Login → Select Biller → Pay → Verify Transaction.
@@ -206,7 +208,7 @@
     - [ ] Test **database rollback** scenarios.
     - [ ] Generate **regression report** with pass/fail summary.
 
-- [ ] **Performance Smoke Tests (Docker)**:
+- [ ] **[LOW] Performance Smoke Tests (Docker)**:
     - [ ] Run **basic load test** (50 users) against docker-compose.
     - [ ] Verify **response times** < 500ms for critical endpoints.
     - [ ] Verify **no memory leaks** after 1000 requests.

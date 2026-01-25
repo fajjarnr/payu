@@ -29,8 +29,15 @@ public @interface CacheInvalidate {
 
     /**
      * Name of the cache to invalidate.
+     * @deprecated Use {@link #value()} instead.
      */
-    String cacheName();
+    @AliasFor("value")
+    String cacheName() default "";
+
+    /**
+     * Alias for cacheName - allows using @CacheInvalidate("cacheName") syntax.
+     */
+    String value() default "";
 
     /**
      * Spring Expression Language (SpEL) for cache key.
@@ -42,10 +49,4 @@ public @interface CacheInvalidate {
      * Whether to invalidate all entries in the cache.
      */
     boolean allEntries() default false;
-
-    /**
-     * Alias for cacheName.
-     */
-    @AliasFor("cacheName")
-    String value() default "";
 }

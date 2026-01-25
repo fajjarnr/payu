@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.codec.Hex;
-import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -21,9 +20,11 @@ import java.util.Map;
 /**
  * Service for field-level encryption/decryption
  * Uses AES-GCM for authenticated encryption
+ * 
+ * <p>Note: This class is instantiated via {@link id.payu.security.config.SecurityAutoConfiguration}.
+ * Do not add @Service annotation.</p>
  */
 @Slf4j
-@Service
 public class EncryptionService {
 
     private static final String ALGORITHM = "AES/GCM/NoPadding";

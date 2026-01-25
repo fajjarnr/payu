@@ -2,12 +2,15 @@ package id.payu.account.config;
 
 import id.payu.account.multitenancy.TenantContext;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
 
 @Component
+@ConditionalOnBean(EntityManagerFactory.class)
 public class TenantInterceptor {
 
     @PersistenceContext

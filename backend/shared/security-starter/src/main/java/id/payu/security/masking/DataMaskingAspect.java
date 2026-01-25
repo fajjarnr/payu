@@ -7,6 +7,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
+import java.util.IdentityHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +25,9 @@ public class DataMaskingAspect {
     private static final Pattern CARD_PATTERN = Pattern.compile("(\\d{4})\\d{8,}(\\d{4})");
     private static final Pattern ACCOUNT_PATTERN = Pattern.compile("(\\d{4})\\d{6,}");
 
+    // ThreadLocal to track visited objects and prevent infinite recursion
+    private final ThreadLocal<IdentityHashMap<Object, Object>> visitedObjects = ThreadLocal.withInitial(IdentityHashMap::new);
+
     public DataMaskingAspect(SecurityProperties properties) {
         this.properties = properties;
     }
@@ -36,6 +40,9 @@ public class DataMaskingAspect {
         if (!properties.isMaskingEnabled()) {
             return joinPoint.proceed();
         }
+
+        // Clear visited objects before processing
+        visitedObjects.get().clear();
 
         // Mask arguments before logging
         Object[] maskedArgs = maskArguments(joinPoint.getArgs());
@@ -53,6 +60,9 @@ public class DataMaskingAspect {
             Object maskedResult = maskValue(result);
             log.debug("Result: {}", maskedResult);
         }
+
+        // Clean up after processing
+        visitedObjects.remove();
 
         return result;
     }
@@ -155,8 +165,15 @@ public class DataMaskingAspect {
             return "null";
         }
 
-        // Use reflection to mask sensitive fields
+        // Check for circular reference
+        IdentityHashMap<Object, Object> visited = visitedObjects.get();
+        if (visited.containsKey(obj)) {
+            return obj.getClass().getSimpleName() + "[...]";
+        }
+        visited.put(obj, obj);
+
         try {
+            // Use reflection to mask sensitive fields
             StringBuilder sb = new StringBuilder(obj.getClass().getSimpleName()).append("{");
 
             java.lang.reflect.Field[] fields = obj.getClass().getDeclaredFields();
@@ -187,6 +204,9 @@ public class DataMaskingAspect {
         } catch (Exception e) {
             log.warn("Failed to mask object: {}", obj.getClass().getSimpleName(), e);
             return obj.getClass().getSimpleName() + "[MASKED]";
+        } finally {
+            // Clean up to prevent memory leaks
+            visited.remove(obj);
         }
     }
 

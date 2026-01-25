@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  *   <li>Custom TTL per method or cache</li>
  *   <li>Stale-while-revalidate pattern for improved performance</li>
  *   <li>Automatic key generation using SpEL</li>
- *   <li>Conditional caching based on result</li>
+   <li>Conditional caching based on result</li>
  *   <li>Cache invalidation support</li>
  * </ul>
  *
@@ -71,8 +71,16 @@ public @interface CacheWithTTL {
 
     /**
      * Name of the cache to use.
+     * @deprecated Use {@link #value()} instead.
      */
-    String cacheName();
+    @AliasFor("value")
+    String cacheName() default "";
+
+    /**
+     * Name of the cache to use - primary attribute.
+     * This is the default attribute used when specifying just the cache name.
+     */
+    String value() default "";
 
     /**
      * Spring Expression Language (SpEL) for custom cache key generation.
@@ -124,10 +132,4 @@ public @interface CacheWithTTL {
      * Whether to sync cache access (prevent cache stampede).
      */
     boolean sync() default true;
-
-    /**
-     * Alias for cacheName.
-     */
-    @AliasFor("cacheName")
-    String value() default "";
 }

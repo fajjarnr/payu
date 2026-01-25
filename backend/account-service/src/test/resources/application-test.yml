@@ -3,9 +3,22 @@ spring:
   main:
     allow-bean-definition-overriding: true
   config:
-    import: optional:vault://
-  cloud:
-    vault:
+    import: "optional:configserver:"
+  # Disable Vault for tests - only exclude auto-configuration classes
+  autoconfigure:
+    exclude: org.springframework.cloud.vault.core.VaultAutoConfiguration
+
+# Actuator endpoint security for tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  # Disable health indicators that require external services
+  health:
+    redis:
+      enabled: false
+    kafka:
       enabled: false
 
   # Use H2 for unit tests (fast)
@@ -13,8 +26,8 @@ spring:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
-    password: 
-  
+    password:
+
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -23,11 +36,11 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
-  
+
   # Disable Flyway for tests
   flyway:
     enabled: false
-  
+
   # Disable Kafka for unit tests
   kafka:
     bootstrap-servers: localhost:9092

@@ -10,65 +10,85 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/var/log/payu/${APP_NAME}.log</file>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"service":"${APP_NAME}","port":"${SERVER_PORT}"}</customFields>
-            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampPattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>/var/log/payu/${APP_NAME}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>100MB</maxFileSize>
-            <maxHistory>7</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
-        </rollingPolicy>
-    </appender>
+    <!-- File appenders only for production profile -->
+    <springProfile name="prod">
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>/var/log/payu/${APP_NAME}.log</file>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"service":"${APP_NAME}","port":"${SERVER_PORT}"}</customFields>
+                <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampPattern>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>/var/log/payu/${APP_NAME}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>1GB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
 
-    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>512</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="FILE"/>
-    </appender>
+        <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <appender-ref ref="FILE"/>
+        </appender>
 
-    <!-- Audit Logger for Security Events -->
-    <appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/var/log/payu/audit.log</file>
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5level | %logger{36} | %msg%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/var/log/payu/audit-%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>365</maxHistory>
-        </rollingPolicy>
-    </appender>
+        <!-- Audit Logger for Security Events -->
+        <appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>/var/log/payu/audit.log</file>
+            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5level | %logger{36} | %msg%n</pattern>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>/var/log/payu/audit-%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>365</maxHistory>
+            </rollingPolicy>
+        </appender>
 
-    <!-- Security and Audit Logger -->
-    <logger name="id.payu.security" level="INFO" additivity="false">
-        <appender-ref ref="AUDIT"/>
-        <appender-ref ref="STDOUT"/>
-    </logger>
+        <!-- Security and Audit Logger with file appenders -->
+        <logger name="id.payu.security" level="INFO" additivity="false">
+            <appender-ref ref="AUDIT"/>
+            <appender-ref ref="STDOUT"/>
+        </logger>
+    </springProfile>
+
+    <!-- Security logger for non-prod environments (no file appender) -->
+    <springProfile name="!prod">
+        <logger name="id.payu.security" level="INFO" additivity="false">
+            <appender-ref ref="STDOUT"/>
+        </logger>
+    </springProfile>
 
     <!-- Resilience Logger -->
     <logger name="id.payu.resilience" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <springProfile name="!prod">
+    <!-- Default profile (when no profile is set, e.g., @WebMvcTest) - console only -->
+    <springProfile name="!prod &amp; !test">
         <root level="INFO">
             <appender-ref ref="STDOUT"/>
         </root>
-
         <logger name="id.payu" level="DEBUG"/>
         <logger name="org.springframework" level="INFO"/>
         <logger name="org.hibernate.SQL" level="DEBUG"/>
     </springProfile>
 
+    <!-- Test profile - console only -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </root>
+        <logger name="id.payu" level="DEBUG"/>
+        <logger name="org.springframework" level="INFO"/>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+    </springProfile>
+
+    <!-- Production profile -->
     <springProfile name="prod">
         <root level="INFO">
             <appender-ref ref="STDOUT"/>
             <appender-ref ref="ASYNC"/>
         </root>
-
         <logger name="id.payu" level="INFO"/>
         <logger name="org.springframework" level="WARN"/>
         <logger name="org.hibernate" level="WARN"/>

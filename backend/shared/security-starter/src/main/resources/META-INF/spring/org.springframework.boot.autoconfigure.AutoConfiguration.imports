@@ -1,5 +1,1 @@
 id.payu.security.config.SecurityAutoConfiguration
-id.payu.security.crypto.EncryptionService
-id.payu.security.masking.DataMaskingAspect
-id.payu.security.audit.AuditAspect
-id.payu.security.audit.AuditLogPublisher

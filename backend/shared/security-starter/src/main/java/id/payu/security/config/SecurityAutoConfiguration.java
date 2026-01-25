@@ -7,8 +7,8 @@ import id.payu.security.masking.DataMaskingAspect;
 import id.payu.security.masking.LogbackMaskingFilter;
 import id.payu.security.audit.AuditAspect;
 import id.payu.security.audit.AuditLogPublisher;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -26,19 +26,23 @@ import java.util.Base64;
 /**
  * Auto-configuration for Security features
  */
-@Slf4j
 @AutoConfiguration
-@RequiredArgsConstructor
 @EnableConfigurationProperties(SecurityProperties.class)
 @EnableAspectJAutoProxy
-@ConditionalOnProperty(prefix = "payu.security.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "payu.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SecurityAutoConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityAutoConfiguration.class);
 
     private final SecurityProperties properties;
 
+    public SecurityAutoConfiguration(SecurityProperties properties) {
+        this.properties = properties;
+    }
+
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security.encryption-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "payu.security", name = "encryption-enabled", havingValue = "true", matchIfMissing = true)
     public EncryptionService encryptionService() {
         log.info("Initializing Encryption Service");
 
@@ -54,7 +58,7 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security.masking-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "payu.security", name = "masking-enabled", havingValue = "true", matchIfMissing = true)
     public DataMaskingAspect dataMaskingAspect() {
         log.info("Initializing Data Masking Aspect");
         return new DataMaskingAspect(properties);
@@ -62,7 +66,7 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security.audit-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
     public AuditAspect auditAspect(
             AuditLogPublisher auditLogPublisher) {
@@ -72,7 +76,7 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security.audit-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
     public AuditLogPublisher auditLogPublisher(
             org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate,

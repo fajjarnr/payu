@@ -10,8 +10,8 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -27,15 +27,19 @@ import java.util.random.RandomGenerator;
 /**
  * Auto-configuration for Resilience4j patterns
  */
-@Slf4j
 @AutoConfiguration
-@RequiredArgsConstructor
 @EnableConfigurationProperties(ResilienceProperties.class)
 @ConditionalOnClass(name = "io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry")
-@ConditionalOnProperty(prefix = "payu.resilience.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "payu.resilience", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ResilienceAutoConfiguration {
 
+    private static final Logger log = LoggerFactory.getLogger(ResilienceAutoConfiguration.class);
+
     private final ResilienceProperties properties;
+
+    public ResilienceAutoConfiguration(ResilienceProperties properties) {
+        this.properties = properties;
+    }
 
     @Bean
     @ConditionalOnMissingBean

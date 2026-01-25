@@ -3,16 +3,35 @@ package id.payu.account.monitoring;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+/**
+ * Monitoring configuration tests using minimal Spring Boot configuration.
+ * Tests actuator endpoints without loading the full application context.
+ */
+@SpringBootTest(
+    classes = MonitoringTestConfiguration.class,
+    properties = {
+        "management.endpoints.web.exposure.include=*",
+        "management.endpoint.health.enabled=true",
+        "management.endpoint.prometheus.enabled=true",
+        "management.endpoint.metrics.enabled=true",
+        "management.endpoint.info.enabled=true"
+    }
+)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DisplayName("Monitoring Configuration Tests")
@@ -31,13 +50,15 @@ class MonitoringConfigurationTest {
     @Test
     @DisplayName("Should include JVM metrics in Prometheus output")
     void shouldIncludeJVMMetrics() throws Exception {
-        mockMvc.perform(get("/actuator/prometheus"))
+        String content = mockMvc.perform(get("/actuator/prometheus"))
                 .andExpect(status().isOk())
-                .andExpect(result -> {
-                    String content = result.getResponse().getContentAsString();
-                    content.contains("jvm_memory_used_bytes");
-                    content.contains("process_cpu_seconds_total");
-                });
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(content)
+                .contains("jvm_memory_used_bytes")
+                .contains("process_cpu_seconds_total");
     }
 
     @Test
@@ -82,11 +103,12 @@ class MonitoringConfigurationTest {
     @Test
     @DisplayName("Should return application name in metrics")
     void shouldReturnApplicationNameInMetrics() throws Exception {
-        mockMvc.perform(get("/actuator/prometheus"))
+        String content = mockMvc.perform(get("/actuator/prometheus"))
                 .andExpect(status().isOk())
-                .andExpect(result -> {
-                    String content = result.getResponse().getContentAsString();
-                    content.contains("application=\"account-service\"");
-                });
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(content).contains("application=\"account-service\"");
     }
 }

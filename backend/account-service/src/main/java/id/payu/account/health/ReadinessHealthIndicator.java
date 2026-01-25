@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,8 @@ import java.util.Map;
  *   <li>Kafka: Listeners are running</li>
  * </ul>
  */
-@Component("readiness")
+@Component("customReadiness")
+@ConditionalOnBean(DataSource.class)
 @RequiredArgsConstructor
 public class ReadinessHealthIndicator implements HealthIndicator {
 

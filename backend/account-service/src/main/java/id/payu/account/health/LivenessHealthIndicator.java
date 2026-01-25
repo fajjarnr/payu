@@ -16,7 +16,7 @@ import java.lang.management.ThreadMXBean;
  * <p>This is a lightweight check that should always return UP if the JVM is alive.
  * Use this for Kubernetes liveness probes.</p>
  */
-@Component("liveness")
+@Component("customLiveness")
 public class LivenessHealthIndicator implements HealthIndicator {
 
     private static final Logger log = LoggerFactory.getLogger(LivenessHealthIndicator.class);
