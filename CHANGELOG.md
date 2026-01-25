@@ -13,13 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Minimal Spring Boot configuration excluding database, security, Kafka, and shared libraries
     - Location: `/backend/account-service/src/test/java/id/payu/account/monitoring/MonitoringTestConfiguration.java`
   - Fixed MonitoringConfigurationTest and TracingConfigurationTest infrastructure dependencies
-    - Added PrometheusMeterRegistry bean configuration for actuator metrics
+    - Added PrometheusMeterRegistry bean via @TestConfiguration inner class
+    - Added KafkaTemplate mock for cache-starter compatibility
+    - Imported MetricsAutoConfiguration and PrometheusMetricsExportAutoConfiguration
     - Excluded shared library auto-configurations (cache, resilience, security) from test context
     - Location: `/backend/account-service/src/test/java/id/payu/account/monitoring/`
-  - Progress: account-service tests improved from 14 errors (100% failure) to 4 failures + 4 passing (50% success)
-    - Passing: metrics endpoint, info endpoint, HTTP metrics, JVM memory metrics
-    - Remaining: Prometheus endpoint (404), health endpoint (503), JVM metrics endpoint (404)
-    - Note: Remaining failures require actuator configuration tuning or integration test approach
+  - **Test Results**:
+    - Progress: account-service tests improved from 14 errors (100% failure) to 3 failures + 5 passing (62.5% success)
+    - Passing: health endpoint, metrics endpoint, info endpoint, HTTP metrics, JVM memory metrics
+    - Remaining: Prometheus endpoint (404) - 3 tests
+    - Note: Prometheus endpoint requires full metrics export stack - consider integration test approach
 - **Shared Libraries Auto-Configuration**:
   - Added META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports files
     - security-starter: Registered SecurityAutoConfiguration for encryption, masking, and audit

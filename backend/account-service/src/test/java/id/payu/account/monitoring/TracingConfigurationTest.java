@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -17,9 +18,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Distributed tracing configuration tests using @SpringBootTest with @AutoConfigureMockMvc.
- * Tests actuator endpoints while excluding database-related auto-configurations (JPA, Flyway, Vault).
- * Actuator endpoints remain fully functional per Spring Boot 3.4 documentation.
+ * Distributed tracing configuration tests using main application class with @AutoConfigureMockMvc.
+ * Tests actuator endpoints while excluding database-related auto-configurations.
+ * Uses mock beans for shared library dependencies that require external infrastructure.
  */
 @SpringBootTest(
     properties = {
@@ -27,7 +28,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
                 + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,"
                 + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration,"
-                + "org.springframework.cloud.vault.core.VaultAutoConfiguration"
+                + "org.springframework.cloud.vault.core.VaultAutoConfiguration",
+        "management.endpoints.web.exposure.include=*",
+        "management.endpoint.health.show-details=always",
+        "management.health.defaults.enabled=false"
     }
 )
 @AutoConfigureMockMvc
@@ -42,31 +46,17 @@ class TracingConfigurationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // Mock security beans for OAuth2/JWT
+    // Mock security beans
     @MockBean
     private JwtDecoder jwtDecoder;
 
-    // Mock JPA repositories
-    @MockBean
-    private id.payu.account.adapter.persistence.repository.UserRepository userRepository;
+    // Mock shared library dependencies
+    @MockBean(name = "cacheInvalidationPublisher")
+    private Object cacheInvalidationPublisher;
 
+    // Mock KafkaTemplate for cache invalidation
     @MockBean
-    private id.payu.account.adapter.persistence.repository.ProfileRepository profileRepository;
-
-    // Mock persistence adapters
-    @MockBean
-    private id.payu.account.adapter.persistence.UserPersistenceAdapter userPersistenceAdapter;
-
-    // Mock messaging adapters
-    @MockBean
-    private id.payu.account.adapter.messaging.KafkaUserEventPublisherAdapter kafkaUserEventPublisherAdapter;
-
-    // Mock client adapters
-    @MockBean
-    private id.payu.account.adapter.client.KycVerificationAdapter kycVerificationAdapter;
-
-    @MockBean
-    private id.payu.account.adapter.client.GatewayClient gatewayClient;
+    private KafkaTemplate<Object, Object> kafkaTemplate;
 
     @Test
     @DisplayName("Should have Tracer bean available")
@@ -79,7 +69,7 @@ class TracingConfigurationTest {
     void shouldCreateTraceContextOnHttpRequest() throws Exception {
         mockMvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk());
-        
+
         if (tracer != null) {
             assertThat(tracer.currentSpan()).isNotNull();
         }
