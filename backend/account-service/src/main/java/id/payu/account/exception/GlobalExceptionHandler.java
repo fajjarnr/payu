@@ -1,6 +1,7 @@
 package id.payu.account.exception;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,9 +17,11 @@ import java.util.UUID;
  * Global exception handler for Account Service.
  * Provides standardized error responses with error codes.
  */
-@Slf4j
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Handle domain-specific exceptions with proper error codes.

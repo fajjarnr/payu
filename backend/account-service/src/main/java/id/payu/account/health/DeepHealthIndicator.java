@@ -3,12 +3,12 @@ package id.payu.account.health;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.integration.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ListenerContainerRegistry;
 import org.springframework.stereotype.Component;
@@ -29,10 +29,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *   <li>Kafka: Produces a test message</li>
  * </ul>
  */
-@Slf4j
 @Component("deepHealth")
 @RequiredArgsConstructor
 public class DeepHealthIndicator implements HealthIndicator {
+
+    private static final Logger log = LoggerFactory.getLogger(DeepHealthIndicator.class);
 
     private final DataSource dataSource;
     private final RedisConnectionFactory redisConnectionFactory;
@@ -42,27 +43,6 @@ public class DeepHealthIndicator implements HealthIndicator {
     private final AtomicBoolean databaseHealthy = new AtomicBoolean(false);
     private final AtomicBoolean redisHealthy = new AtomicBoolean(false);
     private final AtomicBoolean kafkaHealthy = new AtomicBoolean(false);
-
-    public DeepHealthIndicator(
-            DataSource dataSource,
-            RedisConnectionFactory redisConnectionFactory,
-            KafkaTemplate<String, Object> kafkaTemplate) {
-        this.dataSource = dataSource;
-        this.redisConnectionFactory = redisConnectionFactory;
-        this.kafkaTemplate = kafkaTemplate;
-        this.listenerRegistry = null;
-
-        // Initialize metrics
-        Gauge.builder("health.deep.database", databaseHealthy, AtomicBoolean::get)
-            .description("Database deep health status")
-            .register(Metrics.globalRegistry);
-        Gauge.builder("health.deep.redis", redisHealthy, AtomicBoolean::get)
-            .description("Redis deep health status")
-            .register(Metrics.globalRegistry);
-        Gauge.builder("health.deep.kafka", kafkaHealthy, AtomicBoolean::get)
-            .description("Kafka deep health status")
-            .register(Metrics.globalRegistry);
-    }
 
     @Override
     public Health health() {

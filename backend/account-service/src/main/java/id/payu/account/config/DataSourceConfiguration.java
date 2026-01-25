@@ -1,7 +1,8 @@
 package id.payu.account.config;
 
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -24,9 +25,10 @@ import javax.sql.DataSource;
  *   <li>Connection validation and leak detection</li>
  * </ul>
  */
-@Slf4j
 @Configuration
 public class DataSourceConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(DataSourceConfiguration.class);
 
     /**
      * Primary datasource for write operations.

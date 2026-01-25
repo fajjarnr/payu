@@ -1,6 +1,7 @@
 package id.payu.account.health;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -15,9 +16,10 @@ import java.lang.management.ThreadMXBean;
  * <p>This is a lightweight check that should always return UP if the JVM is alive.
  * Use this for Kubernetes liveness probes.</p>
  */
-@Slf4j
 @Component("liveness")
 public class LivenessHealthIndicator implements HealthIndicator {
+
+    private static final Logger log = LoggerFactory.getLogger(LivenessHealthIndicator.class);
 
     private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
     private final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
