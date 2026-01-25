@@ -102,11 +102,12 @@ class BiometricServiceTest {
                 challenge
         );
 
+        // Register 5 devices for the same user (max is 5)
         for (int i = 0; i < 5; i++) {
             BiometricRegistrationRequest r = new BiometricRegistrationRequest(
-                    testUsername + "-" + i,
+                    testUsername,  // Same username
                     testPublicKeyString,
-                    testDeviceId + "-" + i,
+                    testDeviceId + "-" + i,  // Different device IDs
                     testDeviceType,
                     signature,
                     challenge
@@ -114,6 +115,7 @@ class BiometricServiceTest {
             biometricService.registerBiometric(r);
         }
 
+        // The 6th registration should fail
         BiometricException exception = assertThrows(BiometricException.class,
                 () -> biometricService.registerBiometric(request));
         assertEquals("BIO_006", exception.getErrorCode());
@@ -204,7 +206,22 @@ class BiometricServiceTest {
         );
         biometricService.registerBiometric(regRequest);
 
-        biometricService.revokeRegistration(biometricService.findRegistration(testUsername, testDeviceId).get().registrationId());
+        // Save the registration reference before revoking (findRegistration only returns active ones)
+        var registration = biometricService.findRegistration(testUsername, testDeviceId).get();
+        String registrationId = registration.registrationId();
+
+        biometricService.revokeRegistration(registrationId);
+
+        // Create an inactive registration object to pass to the method
+        var inactiveRegistration = new id.payu.auth.dto.BiometricRegistration(
+                registrationId,
+                testUsername,
+                testDeviceId,
+                testDeviceType,
+                testPublicKeyString,
+                registration.createdAt(),
+                false  // inactive
+        );
 
         BiometricAuthenticationRequest authRequest = new BiometricAuthenticationRequest(
                 testUsername,
@@ -214,9 +231,7 @@ class BiometricServiceTest {
         );
 
         BiometricException exception = assertThrows(BiometricException.class,
-                () -> biometricService.authenticateWithBiometric(
-                        authRequest,
-                        biometricService.findRegistration(testUsername, testDeviceId).get()));
+                () -> biometricService.authenticateWithBiometric(authRequest, inactiveRegistration));
         assertEquals("BIO_003", exception.getErrorCode());
         assertTrue(exception.getMessage().contains("inactive"));
     }

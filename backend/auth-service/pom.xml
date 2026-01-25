@@ -102,13 +102,6 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- Jasypt for Encryption -->
-        <dependency>
-            <groupId>com.github.ulisesbocchio</groupId>
-            <!-- <artifactId>jasypt-spring-boot3-starter</artifactId> -->
-            <!-- <version>3.0.5</version> -->
-        </dependency>
-
         <!-- Observability -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -156,6 +149,13 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Kafka for Cache Invalidation (test scope) -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
             <scope>test</scope>
         </dependency>
 

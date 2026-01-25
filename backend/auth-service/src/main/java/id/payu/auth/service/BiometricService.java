@@ -63,6 +63,9 @@ public class BiometricService {
                 true
         );
 
+        // Store the registration
+        registrations.put(registrationId, registration);
+
         log.info("Registered biometric for user {} on device {} with type {}",
                 request.username(), request.deviceId(), request.deviceType());
 
