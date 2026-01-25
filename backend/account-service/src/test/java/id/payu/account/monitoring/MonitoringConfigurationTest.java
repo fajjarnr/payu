@@ -3,12 +3,11 @@ package id.payu.account.monitoring;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,26 +18,42 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Monitoring configuration tests using minimal Spring Boot configuration.
- * Tests actuator endpoints without loading the full application context.
+ * Monitoring configuration tests using main application class with @AutoConfigureMockMvc.
+ * Tests actuator endpoints while excluding database-related auto-configurations.
+ * Uses mock beans for shared library dependencies that require external infrastructure.
  */
 @SpringBootTest(
-    classes = MonitoringTestConfiguration.class,
     properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
+                + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
+                + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,"
+                + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration,"
+                + "org.springframework.cloud.vault.core.VaultAutoConfiguration",
         "management.endpoints.web.exposure.include=*",
-        "management.endpoint.health.enabled=true",
-        "management.endpoint.prometheus.enabled=true",
-        "management.endpoint.metrics.enabled=true",
-        "management.endpoint.info.enabled=true"
+        "management.endpoint.health.show-details=always",
+        "management.health.defaults.enabled=false"
     }
 )
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@WithMockUser
 @DisplayName("Monitoring Configuration Tests")
 class MonitoringConfigurationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    // Mock security beans
+    @MockBean
+    private JwtDecoder jwtDecoder;
+
+    // Mock shared library dependencies
+    @MockBean(name = "cacheInvalidationPublisher")
+    private Object cacheInvalidationPublisher;
+
+    // Mock KafkaTemplate for cache invalidation
+    @MockBean
+    private KafkaTemplate<Object, Object> kafkaTemplate;
 
     @Test
     @DisplayName("Should expose Prometheus metrics endpoint")

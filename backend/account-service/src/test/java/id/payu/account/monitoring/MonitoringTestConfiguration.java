@@ -1,12 +1,13 @@
 package id.payu.account.monitoring;
 
-import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Clock;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -36,18 +37,23 @@ public class MonitoringTestConfiguration {
     /**
      * Configure Prometheus meter registry for testing.
      * This ensures the Prometheus endpoint is available during tests.
+     * Uses SIMPLE config for Prometheus to avoid dependency on Prometheus client.
      */
     @Bean
+    @ConditionalOnMissingBean
     public PrometheusMeterRegistry prometheusMeterRegistry() {
         return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     }
 
     /**
-     * Configure the main meter registry to use Prometheus.
+     * Configure MICROMETER clock for testing.
+     * Required for PrometheusMeterRegistry to work properly.
      */
     @Bean
-    public MeterRegistry meterRegistry(PrometheusMeterRegistry prometheusMeterRegistry) {
-        return prometheusMeterRegistry;
+    @ConditionalOnMissingBean
+    public Clock micrometerClock() {
+        return Clock.SYSTEM;
     }
 }
+
 
