@@ -7,7 +7,8 @@ import id.payu.cache.annotation.CacheInvalidate;
 import id.payu.cache.annotation.CacheWithTTL;
 import id.payu.cache.service.CacheService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +28,9 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class CachedAccountQueryService {
+
+    private static final Logger log = LoggerFactory.getLogger(CachedAccountQueryService.class);
 
     private final CacheService cacheService;
     private final AccountPersistencePort accountPersistencePort;

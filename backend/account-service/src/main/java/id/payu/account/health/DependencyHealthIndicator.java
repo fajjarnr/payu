@@ -1,7 +1,8 @@
 package id.payu.account.health;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.availability.ApplicationAvailability;
@@ -23,10 +24,11 @@ import java.util.Map;
  *   <li>External service health</li>
  * </ul>
  */
-@Slf4j
 @Component("dependencies")
 @RequiredArgsConstructor
 public class DependencyHealthIndicator {
+
+    private static final Logger log = LoggerFactory.getLogger(DependencyHealthIndicator.class);
 
     private final ApplicationAvailability availability;
     private final DeepHealthIndicator deepHealthIndicator;
