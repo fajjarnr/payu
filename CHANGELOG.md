@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Testing Infrastructure**:
+  - Fixed compilation issues in account-service by replacing Lombok annotations with explicit code
+    - Replaced @Data, @Builder, @Getter, @Setter with explicit getters/setters/builders
+    - Replaced @Slf4j with explicit Logger declarations
+    - Fixed SensitiveUserData entity (removed nested Repository interface)
+    - Fixed domain models (User, Account) and entities (Profile) with explicit code
+    - Fixed application.yaml (removed duplicate readinessstate key)
+    - Fixed logback-spring.xml (use SizeAndTimeBasedRollingPolicy)
+    - Reset pom.xml to default Spring Boot configuration for Lombok
+    - Location: `/backend/account-service/`
+
+### Changed
 
 - **Circuit Breaker Tuning and Data Protection**:
   - Created shared `resilience-starter` module for Spring Boot with Resilience4j
