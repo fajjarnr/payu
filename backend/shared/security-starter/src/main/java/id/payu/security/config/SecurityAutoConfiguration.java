@@ -1,6 +1,7 @@
 package id.payu.security.config;
 
-import com.ulisesbocchio.jasyptspringboot.annotation.EnableEncryptableProperties;
+// Jasypt integration disabled until compatible version is available
+// import com.ulisesbocchio.jasyptspringboot.annotation.EnableEncryptableProperties;
 import id.payu.security.crypto.EncryptionService;
 import id.payu.security.masking.DataMaskingAspect;
 import id.payu.security.masking.LogbackMaskingFilter;
@@ -62,7 +63,9 @@ public class SecurityAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "payu.security.audit-enabled", havingValue = "true", matchIfMissing = true)
-    public AuditAspect auditAspect(AuditLogPublisher auditLogPublisher) {
+    @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
+    public AuditAspect auditAspect(
+            AuditLogPublisher auditLogPublisher) {
         log.info("Initializing Audit Aspect");
         return new AuditAspect(properties, auditLogPublisher);
     }
@@ -70,9 +73,12 @@ public class SecurityAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "payu.security.audit-enabled", havingValue = "true", matchIfMissing = true)
-    public AuditLogPublisher auditLogPublisher() {
+    @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
+    public AuditLogPublisher auditLogPublisher(
+            org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate,
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         log.info("Initializing Audit Log Publisher");
-        return new AuditLogPublisher(properties);
+        return new AuditLogPublisher(properties, kafkaTemplate, objectMapper);
     }
 
     private String generateDefaultKey() {

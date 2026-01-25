@@ -4,22 +4,15 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import io.github.resilience4j.core.EventPublisher;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
 /**
  * Aspect for monitoring and logging resilience events
  */
 @Slf4j
-@Aspect
 @Component
 @RequiredArgsConstructor
 public class ResilienceAspect {
@@ -34,29 +27,41 @@ public class ResilienceAspect {
      */
     public void registerCircuitBreakerEventPublisher() {
         circuitBreakerRegistry.getAllCircuitBreakers().forEach(circuitBreaker -> {
-            EventPublisher<CircuitBreakerEvent> eventPublisher = circuitBreaker.getEventPublisher();
+            var eventPublisher = circuitBreaker.getEventPublisher();
 
-            // In Resilience4j 2.x, use onEvent() to handle all event types
             eventPublisher.onEvent(event -> {
-                if (event.getEventType() == CircuitBreakerEvent.Type.CALL_NOT_PERMITTED) {
-                    log.warn("Circuit breaker {} is OPEN - call not permitted", event.getCircuitBreakerName());
-                    publishAlert("CIRCUIT_BREAKER_OPEN", event.getCircuitBreakerName());
-                } else if (event.getEventType() == CircuitBreakerEvent.Type.ERROR) {
-                    log.error("Circuit breaker {} recorded error: {}", event.getCircuitBreakerName(),
-                            event.getThrowable() != null ? event.getThrowable().getMessage() : "Unknown error");
-                } else if (event.getEventType() == CircuitBreakerEvent.Type.STATE_TRANSITION) {
-                    log.info("Circuit breaker {} state transition", event.getCircuitBreakerName());
-                }
+                log.debug("Circuit breaker {} event: {}", circuitBreaker.getName(), event.getEventType());
             });
 
-            eventPublisher.onSuccessRateExceeded(event -> {
-                log.info("Circuit breaker {} success rate exceeded: {}%",
-                        event.getCircuitBreakerName(), event.getSuccessRate());
+            eventPublisher.onSuccess(event -> {
+                log.debug("Circuit breaker {} call succeeded", circuitBreaker.getName());
+            });
+
+            eventPublisher.onError(event -> {
+                log.error("Circuit breaker {} recorded error: {}", circuitBreaker.getName(),
+                        event.getThrowable() != null ? event.getThrowable().getMessage() : "Unknown error");
+            });
+
+            eventPublisher.onStateTransition(event -> {
+                log.info("Circuit breaker {} state transition: {} -> {}",
+                        circuitBreaker.getName(),
+                        event.getStateTransition().getFromState(),
+                        event.getStateTransition().getToState());
+            });
+
+            eventPublisher.onCallNotPermitted(event -> {
+                log.warn("Circuit breaker {} is OPEN - call not permitted", circuitBreaker.getName());
+                publishAlert("CIRCUIT_BREAKER_OPEN", circuitBreaker.getName());
             });
 
             eventPublisher.onFailureRateExceeded(event -> {
                 log.warn("Circuit breaker {} failure rate exceeded: {}%",
-                        event.getCircuitBreakerName(), event.getFailureRate());
+                        circuitBreaker.getName(), event.getFailureRate());
+            });
+
+            eventPublisher.onSlowCallRateExceeded(event -> {
+                log.warn("Circuit breaker {} slow call rate exceeded: {}%",
+                        circuitBreaker.getName(), event.getSlowCallRate());
             });
         });
     }
@@ -66,20 +71,25 @@ public class ResilienceAspect {
      */
     public void registerRetryEventPublisher() {
         retryRegistry.getAllRetries().forEach(retry -> {
-            EventPublisher<io.github.resilience4j.retry.event.RetryEvent> eventPublisher = retry.getEventPublisher();
+            var eventPublisher = retry.getEventPublisher();
+
+            eventPublisher.onEvent(event -> {
+                log.debug("Retry {} event: {}", retry.getName(), event.getEventType());
+            });
 
             eventPublisher.onRetry(event -> {
-                log.warn("Retry {} attempt {} for exception: {}", event.getName(),
-                        event.getNumberOfRetryAttempts(), event.getLastThrowable().getMessage());
+                log.warn("Retry {} attempt {} for exception: {}", retry.getName(),
+                        event.getNumberOfRetryAttempts(),
+                        event.getLastThrowable() != null ? event.getLastThrowable().getMessage() : "Unknown");
             });
 
             eventPublisher.onError(event -> {
-                log.error("Retry {} failed after {} attempts", event.getName(),
+                log.error("Retry {} failed after {} attempts", retry.getName(),
                         event.getNumberOfRetryAttempts());
             });
 
             eventPublisher.onSuccess(event -> {
-                log.info("Retry {} succeeded after {} attempts", event.getName(),
+                log.info("Retry {} succeeded after {} attempts", retry.getName(),
                         event.getNumberOfRetryAttempts());
             });
         });
@@ -90,15 +100,23 @@ public class ResilienceAspect {
      */
     public void registerBulkheadEventPublisher() {
         bulkheadRegistry.getAllBulkheads().forEach(bulkhead -> {
-            EventPublisher<io.github.resilience4j.bulkhead.event.BulkheadEvent> eventPublisher = bulkhead.getEventPublisher();
+            var eventPublisher = bulkhead.getEventPublisher();
+
+            eventPublisher.onEvent(event -> {
+                log.debug("Bulkhead {} event: {}", bulkhead.getName(), event.getEventType());
+            });
 
             eventPublisher.onCallPermitted(event -> {
-                log.debug("Bulkhead {} permitted call", event.getBulkheadName());
+                log.debug("Bulkhead {} permitted call", bulkhead.getName());
             });
 
             eventPublisher.onCallRejected(event -> {
-                log.warn("Bulkhead {} rejected call - bulkhead full", event.getBulkheadName());
-                publishAlert("BULKHEAD_FULL", event.getBulkheadName());
+                log.warn("Bulkhead {} rejected call - bulkhead full", bulkhead.getName());
+                publishAlert("BULKHEAD_FULL", bulkhead.getName());
+            });
+
+            eventPublisher.onCallFinished(event -> {
+                log.debug("Bulkhead {} call finished", bulkhead.getName());
             });
         });
     }
@@ -108,16 +126,24 @@ public class ResilienceAspect {
      */
     public void registerTimeLimiterEventPublisher() {
         timeLimiterRegistry.getAllTimeLimiters().forEach(timeLimiter -> {
-            EventPublisher<io.github.resilience4j.timelimiter.event.TimeLimiterEvent> eventPublisher = timeLimiter.getEventPublisher();
+            var eventPublisher = timeLimiter.getEventPublisher();
+
+            eventPublisher.onEvent(event -> {
+                log.debug("Time limiter {} event: {}", timeLimiter.getName(), event.getEventType());
+            });
 
             eventPublisher.onTimeout(event -> {
-                log.warn("Time limiter {} timed out after {}", event.getTimeLimiterName(),
-                        event.getTimeoutDuration());
+                log.warn("Time limiter {} timed out", timeLimiter.getName());
+                publishAlert("TIMEOUT", timeLimiter.getName());
             });
 
             eventPublisher.onError(event -> {
-                log.error("Time limiter {} error: {}", event.getTimeLimiterName(),
-                        event.getThrowable().getMessage());
+                log.error("Time limiter {} error: {}", timeLimiter.getName(),
+                        event.getThrowable() != null ? event.getThrowable().getMessage() : "Unknown error");
+            });
+
+            eventPublisher.onSuccess(event -> {
+                log.debug("Time limiter {} succeeded", timeLimiter.getName());
             });
         });
     }

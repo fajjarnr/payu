@@ -105,12 +105,13 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- Jasypt for Encryption -->
+        <!-- Jasypt for Encryption - commented out until compatible version is available
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-spring-boot3-starter</artifactId>
             <version>3.0.5</version>
         </dependency>
+        -->
 
         <!-- WebClient for HTTP Calls -->
         <dependency>

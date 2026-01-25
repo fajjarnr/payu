@@ -19,7 +19,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <jasypt.version>3.0.5</jasypt.version>
+        <jasypt.version>3.0.4</jasypt.version>
     </properties>
 
     <dependencies>
@@ -42,19 +42,21 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
-        <!-- Jasypt for field-level encryption -->
+        <!-- Jasypt for field-level encryption (optional - commented out until compatible version is found)
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-spring-boot3-starter</artifactId>
             <version>${jasypt.version}</version>
+            <optional>true</optional>
         </dependency>
 
-        <!-- Jasypt Hibernate integration -->
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-hibernate6</artifactId>
             <version>${jasypt.version}</version>
+            <optional>true</optional>
         </dependency>
+        -->
 
         <!-- Spring Data JPA -->
         <dependency>
@@ -67,6 +69,13 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
+        <!-- Spring Kafka for audit event publishing (optional) -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Jackson for JSON serialization -->
