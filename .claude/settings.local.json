@@ -57,7 +57,13 @@
       "Bash(npm run build:*)",
       "Bash(git commit:*)",
       "mcp__context7__resolve-library-id",
-      "mcp__context7__query-docs"
+      "mcp__context7__query-docs",
+      "Bash(java:*)",
+      "Bash(jar:*)",
+      "Bash(unzip:*)",
+      "Bash(VAULT_ENABLED=false mvn test:*)",
+      "Bash(VAULT_ENABLED=false mvn clean test:*)",
+      "Bash(/home/ubuntu/payu/backend/account-service/src/test/java/id/payu/account/monitoring/MonitoringConfigurationTest.java)"
     ],
     "deny": []
   }
