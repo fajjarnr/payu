@@ -1,15 +1,22 @@
 package id.payu.account.monitoring;
 
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Monitoring configuration tests using main application class with @AutoConfigureMockMvc.
  * Tests actuator endpoints while excluding database-related auto-configurations.
  * Uses mock beans for shared library dependencies that require external infrastructure.
+ * Includes TestConfiguration to set up PrometheusMeterRegistry for /actuator/prometheus endpoint.
  */
 @SpringBootTest(
     properties = {
@@ -31,12 +39,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 + "org.springframework.cloud.vault.core.VaultAutoConfiguration",
         "management.endpoints.web.exposure.include=*",
         "management.endpoint.health.show-details=always",
-        "management.health.defaults.enabled=false"
+        "management.health.defaults.enabled=false",
+        "management.metrics.export.prometheus.enabled=true"
     }
 )
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @WithMockUser
+@Import({
+    MetricsAutoConfiguration.class,
+    PrometheusMetricsExportAutoConfiguration.class
+})
 @DisplayName("Monitoring Configuration Tests")
 class MonitoringConfigurationTest {
 
@@ -54,6 +67,18 @@ class MonitoringConfigurationTest {
     // Mock KafkaTemplate for cache invalidation
     @MockBean
     private KafkaTemplate<Object, Object> kafkaTemplate;
+
+    /**
+     * Test configuration for Prometheus metrics.
+     * Provides PrometheusMeterRegistry bean for /actuator/prometheus endpoint.
+     */
+    @TestConfiguration
+    static class PrometheusTestConfiguration {
+        @Bean
+        public PrometheusMeterRegistry prometheusMeterRegistry() {
+            return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        }
+    }
 
     @Test
     @DisplayName("Should expose Prometheus metrics endpoint")
