@@ -412,6 +412,24 @@ setup_project() {
             cd "$SCRIPT_DIR"
         }
     fi
+
+    # Build All Backend Microservices
+    print_section "Building All Backend Microservices"
+    find backend -maxdepth 2 -name "pom.xml" -not -path "*/shared/*" -not -path "*/simulators/*" | while read -r pom; do
+        service_dir=$(dirname "$pom")
+        service_name=$(basename "$service_dir")
+        echo "Building $service_name..."
+        (cd "$service_dir" && mvn clean package -DskipTests -T 1C -q)
+    done
+    
+    # Build Simulators
+    print_section "Building Simulator Services"
+    find backend/simulators -maxdepth 2 -name "pom.xml" | while read -r pom; do
+        service_dir=$(dirname "$pom")
+        service_name=$(basename "$service_dir")
+        echo "Building $service_name..."
+        (cd "$service_dir" && mvn clean package -DskipTests -T 1C -q)
+    done
     
     # Install frontend dependencies
     if [ -d "frontend/web-app" ]; then
