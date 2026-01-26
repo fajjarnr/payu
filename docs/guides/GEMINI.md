@@ -294,7 +294,45 @@ Setiap kali melakukan perubahan kode yang signifikan:
 
 ---
 
-## 🔗 Related Resources
+## � Excluded Domains (Human-Managed)
+
+> **PENTING**: Area berikut TIDAK boleh diimplementasikan oleh AI assistant. 
+> Ini akan ditangani oleh DevOps Engineer secara manual.
+
+### ❌ DO NOT Implement:
+
+| Domain | Examples | Reason |
+|--------|----------|--------|
+| **DevOps/SRE** | CI/CD pipelines, Tekton configs | Human-managed |
+| **Infrastructure** | OpenShift manifests, Helm charts | Human-managed |
+| **Monitoring Setup** | Prometheus rules, Grafana dashboards | Human-managed |
+| **Logging Setup** | LokiStack configs, Promtail | Human-managed |
+| **GitOps** | ArgoCD applications, sync configs | Human-managed |
+| **Network Policies** | Ingress, egress rules | Human-managed |
+| **Secrets Management** | Vault policies, sealed secrets | Human-managed |
+| **Disaster Recovery** | Backup scripts, restore procedures | Human-managed |
+
+### ✅ What AI CAN Do:
+
+- Application code (backend, frontend, mobile)
+- Unit tests, integration tests
+- Database migrations (Flyway scripts)
+- API documentation (OpenAPI specs)
+- Application-level configs (application.yml)
+- Dockerfiles (for application containers only)
+- README documentation
+
+### When Asked About DevOps:
+
+Jika user meminta implementasi DevOps/SRE, respond dengan:
+
+> "Area DevOps/SRE di-manage secara manual oleh DevOps Engineer. 
+> Saya dapat membantu dengan application code, tests, dan dokumentasi. 
+> Untuk perubahan infrastructure, silakan koordinasi dengan DevOps team."
+
+---
+
+## �🔗 Related Resources
 
 | Resource | Path |
 |----------|------|
