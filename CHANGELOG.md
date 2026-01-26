@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **TDD Practices Skill**: Created comprehensive TDD skill for error prevention
+  - Location: `.claude/skills/tdd-practices/SKILL.md`
+  - Covers: Red-Green-Refactor cycle, test design principles, configuration validation
+  - Includes: Pre-commit hooks, interface-first design, contract testing
+  - Anti-patterns guide and quick reference for common test failures
+- **Pre-commit Hook**: Automated error detection before commits
+  - Location: `scripts/pre-commit-check.sh` + `.git/hooks/pre-commit`
+  - Validates: Compilation, unit tests, architecture tests, POM files
+  - Checks: Empty dependencies, TODO/FIXME comments, large files
+  - Installation: Already enabled in `.git/hooks/pre-commit`
+- **Updated CLAUDE.md**: Added TDD guidelines and error prevention section
+
 ### Fixed
 - **Transaction-Service Unit Tests - Complete**:
   - Fixed ScheduledTransferServiceTest updateScheduledTransfer test with required fields (scheduleType, transferType, startDate, etc.)

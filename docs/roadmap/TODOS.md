@@ -123,6 +123,15 @@
 ### 15. Testing Suite (Existing)
 - [x] **Cross-Service Integration Tests**: Implement holistic End-to-End test suite covering full user journeys.
 - [x] **TDD Hardening**: Increase test coverage to >80% for all core banking services.
+- [x] **TDD Practices & Error Prevention**:
+  - [x] Created `.claude/skills/tdd-practices/SKILL.md` with comprehensive TDD guidelines
+  - [x] Created `scripts/pre-commit-check.sh` for automated error detection
+  - [x] Installed pre-commit hook in `.git/hooks/pre-commit`
+  - [x] Updated `CLAUDE.md` with TDD guidelines and error prevention section
+  - [ ] **[HIGH]** Distribute pre-commit hook installation guide to all developers
+  - [ ] **[HIGH]** Add TDD training session for development team
+  - [ ] **[MEDIUM]** Create TDD quick reference card for developers
+  - [ ] **[MEDIUM]** Implement mutation testing (PIT) to verify test quality
 - [x] **Frontend Quality**:
     *   [x] Setup **Playwright** for E2E testing of critical financial flows (KYC, Transfer, Bill Pay).
     *   [x] Setup **Vitest** for unit testing critical logic in `src/services` and `src/stores`.

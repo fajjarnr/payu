@@ -229,10 +229,12 @@ Query: "Quarkus native image with Redis client"
 ### Testing Guidelines (TDD)
 
 1. **Write tests first** - Red-Green-Refactor cycle
-2. **Unit Tests** - MockitoExtension for service layer
+2. **Unit Tests** - MockitoExtension for service layer (NO external dependencies)
 3. **Controller Tests** - @WebMvcTest with security context
 4. **Architecture Tests** - ArchUnit for layered architecture enforcement
 5. **Integration Tests** - Testcontainers for PostgreSQL/Kafka
+6. **Configuration Tests** - Validate @ConfigMapping properties at compile time
+7. **Contract Tests** - Ensure interface stability between services
 
 **Test Structure:**
 ```
@@ -240,8 +242,17 @@ src/test/java/id/payu/<service>/
 ├── service/           # Unit tests (Mockito)
 ├── controller/        # WebMvcTest
 ├── architecture/      # ArchUnit rules
+├── config/            # Configuration validation tests
 └── integration/       # Testcontainers
 ```
+
+**Error Prevention:**
+- ✅ **Pre-commit hooks** required (validate compilation, unit tests, architecture)
+- ✅ **Interface-first design** (define ports before implementation)
+- ✅ **Test pyramid** (70% unit, 20% integration, 10% E2E)
+- ✅ **No external deps in unit tests** (mock everything)
+
+**For detailed TDD practices, use the `/tdd-practices` skill.**
 
 ### Clean Architecture (Hybrid)
 
