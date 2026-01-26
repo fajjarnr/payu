@@ -1,4 +1,6 @@
 import pytest
+import sys
+sys.path.insert(0, '/home/ubuntu/payu/backend/kyc-service/src')
 from unittest.mock import MagicMock
 from app.ml.ocr_service import OcrService
 

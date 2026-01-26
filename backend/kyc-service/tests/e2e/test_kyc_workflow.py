@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from uuid import uuid4
 import base64
 
+import sys
+sys.path.insert(0, '/home/ubuntu/payu/backend/kyc-service/src')
 from app.main import app
 
 

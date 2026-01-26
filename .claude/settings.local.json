@@ -70,7 +70,9 @@
       "Bash(then)",
       "Bash(else)",
       "Bash(fi:*)",
-      "Bash(for *)"
+      "Bash(for *)",
+      "Bash(.:*)",
+      "Bash(.venv/bin/pip:*)"
     ],
     "deny": []
   }
