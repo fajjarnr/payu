@@ -224,7 +224,7 @@ public interface GatewayConfig {
         String headerName();
 
         @WithName("deprecated-versions")
-        List<String> deprecatedVersions();
+        Optional<List<String>> deprecatedVersions();
     }
 
     interface ValidationConfig {

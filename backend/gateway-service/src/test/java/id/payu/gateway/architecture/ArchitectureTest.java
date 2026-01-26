@@ -43,16 +43,19 @@ class ArchitectureTest {
                     .consideringAllDependencies()
                     .layer("Filter").definedBy("..filter..")
                     .layer("Resource").definedBy("..resource..")
+                    .layer("Service").definedBy("..service..")
                     .layer("Config").definedBy("..config..")
                     .layer("DTO").definedBy("..dto..")
-                    
-                    // Filters are request interceptors
+
+                    // Filters are request interceptors (outermost layer)
                     .whereLayer("Filter").mayNotBeAccessedByAnyLayer()
-                    // Resources are API endpoints
+                    // Resources are API endpoints (outer layer)
                     .whereLayer("Resource").mayNotBeAccessedByAnyLayer()
-                    // Config can be accessed by all layers
-                    .whereLayer("Config").mayOnlyBeAccessedByLayers("Filter", "Resource")
-                    
+                    // Services contain business logic (inner layer)
+                    .whereLayer("Service").mayOnlyBeAccessedByLayers("Filter", "Resource")
+                    // Config is configuration data (innermost layer)
+                    .whereLayer("Config").mayOnlyBeAccessedByLayers("Filter", "Resource", "Service")
+
                     .check(importedClasses);
         }
     }

@@ -1,0 +1,44 @@
+# Quarkus Test Configuration - Disables external dependencies
+
+quarkus:
+  # Disable Redis for tests
+  redis:
+    hosts: disabled
+    enabled: false
+
+  # Disable OIDC for tests
+  oidc:
+    enabled: false
+
+  # Disable health check dependency on external services
+  smallrye-health:
+    check-default-procedures: false
+
+# Gateway test overrides
+gateway:
+  # Disable rate limiting in tests (requires Redis)
+  rate-limit:
+    enabled: false
+  rate-limit-v2:
+    enabled: false
+
+  # Disable circuit breaker tests
+  circuit-breaker:
+    enabled: false
+
+  # Disable analytics (requires persistence)
+  analytics:
+    enabled: false
+
+  # Disable IP whitelist
+  ip-whitelist:
+    enabled: false
+
+  # Disable request signing
+  request-signing:
+    enabled: false
+
+  # Disable API key rotation
+  api-keys:
+    rotation:
+      enabled: false

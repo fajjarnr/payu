@@ -247,7 +247,6 @@ gateway:
       - "v1"
       - "v2"
     header-name: "X-API-Version"
-    deprecated-versions: []
 
   # Request Validation
   validation:
@@ -296,12 +295,10 @@ gateway:
       refill-tokens: 60
       refill-duration: "60s"
     per-user:
-      enabled: true
       capacity: 1000
       refill-tokens: 100
       refill-duration: "60s"
     per-ip:
-      enabled: true
       capacity: 200
       refill-tokens: 20
       refill-duration: "60s"
@@ -388,7 +385,7 @@ gateway:
   # Timeout Policies
   timeout:
     enabled: true
-    default: "30s"
+    default-value: "30s"
     per-service:
       account-service: "30s"
       auth-service: "10s"

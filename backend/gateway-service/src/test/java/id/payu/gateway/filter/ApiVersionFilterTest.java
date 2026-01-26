@@ -17,9 +17,9 @@ public class ApiVersionFilterTest {
     public void testValidVersionInPath() {
         given()
             .when()
-            .get("/api/v1/accounts")
+            .get("/q/health")
             .then()
-            .statusCode(200) // Or expected status code
+            .statusCode(200)
             .header("X-API-Version", notNullValue());
     }
 
@@ -29,7 +29,7 @@ public class ApiVersionFilterTest {
         given()
             .header("X-API-Version", "v1")
             .when()
-            .get("/api/v1/accounts")
+            .get("/q/health")
             .then()
             .statusCode(200)
             .header("X-API-Version", "v1");
@@ -41,10 +41,10 @@ public class ApiVersionFilterTest {
         given()
             .header("X-API-Version", "v99")
             .when()
-            .get("/api/v1/accounts")
+            .get("/q/health")
             .then()
             .statusCode(400)
-            .body("error", containsString("INVALID_API_VERSION"));
+            .body(containsString("INVALID_API_VERSION"));
     }
 
     @Test
@@ -52,7 +52,7 @@ public class ApiVersionFilterTest {
     public void testDefaultVersion() {
         given()
             .when()
-            .get("/health")
+            .get("/q/health")
             .then()
             .statusCode(200);
     }

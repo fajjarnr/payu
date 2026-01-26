@@ -119,12 +119,6 @@
             <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
         </dependency>
 
-        <!-- Security: Vault for secrets -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-vault</artifactId>
-        </dependency>
-
         <!-- Validation -->
         <dependency>
             <groupId>io.quarkus</groupId>

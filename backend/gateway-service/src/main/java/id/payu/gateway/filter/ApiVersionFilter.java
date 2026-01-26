@@ -59,7 +59,7 @@ public class ApiVersionFilter implements ContainerRequestFilter {
         }
 
         // Check for deprecation warnings
-        if (config.versioning().deprecatedVersions().contains(version)) {
+        if (config.versioning().deprecatedVersions().orElse(List.of()).contains(version)) {
             String warning = DEPRECATION_WARNINGS.get(version);
             if (warning != null) {
                 requestContext.getHeaders().add("X-API-Deprecation", warning);
