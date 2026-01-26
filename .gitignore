@@ -53,7 +53,9 @@ htmlcov/
 *.iml
 *.iws
 *.ipr
-out/
+# Only ignore top-level out/ directory (IntelliJ build output)
+# Don't ignore domain/port/out/ which contains hexagonal architecture ports
+/out/
 
 # Eclipse
 .settings/
