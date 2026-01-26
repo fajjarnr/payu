@@ -319,10 +319,11 @@ install_cloud_clis() {
     case $OS in
         ubuntu|debian|pop|fedora|rhel|centos|rocky|almalinux)
             echo "Downloading OpenShift Client..."
-            wget -q https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz
-            tar -xzf openshift-client-linux.tar.gz
-            sudo mv oc kubectl /usr/local/bin/
-            rm openshift-client-linux.tar.gz README.md 2>/dev/null || true
+            mkdir -p /tmp/oc-client
+            wget -q https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz -O /tmp/oc-client/oc.tar.gz
+            tar -xzf /tmp/oc-client/oc.tar.gz -C /tmp/oc-client
+            sudo mv /tmp/oc-client/oc /tmp/oc-client/kubectl /usr/local/bin/
+            rm -rf /tmp/oc-client
             ;;
         macos)
             brew install openshift-cli
