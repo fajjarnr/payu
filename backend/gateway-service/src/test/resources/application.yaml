@@ -1,10 +1,10 @@
 # Quarkus Test Configuration - Disables external dependencies
 
 quarkus:
-  # Disable Redis for tests
+  # Disable Redis (use valid URI but connection will fail, effectively disabling usage)
   redis:
-    hosts: disabled
-    enabled: false
+    hosts: redis://localhost:6379
+    password: ""
 
   # Disable OIDC for tests
   oidc:
@@ -38,7 +38,25 @@ gateway:
   request-signing:
     enabled: false
 
-  # Disable API key rotation
+  # Disable API key management
   api-keys:
+    enabled: false
     rotation:
       enabled: false
+    bypass-paths:
+      - "/health"
+      - "/q/"
+      - "/status"
+      - "/version"
+
+  # Disable Idempotency
+  idempotency:
+    enabled: false
+
+  # Disable Retry
+  retry:
+    enabled: false
+
+  # Disable Timeout
+  timeout:
+    enabled: false

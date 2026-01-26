@@ -6,6 +6,7 @@ import id.payu.wallet.domain.model.WalletTransaction;
 import id.payu.wallet.domain.port.out.WalletEventPublisherPort;
 import id.payu.wallet.domain.port.out.WalletPersistencePort;
 import id.payu.wallet.application.exception.WalletNotFoundException;
+import id.payu.cache.service.CacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,10 +16,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +39,9 @@ class WalletServiceTest {
     @Mock
     private WalletEventPublisherPort walletEventPublisher;
 
+    @Mock
+    private CacheService cacheService;
+
     @InjectMocks
     private WalletService walletService;
 
@@ -44,6 +50,17 @@ class WalletServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Setup default cache behavior to execute the supplier (simulate cache miss/refresh)
+        lenient().when(cacheService.get(anyString(), any(), any())).thenAnswer(inv -> {
+            Supplier<?> supplier = inv.getArgument(2);
+            return supplier.get();
+        });
+
+        lenient().when(cacheService.getWithStaleWhileRevalidate(anyString(), any(), any(), any(), any())).thenAnswer(inv -> {
+            Supplier<?> supplier = inv.getArgument(2);
+            return supplier.get();
+        });
+
         UUID accountId = UUID.randomUUID();
         testWallet = Wallet.builder()
                 .id(UUID.randomUUID())
@@ -69,6 +86,7 @@ class WalletServiceTest {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+// ...
 
     @Test
     @DisplayName("Should get wallet by account ID")

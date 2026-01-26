@@ -65,7 +65,12 @@
       "Bash(VAULT_ENABLED=false mvn clean test:*)",
       "Bash(/home/ubuntu/payu/backend/account-service/src/test/java/id/payu/account/monitoring/MonitoringConfigurationTest.java)",
       "Bash(xargs:*)",
-      "Bash(done:*)"
+      "Bash(done:*)",
+      "Bash(elif:*)",
+      "Bash(then)",
+      "Bash(else)",
+      "Bash(fi:*)",
+      "Bash(for *)"
     ],
     "deny": []
   }

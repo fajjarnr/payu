@@ -20,6 +20,7 @@ public class IdempotencyFilterTest {
     public void testRequestWithIdempotencyKey() {
         given()
             .header("X-Idempotency-Key", IDEMPOTENCY_KEY)
+            .contentType("application/json")
             .when()
             .post("/api/v1/accounts")
             .then()
@@ -34,6 +35,7 @@ public class IdempotencyFilterTest {
         // First request
         given()
             .header("X-Idempotency-Key", idempotencyKey)
+            .contentType("application/json")
             .when()
             .post("/api/v1/accounts")
             .then()
@@ -42,6 +44,7 @@ public class IdempotencyFilterTest {
         // Second request with same key
         given()
             .header("X-Idempotency-Key", idempotencyKey)
+            .contentType("application/json")
             .when()
             .post("/api/v1/accounts")
             .then()
@@ -53,6 +56,7 @@ public class IdempotencyFilterTest {
     @DisplayName("Should allow request without idempotency key")
     public void testRequestWithoutIdempotencyKey() {
         given()
+            .contentType("application/json")
             .when()
             .post("/api/v1/accounts")
             .then()
