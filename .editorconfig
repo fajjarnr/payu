@@ -1,0 +1,65 @@
+# EditorConfig - PayU Digital Banking
+# https://editorconfig.org
+
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Java files
+[*.java]
+indent_size = 4
+max_line_length = 120
+
+# Kotlin files
+[*.{kt,kts}]
+indent_size = 4
+max_line_length = 120
+
+# Python files
+[*.py]
+indent_size = 4
+max_line_length = 88
+
+# XML files (Maven POM, Android layouts)
+[*.xml]
+indent_size = 4
+
+# YAML files
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_size = 2
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = 0
+
+# Shell scripts
+[*.sh]
+indent_size = 2
+
+# Makefile (must use tabs)
+[Makefile]
+indent_style = tab
+
+# SQL files
+[*.sql]
+indent_size = 4
+
+# Dockerfiles
+[Dockerfile*]
+indent_size = 4
+
+# Helm charts
+[*.tpl]
+indent_size = 2
