@@ -480,6 +480,15 @@ setup_project() {
         pre-commit install
         print_success "Pre-commit hooks installed"
     fi
+
+    # Create soft link for AI skills
+    if [ -d ".agent/skills" ]; then
+        echo "Creating soft link for AI skills..."
+        mkdir -p .claude
+        rm -f .claude/skills
+        ln -s ../.agent/skills .claude/skills
+        print_success "Soft link for AI skills created (.claude/skills -> .agent/skills)"
+    fi
     
     print_success "Project setup complete"
 }
