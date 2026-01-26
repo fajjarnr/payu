@@ -6,28 +6,28 @@
 
 ## 📋 Project Overview
 
-**PayU** adalah platform digital banking standalone yang dibangun dengan arsitektur microservices di atas **Red Hat OpenShift 4.20+** ecosystem. Platform ini dirancang sebagai payment infrastructure yang dapat digunakan oleh multiple projects.
+**PayU** adalah platform digital banking standalone yang dibangun dengan arsitektur microservices di atas **Red Hat OpenShift 4.20+** ecosystem. Platform ini dirancang sebagai payment infrastructure berskala enterprise yang dapat digunakan oleh multiple projects.
 
 ### Quick Facts
 
-| Attribute | Value |
-|-----------|-------|
-| **Project Name** | PayU |
-| **Type** | Standalone Digital Banking Platform |
-| **Architecture** | Microservices + Event-Driven |
-| **Platform** | Red Hat OpenShift 4.20+ |
-| **Primary Languages** | Java 21, Python 3.12 |
-| **Last Updated** | January 2026 |
+| Attribute             | Value                                 |
+| --------------------- | ------------------------------------- |
+| **Project Name**      | PayU                                  |
+| **Type**              | Standalone Digital Banking Platform   |
+| **Architecture**      | Scalable Microservices + Event-Driven |
+| **Platform**          | Red Hat OpenShift 4.20+               |
+| **Primary Languages** | Java 21, Python 3.12, TypeScript      |
+| **Last Updated**      | January 2026                          |
 
 ## ⚡ Quick Commands (for AI Agents)
 
-| Action | Command |
-|--------|---------|
-| **Build All** | `mvn clean package -DskipTests -T 1C` |
-| **Run Tests** | `mvn test` |
-| **Local Dev** | `docker-compose up -d` |
-| **Check Logs** | `docker-compose logs -f [service-name]` |
-| **Infrastructure** | `oc get pods` |
+| Action             | Command                                     |
+| ------------------ | ------------------------------------------- |
+| **Build Backend**  | `mvn clean package -DskipTests -T 1C`       |
+| **Run Web App**    | `cd frontend/web-app && npm run dev`        |
+| **Run Dev Docs**   | `cd frontend/developer-docs && npm run dev` |
+| **Infrastructure** | `docker-compose up -d`                      |
+| **Check Services** | `oc get pods` or `docker ps`                |
 
 ---
 
@@ -35,40 +35,54 @@
 
 ### Technology Stack
 
-| Layer | Red Hat Product | Portable Alternative |
-|-------|-----------------|----------------------|
-| **Container Platform** | Red Hat OpenShift 4.20+ | Kubernetes |
-| **Core Banking** | Red Hat Runtimes (Spring Boot 3.4) | Spring Boot |
-| **Supporting Services** | Red Hat Build of Quarkus 3.x | Quarkus |
-| **ML Services** | Python 3.12 (UBI-based) | FastAPI |
-| **Database** | Crunchy PostgreSQL 16 | Any PostgreSQL |
-| **Caching** | Red Hat Data Grid (RESP mode) | Redis, ElastiCache |
-| **Event Streaming** | AMQ Streams (Kafka) | Apache Kafka |
-| **Message Queue** | AMQ Broker (AMQP 1.0) | ActiveMQ Artemis |
-| **Identity** | Red Hat SSO (Keycloak) | Keycloak, Auth0 |
-| **Logging** | OpenShift Logging (LokiStack) | Grafana Loki |
-| **Monitoring** | OpenShift Monitoring | Prometheus/Grafana |
-| **Tracing** | OpenShift Distributed Tracing | Jaeger |
-| **CI/CD** | OpenShift Pipelines + GitOps | Tekton + ArgoCD |
-
-> **Portability Note**: All components use standard APIs (OIDC, RESP, Kafka Protocol, SQL, AMQP).
-> Code remains portable - only configuration changes needed to switch providers.
+| Layer                   | Red Hat Product                    | Portable Alternative |
+| ----------------------- | ---------------------------------- | -------------------- |
+| **Container Platform**  | Red Hat OpenShift 4.20+            | Kubernetes           |
+| **Core Banking**        | Red Hat Runtimes (Spring Boot 3.4) | Spring Boot          |
+| **Supporting Services** | Red Hat Build of Quarkus 3.x       | Quarkus              |
+| **ML/Analytics**        | Python 3.12 (UBI-based)            | FastAPI              |
+| **Database**            | Crunchy PostgreSQL 16              | Any PostgreSQL       |
+| **Caching**             | Red Hat Data Grid (RESP mode)      | Redis, ElastiCache   |
+| **Event Streaming**     | AMQ Streams (Kafka)                | Apache Kafka         |
+| **Message Queue**       | AMQ Broker (Artemis)               | ActiveMQ Artemis     |
+| **Identity**            | Red Hat SSO (Keycloak 24+)         | Keycloak, Auth0      |
+| **Logging**             | OpenShift Logging (LokiStack)      | Grafana Loki         |
+| **Monitoring**          | OpenShift Monitoring               | Prometheus/Grafana   |
+| **Service Mesh**        | OpenShift Service Mesh             | Istio                |
 
 ### Microservices
 
-| Service | Technology | Domain |
-|---------|------------|--------|
-| `account-service` | Spring Boot 3.4 | User accounts, eKYC, multi-pocket |
-| `auth-service` | Spring Boot 3.4 + Red Hat SSO | Authentication, MFA, OAuth2 |
-| `transaction-service` | Spring Boot 3.4 | Transfers, BI-FAST, QRIS |
-| `wallet-service` | Spring Boot 3.4 | Balance management, ledger |
-| `billing-service` | Quarkus 3.x Native | Bill payments, top-ups |
-| `notification-service` | Quarkus 3.x Native | Push, SMS, Email |
-| `gateway-service` | Quarkus 3.x Native | API Gateway |
-| `compliance-service` | Spring Boot 3.4 | Regulatory audits |
-| `support-service` | Quarkus 3.x Native | Support training |
-| `kyc-service` | Python FastAPI | OCR, liveness detection ML |
-| `analytics-service` | Python FastAPI | User insights, ML |
+| Service                | Technology         | Domain                                     |
+| ---------------------- | ------------------ | ------------------------------------------ |
+| `account-service`      | Spring Boot 3.4    | User accounts, profile, multi-pocket       |
+| `auth-service`         | Spring Boot 3.4    | Authentication, Risk-based MFA, Biometrics |
+| `transaction-service`  | Spring Boot 3.4    | Transfers, BI-FAST, QRIS, Sharding         |
+| `wallet-service`       | Spring Boot 3.4    | Double-entry ledger, balance management    |
+| `investment-service`   | Spring Boot 3.4    | Mutual funds, Gold, Robo-advisory          |
+| `lending-service`      | Spring Boot 3.4    | Loans, PayLater, Credit Scoring            |
+| `fx-service`           | Spring Boot 3.4    | Currency exchange rates & conversion       |
+| `statement-service`    | Spring Boot 3.4    | PDF E-Statement generation                 |
+| `backoffice-service`   | Spring Boot 3.4    | Internal admin dashboard, audit            |
+| `partner-service`      | Spring Boot 3.4    | Partner integration & management           |
+| `promotion-service`    | Spring Boot 3.4    | Promo campaigns, vouchers, rewards         |
+| `support-service`      | Spring Boot 3.4    | Customer support, ticketing                |
+| `compliance-service`   | Spring Boot 3.4    | Regulatory compliance, AML                 |
+| `billing-service`      | Quarkus 3.x Native | Bill payments (PLN, PDAM, etc)             |
+| `notification-service` | Quarkus 3.x Native | Push, SMS, Email, WhatsApp                 |
+| `gateway-service`      | Quarkus 3.x Native | API Gateway, Rate limiting                 |
+| `cms-service`          | Spring Boot 3.4    | Banners, Promos, Dynamic Content           |
+| `ab-testing-service`   | Spring Boot 3.4    | UI/Feature experimentation                 |
+| `api-portal-service`   | Quarkus 3.x Native | Centralized OpenAPI Docs & Sandbox         |
+| `kyc-service`          | Python FastAPI     | OCR, Liveness Detection                    |
+| `analytics-service`    | Python FastAPI     | Fraud Scoring, User Insights               |
+
+### Shared Libraries (backend/shared/)
+
+| Library              | Purpose                                         |
+| -------------------- | ----------------------------------------------- |
+| `security-starter`   | Field encryption, Data masking, Audit logging   |
+| `resilience-starter` | Circuit Breaker, Retry, Bulkhead (Resilience4j) |
+| `cache-starter`      | Multi-layer caching (Redis + Caffeine)          |
 
 ---
 
@@ -76,282 +90,155 @@
 
 ```
 payu/
-├── .agent/              # AI agent skills and workflows
+├── .agent/              # AI agent skills and workflows (11 skills)
+├── backend/             # Microservices implementation (20+ services)
+│   ├── shared/          # Shared Spring Boot starters
+│   │   ├── security-starter/    # PII encryption, audit logging
+│   │   ├── resilience-starter/  # Circuit breaker, retry, bulkhead
+│   │   └── cache-starter/       # Multi-layer caching
+│   ├── simulators/      # External service mocks
+│   │   ├── bi-fast-simulator/   # BI-FAST mock
+│   │   ├── dukcapil-simulator/  # Dukcapil mock
+│   │   └── qris-simulator/      # QRIS mock
+│   └── [services]/      # Individual service implementations
+├── frontend/            # All frontend applications
+│   ├── web-app/         # Digital Banking UI (Next.js 15+)
+│   ├── mobile/          # Mobile App (Expo/React Native)
+│   └── developer-docs/  # Partner Portal (Next.js)
 ├── docs/                # Project documentation
 │   ├── architecture/    # ARCHITECTURE.md
 │   ├── product/         # PRD.md
-│   ├── operations/      # DISASTER_RECOVERY.md
-│   ├── security/        # PENTEST_REPORT.md
+│   ├── operations/      # Runbooks, DISASTER_RECOVERY.md
 │   ├── guides/          # GEMINI.md, CONTRIBUTING.md
-│   └── roadmap/         # TODOS.md
-├── CHANGELOG.md         # Version history
-├── README.md            # Project overview
-├── docker-compose.yml   # Local development infrastructure
-├── backend/             # Microservices implementation
-└── infrastructure/      # Kubernetes/OpenShift manifests
+│   └── security/        # Security policies
+├── infrastructure/      # OpenShift, Helm, Tekton, ArgoCD
+├── scripts/             # Automation scripts (backup, deploy, test)
+├── tests/               # Gatling (Performance), Pytest (Regression), E2E
+├── .editorconfig        # Code formatting rules
+├── .env.example         # Environment variables template
+├── CODE_OF_CONDUCT.md   # Community guidelines
+├── LICENSE              # Proprietary license
+├── SECURITY.md          # Security policy
+└── CHANGELOG.md         # Detailed version history
 ```
 
 ---
 
 ## 🛠️ Development Guidelines
 
-### Spring Boot Services (Core Banking)
+### Standard Operating Procedures (SOP)
 
-**Technology Stack:**
-- **Runtime:** Java 21
-- **Framework:** Spring Boot 3.4.x
-- **Messaging:** Spring Kafka (AMQ Streams)
-- **Cache:** Spring Data Redis (Data Grid RESP mode)
-- **Database:** Spring Data JPA + PostgreSQL
-
-**Commands:**
-```bash
-cd backend/account-service
-mvn spring-boot:run     # Development
-mvn clean package       # Build
-mvn test                # Run tests (Unit + Architecture)
-mvn test jacoco:report  # Run tests with coverage
-```
-
-**Testing Stack:**
-- **JUnit 5 + Mockito** - Unit testing
-- **Testcontainers** - Integration testing (PostgreSQL, Kafka)
-- **ArchUnit** - Architecture rule enforcement
-- **JaCoCo** - Code coverage reporting
-
-### Quarkus Services (Supporting)
-
-**Technology Stack:**
-- **Runtime:** Java 21 (GraalVM Native)
-- **Framework:** Quarkus 3.x
-- **Messaging:** SmallRye Reactive Messaging (AMQ)
-- **Cache:** Quarkus Redis (Data Grid RESP mode)
-- **Database:** Quarkus Hibernate ORM + PostgreSQL
-
-**Commands:**
-```bash
-cd backend/billing-service
-./mvnw quarkus:dev                    # Development (hot reload)
-./mvnw package -Pnative               # Native build
-./mvnw package -Dquarkus.container-image.build=true  # Container build
-```
-
-### Python Services (ML/Data)
-
-**Technology Stack:**
-- **Runtime:** Python 3.12 (UBI-based)
-- **Framework:** FastAPI
-- **ML:** PyTorch, scikit-learn
-- **Database:** asyncpg + PostgreSQL
-
-**Commands:**
-```bash
-cd backend/kyc-service
-pip install -r requirements.txt
-uvicorn app.main:app --reload   # Development
-pytest                          # Run tests
-```
-
----
-
-## 📚 Context7 Integration
-
-Untuk mendapatkan dokumentasi terbaru, gunakan Context7 MCP:
-
-### Recommended Libraries
-
-| Library | Context7 ID | Use Case |
-|---------|-------------|----------|
-| **Spring Boot** | `/spring-projects/spring-boot` | Core banking services |
-| **Quarkus** | `/quarkusio/quarkus` | Supporting services |
-| **FastAPI** | `/tiangolo/fastapi` | ML services |
-| **Kafka** | `/apache/kafka` | Event streaming |
-| **PostgreSQL** | `/postgres/postgres` | Database |
-
-### How to Query
-
-```
-# Untuk Spring Boot patterns
-Context7 Library: /spring-projects/spring-boot
-Query: "Spring Data JPA with PostgreSQL JSONB"
-
-# Untuk Quarkus patterns
-Context7 Library: /quarkusio/quarkus
-Query: "Quarkus native image with Redis client"
-```
-
----
-
-## 🎯 AI Assistant Instructions
-
-### When Working on Core Banking (Spring Boot)
-
-1. **Use Spring Boot 3.4.x** - Latest version with Java 21
-2. **Spring Data JPA** - For PostgreSQL access
-3. **Spring Data Redis** - For Data Grid access (RESP mode)
-4. **Spring Kafka** - For AMQ Streams
-5. **Axon Framework** - For CQRS/Event Sourcing (optional)
-
-### When Working on Supporting Services (Quarkus)
-
-1. **Use Quarkus 3.x** - Target native compilation
-2. **Prefer reactive** - Use Mutiny for async operations
-3. **SmallRye extensions** - For messaging and health
-4. **Quarkus Redis** - Use RESP protocol for Data Grid compatibility
-
-### When Working on ML Services (Python)
-
-1. **Use FastAPI** - Async by default
-2. **asyncpg** - For PostgreSQL async access
-3. **PyTorch/scikit-learn** - For ML models
-4. **UBI base image** - For OpenShift compatibility
-
-### Database Guidelines
-
-1. **PostgreSQL JSONB** - For document-like data (instead of MongoDB)
-2. **Standard SQL** - Avoid vendor-specific extensions
-3. **Flyway/Liquibase** - For schema migrations
-4. **Connection pooling** - Use HikariCP (Spring) or Agroal (Quarkus)
-
-### Cache Guidelines
-
-1. **Use Redis API** - Standard `spring-data-redis` or `quarkus-redis-client`
-2. **RESP protocol** - For Data Grid compatibility
-3. **Portable code** - Switch providers via config only
-
-### Code Style
-
-- **Naming:** camelCase untuk variables/functions, PascalCase untuk classes
-- **File naming:** kebab-case untuk files
-- **Packages:** `id.payu.<service>.<layer>`
-- **Error Handling:** Always handle errors with proper logging
+1. **Shared Starters**: Selalu gunakan `security-starter`, `resilience-starter`, dan `cache-starter` untuk fitur-fitur cross-cutting. Jangan implementasi manual di level service.
+2. **DTO First**: Definisikan DTO/Request/Response di package `interfaces.dto` sebelum implementasi logic.
+3. **Port-Adapter Interface**: Gunakan Hexagonal Architecture untuk core services. Semua external communication harus lewat Port interface di domain layer.
+4. **Error Handling**: Gunakan `GlobalExceptionHandler` dan custom `BusinessException` dengan error codes yang unik (e.g., `ACC_001`).
 
 ### Testing Guidelines (TDD)
 
-1. **Write tests first** - Red-Green-Refactor cycle
-2. **Unit Tests** - MockitoExtension for service layer (NO external dependencies)
-3. **Controller Tests** - @WebMvcTest with security context
-4. **Architecture Tests** - ArchUnit for layered architecture enforcement
-5. **Integration Tests** - Testcontainers for PostgreSQL/Kafka
-6. **Configuration Tests** - Validate @ConfigMapping properties at compile time
-7. **Contract Tests** - Ensure interface stability between services
-
-**Test Structure:**
-```
-src/test/java/id/payu/<service>/
-├── service/           # Unit tests (Mockito)
-├── controller/        # WebMvcTest
-├── architecture/      # ArchUnit rules
-├── config/            # Configuration validation tests
-└── integration/       # Testcontainers
-```
-
-**Error Prevention:**
-- ✅ **Pre-commit hooks** required (validate compilation, unit tests, architecture)
-- ✅ **Interface-first design** (define ports before implementation)
-- ✅ **Test pyramid** (70% unit, 20% integration, 10% E2E)
-- ✅ **No external deps in unit tests** (mock everything)
-
-**For detailed TDD practices, use the `/tdd-practices` skill.**
-
-### Clean Architecture (Hybrid)
-
-| Service Type | Architecture | Reason |
-|-------------|--------------|--------|
-| Core Banking | Clean/Hexagonal | Complex business logic, high testability |
-| Supporting | Layered | Mostly CRUD, simpler |
-| ML Services | Simplified Clean | Focus on ML logic |
-
-### 🎨 Frontend Design System (Premium Emerald)
-
-Untuk menjaga konsistensi UI yang premium dan modern:
-1. **Layout**: Selalu gunakan `DashboardLayout` untuk halaman terautentikasi (main app).
-2. **Color Palette**:
-   - Primary: `bank-green` (#10b981) - Gunakan untuk action buttons dan brand primary.
-   - Secondary: `bank-emerald` (#059669) - Gunakan untuk gradients dan hover states.
-   - Background: `bg-background` (bg-white / dark:bg-gray-950) - Gunakan `bg-card` untuk mobile cards.
-3. **Typography**:
-   - Menggunakan Google Fonts **Inter** atau **Outfit**.
-   - Headers: Gunakan `font-black` (900) dengan `tracking-tighter` untuk kesan premium.
-   - Body: Gunakan `font-medium` (500) untuk readability.
-4. **Components Style**:
-   - Radius: Gunakan `rounded-[2.5rem]` untuk main cards dan `rounded-3xl` untuk modal/small cards.
-   - Border: Gunakan `border-border` yang sangat halus (gray-100/800).
-   - Shadows: Gunakan `shadow-2xl shadow-bank-green/20` untuk primary buttons.
-5. **Data Formatting**:
-   - Mata Uang: Selalu gunakan format Rupiah (`Rp 1.000.000`).
-   - Angka: Gunakan `toLocaleString('id-ID')`.
-6. **Mobile First**: Pastikan layout responsif dengan `MobileNav` dan `MobileHeader` yang konsisten.
-
-### Git & Changelog Policy ⚠️
-
-Setiap kali melakukan perubahan kode yang signifikan:
-1. **Update CHANGELOG.md**:
-   - Tambahkan entri di bawah `[Unreleased]` sesuai format Keep a Changelog.
-   - **Versioning**: Gunakan **Semantic Versioning** (Major.Minor.Patch) untuk memberi tag pada kumpulan perubahan (misal: `[1.0.1] - 2026-01-25`).
-2. **Git Commit**: Gunakan conventional commits (`feat:`, `fix:`, `docs:`, `refactor:`)
-3. **Git Push**: Push ke remote repository setelah selesai.
+1. **Unit Tests**: 100% logic coverage menggunakan JUnit 5 & Mockito.
+2. **ArchUnit**: Pastikan setiap service baru memiliki `ArchitectureTest` untuk menjaga layering.
+3. **Testcontainers**: Gunakan untuk integration tests yang membutuhkan PostgreSQL atau Kafka (jika enviroment memungkinkan).
 
 ---
 
-## � Excluded Domains (Human-Managed)
+## 🎨 Frontend Design System (Premium Emerald)
 
-> **PENTING**: Area berikut TIDAK boleh diimplementasikan oleh AI assistant. 
-> Ini akan ditangani oleh DevOps Engineer secara manual.
+Untuk menjaga konsistensi UI yang premium:
 
-### ❌ DO NOT Implement:
-
-| Domain | Examples | Reason |
-|--------|----------|--------|
-| **DevOps/SRE** | CI/CD pipelines, Tekton configs | Human-managed |
-| **Infrastructure** | OpenShift manifests, Helm charts | Human-managed |
-| **Monitoring Setup** | Prometheus rules, Grafana dashboards | Human-managed |
-| **Logging Setup** | LokiStack configs, Promtail | Human-managed |
-| **GitOps** | ArgoCD applications, sync configs | Human-managed |
-| **Network Policies** | Ingress, egress rules | Human-managed |
-| **Secrets Management** | Vault policies, sealed secrets | Human-managed |
-| **Disaster Recovery** | Backup scripts, restore procedures | Human-managed |
-
-### ✅ What AI CAN Do:
-
-- Application code (backend, frontend, mobile)
-- Unit tests, integration tests
-- Database migrations (Flyway scripts)
-- API documentation (OpenAPI specs)
-- Application-level configs (application.yml)
-- Dockerfiles (for application containers only)
-- README documentation
-
-### When Asked About DevOps:
-
-Jika user meminta implementasi DevOps/SRE, respond dengan:
-
-> "Area DevOps/SRE di-manage secara manual oleh DevOps Engineer. 
-> Saya dapat membantu dengan application code, tests, dan dokumentasi. 
-> Untuk perubahan infrastructure, silakan koordinasi dengan DevOps team."
+1. **Color Palette**: Primary `bank-green` (#10b981), Background `bg-gray-950` (Dark Mode).
+2. **Typography**: Inter (UI) dan Outfit (Headers).
+3. **Aesthetics**: Glassmorphism, smooth gradients, subtle micro-animations.
+4. **A11y**: Pastikan komponen support screen readers dan keyboard navigation (pake `@src/lib/a11y.tsx`).
 
 ---
 
-## �🔗 Related Resources
+## 🛡️ Security & Compliance
 
-| Resource | Path |
-|----------|------|
-| Resource | Path |
-|----------|------|
-| Architecture | `docs/architecture/ARCHITECTURE.md` |
-| Product Requirements | `docs/product/PRD.md` |
-| Changelog | `CHANGELOG.md` |
-| README | `README.md` |
-| Roadmap | `docs/roadmap/TODOS.md` |
+AI Assistant harus mematuhi aturan keamanan berikut:
+
+1. **PII Protection**: Data sensitif (NIK, PIN, Phone) harus di-mask di logs dan di-encrypt di DB (pake `@Sensitive` & `security-starter`).
+2. **No Credentials**: Jangan pernah menuliskan password/key di `application.yml`. Gunakan placeholder atau Vault reference.
+3. **Idempotency**: Semua API kritis (transfer, payment) harus mendukung idempotency key.
 
 ---
 
-## 📞 Support
+## 🚫 Excluded Scope (DevOps/SRE)
 
-- **Backend Issues:** backend-team@payu.id
-- **Platform Issues:** platform-team@payu.id
-- **Architecture:** architect@payu.id
+AI Assistant **TIDAK BOLEH** mengimplementasikan kode atau konfigurasi untuk area berikut:
+
+### Infrastructure & Platform
+
+- Kubernetes manifests, Helm charts, OpenShift configurations
+- Terraform, Ansible, atau IaC (Infrastructure as Code)
+- Container registry, image builds, Dockerfile optimizations
+
+### Ketika diminta untuk area di atas:
+
+1. Tolak dengan sopan dan jelaskan bahwa ini adalah tanggung jawab tim DevOps/SRE
+2. Arahkan user ke folder `infrastructure/` untuk referensi
+3. Sarankan untuk berkonsultasi dengan tim operations
 
 ---
 
-*Last Updated: January 2026*
+## 📚 Learning Allowed (DevOps & Security)
+
+AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
+
+### CI/CD & Pipelines
+
+| Area | Contoh | AI Dapat Membantu |
+|------|--------|-------------------|
+| **Tekton Pipelines** | Pipeline, Task, TriggerTemplate | ✅ Explain & implement |
+| **ArgoCD** | Application manifests, sync policies | ✅ Explain & implement |
+
+### Observability & Monitoring
+
+| Area | Contoh | AI Dapat Membantu |
+|------|--------|-------------------|
+| **Log Aggregation** | LokiStack, Promtail, log queries | ✅ Explain & implement |
+| **Observability Setup** | Prometheus, Grafana, dashboards | ✅ Explain & implement |
+| **Distributed Tracing** | Jaeger, OpenTelemetry | ✅ Explain & implement |
+
+### Service Mesh & Networking
+
+| Area | Contoh | AI Dapat Membantu |
+|------|--------|-------------------|
+| **Istio** | VirtualService, DestinationRule, mTLS | ✅ Explain & implement |
+| **Traffic Management** | Canary, Blue-Green, Circuit Breaking | ✅ Explain & implement |
+| **Load Balancer** | Ingress configuration, routing | ✅ Explain & implement |
+
+### Security Infrastructure
+
+| Area | Contoh | AI Dapat Membantu |
+|------|--------|-------------------|
+| **Secret Management** | HashiCorp Vault setup, secret injection | ✅ Explain & implement |
+| **Certificate Management** | TLS certificates, mTLS, rotation | ✅ Explain & implement |
+| **WAF Configuration** | ModSecurity rules, OWASP CRS | ✅ Explain & implement |
+| **SSO/Keycloak** | Realm config, client setup, OIDC | ✅ Explain & implement |
+| **Network Policies** | Pod-to-pod security, ingress rules | ✅ Explain & implement |
+
+> **Note**: Ini adalah lab project, jadi AI dapat membantu implementasi untuk pembelajaran.
+
+---
+
+## 🤖 Available AI Skills
+
+Skills yang tersedia di `.agent/skills/`:
+
+| Skill                        | Description                                |
+| ---------------------------- | ------------------------------------------ |
+| `api-design`                 | REST API standards, OpenAPI, versioning    |
+| `backend-engineer`           | Java/Python microservice development       |
+| `code-review`                | Code review guidelines & best practices    |
+| `container-specialist`       | Docker, containerization best practices    |
+| `database-specialist`        | PostgreSQL, JSONB, migrations, performance |
+| `event-driven-architecture`  | Kafka, Saga patterns, event sourcing       |
+| `frontend-development`       | Next.js, React, TypeScript patterns        |
+| `payu-development`           | PayU-specific conventions & patterns       |
+| `qa-expert`                  | Testing strategies, quality assurance      |
+| `security-specialist`        | Application security, encryption, auth     |
+| `tdd-practices`              | TDD workflow, error prevention, test pyramid |
+
+---
+
+_Last Updated: January 2026_

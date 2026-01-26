@@ -1,5 +1,24 @@
 # PayU Backend Services Status
 
+> **Last Updated**: January 26, 2026  
+> **Total Services**: 22 (19 microservices + 3 simulators)  
+> **Lab Status**: ✅ Feature Complete | ⚠️ TDD In Progress
+
+---
+
+## Quick Test Status
+
+| Status | Count | Services |
+|--------|-------|----------|
+| ✅ Tests Passing | 6 | account, auth, support, billing*, notification*, transaction* |
+| ⚠️ Docker Required | 5 | transaction-int, billing-int, notification-int, partner, backoffice |
+| ❌ Needs Tests | 8 | wallet, investment, lending, fx, statement, cms, ab-testing, promotion |
+| 🔴 Blocked | 2 | kyc (Python libs), analytics (Python libs) |
+
+*Unit tests pass, integration tests need Docker
+
+---
+
 ## Services Overview
 
 ### ✅ Completed Services
@@ -191,19 +210,61 @@
 
 ## Testing Infrastructure
 
+### Test Commands Quick Reference
+
+```bash
+# Spring Boot Services
+cd backend/<service> && mvn test                    # Run all tests
+cd backend/<service> && mvn test -Dtest=*Test       # Unit tests only
+cd backend/<service> && mvn test jacoco:report      # With coverage
+
+# Quarkus Services  
+cd backend/<service> && ./mvnw test                 # Run all tests
+cd backend/<service> && ./mvnw test -Dtest=*Test    # Unit tests only
+
+# Python Services
+cd backend/<service> && pytest -v                   # Run all tests
+cd backend/<service> && pytest --cov=src            # With coverage
+
+# Full Suite (when working)
+./scripts/run-all-tests.sh
+./scripts/test-single-service.sh <service-name>
+```
+
+### Test Categories
+
+| Category | Framework | Scope |
+|----------|-----------|-------|
+| Unit Tests | JUnit 5 / Mockito / pytest | Isolated business logic |
+| Architecture Tests | ArchUnit | Layer dependency enforcement |
+| Controller Tests | @WebMvcTest / @QuarkusTest | REST API endpoints |
+| Integration Tests | Testcontainers | PostgreSQL, Kafka, Keycloak |
+| E2E Tests | Full workflow | Complete user journeys |
+
+### Known Issues & Fixes
+
+| Issue | Affected Services | Fix |
+|-------|-------------------|-----|
+| Testcontainers Docker | billing, notification, partner, backoffice | Start Docker daemon |
+| EncryptionService Bean | All using security-starter | Add @ConditionalOnProperty |
+| Resilience4j 2.x API | All using resilience-starter | Update to new builder API |
+| Python shared libs | kyc, analytics | Inline or create shared package |
+| Gateway env config | gateway-service | Mock Redis/Keycloak in tests |
+
 ### E2E Tests
 - ✅ KYC Service E2E: Complete workflow (start → KTP → selfie → verified)
 - ✅ Analytics Service E2E: Complete user journey with analytics
 - ✅ docker-compose.test.yml: Complete test environment
 
 ### Unit Tests
-- ✅ Account Service: Service, Controller, Architecture tests
-- ✅ Auth Service: Integration tests with Keycloak
-- ✅ Wallet Service: Service, Controller, Architecture tests
-- ✅ Transaction Service: Service, Architecture tests
-- ✅ Billing Service: Service, Controller, Architecture, Integration tests
-- ✅ Notification Service: Service, Resource, Architecture, Integration tests
-- ✅ Gateway Service: Filter, Health tests
+- ✅ Account Service: Service, Controller, Architecture tests (40 tests)
+- ✅ Auth Service: Integration tests with Keycloak (67 tests)
+- ✅ Wallet Service: Service, Controller, Architecture tests (compiles)
+- ✅ Transaction Service: Service, Architecture tests (60 tests)
+- ✅ Billing Service: Service, Controller, Architecture, Integration tests (51 tests)
+- ✅ Notification Service: Service, Resource, Architecture, Integration tests (51 tests)
+- ⚠️ Gateway Service: Filter, Health tests (49/94 passing)
+- ✅ Support Service: ALL PASSING (17 tests) - Reference implementation
 - ✅ KYC Service: OCR, Liveness, Face, Dukcapil unit tests
 - ✅ Analytics Service: Recommendation engine, Analytics service tests
 
@@ -211,22 +272,25 @@
 
 ## Summary
 
-**Status**: All 19 services are ✅ **COMPLETED** with:
+**Status**: All 22 services are ✅ **IMPLEMENTED** with:
 - Full implementation
 - Dockerfiles (UBI9 compliant)
-- Database migrations
+- Database migrations (Flyway)
 - Kafka integration
 - Monitoring (Prometheus + OpenTelemetry)
-- Tests (unit, integration, E2E)
+
+**Test Status**: ⚠️ **IN PROGRESS**
+- Unit tests: ~60% services passing
+- Integration tests: Blocked by Docker/Testcontainers
+- Shared libraries: Need fixes
 
 **Ready for**: 
 - Docker Compose local development
 - OpenShift deployment
-- Integration testing
-- Load testing
+- Demo/presentation
 
-**Next Steps** (if needed):
-1. Complete integration tests between all services
-2. Add load tests (Gatling/JMeter)
-3. Security hardening and penetration testing
-4. Production deployment to OpenShift
+**Needs Work**:
+1. Fix shared library issues (security-starter, resilience-starter)
+2. Complete unit tests for all services
+3. Fix integration test Docker dependencies
+4. Achieve 80% coverage target

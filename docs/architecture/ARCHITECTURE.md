@@ -41,23 +41,22 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 
 ### Technology Stack Overview
 
-| Layer | Red Hat Product | Portable Alternative |
-|-------|-----------------|----------------------|
-| **Container Platform** | Red Hat OpenShift 4.20+ | Kubernetes (EKS/GKE/AKS) |
-| **Core Banking Services** | Red Hat Runtimes (Spring Boot 3.4) | Spring Boot |
-| **Supporting Services** | Red Hat Build of Quarkus 3.x | Quarkus |
-| **ML/Data Services** | Python 3.12 (UBI-based) | Python FastAPI |
-| **API Gateway** | Red Hat Build of Quarkus | Any API Gateway |
-| **Event Streaming** | AMQ Streams (Kafka) | Apache Kafka, Confluent |
-| **Message Queue** | AMQ Broker (Artemis) | ActiveMQ Artemis, RabbitMQ |
-| **Database** | Crunchy PostgreSQL 16 | Any PostgreSQL |
-| **Caching** | Red Hat Data Grid (RESP mode) | Redis, ElastiCache |
-| **Identity & Access** | Red Hat SSO (Keycloak) 24 | Keycloak, Auth0 |
-| **Service Mesh** | OpenShift Service Mesh | Istio, Linkerd |
-| **Logging** | OpenShift Logging (LokiStack) | Grafana Loki |
-| **Monitoring** | OpenShift Monitoring | Prometheus/Grafana |
-| **Tracing** | OpenShift Distributed Tracing | Jaeger, Tempo |
-| **CI/CD** | OpenShift Pipelines + GitOps | Tekton + ArgoCD |
+| Layer                     | Red Hat Product                      | Portable Alternative       |
+| ------------------------- | ------------------------------------ | -------------------------- |
+| **Container Platform**    | Red Hat OpenShift 4.20+              | Kubernetes (EKS/GKE/AKS)   |
+| **Core Banking Services** | Red Hat Runtimes (Spring Boot 3.4)   | Spring Boot                |
+| **Supporting Services**   | Red Hat Build of Quarkus 3.x         | Quarkus                    |
+| **ML/Data Services**      | Python 3.12 (UBI-based)              | Python FastAPI             |
+| **API Gateway**           | Red Hat Build of Quarkus             | Any API Gateway            |
+| **Event Streaming**       | AMQ Streams (Kafka)                  | Apache Kafka, Confluent    |
+| **Message Queue**         | AMQ Broker (Artemis)                 | ActiveMQ Artemis, RabbitMQ |
+| **Database**              | Crunchy PostgreSQL 16                | Any PostgreSQL             |
+| **Caching**               | Red Hat Data Grid (RESP mode)        | Redis, ElastiCache         |
+| **Identity & Access**     | Red Hat SSO (Keycloak) 24            | Keycloak, Auth0            |
+| **Service Mesh**          | OpenShift Service Mesh               | Istio, Linkerd             |
+| **Logging**               | OpenShift Logging (LokiStack)        | Grafana Loki               |
+| **Monitoring**            | OpenShift Monitoring                 | Prometheus/Grafana         |
+| **Shared Libraries**      | Security, Resilience, Cache Starters | Spring Boot Starters       |
 
 > **Portability Note**: All components use standard APIs (OIDC, RESP, Kafka Protocol, SQL, AMQP).
 > Code remains portable - only configuration changes needed to switch providers.
@@ -69,24 +68,27 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 │                  RED HAT OPENSHIFT 4.20+ ECOSYSTEM                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  CORE BANKING (Red Hat Runtimes)       SUPPORTING (Red Hat Build of Quarkus)│
-│  ┌───────────────────────────────┐    ┌───────────────────────────────┐     │
-│  │ account-service               │    │ gateway-service               │     │
-│  │ auth-service                  │    │ billing-service               │     │
-│  │ transaction-service           │    │ notification-service          │     │
-│  │ wallet-service                │    │ card-service                  │     │
-│  │                               │    │ promotion-service             │     │
-│  │ Spring Boot 3.4               │    │ Quarkus 3.x Native            │     │
-│  │ ✓ Axon Framework (CQRS/ES)    │    │ ✓ <50ms startup, <50MB RAM    │     │
-│  │ ✓ Strong ACID transactions    │    │ ✓ Redis-compatible (RESP)     │     │
-│  └───────────────────────────────┘    └───────────────────────────────┘     │
+│  CORE BANKING (Spring Boot 3.4)        SUPPORTING (Spring Boot 3.4)         │
+│  ┌──────────────────────────────┐     ┌─────────────────────────────────┐    │
+│  │ account-svc   auth-svc       │     │ backoffice-svc  partner-svc     │    │
+│  │ transaction-svc wallet-svc   │     │ promotion-svc   support-svc     │    │
+│  │ investment-svc lending-svc   │     │ compliance-svc  cms-svc         │    │
+│  │ fx-svc  statement-svc        │     │ ab-testing-svc                  │    │
+│  └──────────────────────────────┘     └─────────────────────────────────┘    │
 │                                                                              │
-│  ML/DATA (Python 3.12 UBI)            DATA LAYER                            │
-│  ┌───────────────────────────────┐    ┌───────────────────────────────┐     │
-│  │ kyc-service (OCR, liveness)   │    │ PostgreSQL 16 (JSONB)         │     │
-│  │ analytics-service (ML)        │    │ Red Hat Data Grid (RESP)      │     │
-│  │ recommendation-service        │    │ OpenShift Elasticsearch       │     │
-│  └───────────────────────────────┘    └───────────────────────────────┘     │
+│  NATIVE SERVICES (Quarkus 3.x)         ML/DATA (Python 3.12 UBI)            │
+│  ┌──────────────────────────────┐     ┌─────────────────────────────────┐    │
+│  │ gateway-svc   billing-svc    │     │ kyc-svc (OCR, liveness)         │    │
+│  │ notification-svc             │     │ analytics-svc (Fraud ML)        │    │
+│  │ api-portal-svc               │     │                                 │    │
+│  └──────────────────────────────┘     └─────────────────────────────────┘    │
+│                                                                              │
+│  SHARED LIBRARIES (Java)               SIMULATORS                           │
+│  ┌──────────────────────────────┐     ┌─────────────────────────────────┐    │
+│  │ security-starter (PII, Audit)│     │ bi-fast-simulator               │    │
+│  │ resilience-starter (Circuit) │     │ dukcapil-simulator              │    │
+│  │ cache-starter (L2 Caching)   │     │ qris-simulator                  │    │
+│  └──────────────────────────────┘     └─────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -175,14 +177,14 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 
 ### 2.2 Design Principles
 
-| Principle | Implementation |
-|-----------|----------------|
-| **Domain-Driven Design** | Services aligned with banking domains |
-| **Database per Service** | Each service owns its data store |
-| **Event Sourcing** | Complete audit trail for all transactions |
-| **CQRS** | Separated read/write models for performance |
-| **Saga Pattern** | Distributed transaction management |
-| **Zero Trust** | mTLS between all services |
+| Principle                | Implementation                              |
+| ------------------------ | ------------------------------------------- |
+| **Domain-Driven Design** | Services aligned with banking domains       |
+| **Database per Service** | Each service owns its data store            |
+| **Event Sourcing**       | Complete audit trail for all transactions   |
+| **CQRS**                 | Separated read/write models for performance |
+| **Saga Pattern**         | Distributed transaction management          |
+| **Zero Trust**           | mTLS between all services                   |
 
 ---
 
@@ -191,38 +193,49 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 ### 3.1 Service Decomposition
 
 ```
-                              ┌─────────────────────────────────────┐
-                              │           CORE BANKING              │
-                              └─────────────────────────────────────┘
-                                             │
-         ┌───────────────┬───────────────┬───┴───┬───────────────┬───────────────┐
-         │               │               │       │               │               │
-    ┌────▼────┐    ┌─────▼─────┐   ┌─────▼─────┐ ┌▼────────────┐ ┌▼────────────┐ │
-    │ Account │    │   Auth    │   │Transaction│ │   Wallet    │ │  Billing    │ │
-    │ Service │    │  Service  │   │  Service  │ │   Service   │ │  Service    │ │
-    └─────────┘    └───────────┘   └───────────┘ └─────────────┘ └─────────────┘ │
-                                                                                  │
-                              ┌─────────────────────────────────────┐            │
-                              │         SUPPORTING SERVICES         │            │
-                              └─────────────────────────────────────┘            │
-                                             │                                    │
-    ┌───────────────┬───────────────┬────────┴────┬───────────────┬─────────────┘
-    │               │               │             │               │
-┌───▼───────┐ ┌─────▼─────┐ ┌───────▼─────┐ ┌─────▼─────┐ ┌───────▼─────┐
-│    KYC    │ │Notification│ │  Analytics  │ │   Card    │ │  Promotion  │
-│  Service  │ │  Service   │ │   Service   │ │  Service  │ │   Service   │
-└───────────┘ └────────────┘ └─────────────┘ └───────────┘ └─────────────┘
+                               ┌─────────────────────────────────────┐
+                               │           CORE BANKING              │
+                               └─────────────────────────────────────┘
+                                              │
+         ┌───────────────┬───────────────┬────┴────┬───────────────┬───────────────┐
+         │               │               │         │               │               │
+    ┌────▼────┐    ┌─────▼─────┐   ┌─────▼─────┐ ┌─▼───────────┐ ┌─▼───────────┐ ┌─▼───────────┐
+    │ Account │    │   Auth    │   │Transaction│ │   Wallet    │ │ Investment  │ │  Lending    │
+    │ Service │    │  Service  │   │  Service  │ │   Service   │ │  Service    │ │  Service    │
+    └─────────┘    └───────────┘   └───────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+
+                               ┌─────────────────────────────────────┐
+                               │         SUPPORTING SERVICES         │
+                               └─────────────────────────────────────┘
+                                              │
+    ┌───────────────┬───────────────┬─────────┴──────┬───────────────┬───────────────┐
+    │               │               │                │               │               │
+┌───▼───────┐ ┌─────▼─────┐ ┌───────▼─────┐ ┌────────▼─────┐ ┌───────▼─────┐ ┌───────▼─────┐
+│    KYC    │ │Notification│ │  Analytics  │ │   Gateway    │ │   Billing   │ │     CMS     │
+│  Service  │ │  Service   │ │   Service   │ │   Service    │ │   Service   │ │   Service   │
+└───────────┘ └────────────┘ └─────────────┘ └──────────────┘ └─────────────┘ └─────────────┘
+
+                               ┌─────────────────────────────────────┐
+                               │         ADDITIONAL SERVICES         │
+                               └─────────────────────────────────────┘
+                                              │
+    ┌───────────────┬───────────────┬─────────┴──────┬───────────────┬───────────────┐
+    │               │               │                │               │               │
+┌───▼───────┐ ┌─────▼─────┐ ┌───────▼─────┐ ┌────────▼─────┐ ┌───────▼─────┐ ┌───────▼─────┐
+│Backoffice │ │  Partner  │ │  Promotion  │ │   Support    │ │ Compliance  │ │ AB Testing  │
+│  Service  │ │  Service  │ │   Service   │ │   Service    │ │   Service   │ │   Service   │
+└───────────┘ └───────────┘ └─────────────┘ └──────────────┘ └─────────────┘ └─────────────┘
 ```
 
 ### 3.2 Service Specifications
 
 #### 3.2.1 Account Service
 
-| Attribute | Value |
-|-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4.x |
-| **Database** | PostgreSQL |
-| **Port** | 8001 |
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                      |
+| **Database**         | PostgreSQL                                      |
+| **Port**             | 8001                                            |
 | **Responsibilities** | User accounts, multi-pocket, profile management |
 
 ```
@@ -263,14 +276,15 @@ account-service/
 
 #### 3.2.2 Auth Service
 
-| Attribute | Value |
-|-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4.x, Keycloak |
-| **Database** | PostgreSQL |
-| **Port** | 8002 |
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x, Keycloak            |
+| **Database**         | PostgreSQL                                      |
+| **Port**             | 8002                                            |
 | **Responsibilities** | Authentication, MFA, OAuth2, session management |
 
 **Security Features:**
+
 - Biometric authentication (fingerprint, face ID)
 - Device binding & trust management
 - Transaction PIN with rate limiting
@@ -280,11 +294,11 @@ account-service/
 
 #### 3.2.3 Transaction Service
 
-| Attribute | Value |
-|-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4.x |
-| **Database** | PostgreSQL + Event Store |
-| **Port** | 8003 |
+| Attribute            | Value                                       |
+| -------------------- | ------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                  |
+| **Database**         | PostgreSQL + Event Store                    |
+| **Port**             | 8003                                        |
 | **Responsibilities** | Transfer, BI-FAST, QRIS, payment processing |
 
 **Transaction Types:**
@@ -299,14 +313,15 @@ account-service/
 
 #### 3.2.4 Wallet Service
 
-| Attribute | Value |
-|-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4.x |
-| **Database** | PostgreSQL (Double-entry ledger) |
-| **Port** | 8004 |
+| Attribute            | Value                             |
+| -------------------- | --------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x        |
+| **Database**         | PostgreSQL (Double-entry ledger)  |
+| **Port**             | 8004                              |
 | **Responsibilities** | Balance management, ledger, holds |
 
 **Double-Entry Ledger Design:**
+
 ```sql
 -- Ledger entries table
 CREATE TABLE ledger_entries (
@@ -318,7 +333,7 @@ CREATE TABLE ledger_entries (
     currency VARCHAR(3) DEFAULT 'IDR',
     balance_after DECIMAL(19,4) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     CONSTRAINT positive_amount CHECK (amount > 0)
 );
 
@@ -329,14 +344,15 @@ CREATE TABLE ledger_entries (
 
 #### 3.2.5 KYC Service
 
-| Attribute | Value |
-|-----------|-------|
-| **Technology** | Python 3.12, FastAPI (UBI-based) |
-| **Database** | PostgreSQL (JSONB) |
-| **Port** | 8005 |
+| Attribute            | Value                                                |
+| -------------------- | ---------------------------------------------------- |
+| **Technology**       | Python 3.12, FastAPI (UBI-based)                     |
+| **Database**         | PostgreSQL (JSONB)                                   |
+| **Port**             | 8005                                                 |
 | **Responsibilities** | eKYC, OCR, liveness detection, Dukcapil verification |
 
 **ML Pipeline:**
+
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │  KTP Image  │───▶│  OCR Model  │───▶│  Liveness   │───▶│  Dukcapil   │
@@ -354,13 +370,13 @@ CREATE TABLE ledger_entries (
 
 #### 3.2.6 Notification Service
 
-| Attribute | Value |
-|-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x (Native) |
-| **Database** | PostgreSQL |
-| **Cache** | Red Hat Data Grid (RESP mode) |
-| **Messaging** | AMQ Broker (AMQP 1.0) |
-| **Port** | 8006 |
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Quarkus 3.x (Native)                   |
+| **Database**         | PostgreSQL                                      |
+| **Cache**            | Red Hat Data Grid (RESP mode)                   |
+| **Messaging**        | AMQ Broker (AMQP 1.0)                           |
+| **Port**             | 8006                                            |
 | **Responsibilities** | Push notifications, SMS, Email, in-app messages |
 
 **Notification Channels:**
@@ -373,14 +389,121 @@ CREATE TABLE ledger_entries (
 
 ---
 
-### 3.3 Service Communication Matrix
+#### 3.2.7 Investment Service
 
-| From → To | Protocol | Pattern |
-|-----------|----------|---------|
-| Gateway → Services | HTTP/REST | Sync |
-| Service → Service (query) | gRPC | Sync |
-| Service → Service (command) | Kafka | Async |
-| Service → External | HTTP/REST | Async + Callback |
+| Attribute            | Value                                               |
+| -------------------- | --------------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                          |
+| **Database**         | PostgreSQL                                          |
+| **Port**             | 8007                                                |
+| **Responsibilities** | Mutual funds, Gold investment, Portfolio management |
+
+#### 3.2.8 Lending Service
+
+| Attribute            | Value                                       |
+| -------------------- | ------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                  |
+| **Database**         | PostgreSQL                                  |
+| **Port**             | 8008                                        |
+| **Responsibilities** | Loans, PayLater, Credit scoring integration |
+
+#### 3.2.9 FX Service
+
+| Attribute            | Value                                     |
+| -------------------- | ----------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                |
+| **Database**         | PostgreSQL                                |
+| **Port**             | 8009                                      |
+| **Responsibilities** | Currency exchange rates, conversion logic |
+
+#### 3.2.10 Statement Service
+
+| Attribute            | Value                                |
+| -------------------- | ------------------------------------ |
+| **Technology**       | Java 21, Spring Boot 3.4.x           |
+| **Database**         | PostgreSQL                           |
+| **Port**             | 8010                                 |
+| **Responsibilities** | PDF E-Statement generation & storage |
+
+#### 3.2.11 CMS Service
+
+| Attribute            | Value                                |
+| -------------------- | ------------------------------------ |
+| **Technology**       | Java 21, Spring Boot 3.4.x           |
+| **Database**         | PostgreSQL                           |
+| **Port**             | 8011                                 |
+| **Responsibilities** | Banners, Promos, Dynamic App Content |
+
+#### 3.2.12 AB Testing Service
+
+| Attribute            | Value                                             |
+| -------------------- | ------------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                        |
+| **Database**         | PostgreSQL                                        |
+| **Port**             | 8012                                              |
+| **Responsibilities** | Feature flags, Experimentation, Variant bucketing |
+
+#### 3.2.13 Backoffice Service
+
+| Attribute            | Value                                         |
+| -------------------- | --------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                    |
+| **Database**         | PostgreSQL                                    |
+| **Port**             | 8013                                          |
+| **Responsibilities** | Internal admin dashboard, audit, user management |
+
+#### 3.2.14 Partner Service
+
+| Attribute            | Value                                          |
+| -------------------- | ---------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                     |
+| **Database**         | PostgreSQL                                     |
+| **Port**             | 8014                                           |
+| **Responsibilities** | Partner integration, API key management, webhooks |
+
+#### 3.2.15 Promotion Service
+
+| Attribute            | Value                                          |
+| -------------------- | ---------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                     |
+| **Database**         | PostgreSQL                                     |
+| **Port**             | 8015                                           |
+| **Responsibilities** | Promo campaigns, vouchers, rewards, cashback   |
+
+#### 3.2.16 Support Service
+
+| Attribute            | Value                                          |
+| -------------------- | ---------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                     |
+| **Database**         | PostgreSQL                                     |
+| **Port**             | 8016                                           |
+| **Responsibilities** | Customer support, ticketing, FAQ, chat support |
+
+#### 3.2.17 Compliance Service
+
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                      |
+| **Database**         | PostgreSQL                                      |
+| **Port**             | 8017                                            |
+| **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
+
+### 3.3 Shared Libraries (Common Components)
+
+| Library                | Platform    | Purpose                            |
+| ---------------------- | ----------- | ---------------------------------- |
+| **security-starter**   | Spring Boot | Encryption, Masking, Audit         |
+| **resilience-starter** | Spring Boot | Circuit Breaker, Retry, Bulkhead   |
+| **cache-starter**      | Spring Boot | Multi-layer Redis + Caffeine cache |
+
+### 3.4 Service Communication Matrix
+
+| From → To                   | Protocol  | Pattern          |
+| --------------------------- | --------- | ---------------- |
+| Gateway → Services          | HTTP/REST | Sync             |
+| Service → Service (query)   | gRPC      | Sync             |
+| Service → Service (command) | Kafka     | Async            |
+| Service → External          | HTTP/REST | Async + Callback |
 
 ---
 
@@ -388,23 +511,23 @@ CREATE TABLE ledger_entries (
 
 #### Testing Stack
 
-| Tool | Purpose | Scope |
-|------|---------|-------|
-| **JUnit 5** | Unit testing framework | All Java services |
-| **Mockito** | Mocking dependencies | Service layer tests |
-| **Testcontainers** | Integration testing | PostgreSQL, Kafka |
-| **ArchUnit** | Architecture rules | Layered architecture enforcement |
-| **JaCoCo** | Code coverage | Coverage reporting |
-| **Spring Security Test** | Security testing | Auth context mocking |
+| Tool                     | Purpose                | Scope                            |
+| ------------------------ | ---------------------- | -------------------------------- |
+| **JUnit 5**              | Unit testing framework | All Java services                |
+| **Mockito**              | Mocking dependencies   | Service layer tests              |
+| **Testcontainers**       | Integration testing    | PostgreSQL, Kafka                |
+| **ArchUnit**             | Architecture rules     | Layered architecture enforcement |
+| **JaCoCo**               | Code coverage          | Coverage reporting               |
+| **Spring Security Test** | Security testing       | Auth context mocking             |
 
 #### Test Types
 
-| Type | Description | Tools |
-|------|-------------|-------|
-| **Unit Tests** | Isolated business logic | Mockito |
-| **Controller Tests** | REST API endpoints | @WebMvcTest |
-| **Architecture Tests** | Enforce layer dependencies | ArchUnit |
-| **Integration Tests** | Full service with real DB | Testcontainers |
+| Type                   | Description                | Tools          |
+| ---------------------- | -------------------------- | -------------- |
+| **Unit Tests**         | Isolated business logic    | Mockito        |
+| **Controller Tests**   | REST API endpoints         | @WebMvcTest    |
+| **Architecture Tests** | Enforce layer dependencies | ArchUnit       |
+| **Integration Tests**  | Full service with real DB  | Testcontainers |
 
 #### Test Structure (per service)
 
@@ -426,11 +549,11 @@ mvn test -Dtest=*Arch*  # Architecture tests only
 
 #### Clean Architecture Decision
 
-| Service Type | Architecture | Rationale |
-|-------------|--------------|-----------|
-| Core Banking (account, transaction, wallet) | Clean/Hexagonal | Complex domain, high testability needed |
-| Supporting (notification, billing) | Layered | Simple CRUD, no over-engineering |
-| ML Services (kyc, analytics) | Simplified Clean | Focus on ML logic isolation |
+| Service Type                                | Architecture     | Rationale                               |
+| ------------------------------------------- | ---------------- | --------------------------------------- |
+| Core Banking (account, transaction, wallet) | Clean/Hexagonal  | Complex domain, high testability needed |
+| Supporting (notification, billing)          | Layered          | Simple CRUD, no over-engineering        |
+| ML Services (kyc, analytics)                | Simplified Clean | Focus on ML logic isolation             |
 
 ---
 
@@ -508,7 +631,7 @@ payu.                              # Namespace prefix
 ```java
 @Saga
 public class TransferSaga {
-    
+
     @StartSaga
     @SagaEventHandler(associationProperty = "transactionId")
     public void handle(TransferInitiatedEvent event) {
@@ -518,7 +641,7 @@ public class TransferSaga {
             event.getAmount()
         ));
     }
-    
+
     @SagaEventHandler(associationProperty = "transactionId")
     public void handle(BalanceReservedEvent event) {
         // Step 2: Credit to recipient
@@ -527,7 +650,7 @@ public class TransferSaga {
             event.getAmount()
         ));
     }
-    
+
     @SagaEventHandler(associationProperty = "transactionId")
     public void handle(BalanceReservationFailedEvent event) {
         // Compensation: No action needed (nothing committed yet)
@@ -537,7 +660,7 @@ public class TransferSaga {
         ));
         SagaLifecycle.end();
     }
-    
+
     @SagaEventHandler(associationProperty = "transactionId")
     public void handle(CreditFailedEvent event) {
         // Compensation: Release reserved balance
@@ -546,7 +669,7 @@ public class TransferSaga {
             event.getAmount()
         ));
     }
-    
+
     @EndSaga
     @SagaEventHandler(associationProperty = "transactionId")
     public void handle(TransferCompletedEvent event) {
@@ -650,14 +773,14 @@ CREATE TABLE event_store (
     metadata JSONB,
     version BIGINT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    CONSTRAINT unique_aggregate_version 
+
+    CONSTRAINT unique_aggregate_version
         UNIQUE (aggregate_id, version)
 );
 
-CREATE INDEX idx_event_store_aggregate 
+CREATE INDEX idx_event_store_aggregate
     ON event_store(aggregate_id, version);
-CREATE INDEX idx_event_store_type 
+CREATE INDEX idx_event_store_type
     ON event_store(event_type, created_at);
 
 -- Snapshot store for performance
@@ -782,14 +905,14 @@ Layer 5: COMPLIANCE
 
 ### 6.3 Transaction Security
 
-| Control | Implementation |
-|---------|----------------|
-| **Transaction PIN** | 6-digit PIN, 3 attempts before lock |
-| **Transaction Limit** | Daily/monthly limits per tier |
-| **Device Binding** | Max 2 devices per account |
-| **Fraud Detection** | ML model (velocity, geo, behavior) |
-| **3D Secure** | For card transactions |
-| **Idempotency** | UUID-based request deduplication |
+| Control               | Implementation                      |
+| --------------------- | ----------------------------------- |
+| **Transaction PIN**   | 6-digit PIN, 3 attempts before lock |
+| **Transaction Limit** | Daily/monthly limits per tier       |
+| **Device Binding**    | Max 2 devices per account           |
+| **Fraud Detection**   | ML model (velocity, geo, behavior)  |
+| **3D Secure**         | For card transactions               |
+| **Idempotency**       | UUID-based request deduplication    |
 
 ### 6.4 Encryption Standards
 
@@ -799,13 +922,13 @@ encryption:
   at_rest:
     algorithm: AES-256-GCM
     key_management: AWS KMS
-    
+
   in_transit:
     protocol: TLS 1.3
     cipher_suites:
       - TLS_AES_256_GCM_SHA384
       - TLS_CHACHA20_POLY1305_SHA256
-      
+
   field_level:
     pii_fields:
       - nik
@@ -839,7 +962,7 @@ spring:
               args:
                 name: accountServiceCB
                 fallbackUri: forward:/fallback/account
-                
+
         - id: transaction-service
           uri: lb://transaction-service
           predicates:
@@ -849,7 +972,7 @@ spring:
               args:
                 redis-rate-limiter.replenishRate: 50
                 redis-rate-limiter.burstCapacity: 100
-                
+
       default-filters:
         - name: Retry
           args:
@@ -974,7 +1097,7 @@ jobs:
         run: ./mvnw test
       - name: SonarQube Analysis
         run: ./mvnw sonar:sonar
-        
+
   security-scan:
     runs-on: ubuntu-latest
     steps:
@@ -982,7 +1105,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
       - name: OWASP Dependency Check
         uses: dependency-check/gh-action@main
-        
+
   build:
     needs: [test, security-scan]
     runs-on: ubuntu-latest
@@ -991,7 +1114,7 @@ jobs:
         run: |
           docker build -t payu/${{ matrix.service }}:${{ github.sha }} .
           docker push payu/${{ matrix.service }}:${{ github.sha }}
-          
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -1039,12 +1162,12 @@ jobs:
 
 ### 9.2 Key Metrics & SLIs
 
-| Metric | SLI | SLO |
-|--------|-----|-----|
-| **Availability** | Successful requests / Total requests | 99.95% |
-| **Latency (p99)** | Request duration at 99th percentile | < 500ms |
-| **Error Rate** | 5xx errors / Total requests | < 0.1% |
-| **Throughput** | Transactions per second | > 1000 TPS |
+| Metric            | SLI                                  | SLO        |
+| ----------------- | ------------------------------------ | ---------- |
+| **Availability**  | Successful requests / Total requests | 99.95%     |
+| **Latency (p99)** | Request duration at 99th percentile  | < 500ms    |
+| **Error Rate**    | 5xx errors / Total requests          | < 0.1%     |
+| **Throughput**    | Transactions per second              | > 1000 TPS |
 
 ### 9.3 Alerting Rules
 
@@ -1062,7 +1185,7 @@ groups:
           severity: critical
         annotations:
           summary: "High error rate detected"
-          
+
       - alert: TransactionLatencyHigh
         expr: |
           histogram_quantile(0.99, 
@@ -1072,7 +1195,7 @@ groups:
           severity: warning
         annotations:
           summary: "Transaction latency p99 > 3s"
-          
+
       - alert: KafkaConsumerLag
         expr: kafka_consumer_lag > 10000
         for: 5m
@@ -1119,6 +1242,7 @@ groups:
 ### 10.2 API Specification
 
 #### Authentication
+
 ```http
 POST /v1/partner/auth/token
 Content-Type: application/json
@@ -1204,7 +1328,7 @@ Update TokoBapak's `payment-service` to integrate with PayU:
 // PayU Client Configuration
 @Configuration
 public class PayuClientConfig {
-    
+
     @Bean
     public PayuClient payuClient(
         @Value("${payu.base-url}") String baseUrl,
@@ -1225,10 +1349,10 @@ public class PayuClientConfig {
 @Service
 @RequiredArgsConstructor
 public class PayuPaymentProvider implements PaymentProvider {
-    
+
     private final PayuClient payuClient;
     private final StreamBridge streamBridge;
-    
+
     @Override
     public PaymentResult processPayment(ProcessPaymentRequest request) {
         // Create payment request to PayU
@@ -1239,16 +1363,16 @@ public class PayuPaymentProvider implements PaymentProvider {
             .paymentMethod("PAYU_BALANCE")
             .callbackUrl(webhookUrl)
             .build();
-            
+
         PayuPaymentResponse response = payuClient.createPayment(payuRequest);
-        
+
         return PaymentResult.builder()
             .paymentId(response.getPaymentId())
             .status(PaymentStatus.PENDING)
             .paymentUrl(response.getPaymentUrl())
             .build();
     }
-    
+
     // Webhook handler for PayU callbacks
     @PostMapping("/webhooks/payu")
     public ResponseEntity<Void> handlePayuWebhook(
@@ -1259,7 +1383,7 @@ public class PayuPaymentProvider implements PaymentProvider {
         if (!payuClient.verifySignature(signature, event)) {
             return ResponseEntity.status(401).build();
         }
-        
+
         // Publish event to Kafka
         PaymentProcessedEvent processedEvent = PaymentProcessedEvent.builder()
             .paymentId(event.getPaymentId())
@@ -1268,9 +1392,9 @@ public class PayuPaymentProvider implements PaymentProvider {
             .transactionId(event.getTransactionId())
             .amount(event.getAmount().getValue())
             .build();
-            
+
         streamBridge.send("paymentEvents-out-0", processedEvent);
-        
+
         return ResponseEntity.ok().build();
     }
 }
@@ -1326,8 +1450,8 @@ Payment status = payu.payments().get(payment.getId());
 │  │  │    (3 nodes)           │ │  │  │    (3 nodes)           │ │           │
 │  │  └────────────────────────┘ │  │  └────────────────────────┘ │           │
 │  │                              │  │                              │           │
-│  │  ┌────────────────────────┐ │  │  ┌────────────────────────┐ │           │
-│  │  │  PostgreSQL Primary    │ │  │  │  PostgreSQL Standby    │ │           │
+│  │  ┌────────────────────────┐ │  │  │  PostgreSQL Primary    │ │           │
+│  │  │  PostgreSQL Primary    │ │  │  │  (RDS Multi-AZ)        │ │           │
 │  │  │  (RDS Multi-AZ)        │◄┼──┼─▶│  (Sync Replication)    │ │           │
 │  │  └────────────────────────┘ │  │  └────────────────────────┘ │           │
 │  │                              │  │                              │           │
@@ -1341,22 +1465,22 @@ Payment status = payu.payments().get(payment.getId());
 
 ### 11.2 Recovery Objectives
 
-| Metric | Target |
-|--------|--------|
-| **RTO** (Recovery Time Objective) | < 15 minutes |
-| **RPO** (Recovery Point Objective) | < 1 minute |
-| **Backup Frequency** | Continuous + Daily snapshots |
-| **Backup Retention** | 30 days (7 years for compliance) |
+| Metric                             | Target                           |
+| ---------------------------------- | -------------------------------- |
+| **RTO** (Recovery Time Objective)  | < 15 minutes                     |
+| **RPO** (Recovery Point Objective) | < 1 minute                       |
+| **Backup Frequency**               | Continuous + Daily snapshots     |
+| **Backup Retention**               | 30 days (7 years for compliance) |
 
 ### 11.3 Backup Strategy
 
-| Data Type | Backup Method | Frequency | Retention |
-|-----------|---------------|-----------|-----------|
-| PostgreSQL | RDS Automated | Continuous | 7 days |
-| PostgreSQL | Manual Snapshots | Weekly | 1 year |
-| Data Grid | Cluster backup | Daily | 7 days |
-| Kafka | Log retention | Continuous | 7 days |
-| S3 (Documents) | Cross-region replication | Real-time | Compliance-based |
+| Data Type      | Backup Method            | Frequency  | Retention        |
+| -------------- | ------------------------ | ---------- | ---------------- |
+| PostgreSQL     | RDS Automated            | Continuous | 7 days           |
+| PostgreSQL     | Manual Snapshots         | Weekly     | 1 year           |
+| Data Grid      | Cluster backup           | Daily      | 7 days           |
+| Kafka          | Log retention            | Continuous | 7 days           |
+| S3 (Documents) | Cross-region replication | Real-time  | Compliance-based |
 
 ---
 
@@ -1382,12 +1506,12 @@ Features:
 
 **Test Bank Accounts:**
 
-| Bank Code | Account Number | Name | Status |
-|-----------|----------------|------|--------|
-| BCA | 1234567890 | John Doe | Active |
-| BRI | 0987654321 | Jane Doe | Active |
-| MANDIRI | 1111222233 | Test Blocked | Blocked |
-| BNI | 9999888877 | Test Timeout | Timeout |
+| Bank Code | Account Number | Name         | Status  |
+| --------- | -------------- | ------------ | ------- |
+| BCA       | 1234567890     | John Doe     | Active  |
+| BRI       | 0987654321     | Jane Doe     | Active  |
+| MANDIRI   | 1111222233     | Test Blocked | Blocked |
+| BNI       | 9999888877     | Test Timeout | Timeout |
 
 ### 12.2 Dukcapil Simulator
 
@@ -1406,12 +1530,12 @@ Features:
 
 **Test NIK Database:**
 
-| NIK | Name | Status | Match Score |
-|-----|------|--------|-------------|
-| 3201234567890001 | JOHN DOE | Valid | 95% |
-| 3201234567890002 | JANE DOE | Valid | 88% |
-| 3201234567890003 | BLOCKED USER | Blocked | N/A |
-| 3299999999999999 | INVALID NIK | Invalid | N/A |
+| NIK              | Name         | Status  | Match Score |
+| ---------------- | ------------ | ------- | ----------- |
+| 3201234567890001 | JOHN DOE     | Valid   | 95%         |
+| 3201234567890002 | JANE DOE     | Valid   | 88%         |
+| 3201234567890003 | BLOCKED USER | Blocked | N/A         |
+| 3299999999999999 | INVALID NIK  | Invalid | N/A         |
 
 ### 12.3 QRIS Simulator
 
@@ -1435,12 +1559,14 @@ Features:
 
 ### 13.1 Technology Stack
 
-| Platform | Technology | Purpose |
-|----------|------------|---------|
-| **Web App** | Next.js 15 + Tailwind CSS 4 | Customer portal |
-| **Admin Dashboard** | Next.js 15 + shadcn/ui | Internal ops |
-| **Mobile App** | Expo (React Native) | iOS/Android/Web |
-| **Shared** | TypeScript, Zustand, TanStack Query | Cross-platform |
+| Platform             | Technology                          | Purpose           | Directory               |
+| -------------------- | ----------------------------------- | ----------------- | ----------------------- |
+| **Web App**          | Next.js 15 + Tailwind CSS 4         | Customer portal   | `frontend/web-app/`     |
+| **Developer Portal** | Next.js 15 + shadcn/ui              | Partner API docs  | `frontend/developer-docs/` |
+| **Mobile App**       | Expo (React Native)                 | iOS/Android/Web   | `frontend/mobile/`      |
+| **Shared**           | TypeScript, Zustand, TanStack Query | Cross-platform    | -                       |
+
+> **Note:** Admin Dashboard functionality is provided by `backoffice-service` backend with a separate admin UI.
 
 ### 13.2 Architecture
 
@@ -1458,12 +1584,13 @@ Features:
 │  └─────────────────────────────────────────────────────────────────────────┘│
 │                                                                              │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐          │
-│  │    WEB APP       │  │  ADMIN DASHBOARD │  │   MOBILE APP     │          │
+│  │    WEB APP       │  │ DEVELOPER PORTAL │  │   MOBILE APP     │          │
 │  │   (Next.js 15)   │  │   (Next.js 15)   │  │    (Expo)        │          │
+│  │  web-app/        │  │  developer-docs/ │  │  mobile/         │          │
 │  │                  │  │                  │  │                  │          │
-│  │ • SSR/SSG        │  │ • Role-based UI  │  │ • iOS/Android    │          │
-│  │ • App Router     │  │ • Data tables    │  │ • Web preview    │          │
-│  │ • Tailwind CSS 4 │  │ • Charts         │  │ • Push notif     │          │
+│  │ • SSR/SSG        │  │ • API Docs       │  │ • iOS/Android    │          │
+│  │ • App Router     │  │ • Sandbox        │  │ • Web preview    │          │
+│  │ • Tailwind CSS 4 │  │ • Partner Portal │  │ • Push notif     │          │
 │  │ • shadcn/ui      │  │ • shadcn/ui      │  │ • Biometrics     │          │
 │  └──────────────────┘  └──────────────────┘  └──────────────────┘          │
 │           │                    │                    │                       │
@@ -1479,15 +1606,17 @@ Features:
 ### 13.3 Mobile Development Workflow
 
 ```text
+Directory: frontend/mobile/ (React Native Expo)
+
 Daily Development (95% of time):
 ┌─────────────────────────────────────────┐
 │ 1. Expo Web (Browser)                   │
-│    $ cd mobile && bun run web           │
+│    $ cd frontend/mobile && bun run web  │
 │    → Opens http://localhost:8081        │
 │    → Instant preview, hot reload        │
 │                                         │
 │ 2. Expo Go (Real Android Phone)         │
-│    $ cd mobile && bun run start         │
+│    $ cd frontend/mobile && bun run start│
 │    → Scan QR code with Expo Go app      │
 │    → Test on real device                │
 └─────────────────────────────────────────┘
@@ -1495,7 +1624,7 @@ Daily Development (95% of time):
 Testing Native Features (5% of time):
 ┌─────────────────────────────────────────┐
 │ 3. Android Studio Emulator              │
-│    $ cd mobile && bun run android       │
+│    $ cd frontend/mobile && bun run android│
 │    → Camera, biometrics, etc.           │
 │                                         │
 │ 4. EAS Build (Production-like)          │
@@ -1530,68 +1659,68 @@ Testing Native Features (5% of time):
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-| Environment | Purpose | Data | OpenShift Namespace |
-|-------------|---------|------|---------------------|
-| **DEV** | Daily development | Fake/minimal | `payu-dev` |
-| **SIT** | Integration testing | Synthetic | `payu-sit` |
-| **UAT** | Business validation | Anonymized | `payu-uat` |
-| **PREPROD** | Production rehearsal | Prod copy | `payu-preprod` |
-| **PROD** | Live production | Real | `payu-prod` |
+| Environment | Purpose              | Data         | OpenShift Namespace |
+| ----------- | -------------------- | ------------ | ------------------- |
+| **DEV**     | Daily development    | Fake/minimal | `payu-dev`          |
+| **SIT**     | Integration testing  | Synthetic    | `payu-sit`          |
+| **UAT**     | Business validation  | Anonymized   | `payu-uat`          |
+| **PREPROD** | Production rehearsal | Prod copy    | `payu-preprod`      |
+| **PROD**    | Live production      | Real         | `payu-prod`         |
 
 ### 14.2 Infrastructure Decisions
 
-| Component | Decision | Notes |
-|-----------|----------|-------|
-| **Cloud Provider** | AWS | Region: ap-southeast-1 |
-| **Cluster** | Single cluster, Multi-AZ | Cost-effective for lab |
-| **Platform** | Red Hat OpenShift 4.20+ | Full ecosystem |
-| **PostgreSQL** | AWS RDS (primary) | + Crunchy Operator for learning |
-| **Object Storage** | OpenShift Data Foundation + S3 | ODF for persistence |
-| **Backup Retention** | 7 days (lab) | Extend for production |
+| Component            | Decision                       | Notes                           |
+| -------------------- | ------------------------------ | ------------------------------- |
+| **Cloud Provider**   | AWS                            | Region: ap-southeast-1          |
+| **Cluster**          | Single cluster, Multi-AZ       | Cost-effective for lab          |
+| **Platform**         | Red Hat OpenShift 4.20+        | Full ecosystem                  |
+| **PostgreSQL**       | AWS RDS (primary)              | + Crunchy Operator for learning |
+| **Object Storage**   | OpenShift Data Foundation + S3 | ODF for persistence             |
+| **Backup Retention** | 7 days (lab)                   | Extend for production           |
 
 ### 14.3 Security Tools
 
-| Category | Tool | Purpose |
-|----------|------|---------|
-| **Key Management** | HashiCorp Vault | Secrets, PKI, transit encryption |
-| **Container Security** | RHACS (OpenShift ACS) | Image scanning, runtime |
-| **Runtime Security** | Falco | Container runtime threats |
-| **SIEM** | Wazuh | Security monitoring, compliance |
-| **Alerting** | AlertManager → Gmail | Email notifications |
+| Category               | Tool                  | Purpose                          |
+| ---------------------- | --------------------- | -------------------------------- |
+| **Key Management**     | HashiCorp Vault       | Secrets, PKI, transit encryption |
+| **Container Security** | RHACS (OpenShift ACS) | Image scanning, runtime          |
+| **Runtime Security**   | Falco                 | Container runtime threats        |
+| **SIEM**               | Wazuh                 | Security monitoring, compliance  |
+| **Alerting**           | AlertManager → Gmail  | Email notifications              |
 
 ### 14.4 External Service Strategy
 
-| Service | Strategy | Provider |
-|---------|----------|----------|
-| **BI-FAST** | Simulator (Quarkus) | Self-built |
-| **Dukcapil** | Simulator (Quarkus) | Self-built |
-| **QRIS** | Simulator + Sandbox | Self-built + Xendit |
-| **SMS OTP** | Telesign (500 free) | telesign.com |
-| **Push Notification** | Firebase FCM | Free unlimited |
+| Service               | Strategy            | Provider            |
+| --------------------- | ------------------- | ------------------- |
+| **BI-FAST**           | Simulator (Quarkus) | Self-built          |
+| **Dukcapil**          | Simulator (Quarkus) | Self-built          |
+| **QRIS**              | Simulator + Sandbox | Self-built + Xendit |
+| **SMS OTP**           | Telesign (500 free) | telesign.com        |
+| **Push Notification** | Firebase FCM        | Free unlimited      |
 
 ### 14.5 Rate Limiting Configuration
 
-| Endpoint Category | RPS/User | Burst | Purpose |
-|-------------------|----------|-------|---------|
-| **Authentication** | 5/min | 10 | Brute force protection |
-| **OTP Request** | 3/min | 5 | SMS cost control |
-| **Transfer** | 10/min | 20 | Transaction protection |
-| **Balance Inquiry** | 30/min | 50 | High-frequency reads |
-| **Public API** | 100/IP/min | 200 | General protection |
-| **Partner API** | 1000/min | 2000 | B2B high volume |
+| Endpoint Category   | RPS/User   | Burst | Purpose                |
+| ------------------- | ---------- | ----- | ---------------------- |
+| **Authentication**  | 5/min      | 10    | Brute force protection |
+| **OTP Request**     | 3/min      | 5     | SMS cost control       |
+| **Transfer**        | 10/min     | 20    | Transaction protection |
+| **Balance Inquiry** | 30/min     | 50    | High-frequency reads   |
+| **Public API**      | 100/IP/min | 200   | General protection     |
+| **Partner API**     | 1000/min   | 2000  | B2B high volume        |
 
 ### 14.6 User Onboarding Flow (Target: 2-3 minutes)
 
-| Step | Action | Target Time |
-|------|--------|-------------|
-| 1 | Phone number input | 5 sec |
-| 2 | OTP verification (4-digit) | 15 sec |
-| 3 | KTP photo capture (AI-guided) | 20 sec |
-| 4 | Selfie with liveness | 15 sec |
-| 5 | Data confirmation (OCR pre-filled) | 30 sec |
-| 6 | PIN setup (6-digit) | 15 sec |
-| 7 | Biometric setup (optional) | 5 sec |
-| **Total** | | **~2 minutes** |
+| Step      | Action                             | Target Time    |
+| --------- | ---------------------------------- | -------------- |
+| 1         | Phone number input                 | 5 sec          |
+| 2         | OTP verification (4-digit)         | 15 sec         |
+| 3         | KTP photo capture (AI-guided)      | 20 sec         |
+| 4         | Selfie with liveness               | 15 sec         |
+| 5         | Data confirmation (OCR pre-filled) | 30 sec         |
+| 6         | PIN setup (6-digit)                | 15 sec         |
+| 7         | Biometric setup (optional)         | 5 sec          |
+| **Total** |                                    | **~2 minutes** |
 
 ### 14.7 Implementation Phases
 
@@ -1624,11 +1753,18 @@ Phase 4: Supporting Services
 └── 4. analytics-service (insights)
 
 Phase 5: Frontend Applications
-├── 1. Web App (Next.js 15)
-├── 2. Mobile App (Expo)
-└── 3. Admin Dashboard (Next.js 15)
+├── 1. Web App (Next.js 15) - frontend/web-app/
+├── 2. Mobile App (Expo) - frontend/mobile/
+└── 3. Developer Portal (Next.js 15) - frontend/developer-docs/
 
-Phase 6: Integration (Later)
+Phase 6: Additional Services
+├── 1. backoffice-service (admin dashboard)
+├── 2. partner-service (partner integration)
+├── 3. promotion-service (campaigns, vouchers)
+├── 4. support-service (customer support)
+└── 5. compliance-service (regulatory, AML)
+
+Phase 7: Integration (Later)
 ├── 1. TokoBapak Partner API
 ├── 2. Real BI-FAST integration
 └── 3. Real QRIS integration
@@ -1640,20 +1776,20 @@ Phase 6: Integration (Later)
 
 ### A. Technology Versions
 
-| Component | Version |
-|-----------|---------|
-| Java | 21 LTS |
-| Spring Boot | 3.4.x |
-| Quarkus | 3.17.x |
-| Python | 3.12 |
-| FastAPI | 0.115.x |
-| Next.js | 15.x |
-| Expo | 52.x |
-| Kafka | 3.7.x |
-| PostgreSQL | 16.x |
+| Component       | Version   |
+| --------------- | --------- |
+| Java            | 21 LTS    |
+| Spring Boot     | 3.4.x     |
+| Quarkus         | 3.17.x    |
+| Python          | 3.12      |
+| FastAPI         | 0.115.x   |
+| Next.js         | 15.x      |
+| Expo            | 52.x      |
+| Kafka           | 3.7.x     |
+| PostgreSQL      | 16.x      |
 | Redis/Data Grid | 7.x / 8.x |
-| OpenShift | 4.20+ |
-| Istio | 1.23.x |
+| OpenShift       | 4.20+     |
+| Istio           | 1.23.x    |
 
 ### B. Compliance Checklist
 
