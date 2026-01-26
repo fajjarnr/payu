@@ -100,5 +100,4 @@ temp/
 # --- Agentic Tools ---
 .opencode/
 .claude/
-.agent/
 # Note: .ralphy/ is NOT ignored as it contains project rules
