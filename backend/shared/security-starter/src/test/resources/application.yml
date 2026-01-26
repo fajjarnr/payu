@@ -1,0 +1,6 @@
+payu:
+  security:
+    enabled: false
+    encryption-enabled: false
+    masking-enabled: false
+    audit-enabled: false

@@ -1,0 +1,3 @@
+payu:
+  resilience:
+    enabled: false

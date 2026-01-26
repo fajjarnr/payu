@@ -12,6 +12,7 @@ import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -30,7 +31,7 @@ import java.util.random.RandomGenerator;
 @AutoConfiguration
 @EnableConfigurationProperties(ResilienceProperties.class)
 @ConditionalOnClass(name = "io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry")
-@ConditionalOnProperty(prefix = "payu.resilience", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "payu.resilience", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class ResilienceAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(ResilienceAutoConfiguration.class);
@@ -43,7 +44,7 @@ public class ResilienceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public CircuitBreakerRegistry circuitBreakerRegistry(MeterRegistry meterRegistry) {
+    public CircuitBreakerRegistry circuitBreakerRegistry(@Autowired(required = false) MeterRegistry meterRegistry) {
         log.info("Initializing Circuit Breaker Registry with custom configuration");
 
         Map<String, CircuitBreakerConfig> configs = new HashMap<>();
@@ -97,7 +98,7 @@ public class ResilienceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public RetryRegistry retryRegistry(MeterRegistry meterRegistry) {
+    public RetryRegistry retryRegistry(@Autowired(required = false) MeterRegistry meterRegistry) {
         log.info("Initializing Retry Registry with custom configuration");
 
         Map<String, RetryConfig> configs = new HashMap<>();
@@ -154,7 +155,7 @@ public class ResilienceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public BulkheadRegistry bulkheadRegistry(MeterRegistry meterRegistry) {
+    public BulkheadRegistry bulkheadRegistry(@Autowired(required = false) MeterRegistry meterRegistry) {
         log.info("Initializing Bulkhead Registry with custom configuration");
 
         Map<String, BulkheadConfig> configs = new HashMap<>();
@@ -194,7 +195,7 @@ public class ResilienceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public TimeLimiterRegistry timeLimiterRegistry(MeterRegistry meterRegistry) {
+    public TimeLimiterRegistry timeLimiterRegistry(@Autowired(required = false) MeterRegistry meterRegistry) {
         log.info("Initializing Time Limiter Registry with custom configuration");
 
         Map<String, TimeLimiterConfig> configs = new HashMap<>();

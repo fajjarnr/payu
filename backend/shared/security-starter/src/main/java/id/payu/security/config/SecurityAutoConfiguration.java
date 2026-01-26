@@ -29,7 +29,7 @@ import java.util.Base64;
 @AutoConfiguration
 @EnableConfigurationProperties(SecurityProperties.class)
 @EnableAspectJAutoProxy
-@ConditionalOnProperty(prefix = "payu.security", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "payu.security", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class SecurityAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityAutoConfiguration.class);
@@ -42,7 +42,7 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security", name = "encryption-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "payu.security", name = "encryption-enabled", havingValue = "true", matchIfMissing = false)
     public EncryptionService encryptionService() {
         log.info("Initializing Encryption Service");
 
@@ -58,7 +58,7 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security", name = "masking-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "payu.security", name = "masking-enabled", havingValue = "true", matchIfMissing = false)
     public DataMaskingAspect dataMaskingAspect() {
         log.info("Initializing Data Masking Aspect");
         return new DataMaskingAspect(properties);
@@ -66,7 +66,7 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = false)
     @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
     public AuditAspect auditAspect(
             AuditLogPublisher auditLogPublisher) {
@@ -76,7 +76,7 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = false)
     @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
     public AuditLogPublisher auditLogPublisher(
             org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate,

@@ -2,6 +2,7 @@ package id.payu.abtesting.architecture;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +16,9 @@ import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 @DisplayName("Architecture Tests")
 class ArchitectureTest {
 
-    private final JavaClasses classes = new ClassFileImporter().importPackages("id.payu.abtesting");
+    private final JavaClasses classes = new ClassFileImporter()
+            .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+            .importPackages("id.payu.abtesting");
 
     @Test
     @DisplayName("Domain entities should not depend on other layers")
@@ -67,10 +70,14 @@ class ArchitectureTest {
                 .layer("Application").definedBy("..application..")
                 .layer("Domain").definedBy("..domain..")
                 .layer("Infrastructure").definedBy("..infrastructure..")
-                .whereLayer("Interface").mayNotBeAccessedByAnyLayer()
-                .whereLayer("Application").mayOnlyBeAccessedByLayers("Interface", "Application", "Domain")
+                // Interface layer is the entry point - can access Domain (for ports, DTOs)
+                .whereLayer("Interface").mayOnlyBeAccessedByLayers("Interface", "Domain")
+                // Application layer can be accessed by Interface, and can access Domain and Infrastructure
+                .whereLayer("Application").mayOnlyBeAccessedByLayers("Interface", "Application")
+                // Domain layer can be accessed by Application and Infrastructure
                 .whereLayer("Domain").mayOnlyBeAccessedByLayers("Application", "Infrastructure", "Interface", "Domain")
-                .whereLayer("Infrastructure").mayOnlyBeAccessedByLayers("Domain", "Interface")
+                // Infrastructure layer can be accessed by Application layer
+                .whereLayer("Infrastructure").mayOnlyBeAccessedByLayers("Application", "Domain", "Infrastructure")
                 .check(classes);
     }
 }

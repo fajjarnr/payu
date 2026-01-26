@@ -1,13 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash",
-      "CreateFile",
-      "EditFile",
-      "ReadFile",
-      "ListDirectory",
-      "DeleteFile",
-      "Bash(SKIP=mypy,black,ruff git commit:*)"
+      "Bash"
     ],
     "deny": [
       "Bash(sudo *)",
