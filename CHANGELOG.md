@@ -21,6 +21,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Updated CLAUDE.md**: Added TDD guidelines and error prevention section
 
 ### Fixed
+- **Wallet-Service & Compliance-Service Port Interfaces - Complete**:
+  - wallet-service: Added FxRateProviderPort (FX rate operations) and PocketPersistencePort (multi-currency sub-wallets)
+  - compliance-service: Added AuditReportPersistencePort (regulatory compliance) and DataAccessAuditPersistencePort (GDPR compliance)
+  - Fixed PocketPersistenceAdapter: Removed unused deleteById method
+  - Fixed WalletService: Updated cache calls to avoid Optional<Wallet> type issues
+  - **Result**: Both services now compile successfully
+- **Auth-Service Reactive/Servlet API Mismatch - Complete**:
+  - Converted AuthController from reactive (WebFlux) to servlet (Spring MVC) pattern
+  - Added blocking wrapper methods to KeycloakService (validateCredentialsBlocking, loginBlocking, verifyMFAAndCompleteLoginBlocking)
+  - Updated AuthControllerTest mocks to use blocking methods instead of reactive methods
+  - **Test Results**: 67 tests, 0 failures, 0 errors ✅ (was: 3 failures)
 - **Transaction-Service Unit Tests - Complete**:
   - Fixed ScheduledTransferServiceTest updateScheduledTransfer test with required fields (scheduleType, transferType, startDate, etc.)
   - Fixed SplitBillServiceTest tests by adding missing required fields (splitType, totalAmount, currency, title, referenceNumber)
