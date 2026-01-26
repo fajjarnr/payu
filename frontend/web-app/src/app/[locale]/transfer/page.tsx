@@ -3,7 +3,7 @@
 import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar, Zap, Truck } from "lucide-react";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { transferSchema, TransferRequest, TransactionType, TransferScheduleType } from '@/types';
+import { transferSchema, TransferRequest, TransferType, TransferScheduleType } from '@/types';
 import { useState } from 'react';
 import { useInitiateTransfer } from '@/hooks';
 import { useAuthStore } from '@/stores';
@@ -12,7 +12,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 
-const TRANSFER_TYPES: { type: TransactionType; label: string; description: string; icon: React.ComponentType<{ className?: string }>; fee: string; maxLimit: string; processingTime: string }[] = [
+const TRANSFER_TYPES: { type: TransferType; label: string; description: string; icon: React.ComponentType<{ className?: string }>; fee: string; maxLimit: string; processingTime: string }[] = [
   {
     type: 'INTERNAL_TRANSFER',
     label: 'Transfer Instan',
@@ -120,7 +120,7 @@ export default function TransferPage() {
         recipientAccountNumber: data.toAccountId,
         amount: data.amount,
         description: data.description || '',
-        type: data.transferType,
+        type: data.transferType || 'INTERNAL_TRANSFER',
         scheduledAt,
         recurringDay,
         recurringMonth
@@ -231,10 +231,10 @@ export default function TransferPage() {
                       </div>
                       <p className="font-black text-foreground text-sm">{selectedScheduleType?.label}</p>
                       {scheduleType === 'SCHEDULED' && watch('scheduledAt') && (
-                        <p className="text-[10px] text-muted-foreground mt-1">{new Date(watch('scheduledAt')).toLocaleDateString('id-ID')}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">{new Date(watch('scheduledAt') || '').toLocaleDateString('id-ID')}</p>
                       )}
                       {scheduleType === 'RECURRING' && (
-                        <p className="text-[10px] text-muted-foreground mt-1">Tanggal {watch('recurringDay')}-{watch('recurringMonth') || 'setiap bulan'}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Tanggal {watch('recurringDay') || '-'}-{watch('recurringMonth') || 'setiap bulan'}</p>
                       )}
                     </div>
                   </div>

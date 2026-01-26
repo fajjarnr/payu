@@ -1,7 +1,9 @@
 import api from '@/lib/api';
+import type { TransactionType, TransactionStatus, TransferType } from '@/types';
 
-export type TransactionType = 'INTERNAL_TRANSFER' | 'BIFAST_TRANSFER' | 'QRIS_PAYMENT' | 'BILL_PAYMENT' | 'TOP_UP';
-export type TransactionStatus = 'PENDING' | 'VALIDATING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+// Re-export types for convenience
+export type { TransactionType, TransactionStatus };
+export type { TransferType };
 
 export interface InitiateTransferRequest {
   senderAccountId: string;

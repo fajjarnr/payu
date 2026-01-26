@@ -73,7 +73,7 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
 
         setScreenshot(canvas.toDataURL('image/png'));
       }
