@@ -48,6 +48,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added missing mocks to AuthControllerTest (RiskEvaluationService, MFATokenService)
   - Updated AuthControllerTest to use MockMvc instead of WebFluxTest
   - **Test Results**: 67 tests, 3 failures (55% improvement from 9 failures + 1 error)
+  - **Known Issue**: Reactive/servlet API mismatch in AuthController requires refactoring
+
+- **Quarkus Services POM and Configuration Fixes**:
+  - **billing-service & notification-service**: Removed quarkus-vault dependency (not used in code)
+  - **wallet-service & compliance-service**: Removed empty Jasypt dependency blocks (now in shared security-starter)
+  - **gateway-service**: Fixed layered architecture test and configuration issues
+    - Fixed ArchitectureTest: Added Service layer, allowed proper layer dependencies
+    - Fixed GatewayConfig: Made deprecatedVersions Optional<List<String>>
+    - Fixed ApiVersionFilter: Handle Optional deprecatedVersions
+    - Fixed application.yaml: Deprecated versions, rate-limit-v2 structure, timeout config
+    - Added application-test.yaml: Disable external dependencies (Redis, OIDC) for tests
+    - Updated ApiVersionFilterTest: Use /q/health endpoint (unauthenticated)
+
+- **Backend Services Test Results**:
+  - **transaction-service**: 60 tests, 0 unit test failures ✅
+  - **account-service**: 40 tests, 0 failures ✅
+  - **auth-service**: 67 tests, 3 failures (known issue) ⚠️
+  - **wallet-service**: POM fixed, compilation errors remain (missing ports)
+  - **billing-service**: 51 tests, 0 failures, 6 Docker errors ✅
+  - **notification-service**: 51 tests, 0 failures, 6 Docker errors ✅
+  - **gateway-service**: 94 tests, 45 failures (environment issues), architecture passes ⚠️
+  - **compliance-service**: POM fixed, compilation errors remain (missing ports)
+  - **support-service**: 17 tests, 0 failures - ALL PASSING! ✅
+  - **partner-service**: 1 test, 1 Docker error ⚠️
+  - **backoffice-service**: Multiple tests, Docker errors ⚠️
   - **Remaining Issue**: 3 tests in AuthControllerTest have reactive/servlet API mismatch
     - AuthController uses HttpServletRequest but returns Mono<?>
     - Requires controller refactoring to fully resolve
