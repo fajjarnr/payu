@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -578,20 +579,20 @@ public class StatementService {
 
     @lombok.Data
     @lombok.AllArgsConstructor
-    private static class TransactionRecord {
+    public static class TransactionRecord {
         private LocalDate date;
         private String description;
         private BigDecimal amount;
         private TransactionType type;
     }
 
-    private enum TransactionType {
+    public enum TransactionType {
         CREDIT, DEBIT
     }
 
     @lombok.Data
     @lombok.Builder
-    private static class StatementGeneratedEvent {
+    public static class StatementGeneratedEvent {
         private UUID statementId;
         private UUID userId;
         private String accountNumber;
