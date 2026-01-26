@@ -1,5 +1,6 @@
 package id.payu.statement.service;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -52,12 +53,16 @@ public class TransactionServiceClient {
         return new ArrayList<>();
     }
 
-    private record TransactionListResponse(List<TransactionDto> transactions) {}
+    @Data
+    private static class TransactionListResponse {
+        private List<TransactionDto> transactions;
+    }
 
-    private record TransactionDto(
-        LocalDate date,
-        String description,
-        String type,
-        java.math.BigDecimal amount
-    ) {}
+    @Data
+    private static class TransactionDto {
+        private LocalDate date;
+        private String description;
+        private String type;
+        private java.math.BigDecimal amount;
+    }
 }

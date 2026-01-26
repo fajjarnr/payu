@@ -1,5 +1,6 @@
 package id.payu.statement.service;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -38,5 +39,8 @@ public class WalletServiceClient {
         }
     }
 
-    private record WalletBalanceResponse(BigDecimal balance) {}
+    @Data
+    private static class WalletBalanceResponse {
+        private BigDecimal balance;
+    }
 }

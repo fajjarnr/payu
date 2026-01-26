@@ -74,7 +74,7 @@ public class StatementController {
     @GetMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Page<StatementResponse>> listStatements(
-            @PageableDefault(size = 12, sort = "statementPeriod", direction = Sort.Direction.DESCENDING) Pageable pageable,
+            @PageableDefault(size = 12, sort = "statementPeriod", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();

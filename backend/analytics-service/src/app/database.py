@@ -1,8 +1,18 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, String, DateTime, Float, Integer, BigInteger, JSON, Index, Text, Boolean
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    Float,
+    Integer,
+    BigInteger,
+    JSON,
+    Index,
+    Text,
+    Boolean,
+)
 from datetime import datetime
-from typing import Optional, Dict, Any
 
 from app.config import get_settings
 import structlog
@@ -29,13 +39,13 @@ class TransactionAnalyticsEntity(Base):
     status = Column(String, nullable=False)
     recipient_id = Column(String, nullable=True)
     merchant_id = Column(String, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    event_metadata = Column("metadata", JSON, nullable=True)
 
     timestamp = Column(DateTime, nullable=False, index=True)
 
     __table_args__ = (
-        Index('idx_transactions_user_time', 'user_id', 'timestamp'),
-        Index('idx_transactions_type_time', 'transaction_type', 'timestamp'),
+        Index("idx_transactions_user_time", "user_id", "timestamp"),
+        Index("idx_transactions_type_time", "transaction_type", "timestamp"),
     )
 
 
@@ -52,9 +62,7 @@ class WalletBalanceEntity(Base):
 
     timestamp = Column(DateTime, nullable=False, index=True)
 
-    __table_args__ = (
-        Index('idx_wallet_balance_user_time', 'user_id', 'timestamp'),
-    )
+    __table_args__ = (Index("idx_wallet_balance_user_time", "user_id", "timestamp"),)
 
 
 class UserActivityEntity(Base):
@@ -68,13 +76,11 @@ class UserActivityEntity(Base):
     ip_address = Column(String, nullable=True)
     user_agent = Column(Text, nullable=True)
     duration_seconds = Column(Integer, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    event_metadata = Column("metadata", JSON, nullable=True)
 
     timestamp = Column(DateTime, nullable=False, index=True)
 
-    __table_args__ = (
-        Index('idx_user_activity_user_time', 'user_id', 'timestamp'),
-    )
+    __table_args__ = (Index("idx_user_activity_user_time", "user_id", "timestamp"),)
 
 
 class UserMetricsEntity(Base):
@@ -88,11 +94,11 @@ class UserMetricsEntity(Base):
     account_age_days = Column(Integer, default=0)
     kyc_status = Column(String, nullable=True)
 
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    __table_args__ = (
-        Index('idx_user_metrics_kyc', 'kyc_status'),
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
+
+    __table_args__ = (Index("idx_user_metrics_kyc", "kyc_status"),)
 
 
 class RecommendationEntity(Base):
@@ -113,7 +119,7 @@ class RecommendationEntity(Base):
     dismissed_at = Column(DateTime, nullable=True)
 
     __table_args__ = (
-        Index('idx_recommendations_user_created', 'user_id', 'created_at'),
+        Index("idx_recommendations_user_created", "user_id", "created_at"),
     )
 
 
@@ -135,9 +141,9 @@ class FraudScoreEntity(Base):
     scored_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 
     __table_args__ = (
-        Index('idx_fraud_scores_user_time', 'user_id', 'scored_at'),
-        Index('idx_fraud_scores_risk_level', 'risk_level'),
-        Index('idx_fraud_scores_suspicious', 'is_suspicious'),
+        Index("idx_fraud_scores_user_time", "user_id", "scored_at"),
+        Index("idx_fraud_scores_risk_level", "risk_level"),
+        Index("idx_fraud_scores_suspicious", "is_suspicious"),
     )
 
 
@@ -148,12 +154,10 @@ async def init_db():
         echo=False,
         pool_pre_ping=True,
         pool_size=10,
-        max_overflow=20
+        max_overflow=20,
     )
     async_session_maker = async_sessionmaker(
-        engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        engine, class_=AsyncSession, expire_on_commit=False
     )
 
     await _create_hypertables()
@@ -165,25 +169,33 @@ async def _create_hypertables():
     async with async_session_maker() as session:
         from sqlalchemy import text
 
-        create_timescale = text("""
+        create_timescale = text(
+            """
             SELECT create_hypertable('transaction_analytics', 'timestamp',
                 chunk_time_interval => interval '7 days');
-        """)
+        """
+        )
 
-        create_wallet_hypertable = text("""
+        create_wallet_hypertable = text(
+            """
             SELECT create_hypertable('wallet_balance_history', 'timestamp',
                 chunk_time_interval => interval '7 days');
-        """)
+        """
+        )
 
-        create_activity_hypertable = text("""
+        create_activity_hypertable = text(
+            """
             SELECT create_hypertable('user_activity_analytics', 'timestamp',
                 chunk_time_interval => interval '7 days');
-        """)
+        """
+        )
 
-        create_fraud_hypertable = text("""
+        create_fraud_hypertable = text(
+            """
             SELECT create_hypertable('fraud_scores', 'scored_at',
                 chunk_time_interval => interval '7 days');
-        """)
+        """
+        )
 
         try:
             await session.execute(create_timescale)

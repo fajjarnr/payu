@@ -13,7 +13,7 @@ export interface UseWebSocketOptions {
 export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   const { onMessage, onError, onClose, onOpen, enabled = true } = options;
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const token = useAuthStore((state) => state.token);
 
   const disconnect = useCallback(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Activity, Landmark, Coins, Users, UserPlus, MoreVertical } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { BalanceResponse, WalletTransaction, Pocket, SharedMember } from '@/types';
@@ -16,9 +16,15 @@ interface SharedPocket extends Pocket {
 }
 
 export default function PocketsPage() {
-    const [accountId] = useState(() => localStorage.getItem('accountId') || '');
+    const [accountId, setAccountId] = useState('');
     const [selectedPocket, setSelectedPocket] = useState<string | null>(null);
     const [showMemberModal, setShowMemberModal] = useState(false);
+
+    // Load accountId from localStorage on client side only
+    useEffect(() => {
+        const storedAccountId = localStorage.getItem('accountId') || '';
+        setAccountId(storedAccountId);
+    }, []);
 
     const { data: balance, isLoading: balanceLoading } = useQuery({
         queryKey: ['wallet-balance', accountId],

@@ -69,6 +69,7 @@ export interface BalanceResponse {
 }
 
 export type TransactionType = 'INTERNAL_TRANSFER' | 'BIFAST_TRANSFER' | 'SKN_TRANSFER' | 'RTGS_TRANSFER' | 'QRIS_PAYMENT' | 'BILL_PAYMENT' | 'TOP_UP';
+export type TransferType = 'INTERNAL_TRANSFER' | 'BIFAST_TRANSFER' | 'SKN_TRANSFER' | 'RTGS_TRANSFER';
 export type TransactionStatus = 'PENDING' | 'VALIDATING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 export type TransferScheduleType = 'NOW' | 'SCHEDULED' | 'RECURRING';
 
@@ -77,14 +78,17 @@ export const transferSchema = z.object({
   toAccountId: z.string().min(1, 'Destination account is required'),
   amount: z.number().positive('Amount must be positive'),
   description: z.string().optional(),
-  transferType: z.enum(['INTERNAL_TRANSFER', 'BIFAST_TRANSFER', 'SKN_TRANSFER', 'RTGS_TRANSFER']).default('INTERNAL_TRANSFER'),
-  scheduleType: z.enum(['NOW', 'SCHEDULED', 'RECURRING']).default('NOW'),
+  transferType: z.enum(['INTERNAL_TRANSFER', 'BIFAST_TRANSFER', 'SKN_TRANSFER', 'RTGS_TRANSFER'] as const).optional().default('INTERNAL_TRANSFER'),
+  scheduleType: z.enum(['NOW', 'SCHEDULED', 'RECURRING'] as const).optional().default('NOW'),
   scheduledAt: z.string().optional(),
   recurringDay: z.number().min(1).max(31).optional(),
   recurringMonth: z.number().min(1).max(12).optional(),
 });
 
-export type TransferRequest = z.infer<typeof transferSchema>;
+// Use the input type for form (all fields required for form validation)
+export type TransferRequest = z.input<typeof transferSchema>;
+// Use the output type for API calls (defaults applied)
+export type TransferRequestOutput = z.output<typeof transferSchema>;
 
 export interface InitiateTransferRequest {
   senderAccountId: string;
