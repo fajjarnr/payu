@@ -30,6 +30,10 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Python Caches
+.ruff_cache/
+.mypy_cache/
+
 # Virtual Environments
 venv/
 .venv/
