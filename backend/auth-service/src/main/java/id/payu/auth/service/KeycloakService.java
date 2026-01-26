@@ -153,6 +153,52 @@ public class KeycloakService {
         return loginInternal(username, password);
     }
 
+    /**
+     * Blocking version of validateCredentials for use in servlet (non-reactive) contexts.
+     * This method blocks the thread until the validation completes.
+     *
+     * @param username the username
+     * @param password the password
+     * @return true if credentials are valid, false otherwise
+     */
+    public Boolean validateCredentialsBlocking(String username, String password) {
+        return validateCredentials(username, password)
+                .block(); // Block until Mono completes
+    }
+
+    /**
+     * Blocking version of login for use in servlet (non-reactive) contexts.
+     * This method blocks the thread until the login completes.
+     *
+     * @param username the username
+     * @param password the password
+     * @return LoginResponse containing access tokens
+     * @throws IllegalArgumentException if login fails
+     */
+    public LoginResponse loginBlocking(String username, String password) {
+        return login(username, password)
+                .block(); // Block until Mono completes
+    }
+
+    /**
+     * Blocking version of verifyMFAAndCompleteLogin for use in servlet (non-reactive) contexts.
+     * This method blocks the thread until the MFA verification completes.
+     *
+     * @param mfaToken the MFA token
+     * @param otpCode the OTP code
+     * @param username the username
+     * @param password the password
+     * @param context the login context
+     * @return LoginResponse containing access tokens
+     * @throws MFAException if MFA verification fails
+     */
+    public LoginResponse verifyMFAAndCompleteLoginBlocking(String mfaToken, String otpCode,
+                                                            String username, String password,
+                                                            LoginContext context) {
+        return verifyMFAAndCompleteLogin(mfaToken, otpCode, username, password, context)
+                .block(); // Block until Mono completes
+    }
+
     private Mono<LoginResponse> loginInternal(String username, String password) {
         if (isAccountLocked(username)) {
             log.warn("Login attempt for locked account: {}", username);

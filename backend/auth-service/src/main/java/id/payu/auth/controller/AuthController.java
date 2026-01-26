@@ -18,8 +18,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * Authentication controller using Spring MVC (servlet API).
+ * Handles login, MFA verification, and risk evaluation.
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -31,56 +36,66 @@ public class AuthController {
     private final MFATokenService mfaTokenService;
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<?>> login(@Valid @RequestBody LoginRequest request, 
-                                        HttpServletRequest httpRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+                                    HttpServletRequest httpRequest) {
         LoginContext context = buildLoginContext(request.username(), httpRequest);
-        
-        return keycloakService.validateCredentials(request.username(), request.password())
-                .flatMap(valid -> {
-                    if (!valid) {
-                        return Mono.just(ResponseEntity.badRequest().build());
-                    }
-                    
-                    RiskEvaluationService.RiskEvaluationResult riskResult = 
-                            riskEvaluationService.evaluateRisk(context);
-                    
-                    if (riskResult.isMfaRequired()) {
-                        var mfaToken = mfaTokenService.generateMFAToken(request.username());
-                        return Mono.just(ResponseEntity.ok(
-                                new MFAResponse(
-                                        true,
-                                        mfaToken.mfaToken(),
-                                        (mfaToken.expiresAt() - System.currentTimeMillis()) / 1000,
-                                        riskResult.getMessage()
-                                )
-                        ));
-                    }
-                    
-                    return keycloakService.login(request.username(), request.password())
-                            .map(ResponseEntity::ok);
-                })
-                .onErrorResume(error -> Mono.just(ResponseEntity.badRequest().build()));
+
+        try {
+            // Validate credentials (blocking call)
+            Boolean isValid = keycloakService.validateCredentialsBlocking(request.username(), request.password());
+
+            if (Boolean.FALSE.equals(isValid)) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Evaluate risk (synchronous)
+            RiskEvaluationService.RiskEvaluationResult riskResult =
+                    riskEvaluationService.evaluateRisk(context);
+
+            if (riskResult.isMfaRequired()) {
+                var mfaToken = mfaTokenService.generateMFAToken(request.username());
+                return ResponseEntity.ok(
+                        new MFAResponse(
+                                true,
+                                mfaToken.mfaToken(),
+                                (mfaToken.expiresAt() - System.currentTimeMillis()) / 1000,
+                                riskResult.getMessage()
+                        )
+                );
+            }
+
+            // Complete login (blocking)
+            LoginResponse loginResponse = keycloakService.loginBlocking(request.username(), request.password());
+            return ResponseEntity.ok(loginResponse);
+
+        } catch (Exception e) {
+            log.error("Login failed for user: {}", request.username(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/mfa/verify")
-    public Mono<ResponseEntity<LoginResponse>> verifyMFA(@Valid @RequestBody MFAVerifyRequest request,
-                                                        HttpServletRequest httpRequest) {
+    public ResponseEntity<LoginResponse> verifyMFA(@Valid @RequestBody MFAVerifyRequest request,
+                                                    HttpServletRequest httpRequest) {
         LoginContext context = buildLoginContext(request.username(), httpRequest);
-        
-        return keycloakService.verifyMFAAndCompleteLogin(
-                        request.mfaToken(),
-                        request.otpCode(),
-                        request.username(),
-                        "", 
-                        context
-                )
-                .map(ResponseEntity::ok)
-                .onErrorResume(error -> {
-                    if (error instanceof MFAException) {
-                        log.warn("MFA verification failed: {}", error.getMessage());
-                    }
-                    return Mono.just(ResponseEntity.badRequest().build());
-                });
+
+        try {
+            LoginResponse response = keycloakService.verifyMFAAndCompleteLoginBlocking(
+                    request.mfaToken(),
+                    request.otpCode(),
+                    request.username(),
+                    "",
+                    context
+            );
+            return ResponseEntity.ok(response);
+
+        } catch (MFAException e) {
+            log.warn("MFA verification failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("MFA verification failed for user: {}", request.username(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     private LoginContext buildLoginContext(String username, HttpServletRequest request) {

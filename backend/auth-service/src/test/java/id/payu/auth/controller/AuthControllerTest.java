@@ -64,9 +64,9 @@ class AuthControllerTest {
                     "Bearer"
             );
 
-            // Mock validateCredentials to return true
-            given(keycloakService.validateCredentials(anyString(), anyString()))
-                    .willReturn(Mono.just(true));
+            // Mock validateCredentialsBlocking to return true
+            given(keycloakService.validateCredentialsBlocking(anyString(), anyString()))
+                    .willReturn(true);
 
             // Mock risk evaluation to return low risk (no MFA required)
             given(riskEvaluationService.evaluateRisk(any()))
@@ -77,8 +77,8 @@ class AuthControllerTest {
                             "Low risk"  // message
                     ));
 
-            given(keycloakService.login(anyString(), anyString()))
-                    .willReturn(Mono.just(response));
+            given(keycloakService.loginBlocking(anyString(), anyString()))
+                    .willReturn(response);
 
             // When/Then
             mockMvc.perform(post("/api/v1/auth/login")
@@ -104,9 +104,9 @@ class AuthControllerTest {
             // Given
             LoginRequest request = new LoginRequest("testuser", "wrongpassword");
 
-            // Mock validateCredentials to return false
-            given(keycloakService.validateCredentials(anyString(), anyString()))
-                    .willReturn(Mono.just(false));
+            // Mock validateCredentialsBlocking to return false
+            given(keycloakService.validateCredentialsBlocking(anyString(), anyString()))
+                    .willReturn(false);
 
             // When/Then
             mockMvc.perform(post("/api/v1/auth/login")
@@ -128,9 +128,9 @@ class AuthControllerTest {
             // Given
             LoginRequest request = new LoginRequest("lockeduser", "password");
 
-            // Mock validateCredentials to return false (simulating locked account)
-            given(keycloakService.validateCredentials(anyString(), anyString()))
-                    .willReturn(Mono.just(false));
+            // Mock validateCredentialsBlocking to return false (simulating locked account)
+            given(keycloakService.validateCredentialsBlocking(anyString(), anyString()))
+                    .willReturn(false);
 
             // When/Then
             mockMvc.perform(post("/api/v1/auth/login")
