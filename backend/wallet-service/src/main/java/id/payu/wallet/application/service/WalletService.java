@@ -43,15 +43,16 @@ public class WalletService implements WalletUseCase {
         log.debug("Getting wallet for account: {}", accountId);
         String cacheKey = "wallet:account:" + accountId;
 
-        return cacheService.get(
-                cacheKey,
-                Wallet.class,
-                () -> {
-                    Optional<Wallet> wallet = walletPersistencePort.findByAccountId(accountId);
-                    wallet.ifPresent(w -> cacheService.put(cacheKey, w, Duration.ofMinutes(10)));
-                    return wallet;
-                }
-        );
+        // Try cache first
+        Wallet cached = cacheService.get(cacheKey, Wallet.class);
+        if (cached != null) {
+            return Optional.of(cached);
+        }
+
+        // Cache miss - fetch from DB
+        Optional<Wallet> wallet = walletPersistencePort.findByAccountId(accountId);
+        wallet.ifPresent(w -> cacheService.put(cacheKey, w, Duration.ofMinutes(10)));
+        return wallet;
     }
 
     @Override

@@ -47,11 +47,6 @@ public class PocketPersistenceAdapter implements PocketPersistencePort {
         return repository.findAllActive().stream().map(this::toDomain).toList();
     }
 
-    @Override
-    public void deleteById(UUID pocketId) {
-        repository.deleteById(pocketId);
-    }
-
     private PocketEntity toEntity(Pocket pocket) {
         PocketEntity entity = new PocketEntity();
         entity.setId(pocket.getId());
