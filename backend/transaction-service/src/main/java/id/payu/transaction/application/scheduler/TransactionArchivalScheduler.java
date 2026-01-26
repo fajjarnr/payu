@@ -1,6 +1,6 @@
 package id.payu.transaction.application.scheduler;
 
-import id.payu.transaction.application.service.ArchivalResult;
+import id.payu.transaction.application.service.dto.ArchivalResult;
 import id.payu.transaction.application.service.TransactionArchivalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package id.payu.transaction.application.service;
+package id.payu.transaction.application.service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

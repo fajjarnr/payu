@@ -1,6 +1,7 @@
 package id.payu.transaction.application.service;
 
 import id.payu.transaction.domain.model.ScheduledTransfer;
+import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
 import id.payu.transaction.dto.CreateScheduledTransferRequest;
@@ -47,7 +48,7 @@ class ScheduledTransferServiceTest {
                 .amount(new BigDecimal("100000"))
                 .currency("IDR")
                 .description("Monthly transfer")
-                .transferType(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
+                .transferType(Transaction.TransactionType.INTERNAL_TRANSFER)
                 .scheduleType(ScheduledTransfer.ScheduleType.RECURRING_MONTHLY)
                 .startDate(Instant.now())
                 .dayOfMonth(1)
@@ -210,6 +211,12 @@ class ScheduledTransferServiceTest {
                 .senderAccountId(UUID.randomUUID())
                 .recipientAccountNumber("0987654321")
                 .amount(new BigDecimal("200000"))
+                .currency("IDR")
+                .description("Updated transfer")
+                .transferType(Transaction.TransactionType.INTERNAL_TRANSFER)
+                .scheduleType(ScheduledTransfer.ScheduleType.RECURRING_MONTHLY)
+                .startDate(Instant.now().plusSeconds(300))
+                .dayOfMonth(15)
                 .build();
 
         when(persistencePort.findById(id)).thenReturn(Optional.of(scheduledTransfer));

@@ -1,5 +1,6 @@
 package id.payu.transaction.application.service;
 
+import id.payu.transaction.application.service.dto.ArchivalResult;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.model.TransactionArchive;
 import id.payu.transaction.domain.port.out.TransactionArchivalPersistencePort;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -17,6 +19,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,6 +46,11 @@ class TransactionArchivalServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Set private fields via reflection since @Value annotations aren't processed in Mockito tests
+        ReflectionTestUtils.setField(archivalService, "retentionMonths", 12);
+        ReflectionTestUtils.setField(archivalService, "batchSize", 1000);
+        ReflectionTestUtils.setField(archivalService, "archivalEnabled", true);
+
         completedTransaction = Transaction.builder()
                 .id(UUID.randomUUID())
                 .referenceNumber("TXN1234567890")
@@ -99,6 +107,21 @@ class TransactionArchivalServiceTest {
     @Test
     @DisplayName("should return DISABLED status when archival is disabled")
     void shouldReturnDisabledStatus() {
+        // Disable archival via reflection
+        ReflectionTestUtils.setField(archivalService, "archivalEnabled", false);
+
+        ArchivalResult result = archivalService.archiveOldTransactions();
+
+        assertThat(result).isNotNull();
+        assertThat(result.getArchivedCount()).isEqualTo(0);
+        assertThat(result.getBatchId()).isNull();
+        assertThat(result.getStatus()).isEqualTo("DISABLED");
+
+        // Re-enable for other tests
+        ReflectionTestUtils.setField(archivalService, "archivalEnabled", true);
+
+        verify(archivalPersistencePort, times(0)).archiveTransactions(anyList());
+        verify(archivalPersistencePort, times(0)).deleteArchivedTransactions(anyList());
     }
 
     @Test
@@ -121,15 +144,20 @@ class TransactionArchivalServiceTest {
                     .build());
         }
 
+        // Use AtomicInteger to track call count for pagination simulation
+        AtomicInteger callCount = new AtomicInteger(0);
+
         given(archivalPersistencePort.countTransactionsToArchive(any(Instant.class))).willReturn(2500L);
         given(archivalPersistencePort.getNextBatchId()).willReturn(1L);
         given(archivalPersistencePort.findTransactionsToArchive(any(Instant.class), eq(1000)))
                 .willAnswer(invocation -> {
-                    int page = invocation.getArgument(1, Integer.class);
-                    if (page == 0) return transactions.subList(0, 1000);
-                    if (page == 1) return transactions.subList(1000, 2000);
-                    if (page == 2) return transactions.subList(2000, 2500);
-                    return List.of();
+                    int call = callCount.getAndIncrement();
+                    int start = call * 1000;
+                    int end = Math.min(start + 1000, transactions.size());
+                    if (start >= transactions.size()) {
+                        return List.of();
+                    }
+                    return transactions.subList(start, end);
                 });
 
         ArchivalResult result = archivalService.archiveOldTransactions();

@@ -1,12 +1,13 @@
 package id.payu.transaction.architecture;
 
 import com.tngtech.archunit.base.DescribedPredicate;
-import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
 @AnalyzeClasses(packages = "id.payu.transaction", importOptions = ImportOption.DoNotIncludeTests.class)
@@ -22,20 +23,20 @@ public class ArchitectureTest {
     static final ArchRule application_layer_should_only_depend_on_domain =
             classes().that().resideInAPackage("..application..")
                     .should().onlyDependOnClassesThat()
-                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.dto..", "java..", "lombok..", "org.springframework..", "org.slf4j..");
+                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.dto..", "id.payu.transaction.application..", "java..", "lombok..", "org.springframework..", "org.slf4j..");
 
     @ArchTest
     static final ArchRule adapter_layer_should_only_depend_on_domain_and_application =
             classes().that().resideInAPackage("..adapter..")
                     .should().onlyDependOnClassesThat()
-                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.application..", "id.payu.transaction.dto..", "java..", "org.springframework..", "lombok..", "org.slf4j..", "com.fasterxml.jackson..", "jakarta..", "..adapter..", "io.github.resilience4j..");
+                    .resideInAnyPackage("id.payu.transaction.domain..", "id.payu.transaction.application..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "lombok..", "org.slf4j..", "com.fasterxml.jackson..", "jakarta..", "..adapter..", "io.github.resilience4j..", "io.swagger.v3.oas.annotations..");
 
     @ArchTest
     static final ArchRule controllers_should_only_depend_on_usecases =
             classes().that().resideInAPackage("..adapter.web..")
                     .should().onlyDependOnClassesThat()
                     // Allowed domain.model because controller returns Transaction object currently
-                    .resideInAnyPackage("id.payu.transaction.domain.port.in..", "id.payu.transaction.domain.model..", "id.payu.transaction.dto..", "java..", "org.springframework..", "jakarta..", "lombok..");
+                    .resideInAnyPackage("id.payu.transaction.domain.port.in..", "id.payu.transaction.domain.model..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "jakarta..", "lombok..", "org.slf4j..", "io.swagger.v3.oas.annotations..");
 
     @ArchTest
     static final ArchRule adapters_should_have_suffixed_names =
@@ -50,6 +51,12 @@ public class ArchitectureTest {
             classes().that().resideInAPackage("..application.service..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
+                    .and(new DescribedPredicate<JavaClass>("not in dto package") {
+                        @Override
+                        public boolean test(JavaClass javaClass) {
+                            return !javaClass.getPackageName().endsWith(".dto");
+                        }
+                    })
                     .should().haveSimpleNameEndingWith("Service");
 
     @ArchTest

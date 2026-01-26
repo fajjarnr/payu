@@ -94,8 +94,36 @@ class SplitBillServiceTest {
 
     @Test
     void createSplitBill_WithMultipleParticipants_ShouldSplitEqually() {
-        when(persistencePort.save(any(SplitBill.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(persistencePort.findParticipantsBySplitBillId(any())).thenReturn(List.of());
+        when(persistencePort.save(any(SplitBill.class))).thenAnswer(invocation -> {
+            SplitBill bill = invocation.getArgument(0);
+            bill.setId(splitBillId);
+            return bill;
+        });
+        when(persistencePort.findParticipantsBySplitBillId(splitBillId)).thenAnswer(invocation -> {
+            // Return the participants that would have been saved
+            return List.of(
+                    SplitBillParticipant.builder()
+                            .id(UUID.randomUUID())
+                            .splitBillId(splitBillId)
+                            .accountId(createRequest.getParticipants().get(0).getAccountId())
+                            .accountNumber(createRequest.getParticipants().get(0).getAccountNumber())
+                            .accountName(createRequest.getParticipants().get(0).getAccountName())
+                            .amountOwed(new BigDecimal("500.00"))
+                            .amountPaid(new BigDecimal("0.00"))
+                            .status(SplitBillParticipant.ParticipantStatus.PENDING)
+                            .build(),
+                    SplitBillParticipant.builder()
+                            .id(UUID.randomUUID())
+                            .splitBillId(splitBillId)
+                            .accountId(createRequest.getParticipants().get(1).getAccountId())
+                            .accountNumber(createRequest.getParticipants().get(1).getAccountNumber())
+                            .accountName(createRequest.getParticipants().get(1).getAccountName())
+                            .amountOwed(new BigDecimal("500.00"))
+                            .amountPaid(new BigDecimal("0.00"))
+                            .status(SplitBillParticipant.ParticipantStatus.PENDING)
+                            .build()
+            );
+        });
 
         SplitBillResponse response = splitBillService.createSplitBill(createRequest);
 
@@ -119,6 +147,7 @@ class SplitBillServiceTest {
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
                 .title("Makan Bersama")
+                .splitType(SplitBill.SplitType.EQUAL)
                 .status(SplitBill.SplitStatus.ACTIVE)
                 .participants(List.of(
                         SplitBillParticipant.builder()
@@ -158,6 +187,9 @@ class SplitBillServiceTest {
     void activateSplitBill_WhenInDraft_ShouldActivateAndPublishEvent() {
         SplitBill splitBill = SplitBill.builder()
                 .id(splitBillId)
+                .splitType(SplitBill.SplitType.EQUAL)
+                .totalAmount(new BigDecimal("1000.00"))
+                .currency("IDR")
                 .status(SplitBill.SplitStatus.DRAFT)
                 .build();
 
@@ -178,6 +210,9 @@ class SplitBillServiceTest {
     void activateSplitBill_WhenNotDraft_ShouldThrowException() {
         SplitBill splitBill = SplitBill.builder()
                 .id(splitBillId)
+                .splitType(SplitBill.SplitType.EQUAL)
+                .totalAmount(new BigDecimal("1000.00"))
+                .currency("IDR")
                 .status(SplitBill.SplitStatus.ACTIVE)
                 .build();
 
@@ -204,8 +239,12 @@ class SplitBillServiceTest {
 
         SplitBill splitBill = SplitBill.builder()
                 .id(splitBillId)
+                .referenceNumber("SPL123456")
+                .creatorAccountId(accountId)
                 .totalAmount(new BigDecimal("1000.00"))
                 .currency("IDR")
+                .title("Test Split Bill")
+                .splitType(SplitBill.SplitType.EQUAL)
                 .status(SplitBill.SplitStatus.IN_PROGRESS)
                 .participants(List.of(participant))
                 .build();
@@ -248,6 +287,12 @@ class SplitBillServiceTest {
 
         SplitBill splitBill = SplitBill.builder()
                 .id(splitBillId)
+                .referenceNumber("SPL123456")
+                .creatorAccountId(accountId)
+                .totalAmount(new BigDecimal("1000.00"))
+                .currency("IDR")
+                .title("Test Split Bill")
+                .splitType(SplitBill.SplitType.EQUAL)
                 .status(SplitBill.SplitStatus.IN_PROGRESS)
                 .participants(List.of(participant))
                 .build();
@@ -268,6 +313,12 @@ class SplitBillServiceTest {
     void addParticipant_WhenInDraft_ShouldAddParticipantAndPublishEvent() {
         SplitBill splitBill = SplitBill.builder()
                 .id(splitBillId)
+                .referenceNumber("SPL123456")
+                .creatorAccountId(accountId)
+                .totalAmount(new BigDecimal("1000.00"))
+                .currency("IDR")
+                .title("Test Split Bill")
+                .splitType(SplitBill.SplitType.EQUAL)
                 .status(SplitBill.SplitStatus.DRAFT)
                 .build();
 
@@ -293,6 +344,12 @@ class SplitBillServiceTest {
     void cancelSplitBill_WhenActive_ShouldCancelAndPublishEvent() {
         SplitBill splitBill = SplitBill.builder()
                 .id(splitBillId)
+                .referenceNumber("SPL123456")
+                .creatorAccountId(accountId)
+                .totalAmount(new BigDecimal("1000.00"))
+                .currency("IDR")
+                .title("Test Split Bill")
+                .splitType(SplitBill.SplitType.EQUAL)
                 .status(SplitBill.SplitStatus.ACTIVE)
                 .build();
 
@@ -312,6 +369,12 @@ class SplitBillServiceTest {
     void cancelSplitBill_WhenCompleted_ShouldThrowException() {
         SplitBill splitBill = SplitBill.builder()
                 .id(splitBillId)
+                .referenceNumber("SPL123456")
+                .creatorAccountId(accountId)
+                .totalAmount(new BigDecimal("1000.00"))
+                .currency("IDR")
+                .title("Test Split Bill")
+                .splitType(SplitBill.SplitType.EQUAL)
                 .status(SplitBill.SplitStatus.COMPLETED)
                 .build();
 
