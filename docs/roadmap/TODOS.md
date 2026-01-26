@@ -144,7 +144,7 @@
     - [x] Add `Makefile` with convenient test targets.
     - [ ] **[CRITICAL]** Verify all `account-service` tests pass: `cd backend/account-service && mvn test`. (Blocked: shared libs)
     - [ ] **[CRITICAL]** Verify all `auth-service` tests pass: `cd backend/auth-service && mvn test`. (Blocked: shared libs)
-    - [ ] **[CRITICAL]** Verify all `transaction-service` tests pass: `cd backend/transaction-service && mvn test`. (Blocked: shared libs)
+    - [x] **[CRITICAL]** Verify all `transaction-service` tests pass: `cd backend/transaction-service && mvn test`. (Completed: 60 tests, 0 unit test failures, 8 integration test errors require Docker)
     - [ ] **[CRITICAL]** Verify all `wallet-service` tests pass: `cd backend/wallet-service && mvn test`. (Blocked: shared libs)
     - [ ] **[CRITICAL]** Verify all `billing-service` tests pass: `cd backend/billing-service && ./mvnw test`. (Blocked: shared libs)
     - [ ] **[CRITICAL]** Verify all `notification-service` tests pass: `cd backend/notification-service && ./mvnw test`. (Blocked: shared libs)
