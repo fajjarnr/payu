@@ -160,9 +160,8 @@ cleanup-test-db: ## Reset test databases
 build-test-deps: ## Install shared dependencies
 	@echo "Installing shared libraries..."
 	@cd backend/shared/cache-starter && mvn clean install -DskipTests -q
-	@cd ../resilience-starter && mvn clean install -DskipTests -q
-	@cd ../security-starter && mvn clean install -DskipTests -q
-	@cd ../../..
+	@cd backend/shared/resilience-starter && mvn clean install -DskipTests -q
+	@cd backend/shared/security-starter && mvn clean install -DskipTests -q
 	@echo "Shared dependencies installed"
 
 # ============================================

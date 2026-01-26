@@ -33,9 +33,10 @@ NC='\033[0m' # No Color
 
 # Versions
 JAVA_VERSION="21"
-NODE_VERSION="20"
+NODE_VERSION="22"
 PYTHON_VERSION="3.12"
 MAVEN_VERSION="3.9.9"
+OC_VERSION="stable"
 
 # Detect OS
 detect_os() {
@@ -302,9 +303,52 @@ install_nodejs() {
     esac
     
     # Install global npm packages
-    sudo npm install -g pnpm
+    sudo npm install -g pnpm yarn
     
     print_success "Node.js $NODE_VERSION installed"
+}
+
+install_cloud_clis() {
+    print_section "Installing Cloud CLIs (OpenShift & Kubernetes)"
+    
+    if command_exists oc; then
+        print_warning "OpenShift CLI already installed: $(oc version --client | head -n 1)"
+        return 0
+    fi
+    
+    case $OS in
+        ubuntu|debian|pop|fedora|rhel|centos|rocky|almalinux)
+            echo "Downloading OpenShift Client..."
+            wget -q https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz
+            tar -xzf openshift-client-linux.tar.gz
+            sudo mv oc kubectl /usr/local/bin/
+            rm openshift-client-linux.tar.gz README.md 2>/dev/null || true
+            ;;
+        macos)
+            brew install openshift-cli
+            ;;
+    esac
+    
+    print_success "OpenShift and Kubernetes CLIs installed"
+}
+
+install_db_clients() {
+    print_section "Installing Database & Messaging Clients"
+    
+    case $OS in
+        ubuntu|debian|pop)
+            sudo apt install -y postgresql-client redis-tools kcat
+            ;;
+        fedora|rhel|centos|rocky|almalinux)
+            sudo dnf install -y postgresql redis kcat
+            ;;
+        macos)
+            brew install postgresql@16 redis kcat
+            brew link --force postgresql@16
+            ;;
+    esac
+    
+    print_success "Database & Messaging clients installed"
 }
 
 install_additional_tools() {
@@ -313,13 +357,13 @@ install_additional_tools() {
     # Install jq (JSON processor)
     case $OS in
         ubuntu|debian|pop)
-            sudo apt install -y jq httpie
+            sudo apt install -y jq httpie pre-commit
             ;;
         fedora|rhel|centos|rocky|almalinux)
-            sudo dnf install -y jq httpie
+            sudo dnf install -y jq httpie pre-commit
             ;;
         macos)
-            brew install jq httpie
+            brew install jq httpie pre-commit
             ;;
     esac
     
@@ -355,12 +399,24 @@ setup_project() {
         cp .env.example .env
         print_success "Created .env from .env.example"
     fi
+
+    # Build Shared Starters (Mandatory for backend)
+    print_section "Building Shared Backend Starters"
+    if [ -d "backend/shared" ]; then
+        make build-test-deps || {
+            echo "Fallback: building starters manually..."
+            cd backend/shared/cache-starter && mvn clean install -DskipTests -q
+            cd ../resilience-starter && mvn clean install -DskipTests -q
+            cd ../security-starter && mvn clean install -DskipTests -q
+            cd "$SCRIPT_DIR"
+        }
+    fi
     
     # Install frontend dependencies
     if [ -d "frontend/web-app" ]; then
         echo "Installing web-app dependencies..."
         cd frontend/web-app
-        npm install
+        npm install --legacy-peer-deps
         cd "$SCRIPT_DIR"
         print_success "web-app dependencies installed"
     fi
@@ -368,7 +424,7 @@ setup_project() {
     if [ -d "frontend/developer-docs" ]; then
         echo "Installing developer-docs dependencies..."
         cd frontend/developer-docs
-        npm install
+        npm install --legacy-peer-deps
         cd "$SCRIPT_DIR"
         print_success "developer-docs dependencies installed"
     fi
@@ -376,7 +432,7 @@ setup_project() {
     if [ -d "frontend/mobile" ]; then
         echo "Installing mobile dependencies..."
         cd frontend/mobile
-        npm install
+        npm install --legacy-peer-deps
         cd "$SCRIPT_DIR"
         print_success "mobile dependencies installed"
     fi
@@ -387,13 +443,24 @@ setup_project() {
             echo "Installing $service Python dependencies..."
             cd "backend/$service"
             python3 -m venv .venv
-            source .venv/bin/activate
-            pip install -r requirements.txt
+            if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+                source .venv/Scripts/activate
+            else
+                source .venv/bin/activate
+            fi
+            pip install -r requirements.txt || print_warning "Failed to install requirements for $service"
             deactivate
             cd "$SCRIPT_DIR"
             print_success "$service dependencies installed"
         fi
     done
+
+    # Setup Pre-commit hooks
+    if command_exists pre-commit; then
+        echo "Setting up pre-commit hooks..."
+        pre-commit install
+        print_success "Pre-commit hooks installed"
+    fi
     
     print_success "Project setup complete"
 }
@@ -490,7 +557,25 @@ check_versions() {
     if command_exists oc; then
         print_success "OpenShift CLI: $(oc version --client 2>/dev/null | head -n 1)"
     else
-        print_warning "OpenShift CLI: Not installed"
+        print_error "OpenShift CLI: Not installed"
+    fi
+
+    if command_exists psql; then
+        print_success "psql: $(psql --version)"
+    else
+        print_error "psql: Not installed"
+    fi
+
+    if command_exists redis-cli; then
+        print_success "redis-cli: $(redis-cli --version)"
+    else
+        print_error "redis-cli: Not installed"
+    fi
+
+    if command_exists kcat; then
+        print_success "kcat: $(kcat -V | head -n 1)"
+    else
+        print_error "kcat: Not installed"
     fi
     
     echo ""
@@ -555,6 +640,8 @@ main() {
             install_maven
             install_python
             install_nodejs
+            install_db_clients
+            install_cloud_clis
             install_additional_tools
             setup_project
             check_versions
