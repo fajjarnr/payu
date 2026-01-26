@@ -1,7 +1,10 @@
 import pytest
+import sys
+
+sys.path.insert(0, "/home/ubuntu/payu/backend/analytics-service/src")  # noqa: E402
 from datetime import datetime, timedelta
 
-from app.models.schemas import FraudRiskLevel, FraudScore, FraudDetectionResult
+from app.models.schemas import FraudRiskLevel, FraudDetectionResult
 from app.ml.fraud_detection import FraudDetectionEngine
 
 
@@ -28,7 +31,7 @@ class TestFraudDetectionEngine:
             "amount": 50000.0,
             "type": "TRANSFER",
             "currency": "IDR",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = fraud_engine._calculate_amount_risk(transaction_data)
@@ -43,7 +46,7 @@ class TestFraudDetectionEngine:
             "amount": 200000000.0,
             "type": "TRANSFER",
             "currency": "IDR",
-            "metadata": {}
+            "metadata": {},
         }
 
         amount_risk = fraud_engine._calculate_amount_risk(transaction_data)
@@ -57,7 +60,7 @@ class TestFraudDetectionEngine:
             "amount": 75000000.0,
             "type": "QRIS_PAYMENT",
             "currency": "IDR",
-            "metadata": {}
+            "metadata": {},
         }
 
         amount_risk = fraud_engine._calculate_amount_risk(transaction_data)
@@ -73,8 +76,8 @@ class TestFraudDetectionEngine:
                     "transaction_id": f"txn-{i}",
                     "amount": 50000.0,
                     "type": "TRANSFER",
-                    "timestamp": (base_time - timedelta(seconds=i*30)).isoformat(),
-                    "recipient_id": f"recipient-{i}"
+                    "timestamp": (base_time - timedelta(seconds=i * 30)).isoformat(),
+                    "recipient_id": f"recipient-{i}",
                 }
                 for i in range(6)
             ]
@@ -84,10 +87,12 @@ class TestFraudDetectionEngine:
             "transaction_id": "txn-new",
             "user_id": "user-123",
             "amount": 50000.0,
-            "type": "TRANSFER"
+            "type": "TRANSFER",
         }
 
-        velocity_risk = await fraud_engine._calculate_velocity_risk(transaction_data, user_history)
+        velocity_risk = await fraud_engine._calculate_velocity_risk(
+            transaction_data, user_history
+        )
         assert velocity_risk >= 20.0
 
     async def test_velocity_risk_normal_frequency(self, fraud_engine):
@@ -99,7 +104,7 @@ class TestFraudDetectionEngine:
                     "amount": 50000.0,
                     "type": "TRANSFER",
                     "timestamp": (datetime.utcnow() - timedelta(hours=i)).isoformat(),
-                    "recipient_id": f"recipient-{i}"
+                    "recipient_id": f"recipient-{i}",
                 }
                 for i in range(3)
             ]
@@ -109,10 +114,12 @@ class TestFraudDetectionEngine:
             "transaction_id": "txn-new",
             "user_id": "user-123",
             "amount": 50000.0,
-            "type": "TRANSFER"
+            "type": "TRANSFER",
         }
 
-        velocity_risk = await fraud_engine._calculate_velocity_risk(transaction_data, user_history)
+        velocity_risk = await fraud_engine._calculate_velocity_risk(
+            transaction_data, user_history
+        )
         assert velocity_risk < 20.0
 
     async def test_behavioral_risk_high_deviation(self, fraud_engine):
@@ -124,7 +131,7 @@ class TestFraudDetectionEngine:
                     "amount": 10000.0,
                     "type": "TRANSFER",
                     "timestamp": (datetime.utcnow() - timedelta(hours=i)).isoformat(),
-                    "recipient_id": f"recipient-{i}"
+                    "recipient_id": f"recipient-{i}",
                 }
                 for i in range(10)
             ]
@@ -134,44 +141,50 @@ class TestFraudDetectionEngine:
             "transaction_id": "txn-new",
             "user_id": "user-123",
             "amount": 50000.0,
-            "type": "TRANSFER"
+            "type": "TRANSFER",
         }
 
-        behavioral_risk = await fraud_engine._calculate_behavioral_risk(transaction_data, user_history)
+        behavioral_risk = await fraud_engine._calculate_behavioral_risk(
+            transaction_data, user_history
+        )
         assert behavioral_risk > 0
 
     async def test_account_age_risk_new_account(self, fraud_engine):
         """Test account age risk for new account"""
         user_history = {
             "account_created_at": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
-            "recent_transactions": []
+            "recent_transactions": [],
         }
 
         transaction_data = {
             "transaction_id": "txn-new",
             "user_id": "user-123",
             "amount": 100000.0,
-            "type": "TRANSFER"
+            "type": "TRANSFER",
         }
 
-        account_age_risk = fraud_engine._calculate_account_age_risk(transaction_data, user_history)
+        account_age_risk = fraud_engine._calculate_account_age_risk(
+            transaction_data, user_history
+        )
         assert account_age_risk >= 40.0
 
     async def test_account_age_risk_old_account(self, fraud_engine):
         """Test account age risk for established account"""
         user_history = {
             "account_created_at": (datetime.utcnow() - timedelta(days=365)).isoformat(),
-            "recent_transactions": []
+            "recent_transactions": [],
         }
 
         transaction_data = {
             "transaction_id": "txn-new",
             "user_id": "user-123",
             "amount": 100000.0,
-            "type": "TRANSFER"
+            "type": "TRANSFER",
         }
 
-        account_age_risk = fraud_engine._calculate_account_age_risk(transaction_data, user_history)
+        account_age_risk = fraud_engine._calculate_account_age_risk(
+            transaction_data, user_history
+        )
         assert account_age_risk == 0.0
 
     def test_location_risk_suspicious_ip(self, fraud_engine):
@@ -183,8 +196,8 @@ class TestFraudDetectionEngine:
             "type": "TRANSFER",
             "metadata": {
                 "ip_address": "192.168.1.100",
-                "suspicious_ips": ["192.168.1.100"]
-            }
+                "suspicious_ips": ["192.168.1.100"],
+            },
         }
 
         location_risk = fraud_engine._calculate_location_risk(transaction_data)
@@ -199,8 +212,8 @@ class TestFraudDetectionEngine:
             "type": "TRANSFER",
             "metadata": {
                 "ip_address": "192.168.1.200",
-                "last_known_ip": "192.168.1.100"
-            }
+                "last_known_ip": "192.168.1.100",
+            },
         }
 
         location_risk = fraud_engine._calculate_location_risk(transaction_data)
@@ -212,7 +225,7 @@ class TestFraudDetectionEngine:
             "transaction_id": "txn-new",
             "user_id": "user-123",
             "amount": 100000.0,
-            "type": "TRANSFER"
+            "type": "TRANSFER",
         }
 
         location_risk = fraud_engine._calculate_location_risk(transaction_data)
@@ -263,7 +276,7 @@ class TestFraudDetectionEngine:
             "user_id": "user-123",
             "amount": 10000.0,
             "type": "TRANSFER",
-            "currency": "IDR"
+            "currency": "IDR",
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction_data)
@@ -284,10 +297,10 @@ class TestFraudDetectionEngine:
                     "amount": 50000.0,
                     "type": "TRANSFER",
                     "timestamp": (datetime.utcnow() - timedelta(minutes=i)).isoformat(),
-                    "recipient_id": f"recipient-{i}"
+                    "recipient_id": f"recipient-{i}",
                 }
                 for i in range(6)
-            ]
+            ],
         }
 
         transaction_data = {
@@ -295,10 +308,12 @@ class TestFraudDetectionEngine:
             "user_id": "user-123",
             "amount": 250000000.0,
             "type": "TRANSFER",
-            "currency": "IDR"
+            "currency": "IDR",
         }
 
-        result = await fraud_engine.calculate_fraud_score(transaction_data, user_history)
+        result = await fraud_engine.calculate_fraud_score(
+            transaction_data, user_history
+        )
 
         assert isinstance(result, FraudDetectionResult)
         assert result.fraud_score.risk_score >= 40
@@ -312,7 +327,7 @@ class TestFraudDetectionEngine:
             "user_id": "user-123",
             "amount": 100000000.0,
             "type": "TRANSFER",
-            "currency": "IDR"
+            "currency": "IDR",
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction_data)
@@ -331,11 +346,11 @@ class TestFraudDetectionEngine:
             risk_factors={
                 "amount_anomaly": 40.0,
                 "velocity_check": 50.0,
-                "behavioral_pattern": 30.0
+                "behavioral_pattern": 30.0,
             },
             is_suspicious=True,
             recommended_action="BLOCK - Block transaction and require additional verification",
-            scored_at=datetime.utcnow()
+            scored_at=datetime.utcnow(),
         )
 
         fraud_result = FraudDetectionResult(
@@ -344,8 +359,8 @@ class TestFraudDetectionEngine:
             requires_review=False,
             rule_triggers=[
                 "High Amount Anomaly detected",
-                "High Velocity Check detected"
-            ]
+                "High Velocity Check detected",
+            ],
         )
 
         explanation = fraud_engine.explain_fraud_score(fraud_result)
@@ -365,7 +380,7 @@ class TestFraudDetectionEngine:
                 "user_id": "user-123",
                 "amount": 10000.0 * i,
                 "type": "TRANSFER",
-                "currency": "IDR"
+                "currency": "IDR",
             }
             for i in range(1, 6)
         ]
@@ -388,7 +403,7 @@ class TestFraudDetectionEngine:
             "user_id": "user-999",
             "amount": 50000.0,
             "type": "TRANSFER",
-            "currency": "IDR"
+            "currency": "IDR",
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction_data)

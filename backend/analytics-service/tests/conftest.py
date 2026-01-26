@@ -1,14 +1,21 @@
 import pytest
-from unittest.mock import Mock, AsyncMock
-from sqlalchemy.ext.asyncio import AsyncSession
+import sys
+
+sys.path.insert(
+    0, "/home/ubuntu/payu/backend/analytics-service/src"
+)  # noqa: E402
+from unittest.mock import AsyncMock  # noqa: E402
+from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
+
 
 @pytest.fixture
 def mock_settings():
     """Mock settings for testing"""
     from app.config import Settings
+
     settings = Settings(
-        database_url="postgresql+asyncpg://test:test@localhost:5433/test_analytics",
-        kafka_bootstrap_servers="localhost:9092"
+        database_url="postgresql+asyncpg://test:test@localhost:5433/test_analytics",  # pragma: allowlist secret
+        kafka_bootstrap_servers="localhost:9092",
     )
     return settings
 
@@ -25,6 +32,7 @@ def mock_db_session():
 def mock_analytics_service(mock_db_session):
     """Mock Analytics service"""
     from app.services.analytics_service import AnalyticsService
+
     return AnalyticsService(mock_db_session)
 
 
