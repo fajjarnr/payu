@@ -58,7 +58,7 @@ test.describe('Transfer Flow', () => {
 
   test('should validate transfer amount', async ({ page }) => {
     await page.click('button:has-text("Tinjau Ringkasan Transfer")');
-    
+
     const toast = page.locator('[role="alert"], .text-warning');
     await expect(toast).toContainText('Silakan pilih penerima');
   });
@@ -66,9 +66,9 @@ test.describe('Transfer Flow', () => {
   test('should show review page with valid data', async ({ page }) => {
     await page.fill('input[placeholder="Masukkan ID Akun atau Nomor Rekening"]', 'acc-any123');
     await page.fill('input[placeholder="0"]', '50000');
-    
+
     await page.click('button:has-text("Tinjau Ringkasan Transfer")');
-    
+
     await expect(page.getByText('Tinjau Transfer')).toBeVisible();
     await expect(page.getByText('Rp 50.000')).toBeVisible();
   });
@@ -81,10 +81,11 @@ test.describe('Transfer Flow', () => {
   test('should return to form from review page', async ({ page }) => {
     await page.fill('input[placeholder="Masukkan ID Akun atau Nomor Rekening"]', 'acc-any123');
     await page.fill('input[placeholder="0"]', '50000');
-    
+
     await page.click('button:has-text("Tinjau Ringkasan Transfer")');
-    await page.click('button:has-text("Tinjau Transfer")').locator('..').locator('button').first();
-    
+    const backButton = page.locator('button:has-text("Tinjau Transfer")').locator('..').locator('button').first();
+    await backButton.click();
+
     await expect(page.getByText('Transfer Instan')).toBeVisible();
   });
 

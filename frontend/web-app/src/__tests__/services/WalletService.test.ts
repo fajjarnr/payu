@@ -167,7 +167,7 @@ describe('WalletService', () => {
     });
 
     it('should fetch transaction history with custom pagination', async () => {
-      const mockTransactions = [];
+      const mockTransactions: any[] = [];
 
       vi.mocked(api.get).mockResolvedValue({ data: mockTransactions });
 

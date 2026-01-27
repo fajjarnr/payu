@@ -20,7 +20,8 @@
     "confirm": "Konfirmasi",
     "success": "Berhasil",
     "failed": "Gagal",
-    "pending": "Menunggu"
+    "pending": "Menunggu",
+    "user": "Pengguna"
   },
   "nav": {
     "dashboard": "Dasbor",
