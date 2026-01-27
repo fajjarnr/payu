@@ -56,6 +56,14 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
         return transactionJpaRepository.findByReferenceNumber(referenceNumber).stream().toList();
     }
 
+    @Override
+    public Optional<Transaction> findByIdempotencyKey(String idempotencyKey) {
+        if (shardingConfig.isEnabled()) {
+            log.debug("Finding transactions by idempotency key {}", idempotencyKey);
+        }
+        return transactionJpaRepository.findByIdempotencyKey(idempotencyKey);
+    }
+
     /**
      * Find transactions by sender account ID (partition-aware).
      * When sharding is enabled, this query benefits from partition pruning.

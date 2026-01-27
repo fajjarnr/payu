@@ -32,6 +32,7 @@ public interface TransactionJpaRepository extends JpaRepository<Transaction, UUI
      * Global index ensures efficient lookup across all partitions.
      */
     Optional<Transaction> findByReferenceNumber(String referenceNumber);
+    Optional<Transaction> findByIdempotencyKey(String idempotencyKey);
 
     /**
      * Find transactions for an account (both sender and recipient).

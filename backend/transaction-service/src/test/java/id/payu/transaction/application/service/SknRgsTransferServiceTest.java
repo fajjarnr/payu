@@ -91,7 +91,7 @@ class SknRgsTransferServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo("PENDING");
+        assertThat(response.getStatus()).isEqualTo("VALIDATING");
         assertThat(response.getFee()).isEqualTo(new BigDecimal("5000"));
         assertThat(response.getEstimatedCompletionTime()).isEqualTo("Same day");
         verify(transactionPersistencePort, times(2)).save(any(Transaction.class));
@@ -141,7 +141,7 @@ class SknRgsTransferServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo("PENDING");
+        assertThat(response.getStatus()).isEqualTo("VALIDATING");
         assertThat(response.getFee()).isEqualTo(new BigDecimal("25000"));
         assertThat(response.getEstimatedCompletionTime()).isEqualTo("Real-time");
         verify(transactionPersistencePort, times(2)).save(any(Transaction.class));

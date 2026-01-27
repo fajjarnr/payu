@@ -869,7 +869,7 @@ npm run build             # Production build
 
 ---
 
-## 🔧 Phase 4: Backend Improvements
+## 🔧 Phase 5: Backend Hardening
 
 ### 30. API & Performance Optimization
 - [x] **API Gateway Enhancements**:
@@ -921,53 +921,30 @@ npm run build             # Production build
 
 ---
 
-## 🏗️ Phase 4: Infrastructure & DevOps
+## 🏗️ Phase 6: Enterprise Infrastructure & DevOps (Learning Lab)
+> **Note**: Bagian ini difokuskan pada implementasi infrastruktur enterprise di atas OpenShift.
 
-### 33. CI/CD Pipeline Enhancements
-- [x] **Tekton Pipeline Tasks**:
-    - [x] Create **Build Pipeline** for all services.
-    - [x] Create **Test Pipeline** with parallel execution.
-    - [x] Create **Deploy Pipeline** with blue-green deployment.
-    - [x] Add **Rollback Pipeline** for quick recovery.
-- [x] **ArgoCD Configuration**:
-    - [x] Setup **ApplicationSet** for multi-environment.
-    - [x] Configure **Sync Waves** for dependency order.
-    - [x] Implement **PR Preview Environments**.
-    - [x] Add **Drift Detection** alerts.
-- [x] **Quality Gates**:
-    - [x] Add **SonarQube** integration for code quality.
-    - [x] Implement **Test Coverage** thresholds (80%+).
-    - [x] Add **Security Scanning** (Trivy/Snyk).
-    - [x] Block deploys on **Critical Vulnerabilities**.
+### 33. Containerization & Registry Optimization
+- [ ] **Dockerfile Hardening**: Migrasi semua microservices ke Red Hat UBI-9 minimal images.
+- [ ] **Multi-stage Builds**: Optimasi build layer untuk mengecilkan ukuran image (<100MB untuk Quarkus/Java).
+- [ ] **Security Scanning**: Integrasi Trivy/Snyk untuk scan vulnerability pada base image.
+- [ ] **Registry Management**: Setup image tagging strategy (semantic versioning) dan pushing ke internal registry.
 
-### 34. Monitoring & Alerting
-- [x] **Grafana Dashboards**:
-    - [x] Create **Business Metrics** dashboard (TPV, conversions).
-    - [x] Create **SLA Dashboard** with uptime tracking.
-    - [x] Create **Cost Dashboard** for resource optimization.
-    - [x] Create **User Journey** dashboard with funnel analysis.
-- [x] **Alerting Rules**:
-    - [x] Define **SLO-based Alerts** (99.9% availability).
-    - [x] Add **Error Budget** tracking.
-    - [x] Implement **PagerDuty/OpsGenie** integration.
-    - [x] Create **Runbooks** for each alert type.
-- [x] **Log Management**:
-    - [x] Implement **Log Correlation** with trace IDs.
-    - [x] Add **Log Sampling** for high-volume services.
-    - [x] Create **Log-based Alerts** for critical errors.
-    - [x] Implement **Log Export** to S3 for compliance.
+### 34. CI/CD Pipeline (Tekton & ArgoCD)
+- [ ] **Advanced Tekton Tasks**: Implementasi custom tasks untuk unit testing, sonar scan, dan image building.
+- [ ] **GitOps with ArgoCD**: Konfigurasi ApplicationSet untuk otomasi deployment ke namespace `dev`, `staging`, dan `prod`.
+- [ ] **Canary Deployment**: Integrasi Argo Rollouts untuk strategi deployment bertahap.
 
-### 35. Cost Optimization
-- [x] **Resource Right-sizing**:
-    - [x] Analyze **CPU/Memory Usage** patterns.
-    - [x] Implement **VPA** (Vertical Pod Autoscaler).
-    - [x] Configure **HPA** thresholds per service.
-    - [x] Add **Cluster Autoscaler** for nodes.
-- [x] **Cost Visibility**:
-    - [x] Implement **Cost Allocation** by namespace.
-    - [x] Create **Cost Reports** for stakeholders.
-    - [x] Set **Budget Alerts** for cost overruns.
-    - [x] Identify **Idle Resources** for cleanup.
+### 35. Observability & Service Mesh (Istio)
+- [ ] **Service Mesh Setup**: Injeksi Istio sidecar untuk mTLS antar service.
+- [ ] **Distributed Tracing**: Konfigurasi OpenTelemetry ke Jaeger untuk visualisasi request flow.
+- [ ] **Monitoring Stack**: Custom Grafana dashboards untuk business metrics (TPV, Success Rate).
+- [ ] **Log Aggregation**: Optimasi query Loki untuk audit log perbankan.
+
+### 36. Security Infrastructure
+- [ ] **Secret Injection**: Integrasi HashiCorp Vault dengan OpenShift untuk injeksi env-vars secara aman.
+- [ ] **Network Policies**: Implementasi zero-trust network di level namespace.
+- [ ] **Certificate Management**: Otomasi rotasi sertifikat TLS menggunakan cert-manager.
 
 ---
 

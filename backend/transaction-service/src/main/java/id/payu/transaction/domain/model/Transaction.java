@@ -29,6 +29,7 @@ public class Transaction {
     private Instant createdAt;
     private Instant updatedAt;
     private Instant completedAt;
+    private String idempotencyKey;
 
     public enum TransactionType {
         INTERNAL_TRANSFER,

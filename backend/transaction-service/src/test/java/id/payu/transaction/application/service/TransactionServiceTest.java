@@ -74,7 +74,7 @@ class TransactionServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo("PENDING");
+        assertThat(response.getStatus()).isEqualTo("VALIDATING");
         verify(transactionPersistencePort, times(2)).save(any(Transaction.class)); // Saved initially and after validation update
         verify(eventPublisherPort).publishTransactionInitiated(any(Transaction.class));
         verify(walletServicePort).reserveBalance(eq(transferRequest.getSenderAccountId()), anyString(), eq(transferRequest.getAmount()));
@@ -109,7 +109,7 @@ class TransactionServiceTest {
         request.setAmount(new BigDecimal("50000"));
 
         given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
-        
+
         given(qrisServicePort.processPayment(any(QrisPaymentRequest.class))).willReturn(
                 QrisPaymentResponse.builder().status("SUCCESS").build()
         );

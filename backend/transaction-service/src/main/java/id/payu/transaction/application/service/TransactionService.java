@@ -30,6 +30,15 @@ public class TransactionService implements TransactionUseCase {
     @Override
     @Transactional
     public InitiateTransferResponse initiateTransfer(InitiateTransferRequest request) {
+        if (request.getIdempotencyKey() != null) {
+            return transactionPersistencePort.findByIdempotencyKey(request.getIdempotencyKey())
+                    .map(this::mapToInitiateTransferResponse)
+                    .orElseGet(() -> createNewTransaction(request));
+        }
+        return createNewTransaction(request);
+    }
+
+    private InitiateTransferResponse createNewTransaction(InitiateTransferRequest request) {
         String referenceNumber = generateReferenceNumber();
 
         Transaction transaction = Transaction.builder()
@@ -43,6 +52,7 @@ public class TransactionService implements TransactionUseCase {
                 .status(Transaction.TransactionStatus.PENDING)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
+                .idempotencyKey(request.getIdempotencyKey())
                 .build();
 
         transaction = transactionPersistencePort.save(transaction);
@@ -65,10 +75,14 @@ public class TransactionService implements TransactionUseCase {
         transaction.setStatus(Transaction.TransactionStatus.VALIDATING);
         transactionPersistencePort.save(transaction);
 
+        if (request.getType() == InitiateTransferRequest.TransactionType.BIFAST_TRANSFER) {
+            processBiFastTransfer(transaction, request);
+        }
+
         return InitiateTransferResponse.builder()
                 .transactionId(transaction.getId())
                 .referenceNumber(referenceNumber)
-                .status("PENDING")
+                .status(transaction.getStatus().name())
                 .fee(calculateFee(request.getType(), request.getAmount()))
                 .estimatedCompletionTime(getEstimatedCompletionTime(request.getType()))
                 .build();
@@ -146,5 +160,54 @@ public class TransactionService implements TransactionUseCase {
             case SKN_TRANSFER -> "Same day";
             case RTGS_TRANSFER -> "Real-time";
         };
+    }
+
+    private void processBiFastTransfer(Transaction transaction, InitiateTransferRequest request) {
+        try {
+            BifastTransferRequest bifastRequest = BifastTransferRequest.builder()
+                    .referenceNumber(transaction.getReferenceNumber())
+                    .amount(request.getAmount())
+                    .currency(request.getCurrency())
+                    .beneficiaryAccountNumber(request.getRecipientAccountNumber())
+                    .beneficiaryBankCode("014") // BCA dummy for now
+                    .beneficiaryAccountName("Beneficiary") // Dummy
+                    .senderAccountNumber(request.getSenderAccountId().toString())
+                    .senderAccountName("Sender") // Dummy
+                    .purposeCode("OTHR")
+                    .build();
+
+            bifastServicePort.initiateTransfer(bifastRequest);
+            // If success, it remains PENDING/VALIDATING until callback or subsequent status check
+            // Or if synchronous:
+            transaction.setStatus(Transaction.TransactionStatus.PENDING);
+        } catch (java.util.concurrent.TimeoutException e) {
+            transaction.setStatus(Transaction.TransactionStatus.FAILED);
+            transaction.setFailureReason("BI-FAST Timeout");
+            eventPublisherPort.publishTransactionFailed(transaction, "BI-FAST Timeout");
+        } catch (Exception e) {
+            transaction.setStatus(Transaction.TransactionStatus.FAILED);
+            transaction.setFailureReason(e.getMessage());
+            eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
+        } finally {
+            transactionPersistencePort.save(transaction);
+        }
+    }
+
+    private InitiateTransferResponse mapToInitiateTransferResponse(Transaction transaction) {
+        return InitiateTransferResponse.builder()
+                .transactionId(transaction.getId())
+                .referenceNumber(transaction.getReferenceNumber())
+                .status(transaction.getStatus().name())
+                .fee(calculateFee(toRequestType(transaction.getType()), transaction.getAmount()))
+                .estimatedCompletionTime(getEstimatedCompletionTime(toRequestType(transaction.getType())))
+                .build();
+    }
+
+    private InitiateTransferRequest.TransactionType toRequestType(Transaction.TransactionType type) {
+        try {
+            return InitiateTransferRequest.TransactionType.valueOf(type.name());
+        } catch (IllegalArgumentException e) {
+            return InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER; // Default fallback
+        }
     }
 }

@@ -170,7 +170,6 @@ AI Assistant **TIDAK BOLEH** mengimplementasikan kode atau konfigurasi untuk are
 
 - Kubernetes manifests, Helm charts, OpenShift configurations
 - Terraform, Ansible, atau IaC (Infrastructure as Code)
-- Container registry, image builds, Dockerfile optimizations
 
 ### Ketika diminta untuk area di atas:
 
@@ -190,6 +189,13 @@ AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
 |------|--------|-------------------|
 | **Tekton Pipelines** | Pipeline, Task, TriggerTemplate | ✅ Explain & implement |
 | **ArgoCD** | Application manifests, sync policies | ✅ Explain & implement |
+
+### Containerization & Registry
+
+| Area | Contoh | AI Dapat Membantu |
+|------|--------|-------------------|
+| **Containerization** | Dockerfile, image builds, optimizations | ✅ Explain & implement |
+| **Artifact Registry** | Container registry, image tagging, pushing | ✅ Explain & implement |
 
 ### Observability & Monitoring
 

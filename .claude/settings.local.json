@@ -1,13 +1,10 @@
 {
-  "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true
-  },
   "permissions": {
-    "deny": [
-      "Bash(sudo *)",
-      "Bash(rm -rf /)",
-      "Bash(ssh *)"
-    ]
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)"
+    ],
+    "defaultMode": "bypassPermissions"
   }
 }

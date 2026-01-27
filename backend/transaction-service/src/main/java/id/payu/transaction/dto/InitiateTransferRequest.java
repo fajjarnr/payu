@@ -42,4 +42,6 @@ public class InitiateTransferRequest {
         SKN_TRANSFER,
         RTGS_TRANSFER
     }
+
+    private String idempotencyKey;
 }

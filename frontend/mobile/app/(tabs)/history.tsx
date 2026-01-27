@@ -60,6 +60,18 @@ export default function HistoryScreen() {
 
   const groupedTransactions = groupTransactionsByDate();
 
+  const handleScroll = ({ nativeEvent }: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    const paddingToBottom = 100;
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom;
+
+    if (isCloseToBottom && hasMore && !isLoadingMore) {
+      loadMoreTransactions();
+    }
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -68,17 +80,7 @@ export default function HistoryScreen() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
-      onScroll={({ nativeEvent }) => {
-        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-        const paddingToBottom = 100;
-        const isCloseToBottom =
-          layoutMeasurement.height + contentOffset.y >=
-          contentSize.height - paddingToBottom;
-
-        if (isCloseToBottom && hasMore && !isLoadingMore) {
-          loadMoreTransactions();
-        }
-      }
+      onScroll={handleScroll}
       scrollEventThrottle={400}
     >
       <View style={styles.header}>

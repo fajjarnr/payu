@@ -11,4 +11,5 @@ public interface TransactionPersistencePort {
     Optional<Transaction> findById(UUID transactionId);
     List<Transaction> findByAccountId(UUID accountId, int page, int size);
     List<Transaction> findByReferenceNumber(String referenceNumber);
+    Optional<Transaction> findByIdempotencyKey(String idempotencyKey);
 }
