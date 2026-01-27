@@ -17,7 +17,7 @@ public class ArchitectureTest {
     static final ArchRule domain_layer_should_be_free_of_dependencies =
             classes().that().resideInAPackage("..domain..")
                     .should().onlyDependOnClassesThat()
-                    .resideInAnyPackage("java..", "org.springframework.data..", "..domain..", "id.payu.transaction.dto..", "lombok..");
+                    .resideInAnyPackage("java..", "org.springframework.data..", "..domain..", "id.payu.transaction.dto..", "lombok..", "jakarta.persistence..", "jakarta.annotation..");
 
     @ArchTest
     static final ArchRule application_layer_should_only_depend_on_domain =
