@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Shield, Sparkles } from 'lucide-react';
+import { Crown, Shield, Sparkles, LucideIcon } from 'lucide-react';
 import { useVIPStatus } from '@/hooks/useVIPStatus';
 import clsx from 'clsx';
 
@@ -13,6 +13,13 @@ interface VIPBadgeProps {
   variant?: 'badge' | 'card' | 'inline';
   className?: string;
 }
+
+// Move icon mapping outside component to avoid creating components during render
+const TIER_ICONS: Record<string, LucideIcon> = {
+  VIP: Crown,
+  DIAMOND: Sparkles,
+  PLATINUM: Shield,
+};
 
 export default function VIPBadge({
   size = 'md',
@@ -45,20 +52,7 @@ export default function VIPBadge({
     },
   };
 
-  const getIcon = () => {
-    switch (tier) {
-      case 'VIP':
-        return Crown;
-      case 'DIAMOND':
-        return Sparkles;
-      case 'PLATINUM':
-        return Shield;
-      default:
-        return Crown;
-    }
-  };
-
-  const Icon = getIcon();
+  const Icon = TIER_ICONS[tier] || Crown;
   const currentSize = sizeStyles[size];
 
   if (variant === 'card') {
@@ -143,7 +137,7 @@ interface VIPStatusIndicatorProps {
 }
 
 export function VIPStatusIndicator({ showTier = true, showBenefits = false, className }: VIPStatusIndicatorProps) {
-  const { isVIP, tier, tierLabel, benefits } = useVIPStatus();
+  const { isVIP, benefits } = useVIPStatus();
 
   if (!isVIP) {
     return null;

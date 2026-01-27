@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import SegmentationService from '@/services/SegmentationService';
-import type { SegmentedOffer, SegmentedOffersResponse } from '@/services/SegmentationService';
 
 export const useSegmentedOffers = (userId: string | undefined, page = 0, size = 10) => {
   const queryClient = useQueryClient();

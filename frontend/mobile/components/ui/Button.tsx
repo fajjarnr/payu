@@ -51,7 +51,7 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const getTextColor = () => {
-    if (disabled) return colors.textSecondary;
+    if (disabled) return (colors as typeof colors & { textSecondary?: string }).textSecondary ?? '#6b7280';
     switch (variant) {
       case 'outline':
       case 'ghost':

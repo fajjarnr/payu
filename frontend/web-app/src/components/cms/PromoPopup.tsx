@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import { useRouter } from 'next/navigation';
 import { usePopups } from '@/hooks';
-import type { Content } from '@/services/CMSService';
 
 interface PromoPopupProps {
   segment?: string;
@@ -29,34 +29,30 @@ export default function PromoPopup({
   delay = 2000,
   sessionKey = 'promo-popup-session',
 }: PromoPopupProps) {
+  const router = useRouter();
   const { data: popups, isLoading } = usePopups({ segment, location, device });
   const [isOpen, setIsOpen] = useState(false);
   const [currentPopupIndex, setCurrentPopupIndex] = useState(0);
-  const [sessionState, setSessionState] = useState<PopupSession>({
-    shownThisSession: false,
-    timestamp: 0,
-  });
-
-  // Load session state from sessionStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = sessionStorage.getItem(sessionKey);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          // Reset if more than 30 minutes have passed
-          const now = Date.now();
-          if (now - parsed.timestamp > 30 * 60 * 1000) {
-            sessionStorage.removeItem(sessionKey);
-          } else {
-            setSessionState(parsed);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load popup session state:', error);
-      }
+  const [sessionState, setSessionState] = useState<PopupSession>(() => {
+    if (typeof window === 'undefined') {
+      return { shownThisSession: false, timestamp: 0 };
     }
-  }, [sessionKey]);
+    try {
+      const stored = sessionStorage.getItem('promo-popup-session');
+      if (stored) {
+        const parsed = JSON.parse(stored) as PopupSession;
+        const now = Date.now();
+        if (now - parsed.timestamp > 30 * 60 * 1000) {
+          sessionStorage.removeItem('promo-popup-session');
+          return { shownThisSession: false, timestamp: 0 };
+        }
+        return parsed;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return { shownThisSession: false, timestamp: 0 };
+  });
 
   // Filter eligible popups
   const eligiblePopups = popups?.filter((popup) => {
@@ -135,7 +131,7 @@ export default function PromoPopup({
       if (currentPopup.actionType === 'LINK') {
         window.open(currentPopup.actionUrl, '_blank', 'noopener,noreferrer');
       } else if (currentPopup.actionType === 'DEEP_LINK') {
-        window.location.href = currentPopup.actionUrl;
+        router.push(currentPopup.actionUrl);
       }
     }
   };
@@ -239,7 +235,7 @@ export default function PromoPopup({
                     onClick={() => handleClose(true)}
                     className="flex-1 px-6 py-3 bg-muted hover:bg-muted/80 text-foreground font-bold rounded-2xl transition-all hover:scale-105 active:scale-95"
                   >
-                    Don't Show Again
+                    Don&apos;t Show Again
                   </button>
                 </div>
 

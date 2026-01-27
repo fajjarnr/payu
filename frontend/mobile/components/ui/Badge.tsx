@@ -56,7 +56,7 @@ export const Badge: React.FC<BadgeProps> = ({
   const textStyle = {
     color: getTextColor(),
     fontSize: size === 'sm' ? 12 : 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   };
 
   return (

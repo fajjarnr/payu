@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, AlertTriangle, Info, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import { useRouter } from 'next/navigation';
 import { useEmergencyAlerts } from '@/hooks';
 import type { Content } from '@/services/CMSService';
 
@@ -58,22 +59,17 @@ export default function EmergencyAlert({
   device,
   storageKey = 'dismissed-alerts',
 }: EmergencyAlertProps) {
+  const router = useRouter();
   const { data: alerts, isLoading } = useEmergencyAlerts({ segment, location, device });
-  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
-
-  // Load dismissed alerts from localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(storageKey);
-        if (stored) {
-          setDismissedAlerts(new Set(JSON.parse(stored)));
-        }
-      } catch (error) {
-        console.error('Failed to load dismissed alerts:', error);
-      }
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
     }
-  }, [storageKey]);
+  });
 
   // Save dismissed alerts to localStorage
   const saveDismissedAlert = (alertId: string) => {
@@ -100,7 +96,7 @@ export default function EmergencyAlert({
       if (alert.actionType === 'LINK') {
         window.open(alert.actionUrl, '_blank', 'noopener,noreferrer');
       } else if (alert.actionType === 'DEEP_LINK') {
-        window.location.href = alert.actionUrl;
+        router.push(alert.actionUrl);
       }
     }
   };

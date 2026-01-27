@@ -117,7 +117,7 @@ export const useAppLock = () => {
     }
   };
 
-  const setSessionTimeout = async (minutes: number) => {
+  const updateSessionTimeout = async (minutes: number) => {
     try {
       await SecureStore.setItemAsync(SESSION_TIMEOUT_KEY, minutes.toString());
       setSessionTimeout(minutes);
@@ -136,7 +136,7 @@ export const useAppLock = () => {
     sessionTimeout,
     unlock,
     toggleAppLock,
-    setSessionTimeout,
+    setSessionTimeout: updateSessionTimeout,
     lockImmediately,
     checkJailbreak,
   };

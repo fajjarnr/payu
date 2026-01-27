@@ -5,6 +5,7 @@ import {
   type ReserveBalanceRequest,
   type ReserveBalanceResponse,
   type CreditRequest,
+  type WalletTransaction,
 } from '@/services/WalletService';
 import api from '@/lib/api';
 
@@ -167,7 +168,7 @@ describe('WalletService', () => {
     });
 
     it('should fetch transaction history with custom pagination', async () => {
-      const mockTransactions: any[] = [];
+      const mockTransactions: WalletTransaction[] = [];
 
       vi.mocked(api.get).mockResolvedValue({ data: mockTransactions });
 

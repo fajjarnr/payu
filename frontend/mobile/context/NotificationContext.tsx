@@ -34,7 +34,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
     setPermissionGranted(granted);
 
     if (granted) {
-      await notificationService.registerForPushNotifications();
+      await notificationService.registerPushToken();
     }
   };
 

@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import ABTestingService, {
   VariantAssignment,
-  Experiment,
 } from '@/services/ABTestingService';
 import { useExperimentContext } from '@/contexts/ExperimentContext';
 import { useAuth } from './index';
@@ -106,7 +105,6 @@ export function useExperiment(
     deviceId,
     refetchOnMount = false,
     onVariantAssigned,
-    onError,
   } = options;
 
   const { user } = useAuth();

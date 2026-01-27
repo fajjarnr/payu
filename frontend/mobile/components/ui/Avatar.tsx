@@ -39,7 +39,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   const textStyle = {
     color: '#ffffff',
     fontSize: size / 2.5,
-    fontWeight: '700',
+    fontWeight: '700' as const,
   };
 
   if (source?.uri) {

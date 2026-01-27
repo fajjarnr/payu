@@ -63,7 +63,7 @@ const VIP_BENEFITS = {
 
 export const useVIPStatus = (): VIPStatus => {
   const user = useAuthStore((state) => state.user);
-  const { currentTier, currentMembership, isVIP } = useUserSegment(user?.id);
+  const { currentTier, isVIP } = useUserSegment(user?.id);
 
   const tierConfig = useMemo(() => {
     if (!currentTier) return { label: 'Standard', color: '#6b7280' };

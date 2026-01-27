@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Activity, Landmark, Coins, Users, UserPlus, MoreVertical } from "lucide-react";
+import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { BalanceResponse, WalletTransaction, Pocket, SharedMember } from '@/types';
 import api from '@/lib/api';
@@ -16,15 +16,16 @@ interface SharedPocket extends Pocket {
 }
 
 export default function PocketsPage() {
-    const [accountId, setAccountId] = useState('');
+    const [accountId, setAccountId] = useState(() => {
+        if (typeof window === 'undefined') return '';
+        try {
+            return localStorage.getItem('accountId') || '';
+        } catch {
+            return '';
+        }
+    });
     const [selectedPocket, setSelectedPocket] = useState<string | null>(null);
     const [showMemberModal, setShowMemberModal] = useState(false);
-
-    // Load accountId from localStorage on client side only
-    useEffect(() => {
-        const storedAccountId = localStorage.getItem('accountId') || '';
-        setAccountId(storedAccountId);
-    }, []);
 
     const { data: balance, isLoading: balanceLoading } = useQuery({
         queryKey: ['wallet-balance', accountId],
@@ -99,7 +100,7 @@ export default function PocketsPage() {
         }
     ];
 
-    const activePocket = selectedPocket 
+    const activePocket = selectedPocket
         ? sharedPockets.find(p => p.id === selectedPocket)
         : null;
 
@@ -116,7 +117,7 @@ export default function PocketsPage() {
                                 </div>
                                 <div className="flex gap-3">
                                     <ButtonMotion>
-                                        <button 
+                                        <button
                                             onClick={() => setShowMemberModal(true)}
                                             className="bg-muted text-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest border border-border shadow-lg hover:bg-muted/80 transition-all flex items-center gap-2"
                                         >
@@ -335,7 +336,7 @@ export default function PocketsPage() {
 
                                     return (
                                         <div key={pocket.id} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden group">
-                                            <div 
+                                            <div
                                                 onClick={() => setSelectedPocket(isSelected ? null : pocket.id)}
                                                 className="p-6 cursor-pointer transition-colors hover:bg-muted/30"
                                             >

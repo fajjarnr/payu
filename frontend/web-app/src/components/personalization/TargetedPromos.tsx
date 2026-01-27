@@ -17,7 +17,7 @@ interface TargetedPromosProps {
 
 export default function TargetedPromos({ offerType, className, maxPromos = 2 }: TargetedPromosProps) {
   const user = useAuthStore((state) => state.user);
-  const { offers, isLoading, error, cashbackOffers, discountOffers, rewardOffers } = useSegmentedOffers(user?.id);
+  const { offers, isLoading, error } = useSegmentedOffers(user?.id);
 
   const filteredOffers = React.useMemo(() => {
     const filtered = offerType

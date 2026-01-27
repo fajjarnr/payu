@@ -14,6 +14,12 @@ import { useExperiment } from '@/hooks/useExperiment';
 import { ExperimentVariant } from '@/components/experiments';
 import { FeatureFlag } from '@/components/experiments';
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 // =============================================================================
 // Example 1: Direct useExperiment hook usage
 // =============================================================================
@@ -203,8 +209,8 @@ export function CheckoutWithCallbacks() {
     onVariantAssigned: (assignedVariant) => {
       console.log(`User assigned to variant: ${assignedVariant}`);
       // Send to analytics
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'experiment_view', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'experiment_view', {
           experiment_key: 'checkout_design_v3',
           variant: assignedVariant,
         });

@@ -4,8 +4,14 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Camera, Send, X, AlertCircle, CheckCircle, Bug, Lightbulb } from 'lucide-react';
+import { Camera, X, AlertCircle, CheckCircle, Bug, Lightbulb } from 'lucide-react';
 import { a11yUtils } from '@/lib/a11y';
+
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
 
 interface FeedbackData {
   category: 'bug' | 'feature' | 'other';
@@ -56,8 +62,8 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
   const captureScreenshot = async () => {
     try {
       // Try using modern Screen Capture API
-      const mediaDevices = navigator.mediaDevices as any;
-      if (mediaDevices.getDisplayMedia) {
+      const mediaDevices = navigator.mediaDevices;
+      if (mediaDevices?.getDisplayMedia) {
         const stream = await mediaDevices.getDisplayMedia({
           video: { cursor: 'always' } as MediaTrackConstraints
         });
@@ -218,7 +224,7 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                         <button
                           key={cat.value}
                           type="button"
-                          onClick={() => setCategory(cat.value as any)}
+                          onClick={() => setCategory(cat.value as FeedbackData['category'])}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                             category === cat.value
                               ? 'border-bank-green bg-bank-green/10'
