@@ -106,5 +106,7 @@ temp/
 # --- Agentic Tools ---
 .opencode/
 .claude/
+!.claude/settings.json
+!.claude/settings.local.json
 # Note: .agent/ is NOT ignored as it contains project-specific AI instructions
 # Note: .ralphy/ is NOT ignored as it contains project rules
