@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { PersonalizedGreeting, PersonalizedWelcomeBanner } from '@/components/personalization/PersonalizedGreeting';
+import PersonalizedGreeting from '@/components/personalization/PersonalizedGreeting';
+import { PersonalizedWelcomeBanner } from '@/components/personalization/PersonalizedGreeting';
 
 // Mock the hooks
 vi.mock('@/hooks/useUserSegment', () => ({
@@ -55,12 +56,12 @@ const createWrapper = () => {
 
 describe('PersonalizedGreeting', () => {
   it('should render personalized greeting with VIP badge', () => {
-    render(
+    const { container } = render(
       <PersonalizedGreeting showTimeBased={true} showSegment={true} />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('John Doe');
+    expect(container.textContent).toContain('John Doe');
   });
 
   it('should render without VIP badge when showSegment is false', () => {
@@ -76,22 +77,22 @@ describe('PersonalizedGreeting', () => {
 
 describe('PersonalizedWelcomeBanner', () => {
   it('should render welcome banner for VIP users', () => {
-    render(
+    const { container } = render(
       <PersonalizedWelcomeBanner />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('Welcome back');
-    expect(screen.textContent).toContain('John');
-    expect(screen.textContent).toContain('PERSONALIZED EXPERIENCE');
+    expect(container.textContent).toContain('Welcome back');
+    expect(container.textContent).toContain('John');
+    expect(container.textContent).toContain('PERSONALIZED EXPERIENCE');
   });
 
   it('should render VIP benefits message', () => {
-    render(
+    const { container } = render(
       <PersonalizedWelcomeBanner />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('exclusive benefits');
+    expect(container.textContent).toContain('exclusive benefits');
   });
 });

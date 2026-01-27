@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TargetedPromos, QuickPromoBanner } from '@/components/personalization/TargetedPromos';
+import TargetedPromos from '@/components/personalization/TargetedPromos';
+import { QuickPromoBanner } from '@/components/personalization/TargetedPromos';
 
 // Mock the hooks
 vi.mock('@/hooks/useSegmentedOffers', () => ({
@@ -104,45 +105,45 @@ const createWrapper = () => {
 
 describe('TargetedPromos', () => {
   it('should render promo items', () => {
-    render(
+    const { container } = render(
       <TargetedPromos maxPromos={2} />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('Special Cashback');
-    expect(screen.textContent).toContain('Free Transfer');
+    expect(container.textContent).toContain('Special Cashback');
+    expect(container.textContent).toContain('Free Transfer');
   });
 
   it('should filter by offer type when specified', () => {
-    render(
+    const { container } = render(
       <TargetedPromos offerType="CASHBACK" maxPromos={2} />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('Special Cashback');
-    expect(screen.textContent).not.toContain('Free Transfer');
+    expect(container.textContent).toContain('Special Cashback');
+    expect(container.textContent).not.toContain('Free Transfer');
   });
 
   it('should render promo code when available', () => {
-    render(
+    const { container } = render(
       <TargetedPromos offerType="CASHBACK" maxPromos={1} />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('VIP5');
+    expect(container.textContent).toContain('VIP5');
   });
 });
 
 describe('QuickPromoBanner', () => {
   it('should render top cashback offer', () => {
-    render(
+    const { container } = render(
       <QuickPromoBanner />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('Special Cashback');
-    expect(screen.textContent).toContain('5%');
-    expect(screen.textContent).toContain('Klaim');
+    expect(container.textContent).toContain('Special Cashback');
+    expect(container.textContent).toContain('5%');
+    expect(container.textContent).toContain('Klaim');
   });
 
   it('should not render when no offers available', () => {

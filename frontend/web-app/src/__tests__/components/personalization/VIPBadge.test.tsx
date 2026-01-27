@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { VIPBadge, VIPStatusIndicator } from '@/components/personalization/VIPBadge';
+import VIPBadge from '@/components/personalization/VIPBadge';
+import { VIPStatusIndicator } from '@/components/personalization/VIPBadge';
 
 // Mock the hooks
 vi.mock('@/hooks/useVIPStatus', () => ({
@@ -89,20 +90,20 @@ describe('VIPBadge', () => {
 
 describe('VIPStatusIndicator', () => {
   it('should render VIP status with tier', () => {
-    render(
+    const { container } = render(
       <VIPStatusIndicator showTier={true} showBenefits={false} />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('STATUS MEMBER');
+    expect(container.textContent).toContain('STATUS MEMBER');
   });
 
   it('should render VIP status with benefits', () => {
-    render(
+    const { container } = render(
       <VIPStatusIndicator showTier={false} showBenefits={true} />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.textContent).toContain('BENEFIT EKSKLUSIF');
+    expect(container.textContent).toContain('BENEFIT EKSKLUSIF');
   });
 });
