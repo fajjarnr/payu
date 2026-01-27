@@ -1,8 +1,8 @@
 # Project Roadmap & Todo List
 
-> **Lab Project Status**: ✅ **FEATURE COMPLETE** - All 22 microservices implemented  
-> **Primary Focus**: 🧪 **TDD & Test Quality** - Fixing remaining test issues  
-> **Last Updated**: January 26, 2026
+> **Lab Project Status**: ✅ **FEATURE COMPLETE** - All 22 microservices implemented
+> **Primary Focus**: 🧪 **TDD & Test Quality** - Fixing remaining test issues
+> **Last Updated**: January 27, 2026
 
 ---
 
@@ -61,7 +61,7 @@
 | `promotion-service` | ❓ Unknown | ❓ Unknown | Not yet tested |
 | `kyc-service` | ✅ 9/9 | ⚠️ 0/0 | **Fixed**: Async fixtures, mocks, OCR fields |
 | `analytics-service` | ✅ 74/82 | ⚠️ 8/8 (infrastructure) | **Fixed**: Router import, websocket/Kafka need Docker |
-| `frontend/web-app` | ✅ 185/208 | ⚠️ Playwright | **Fixed**: Import issues (185/208 passing) |
+| `frontend/web-app` | ✅ 185/208 | ⚠️ Playwright | **Fixed**: Imports, build, TypeScript check pass |
 
 ### Summary of Completed Fixes (January 2026)
 
@@ -69,9 +69,12 @@
 ✅ **account-service**: Added 4 edge case tests (40 → 44 passing)
 ✅ **auth-service**: Fixed risk evaluation tests (67/67 passing)
 ✅ **transaction-service**: Fixed ArchUnit rules for JPA annotations (60/60 passing)
+✅ **wallet-service**: All tests passing (67/67)
+✅ **investment-service**: Tests passing (10/13, 3 skipped)
+✅ **lending-service**: All tests passing (17/17)
 ✅ **kyc-service**: Fixed async fixtures and mocks (9/9 passing)
 ✅ **analytics-service**: Fixed router import (74/82 passing, 8 need infrastructure)
-✅ **frontend/web-app**: Fixed React import issues (185/208 passing)
+✅ **frontend/web-app**: Fixed imports, build, TypeScript check (185/208 passing)
 
 ### Remaining Infrastructure Issues (DevOps Responsibility)
 
