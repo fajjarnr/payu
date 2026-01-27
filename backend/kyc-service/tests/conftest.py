@@ -1,11 +1,21 @@
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.main import app
-from app.config import Settings
+import sys
+
+sys.path.insert(0, "/home/ubuntu/payu/backend/kyc-service/src")  # noqa: E402
+
+from unittest.mock import Mock, AsyncMock, patch  # noqa: E402
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
+    async_sessionmaker,
+)  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
+from app.main import app  # noqa: E402
+from app.config import Settings  # noqa: E402
+from app.database import Base, get_db_session  # noqa: E402
+from httpx import AsyncClient, ASGITransport  # noqa: E402
 
 
-# Override settings for testing
 @pytest.fixture(scope="session")
 def test_settings():
     """Test settings with SQLite in-memory database"""
@@ -25,44 +35,68 @@ def test_settings():
 
 
 @pytest.fixture(scope="session")
-async def test_db():
-    """Create test database tables"""
-    from app.database import Base
-
-    # Create in-memory database
-    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
-
-    async_session_maker = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
+async def test_db_engine():
+    """Create test database engine and tables"""
+    # Create in-memory database engine with StaticPool for shared connections
+    test_engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        echo=False,
+        poolclass=StaticPool,
+        connect_args={"check_same_thread": False},
     )
 
     # Create tables
-    async with engine.begin() as conn:
+    async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    yield async_session_maker
+    yield test_engine
 
     # Cleanup
-    await engine.dispose()
+    await test_engine.dispose()
 
 
 @pytest.fixture
-async def test_client(test_db):
-    """Test client with database session"""
+async def test_session_maker(test_db_engine):
+    """Create test session maker"""
+    async_session_maker = async_sessionmaker(
+        test_db_engine, class_=AsyncSession, expire_on_commit=False
+    )
 
-    # Override get_db_session to use test database
-    async def get_test_db():
-        async with test_db() as session:
+    # Patch the module-level variables
+    import app.database
+
+    original_engine = app.database.engine
+    original_session_maker = app.database.async_session_maker
+
+    app.database.engine = test_db_engine
+    app.database.async_session_maker = async_session_maker
+
+    yield async_session_maker
+
+    # Restore original values
+    app.database.engine = original_engine
+    app.database.async_session_maker = original_session_maker
+
+
+@pytest.fixture
+async def async_test_client(test_session_maker):
+    """Async test client with database session override"""
+
+    # Override get_db_session dependency
+    async def override_get_db():
+        async with test_session_maker() as session:
             yield session
 
-    with patch("app.database.get_db_session", side_effect=get_test_db):
-        # Use ASGI transport which will handle lifespan events
-        from fastapi.testclient import TestClient
+    app.dependency_overrides[get_db_session] = override_get_db
 
-        with TestClient(app) as client:
-            yield client
+    # Create AsyncClient with ASGI transport
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        yield client
+
+    # Clean up dependency override
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture

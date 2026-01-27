@@ -2,12 +2,12 @@ import pytest
 import sys
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/analytics-service/src")  # noqa: E402
-from unittest.mock import AsyncMock
-from fastapi.testclient import TestClient
-from fastapi import WebSocket
+from unittest.mock import AsyncMock  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from fastapi import WebSocket  # noqa: E402
 
-from app.main import app
-from app.websocket.connection_manager import manager
+from app.main import app  # noqa: E402
+from app.websocket.connection_manager import manager  # noqa: E402
 
 
 @pytest.fixture
