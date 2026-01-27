@@ -11,6 +11,8 @@ import sys
 sys.path.insert(0, "/home/ubuntu/payu/backend/kyc-service/src")  # noqa: E402
 from app.main import app
 
+# Import the actual service classes for proper mocking
+
 
 @pytest.mark.e2e
 class TestKycWorkflowE2E:
@@ -40,12 +42,12 @@ class TestKycWorkflowE2E:
             verification_id = start_data["verification_id"]
 
             # Step 2: Upload KTP image
-            with patch("app.services.kyc_service.OcrService") as MockOCR, patch(
-                "app.services.kyc_service.LivenessService"
+            with patch("app.ml.ocr_service.OcrService") as MockOCR, patch(
+                "app.ml.liveness_service.LivenessService"
             ) as MockLiveness, patch(
-                "app.services.kyc_service.FaceService"
+                "app.ml.face_service.FaceService"
             ) as MockFace, patch(
-                "app.services.kyc_service.DukcapilClient"
+                "app.adapters.dukcapil_client.DukcapilClient"
             ) as MockDukcapil:
 
                 # Mock OCR response
@@ -128,9 +130,7 @@ class TestKycWorkflowE2E:
                 MockDukcapil.return_value = mock_dukcapil_instance
 
                 # Mock Kafka producer
-                with patch(
-                    "app.services.kyc_service.KafkaProducerService"
-                ) as MockKafka:
+                with patch("app.ml.ocr_service.KafkaProducerService") as MockKafka:
                     mock_kafka_instance = AsyncMock()
                     mock_kafka_instance.publish_event = AsyncMock()
                     MockKafka.return_value = mock_kafka_instance
@@ -178,9 +178,7 @@ class TestKycWorkflowE2E:
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             # Mock database query
-            with patch(
-                "app.services.kyc_service.KycService.get_verification"
-            ) as mock_get:
+            with patch("app.ml.ocr_service.KycService.get_verification") as mock_get:
                 mock_entity = MagicMock()
                 mock_entity.verification_id = sample_verification_id
                 mock_entity.user_id = sample_user_id
@@ -232,7 +230,7 @@ class TestKycWorkflowE2E:
             verification_id = start_response.json()["verification_id"]
 
             # Mock liveness failure
-            with patch("app.services.kyc_service.LivenessService") as MockLiveness:
+            with patch("app.ml.liveness_service.LivenessService") as MockLiveness:
                 mock_liveness_instance = AsyncMock()
                 mock_liveness_instance.check_liveness = AsyncMock(
                     return_value=MagicMock(
@@ -250,9 +248,7 @@ class TestKycWorkflowE2E:
                 )
                 MockLiveness.return_value = mock_liveness_instance
 
-                with patch(
-                    "app.services.kyc_service.KafkaProducerService"
-                ) as MockKafka:
+                with patch("app.ml.ocr_service.KafkaProducerService") as MockKafka:
                     mock_kafka_instance = AsyncMock()
                     mock_kafka_instance.publish_event = AsyncMock()
                     MockKafka.return_value = mock_kafka_instance
@@ -286,7 +282,7 @@ class TestKycWorkflowE2E:
             verification_id = start_response.json()["verification_id"]
 
             # Mock face match failure
-            with patch("app.services.kyc_service.FaceService") as MockFace:
+            with patch("app.ml.face_service.FaceService") as MockFace:
                 mock_face_instance = AsyncMock()
                 mock_face_instance.match_face = AsyncMock(
                     return_value=MagicMock(
@@ -307,7 +303,7 @@ class TestKycWorkflowE2E:
                 MockFace.return_value = mock_face_instance
 
                 # Mock liveness pass
-                with patch("app.services.kyc_service.LivenessService") as MockLiveness:
+                with patch("app.ml.liveness_service.LivenessService") as MockLiveness:
                     mock_liveness_instance = AsyncMock()
                     mock_liveness_instance.check_liveness = AsyncMock(
                         return_value=MagicMock(
@@ -325,9 +321,7 @@ class TestKycWorkflowE2E:
                     )
                     MockLiveness.return_value = mock_liveness_instance
 
-                    with patch(
-                        "app.services.kyc_service.KafkaProducerService"
-                    ) as MockKafka:
+                    with patch("app.ml.ocr_service.KafkaProducerService") as MockKafka:
                         mock_kafka_instance = AsyncMock()
                         mock_kafka_instance.publish_event = AsyncMock()
                         MockKafka.return_value = mock_kafka_instance
