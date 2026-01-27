@@ -8,5 +8,18 @@
       "Bash(rm -rf /)",
       "Bash(ssh *)"
     ]
-  }
+  },
+  "autoApprove": {
+    "enabled": true,
+    "patterns": [
+      "Bash(*)"
+    ]
+  },
+  "confirmations": {
+    "fileCreation": false,
+    "fileModification": false,
+    "fileExecution": false,
+    "commandExecution": false
+  },
+  "interactive": false
 }
