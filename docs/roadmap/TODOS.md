@@ -47,7 +47,7 @@
 |---------|------------|-------------------|-------|
 | `account-service` | ✅ 40/40 | ⚠️ Docker | Testcontainers needs Docker |
 | `auth-service` | ✅ 67/67 | ⚠️ Docker | Keycloak container needed |
-| `transaction-service` | ✅ 60/60 | ⚠️ 8 Docker errors | PostgreSQL container needed |
+| `transaction-service` | ✅ 60/60 | ⚠️ 8 Docker (infrastructure) | **Fixed**: ArchUnit for JPA annotations |
 | `wallet-service` | ✅ Compiles | ⚠️ Untested | Port interfaces added |
 | `billing-service` | ✅ 51/51 | ⚠️ 6 Docker errors | Testcontainers issue |
 | `notification-service` | ✅ 51/51 | ⚠️ 6 Docker errors | Testcontainers issue |
