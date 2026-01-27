@@ -59,15 +59,15 @@
 | `investment-service` | ❓ Unknown | ❓ Unknown | Not yet tested |
 | `lending-service` | ❓ Unknown | ❓ Unknown | Not yet tested |
 | `promotion-service` | ❓ Unknown | ❓ Unknown | Not yet tested |
-| `kyc-service` | ⚠️ Blocked | ❌ Shared libs | Python shared libs missing |
-| `analytics-service` | ⚠️ Blocked | ❌ Shared libs | Python shared libs missing |
+| `kyc-service` | ✅ 9/9 | ⚠️ 0/0 | **Fixed**: Async fixtures, mock patches, OCR result fields |
+| `analytics-service` | ✅ 74/82 | ⚠️ 8/8 (infrastructure) | **Fixed**: Router import, 8 websocket/Kafka tests need infrastructure |
 
 ### Shared Library Issues
 
-| Library | Status | Issue | Fix Required |
-|---------|--------|-------|--------------|
-| `security-starter` | ❌ Bean Error | `EncryptionService` not found | Add `@ConditionalOnProperty` |
-| `resilience-starter` | ❌ API Mismatch | Resilience4j 2.x breaking changes | Update to new API |
+| Library | Status | Issue | Fix |
+|---------|--------|-------|-----|
+| `security-starter` | ✅ Fixed | `EncryptionService` not found | Added `@ConditionalOnProperty` |
+| `resilience-starter` | ✅ Fixed | Resilience4j 2.x breaking changes | Updated to new API |
 | `cache-starter` | ✅ Works | Compiles successfully | None |
 
 ---
