@@ -170,5 +170,96 @@ class UserApplicationServiceTest {
             assertThat(registeredUser.getKycStatus()).isEqualTo(User.KycStatus.REJECTED);
             verify(userPersistencePort).save(any(User.class));
         }
+
+        @Test
+        @DisplayName("should throw exception when username already exists")
+        void shouldThrowExceptionWhenUsernameExists() {
+            // Given
+            given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
+            given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(true);
+
+            // When/Then
+            assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Username already exists");
+
+            verify(userPersistencePort, never()).save(any(User.class));
+            verify(kycVerificationPort, never()).verifyNik(anyString(), anyString());
+        }
+
+        @Test
+        @DisplayName("should validate phone number format for Indonesian numbers")
+        void shouldValidatePhoneNumberFormat() throws ExecutionException, InterruptedException {
+            // Given - Valid Indonesian phone formats
+            String[] validPhoneNumbers = {
+                "+6281234567890",
+                "081234567890",
+                "6281234567890"
+            };
+
+            for (String phoneNumber : validPhoneNumbers) {
+                RegisterUserRequest request = new RegisterUserRequest(
+                        validRequest.externalId(),
+                        "testuser" + phoneNumber.substring(5), // unique username
+                        "test" + phoneNumber.substring(5) + "@example.com", // unique email
+                        phoneNumber,
+                        validRequest.fullName(),
+                        validRequest.nik());
+
+                given(userPersistencePort.existsByEmail(request.email())).willReturn(false);
+                given(userPersistencePort.existsByUsername(request.username())).willReturn(false);
+                given(kycVerificationPort.verifyNik(request.nik(), request.fullName()))
+                        .willReturn(successfulKycResponse);
+
+                User savedUser = User.builder()
+                        .id(UUID.randomUUID())
+                        .phoneNumber(request.phoneNumber())
+                        .status(User.UserStatus.ACTIVE)
+                        .kycStatus(User.KycStatus.APPROVED)
+                        .build();
+                given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
+
+                // When/Then - Should not throw exception for valid format
+                assertThat(userApplicationService.registerUser(request)).isNotNull();
+            }
+        }
+
+        @Test
+        @DisplayName("should publish Kafka event when user is successfully registered")
+        void shouldPublishKafkaEventOnSuccessfulRegistration() throws ExecutionException, InterruptedException {
+            // Given
+            given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
+            given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
+            given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName()))
+                    .willReturn(successfulKycResponse);
+
+            User savedUser = User.builder()
+                    .id(UUID.randomUUID())
+                    .email(validRequest.email())
+                    .username(validRequest.username())
+                    .status(User.UserStatus.ACTIVE)
+                    .kycStatus(User.KycStatus.APPROVED)
+                    .build();
+            given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
+
+            // When
+            userApplicationService.registerUser(validRequest).get();
+
+            // Then
+            verify(userEventPublisherPort, times(1)).publishUserCreated(any(id.payu.account.dto.UserCreatedEvent.class));
+        }
+
+        @Test
+        @DisplayName("should NOT publish Kafka event when registration fails due to duplicate email")
+        void shouldNotPublishKafkaEventWhenRegistrationFails() {
+            // Given
+            given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(true);
+
+            // When/Then
+            assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
+                    .isInstanceOf(IllegalArgumentException.class);
+
+            verify(userEventPublisherPort, never()).publishUserCreated(any());
+        }
     }
 }
