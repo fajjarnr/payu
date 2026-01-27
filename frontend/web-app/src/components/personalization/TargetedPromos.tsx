@@ -20,7 +20,7 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2 }: 
   const { offers, isLoading, error, cashbackOffers, discountOffers, rewardOffers } = useSegmentedOffers(user?.id);
 
   const filteredOffers = React.useMemo(() => {
-    let filtered = offerType
+    const filtered = offerType
       ? offers.filter(offer => offer.offerType === offerType)
       : offers;
 
