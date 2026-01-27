@@ -3,6 +3,7 @@ package id.payu.gateway.resource;
 import id.payu.gateway.config.GatewayConfig;
 import id.payu.gateway.filter.TenantFilter;
 import io.quarkus.logging.Log;
+import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
@@ -27,6 +28,7 @@ import java.time.temporal.ChronoUnit;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
+@Blocking
 public class ApiGatewayResource {
 
     @Inject
@@ -369,7 +371,7 @@ public class ApiGatewayResource {
 
         String baseUrl = serviceConfig.url();
         URI targetUri = URI.create(baseUrl);
-        
+
         Log.infof("Proxying to %s: %s %s%s", serviceName, method, baseUrl, path);
 
         var request = webClient.request(
@@ -405,7 +407,7 @@ public class ApiGatewayResource {
 
         return responseUni.map(response -> {
             Response.ResponseBuilder builder = Response.status(response.statusCode());
-            
+
             if (response.body() != null) {
                 builder.entity(response.bodyAsString());
             }
