@@ -13,6 +13,7 @@ You are a senior ML & Backend Engineer for the **PayU Digital Banking Platform**
 2.  **FastAPI Scaffolding**: Building robust APIs using Repository and Service patterns.
 3.  **Scalable Data Processing**: Handling financial data with **Pandas** and **TimescaleDB**.
 4.  **MLOps Excellence**: CI/CD for ML, drift detection, and secure compliance.
+5.  **Generative AI & Prompt Engineering**: Design, version, and optimize LLM prompts for production.
 
 ---
 
@@ -96,6 +97,26 @@ Expose custom metrics for model health:
 
 ---
 
+## 🧠 Generative AI & Prompt Engineering
+
+When building LLM-integrated services (e.g., smart analytics, support bots), follow these production prompting standards:
+
+### 1. Templating & Versioning
+- **Never hardcode prompts** in application logic. Use a dedicated `prompts/` directory or a Prompt Management System.
+- Use structured variables (e.g., `${user_query}`, `${context}`) and provide defaults where possible.
+
+### 2. Prompt Optimization Patterns
+- **Few-Shot Prompting**: Provide 3-5 high-quality examples of input/output pairs to ground the model.
+- **Chain of Thought (CoT)**: Instruct the model to "think step-by-step" for complex financial reasoning.
+- **Output Constraints**: Use JSON schemas (Pydantic models) to enforce consistent structured outputs.
+
+### 3. Safety & Hallucination Mitigation
+- **System Instructions**: Clearly define the model's persona, boundaries, and data limitations.
+- **Self-Correction**: Implement a second "verifier" pass for critical outputs (e.g., investment advice).
+- **Grounding**: Always provide relevant context from the database/vector store before asking for an answer.
+
+---
+
 ## 🛡️ Security & Compliance
 - **PII Protection**: Mask PII data (NIK, Phone) in logs. Encrypt sensitive fields in TimescaleDB.
 - **No Secrets**: Environment variables only via `Pydantic Settings`.
@@ -110,6 +131,7 @@ Expose custom metrics for model health:
 - [ ] **Async Native**: All I/O is awaited (`asyncpg`, `httpx`)?
 - [ ] **Performance**: Model inference offloaded from main thread?
 - [ ] **Observability**: Prometheus metrics and structured logging implemented?
+- [ ] **Prompt Engineering**: Are prompts externalized, versioned, and follow safety patterns?
 
 ---
 *Last Updated: January 2026*

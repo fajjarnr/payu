@@ -11,7 +11,7 @@ This workflow guides the AI agent through the standard Antigravity lifecycle, st
 **Goal**: Understand the requirements and design the solution.
 
 1.  **Context Loading**
-    - Read `GEMINI.md` to understand the PayU ecosystem and rules.
+    - Read `CLAUDE.md` to understand the PayU ecosystem and rules.
     - Read `SKILL.md` in `.agent/skills/payu-development/` to load specific tech stack commands.
     - Read `PRD.md` and `ARCHITECTURE.md` if the task involves feature changes.
 
@@ -55,6 +55,7 @@ This workflow guides the AI agent through the standard Antigravity lifecycle, st
 
 **Goal**: Prove that the changes work and adhere to standards.
 
+// turbo
 1.  **Automated Verification**
     - Run all tests for the service: `mvn test` (Spring) or `./mvnw test` (Quarkus).
     - Run Architecture tests: `mvn test -Dtest=*Arch*`.

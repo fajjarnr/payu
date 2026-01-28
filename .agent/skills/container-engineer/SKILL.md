@@ -1,5 +1,5 @@
 ---
-name: container-specialist
+name: container-engineer
 description: Skill untuk membuat dan mengelola container images menggunakan best practices - UBI9 base images, multi-stage builds, security hardening, dan OpenShift compatibility.
 ---
 
@@ -61,7 +61,22 @@ Gunakan skill ini ketika:
 - Smaller final image size (50-80% reduction)
 - No build tools in production image
 - Reduced attack surface
-- Better layer caching
+- **Optimal Layer Caching**: Always copy dependency descriptors (`pom.xml`, `package.json`) before source code.
+
+**Optimal Pattern:**
+```dockerfile
+# 1. Base + WORKDIR
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.20 AS build
+WORKDIR /build
+
+# 2. Copy dependencies FIRST
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# 3. Copy source and build
+COPY src ./src
+RUN mvn package -DskipTests
+```
 
 **Structure:**
 
@@ -135,6 +150,28 @@ LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.url="https://github.com/payu/service"
 LABEL org.opencontainers.image.source="https://github.com/payu/service"
 LABEL org.opencontainers.image.licenses="Proprietary"
+```
+
+---
+
+### 6. Build Cache & Secrets (BuildKit)
+
+> [!TIP]
+> **Gunakan BuildKit features** untuk mempercepat build dan mengelola secrets dengan aman.
+
+**Build Cache Mounting (Maven Example):**
+```dockerfile
+# Mount Maven repository to speed up repeated builds
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn package -DskipTests
+```
+
+**Build-time Secrets:**
+```dockerfile
+# Access secrets during build without leaking them into image layers
+RUN --mount=type=secret,id=npm_token \
+    NPM_TOKEN=$(cat /run/secrets/npm_token) \
+    npm ci
 ```
 
 ---
@@ -480,19 +517,53 @@ podman push payu/account-service:1.0.0 \
 
 ---
 
+## 🛠️ Docker Compose for Simulators
+Gunakan `condition: service_healthy` untuk memastikan startup ordering yang benar pada simulators environment.
+
+```yaml
+services:
+  transaction-service:
+    depends_on:
+      bi-fast-simulator:
+        condition: service_healthy
+  
+  bi-fast-simulator:
+    image: payu/bi-fast-simulator:latest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+```
+
+---
+
+## 🔍 Troubleshooting & Diagnostics
+
+| Symptoms | Root Cause | Solution |
+| :--- | :--- | :--- |
+| **Slow Builds** (>10m) | Poor layer ordering, large context | Multi-stage, .dockerignore, dep caching |
+| **Freq. Cache Invalid.** | Source copied too early | Move `COPY src` to the last stage |
+| **Security Scan Fail** | Outdated base, hardcoded secrets | Update UBI tag, use BuildKit secrets |
+| **Large Images** | Tools left in runtime stage | Multi-stage, use `-runtime` base image |
+
+---
+
 ## 🔍 Verification Checklist
 
 Sebelum merge, pastikan Dockerfile memenuhi checklist berikut:
 
 - [ ] Base image menggunakan UBI9 (`registry.access.redhat.com/ubi9/...`)
 - [ ] Multi-stage build (minimal 2 stages: build dan runtime)
+- [ ] Dependencies (`pom.xml`/`package.json`) di-copy sebelum source code
+- [ ] Konsolidasi `RUN` commands untuk meminimalkan layers (terutama yang melibatkan `dnf`/`npm`)
 - [ ] Non-root user di runtime stage (`USER 185`)
 - [ ] Labels: maintainer, description, version
 - [ ] HEALTHCHECK dengan parameter yang sesuai
 - [ ] EXPOSE dengan port yang benar
 - [ ] JVM container-aware settings (MaxRAMPercentage, UseContainerSupport)
-- [ ] Tidak ada secrets hardcoded
-- [ ] .dockerignore file exists
+- [ ] Tidak ada secrets hardcoded (Gunakan BuildKit `--mount=type=secret` jika perlu)
+- [ ] .dockerignore file tersedia dan lengkap
 - [ ] Image version di-pin (tidak menggunakan `:latest`)
 
 ---

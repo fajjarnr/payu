@@ -1,5 +1,5 @@
 ---
-name: frontend-development
+name: frontend-engineer
 description: Expert Frontend Engineer for PayU Digital Banking Platform - specializing in Next.js web apps, React Native mobile apps, and modern frontend architecture.
 ---
 
@@ -12,6 +12,50 @@ You are a senior Frontend Engineer for the **PayU Digital Banking Platform**. Yo
 ### 1. Web Applications (Next.js 15+)
 
 **For:** Customer Web App & Admin Web Console
+
+## 🛡️ TypeScript Strict Best Practices
+
+Derived from **Prowler Cloud** standards to ensure type safety and easy refactoring.
+
+### 1. Const Types Pattern (vs Enums)
+ALWAYS create `const` objects first, then derive types.
+```typescript
+// ✅ Correct: Single source of truth, runtime values
+const STATUS = {
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+} as const;
+
+type Status = (typeof STATUS)[keyof typeof STATUS]; // "active" | "inactive"
+
+// ❌ Wrong: Hardcoded union types
+type Status = "active" | "inactive";
+```
+
+### 2. Flat Interfaces
+Minimize nested objects within interfaces. Extract them!
+```typescript
+// ✅ Correct
+interface UserAddress {
+  street: string;
+}
+interface User {
+  address: UserAddress;
+}
+
+// ❌ Wrong
+interface User {
+  address: { street: string }; // No inline nesting
+}
+```
+
+### 3. No `any` Policy
+Use `unknown` + Type Guards instead.
+```typescript
+function isUser(input: unknown): input is User {
+    return typeof input === "object" && input !== null && "id" in input;
+}
+```
 
 **Technology Stack:**
 - **Framework:** Next.js 15+ with App Router
@@ -413,6 +457,243 @@ export const ReactQueryProvider = ({ children }) => (
 
 ---
 
+## 🚀 Advanced Next.js Caching (Cache Components)
+For Next.js 15+ projects, use the `'use cache'` directive for extreme performance and granular invalidation.
+
+### 1. The `'use cache'` Directive
+Apply to files, components, or functions to mark them as cacheable. All cached functions must be **async**.
+
+```tsx
+async function ExchangeRates() {
+  'use cache'
+  cacheTag('rates')
+  cacheLife('minutes')
+  return await api.getRates()
+}
+```
+
+### 2. Cache Control APIs
+| API | Purpose | Example |
+| :--- | :--- | :--- |
+| `cacheLife()` | Define duration profiles | `cacheLife('hours')` |
+| `cacheTag()` | Label for invalidation | `cacheTag('users', 'profile')` |
+| `updateTag()` | **Immediate** invalidation | `updateTag('rates')` (Read-your-own-writes) |
+| `revalidateTag()`| **Background** revalidation | `revalidateTag('logs', 'max')` (SWR) |
+
+### 3. Partial Prerendering (PPR) Pattern
+Compose pages with a mix of static, cached, and dynamic content:
+1. **Static Shell**: Navigation, Layouts (no special handling).
+2. **Cached Content**: Uses `'use cache'` with appropriate `cacheLife`.
+3. **Dynamic Content**: Wrap in `<Suspense>` to stream at request time (e.g., Session-based data).
+
+### 4. Cache Review Checklist (Next.js 15+)
+- [ ] Is data fetching wrapped in `'use cache'` where applicable?
+- [ ] Are relevant `cacheTag()` labels applied for future invalidation?
+- [ ] Does every Server Action mutation call `updateTag()` or `revalidateTag()`?
+- [ ] Are dynamic components (no cache) wrapped in `<Suspense>` boundaries?
+- [ ] **Avoid**: `cookies()` or `headers()` inside a `'use cache'` scope.
+
+---
+
+---
+
+## 🎨 Tailwind Design System
+Build production-ready design systems using **Design Tokens**, **CVA** (Class Variance Authority), and accessible component patterns.
+
+### 1. Design Token Hierarchy
+Use a three-tier system to manage colors and spacing:
+1. **Brand Tokens** (Generic): `blue-500`, `emerald-600`.
+2. **Semantic Tokens** (Purpose): `primary`, `success`, `background`.
+3. **Component Tokens** (Specific): `button-bg`, `input-border`.
+
+```typescript
+// tailwind.config.ts (Semantic tokens)
+theme: {
+  extend: {
+    colors: {
+      primary: "hsl(var(--primary))",
+      success: "hsl(var(--success))",
+      background: "hsl(var(--background))",
+    }
+  }
+}
+```
+
+### 2. CVA (Class Variance Authority) Pattern
+Standardize component variants with type-safety.
+
+```typescript
+// components/ui/button.tsx
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const buttonVariants = cva(
+  'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:ring-2 disabled:opacity-50',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        outline: 'border border-input bg-background hover:bg-accent',
+        ghost: 'hover:bg-accent hover:text-accent-foreground',
+      },
+      size: {
+        default: 'h-10 px-4 py-2',
+        sm: 'h-9 px-3',
+        lg: 'h-11 px-8',
+      },
+    },
+    defaultVariants: { variant: 'default', size: 'default' },
+  }
+);
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {}
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => (
+    <button className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+  )
+);
+```
+
+### 3. Compound Components Pattern (e.g., Card)
+Modularize complex components for maximum flexibility.
+
+```typescript
+// components/ui/card.tsx
+export const Card = ({ className, ...props }) => (
+  <div className={cn('rounded-lg border bg-card shadow-sm', className)} {...props} />
+);
+
+export const CardHeader = ({ className, ...props }) => (
+  <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+);
+
+export const CardTitle = ({ className, ...props }) => (
+  <h3 className={cn('text-2xl font-semibold', className)} {...props} />
+);
+```
+
+### 4. Utility Functions (`cn`)
+Always use `tailwind-merge` + `clsx` to prevent class name collisions.
+
+```typescript
+// lib/utils.ts
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+```
+
+### 3. Advanced Component Patterns
+
+#### A. Polymorphic Components (`as` prop)
+Allow components to render as different HTML tags while maintaining type safety.
+
+```tsx
+type ButtonProps<C extends React.ElementType> = {
+  as?: C;
+  children: React.ReactNode;
+} & React.ComponentPropsWithoutRef<C>;
+
+export const Button = <C extends React.ElementType = 'button'>({
+  as,
+  ...props
+}: ButtonProps<C>) => {
+  const Component = as || 'button';
+  return <Component {...props} />;
+};
+```
+
+#### B. Slot Pattern (Radix UI)
+Use the `asChild` pattern to merge styles onto a custom child component.
+
+```tsx
+import { Slot } from '@radix-ui/react-slot';
+
+export const Button = ({ asChild, ...props }) => {
+  const Comp = asChild ? Slot : 'button';
+  return <Comp {...props} />;
+};
+```
+
+#### C. Headless UI Hooks
+Separate logic from presentation for complex components like Toggles or Listboxes.
+
+```tsx
+function useToggle() {
+  const [pressed, setPressed] = useState(false);
+  return {
+    pressed,
+    toggleProps: {
+      role: 'button',
+      'aria-pressed': pressed,
+      onClick: () => setPressed(!pressed),
+    },
+  };
+}
+```
+
+### 4. Robust Theming Architecture
+Implement a global `ThemeProvider` for full control over dark mode and system preferences.
+
+```tsx
+// 1. Detect system preference
+const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+// 2. Apply theme to document root
+document.documentElement.classList.add(isDark ? "dark" : "light");
+
+// 3. Persist in LocalStorage
+localStorage.setItem("theme", "dark");
+```
+
+---
+
+---
+
+## 🏗️ Component Architecture (Composition Patterns)
+
+Adopt **Vercel's Composition Patterns** to avoid prop drilling and "boolean prop explosion".
+
+### 1. Avoid Boolean Prop Proliferation
+Never create components with excessive configuration flags (`<Card isEditing isProMode isMobile ...>`).
+- **Antipattern**: One giant component with 20 `if/else`.
+- **Solution**: Create **Explicit Component Variants** composed of shared primitives.
+    ```tsx
+    // ❌ Wrong
+    <Composer isEditing isThread channelId="123" />
+    
+    // ✅ Right
+    <ThreadComposer channelId="123" />
+    <EditComposer messageId="456" />
+    ```
+
+### 2. Compound Components
+Use this pattern for complex UI widgets (Dropdowns, Dialogs, Cards) to keep state flexible.
+- **Rule**: Parent provides Context; Children consume it. Visual hierarchy is decoupled from logic.
+    ```tsx
+    // Usage
+    <Composer.Provider>
+        <Composer.Frame>
+            <Composer.Input />
+            <Composer.Footer>
+              <Composer.Submit />
+            </Composer.Footer>
+        </Composer.Frame>
+    </Composer.Provider> // Submit button works even if moved outside Frame!
+    ```
+
+### 3. Decouple State from UI
+UI components should receive state via **Generic Context Interfaces**, not be hardcoded to a specific store.
+- **Goal**: The same `<Composer.Input>` should work for both a "New Message" (Local State/Zustand) and "Edit Message" (Server State/ReactQuery).
+- **Implementation**: Define `interface ComposerActions { submit: () => void }` and implement it in different Providers.
+
+---
+
 ## Component Design Patterns
 
 ### 1. Form Components (React Hook Form + Zod)
@@ -778,7 +1059,7 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('Error caught by boundary:', error, errorInfo);
   }
   
-  render() {
+    render() {
     if (this.state.hasError) {
       return this.props.fallback || <ErrorFallback error={this.state.error} />;
     }
@@ -787,6 +1068,29 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 ```
+
+## 🔴 Centralized Error Code Mapping
+Following the PayU engineering standard, frontends must map backend error codes to user-friendly messages.
+
+### 1. Error Mapping Strategy
+Instead of hardcoding strings, use the extracted error JSON from the backend.
+
+```typescript
+// lib/utils/error-mapper.ts
+import errorCatalog from '@/constants/errors.json';
+
+export const mapErrorCode = (code: string, locale: string = 'id'): string => {
+  const entry = errorCatalog[code];
+  if (!entry) return errorCatalog['GEN_500'][locale];
+  return entry[locale] || entry['en'];
+};
+```
+
+### 2. Implementation with i18n
+Integrate your mapping with `next-intl` or your i18n framework to ensure localized error displays.
+
+### 3. Unknown Code Logging
+Always log the original `errorCode` and `traceId` to the console (development) or a monitoring service (production) if a mapping is missing.
 
 ---
 

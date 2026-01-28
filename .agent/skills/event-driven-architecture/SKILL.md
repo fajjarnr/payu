@@ -151,9 +151,23 @@ public record PayuEvent<T>(
 
 ---
 
-## 🔄 Saga Pattern (Choreography)
+## 🔄 Saga Patterns: Orchestration vs. Choreography
 
-### Transfer Saga Flow
+Distributed transactions in PayU are implemented using the **Saga Pattern**. Choose the right approach based on complexity.
+
+### 1. Choreography (Event-Based)
+Services publish and subscribe to each other's events without a central controller.
+- **Best for**: Simple workflows with 2-3 services.
+- **Pros**: Low overhead, easy to scale.
+- **Cons**: Difficult to track the overall state of the transaction.
+
+### 2. Orchestration (Command-Based)
+A central "Orchestrator" service coordinates the steps by sending commands and receiving events.
+- **Best for**: Complex workflows (e.g., Transfer which involves Balance, Fraud, BI-FAST, and Notifications).
+- **Pros**: Centralized logic, easy to monitor, explicit state management.
+- **Cons**: Orchestrator becomes a single point of failure (requires high availability).
+
+### Transfer Saga Flow (Choreography Example)
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
@@ -335,7 +349,64 @@ public void onCreditRequested(
 
 ---
 
-## 📊 Event Sourcing (Optional)
+## 🏛️ Event Store Design (PostgreSQL)
+
+For services using **Event Sourcing** (like `wallet-service`), we implement a custom Event Store on top of PostgreSQL.
+
+### 1. Schema Definition
+```sql
+-- Events table: Append-only ledger of facts
+CREATE TABLE events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    stream_id VARCHAR(255) NOT NULL, -- e.g., "wallet-001"
+    stream_type VARCHAR(255) NOT NULL, -- e.g., "Wallet"
+    event_type VARCHAR(255) NOT NULL, -- e.g., "BalanceChanged"
+    event_data JSONB NOT NULL,
+    metadata JSONB DEFAULT '{}',     -- traceId, correlationId
+    version BIGINT NOT NULL,         -- Per-stream version for OCC
+    global_position BIGSERIAL,       -- Global order across all streams
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+
+    CONSTRAINT unique_stream_version UNIQUE (stream_id, version)
+);
+
+-- Snapshots table: To optimize aggregate reconstruction
+CREATE TABLE snapshots (
+    stream_id VARCHAR(255) PRIMARY KEY,
+    snapshot_data JSONB NOT NULL,
+    version BIGINT NOT NULL,         -- Last version included in snapshot
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Checkpoints: For real-time event subscribers
+CREATE TABLE subscription_checkpoints (
+    subscription_id VARCHAR(255) PRIMARY KEY,
+    last_position BIGINT NOT NULL DEFAULT 0,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 2. Core Operational Patterns
+
+#### A. Optimistic Concurrency Control (OCC)
+Always check the `expected_version` before appending to prevent race conditions.
+```sql
+-- Before insert: Verify version
+SELECT MAX(version) FROM events WHERE stream_id = 'wallet-001';
+-- If version matches expected, perform insert in transaction.
+```
+
+#### B. Snapshotting
+Avoid replaying thousands of events by periodically saving the aggregate state.
+1. Load latest snapshot.
+2. Replay only events where `version > snapshot.version`.
+
+#### C. Determinism
+Workflows or Aggregate logic MUST be deterministic. No `now()`, `random()`, or network calls inside the `apply()` logic.
+
+---
+
+## 📊 Event Sourcing Implementation
 
 ### Event Store Entity
 
@@ -397,6 +468,50 @@ public class WalletAggregate {
     }
 }
 ```
+
+---
+
+## 🏗️ Advanced Workflow Patterns
+
+### 1. Entity Workflows (Actor Model)
+Use long-lived workflows to represent a single entity instance (e.g., a "Transaction" or "User Session").
+- **Pattern**: Every state change is a signal to the workflow.
+- **Benefit**: Guarantees consistency and provides a natural audit trail.
+
+### 2. Fan-Out/Fan-In (Parallel Execution)
+Execute multiple tasks in parallel and aggregate results before proceeding.
+- **Example**: Checking fraud scoring from 3 different providers concurrently.
+- **Constraint**: Aggregate results only after ALL (or a majority) have responded within a timeout.
+
+### 3. Saga Compensation (Rollback logic)
+For every forward action, define a backward compensation.
+- **Rule**: Register compensation BEFORE executing the step.
+- **Execution**: On failure, run compensations in reverse order (LIFO).
+- **Idempotency**: All compensations MUST be idempotent.
+
+---
+
+## ⚡ Durable Execution & Workflow Resilience
+
+Menerapkan prinsip "Durable Execution" (seperti pola Inngest) untuk memastikan workflow backend kita tahan terhadap restart service atau network failure.
+
+### 1. Checkpoint & Memoization (Durable Steps)
+Pecah workflow besar menjadi langkah-langkah kecil (`Steps`). Setiap langkah yang sukses harus dicatat (*checkpoint*) agar tidak diulang jika terjadi retry.
+- **Implementasi**: Gunakan tabel `saga_state` untuk mencatat langkah mana saja yang sudah `COMPLETED`.
+- **Aturan**: Sebelum menjalankan Step X, cek apakah Step X sudah tercatat sukses di DB.
+
+### 2. Durable Sleep & Scheduling
+HINDARI penggunaan `Thread.sleep()` untuk delay yang lama (misal: menunggu 24 jam sebelum retry).
+- **Pola**: Simpan state ke database dengan kolom `scheduled_at`, lalu gunakan scheduler (seperti Quartz atau Kafka delayed messages) untuk men-trigger kembali workflow.
+
+### 3. Concurrency & Rate Limiting
+Kontrol beban workflow di level event consumer.
+- **In-flight Limit**: Batasi jumlah transaksi paralel per user_id menggunakan Redis lock atau Kafka partition locking.
+- **Throttling**: Jika penyedia eksternal (misal: BI-FAST) lambat, turunkan kecepatan consumer secara otomatis (back-off).
+
+### 4. Step-Based Error Handling
+Jangan batalkan seluruh Saga hanya karena satu Step *transient error*.
+- **Pola**: Bedakan antara *Fatal Error* (trigger Compensation) dan *Retriable Error* (tahan state, coba lagi nanti).
 
 ---
 

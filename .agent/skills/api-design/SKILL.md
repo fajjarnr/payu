@@ -119,6 +119,20 @@ POST   /v1/accounts/{id}/pockets       # Create pocket for account
 }
 ```
 
+## 🔴 Centralized Error Code Management
+Inspired by large-scale platforms (e.g., React), PayU uses an **"Extractable Error Codes"** pattern.
+
+### 1. The Pattern
+Error codes are the **source of truth**. The `message` field is for human convenience, but the `code` is what clients (Web/Mobile) use for logic and localization.
+
+### 2. Error Extraction Workflow
+1. **Define**: Add unique codes in the backend domain layer (e.g., `ACC_001`).
+2. **Extract**: Run `./scripts/extract-errors.sh` during the build process to generate a master JSON mapping.
+3. **Synchronize**: The generated JSON is consumed by Frontend/Mobile to provide mapped, user-friendly, and localized messages.
+
+### 3. "Unknown Error" Handling
+If a client encounters a code not found in their local mapping, they must fallback to a generic message but log the unknown code for developer investigation.
+
 ### Pagination
 
 ```java

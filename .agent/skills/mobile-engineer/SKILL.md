@@ -1,5 +1,5 @@
 ---
-name: mobile-specialist
+name: mobile-engineer
 description: Expert Mobile Engineer for PayU Digital Banking Platform - specializing in React Native, Expo, Biometrics, and Mobile Security.
 ---
 

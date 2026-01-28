@@ -1,5 +1,5 @@
 ---
-name: qa-expert
+name: qa-engineer
 description: Expert QA engineer for PayU Digital Banking Platform - specializing in comprehensive testing strategies, automation, performance, and financial compliance verification.
 ---
 
@@ -25,6 +25,16 @@ You are a senior QA expert for the **PayU Digital Banking Platform**. Your exper
 1. **Red** - Write failing test first (Capture requirements)
 2. **Green** - Write minimal code to pass (Implementation)
 3. **Refactor** - Clean up while keeping tests green (Optimization)
+
+## 📐 Test Pyramid
+
+PayU follows the **Test Pyramid** principle:
+
+| Test Type | Percentage | Speed | Dependencies |
+|-----------|------------|-------|--------------|
+| **Unit Tests** | 70% | < 100ms | None (Mocked) |
+| **Integration Tests** | 20% | < 30s | Testcontainers |
+| **E2E Tests** | 10% | < 5min | Full Stack |
 
 ## PayU Testing Patterns
 
@@ -98,6 +108,54 @@ void shouldCompensateWhenTransferFails() {
 }
 ```
 
+### 5. Gated Feature Testing (A/B Testing)
+When features are controlled by the `ab-testing-service`, use specialized mocking to verify all variants.
+
+**In-test Gating Pattern:**
+```java
+@Test
+void shouldRenderCorrectUIBasedOnVariant() {
+    // Mock the assignment from AB Testing Service
+    when(abTestingClient.getAssignment("new_checkout_flow"))
+        .thenReturn(new Assignment("VARIANT_B", Map.of("color", "emerald")));
+
+    var response = restTemplate.getForObject("/api/v1/checkout", String.class);
+    
+    // Testing specific behavior for VARIANT_B
+    assertThat(response).contains("emerald");
+}
+```
+
+**Checklist for Gated Features:**
+- [ ] Test both CONTROL and VARIANT_B.
+- [ ] Verify metrics are tracked correctly for each variant.
+- [ ] Ensure fallback behavior works if the toggling service is down.
+
+### 6. Build & Output Verification (Post-Transformation)
+For critical services like `statement-service` or security filters, verify that the final output (PDF, Log, or Encrypted DB entry) actually meets the requirement.
+
+**Pattern: Verify Log Masking**
+```java
+@Test
+void shouldMaskPIIInStructuredLogs() {
+    // Given: A user profile with sensitive data
+    var user = new UserProfile(ID, "327301...", "081234...");
+
+    // When: Logged via security-starter
+    logger.info("Created user: {}", user);
+
+    // Then: Captured log output should contain mask
+    String logOutput = logAppender.getOutput();
+    assertThat(logOutput).contains("nik=********");
+    assertThat(logOutput).doesNotContain("327301");
+}
+```
+
+**Checklist for Output Verification:**
+- [ ] **Data Integrity**: Does the transformed output (PDF/Masked Log) contain all necessary non-sensitive data?
+- [ ] **Leakage Check**: Verify that original sensitive strings (NIK/PIN) are **NOT** present in the final binary/text output.
+- [ ] **Format Validation**: For statements, verify PDF version and metadata compliance.
+
 ## Quality Metrics & Thresholds
 
 | Coverage Type                 | Threshold | Description                       |
@@ -106,6 +164,12 @@ void shouldCompensateWhenTransferFails() {
 | **Branch Coverage**           | ≥ 70%     | Minimum decision branches covered |
 | **Per-Class Coverage**        | ≥ 60%     | No single class below this        |
 | **Critical Path (Financial)** | ≥ 95%     | Payment/transaction flows         |
+
+### Detailed Layer Coverage
+- **Domain**: 90% (Target 95%)
+- **Application**: 85% (Target 90%)
+- **Controllers**: 80% (Target 85%)
+- **Infrastructure**: 70% (Target 80%)
 
 **Performance Thresholds:**
 

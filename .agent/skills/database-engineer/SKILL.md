@@ -1,5 +1,5 @@
 ---
-name: database-specialist
+name: database-engineer
 description: Expert in PostgreSQL database design, optimization, migrations, and JSONB patterns for PayU Digital Banking Platform.
 ---
 
@@ -172,6 +172,31 @@ ALTER TABLE ledger_entries ADD CONSTRAINT chk_balance_consistency
         (entry_type = 'DEBIT' AND balance_after = balance_before - amount)
     );
 ```
+
+---
+
+## ⚡ High-Scale & NoSQL-like Patterns
+
+Walaupun PayU menggunakan PostgreSQL, untuk beban kerja skala masif (seperti `transaction-service`), kita menerapkan prinsip-prinsip dari distributed NoSQL.
+
+### 1. Query-First Modeling
+Berbeda dengan SQL tradisional, model data kita harus dioptimalkan untuk pola pembacaan spesifik (Access Patterns).
+- **Proses**: Identifikasi query tersering -> Desain tabel/index agar data bisa diambil dalam satu I/O request.
+- **Trade-off**: Memberi beban lebih pada penulisan (write) demi kecepatan pembacaan (read).
+
+### 2. Denormalisasi & Duplikasi Data
+Jangan ragu untuk menduplikasi data ke kolom lain atau tabel lain demi menghindari JOIN yang mahal di tabel berskala jutaan baris.
+- **Contoh**: Menyimpan `user_name` langsung di tabel `transactions` agar history transaksi tidak perlu JOIN ke tabel `users`.
+- **Konsistensi**: Gunakan `Event-Driven Architecture` untuk sinkronisasi data yang diduplikasi secara eventual.
+
+### 3. Partitioning: Avoiding Hot Partitions
+Saat melakukan sharding atau partitioning:
+- **Pilih Partition Key yang High-Cardinality**: Gunakan `user_id` atau `device_id`.
+- **HINDARI**: Menggunakan status (misal: `status='ACTIVE'`) sebagai partition key, karena hal ini menciptakan **Hot Partition**—beban hanya akan menumpuk di satu node fisik.
+
+### 4. Single-Table Pattern (via JSONB)
+Simpan data relasi yang sering dibaca bersamaan dalam satu kolom JSONB (seperti pola Adjacency List pada NoSQL).
+- **Kapan?**: Untuk metadata transaksi atau preferensi user yang strukturnya dinamis.
 
 ---
 
