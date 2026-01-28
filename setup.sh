@@ -88,7 +88,7 @@ command_exists() {
 
 install_base_packages() {
     print_section "Installing Base Packages"
-    
+
     case $OS in
         ubuntu|debian|pop)
             sudo apt update && sudo apt upgrade -y
@@ -128,34 +128,34 @@ install_base_packages() {
             brew install git curl wget
             ;;
     esac
-    
+
     print_success "Base packages installed"
 }
 
 install_docker() {
     print_section "Installing Docker"
-    
+
     if command_exists docker; then
         print_warning "Docker already installed: $(docker --version)"
         return 0
     fi
-    
+
     case $OS in
         ubuntu|debian|pop)
             # Remove old versions
             sudo apt remove -y docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc 2>/dev/null || true
-            
+
             # Add Docker's official GPG key
             sudo install -m 0755 -d /etc/apt/keyrings
             sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
             sudo chmod a+r /etc/apt/keyrings/docker.asc
-            
+
             # Add the repository to Apt sources
             echo \
               "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
               $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
               sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-            
+
             sudo apt update -y
             sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
             ;;
@@ -168,7 +168,7 @@ install_docker() {
             echo -e "${YELLOW}Please open Docker Desktop to complete installation${NC}"
             ;;
     esac
-    
+
     # Add user to docker group (Linux only)
     if [[ "$OS" != "macos" ]]; then
         sudo usermod -aG docker $USER
@@ -176,13 +176,13 @@ install_docker() {
         sudo systemctl start docker
         print_warning "Log out and back in for docker group changes to take effect"
     fi
-    
+
     print_success "Docker installed"
 }
 
 install_java() {
     print_section "Installing Java $JAVA_VERSION (Temurin)"
-    
+
     if command_exists java; then
         CURRENT_JAVA=$(java -version 2>&1 | head -n 1)
         if echo "$CURRENT_JAVA" | grep -q "21"; then
@@ -190,7 +190,7 @@ install_java() {
             return 0
         fi
     fi
-    
+
     case $OS in
         ubuntu|debian|pop)
             # Add Adoptium repository
@@ -207,7 +207,7 @@ install_java() {
             brew install --cask temurin@21
             ;;
     esac
-    
+
     # Set JAVA_HOME
     if [[ "$OS" != "macos" ]]; then
         JAVA_HOME_PATH=$(dirname $(dirname $(readlink -f $(which java))))
@@ -216,18 +216,18 @@ install_java() {
             echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
         fi
     fi
-    
+
     print_success "Java $JAVA_VERSION installed"
 }
 
 install_maven() {
     print_section "Installing Maven $MAVEN_VERSION"
-    
+
     if command_exists mvn; then
         print_warning "Maven already installed: $(mvn -version | head -n 1)"
         return 0
     fi
-    
+
     case $OS in
         ubuntu|debian|pop)
             sudo apt install -y maven
@@ -239,13 +239,13 @@ install_maven() {
             brew install maven
             ;;
     esac
-    
+
     print_success "Maven installed"
 }
 
 install_python() {
     print_section "Installing Python $PYTHON_VERSION"
-    
+
     if command_exists python3; then
         CURRENT_PY=$(python3 --version)
         if echo "$CURRENT_PY" | grep -q "3.12\|3.13"; then
@@ -253,7 +253,7 @@ install_python() {
             return 0
         fi
     fi
-    
+
     case $OS in
         ubuntu|debian|pop)
             sudo add-apt-repository -y ppa:deadsnakes/ppa
@@ -268,17 +268,17 @@ install_python() {
             brew install python@3.12
             ;;
     esac
-    
+
     # Install pipx for global tools
     python3 -m pip install --user pipx
     python3 -m pipx ensurepath
-    
+
     print_success "Python $PYTHON_VERSION installed"
 }
 
 install_nodejs() {
     print_section "Installing Node.js $NODE_VERSION LTS"
-    
+
     if command_exists node; then
         CURRENT_NODE=$(node --version)
         if echo "$CURRENT_NODE" | grep -q "v2[0-9]"; then
@@ -286,7 +286,7 @@ install_nodejs() {
             return 0
         fi
     fi
-    
+
     case $OS in
         ubuntu|debian|pop)
             # Install via NodeSource
@@ -301,21 +301,21 @@ install_nodejs() {
             brew install node@${NODE_VERSION}
             ;;
     esac
-    
+
     # Install global npm packages
     sudo npm install -g pnpm yarn
-    
+
     print_success "Node.js $NODE_VERSION installed"
 }
 
 install_cloud_clis() {
     print_section "Installing Cloud CLIs (OpenShift & Kubernetes)"
-    
+
     if command_exists oc; then
         print_warning "OpenShift CLI already installed: $(oc version --client | head -n 1)"
         return 0
     fi
-    
+
     case $OS in
         ubuntu|debian|pop|fedora|rhel|centos|rocky|almalinux)
             echo "Downloading OpenShift Client..."
@@ -329,13 +329,13 @@ install_cloud_clis() {
             brew install openshift-cli
             ;;
     esac
-    
+
     print_success "OpenShift and Kubernetes CLIs installed"
 }
 
 install_db_clients() {
     print_section "Installing Database & Messaging Clients"
-    
+
     case $OS in
         ubuntu|debian|pop)
             sudo apt install -y postgresql-client redis-tools kcat
@@ -348,13 +348,13 @@ install_db_clients() {
             brew link --force postgresql@16
             ;;
     esac
-    
+
     print_success "Database & Messaging clients installed"
 }
 
 install_additional_tools() {
     print_section "Installing Additional Development Tools"
-    
+
     # Install jq (JSON processor)
     case $OS in
         ubuntu|debian|pop)
@@ -367,7 +367,7 @@ install_additional_tools() {
             brew install jq httpie pre-commit
             ;;
     esac
-    
+
     # Install k9s (Kubernetes TUI) - optional
     if ! command_exists k9s; then
         echo "Installing k9s..."
@@ -380,7 +380,7 @@ install_additional_tools() {
                 ;;
         esac
     fi
-    
+
     print_success "Additional tools installed"
 }
 
@@ -390,11 +390,11 @@ install_additional_tools() {
 
 setup_project() {
     print_section "Setting Up PayU Project"
-    
+
     # Get project root directory
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     cd "$SCRIPT_DIR"
-    
+
     # Copy environment file if not exists
     if [ ! -f .env ] && [ -f .env.example ]; then
         cp .env.example .env
@@ -422,7 +422,7 @@ setup_project() {
         echo "Building $service_name..."
         (cd "$service_dir" && mvn clean package -DskipTests -T 1C -q)
     done
-    
+
     # Build Simulators
     print_section "Building Simulator Services"
     find backend/simulators -maxdepth 2 -name "pom.xml" | while read -r pom; do
@@ -431,7 +431,7 @@ setup_project() {
         echo "Building $service_name..."
         (cd "$service_dir" && mvn clean package -DskipTests -T 1C -q)
     done
-    
+
     # Install frontend dependencies
     if [ -d "frontend/web-app" ]; then
         echo "Installing web-app dependencies..."
@@ -440,7 +440,7 @@ setup_project() {
         cd "$SCRIPT_DIR"
         print_success "web-app dependencies installed"
     fi
-    
+
     if [ -d "frontend/developer-docs" ]; then
         echo "Installing developer-docs dependencies..."
         cd frontend/developer-docs
@@ -448,7 +448,7 @@ setup_project() {
         cd "$SCRIPT_DIR"
         print_success "developer-docs dependencies installed"
     fi
-    
+
     if [ -d "frontend/mobile" ]; then
         echo "Installing mobile dependencies..."
         cd frontend/mobile
@@ -456,7 +456,7 @@ setup_project() {
         cd "$SCRIPT_DIR"
         print_success "mobile dependencies installed"
     fi
-    
+
     # Install Python service dependencies
     for service in kyc-service analytics-service; do
         if [ -d "backend/$service" ]; then
@@ -490,7 +490,7 @@ setup_project() {
         ln -s ../.agent/skills .claude/skills
         print_success "Soft link for AI skills created (.claude/skills -> .agent/skills)"
     fi
-    
+
     print_success "Project setup complete"
 }
 
@@ -500,18 +500,18 @@ setup_project() {
 
 check_versions() {
     print_section "Checking Installed Versions"
-    
+
     echo ""
     echo "Required Tools:"
     echo "---------------"
-    
+
     # Git
     if command_exists git; then
         print_success "Git: $(git --version)"
     else
         print_error "Git: Not installed"
     fi
-    
+
     # Docker
     if command_exists docker; then
         print_success "Docker: $(docker --version)"
@@ -521,7 +521,7 @@ check_versions() {
     else
         print_error "Docker: Not installed"
     fi
-    
+
     # Java
     if command_exists java; then
         JAVA_VER=$(java -version 2>&1 | head -n 1)
@@ -533,14 +533,14 @@ check_versions() {
     else
         print_error "Java: Not installed"
     fi
-    
+
     # Maven
     if command_exists mvn; then
         print_success "Maven: $(mvn -version 2>&1 | head -n 1)"
     else
         print_error "Maven: Not installed"
     fi
-    
+
     # Python
     if command_exists python3; then
         PY_VER=$(python3 --version)
@@ -552,7 +552,7 @@ check_versions() {
     else
         print_error "Python: Not installed"
     fi
-    
+
     # Node.js
     if command_exists node; then
         NODE_VER=$(node --version)
@@ -565,24 +565,24 @@ check_versions() {
     else
         print_error "Node.js: Not installed"
     fi
-    
+
     # Optional tools
     echo ""
     echo "Optional Tools:"
     echo "---------------"
-    
+
     if command_exists jq; then
         print_success "jq: $(jq --version)"
     else
         print_warning "jq: Not installed"
     fi
-    
+
     if command_exists k9s; then
         print_success "k9s: $(k9s version --short 2>/dev/null || echo 'installed')"
     else
         print_warning "k9s: Not installed"
     fi
-    
+
     if command_exists oc; then
         print_success "OpenShift CLI: $(oc version --client 2>/dev/null | head -n 1)"
     else
@@ -606,7 +606,7 @@ check_versions() {
     else
         print_error "kcat: Not installed"
     fi
-    
+
     echo ""
 }
 
@@ -621,9 +621,9 @@ main() {
     echo -e "${GREEN}║                    Version 1.0.0                               ║${NC}"
     echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    
+
     detect_os
-    
+
     case "${1:-full}" in
         --check|-c)
             check_versions
@@ -674,7 +674,7 @@ main() {
             install_additional_tools
             setup_project
             check_versions
-            
+
             print_section "Installation Complete!"
             echo ""
             echo "Next steps:"
