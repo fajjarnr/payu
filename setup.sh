@@ -406,7 +406,8 @@ setup_project() {
     if [ -d "backend/shared" ]; then
         make build-test-deps || {
             echo "Fallback: building starters manually..."
-            cd backend/shared/cache-starter && mvn clean install -DskipTests -q
+            cd backend/shared/api-commons && mvn clean install -DskipTests -q
+            cd ../cache-starter && mvn clean install -DskipTests -q
             cd ../resilience-starter && mvn clean install -DskipTests -q
             cd ../security-starter && mvn clean install -DskipTests -q
             cd "$SCRIPT_DIR"
