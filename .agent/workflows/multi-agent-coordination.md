@@ -26,7 +26,7 @@ Gunakan untuk tugas besar yang butuh *central planner*.
 - **Topology**: Hierarchical.
 - **Flow**: Architect Planning -> Worker Execution -> Architect Review.
 
-### 3. Pattern: Comprehensive Analysis
+### 4. Pattern: Comprehensive Analysis
 Alur: `explorer-agent` → `domain-agents` → `synthesis`
 - Memetakan codebase secara utuh sebelum melakukan perubahan besar.
 - Sangat efektif untuk *onboarding* pada service baru atau refaktor arsitektur.
@@ -42,7 +42,7 @@ Agar "Swarm" efektif, semua agen harus berbagi *memory state*:
 
 ---
 
-## 📝 Synthesis Protocol (Reporting)
+## 📋 Common Orchestration Scenarios
 
 | Skenario | Urutan Agen (Orchestration) |
 | :--- | :--- |

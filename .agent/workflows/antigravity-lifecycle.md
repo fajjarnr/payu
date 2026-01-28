@@ -61,11 +61,7 @@ This workflow guides the AI agent through the standard Antigravity lifecycle, st
         - **Infrastructure Layer** (Output Adapters): JPA Implementations (Repositories), Kafka Producers, External Clients. Implements Ports.
         - **API Layer** (Driving Adapters): REST Controllers, gRPC. Calls Application Layer.
 
-### Phase 3: Verify (Scientific Validation)
-- **Strict Verification**: Don't just run tests. Verify the *ISC*.
-- **Skeptical Agent**: Assume the code is broken until proven otherwise.
-
-## Phase 4: Verification
+## Phase 3: Verification
 
 **Goal**: Prove that the changes work and adhere to standards.
 

@@ -90,7 +90,7 @@
 
 ```
 payu/
-├── .agent/              # AI agent skills and workflows (11 skills)
+├── .agent/              # AI agent skills and workflows (20 skills)
 ├── backend/             # Microservices implementation (20+ services)
 │   ├── shared/          # Shared Spring Boot starters
 │   │   ├── security-starter/    # PII encryption, audit logging
@@ -298,6 +298,8 @@ Claude Code SHOULD follow established workflows in `.agent/workflows/` for compl
 
 - **`/antigravity-lifecycle`**: Standard SDLC lifecycle (Planning -> Execution -> Verification).
 - **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes.
+- **`/new-service-scaffolding`**: Workflow untuk scaffolding microservice baru di platform PayU dengan arsitektur Hexagonal dan konfigurasi standar.
+- **`/security-audit`**: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK.
 
 *Usage*: When tasked with complex refactoring or multi-service updates, read the relevant workflow file first.
 
