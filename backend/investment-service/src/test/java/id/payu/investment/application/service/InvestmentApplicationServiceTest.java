@@ -324,5 +324,234 @@ class InvestmentApplicationServiceTest {
 
             verify(walletServicePort, never()).creditBalance(anyString(), any(BigDecimal.class));
         }
+
+        @Test
+        @DisplayName("should throw exception when selling non-existent transaction")
+        void shouldThrowExceptionWhenSellingNonExistentTransaction() {
+            UUID transactionId = UUID.randomUUID();
+
+            given(investmentPersistencePort.findTransactionById(transactionId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> investmentApplicationService.sellInvestment(
+                    testAccountId, transactionId, testAmount))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Transaction not found");
+
+            verify(walletServicePort, never()).creditBalance(anyString(), any(BigDecimal.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("buyDeposit")
+    class BuyDeposit {
+
+        @Test
+        @DisplayName("should buy deposit successfully")
+        void shouldBuyDepositSuccessfully() throws ExecutionException, InterruptedException {
+            int tenure = 6;
+
+            InvestmentAccount account = InvestmentAccount.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .totalBalance(BigDecimal.ZERO)
+                    .availableBalance(BigDecimal.ZERO)
+                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.of(account));
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(true);
+
+            Deposit deposit = Deposit.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(testAccountId)
+                    .amount(testAmount)
+                    .tenure(tenure)
+                    .interestRate(new BigDecimal("0.0550"))
+                    .maturityAmount(new BigDecimal("1027500.00"))
+                    .status(Deposit.DepositStatus.ACTIVE)
+                    .currency("IDR")
+                    .build();
+
+            given(investmentPersistencePort.saveDeposit(any(Deposit.class))).willReturn(deposit);
+
+            CompletableFuture<Deposit> result = investmentApplicationService.buyDeposit(
+                    testAccountId, testUserId, testAmount, tenure);
+            Deposit boughtDeposit = result.get();
+
+            assertThat(boughtDeposit).isNotNull();
+            assertThat(boughtDeposit.getTenure()).isEqualTo(tenure);
+            verify(walletServicePort).deductBalance(testUserId, testAmount);
+            verify(investmentPersistencePort).saveDeposit(any(Deposit.class));
+            verify(investmentPersistencePort).saveTransaction(any(InvestmentTransaction.class));
+            verify(investmentEventPublisherPort).publishInvestmentCompleted(any(InvestmentEvent.class));
+        }
+
+        @Test
+        @DisplayName("should throw exception when buying deposit with insufficient balance")
+        void shouldThrowExceptionWhenInsufficientBalance() {
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId)))
+                    .willReturn(Optional.of(InvestmentAccount.builder()
+                            .id(UUID.randomUUID())
+                            .userId(testUserId)
+                            .build()));
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(false);
+
+            assertThatThrownBy(() -> investmentApplicationService.buyDeposit(
+                    testAccountId, testUserId, testAmount, 6))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Insufficient wallet balance");
+
+            verify(walletServicePort, never()).deductBalance(anyString(), any(BigDecimal.class));
+        }
+
+        @Test
+        @DisplayName("should throw exception when account not found")
+        void shouldThrowExceptionWhenAccountNotFound() {
+            given(investmentPersistencePort.findAccountById(UUID.fromString(testAccountId))).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> investmentApplicationService.buyDeposit(
+                    testAccountId, testUserId, testAmount, 6))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Investment account not found");
+        }
+    }
+
+    @Nested
+    @DisplayName("getAccountByUserId")
+    class GetAccountByUserId {
+
+        @Test
+        @DisplayName("should get account by user id successfully")
+        void shouldGetAccountByUserId() throws ExecutionException, InterruptedException {
+            InvestmentAccount account = InvestmentAccount.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .totalBalance(new BigDecimal("5000000"))
+                    .status(InvestmentAccount.AccountStatus.ACTIVE)
+                    .build();
+
+            given(investmentPersistencePort.findAccountByUserId(testUserId)).willReturn(Optional.of(account));
+
+            CompletableFuture<InvestmentAccount> result = investmentApplicationService.getAccountByUserId(testUserId);
+            InvestmentAccount foundAccount = result.get();
+
+            assertThat(foundAccount).isNotNull();
+            assertThat(foundAccount.getUserId()).isEqualTo(testUserId);
+            verify(investmentPersistencePort).findAccountByUserId(testUserId);
+        }
+
+        @Test
+        @DisplayName("should throw exception when account not found")
+        void shouldThrowExceptionWhenAccountNotFoundByUserId() {
+            given(investmentPersistencePort.findAccountByUserId(testUserId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> investmentApplicationService.getAccountByUserId(testUserId))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Investment account not found");
+        }
+    }
+
+    @Nested
+    @DisplayName("getGoldByUserId")
+    class GetGoldByUserId {
+
+        @Test
+        @DisplayName("should get gold by user id successfully")
+        void shouldGetGoldByUserId() throws ExecutionException, InterruptedException {
+            Gold gold = Gold.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .amount(new BigDecimal("10.5"))
+                    .averageBuyPrice(new BigDecimal("1200000"))
+                    .currentValue(new BigDecimal("12600000"))
+                    .build();
+
+            given(investmentPersistencePort.findGoldByUserId(testUserId)).willReturn(Optional.of(gold));
+
+            CompletableFuture<Gold> result = investmentApplicationService.getGoldByUserId(testUserId);
+            Gold foundGold = result.get();
+
+            assertThat(foundGold).isNotNull();
+            assertThat(foundGold.getUserId()).isEqualTo(testUserId);
+            verify(investmentPersistencePort).findGoldByUserId(testUserId);
+        }
+
+        @Test
+        @DisplayName("should throw exception when gold not found")
+        void shouldThrowExceptionWhenGoldNotFound() {
+            given(investmentPersistencePort.findGoldByUserId(testUserId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> investmentApplicationService.getGoldByUserId(testUserId))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Gold holdings not found");
+        }
+    }
+
+    @Nested
+    @DisplayName("buyGold error scenarios")
+    class BuyGoldErrors {
+
+        @Test
+        @DisplayName("should throw exception when gold price not available")
+        void shouldThrowExceptionWhenGoldPriceNotAvailable() {
+            given(investmentPersistencePort.getLatestGoldPrice()).willReturn(null);
+
+            assertThatThrownBy(() -> investmentApplicationService.buyGold(testUserId, testAmount))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Gold price not available");
+
+            verify(walletServicePort, never()).deductBalance(anyString(), any(BigDecimal.class));
+        }
+
+        @Test
+        @DisplayName("should throw exception when buying gold with insufficient balance")
+        void shouldThrowExceptionWhenBuyingGoldWithInsufficientBalance() {
+            given(investmentPersistencePort.getLatestGoldPrice()).willReturn(new BigDecimal("1250000"));
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(false);
+
+            assertThatThrownBy(() -> investmentApplicationService.buyGold(testUserId, testAmount))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Insufficient wallet balance");
+
+            verify(walletServicePort, never()).deductBalance(anyString(), any(BigDecimal.class));
+        }
+
+        @Test
+        @DisplayName("should add to existing gold holdings")
+        void shouldAddToExistingGoldHoldings() throws ExecutionException, InterruptedException {
+            BigDecimal goldPrice = new BigDecimal("1250000.00");
+
+            Gold existingGold = Gold.builder()
+                    .id(UUID.randomUUID())
+                    .userId(testUserId)
+                    .amount(new BigDecimal("1.0000"))
+                    .averageBuyPrice(new BigDecimal("1200000.00"))
+                    .currentPrice(goldPrice)
+                    .currentValue(new BigDecimal("1250000.00"))
+                    .unrealizedProfitLoss(new BigDecimal("50000.00"))
+                    .build();
+
+            given(investmentPersistencePort.getLatestGoldPrice()).willReturn(goldPrice);
+            given(walletServicePort.hasSufficientBalance(testUserId, testAmount)).willReturn(true);
+            given(investmentPersistencePort.findGoldByUserId(testUserId)).willReturn(Optional.of(existingGold));
+
+            Gold updatedGold = Gold.builder()
+                    .id(existingGold.getId())
+                    .userId(testUserId)
+                    .amount(new BigDecimal("1.8000"))
+                    .averageBuyPrice(new BigDecimal("1222222.22"))
+                    .currentPrice(goldPrice)
+                    .currentValue(new BigDecimal("2250000.00"))
+                    .build();
+
+            given(investmentPersistencePort.saveGold(any(Gold.class))).willReturn(updatedGold);
+
+            CompletableFuture<Gold> result = investmentApplicationService.buyGold(testUserId, testAmount);
+            Gold boughtGold = result.get();
+
+            assertThat(boughtGold).isNotNull();
+            verify(walletServicePort).deductBalance(testUserId, testAmount);
+            verify(investmentPersistencePort).saveGold(any(Gold.class));
+        }
     }
 }

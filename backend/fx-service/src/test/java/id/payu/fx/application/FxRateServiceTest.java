@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,7 +40,7 @@ class FxRateServiceTest {
     @BeforeEach
     void setUp() {
         fxRateService = new id.payu.fx.application.service.FxRateService(fxRateRepository, fxRateProvider);
-        
+
         testRate = FxRate.builder()
                 .id(UUID.randomUUID())
                 .fromCurrency("IDR")
@@ -114,5 +115,60 @@ class FxRateServiceTest {
         assertThat(result.getToAmount()).isEqualByComparingTo("65.00");
         assertThat(result.getExchangeRate()).isEqualByComparingTo("0.000065");
         assertThat(result.getStatus()).isEqualTo(FxConversion.ConversionStatus.COMPLETED);
+    }
+
+    @Test
+    void getCurrentRate_shouldFetchNewRate_whenNoCachedRate() {
+        when(fxRateRepository.findLatestRate(eq("IDR"), eq("USD"), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
+        when(fxRateProvider.fetchCurrentRate("IDR", "USD")).thenReturn(testRate);
+        when(fxRateRepository.save(any(FxRate.class))).thenReturn(testRate);
+
+        FxRate result = fxRateService.getCurrentRate("IDR", "USD");
+
+        assertThat(result).isEqualTo(testRate);
+        verify(fxRateProvider).fetchCurrentRate("IDR", "USD");
+        verify(fxRateRepository).save(any(FxRate.class));
+    }
+
+    @Test
+    void getAllRates_shouldReturnAllRates() {
+        when(fxRateRepository.findAll()).thenReturn(List.of(testRate));
+
+        var result = fxRateService.getAllRates();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(testRate);
+        verify(fxRateRepository).findAll();
+    }
+
+    @Test
+    void updateRates_shouldUpdateAllSupportedCurrencies() {
+        when(fxRateProvider.isAvailable()).thenReturn(true);
+        when(fxRateProvider.fetchCurrentRate(anyString(), anyString())).thenReturn(testRate);
+        when(fxRateRepository.save(any(FxRate.class))).thenReturn(testRate);
+
+        fxRateService.updateRates();
+
+        // Should update 7 currencies (all except IDR which is BASE_CURRENCY)
+        verify(fxRateProvider, atLeastOnce()).fetchCurrentRate(anyString(), anyString());
+        verify(fxRateRepository, atLeast(14)).save(any(FxRate.class)); // 7 pairs x 2 directions
+    }
+
+    @Test
+    void updateRates_shouldDoNothing_whenProviderNotAvailable() {
+        when(fxRateProvider.isAvailable()).thenReturn(false);
+
+        fxRateService.updateRates();
+
+        verify(fxRateProvider, never()).fetchCurrentRate(anyString(), anyString());
+        verify(fxRateRepository, never()).save(any(FxRate.class));
+    }
+
+    @Test
+    void getCurrentRate_shouldThrowException_forUnsupportedToCurrency() {
+        assertThatThrownBy(() -> fxRateService.getCurrentRate("IDR", "XYZ"))
+                .isInstanceOf(id.payu.fx.application.service.FxRateNotFoundException.class)
+                .hasMessageContaining("Unsupported to currency");
     }
 }

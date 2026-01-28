@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -235,5 +236,147 @@ class ContentServiceTest {
 
         // Then
         assertThat(matches).isTrue();
+    }
+
+    @Test
+    @DisplayName("Should update content successfully")
+    void shouldUpdateContentSuccessfully() {
+        // Given
+        UUID contentId = content.getId();
+        ContentRequest updateRequest = ContentRequest.builder()
+            .contentType("PROMO")
+            .title("Updated Banner")
+            .description("Updated Description")
+            .imageUrl("https://example.com/updated.png")
+            .actionUrl("https://example.com/updated")
+            .actionType("LINK")
+            .startDate(LocalDate.now())
+            .endDate(LocalDate.now().plusDays(60))
+            .priority(200)
+            .targetingRules(new HashMap<>())
+            .metadata(new HashMap<>())
+            .build();
+
+        when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
+        when(contentRepository.existsByTitleIgnoreCase("Updated Banner")).thenReturn(false);
+        when(contentRepository.save(any(Content.class))).thenReturn(content);
+
+        // When
+        var response = contentService.updateContent(contentId, updateRequest, "admin");
+
+        // Then
+        assertThat(response).isNotNull();
+        verify(contentRepository).save(any(Content.class));
+    }
+
+    @Test
+    @DisplayName("Should get content by type")
+    void shouldGetContentByType() {
+        // Given
+        when(contentRepository.findByContentType("BANNER")).thenReturn(List.of(content));
+
+        // When
+        var result = contentService.getContentByType("BANNER");
+
+        // Then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getContentType()).isEqualTo("BANNER");
+    }
+
+    @Test
+    @DisplayName("Should get content by status")
+    void shouldGetContentByStatus() {
+        // Given
+        when(contentRepository.findByStatus(Content.ContentStatus.DRAFT)).thenReturn(List.of(content));
+
+        // When
+        var result = contentService.getContentByStatus("draft");
+
+        // Then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo("DRAFT");
+    }
+
+    @Test
+    @DisplayName("Should get active content by type")
+    void shouldGetActiveContentByType() {
+        // Given
+        when(contentRepository.findActiveByContentType("BANNER", LocalDate.now())).thenReturn(List.of(content));
+
+        // When
+        var result = contentService.getActiveContentByType("BANNER");
+
+        // Then
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Should get scheduled content to activate")
+    void shouldGetScheduledContentToActivate() {
+        // Given
+        when(contentRepository.findScheduledToActivate(LocalDate.now())).thenReturn(List.of(content));
+
+        // When
+        var result = contentService.getScheduledContentToActivate();
+
+        // Then
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Should get expired active content")
+    void shouldGetExpiredActiveContent() {
+        // Given
+        when(contentRepository.findActiveToArchive(LocalDate.now())).thenReturn(List.of(content));
+
+        // When
+        var result = contentService.getExpiredActiveContent();
+
+        // Then
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Should activate scheduled content")
+    void shouldActivateScheduledContent() {
+        // Given
+        UUID contentId = content.getId();
+        when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
+
+        // When
+        contentService.activateScheduledContent(List.of(contentId));
+
+        // Then
+        assertThat(content.getStatus()).isEqualTo(Content.ContentStatus.ACTIVE);
+        verify(contentRepository).save(any(Content.class));
+    }
+
+    @Test
+    @DisplayName("Should archive expired content")
+    void shouldArchiveExpiredContent() {
+        // Given
+        content.setStatus(Content.ContentStatus.ACTIVE);
+        UUID contentId = content.getId();
+        when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
+
+        // When
+        contentService.archiveExpiredContent(List.of(contentId));
+
+        // Then
+        assertThat(content.getStatus()).isEqualTo(Content.ContentStatus.ARCHIVED);
+        verify(contentRepository).save(any(Content.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when deleting non-existent content")
+    void shouldThrowExceptionWhenDeletingNonExistentContent() {
+        // Given
+        UUID contentId = UUID.randomUUID();
+        when(contentRepository.existsById(contentId)).thenReturn(false);
+
+        // When/Then
+        assertThatThrownBy(() -> contentService.deleteContent(contentId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("not found");
     }
 }

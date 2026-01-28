@@ -200,4 +200,116 @@ class ExperimentServiceTest {
         verify(experimentRepository).save(any(Experiment.class));
         verify(eventProducer).publishStatusChanged(any(Experiment.class));
     }
+
+    @Test
+    @DisplayName("Should get experiment by key")
+    void shouldGetExperimentByKey() {
+        // Given
+        String key = "test_experiment";
+        when(experimentRepository.findByKey(key)).thenReturn(Optional.of(testExperiment));
+
+        // When
+        Experiment result = experimentService.getExperimentByKey(key);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getKey()).isEqualTo(key);
+        verify(experimentRepository).findByKey(key);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when experiment not found by key")
+    void shouldThrowExceptionWhenNotFoundByKey() {
+        // Given
+        String key = "nonexistent";
+        when(experimentRepository.findByKey(key)).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> experimentService.getExperimentByKey(key))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not found");
+    }
+
+    @Test
+    @DisplayName("Should get active experiments")
+    void shouldGetActiveExperiments() {
+        // Given
+        when(experimentRepository.findActiveExperiments(any(LocalDate.class))).thenReturn(List.of(testExperiment));
+
+        // When
+        var result = experimentService.getActiveExperiments();
+
+        // Then
+        assertThat(result).hasSize(1);
+        verify(experimentRepository).findActiveExperiments(any(LocalDate.class));
+    }
+
+    @Test
+    @DisplayName("Should update experiment successfully")
+    void shouldUpdateExperimentSuccessfully() {
+        // Given
+        Experiment updates = Experiment.builder()
+                .name("Updated Experiment")
+                .description("Updated description")
+                .trafficSplit(75)
+                .build();
+
+        when(experimentRepository.findById(testId)).thenReturn(Optional.of(testExperiment));
+        when(experimentRepository.save(any(Experiment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Experiment result = experimentService.updateExperiment(testId, updates);
+
+        // Then
+        assertThat(result.getName()).isEqualTo("Updated Experiment");
+        assertThat(result.getDescription()).isEqualTo("Updated description");
+        assertThat(result.getTrafficSplit()).isEqualTo(75);
+        verify(experimentRepository).save(any(Experiment.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when updating running experiment key")
+    void shouldThrowExceptionWhenUpdatingRunningExperimentKey() {
+        // Given
+        testExperiment.setStatus(ExperimentStatus.RUNNING);
+        Experiment updates = Experiment.builder()
+                .key("different_key")
+                .build();
+
+        when(experimentRepository.findById(testId)).thenReturn(Optional.of(testExperiment));
+
+        // When/Then
+        assertThatThrownBy(() -> experimentService.updateExperiment(testId, updates))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Cannot change key of running experiment");
+    }
+
+    @Test
+    @DisplayName("Should delete experiment successfully")
+    void shouldDeleteExperimentSuccessfully() {
+        // Given
+        testExperiment.setStatus(ExperimentStatus.DRAFT);
+        when(experimentRepository.findById(testId)).thenReturn(Optional.of(testExperiment));
+        doNothing().when(experimentRepository).deleteById(testId);
+
+        // When
+        experimentService.deleteExperiment(testId);
+
+        // Then
+        verify(experimentRepository).deleteById(testId);
+        verify(eventProducer).publishExperimentDeleted(testId);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when deleting running experiment")
+    void shouldThrowExceptionWhenDeletingRunningExperiment() {
+        // Given
+        testExperiment.setStatus(ExperimentStatus.RUNNING);
+        when(experimentRepository.findById(testId)).thenReturn(Optional.of(testExperiment));
+
+        // When/Then
+        assertThatThrownBy(() -> experimentService.deleteExperiment(testId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Cannot delete running experiment");
+    }
 }
