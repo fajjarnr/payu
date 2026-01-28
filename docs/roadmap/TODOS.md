@@ -50,6 +50,14 @@
 - ✅ Critical path testing verified (P0/P1 scenarios)
 - ✅ Container security compliance verified
 
+### Build Infrastructure Updated (January 28, 2026)
+
+**Shared Libraries Build Fixed:**
+- ✅ **api-commons**: Added to Makefile build-test-deps target
+- ✅ **setup.sh**: Updated fallback build to include api-commons
+- ✅ **SecurityHeadersFilterTest**: Fixed assertThatCode import
+- ✅ All 4 shared libraries now build in correct order
+
 ### Frontend Fixes Completed
 
 **Web-App (frontend/web-app/):**
@@ -114,7 +122,7 @@
 | **Support** | support, backoffice, partner, promotion | ✅ Complete |
 | **ML/Analytics** | kyc (Python), analytics (Python) | ✅ Complete |
 | **Simulators** | bi-fast, dukcapil, qris | ✅ Complete |
-| **Shared Libs** | security-starter, resilience-starter, cache-starter | ⚠️ Needs Fix |
+| **Shared Libs** | security-starter, resilience-starter, cache-starter, api-commons | ✅ Fixed |
 
 ### Frontend Inventory
 
@@ -1228,4 +1236,4 @@ make test                                     # All tests
 
 ---
 
-_Last Updated: January 28, 2026_
+_Last Updated: January 28, 2026 - Build infrastructure fixed (api-commons added to shared libraries build)_
