@@ -1,18 +1,16 @@
 server:
   port: 8081
   shutdown: graceful
-
 spring:
   application:
     name: account-service
   config:
     import: optional:vault://
-
   cloud:
     vault:
-      enabled: ${VAULT_ENABLED:true}
-      uri: ${VAULT_URI:http://localhost:8200}
-      token: ${VAULT_TOKEN:dev-only-token}
+      enabled: ${VAULT_ENABLED:false}
+      uri: ${VAULT_URI}
+      token: ${VAULT_TOKEN}
       scheme: http
       connection-timeout: 5000
       read-timeout: 15000
@@ -20,13 +18,12 @@ spring:
         enabled: true
         backend: secret
         application-name: account-service
-
   datasource:
     # Primary datasource for write operations
     primary:
-      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5435/account_db}
-      username: ${DB_USERNAME:postgres}
-      password: ${DB_PASSWORD:postgres}
+      jdbc-url: ${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
       driver-class-name: org.postgresql.Driver
       hikari:
         # Pool configuration - Formula: cores * 2 + effective_spindle_count
@@ -46,13 +43,12 @@ spring:
         # Leak detection (60 seconds)
         leak-detection-threshold: 60000
         pool-name: primary-pool
-
     # Read replica datasource for reporting/analytics queries
     read-replica:
-      enabled: ${READ_REPLICA_ENABLED:false}
-      jdbc-url: ${READ_REPLICA_URL:jdbc:postgresql://localhost:5436/account_db_replica}
-      username: ${READ_REPLICA_USERNAME:postgres}
-      password: ${READ_REPLICA_PASSWORD:postgres}
+      enabled: ${READ_REPLICA_ENABLED}
+      jdbc-url: ${READ_REPLICA_URL}
+      username: ${READ_REPLICA_USERNAME}
+      password: ${READ_REPLICA_PASSWORD}
       driver-class-name: org.postgresql.Driver
       hikari:
         # Larger pool for reads (typically 2x primary)
@@ -67,7 +63,6 @@ spring:
         leak-detection-threshold: 60000
         pool-name: read-replica-pool
         read-only: true
-
   jpa:
     open-in-view: false
     hibernate:
@@ -90,13 +85,11 @@ spring:
         cache:
           use_second_level_cache: false
           use_query_cache: false
-
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
-
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
     consumer:
@@ -110,14 +103,12 @@ spring:
       acks: all
       properties:
         retry.backoff.ms: 1000
-
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
           jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/payu/protocol/openid-connect/certs}
-
 management:
   endpoints:
     web:
@@ -150,7 +141,6 @@ management:
   zipkin:
     tracing:
       endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans
-
 resilience4j:
   circuitbreaker:
     instances:
@@ -180,14 +170,12 @@ resilience4j:
     instances:
       gatewayService:
         timeout-duration: 5s
-
 # Application Configuration
 payu:
   gateway:
     url: ${GATEWAY_URL:http://localhost:8080}
   kyc:
     auto-approve-score: 80
-
   # Resilience Configuration
   resilience:
     enabled: true
@@ -220,7 +208,6 @@ payu:
           max-attempts: 3
         bulkhead:
           max-concurrent-calls: 20
-
   # Security Configuration
   security:
     enabled: true
@@ -229,7 +216,7 @@ payu:
     audit-enabled: true
     encryption:
       algorithm: PBEWITHHMACSHA512ANDAES_256
-      password: ${ENCRYPTION_KEY:default-encryption-key-change-in-production}
+      password: ${ENCRYPTION_KEY}
       fields:
         - .*password.*
         - .*ssn.*
@@ -264,7 +251,6 @@ payu:
         - LOGOUT
         - KYC_APPROVE
         - KYC_REJECT
-
   cache:
     enabled: true
     redis:

@@ -9,7 +9,7 @@
         <version>3.4.1</version>
         <relativePath/>
     </parent>
-    
+
     <groupId>id.payu</groupId>
     <artifactId>transaction-service</artifactId>
     <version>1.0.0-SNAPSHOT</version>
@@ -99,6 +99,13 @@
         <dependency>
             <groupId>id.payu</groupId>
             <artifactId>security-starter</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- PayU API Commons -->
+        <dependency>
+            <groupId>id.payu.shared</groupId>
+            <artifactId>api-commons</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 

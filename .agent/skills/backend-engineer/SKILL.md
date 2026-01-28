@@ -395,3 +395,35 @@ When immediate consistency is required on the query side, use a Version-Check or
 1. **Command** returns a `version_id`.
 2. **Query** includes `min_version=version_id`.
 3. **Query Handler** waits (up to a timeout) until the Read Model matches the requested version.
+
+## 🔌 External API Integration Patterns
+
+When consuming third-party APIs (e.g., Stripe, SendGrid), follow these patterns:
+
+### 1. Robust Client Wrapper (Facade)
+Jangan panggil `HttpClient` langsung di Service. Bungkus dalam Adapter.
+```java
+// ✅ Correct: Facade Pattern
+public class StripePaymentAdapter implements PaymentPort {
+    private final StripeClient client;
+
+    public void charge(ChargeRequest req) {
+        try {
+            client.createCharge(req);
+        } catch (StripeException e) {
+            // Translate external error to internal domain exception
+            throw new PaymentGatewayException(e.getCode(), "Stripe failure");
+        }
+    }
+}
+```
+
+### 2. Resilience Decorators
+Gunakan **Resilience4j** untuk melindungi sistem dari *cascading failures*.
+- **Circuit Breaker**: Stop request jika error rate > 50%.
+- **Retry**: Gunakan *Exponential Backoff* (1s, 2s, 4s). Hati-hati dengan *Non-Idempotent* operations (POST).
+- **Time Limiter**: Jangan biarkan thread hang selamanya. (Default: 5s).
+
+### 3. Webhook Handling
+- **Signature Verification**: Wajib verifikasi `X-Signature` header untuk mencegah *spoofing*.
+- **Async Processing**: Terima webhook -> Masukkan ke Queue -> Balas 200 OK segera. Proses logic di worker.

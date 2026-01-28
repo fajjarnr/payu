@@ -52,7 +52,20 @@ public class SecurityProperties {
         private String algorithm = "PBEWITHHMACSHA512ANDAES_256";
 
         /**
-         * Encryption password (should be externalized)
+         * Encryption password - MUST be externalized via Vault or environment variable.
+         *
+         * WARNING: Never store this in source control or use default values.
+         * Use Spring Cloud Vault or environment variables for production.
+         *
+         * Configuration examples:
+         * - Environment variable: ENCRYPTION_KEY
+         * - Vault path: secret/payu/[service-name]/encryption-key
+         * - Kubernetes secret: payu-encryption-key
+         *
+         * Key requirements:
+         * - Minimum 32 characters for AES-256
+         * - Use cryptographically secure random generation
+         * - Rotate keys quarterly (document procedures)
          */
         private String password;
 

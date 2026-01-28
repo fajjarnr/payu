@@ -9,7 +9,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Security configuration for Auth Service.
- * 
+ *
  * Configures which endpoints require authentication and which are public.
  * The login endpoint must be accessible without authentication.
  */
@@ -29,17 +29,19 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/refresh").permitAll()
                 .requestMatchers("/api/v1/auth/forgot-password").permitAll()
                 .requestMatchers("/api/v1/auth/reset-password").permitAll()
-                
-                // Actuator endpoints for health checks
-                .requestMatchers("/actuator/**").permitAll()
-                
+
+                // Actuator endpoints - only health endpoint is public, others require authentication
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers("/actuator/info").permitAll()
+                .requestMatchers("/actuator/**").authenticated()
+
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> {})
             );
-        
+
         return http.build();
     }
 }

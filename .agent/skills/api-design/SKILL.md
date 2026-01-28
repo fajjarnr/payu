@@ -386,12 +386,27 @@ components:
             code: "UNAUTHORIZED"
             message: "Token tidak valid atau sudah kadaluarsa"
 
-  securitySchemes:
+```yaml
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
 ```
+
+## 📜 OpenAPI 3.1 Advanced Patterns
+
+### Design Approaches
+| Approach | Best For | PayU Context |
+| :--- | :--- | :--- |
+| **Design-First** | New Services | Use Spectral to lint before coding. |
+| **Code-First** | Existing Services | Generate via SpringDoc/FastAPI. |
+
+### Best Practices Checklist
+- [ ] **Reuse Components**: Use `$ref` for shared Error schemas and Paging.
+- [ ] **Real Examples**: Every schema MUST have an `example` or `examples` map.
+- [ ] **Security Explicit**: Define global `security` and override per-path if needed.
+- [ ] **Semantic Versioning**: API version matches Spec version.
+
 
 ---
 
@@ -579,3 +594,39 @@ Before publishing an API:
 ---
 
 *Last Updated: January 2026*
+
+---
+
+## 🕸️ GraphQL Design Patterns (Reference)
+
+For services requiring flexible data fetching (e.g., Mobile BFF), use these GraphQL standards.
+
+### 1. Schema-First Design
+Define types before code.
+```graphql
+type User {
+  id: ID!
+  orders(first: Int = 10, after: String): OrderConnection! # Relay Pagination
+}
+
+type OrderConnection {
+  edges: [OrderEdge!]!
+  pageInfo: PageInfo!
+}
+```
+
+### 2. Best Practices
+1.  **Avoid N+1**: MUST use **DataLoaders** for field resolvers.
+    ```python
+    # Bad: SQL query inside loop
+    # Good: Loader batches IDs -> Single Query -> Map results
+    orders = await loader.load(user["id"])
+    ```
+2.  **Mutations**: Return specific payloads with error arrays.
+    ```graphql
+    type CreateUserPayload {
+      user: User
+      errors: [Error!]
+    }
+    ```
+3.  **Deprecation**: Use `@deprecated(reason: "...")` directive.

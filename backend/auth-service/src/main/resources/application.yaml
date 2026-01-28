@@ -1,18 +1,16 @@
 server:
   port: 8082
   shutdown: graceful
-
 spring:
   application:
     name: auth-service
   config:
     import: vault://
-
   cloud:
     vault:
-      enabled: ${VAULT_ENABLED:true}
-      uri: ${VAULT_URI:http://localhost:8200}
-      token: ${VAULT_TOKEN:dev-only-token}
+      enabled: ${VAULT_ENABLED:false}
+      uri: ${VAULT_URI}
+      token: ${VAULT_TOKEN}
       scheme: http
       connection-timeout: 5000
       read-timeout: 15000
@@ -20,13 +18,11 @@ spring:
         enabled: true
         backend: secret
         application-name: auth-service
-
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
-
 management:
   endpoints:
     web:
@@ -43,7 +39,6 @@ management:
   zipkin:
     tracing:
       endpoint: ${OTEL_ENDPOINT:http://localhost:4317}/v1/spans
-
 resilience4j:
   ratelimiter:
     instances:
@@ -69,7 +64,6 @@ resilience4j:
         wait-duration: 1s
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
-
 # Account Lockout Configuration
 payu:
   security:
@@ -85,10 +79,10 @@ payu:
     challenge-expiry-seconds: 300
     max-registrations-per-user: 5
   keycloak:
-    server-url: ${KEYCLOAK_URL:http://localhost:8180}
-    realm: ${KEYCLOAK_REALM:payu}
-    client-id: ${KEYCLOAK_CLIENT_ID:auth-service}
-    client-secret: ${KEYCLOAK_CLIENT_SECRET:secret}
+    server-url: ${KEYCLOAK_URL}
+    realm: ${KEYCLOAK_REALM}
+    client-id: ${KEYCLOAK_CLIENT_ID}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET}
     admin:
-      username: ${KEYCLOAK_ADMIN_USERNAME:admin}
-      password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+      username: ${KEYCLOAK_ADMIN_USERNAME}
+      password: ${KEYCLOAK_ADMIN_PASSWORD}

@@ -4,7 +4,6 @@ quarkus:
   http:
     port: 8099
     test-port: 0
-
   otel:
     service:
       name: backoffice-service
@@ -17,10 +16,10 @@ quarkus:
         - service.version=1.0.0
   datasource:
     db-kind: postgresql
-    username: ${DB_USER:payu}
-    password: ${DB_PASSWORD:payu123}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     jdbc:
-      url: jdbc:postgresql://${DB_HOST:localhost:5432}/${DB_NAME:payu_backoffice}
+      url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
   hibernate-orm:
     database:
       generation: none
@@ -34,12 +33,10 @@ quarkus:
     category:
       "id.payu.backoffice":
         level: INFO
-
 "%test":
   quarkus:
     datasource:
       jdbc:
-        url: 
+        url:
     flyway:
       migrate-at-start: true
-
