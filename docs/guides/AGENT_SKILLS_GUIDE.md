@@ -48,19 +48,19 @@ Skill memberikan konteks strategis sebelum eksekusi dimulai.
 ### 1. Engineering Specialists (Role-Based)
 | Skill | Fokus Utama |
 | :--- | :--- |
-| **`@backend-engineer`** | Spring Boot, Quarkus, Hexagonal Architecture. |
-| **`@frontend-engineer`**| Next.js, React, Design System Patterns. |
-| **`@database-engineer`**| PostgreSQL optimization, JSONB, Flyway. |
-| **`@security-engineer`**| PCI-DSS v4.0, OJK compliance, Encryption. |
-| **`@event-driven-architecture`** | Kafka, Saga, Sourcing, Idempotency. |
+| **`/backend-engineer`** | Spring Boot, Quarkus, Hexagonal Architecture. |
+| **`/frontend-engineer`**| Next.js, React, Design System Patterns. |
+| **`/database-engineer`**| PostgreSQL optimization, JSONB, Flyway. |
+| **`/security-engineer`**| PCI-DSS v4.0, OJK compliance, Encryption. |
+| **`/event-driven-architecture`** | Kafka, Saga, Sourcing, Idempotency. |
 
 ### 2. Workflow & Infrastructure Specialists
 | Skill | Fokus Utama |
 | :--- | :--- |
-| **`@devops-engineer`**    | CI/CD Pipelines, Tekton, ArgoCD. |
-| **`@qa-engineer`**       | TDD, Testcontainers, Performance Strategy. |
-| **`@docs-engineer`**      | ADR, OpenAPI docs, Runbooks. |
-| **`@c4-architecture`**  | Visualisasi arsitektur (Mermaid). |
+| **`/devops-engineer`**    | CI/CD Pipelines, Tekton, ArgoCD. |
+| **`/qa-engineer`**       | TDD, Testcontainers, Performance Strategy. |
+| **`/docs-engineer`**      | ADR, OpenAPI docs, Runbooks. |
+| **`/c4-architecture`**  | Visualisasi arsitektur (Mermaid). |
 
 ---
 
@@ -69,8 +69,8 @@ Skill memberikan konteks strategis sebelum eksekusi dimulai.
 Gunakan alur berikut untuk mengorkestrasi Skills dan Agents secara efektif:
 
 ### Fase 1: Discovery & Planning (Skill Focus)
-1.  Gunakan **`@payu-development`** untuk memahami konteks arsitektur layanan.
-2.  Gunakan **`@api-design`** atau **`@database-engineer`** untuk merancang kontrak data.
+1.  Gunakan **`/payu-development`** untuk memahami konteks arsitektur layanan.
+2.  Gunakan **`/api-design`** atau **`/database-engineer`** untuk merancang kontrak data.
 3.  **Output**: Dokumen rencana atau desain yang divalidasi.
 
 ### Fase 2: Scaffolding & Setup (Agent Focus)
@@ -79,19 +79,19 @@ Gunakan alur berikut untuk mengorkestrasi Skills dan Agents secara efektif:
 3.  **Output**: Boilerplate kode dan skema DB siap pakai.
 
 ### Fase 3: Core Implementation (Skill & Agent Collaboration)
-1.  Panggil **`@backend-engineer`** untuk panduan implementasi DDD.
-2.  Gunakan `fork @logic-builder` untuk menulis logika domain fungsional.
-3.  Gunakan `fork @tester` secara paralel untuk menulis unit tests (TDD).
+1.  Panggil **`/backend-engineer`** untuk panduan implementasi DDD.
+2.  Gunakan `@logic-builder` untuk menulis logika domain fungsional.
+3.  Gunakan `@tester` secara paralel untuk menulis unit tests (TDD).
 4.  **Output**: Kode fungsional dengan 100% logic coverage.
 
 ### Fase 4: Optimization & Verification (Audit Focus)
-1.  Gunakan `fork @styler` untuk memoles tampilan frontend (jika relevan).
-2.  Panggil `fork @security-auditor` untuk memastikan tidak ada kebocoran PII dan audit RBAC.
-3.  Gunakan **`@code-review`** untuk final check sebelum commit.
+1.  Gunakan `@styler` untuk memoles tampilan frontend (jika relevan).
+2.  Panggil `@security-auditor` untuk memastikan tidak ada kebocoran PII dan audit RBAC.
+3.  Gunakan **`/code-review`** untuk final check sebelum commit.
 
 ### Fase 5: Delivery (Orchestration Focus)
-1.  Gunakan `fork @orchestrator` untuk merapikan branch, melakukan squash commit, dan pushing ke remote.
-2.  Panggil **`@devops-engineer`** untuk memantau status pipeline di Tekton/ArgoCD.
+1.  Gunakan `@orchestrator` untuk merapikan branch, melakukan squash commit, dan pushing ke remote.
+2.  Panggil **`/devops-engineer`** untuk memantau status pipeline di Tekton/ArgoCD.
 
 ---
 
