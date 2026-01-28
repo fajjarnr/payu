@@ -1,5 +1,1 @@
-{
-  "permissions": {
-    "defaultMode": "bypassPermissions"
-  }
-}
+../.agent/settings.json
