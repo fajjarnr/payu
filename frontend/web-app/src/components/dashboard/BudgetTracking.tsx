@@ -220,7 +220,7 @@ export default function BudgetTracking({
       )}
 
       {/* Budget List */}
-      <div className="space-y-3">
+      <div className="space-y-3" role="list">
         <AnimatePresence mode="popLayout">
           {budgets.map((budget, index) => {
             const StatusIcon = getStatusIcon(budget.status);

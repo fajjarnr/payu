@@ -2,6 +2,7 @@ import React from 'react';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import { Utensils, ShoppingCart } from 'lucide-react';
 import SpendingInsights from '@/components/dashboard/SpendingInsights';
 
 expect.extend(toHaveNoViolations);
@@ -16,11 +17,7 @@ describe('SpendingInsights', () => {
       trend: 'up' as const,
       trendValue: 12,
       color: 'bg-chart-1',
-      icon: ({ className }: { className?: string }) => (
-        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-        </svg>
-      ),
+      icon: Utensils,
     },
     {
       id: 'shopping',
@@ -30,11 +27,7 @@ describe('SpendingInsights', () => {
       trend: 'down' as const,
       trendValue: 8,
       color: 'bg-chart-2',
-      icon: ({ className }: { className?: string }) => (
-        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-        </svg>
-      ),
+      icon: ShoppingCart,
     },
   ];
 
@@ -42,30 +35,36 @@ describe('SpendingInsights', () => {
     renderWithIntl(<SpendingInsights data={mockCategories} />);
 
     expect(screen.getByText('Wawasan Pengeluaran')).toBeInTheDocument();
-    expect(screen.getByText('Makanan & Minuman')).toBeInTheDocument();
-    expect(screen.getByText('Belanja')).toBeInTheDocument();
+    // Use getAllByText since the category name appears in both the list and summary
+    expect(screen.getAllByText('Makanan & Minuman').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Belanja').length).toBeGreaterThan(0);
   });
 
   it('should calculate total spending correctly', () => {
     renderWithIntl(<SpendingInsights data={mockCategories} />);
 
-    expect(screen.getByText(/Rp\s*4\.300\.000/)).toBeInTheDocument();
+    // Total is 2500000 + 1800000 = 4300000
+    expect(screen.getByText('Rp 4.300.000')).toBeInTheDocument();
   });
 
   it('should display highest category', () => {
     renderWithIntl(<SpendingInsights data={mockCategories} />);
 
     expect(screen.getByText('Kategori Terbesar')).toBeInTheDocument();
-    expect(screen.getByText('Makanan & Minuman')).toBeInTheDocument();
+    expect(screen.getAllByText('Makanan & Minuman').length).toBeGreaterThan(0);
   });
 
   it('should expand category details on click', async () => {
     renderWithIntl(<SpendingInsights data={mockCategories} />);
 
-    const categoryButton = screen.getByText('Makanan & Minuman').closest('button');
-    expect(categoryButton).toBeInTheDocument();
+    // Find the first category button by looking for button with the category text
+    const categoryButtons = screen.getAllByRole('button');
+    const foodCategoryButton = categoryButtons.find(btn =>
+      btn.textContent?.includes('Makanan')
+    );
 
-    fireEvent.click(categoryButton!);
+    expect(foodCategoryButton).toBeInTheDocument();
+    fireEvent.click(foodCategoryButton!);
 
     await waitFor(() => {
       expect(screen.getByText('Lihat Transaksi')).toBeInTheDocument();

@@ -20,7 +20,8 @@
     "confirm": "Confirm",
     "success": "Success",
     "failed": "Failed",
-    "pending": "Pending"
+    "pending": "Pending",
+    "user": "User"
   },
   "nav": {
     "dashboard": "Dashboard",

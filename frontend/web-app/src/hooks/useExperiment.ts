@@ -105,6 +105,7 @@ export function useExperiment(
     deviceId,
     refetchOnMount = false,
     onVariantAssigned,
+    onError,
   } = options;
 
   const { user } = useAuth();
@@ -145,7 +146,7 @@ export function useExperiment(
     queryKey: ['experiment-assignment', experimentKey, userId],
     queryFn: () =>
       ABTestingService.assignVariant(experimentKey, userId!, deviceId),
-    enabled: !!experimentKey && !!userId && (!initialVariant || refetchOnMount),
+    enabled: !!experimentKey && !!userId && !!experiment && (!initialVariant || refetchOnMount),
     staleTime: 30 * 60 * 1000, // 30 minutes
     retry: 2,
   });
@@ -161,6 +162,13 @@ export function useExperiment(
       onVariantAssigned?.(assignment.variantKey);
     }
   }, [assignment, experimentKey, context, onVariantAssigned]);
+
+  // Call error callback when error occurs
+  useEffect(() => {
+    if (isError && error) {
+      onError?.(error);
+    }
+  }, [isError, error, onError]);
 
   // Track impression on mount (once per session)
   useEffect(() => {
