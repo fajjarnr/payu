@@ -1,226 +1,110 @@
 package id.payu.transaction.application.service;
 
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandHandler;
+import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommand;
+import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommandHandler;
+import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQuery;
+import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQueryHandler;
+import id.payu.transaction.application.cqrs.query.GetTransactionQuery;
+import id.payu.transaction.application.cqrs.query.GetTransactionQueryHandler;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
-import id.payu.transaction.domain.port.out.*;
-import id.payu.transaction.dto.*;
+import id.payu.transaction.dto.InitiateTransferRequest;
+import id.payu.transaction.dto.InitiateTransferResponse;
+import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Transaction service implementing CQRS pattern.
+ *
+ * <p>This service acts as a facade that delegates to specialized command and query handlers.
+ * It maintains backward compatibility through deprecated methods while encouraging
+ * the use of explicit Command and Query objects.</p>
+ *
+ * <p>CQRS Architecture:</p>
+ * <ul>
+ *   <li><b>Command Side:</b> Handlers for write operations (InitiateTransfer, ProcessQrisPayment)</li>
+ *   <li><b>Query Side:</b> Handlers for read operations (GetTransaction, GetAccountTransactions)</li>
+ *   <li><b>Benefits:</b> Independent optimization, clear intent, better testability</li>
+ * </ul>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TransactionService implements TransactionUseCase {
 
-    private final TransactionPersistencePort transactionPersistencePort;
-    private final WalletServicePort walletServicePort;
-    private final BifastServicePort bifastServicePort;
-    private final SknServicePort sknServicePort;
-    private final RgsServicePort rgsServicePort;
-    private final QrisServicePort qrisServicePort;
-    private final TransactionEventPublisherPort eventPublisherPort;
-    private final AuthorizationService authorizationService;
+    private final InitiateTransferCommandHandler initiateTransferHandler;
+    private final ProcessQrisPaymentCommandHandler processQrisPaymentHandler;
+    private final GetTransactionQueryHandler getTransactionHandler;
+    private final GetAccountTransactionsQueryHandler getAccountTransactionsQueryHandler;
+
+    // CQRS Methods - Command Side (Write Operations)
 
     @Override
-    @Transactional
+    public InitiateTransferCommandResult initiateTransfer(InitiateTransferCommand command) {
+        log.info("Delegating to InitiateTransferCommandHandler");
+        return initiateTransferHandler.handle(command);
+    }
+
+    @Override
+    public void processQrisPayment(ProcessQrisPaymentCommand command) {
+        log.info("Delegating to ProcessQrisPaymentCommandHandler");
+        processQrisPaymentHandler.handle(command);
+    }
+
+    // CQRS Methods - Query Side (Read Operations)
+
+    @Override
+    public Transaction getTransaction(GetTransactionQuery query) {
+        log.info("Delegating to GetTransactionQueryHandler");
+        return getTransactionHandler.handle(query);
+    }
+
+    @Override
+    public List<Transaction> getAccountTransactions(GetAccountTransactionsQuery query) {
+        log.info("Delegating to GetAccountTransactionsQueryHandler");
+        return getAccountTransactionsQueryHandler.handle(query);
+    }
+
+    // Legacy Methods - Deprecated, Use CQRS Methods Instead
+
+    @Override
+    @Deprecated
     public InitiateTransferResponse initiateTransfer(InitiateTransferRequest request, String userId) {
-        // Verify the user owns the sender account
-        authorizationService.verifySenderAccountOwnership(request.getSenderAccountId(), userId);
-
-        if (request.getIdempotencyKey() != null) {
-            return transactionPersistencePort.findByIdempotencyKey(request.getIdempotencyKey())
-                    .map(this::mapToInitiateTransferResponse)
-                    .orElseGet(() -> createNewTransaction(request));
-        }
-        return createNewTransaction(request);
-    }
-
-    private InitiateTransferResponse createNewTransaction(InitiateTransferRequest request) {
-        String referenceNumber = generateReferenceNumber();
-
-        Transaction transaction = Transaction.builder()
-                .id(UUID.randomUUID())
-                .referenceNumber(referenceNumber)
-                .senderAccountId(request.getSenderAccountId())
-                .amount(request.getAmount())
-                .currency(request.getCurrency() != null ? request.getCurrency() : "IDR")
-                .description(request.getDescription())
-                .type(Transaction.TransactionType.valueOf(request.getType().name()))
-                .status(Transaction.TransactionStatus.PENDING)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
-                .idempotencyKey(request.getIdempotencyKey())
-                .build();
-
-        transaction = transactionPersistencePort.save(transaction);
-        eventPublisherPort.publishTransactionInitiated(transaction);
-
-        ReserveBalanceResponse balanceResponse = walletServicePort.reserveBalance(
-                request.getSenderAccountId(),
-                transaction.getId().toString(),
-                request.getAmount()
-        );
-
-        if (!balanceResponse.isSuccess()) {
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
-            transaction.setFailureReason("Insufficient balance");
-            transactionPersistencePort.save(transaction);
-            eventPublisherPort.publishTransactionFailed(transaction, "Insufficient balance");
-            throw new IllegalStateException("Insufficient balance");
-        }
-
-        transaction.setStatus(Transaction.TransactionStatus.VALIDATING);
-        transactionPersistencePort.save(transaction);
-
-        if (request.getType() == InitiateTransferRequest.TransactionType.BIFAST_TRANSFER) {
-            processBiFastTransfer(transaction, request);
-        }
-
-        return InitiateTransferResponse.builder()
-                .transactionId(transaction.getId())
-                .referenceNumber(referenceNumber)
-                .status(transaction.getStatus().name())
-                .fee(calculateFee(request.getType(), request.getAmount()))
-                .estimatedCompletionTime(getEstimatedCompletionTime(request.getType()))
-                .build();
+        log.warn("Using deprecated initiateTransfer method - consider using InitiateTransferCommand");
+        InitiateTransferCommand command = InitiateTransferCommand.from(request, userId);
+        InitiateTransferCommandResult result = initiateTransfer(command);
+        return result.toResponse();
     }
 
     @Override
-    public Transaction getTransaction(UUID transactionId, String userId) {
-        // Verify user has access to this transaction
-        authorizationService.verifyTransactionAccess(transactionId, userId);
-
-        return transactionPersistencePort.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
-    }
-
-    @Override
-    public List<Transaction> getAccountTransactions(UUID accountId, String userId, int page, int size) {
-        // Verify user owns the account
-        authorizationService.verifyAccountOwnership(accountId, userId);
-
-        return transactionPersistencePort.findByAccountId(accountId, page, size);
-    }
-
-    @Override
-    @Transactional
+    @Deprecated
     public void processQrisPayment(ProcessQrisPaymentRequest request, String userId) {
-        // QRIS payments require account verification through wallet service
-        // The wallet service will verify balance ownership
-        // Additional verification can be added here if needed
-        String referenceNumber = generateReferenceNumber();
-
-        Transaction transaction = Transaction.builder()
-                .id(UUID.randomUUID())
-                .referenceNumber(referenceNumber)
-                .amount(request.getAmount())
-                .currency(request.getCurrency() != null ? request.getCurrency() : "IDR")
-                .type(Transaction.TransactionType.QRIS_PAYMENT)
-                .status(Transaction.TransactionStatus.PENDING)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
-                .build();
-
-        transaction = transactionPersistencePort.save(transaction);
-        eventPublisherPort.publishTransactionInitiated(transaction);
-
-        QrisPaymentRequest qrisRequest = QrisPaymentRequest.builder()
-                .qrisCode(request.getQrisCode())
-                .amount(request.getAmount())
-                .currency(transaction.getCurrency())
-                .merchantName("Merchant")
-                .customerReference(referenceNumber)
-                .build();
-
-        QrisPaymentResponse qrisResponse = qrisServicePort.processPayment(qrisRequest);
-
-        if ("SUCCESS".equals(qrisResponse.getStatus())) {
-            transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
-            transaction.setCompletedAt(Instant.now());
-            eventPublisherPort.publishTransactionCompleted(transaction);
-        } else {
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
-            transaction.setFailureReason(qrisResponse.getMessage());
-            eventPublisherPort.publishTransactionFailed(transaction, qrisResponse.getMessage());
-        }
-
-        transactionPersistencePort.save(transaction);
+        log.warn("Using deprecated processQrisPayment method - consider using ProcessQrisPaymentCommand");
+        ProcessQrisPaymentCommand command = ProcessQrisPaymentCommand.from(request, userId);
+        processQrisPayment(command);
     }
 
-    private String generateReferenceNumber() {
-        return "TXN" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+    @Override
+    @Deprecated
+    public Transaction getTransaction(UUID transactionId, String userId) {
+        log.warn("Using deprecated getTransaction method - consider using GetTransactionQuery");
+        GetTransactionQuery query = new GetTransactionQuery(transactionId, userId);
+        return getTransaction(query);
     }
 
-    private BigDecimal calculateFee(InitiateTransferRequest.TransactionType type, BigDecimal amount) {
-        return switch (type) {
-            case INTERNAL_TRANSFER -> BigDecimal.ZERO;
-            case BIFAST_TRANSFER -> new BigDecimal("2500");
-            case SKN_TRANSFER -> new BigDecimal("5000");
-            case RTGS_TRANSFER -> new BigDecimal("25000");
-        };
-    }
-
-    private String getEstimatedCompletionTime(InitiateTransferRequest.TransactionType type) {
-        return switch (type) {
-            case INTERNAL_TRANSFER, BIFAST_TRANSFER -> "2 seconds";
-            case SKN_TRANSFER -> "Same day";
-            case RTGS_TRANSFER -> "Real-time";
-        };
-    }
-
-    private void processBiFastTransfer(Transaction transaction, InitiateTransferRequest request) {
-        try {
-            BifastTransferRequest bifastRequest = BifastTransferRequest.builder()
-                    .referenceNumber(transaction.getReferenceNumber())
-                    .amount(request.getAmount())
-                    .currency(request.getCurrency())
-                    .beneficiaryAccountNumber(request.getRecipientAccountNumber())
-                    .beneficiaryBankCode("014") // BCA dummy for now
-                    .beneficiaryAccountName("Beneficiary") // Dummy
-                    .senderAccountNumber(request.getSenderAccountId().toString())
-                    .senderAccountName("Sender") // Dummy
-                    .purposeCode("OTHR")
-                    .build();
-
-            bifastServicePort.initiateTransfer(bifastRequest);
-            // If success, it remains PENDING/VALIDATING until callback or subsequent status check
-            // Or if synchronous:
-            transaction.setStatus(Transaction.TransactionStatus.PENDING);
-        } catch (java.util.concurrent.TimeoutException e) {
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
-            transaction.setFailureReason("BI-FAST Timeout");
-            eventPublisherPort.publishTransactionFailed(transaction, "BI-FAST Timeout");
-        } catch (Exception e) {
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
-            transaction.setFailureReason(e.getMessage());
-            eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
-        } finally {
-            transactionPersistencePort.save(transaction);
-        }
-    }
-
-    private InitiateTransferResponse mapToInitiateTransferResponse(Transaction transaction) {
-        return InitiateTransferResponse.builder()
-                .transactionId(transaction.getId())
-                .referenceNumber(transaction.getReferenceNumber())
-                .status(transaction.getStatus().name())
-                .fee(calculateFee(toRequestType(transaction.getType()), transaction.getAmount()))
-                .estimatedCompletionTime(getEstimatedCompletionTime(toRequestType(transaction.getType())))
-                .build();
-    }
-
-    private InitiateTransferRequest.TransactionType toRequestType(Transaction.TransactionType type) {
-        try {
-            return InitiateTransferRequest.TransactionType.valueOf(type.name());
-        } catch (IllegalArgumentException e) {
-            return InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER; // Default fallback
-        }
+    @Override
+    @Deprecated
+    public List<Transaction> getAccountTransactions(UUID accountId, String userId, int page, int size) {
+        log.warn("Using deprecated getAccountTransactions method - consider using GetAccountTransactionsQuery");
+        GetAccountTransactionsQuery query = new GetAccountTransactionsQuery(
+                accountId.toString(), userId, page, size);
+        return getAccountTransactions(query);
     }
 }

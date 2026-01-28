@@ -20,8 +20,25 @@ public class Transaction {
     private UUID senderAccountId;
     private UUID recipientAccountId;
     private TransactionType type;
-    private BigDecimal amount;
-    private String currency;
+
+    /**
+     * The monetary amount involved in this transaction.
+     * Uses Money Value Object for precise decimal arithmetic and currency safety.
+     */
+    private Money amount;
+
+    /**
+     * @deprecated Use {@link #getAmount()} instead. This field is kept for JPA compatibility.
+     */
+    @Deprecated
+    private BigDecimal amountValue;
+
+    /**
+     * @deprecated Use {@link #getAmount()} instead. This field is kept for JPA compatibility.
+     */
+    @Deprecated
+    private String currencyCode;
+
     private String description;
     private TransactionStatus status;
     private String failureReason;
@@ -30,6 +47,33 @@ public class Transaction {
     private Instant updatedAt;
     private Instant completedAt;
     private String idempotencyKey;
+
+    /**
+     * Gets the monetary amount.
+     * For backward compatibility, reconstructs Money from deprecated fields if amount is null.
+     *
+     * @return the monetary amount
+     */
+    public Money getAmount() {
+        if (amount == null && amountValue != null && currencyCode != null) {
+            return Money.of(amountValue, currencyCode);
+        }
+        return amount;
+    }
+
+    /**
+     * Sets the monetary amount.
+     * Also updates deprecated fields for JPA compatibility.
+     *
+     * @param amount the monetary amount
+     */
+    public void setAmount(Money amount) {
+        this.amount = amount;
+        if (amount != null) {
+            this.amountValue = amount.getAmount();
+            this.currencyCode = amount.getCurrency().getCurrencyCode();
+        }
+    }
 
     public enum TransactionType {
         INTERNAL_TRANSFER,
