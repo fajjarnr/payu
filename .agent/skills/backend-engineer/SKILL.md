@@ -427,3 +427,10 @@ Gunakan **Resilience4j** untuk melindungi sistem dari *cascading failures*.
 ### 3. Webhook Handling
 - **Signature Verification**: Wajib verifikasi `X-Signature` header untuk mencegah *spoofing*.
 - **Async Processing**: Terima webhook -> Masukkan ke Queue -> Balas 200 OK segera. Proses logic di worker.
+
+## 🤖 Agent Delegation
+
+Untuk eksekusi tugas spesifik, fork agen berikut:
+- **Scaffolding Service**: Fork `@scaffolder` untuk inisialisasi project.
+- **Domain logic**: Fork `@logic-builder` untuk implementasi Rich Domain Model.
+- **Testing**: Fork `@tester` untuk menulis test suite (Unit/Integration).

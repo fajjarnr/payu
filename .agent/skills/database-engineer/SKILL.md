@@ -574,6 +574,10 @@ Before deploying schema changes:
 - [ ] Rollback script prepared
 - [ ] Integration tests pass with Testcontainers
 
+## 🤖 Agent Delegation
+
+Untuk pembuatan script migrasi Flyway dan SQL optimization task, fork **`@migrator`**. Agen ini khusus menangani validasi skema dan performa query database.
+
 ---
 
 *Last Updated: January 2026*

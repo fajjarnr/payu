@@ -58,6 +58,20 @@ payu/backend/
 | **AI & Data** | `@ml-engineer` | Python, FastAPI, ML Models, Fraud Analytics |
 | **Strategy & Lead** | `@cto-advisor` | Technology Strategy, Engineering Metrics, Scaling |
 
+## 🤖 AI Agent Orchestration (Modular Execution)
+
+PayU menggunakan arsitektur **Specialized Agents** untuk eksekusi tugas yang terfokus dan aman. Skills (High-level) dapat menugaskan (fork) spesialis berikut di direktori `.claude/agents/`:
+
+- **`@scaffolder`**: Pembuatan service/folder structure baru.
+- **`@logic-builder`**: Implementasi Domain logic & DDD patterns.
+- **`@tester`**: Penulisan & eksekusi test suite (JUnit, Gatling).
+- **`@security-auditor`**: Audit keamanan & kepatuhan (PCI-DSS).
+- **`@migrator`**: Manajemen skema database & Flyway.
+- **`@styler`**: Implementasi UI/UX & estetika (Emerald Design).
+- **`@orchestrator`**: Manajemen CI/CD, Git, & alur kerja otomatis.
+
+> **Workflow**: Untuk tugas kompleks, fork agent yang relevan dengan parameter perintah yang spesifik. Laporan akhir dari agent harus diverifikasi sebelum penggabungan kode.
+
 ## Architecture Decision & Trade-offs
 
 Setiap keputusan arsitektur di PayU harus melalui evaluasi **Trade-off Analysis** yang tercatat dalam ADR.

@@ -263,3 +263,7 @@ All financial and security-sensitive actions MUST produce an immutable audit log
 - [ ] **PCI-DSS Compliance**: No CVV, PIN, or raw track data stored in DB/Logs
 - [ ] **PAN Masking**: Card numbers masked in all UI and reports (6/4 rule)
 - [ ] **Encryption at Rest**: All payment-related PII (PAN, Account IDs) encrypted using AES-256-GCM
+
+## 🤖 Agent Delegation
+
+Untuk audit kepatuhan PCI-DSS dan scanning PII pada codebase, fork **`@security-auditor`**. Gunakan agen ini sebelum fase release untuk memastikan zero security leakage.

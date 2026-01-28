@@ -108,5 +108,8 @@ temp/
 .claude/
 !.claude/settings.json
 !.claude/settings.local.json
+!.claude/skills
+!.claude/agents
+!.claude/workflows
 # Note: .agent/ is NOT ignored as it contains project-specific AI instructions
 # Note: .ralphy/ is NOT ignored as it contains project rules

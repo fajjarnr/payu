@@ -1146,6 +1146,10 @@ export default {
 - [ ] **API Integration**: React Query configured, proper error handling
 - [ ] **Internationalization**: All user-facing text uses translation keys
 
+## 🤖 Agent Delegation
+
+Untuk implementasi detail UI/UX (CSS, Gradients, Animations) sesuai standar "Premium Emerald", fork **`@styler`**. Agen ini fokus pada visual excellence dan aksesibilitas.
+
 ---
 
 ## Related Resources

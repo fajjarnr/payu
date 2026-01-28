@@ -217,3 +217,7 @@ mvn test -Dtest.excluded.groups=none
 mvn test jacoco:report
 # Report: target/site/jacoco/index.html
 ```
+
+## 🤖 Agent Delegation
+
+Untuk otomatisasi penulisan dan eksekusi test suite masif, fork **`@tester`**. Agen ini akan menangani setup Testcontainers dan penulisan JUnit 5 boilerplate secara mandiri.

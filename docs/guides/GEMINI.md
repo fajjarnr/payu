@@ -90,7 +90,11 @@
 
 ```
 payu/
-├── .agent/              # AI agent skills and workflows (20 skills)
+├── .agent/               # Master AI configuration (Source of Truth)
+│   ├── skills/           # 20+ Specialized AI skills
+│   ├── agents/           # Specialized execution agents (Scaffolder, Tester, etc.)
+│   └── workflows/        # SDLC & coordination workflows
+├── .claude/              # Claude Code Entry Point (Soft links to .agent/)
 ├── backend/             # Microservices implementation (20+ services)
 │   ├── shared/          # Shared Spring Boot starters
 │   │   ├── security-starter/    # PII encryption, audit logging
@@ -300,6 +304,10 @@ Claude Code SHOULD follow established workflows in `.agent/workflows/` for compl
 - **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes.
 - **`/new-service-scaffolding`**: Workflow untuk scaffolding microservice baru di platform PayU dengan arsitektur Hexagonal dan konfigurasi standar.
 - **`/security-audit`**: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK.
+
+## 🤖 Specialized AI Agents
+Untuk eksekusi tugas yang terisolasi dan spesifik, agen berikut tersedia di `.agent/agents/` (diakses via `.claude/agents/`):
+- `@scaffolder`, `@logic-builder`, `@tester`, `@security-auditor`, `@migrator`, `@styler`, `@orchestrator`.
 
 *Usage*: When tasked with complex refactoring or multi-service updates, read the relevant workflow file first.
 

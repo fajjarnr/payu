@@ -117,5 +117,9 @@ Always include a health-check step post-deployment.
 - [ ] Is there a `trap` for cleanup?
 - [ ] Are variable assignments quoted?
 
+## 🤖 Agent Delegation
+
+Untuk eksekusi otomasi pipeline, git branch management, dan script maintenance, fork **`@orchestrator`**. Agen ini fokus pada efisiensi alur kerja pengiriman kode.
+
 ---
 *Last Updated: January 2026*
