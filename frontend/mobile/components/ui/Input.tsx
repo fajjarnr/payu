@@ -21,10 +21,12 @@ interface InputProps {
   icon?: React.ReactNode;
   multiline?: boolean;
   numberOfLines?: number;
+  maxLength?: number;
   style?: ViewStyle;
   onSubmitEditing?: () => void;
   returnKeyType?: 'done' | 'next' | 'go' | 'search';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -39,9 +41,11 @@ export const Input: React.FC<InputProps> = ({
   icon,
   multiline = false,
   numberOfLines = 1,
+  maxLength,
   style,
   onSubmitEditing,
   returnKeyType = 'done',
+  textAlign,
 }) => {
   const { colors } = useTheme();
 
@@ -100,10 +104,11 @@ export const Input: React.FC<InputProps> = ({
           editable={!disabled}
           multiline={multiline}
           numberOfLines={numberOfLines}
+          maxLength={maxLength}
           style={inputStyle}
           onSubmitEditing={onSubmitEditing}
           returnKeyType={returnKeyType}
-          autoCapitalize={autoCapitalize}
+          textAlign={textAlign}
         />
       </View>
       {error && <Text style={errorStyle}>{error}</Text>}

@@ -4,6 +4,7 @@ export interface User {
   email: string;
   phoneNumber: string;
   fullName: string;
+  avatar?: string;
   kycVerified: boolean;
   createdAt: string;
 }

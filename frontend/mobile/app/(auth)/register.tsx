@@ -296,7 +296,7 @@ export default function RegisterScreen() {
         maxLength={6}
         error={errors.otp}
         textAlign="center"
-        style={{ letterSpacing: 8 }}
+        style={{ letterSpacing: 8 } as any}
       />
 
       <TouchableOpacity
@@ -379,7 +379,7 @@ export default function RegisterScreen() {
         secureTextEntry
         error={errors.pin}
         textAlign="center"
-        style={{ letterSpacing: 8 }}
+        style={{ letterSpacing: 8 } as any}
       />
 
       <Input
@@ -392,7 +392,7 @@ export default function RegisterScreen() {
         secureTextEntry
         error={errors.confirmPin}
         textAlign="center"
-        style={{ letterSpacing: 8 }}
+        style={{ letterSpacing: 8 } as any}
       />
 
       <TouchableOpacity

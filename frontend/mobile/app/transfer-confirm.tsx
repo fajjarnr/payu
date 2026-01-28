@@ -185,7 +185,7 @@ Status: ${step === 'success' ? 'Success' : 'Failed'}
             From
           </Text>
           <Text style={[styles.detailValue, { color: colors.text }]}>
-            {user?.accountNumber || '•••• 1234'}
+            {user?.phoneNumber ? `•••• ${user.phoneNumber.slice(-4)}` : '•••• 1234'}
           </Text>
         </View>
 

@@ -297,7 +297,7 @@ export default function ProfileScreen() {
         <View style={styles.profileStats}>
           <View style={styles.statItem}>
             <Text style={[styles.statValue, { color: colors.text }]}>
-              {user?.accountNumber || '•••• 1234'}
+              {user?.phoneNumber ? `•••• ${user.phoneNumber.slice(-4)}` : '•••• 1234'}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
               Account Number

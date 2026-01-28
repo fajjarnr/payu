@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   categoryCard: {
-    width: (100 - 4) / 3 + '%',
+    width: ((100 - 4) / 3 + '%') as any,
     aspectRatio: 1,
     marginHorizontal: 8,
     marginBottom: 16,

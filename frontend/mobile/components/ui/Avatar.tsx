@@ -4,6 +4,7 @@ import { useTheme } from '@react-navigation/native';
 
 interface AvatarProps {
   source?: { uri: string };
+  src?: string; // Alias for source.uri
   name?: string;
   size?: number;
   style?: ViewStyle;
@@ -11,6 +12,7 @@ interface AvatarProps {
 
 export const Avatar: React.FC<AvatarProps> = ({
   source,
+  src,
   name,
   size = 48,
   style,
@@ -42,7 +44,9 @@ export const Avatar: React.FC<AvatarProps> = ({
     fontWeight: '700' as const,
   };
 
-  if (source?.uri) {
+  const imageSource = source || (src ? { uri: src } : undefined);
+
+  if (imageSource?.uri) {
     const imageStyle: any = {
       width: size,
       height: size,
@@ -51,7 +55,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     };
     return (
       <Image
-        source={source}
+        source={imageSource}
         style={imageStyle}
       />
     );

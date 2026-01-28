@@ -3,8 +3,14 @@ import { CameraView, CameraType, Camera } from 'expo-camera';
 
 export const useCamera = () => {
   const [type, setType] = useState<CameraType>('back');
-  const [permissions, requestPermission] = Camera.useCameraPermissions();
+  const [permission, setPermission] = useState<boolean>(false);
   const cameraRef = useRef<any>(null);
+
+  const requestPermission = async () => {
+    const result = await Camera.requestCameraPermissionsAsync();
+    setPermission(result.granted);
+    return result.granted;
+  };
 
   const toggleCameraType = () => {
     setType(current => (current === 'back' ? 'front' : 'back'));
@@ -17,7 +23,7 @@ export const useCamera = () => {
 
   return {
     type,
-    permissions,
+    permission,
     requestPermission,
     toggleCameraType,
     takePicture,

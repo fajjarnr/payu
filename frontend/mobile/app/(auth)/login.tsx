@@ -231,7 +231,7 @@ export default function LoginScreen() {
           onSubmitEditing={handleVerifyOTP}
           returnKeyType="done"
           textAlign="center"
-          style={{ letterSpacing: 8 }}
+          style={{ letterSpacing: 8 } as any}
         />
 
         <TouchableOpacity

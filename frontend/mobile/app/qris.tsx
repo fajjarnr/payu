@@ -1,70 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  ScrollView,
   Alert,
+  TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { CameraView, Camera } from 'expo-camera';
 import { useTheme } from '@react-navigation/native';
-import { useQRScanner } from '@/hooks/useCamera';
-import { transactionService } from '@/services/transaction.service';
 import { Button } from '@/components/ui/Button';
 import { formatCurrency } from '@/utils/currency';
 
 export default function QRISscreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { hasPermission, facing, toggleCameraFacing } = useCamera();
-  const { scanned, handleBarCodeScanned, resetScanner } = useQRScanner();
 
-  const [qrData, setQrData] = useState<any>(null);
   const [amount, setAmount] = useState('');
   const [processing, setProcessing] = useState(false);
-
-  useEffect(() => {
-    if (scanned) {
-      // QR data would be parsed here
-      // For demo, show payment confirmation
-    }
-  }, [scanned]);
-
-  const handleBarCodeScannedWrapper = ({ data, type }: { data: string; type: string }) => {
-    if (scanned) return;
-
-    try {
-      // Parse QRIS data
-      const parsed = JSON.parse(data);
-      setQrData(parsed);
-    } catch {
-      // If not JSON, treat as raw data
-      setQrData({ raw: data });
-    }
-  };
+  const [qrData, setQrData] = useState<any>(null);
+  const [showManualInput, setShowManualInput] = useState(false);
 
   const handlePayment = async () => {
-    if (!qrData || !amount) {
-      Alert.alert('Error', 'Please enter amount');
+    if (!amount || parseFloat(amount) <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
 
     setProcessing(true);
 
     try {
-      const transaction = await transactionService.payQRIS({
-        ...qrData,
-        amount: parseFloat(amount),
-      });
-
+      // Mock payment - in production, call actual payment service
       Alert.alert('Success', 'Payment successful!', [
         {
           text: 'OK',
-          onPress: () => {
-            resetScanner();
-            router.back();
-          },
+          onPress: () => router.back(),
         },
       ]);
     } catch (error: any) {
@@ -77,272 +48,154 @@ export default function QRISscreen() {
     }
   };
 
-  if (hasPermission === null) {
-    return (
-      <View style={styles.container}>
-        <Text>Requesting camera permission...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>No camera permission</Text>
-        <Button title="Go Back" onPress={() => router.back()} />
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing={facing}
-        onBarcodeScanned={scanned ? undefined : handleBarCodeScannedWrapper}
-        barcodeScannerSettings={{
-          barcodeTypes: ['qr'],
-        }}
-      >
-        <View style={styles.overlay}>
-          {/* Scan Frame */}
-          <View style={styles.scanFrame}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
-          </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>QRIS Payment</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={[styles.backButton, { color: colors.text }]}>← Back</Text>
+        </TouchableOpacity>
+      </View>
 
-          <Text style={styles.instruction}>
-            {scanned ? 'QR Code detected!' : 'Align QR code within frame'}
-          </Text>
+      <View style={styles.card}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          Scan QR Code or Enter Amount
+        </Text>
 
-          {scanned && (
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={resetScanner}
-              >
-                <Text style={styles.buttonText}>Scan Again</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.primaryButton]}
-                onPress={() => router.back()}
-              >
-                <Text style={styles.primaryButtonText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          <TouchableOpacity
-            style={styles.flipButton}
-            onPress={toggleCameraFacing}
-          >
-            <Text style={styles.flipButtonText}>🔄 Flip Camera</Text>
-          </TouchableOpacity>
-        </View>
-      </CameraView>
-
-      {/* Payment Modal */}
-      {qrData && scanned && (
-        <View style={styles.paymentModal}>
-          <View style={[styles.paymentContent, { backgroundColor: colors.background }]}>
-            <Text style={[styles.paymentTitle, { color: colors.text }]}>
-              QRIS Payment
-            </Text>
-
-            {qrData.merchantName && (
-              <Text style={[styles.merchantName, { color: colors.textSecondary }]}>
-                {qrData.merchantName}
+        {!showManualInput ? (
+          <>
+            <View style={styles.qrPlaceholder}>
+              <Text style={[styles.qrPlaceholderText, { color: colors.textSecondary }]}>
+                QR scanner will appear here
               </Text>
-            )}
+              <Text style={[styles.qrPlaceholderHint, { color: colors.textSecondary }]}>
+                (Camera functionality requires additional setup)
+              </Text>
+            </View>
 
-            <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>
-              Amount
+            <TouchableOpacity
+              style={[styles.manualInputButton, { borderColor: colors.border }]}
+              onPress={() => setShowManualInput(true)}
+            >
+              <Text style={[styles.manualInputButtonText, { color: colors.text }]}>
+                Or Enter Amount Manually
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>
+              Enter Amount (IDR)
             </Text>
-            <Text style={[styles.amount, { color: colors.text }]}>
-              {amount ? formatCurrency(parseFloat(amount)) : 'Rp 0'}
+            <TextInput
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="decimal-pad"
+              placeholder="0"
+              style={[styles.input, {
+                borderColor: colors.border,
+                color: colors.text,
+                backgroundColor: colors.card
+              }]}
+              editable={!processing}
+            />
+
+            <Text style={[styles.note, { color: colors.textSecondary }]}>
+              Enter the amount you want to pay
             </Text>
 
             <TouchableOpacity
-              style={[styles.enterAmountButton, { borderColor: colors.border }]}
+              style={[styles.manualInputButton, { borderColor: colors.border }]}
+              onPress={() => setShowManualInput(false)}
             >
-              <Text style={[styles.enterAmountText, { color: colors.text }]}>
-                Enter Amount
+              <Text style={[styles.manualInputButtonText, { color: colors.text }]}>
+                ← Back to QR Scanner
               </Text>
             </TouchableOpacity>
+          </>
+        )}
 
-            <View style={styles.paymentActions}>
-              <Button
-                title="Cancel"
-                onPress={resetScanner}
-                variant="outline"
-                style={{ flex: 1, marginRight: 8 }}
-              />
-              <Button
-                title="Pay"
-                onPress={handlePayment}
-                loading={processing}
-                style={{ flex: 1 }}
-              />
-            </View>
-          </View>
+        <View style={styles.paymentSection}>
+          <Button
+            title={`Pay ${amount ? formatCurrency(parseFloat(amount)) : 'Rp 0'}`}
+            onPress={handlePayment}
+            loading={processing}
+            disabled={!amount || parseFloat(amount) <= 0}
+            style={{ marginTop: 16 }}
+          />
         </View>
-      )}
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0f172a',
   },
-  camera: {
-    flex: 1,
+  contentContainer: {
+    padding: 20,
   },
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  scanFrame: {
-    width: 280,
-    height: 280,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 20,
-    position: 'relative',
-  },
-  corner: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderColor: '#10b981',
-  },
-  topLeft: {
-    top: -2,
-    left: -2,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderTopLeftRadius: 20,
-  },
-  topRight: {
-    top: -2,
-    right: -2,
-    borderTopWidth: 4,
-    borderRightWidth: 4,
-    borderTopRightRadius: 20,
-  },
-  bottomLeft: {
-    bottom: -2,
-    left: -2,
-    borderBottomWidth: 4,
-    borderLeftWidth: 4,
-    borderBottomLeftRadius: 20,
-  },
-  bottomRight: {
-    bottom: -2,
-    right: -2,
-    borderBottomWidth: 4,
-    borderRightWidth: 4,
-    borderBottomRightRadius: 20,
-  },
-  instruction: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 24,
-    textAlign: 'center',
-  },
-  actionButtons: {
+  header: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    backgroundColor: '#10b981',
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
+  title: {
+    fontSize: 24,
     fontWeight: '700',
   },
-  flipButton: {
-    position: 'absolute',
-    bottom: 40,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  backButton: {
+    fontSize: 16,
   },
-  flipButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  paymentModal: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-  },
-  paymentContent: {
+  card: {
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
     padding: 24,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
   },
-  paymentTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    marginBottom: 8,
-  },
-  merchantName: {
+  label: {
     fontSize: 14,
-    marginBottom: 24,
+    marginBottom: 16,
   },
-  amountLabel: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  amount: {
-    fontSize: 36,
-    fontWeight: '900',
-    marginBottom: 24,
-  },
-  enterAmountButton: {
-    paddingVertical: 16,
+  qrPlaceholder: {
+    height: 200,
+    backgroundColor: '#374151',
     borderRadius: 12,
-    borderWidth: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
-  enterAmountText: {
+  qrPlaceholderText: {
     fontSize: 16,
-    fontWeight: '600',
+    marginBottom: 8,
   },
-  paymentActions: {
-    flexDirection: 'row',
-    gap: 12,
+  qrPlaceholderHint: {
+    fontSize: 12,
   },
-  errorText: {
+  manualInputButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  manualInputButtonText: {
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
-    color: '#ffffff',
+    marginBottom: 12,
+  },
+  note: {
+    fontSize: 12,
     marginBottom: 24,
+  },
+  paymentSection: {
+    marginTop: 24,
   },
 });
