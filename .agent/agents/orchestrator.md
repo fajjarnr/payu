@@ -1,9 +1,7 @@
 ---
 name: orchestrator
-description: DevOps specialist focused on CI/CD pipelines, Git workflows, and deployment automation.
-tools: [Bash, Read, Edit, Write]
-permissionMode: bypassPermissions
-user-invocable: false
+description: DevOps specialist focused on CI/CD pipelines, Git workflows, and deployment automation. Use for git operations and pipeline management.
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Orchestrator Agent Instructions

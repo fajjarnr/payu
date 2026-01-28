@@ -9,12 +9,12 @@ This skill provides the architectural overview and entry points for developing t
 
 ## Project Overview
 
-| Attribute | Value |
-|-----------|-------|
-| **Project Name** | PayU |
-| **Type** | Standalone Digital Banking Platform |
-| **Platform** | Red Hat OpenShift 4.20+ |
-| **Primary Languages** | Java 21 (Core), Python 3.12 (ML) |
+| Attribute             | Value                               |
+| --------------------- | ----------------------------------- |
+| **Project Name**      | PayU                                |
+| **Type**              | Standalone Digital Banking Platform |
+| **Platform**          | Red Hat OpenShift 4.20+             |
+| **Primary Languages** | Java 21 (Core), Python 3.12 (ML)    |
 
 ## ⚡ AI-Accelerated Development (SDLC Loop)
 
@@ -44,19 +44,19 @@ payu/backend/
 
 ## Specialized Skills Map
 
-| Task Category | Use Skill | Description |
-|---------------|-----------|-------------|
-| **Backend & DB** | `@backend-engineer`, `@database-engineer`, `@error-handling-engineer` | Microservices, SQL Optimization, Error Handling Patterns |
-| **Frontend & Mobile** | `@frontend-engineer`, `@mobile-engineer` | Next.js, React Native, UI/UX, Design Systems |
-| **API & Messaging** | `@api-design`, `@event-driven-architecture` | REST/OpenAPI, Kafka, Saga Patterns, CloudEvents |
-| **Testing & QA** | `@qa-engineer` | Integration Tests, Performance, Strategy |
-| **Security & Compliance** | `@security-engineer` | PCI-DSS, Encryption, OJK Compliance, PII |
-| **DevOps & Infra** | `@devops-engineer`, `@container-engineer` | CI/CD, Tekton, ArgoCD, Automation Scripts |
-| **Observability** | `@observability-engineer` | Distributed Tracing, Jaeger, Logs (Loki), Metrics |
-| **Automation** | `@debugging-engineer` | Root Cause Analysis, Performance Debugging |
-| **Workflow & Docs** | `@c4-architecture`, `@git-workflow`, `@code-review`, `@docs-engineer`, `/multi-agent-coordination` | Architecture Visualization, PR Standards, Documentation |
-| **AI & Data** | `@ml-engineer` | Python, FastAPI, ML Models, Fraud Analytics |
-| **Strategy & Lead** | `@cto-advisor` | Technology Strategy, Engineering Metrics, Scaling |
+| Task Category             | Use Skill                                                                                          | Description                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Backend & DB**          | `@backend-engineer`, `@database-engineer`, `@error-handling-engineer`                              | Microservices, SQL Optimization, Error Handling Patterns |
+| **Frontend & Mobile**     | `@frontend-engineer`, `@mobile-engineer`                                                           | Next.js, React Native, UI/UX, Design Systems             |
+| **API & Messaging**       | `@api-design`, `@event-driven-architecture`                                                        | REST/OpenAPI, Kafka, Saga Patterns, CloudEvents          |
+| **Testing & QA**          | `@qa-engineer`                                                                                     | Integration Tests, Performance, Strategy                 |
+| **Security & Compliance** | `@security-engineer`                                                                               | PCI-DSS, Encryption, OJK Compliance, PII                 |
+| **DevOps & Infra**        | `@devops-engineer`, `@container-engineer`                                                          | CI/CD, Tekton, ArgoCD, Automation Scripts                |
+| **Observability**         | `@observability-engineer`                                                                          | Distributed Tracing, Jaeger, Logs (Loki), Metrics        |
+| **Automation**            | `@debugging-engineer`                                                                              | Root Cause Analysis, Performance Debugging               |
+| **Workflow & Docs**       | `@c4-architecture`, `@git-workflow`, `@code-review`, `@docs-engineer`, `/multi-agent-coordination` | Architecture Visualization, PR Standards, Documentation  |
+| **AI & Data**             | `@ml-engineer`                                                                                     | Python, FastAPI, ML Models, Fraud Analytics              |
+| **Strategy & Lead**       | `@cto-advisor`                                                                                     | Technology Strategy, Engineering Metrics, Scaling        |
 
 ## 🤖 AI Agent Orchestration (Modular Execution)
 
@@ -65,8 +65,9 @@ PayU menggunakan arsitektur **Specialized Agents** untuk eksekusi tugas yang ter
 - **`@scaffolder`**: Pembuatan service/folder structure baru.
 - **`@logic-builder`**: Implementasi Domain logic & DDD patterns.
 - **`@tester`**: Penulisan & eksekusi test suite (JUnit, Gatling).
-- **`@security-auditor`**: Audit keamanan & kepatuhan (PCI-DSS).
+- **`@auditor`**: Audit keamanan & kepatuhan (PCI-DSS).
 - **`@migrator`**: Manajemen skema database & Flyway.
+- **`@builder`**: Build, packaging, dan containerization.
 - **`@styler`**: Implementasi UI/UX & estetika (Emerald Design).
 - **`@orchestrator`**: Manajemen CI/CD, Git, & alur kerja otomatis.
 
@@ -77,43 +78,51 @@ PayU menggunakan arsitektur **Specialized Agents** untuk eksekusi tugas yang ter
 Setiap keputusan arsitektur di PayU harus melalui evaluasi **Trade-off Analysis** yang tercatat dalam ADR.
 
 1. **Simplicity First**: Pilih solusi paling sederhana yang memenuhi syarat. Hindari over-engineering.
-2. **Rationality over Patterns**: Jangan gunakan pola (misal: Microservices) hanya karena tren, tetapi karena ia menyelesaikan hambatan spesifik (misal: *independent scaling*).
-3. **Explicit Trade-offs**: Akui apa yang dikorbankan (misal: *eventual consistency* demi *high availability*).
+2. **Rationality over Patterns**: Jangan gunakan pola (misal: Microservices) hanya karena tren, tetapi karena ia menyelesaikan hambatan spesifik (misal: _independent scaling_).
+3. **Explicit Trade-offs**: Akui apa yang dikorbankan (misal: _eventual consistency_ demi _high availability_).
 
 ## Core Architecture Patterns
 
 ### 1. Hexagonal Architecture (Core Banking)
+
 Used in Account, Auth, Transaction, Wallet services.
+
 - Decouples domain logic from frameworks.
 - Easier to test business rules in isolation.
 
 ### 2. Event-Driven Architecture
+
 - **Broker**: AMQ Streams (Kafka).
 - **Patterns**: Saga (Choreography for simple flows, Orchestration for complex distributed transactions).
 - **Consistency**: Eventual consistency for cross-service operations.
 - **Advanced**: Entity Workflows, Fan-Out/Fan-In, and **Event Store Design** (PostgreSQL streams, snapshots, OCC).
 
 ### 3. CQRS (Command-Query Responsibility Segregation)
+
 - Separates Read and Write operations for performance and scalability.
 - Read models are optimized for UI/Dashboard requirements (e.g., in `analytics-service`).
 - Implemented via the `@backend-engineer` power patterns.
 
 ### 4. Domain-Driven Design (DDD)
+
 - **Bounded Contexts**: Microservices mapped to business domains.
 - **Ubiquitous Language**: Shared terminology between business and dev.
 - **Tactical Patterns**: Entities, Value Objects, and Aggregates for robust logic.
 
 ### 5. PCI DSS Compliance
+
 - Strict adherence to cardholder data protection standards.
 - Scope reduction via tokenization and network segmentation.
 - Managed by the `@security-engineer` directives.
 
 ### 6. Polyglot Persistence
+
 - **PostgreSQL**: Primary transactional storage (isolated schemas).
 - **Redis**: Caching and distributed locks.
 - **TimescaleDB**: Time-series analytics.
 
 ### 7. Observability
+
 - **Logs**: LokiStack (JSON Structured).
 - **Metrics**: Prometheus/Grafana.
 - **Traces**: Jaeger (OpenTelemetry).
@@ -123,13 +132,14 @@ Used in Account, Auth, Transaction, Wallet services.
 
 Every new high-impact feature must follow the gated rollout process via **`ab-testing-service`**.
 
-| Step | Action | Responsibility |
-| :--- | :--- | :--- |
-| **1. Define** | Create Experiment Key in `ab-testing-service` (e.g., `fx_v2_engine`). | Product/Dev |
-| **2. Code** | Wrap feature logic in variant checks. Use **`@mobile-engineer`** or **`@frontend-engineer`** gating patterns. | Developer |
-| **3. Test** | Verify both Control and Variant paths using **`@qa-engineer`** gated testing patterns. | QA/Dev |
-| **4. Rollout** | Increase traffic split incrementally (10% -> 50% -> 100%). | @devops-engineer |
-| **5. Cleanup** | Once 100% rolled out, remove the gating logic and experiment key. | Developer |
+| Step           | Action                                                                                                        | Responsibility   |
+| :------------- | :------------------------------------------------------------------------------------------------------------ | :--------------- |
+| **1. Define**  | Create Experiment Key in `ab-testing-service` (e.g., `fx_v2_engine`).                                         | Product/Dev      |
+| **2. Code**    | Wrap feature logic in variant checks. Use **`@mobile-engineer`** or **`@frontend-engineer`** gating patterns. | Developer        |
+| **3. Test**    | Verify both Control and Variant paths using **`@qa-engineer`** gated testing patterns.                        | QA/Dev           |
+| **4. Rollout** | Increase traffic split incrementally (10% -> 50% -> 100%).                                                    | @devops-engineer |
+| **5. Cleanup** | Once 100% rolled out, remove the gating logic and experiment key.                                             | Developer        |
 
 ---
-*ALWAYS use the specialized skills for deeper context when performing specific tasks.*
+
+_ALWAYS use the specialized skills for deeper context when performing specific tasks._

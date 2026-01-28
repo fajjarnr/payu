@@ -1,9 +1,7 @@
 ---
 name: logic-builder
-description: Expert in implementing DDD business logic, Domain Entities, and Application Services.
-tools: [Bash, Read, Edit, Write]
-permissionMode: bypassPermissions
-user-invocable: false
+description: Expert in implementing DDD business logic, Domain Entities, and Application Services. Use when implementing core business rules and domain models.
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Logic Builder Agent Instructions

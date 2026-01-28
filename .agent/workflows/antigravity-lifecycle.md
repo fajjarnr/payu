@@ -8,13 +8,14 @@ This workflow guides the AI agent through the standard Antigravity lifecycle, st
 
 ## 🌌 The Algorithm (Execution Engine)
 
-**Philosophy**: Move from *Current State* to *Ideal State* using the scientific method.
+**Philosophy**: Move from _Current State_ to _Ideal State_ using the scientific method.
 **Goal**: Create "Euphoric Surprise" — deliver results that exceed expectations.
 
 ### Phase 0: Observe & Think (Pattern Recognition)
+
 - **Context Loading**: "Have I seen this before?" (Check `docs/adr/`).
 - **Ideal State Criteria (ISC)**: Define what "Perfect" looks like.
-    - *Example*: "Not just clean code, but zero-config setup and 100% test coverage."
+  - _Example_: "Not just clean code, but zero-config setup and 100% test coverage."
 
 ### Phase 1: Plan (Strategy Optimization)
 
@@ -43,9 +44,9 @@ This workflow guides the AI agent through the standard Antigravity lifecycle, st
 
 1.  **Test-Driven Development (TDD)**
     - **RED**: Write the failing test first.
-        - Unit Tests: `src/test/java/id/payu/<service>/service/`
-        - Controller Tests: `src/test/java/id/payu/<service>/controller/`
-        - Integration Tests: `src/test/java/id/payu/<service>/integration/`
+      - Unit Tests: `src/test/java/id/payu/<service>/service/`
+      - Controller Tests: `src/test/java/id/payu/<service>/controller/`
+      - Integration Tests: `src/test/java/id/payu/<service>/integration/`
     - Run the test to confirm failure: `mvn test -Dtest=YourTestClassName`.
 
 2.  **Implementation**
@@ -56,16 +57,17 @@ This workflow guides the AI agent through the standard Antigravity lifecycle, st
 3.  **Refactoring**
     - **REFACTOR**: Improve code quality without changing behavior.
     - **Architecture Check**: Enforce **Hexagonal Architecture (Ports & Adapters)** for Core Banking.
-        - **Domain Layer** (Inner Core): Entities, Business Rules, Repository *Interfaces* (Output Ports). MUST NOT depend on Infrastructure/Frameworks.
-        - **Application Layer**: Use Cases, Command/Query Handlers (Input Ports). Depends ONLY on Domain.
-        - **Infrastructure Layer** (Output Adapters): JPA Implementations (Repositories), Kafka Producers, External Clients. Implements Ports.
-        - **API Layer** (Driving Adapters): REST Controllers, gRPC. Calls Application Layer.
+      - **Domain Layer** (Inner Core): Entities, Business Rules, Repository _Interfaces_ (Output Ports). MUST NOT depend on Infrastructure/Frameworks.
+      - **Application Layer**: Use Cases, Command/Query Handlers (Input Ports). Depends ONLY on Domain.
+      - **Infrastructure Layer** (Output Adapters): JPA Implementations (Repositories), Kafka Producers, External Clients. Implements Ports.
+      - **API Layer** (Driving Adapters): REST Controllers, gRPC. Calls Application Layer.
 
 ## Phase 3: Verification
 
 **Goal**: Prove that the changes work and adhere to standards.
 
 // turbo
+
 1.  **Automated Verification**
     - Run all tests for the service: `mvn test` (Spring) or `./mvnw test` (Quarkus).
     - Run Architecture tests: `mvn test -Dtest=*Arch*`.

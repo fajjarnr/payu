@@ -4,32 +4,37 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 
 ## 🏗️ Core Mapping Strategy
 
-| Triggering Skill | Orchestrated Agent | Rationale |
-| :--- | :--- | :--- |
-| `@payu-development` | `@scaffolder` | Mengotomatisasi pembuatan service baru tanpa mengurusi detail boilerplate. |
-| `@backend-engineer` | `@logic-builder` | Memfokuskan agen pada implementasi Domain logic dan DDD entities. |
-| `@qa-engineer` | `@tester` | Memisahkan penulisan test code dan eksekusi dari pembangunan logic. |
-| `@security-engineer`| `@security-auditor` | Melakukan audit kepatuhan (PCI-DSS) secara independen dan akurat. |
-| `@database-engineer`| `@migrator` | Mengelola skema database dan migrasi Flyway secara terfokus. |
-| `@frontend-engineer`| `@styler` | Menjamin estetika "Premium Emerald" tanpa mencampuradukkan business logic. |
-| `@devops-engineer` | `@orchestrator` | Mengurus alur CI/CD dan sinkronisasi git secara efisien. |
+| Triggering Skill     | Orchestrated Agent    | Rationale                                      |
+| :------------------- | :-------------------- | :--------------------------------------------- |
+| `@payu-development`  | `@scaffolder`         | Mengotomatisasi pembuatan service baru.        |
+| `@backend-engineer`  | `@logic-builder`      | Implementasi Domain logic dan DDD entities.    |
+| `@qa-engineer`       | `@tester`             | Penulisan test code dan eksekusi.              |
+| `@security-engineer` | `@auditor`            | Audit keamanan dan kepatuhan (PCI-DSS/OJK).    |
+| `@database-engineer` | `@migrator`           | Pengelolaan skema database dan migrasi Flyway. |
+| `@devops-engineer`   | `@builder`            | Build, packaging, dan containerization.        |
+| `@frontend-engineer` | `@styler`             | Estetika "Premium Emerald" dan A11y.           |
+| `@devops-engineer`   | `@orchestrator`       | Alur CI/CD dan sinkronisasi git.               |
+| `@payu-development`  | `@lifecycle-manager`  | Pengelola SDLC penuh (End-to-End).             |
+| `@payu-development`  | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
+| `@security-engineer` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
 
 ## 🔄 Execution Workflow
 
 Berdasarkan `antigravity-lifecycle`, berikut adalah bagaimana kolaborasi terjadi:
 
-1.  **Fase Plan**: Skill (@backend-engineer) merancang solusi.
-2.  **Fase Build**:
-    - Skill memanggil `fork @logic-builder` untuk menulis kode domain.
-    - Skill memanggil `fork @tester` untuk menulis unit tests secara paralel.
-    - Jika ada perubahan DB, skill memanggil `fork @migrator`.
-3.  **Fase Verify**:
-    - Skill memanggil `fork @tester` untuk menjalankan full suite.
-    - Skill memanggil `fork @security-auditor` untuk audit kepatuhan.
-4.  **Fase Sign-off**: Skill memanggil `fork @orchestrator` untuk merge dan push.
+1. **Fase Plan**: `@lifecycle-manager` merancang rencana implementasi.
+2. **Fase Build**:
+   - `@logic-builder` menulis fungsionalitas kode.
+   - `@tester` menulis unit tests secara paralel.
+   - `@migrator` menangani perubahan skema database.
+   - `@builder` memastikan kode dapat di-compile dan di-package.
+3. **Fase Verify**:
+   - `@tester` menjalankan seluruh suite testing (Unit, Integration).
+   - `@auditor` melakukan penilaian keamanan dan kualitas kode.
+4. **Fase Sign-off**: `@orchestrator` menangani PR dan integrasi git.
 
 ## 🛡️ Guardrails
 
-- **Single Responsibility**: Setiap agen hanya memiliki tool dan instruksi untuk satu tujuan spesifik.
-- **Context Isolation**: Penggunaan agen melalui `fork` mengisolasi context eksekusi, mencegah "context pollution" pada agent utama.
-- **Unattended Execution**: Agents dirancang untuk berjalan tanpa pengawasan, dengan kriteria output yang ketat (Final Report format).
+- **Single Responsibility**: Setiap agen hanya memiliki satu tujuan spesifik.
+- **Context Isolation**: Penggunaan agen mengisolasi context eksekusi.
+- **Unattended Execution**: Agents dirancang untuk berjalan secara mandiri.

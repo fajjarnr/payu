@@ -90,11 +90,10 @@
 
 ```
 payu/
-├── .agent/               # Master AI configuration (Source of Truth)
-│   ├── skills/           # 20+ Specialized AI skills
-│   ├── agents/           # Specialized execution agents (Scaffolder, Tester, etc.)
-│   └── workflows/        # SDLC & coordination workflows
-├── .claude/              # Claude Code Entry Point (Soft links to .agent/)
+├── .claude/              # Claude Code Configuration (Native)
+│   ├── skills/           # 20+ AI Skills (auto-discovery, slash commands)
+│   ├── agents/           # 7 Specialized Subagents
+│   └── settings.json     # Permissions & hooks
 ├── backend/             # Microservices implementation (20+ services)
 │   ├── shared/          # Shared Spring Boot starters
 │   │   ├── security-starter/    # PII encryption, audit logging
@@ -113,7 +112,7 @@ payu/
 │   ├── architecture/    # ARCHITECTURE.md
 │   ├── product/         # PRD.md
 │   ├── operations/      # Runbooks, DISASTER_RECOVERY.md
-│   ├── guides/          # GEMINI.md, AGENT_SKILLS_GUIDE.md
+│   ├── guides/          # AI Skills Guide
 │   └── security/        # Security policies
 ├── infrastructure/      # OpenShift, Helm, Tekton, ArgoCD
 ├── scripts/             # Automation scripts (backup, deploy, test)
@@ -189,43 +188,43 @@ AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
 
 ### CI/CD & Pipelines
 
-| Area | Contoh | AI Dapat Membantu |
-|------|--------|-------------------|
-| **Tekton Pipelines** | Pipeline, Task, TriggerTemplate | ✅ Explain & implement |
-| **ArgoCD** | Application manifests, sync policies | ✅ Explain & implement |
+| Area                 | Contoh                               | AI Dapat Membantu      |
+| -------------------- | ------------------------------------ | ---------------------- |
+| **Tekton Pipelines** | Pipeline, Task, TriggerTemplate      | ✅ Explain & implement |
+| **ArgoCD**           | Application manifests, sync policies | ✅ Explain & implement |
 
 ### Containerization & Registry
 
-| Area | Contoh | AI Dapat Membantu |
-|------|--------|-------------------|
-| **Containerization** | Dockerfile, image builds, optimizations | ✅ Explain & implement |
+| Area                  | Contoh                                     | AI Dapat Membantu      |
+| --------------------- | ------------------------------------------ | ---------------------- |
+| **Containerization**  | Dockerfile, image builds, optimizations    | ✅ Explain & implement |
 | **Artifact Registry** | Container registry, image tagging, pushing | ✅ Explain & implement |
 
 ### Observability & Monitoring
 
-| Area | Contoh | AI Dapat Membantu |
-|------|--------|-------------------|
-| **Log Aggregation** | LokiStack, Promtail, log queries | ✅ Explain & implement |
-| **Observability Setup** | Prometheus, Grafana, dashboards | ✅ Explain & implement |
-| **Distributed Tracing** | Jaeger, OpenTelemetry | ✅ Explain & implement |
+| Area                    | Contoh                           | AI Dapat Membantu      |
+| ----------------------- | -------------------------------- | ---------------------- |
+| **Log Aggregation**     | LokiStack, Promtail, log queries | ✅ Explain & implement |
+| **Observability Setup** | Prometheus, Grafana, dashboards  | ✅ Explain & implement |
+| **Distributed Tracing** | Jaeger, OpenTelemetry            | ✅ Explain & implement |
 
 ### Service Mesh & Networking
 
-| Area | Contoh | AI Dapat Membantu |
-|------|--------|-------------------|
-| **Istio** | VirtualService, DestinationRule, mTLS | ✅ Explain & implement |
-| **Traffic Management** | Canary, Blue-Green, Circuit Breaking | ✅ Explain & implement |
-| **Load Balancer** | Ingress configuration, routing | ✅ Explain & implement |
+| Area                   | Contoh                                | AI Dapat Membantu      |
+| ---------------------- | ------------------------------------- | ---------------------- |
+| **Istio**              | VirtualService, DestinationRule, mTLS | ✅ Explain & implement |
+| **Traffic Management** | Canary, Blue-Green, Circuit Breaking  | ✅ Explain & implement |
+| **Load Balancer**      | Ingress configuration, routing        | ✅ Explain & implement |
 
 ### Security Infrastructure
 
-| Area | Contoh | AI Dapat Membantu |
-|------|--------|-------------------|
-| **Secret Management** | HashiCorp Vault setup, secret injection | ✅ Explain & implement |
-| **Certificate Management** | TLS certificates, mTLS, rotation | ✅ Explain & implement |
-| **WAF Configuration** | ModSecurity rules, OWASP CRS | ✅ Explain & implement |
-| **SSO/Keycloak** | Realm config, client setup, OIDC | ✅ Explain & implement |
-| **Network Policies** | Pod-to-pod security, ingress rules | ✅ Explain & implement |
+| Area                       | Contoh                                  | AI Dapat Membantu      |
+| -------------------------- | --------------------------------------- | ---------------------- |
+| **Secret Management**      | HashiCorp Vault setup, secret injection | ✅ Explain & implement |
+| **Certificate Management** | TLS certificates, mTLS, rotation        | ✅ Explain & implement |
+| **WAF Configuration**      | ModSecurity rules, OWASP CRS            | ✅ Explain & implement |
+| **SSO/Keycloak**           | Realm config, client setup, OIDC        | ✅ Explain & implement |
+| **Network Policies**       | Pod-to-pod security, ingress rules      | ✅ Explain & implement |
 
 > **Note**: Ini adalah lab project, jadi AI dapat membantu implementasi untuk pembelajaran.
 
@@ -235,28 +234,28 @@ AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
 
 Skills yang tersedia di `.agent/skills/`:
 
-| Skill | Description |
-| ---------------------------- | ------------------------------------------ |
-| `api-design` | REST API standards, OpenAPI, versioning |
-| `c4-architecture` | Architecture visualization using C4 Model |
-| `backend-engineer` | Java/Python microservice development |
-| `code-review` | Code quality & review checklists |
-| `container-engineer` | UBI Images & OpenShift containers |
-| `cto-advisor` | Strategic technical leadership & metrics |
-| `database-engineer` | PostgreSQL, JSONB, migrations |
-| `debugging-engineer` | Systematic root cause analysis & debugging |
-| `error-handling-engineer` | Error patterns, Circuit Breakers, fallbacks |
-| `devops-engineer` | CI/CD Pipelines, Tekton, ArgoCD, Automation Scripts |
-| `docs-engineer` | Documentation & Tech Writing |
-| `event-driven-architecture` | Kafka, Saga, Event Sourcing |
-| `frontend-engineer` | Next.js, React, Design Systems |
-| `git-workflow` | Git standards & PR workflows |
-| `ml-engineer` | Fraud Scoring, Python & Analytics |
-| `mobile-engineer` | React Native, Expo, Mobile Security |
-| `observability-engineer` | Distributed Tracing, Logs, and Metrics |
-| `payu-development` | Pathfinding & Core Architecture |
-| `qa-engineer` | Testing strategies & QA automation |
-| `security-engineer` | PCI-DSS, Encryption, OJK Compliance |
+| Skill                       | Description                                         |
+| --------------------------- | --------------------------------------------------- |
+| `api-design`                | REST API standards, OpenAPI, versioning             |
+| `c4-architecture`           | Architecture visualization using C4 Model           |
+| `backend-engineer`          | Java/Python microservice development                |
+| `code-review`               | Code quality & review checklists                    |
+| `container-engineer`        | UBI Images & OpenShift containers                   |
+| `cto-advisor`               | Strategic technical leadership & metrics            |
+| `database-engineer`         | PostgreSQL, JSONB, migrations                       |
+| `debugging-engineer`        | Systematic root cause analysis & debugging          |
+| `error-handling-engineer`   | Error patterns, Circuit Breakers, fallbacks         |
+| `devops-engineer`           | CI/CD Pipelines, Tekton, ArgoCD, Automation Scripts |
+| `docs-engineer`             | Documentation & Tech Writing                        |
+| `event-driven-architecture` | Kafka, Saga, Event Sourcing                         |
+| `frontend-engineer`         | Next.js, React, Design Systems                      |
+| `git-workflow`              | Git standards & PR workflows                        |
+| `ml-engineer`               | Fraud Scoring, Python & Analytics                   |
+| `mobile-engineer`           | React Native, Expo, Mobile Security                 |
+| `observability-engineer`    | Distributed Tracing, Logs, and Metrics              |
+| `payu-development`          | Pathfinding & Core Architecture                     |
+| `qa-engineer`               | Testing strategies & QA automation                  |
+| `security-engineer`         | PCI-DSS, Encryption, OJK Compliance                 |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 
@@ -265,51 +264,62 @@ Skills yang tersedia di `.agent/skills/`:
 To emulate "Adaptive Intelligence" without a persistent database, all Agents MUST follow this cognitive cycle:
 
 ### 1. Pattern Recognition (Context Loading)
+
 Before solving a problem, ask:
+
 - "Have I seen this error pattern (`api_errors_increase`) before?"
 - "Does this architecture match a known pattern (`Microservices` vs `Modular Monolith`)?"
 - **Action**: Check `docs/adr/` and `docs/guides/` for historical context.
 
 ### 2. Strategy Optimization (Planning)
+
 Don't just execute. Optimize.
+
 - **Option A**: Quick Fix (Low risk, high speed)
 - **Option B**: Refactor (High risk, long term benefit)
-- **Decision**: Select strategy based on *Context Discovery* (Team size, Timeline).
+- **Decision**: Select strategy based on _Context Discovery_ (Team size, Timeline).
 
 ### 3. Continuous Learning (Synthesis)
+
 After completing a complex task (Workflow), generate a "Lesson Learned" block in the summary:
+
 ```markdown
 ### 🧠 Meta-Learning
+
 - **Observation**: Parallel dispatching failed for shared files.
 - **Correction**: Use Sequential Chain for shared resources in future.
 ```
 
 ## 🤝 Collaboration Modes (Pair Programming)
+
 To align with the user's intent, adopt one of these modes when requested:
 
-| Mode | Behavior | When to Use |
-| :--- | :--- | :--- |
-| **Driver Mode** | Implement code actively, proposing solutions. | "Implement this feature", "Fix this bug" |
-| **Navigator Mode** | Plan, review, and guide; let User code. | "Help me plan", "What do you think of this?" |
-| **TDD Mode** | **Strictly** write tests before implementation (Red-Green-Refactor). | "Test first", "Ensure high coverage" |
-| **Review Mode** | Audit code for security, style, and logic. No implementation. | "Review my PR", "Check for bugs" |
-| **Mentor Mode** | Explain concepts, provide examples, avoid direct solution. | "Explain how this works", "Teach me" |
+| Mode               | Behavior                                                             | When to Use                                  |
+| :----------------- | :------------------------------------------------------------------- | :------------------------------------------- |
+| **Driver Mode**    | Implement code actively, proposing solutions.                        | "Implement this feature", "Fix this bug"     |
+| **Navigator Mode** | Plan, review, and guide; let User code.                              | "Help me plan", "What do you think of this?" |
+| **TDD Mode**       | **Strictly** write tests before implementation (Red-Green-Refactor). | "Test first", "Ensure high coverage"         |
+| **Review Mode**    | Audit code for security, style, and logic. No implementation.        | "Review my PR", "Check for bugs"             |
+| **Mentor Mode**    | Explain concepts, provide examples, avoid direct solution.           | "Explain how this works", "Teach me"         |
 
 ---
 
 ## 🔄 Workflows & Procedures
+
 Claude Code SHOULD follow established workflows in `.agent/workflows/` for complex operations:
 
-- **`/antigravity-lifecycle`**: Standard SDLC lifecycle (Planning -> Execution -> Verification).
-- **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes.
+- **`/antigravity-lifecycle`**: Standard SDLC lifecycle (Observe -> Plan -> Execute -> Verify).
+- **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes. **(Principally handled by Main AI)**
 - **`/new-service-scaffolding`**: Workflow untuk scaffolding microservice baru di platform PayU dengan arsitektur Hexagonal dan konfigurasi standar.
 - **`/security-audit`**: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK.
 
 ## 🤖 Specialized AI Agents
-Untuk eksekusi tugas yang terisolasi dan spesifik, agen berikut tersedia di `.agent/agents/` (diakses via `.claude/agents/`):
-- `@scaffolder`, `@logic-builder`, `@tester`, `@security-auditor`, `@migrator`, `@styler`, `@orchestrator`.
 
-*Usage*: When tasked with complex refactoring or multi-service updates, read the relevant workflow file first.
+Untuk eksekusi tugas yang terisolasi dan spesifik, agen berikut tersedia di `.agent/agents/` (diakses via `.claude/agents/`):
+
+- `@scaffolder`, `@logic-builder`, `@tester`, `@auditor`, `@migrator`, `@builder`, `@styler`, `@orchestrator`, `@lifecycle-manager`, `@scaffolding-expert`, `@compliance-auditor`.
+
+_Usage_: When tasked with complex refactoring or multi-service updates, read the relevant workflow file first.
 
 ---
 

@@ -1,9 +1,7 @@
 ---
 name: scaffolder
-description: Specialist in microservice scaffolding and project structure setup follow PayU standards.
-tools: [Bash, Read, Edit, Write]
-permissionMode: bypassPermissions
-user-invocable: false
+description: Specialist in microservice scaffolding and project structure setup following PayU standards. Use when creating new services, modules, or boilerplate code.
+tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
 # Scaffolder Agent Instructions

@@ -1,7 +1,9 @@
 ---
 description: Workflow untuk scaffolding microservice baru di platform PayU dengan arsitektur Hexagonal dan konfigurasi standar.
 ---
+
 // turbo-all
+
 # New Service Scaffolding Workflow
 
 Gunakan workflow ini saat membuat microservice baru di PayU platform.
@@ -28,6 +30,7 @@ Gunakan workflow ini saat membuat microservice baru di PayU platform.
 ## Phase 2: Scaffold Generation
 
 1. **Spring Boot (Core Banking)**
+
    ```bash
    mkdir -p backend/<service-name>
    cd backend/<service-name>
@@ -35,6 +38,7 @@ Gunakan workflow ini saat membuat microservice baru di PayU platform.
    ```
 
 2. **Directory Structure (Hexagonal)**
+
    ```
    src/main/java/id/payu/<service>/
    ├── domain/              # Entities, Value Objects, Repository Ports
@@ -74,7 +78,9 @@ Gunakan workflow ini saat membuat microservice baru di PayU platform.
 ## Phase 4: Verification
 
 // turbo
+
 1. **Run ArchUnit Test**
+
    ```bash
    mvn test -Dtest=*Arch*
    ```
@@ -86,4 +92,5 @@ Gunakan workflow ini saat membuat microservice baru di PayU platform.
    ```
 
 ---
-*Last Updated: January 2026*
+
+_Last Updated: January 2026_

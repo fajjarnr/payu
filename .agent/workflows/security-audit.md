@@ -1,6 +1,7 @@
 ---
 description: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK.
 ---
+
 # Security Audit Workflow
 
 Gunakan workflow ini sebelum release fitur yang menyentuh data sensitif (PII, finansial).
@@ -27,6 +28,7 @@ Gunakan workflow ini sebelum release fitur yang menyentuh data sensitif (PII, fi
    ```bash
    mvn dependency-check:check
    ```
+
    - [ ] Tidak ada CVE Critical/High?
 
 ## Phase 2: Configuration Audit
@@ -57,4 +59,5 @@ Gunakan workflow ini sebelum release fitur yang menyentuh data sensitif (PII, fi
    - Mark service as "Audited" in compliance dashboard.
 
 ---
-*Last Updated: January 2026*
+
+_Last Updated: January 2026_
