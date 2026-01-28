@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
+import * as Device from 'expo-device';
+import * as Constants from 'expo-constants';
 import { feedbackService } from '@/services/feedback.service';
 import { useAnalytics } from './useAnalytics';
+import type { FeedbackData as AppFeedbackData } from '@/types';
 
 interface FeedbackData {
   category: 'bug' | 'feature' | 'improvement' | 'other';
@@ -10,6 +13,19 @@ interface FeedbackData {
   email?: string;
   screenshots?: string[];
 }
+
+const toAppFeedbackData = (data: FeedbackData): AppFeedbackData => ({
+  category: data.category as AppFeedbackData['category'],
+  rating: data.rating || 0,
+  message: data.message,
+  screenshots: data.screenshots,
+  deviceInfo: {
+    appVersion: '1.0.0',
+    os: Platform.OS,
+    osVersion: Platform.Version as string,
+    device: Device.modelName || 'Unknown',
+  },
+});
 
 export const useFeedback = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +36,7 @@ export const useFeedback = () => {
     setIsSubmitting(true);
 
     try {
-      await feedbackService.submitFeedback(data);
+      await feedbackService.submitFeedback(toAppFeedbackData(data));
 
       trackEvent('feedback_submitted', {
         category: data.category,
@@ -133,17 +149,17 @@ export const useFeedbackWidget = (triggerAfter?: number) => {
   };
 };
 
-// In-app feedback survey hook
+// In-app feedback survey hook (not fully implemented)
 export const useFeedbackSurvey = () => {
-  const [currentSurvey, setCurrentSurvey] = useState<any | null>(null);
-  const [surveyResponses, setSurveyResponses] = useState<Record<string, any>>({});
+  const [currentSurvey, setCurrentSurvey] = useState<{ id: string } | null>(null);
+  const [surveyResponses, setSurveyResponses] = useState<Record<string, unknown>>({});
 
   const startSurvey = (surveyId: string) => {
     // Load survey configuration
     setCurrentSurvey({ id: surveyId });
   };
 
-  const answerQuestion = (questionId: string, answer: any) => {
+  const answerQuestion = (questionId: string, answer: unknown) => {
     setSurveyResponses((prev) => ({
       ...prev,
       [questionId]: answer,
@@ -151,13 +167,14 @@ export const useFeedbackSurvey = () => {
   };
 
   const submitSurvey = async () => {
-    if (!currentSurvey) return;
+    if (!currentSurvey) return false;
 
     try {
-      await feedbackService.submitSurvey({
-        surveyId: currentSurvey.id,
-        responses: surveyResponses,
-      });
+      // TODO: Implement survey submission when backend is ready
+      // await feedbackService.submitSurvey({
+      //   surveyId: currentSurvey.id,
+      //   responses: surveyResponses,
+      // });
 
       setCurrentSurvey(null);
       setSurveyResponses({});

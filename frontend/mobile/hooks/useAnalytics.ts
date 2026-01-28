@@ -1,7 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { Platform } from 'react-native';
+
+// expo-screen-orientation is optional, only import if available
+let ScreenOrientation: any;
+try {
+  ScreenOrientation = require('expo-screen-orientation');
+} catch {
+  // Module not available, will use fallback
+}
 
 interface AnalyticsEvent {
   name: string;

@@ -1,50 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { CameraView, CameraType, Camera } from 'expo-camera';
 
 export const useCamera = () => {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [facing, setFacing] = useState<CameraType>('back');
+  const [type, setType] = useState<CameraType>('back');
+  const [permissions, requestPermission] = Camera.useCameraPermissions();
+  const cameraRef = useRef<any>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
+  const toggleCameraType = () => {
+    setType(current => (current === 'back' ? 'front' : 'back'));
+  };
 
-  const toggleCameraFacing = () => {
-    setFacing((current) => (current === 'back' ? 'front' : 'back'));
+  const takePicture = async () => {
+    if (!cameraRef.current) return null;
+    return await cameraRef.current.takePictureAsync();
   };
 
   return {
-    hasPermission,
-    facing,
-    toggleCameraFacing,
+    type,
+    permissions,
+    requestPermission,
+    toggleCameraType,
+    takePicture,
+    cameraRef,
   };
 };
 
-export const useQRScanner = () => {
-  const [scanned, setScanned] = useState(false);
-
-  const handleBarCodeScanned = ({
-    data,
-  }: {
-    data: string;
-    type: string;
-  }) => {
-    if (scanned) return;
-
-    setScanned(true);
-    return data;
-  };
-
-  const resetScanner = () => {
-    setScanned(false);
-  };
-
-  return {
-    scanned,
-    handleBarCodeScanned,
-    resetScanner,
-  };
-};
+export default useCamera;

@@ -55,7 +55,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-      <Card variant="flat" padding="md" style={[styles.container, style]}>
+      <Card variant="flat" padding="md" style={style as any}>
         <View style={styles.leftContainer}>
           <View style={[styles.iconContainer, { backgroundColor: `${'#10b981'}20` }]}>
             <Text style={styles.icon}>{getIcon()}</Text>
@@ -64,7 +64,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
             <Text style={[styles.description, { color: colors.text }]}>
               {transaction.description}
             </Text>
-            <Text style={[styles.time, { color: colors.textSecondary }]}>
+            <Text style={[styles.time, { color: (colors as typeof colors & { textSecondary?: string }).textSecondary ?? '#6b7280' }]}>
               {formatRelativeTime(transaction.createdAt)}
             </Text>
           </View>

@@ -43,15 +43,16 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   if (source?.uri) {
+    const imageStyle: any = {
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: colors.border,
+    };
     return (
       <Image
         source={source}
-        style={[
-          avatarStyle,
-          {
-            backgroundColor: colors.border,
-          },
-        ]}
+        style={imageStyle}
       />
     );
   }

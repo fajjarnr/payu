@@ -1,6 +1,6 @@
 export const formatDate = (date: string | Date): string => {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateFormat('id-ID', {
+  return new Intl.DateTimeFormat('id-ID', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -9,7 +9,7 @@ export const formatDate = (date: string | Date): string => {
 
 export const formatDateTime = (date: string | Date): string => {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateFormat('id-ID', {
+  return new Intl.DateTimeFormat('id-ID', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -20,7 +20,7 @@ export const formatDateTime = (date: string | Date): string => {
 
 export const formatTime = (date: string | Date): string => {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateFormat('id-ID', {
+  return new Intl.DateTimeFormat('id-ID', {
     hour: '2-digit',
     minute: '2-digit',
   }).format(d);

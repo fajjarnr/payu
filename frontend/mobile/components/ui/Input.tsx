@@ -15,7 +15,7 @@ interface InputProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'number-pad';
   error?: string;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -24,6 +24,7 @@ interface InputProps {
   style?: ViewStyle;
   onSubmitEditing?: () => void;
   returnKeyType?: 'done' | 'next' | 'go' | 'search';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -102,6 +103,7 @@ export const Input: React.FC<InputProps> = ({
           style={inputStyle}
           onSubmitEditing={onSubmitEditing}
           returnKeyType={returnKeyType}
+          autoCapitalize={autoCapitalize}
         />
       </View>
       {error && <Text style={errorStyle}>{error}</Text>}

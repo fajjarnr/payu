@@ -20,6 +20,7 @@ interface AuthState {
     phoneNumber: string;
     fullName: string;
     password: string;
+    confirmPassword?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
@@ -79,7 +80,13 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          const response = await authService.register(data);
+          // Ensure confirmPassword is present for RegisterData type
+          const registerData = {
+            ...data,
+            confirmPassword: data.confirmPassword || data.password,
+          };
+
+          const response = await authService.register(registerData);
 
           await storage.set(AUTH_CONFIG.TOKEN_KEY, response.tokens);
           await storage.set(AUTH_CONFIG.USER_KEY, response.user);

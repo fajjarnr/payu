@@ -24,13 +24,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
 
   return (
     <Card
-      style={[
-        {
-          backgroundColor: '#10b981',
-          borderWidth: 0,
-        },
-        style,
-      ]}
+      style={style as any}
       padding="lg"
     >
       {/* Header */}

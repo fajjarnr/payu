@@ -31,14 +31,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
 
   return (
     <Card
-      style={[
-        {
-          backgroundColor: gradientStart,
-          borderWidth: 0,
-        },
-        styles.cardContainer,
-        style,
-      ]}
+      style={style as any}
       padding="lg"
     >
       {/* Card Header */}

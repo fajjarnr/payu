@@ -118,8 +118,8 @@ export interface PaginatedResponse<T> {
 
 // Navigation Types
 export type RootStackParamList = {
-  (auth): undefined;
-  (tabs): undefined;
+  auth: undefined;
+  tabs: undefined;
   qris: undefined;
   feedback: undefined;
   transfer: undefined;
