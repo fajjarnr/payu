@@ -56,7 +56,7 @@ Gunakan alur berikut saat mengimplementasikan fitur baru untuk hasil yang maksim
 ### Fase 2: Implementasi (TDD)
 1.  Gunakan **`@qa-engineer`** untuk merancang strategi pengujian dan cakupan coverage.
 2.  Panggil **`@backend-engineer`** (yang mencakup pola TDD) atau **`@frontend-engineer`** untuk menulis logika bisnis menggunakan pola Clean/Hexagonal.
-3.  Jika tugas sangat besar (misal: merombak 3 service), gunakan workflow **`/multi-agent-coordination`** untuk membagi tugas secara paralel.
+3.  Jika tugas sangat besar (misal: merombak 3 service), baca workflow [`.agent/workflows/multi-agent-coordination.md`](./.agent/workflows/multi-agent-coordination.md) untuk membagi tugas secara paralel.
 
 ### Fase 3: Verifikasi & Review
 1.  Selalu jalankan checklist dari **`@code-review`** sebelum membuat PR.
