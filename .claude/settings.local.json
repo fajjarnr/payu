@@ -1,5 +1,10 @@
 {
   "permissions": {
-    "defaultMode": "bypassAll"
+    "defaultMode": "bypassAll",
+    "allow": [
+      "Bash(mvn:*)",
+      "Bash(javac:*)",
+      "Bash(git add:*)"
+    ]
   }
 }

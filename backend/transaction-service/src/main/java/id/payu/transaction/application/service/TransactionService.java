@@ -2,6 +2,7 @@ package id.payu.transaction.application.service;
 
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandHandler;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommand;
 import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommandHandler;
 import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQuery;
@@ -11,7 +12,6 @@ import id.payu.transaction.application.cqrs.query.GetTransactionQueryHandler;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
-import id.payu.transaction.dto.InitiateTransferResponse;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,11 +76,10 @@ public class TransactionService implements TransactionUseCase {
 
     @Override
     @Deprecated
-    public InitiateTransferResponse initiateTransfer(InitiateTransferRequest request, String userId) {
+    public InitiateTransferCommandResult initiateTransfer(InitiateTransferRequest request, String userId) {
         log.warn("Using deprecated initiateTransfer method - consider using InitiateTransferCommand");
         InitiateTransferCommand command = InitiateTransferCommand.from(request, userId);
-        InitiateTransferCommandResult result = initiateTransfer(command);
-        return result.toResponse();
+        return initiateTransfer(command);
     }
 
     @Override

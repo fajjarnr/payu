@@ -164,10 +164,12 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                     .type(InitiateTransferRequest.TransactionType.valueOf(scheduledTransfer.getTransferType().name()))
                     .build();
 
-            var response = transactionUseCase.initiateTransfer(request);
+            var response = transactionUseCase.initiateTransfer(
+                    request,
+                    scheduledTransfer.getSenderAccountId().toString());
 
             scheduledTransfer.setExecutedCount(scheduledTransfer.getExecutedCount() + 1);
-            scheduledTransfer.setLastTransactionId(response.getTransactionId());
+            scheduledTransfer.setLastTransactionId(response.transactionId());
 
             if (scheduledTransfer.isCompleted()) {
                 scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.COMPLETED);
@@ -183,7 +185,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
             persistencePort.save(scheduledTransfer);
 
             log.info("Scheduled transfer executed successfully, id: {}, transactionId: {}, executedCount: {}",
-                    scheduledTransfer.getId(), response.getTransactionId(), scheduledTransfer.getExecutedCount());
+                    scheduledTransfer.getId(), response.transactionId(), scheduledTransfer.getExecutedCount());
 
         } catch (Exception e) {
             scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.FAILED);

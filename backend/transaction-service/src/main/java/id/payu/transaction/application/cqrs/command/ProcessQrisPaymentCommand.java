@@ -20,12 +20,12 @@ public record ProcessQrisPaymentCommand(
      * Factory method to create command from DTO.
      */
     public static ProcessQrisPaymentCommand from(ProcessQrisPaymentRequest request, String userId) {
-        Money money = request.currency() != null
-                ? Money.of(request.amount(), request.currency())
-                : Money.idr(request.amount());
+        Money money = request.getCurrency() != null
+                ? Money.of(request.getAmount(), request.getCurrency())
+                : Money.idr(request.getAmount());
 
         return new ProcessQrisPaymentCommand(
-                request.qrisCode(),
+                request.getQrisCode(),
                 money,
                 userId
         );

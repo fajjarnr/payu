@@ -5,6 +5,7 @@ import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.*;
 import id.payu.transaction.dto.BifastTransferRequest;
+import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.QrisPaymentRequest;
 import id.payu.transaction.dto.QrisPaymentResponse;
 import id.payu.transaction.dto.ReserveBalanceResponse;
@@ -133,8 +134,27 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
             bifastServicePort.initiateTransfer(bifastRequest);
             transaction.setStatus(Transaction.TransactionStatus.PENDING);
         } catch (Exception e) {
+            // SAGA COMPENSATION: Release reserved balance on BiFast failure
+            log.error("BiFast transfer failed, initiating compensation. Transaction: {}, Error: {}",
+                    transaction.getId(), e.getMessage());
+
+            // Compensate: Release the reserved balance back to wallet
+            try {
+                walletServicePort.releaseBalance(
+                        command.senderAccountId(),
+                        transaction.getId().toString(),
+                        command.amount().getAmount()
+                );
+                log.info("Balance released successfully for transaction: {}", transaction.getId());
+            } catch (Exception compensationError) {
+                log.error("Failed to release balance during compensation for transaction: {}. Error: {}",
+                        transaction.getId(), compensationError.getMessage());
+                // Continue with failure marking even if compensation fails
+                // In production, this should trigger an alert for manual intervention
+            }
+
             transaction.setStatus(Transaction.TransactionStatus.FAILED);
-            transaction.setFailureReason(e.getMessage());
+            transaction.setFailureReason("BiFast transfer failed: " + e.getMessage());
             eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
         } finally {
             transactionPersistencePort.save(transaction);

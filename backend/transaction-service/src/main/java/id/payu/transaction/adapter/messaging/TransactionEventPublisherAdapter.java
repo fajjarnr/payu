@@ -28,8 +28,8 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
         event.put("transactionId", transaction.getId().toString());
         event.put("referenceNumber", transaction.getReferenceNumber());
         event.put("senderAccountId", transaction.getSenderAccountId().toString());
-        event.put("amount", transaction.getAmount());
-        event.put("currency", transaction.getCurrency());
+        event.put("amount", transaction.getAmount().getAmount());
+        event.put("currency", transaction.getAmount().getCurrency().getCurrencyCode());
         event.put("type", transaction.getType().name());
         event.put("status", transaction.getStatus().name());
         event.put("timestamp", transaction.getCreatedAt());
@@ -57,8 +57,8 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
         event.put("eventType", "transaction-completed");
         event.put("transactionId", transaction.getId().toString());
         event.put("referenceNumber", transaction.getReferenceNumber());
-        event.put("amount", transaction.getAmount());
-        event.put("currency", transaction.getCurrency());
+        event.put("amount", transaction.getAmount().getAmount());
+        event.put("currency", transaction.getAmount().getCurrency().getCurrencyCode());
         event.put("type", transaction.getType().name());
         event.put("status", transaction.getStatus().name());
         event.put("completedAt", transaction.getCompletedAt());
@@ -74,8 +74,8 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
         event.put("eventType", "transaction-failed");
         event.put("transactionId", transaction.getId().toString());
         event.put("referenceNumber", transaction.getReferenceNumber());
-        event.put("amount", transaction.getAmount());
-        event.put("currency", transaction.getCurrency());
+        event.put("amount", transaction.getAmount().getAmount());
+        event.put("currency", transaction.getAmount().getCurrency().getCurrencyCode());
         event.put("type", transaction.getType().name());
         event.put("status", transaction.getStatus().name());
         event.put("failureReason", reason);

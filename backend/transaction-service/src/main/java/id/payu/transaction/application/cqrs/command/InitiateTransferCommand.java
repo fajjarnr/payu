@@ -28,19 +28,19 @@ public record InitiateTransferCommand(
      */
     public static InitiateTransferCommand from(InitiateTransferRequest request, String userId) {
         // Convert BigDecimal amount to Money Value Object
-        Money money = request.currency() != null
-                ? Money.of(request.amount(), request.currency())
-                : Money.idr(request.amount());
+        Money money = request.getCurrency() != null
+                ? Money.of(request.getAmount(), request.getCurrency())
+                : Money.idr(request.getAmount());
 
         return new InitiateTransferCommand(
-                request.senderAccountId(),
-                request.recipientAccountNumber(),
+                request.getSenderAccountId(),
+                request.getRecipientAccountNumber(),
                 money,
-                request.description(),
-                request.type(),
-                request.transactionPin(),
-                request.deviceId(),
-                request.idempotencyKey(),
+                request.getDescription(),
+                request.getType(),
+                request.getTransactionPin(),
+                request.getDeviceId(),
+                request.getIdempotencyKey(),
                 userId
         );
     }

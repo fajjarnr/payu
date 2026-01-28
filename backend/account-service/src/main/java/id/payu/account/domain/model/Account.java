@@ -1,7 +1,5 @@
 package id.payu.account.domain.model;
 
-import id.payu.transaction.domain.model.Money;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -34,18 +32,13 @@ public class Account {
     private BigDecimal balance;
     private String currency;
 
-    /**
-     * @deprecated Use Money instead. Kept for backward compatibility.
-     */
-    @Deprecated
-    private transient Money moneyValue;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Minimum balance requirements by account type
+    // Balance limits by account type
     private static final BigDecimal MINIMUM_SAVINGS_BALANCE = new BigDecimal("10000");
     private static final BigDecimal MINIMUM_CHECKING_BALANCE = new BigDecimal("50000");
+    private static final BigDecimal MAXIMUM_BALANCE = new BigDecimal("999999999999.99"); // Maximum allowed balance
     private static final BigDecimal ZERO = BigDecimal.ZERO;
 
     // Constructors
@@ -75,31 +68,19 @@ public class Account {
      * Business rules:
      * - Account must be active
      * - Amount must be positive
+     * - Maximum balance limit must not be exceeded
      *
      * @param amount the amount to credit
      * @throws IllegalArgumentException if account is not active
      * @throws IllegalArgumentException if amount is negative
+     * @throws InsufficientFundsException if maximum balance would be exceeded
      */
     public void credit(BigDecimal amount) {
         assertAccountActive();
         assertPositiveAmount(amount);
+        assertMaximumBalanceNotExceeded(amount);
 
         this.balance = this.balance.add(amount);
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    /**
-     * Credits Money to this account.
-     *
-     * @param money the Money to credit
-     * @throws IllegalArgumentException if account is not active
-     * @throws IllegalArgumentException if currency doesn't match
-     */
-    public void credit(Money money) {
-        assertAccountActive();
-        assertCurrencyMatches(money);
-
-        this.balance = this.balance.add(money.getAmount());
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -123,24 +104,6 @@ public class Account {
         assertMinimumBalanceAfterDebit(amount);
 
         this.balance = this.balance.subtract(amount);
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    /**
-     * Debits Money from this account.
-     *
-     * @param money the Money to debit
-     * @throws IllegalArgumentException if account is not active
-     * @throws IllegalArgumentException if currency doesn't match
-     * @throws InsufficientFundsException if insufficient balance
-     */
-    public void debit(Money money) {
-        assertAccountActive();
-        assertCurrencyMatches(money);
-        assertSufficientFunds(money.getAmount());
-        assertMinimumBalanceAfterDebit(money.getAmount());
-
-        this.balance = this.balance.subtract(money.getAmount());
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -262,18 +225,6 @@ public class Account {
     }
 
     /**
-     * Gets the current balance as Money.
-     *
-     * @return the balance as Money
-     */
-    public Money getBalanceAsMoney() {
-        if (moneyValue == null) {
-            moneyValue = Money.of(this.balance, this.currency);
-        }
-        return moneyValue;
-    }
-
-    /**
      * Checks if the account has sufficient funds for a debit operation.
      *
      * @param amount the amount to check
@@ -327,14 +278,6 @@ public class Account {
         }
     }
 
-    private void assertCurrencyMatches(Money money) {
-        if (!this.currency.equals(money.getCurrency().getCurrencyCode())) {
-            throw new IllegalArgumentException(
-                "Currency mismatch. Account currency: " + this.currency +
-                ", payment currency: " + money.getCurrency().getCurrencyCode());
-        }
-    }
-
     private BigDecimal getMinimumBalanceForType() {
         if ("SAVINGS".equals(this.accountType)) {
             return MINIMUM_SAVINGS_BALANCE;
@@ -342,6 +285,15 @@ public class Account {
             return MINIMUM_CHECKING_BALANCE;
         }
         return ZERO; // Pocket accounts have no minimum
+    }
+
+    private void assertMaximumBalanceNotExceeded(BigDecimal amount) {
+        BigDecimal postCreditBalance = this.balance.add(amount);
+        if (postCreditBalance.compareTo(MAXIMUM_BALANCE) > 0) {
+            throw new InsufficientFundsException(
+                "Credit would exceed maximum balance limit. Maximum: " + MAXIMUM_BALANCE +
+                ", post-credit balance: " + postCreditBalance);
+        }
     }
 
     // ==================== EXCEPTIONS ====================

@@ -10,6 +10,8 @@ import id.payu.api.common.openapi.OpenApiConstants;
 import id.payu.api.common.openapi.PaginationParameter;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.api.common.response.PaginationInfo;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
@@ -115,8 +117,9 @@ public class TransactionController extends BaseController {
     ) {
         try {
             String userId = extractUserId();
-            InitiateTransferResponse response = transactionUseCase.initiateTransfer(request, userId);
-            return created(response, "/api/v1/transactions/" + response.transactionId());
+            InitiateTransferCommandResult result = transactionUseCase.initiateTransfer(request, userId);
+            InitiateTransferResponse response = result.toResponse();
+            return created(response, "/api/v1/transactions/" + result.transactionId());
         } catch (BusinessException e) {
             log.warn("Transfer initiation failed: {}", e.getMessage());
             return ResponseEntity.unprocessableEntity()
