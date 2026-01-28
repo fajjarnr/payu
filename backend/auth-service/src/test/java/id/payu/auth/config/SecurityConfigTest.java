@@ -1,4 +1,4 @@
-package id.payu.transaction.config;
+package id.payu.auth.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,12 +12,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Security configuration tests for Transaction Service.
+ * Security configuration tests for Auth Service.
  *
  * Tests verify that:
- * - Public actuator endpoints (health/info) are accessible
- * - All other actuator endpoints require SCOPE_actuator authority
- * - All API endpoints require authentication
+ * - Public endpoints are accessible without authentication
+ * - Actuator endpoints are properly secured (only health/info are public)
+ * - All other endpoints require authentication
  *
  * PCI-DSS Compliance:
  * - Requirement 1: Firewall configurations (actuator security)
@@ -31,13 +31,34 @@ class SecurityConfigTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // Basic instantiation test
+    // Public endpoint tests
 
     @Test
-    @DisplayName("SecurityConfig should be instantiable")
-    void securityConfigShouldBeInstantiable() {
-        SecurityConfig securityConfig = new SecurityConfig();
-        assertThat(securityConfig).isNotNull();
+    @DisplayName("Should allow public access to login endpoint")
+    void shouldAllowPublicAccessToLoginEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/login"))
+                .andExpect(status().isMethodNotAllowed()); // 405 because we need POST
+    }
+
+    @Test
+    @DisplayName("Should allow public access to register endpoint")
+    void shouldAllowPublicAccessToRegisterEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/register"))
+                .andExpect(status().isMethodNotAllowed()); // 405 because we need POST
+    }
+
+    @Test
+    @DisplayName("Should allow public access to refresh endpoint")
+    void shouldAllowPublicAccessToRefreshEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/refresh"))
+                .andExpect(status().isMethodNotAllowed()); // 405 because we need POST
+    }
+
+    @Test
+    @DisplayName("Should allow public access to forgot-password endpoint")
+    void shouldAllowPublicAccessToForgotPasswordEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/forgot-password"))
+                .andExpect(status().isMethodNotAllowed()); // 405 because we need POST
     }
 
     // Public actuator endpoint tests
@@ -73,95 +94,65 @@ class SecurityConfigTest {
     // Secured actuator endpoint tests
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator metrics endpoint")
-    void shouldRequireScopeActuatorForActuatorMetrics() throws Exception {
+    @DisplayName("Should require authentication for actuator metrics endpoint")
+    void shouldRequireAuthenticationForActuatorMetrics() throws Exception {
         mockMvc.perform(get("/actuator/metrics"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator prometheus endpoint")
-    void shouldRequireScopeActuatorForActuatorPrometheus() throws Exception {
+    @DisplayName("Should require authentication for actuator prometheus endpoint")
+    void shouldRequireAuthenticationForActuatorPrometheus() throws Exception {
         mockMvc.perform(get("/actuator/prometheus"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator env endpoint")
-    void shouldRequireScopeActuatorForActuatorEnv() throws Exception {
+    @DisplayName("Should require authentication for actuator env endpoint")
+    void shouldRequireAuthenticationForActuatorEnv() throws Exception {
         mockMvc.perform(get("/actuator/env"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator configprops endpoint")
-    void shouldRequireScopeActuatorForActuatorConfigProps() throws Exception {
+    @DisplayName("Should require authentication for actuator configprops endpoint")
+    void shouldRequireAuthenticationForActuatorConfigProps() throws Exception {
         mockMvc.perform(get("/actuator/configprops"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator beans endpoint")
-    void shouldRequireScopeActuatorForActuatorBeans() throws Exception {
+    @DisplayName("Should require authentication for actuator beans endpoint")
+    void shouldRequireAuthenticationForActuatorBeans() throws Exception {
         mockMvc.perform(get("/actuator/beans"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator mappings endpoint")
-    void shouldRequireScopeActuatorForActuatorMappings() throws Exception {
+    @DisplayName("Should require authentication for actuator mappings endpoint")
+    void shouldRequireAuthenticationForActuatorMappings() throws Exception {
         mockMvc.perform(get("/actuator/mappings"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator loggers endpoint")
-    void shouldRequireScopeActuatorForActuatorLoggers() throws Exception {
+    @DisplayName("Should require authentication for actuator loggers endpoint")
+    void shouldRequireAuthenticationForActuatorLoggers() throws Exception {
         mockMvc.perform(get("/actuator/loggers"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator threaddump endpoint")
-    void shouldRequireScopeActuatorForActuatorThreadDump() throws Exception {
+    @DisplayName("Should require authentication for actuator threaddump endpoint")
+    void shouldRequireAuthenticationForActuatorThreadDump() throws Exception {
         mockMvc.perform(get("/actuator/threaddump"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should require SCOPE_actuator for actuator heapdump endpoint")
-    void shouldRequireScopeActuatorForActuatorHeapDump() throws Exception {
+    @DisplayName("Should require authentication for actuator heapdump endpoint")
+    void shouldRequireAuthenticationForActuatorHeapDump() throws Exception {
         mockMvc.perform(get("/actuator/heapdump"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    // API endpoint tests
-
-    @Test
-    @DisplayName("Should require authentication for transaction transfer endpoint")
-    void shouldRequireAuthenticationForTransferEndpoint() throws Exception {
-        mockMvc.perform(get("/api/v1/transactions/transfer"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("Should require authentication for transaction detail endpoint")
-    void shouldRequireAuthenticationForTransactionDetail() throws Exception {
-        mockMvc.perform(get("/api/v1/transactions/123e4567-e89b-12d3-a456-426614174000"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("Should require authentication for account transactions endpoint")
-    void shouldRequireAuthenticationForAccountTransactions() throws Exception {
-        mockMvc.perform(get("/api/v1/transactions/accounts/123e4567-e89b-12d3-a456-426614174000"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("Should require authentication for QRIS payment endpoint")
-    void shouldRequireAuthenticationForQrisPayment() throws Exception {
-        mockMvc.perform(get("/api/v1/transactions/qris/pay"))
                 .andExpect(status().isUnauthorized());
     }
 
