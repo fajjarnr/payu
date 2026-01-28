@@ -6,7 +6,17 @@ description: Standard workflow for implementing features or fixing bugs using th
 
 This workflow guides the AI agent through the standard Antigravity lifecycle, strictly enforcing PayU's engineering standards (TDD, Architecture, Security).
 
-## Phase 1: Planning
+## 🌌 The Algorithm (Execution Engine)
+
+**Philosophy**: Move from *Current State* to *Ideal State* using the scientific method.
+**Goal**: Create "Euphoric Surprise" — deliver results that exceed expectations.
+
+### Phase 0: Observe & Think (Pattern Recognition)
+- **Context Loading**: "Have I seen this before?" (Check `docs/adr/`).
+- **Ideal State Criteria (ISC)**: Define what "Perfect" looks like.
+    - *Example*: "Not just clean code, but zero-config setup and 100% test coverage."
+
+### Phase 1: Plan (Strategy Optimization)
 
 **Goal**: Understand the requirements and design the solution.
 
@@ -51,7 +61,11 @@ This workflow guides the AI agent through the standard Antigravity lifecycle, st
         - **Infrastructure Layer** (Output Adapters): JPA Implementations (Repositories), Kafka Producers, External Clients. Implements Ports.
         - **API Layer** (Driving Adapters): REST Controllers, gRPC. Calls Application Layer.
 
-## Phase 3: Verification
+### Phase 3: Verify (Scientific Validation)
+- **Strict Verification**: Don't just run tests. Verify the *ISC*.
+- **Skeptical Agent**: Assume the code is broken until proven otherwise.
+
+## Phase 4: Verification
 
 **Goal**: Prove that the changes work and adhere to standards.
 
