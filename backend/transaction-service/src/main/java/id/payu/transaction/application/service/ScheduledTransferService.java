@@ -217,8 +217,8 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                 }
                 yield baseDate.plusSeconds(2629800);
             }
-            case RECURRING_CUSTOM -> frequencyDays != null 
-                    ? baseDate.plusSeconds(frequencyDays * 86400L) 
+            case RECURRING_CUSTOM -> frequencyDays != null
+                    ? baseDate.plusSeconds(frequencyDays * 86400L)
                     : baseDate.plusSeconds(2629800);
         };
     }

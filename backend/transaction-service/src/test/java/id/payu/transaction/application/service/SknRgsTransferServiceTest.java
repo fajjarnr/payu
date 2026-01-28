@@ -42,14 +42,16 @@ class SknRgsTransferServiceTest {
     @Mock
     private TransactionEventPublisherPort eventPublisherPort;
 
-    @InjectMocks
-    private TransactionService transactionService;
-
+    private UUID userId;
     private InitiateTransferRequest sknTransferRequest;
     private InitiateTransferRequest rgsTransferRequest;
 
+    @InjectMocks
+    private TransactionService transactionService;
+
     @BeforeEach
     void setUp() {
+        userId = UUID.randomUUID();
         UUID senderAccountId = UUID.randomUUID();
 
         sknTransferRequest = new InitiateTransferRequest();
@@ -87,7 +89,7 @@ class SknRgsTransferServiceTest {
         );
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest);
+        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest, userId.toString());
 
         // Then
         assertThat(response).isNotNull();
@@ -112,7 +114,7 @@ class SknRgsTransferServiceTest {
         );
 
         // When/Then
-        assertThatThrownBy(() -> transactionService.initiateTransfer(sknTransferRequest))
+        assertThatThrownBy(() -> transactionService.initiateTransfer(sknTransferRequest, userId.toString()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Insufficient balance");
 
@@ -179,7 +181,7 @@ class SknRgsTransferServiceTest {
         );
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest);
+        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest, userId.toString());
 
         // Then
         assertThat(response.getFee()).isEqualTo(new BigDecimal("5000"));
@@ -211,7 +213,7 @@ class SknRgsTransferServiceTest {
         );
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest);
+        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest, userId.toString());
 
         // Then
         assertThat(response.getEstimatedCompletionTime()).isEqualTo("Same day");

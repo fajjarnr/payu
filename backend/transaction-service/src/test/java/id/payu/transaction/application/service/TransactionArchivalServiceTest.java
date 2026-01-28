@@ -57,8 +57,7 @@ class TransactionArchivalServiceTest {
                 .senderAccountId(UUID.randomUUID())
                 .recipientAccountId(UUID.randomUUID())
                 .type(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .amount(new BigDecimal("100000"))
-                .currency("IDR")
+                .amount(id.payu.transaction.domain.model.Money.idr(new BigDecimal("100000")))
                 .description("Test transfer")
                 .status(Transaction.TransactionStatus.COMPLETED)
                 .createdAt(ZonedDateTime.now().minusMonths(13).toInstant())
@@ -135,8 +134,7 @@ class TransactionArchivalServiceTest {
                     .senderAccountId(UUID.randomUUID())
                     .recipientAccountId(UUID.randomUUID())
                     .type(Transaction.TransactionType.INTERNAL_TRANSFER)
-                    .amount(new BigDecimal("1000"))
-                    .currency("IDR")
+                    .amount(id.payu.transaction.domain.model.Money.idr(new BigDecimal("1000")))
                     .status(Transaction.TransactionStatus.COMPLETED)
                     .createdAt(ZonedDateTime.now().minusMonths(13).toInstant())
                     .updatedAt(ZonedDateTime.now().minusMonths(13).toInstant())
@@ -250,8 +248,8 @@ class TransactionArchivalServiceTest {
         assertThat(archive.getReferenceNumber()).isEqualTo(completedTransaction.getReferenceNumber());
         assertThat(archive.getSenderAccountId()).isEqualTo(completedTransaction.getSenderAccountId());
         assertThat(archive.getRecipientAccountId()).isEqualTo(completedTransaction.getRecipientAccountId());
-        assertThat(archive.getAmount()).isEqualTo(completedTransaction.getAmount());
-        assertThat(archive.getCurrency()).isEqualTo(completedTransaction.getCurrency());
+        assertThat(archive.getAmount()).isEqualTo(completedTransaction.getAmount().getAmount());
+        assertThat(archive.getCurrency()).isEqualTo(completedTransaction.getAmount().getCurrency().getCurrencyCode());
         assertThat(archive.getType().name()).isEqualTo(completedTransaction.getType().name());
         assertThat(archive.getStatus().name()).isEqualTo(completedTransaction.getStatus().name());
         assertThat(archive.getArchivalReason()).isEqualTo("RETENTION_EXPIRED");
