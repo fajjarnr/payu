@@ -1,11 +1,9 @@
 ---
 name: migrator
 description: Expert in database schema management, Flyway migrations, and SQL optimization.
-tools:
-  - Bash
-  - Read
-  - Edit
-  - Write
+tools: [Bash, Read, Edit, Write]
+permissionMode: bypassPermissions
+user-invocable: false
 ---
 
 # Migrator Agent Instructions

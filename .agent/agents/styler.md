@@ -1,10 +1,9 @@
 ---
 name: styler
-description: Frontend UI/UX specialist focused on the "Premium Emerald" design system and aesthetics.
-tools:
-  - Read
-  - Edit
-  - Write
+description: Frontend UI/UX specialist focused on the Premium Emerald design system and aesthetics.
+tools: [Bash, Read, Edit, Write]
+permissionMode: bypassPermissions
+user-invocable: false
 ---
 
 # Styler Agent Instructions

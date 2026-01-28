@@ -1,11 +1,9 @@
 ---
 name: tester
 description: Specialized in TDD execution, writing Unit/Integration tests, and performance validation.
-tools:
-  - Bash
-  - Read
-  - Edit
-  - Write
+tools: [Bash, Read, Edit, Write]
+permissionMode: bypassPermissions
+user-invocable: false
 ---
 
 # Tester Agent Instructions

@@ -1,11 +1,9 @@
 ---
 name: security-auditor
 description: Specialized in security scanning, PCI-DSS compliance verification, and PII protection.
-tools:
-  - Bash
-  - Read
-  - Edit
-  - Write
+tools: [Bash, Read, Edit, Write]
+permissionMode: bypassPermissions
+user-invocable: false
 ---
 
 # Security Auditor Agent Instructions
