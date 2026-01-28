@@ -40,6 +40,8 @@ payu/backend/
 | **Security & Compliance** | `@security-specialist` | PCI-DSS, Secure Coding, OJK Compliance, PII |
 | **Code Review** | `@code-review` | Code quality checklist, Hygiene, Style guide |
 | **Containers** | `@container-specialist` | Dockerfiles, OpenShift, UBI Images |
+| **Mobile App** | `@mobile-specialist` | React Native, Expo, Biometrics |
+| **AI & Data** | `@ml-engineer` | Python, FastAPI, ML Models, Analytics |
 
 ## Core Architecture Patterns
 

@@ -104,4 +104,159 @@ class BiFastTransferTest {
         assertThat(response.getStatus()).isEqualTo("FAILED");
         verify(eventPublisherPort).publishTransactionFailed(any(), anyString());
     }
+
+    @Test
+    @DisplayName("should handle BI-FAST timeout with specific failure reason")
+    void shouldHandleBifastTimeout_WithSpecificFailureReason() throws TimeoutException {
+        // Given
+        String timeoutMessage = "Connection timed out after 30s";
+        InitiateTransferRequest request = InitiateTransferRequest.builder()
+                .senderAccountId(UUID.randomUUID())
+                .recipientAccountNumber("123456")
+                .amount(new BigDecimal("50000"))
+                .description("BI-FAST Connection Timeout")
+                .type(InitiateTransferRequest.TransactionType.BIFAST_TRANSFER)
+                .build();
+
+        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
+                ReserveBalanceResponse.builder().status("RESERVED").build()
+        );
+
+        when(bifastServicePort.initiateTransfer(any()))
+                .thenThrow(new TimeoutException(timeoutMessage));
+
+        // When
+        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo("FAILED");
+        verify(eventPublisherPort).publishTransactionFailed(any(), eq("BI-FAST Timeout"));
+    }
+
+    @Test
+    @DisplayName("should handle BI-FAST timeout with large amount")
+    void shouldHandleBifastTimeout_WithLargeAmount() throws TimeoutException {
+        // Given
+        InitiateTransferRequest request = InitiateTransferRequest.builder()
+                .senderAccountId(UUID.randomUUID())
+                .recipientAccountNumber("123456")
+                .amount(new BigDecimal("250000000")) // 250 million IDR - high value
+                .description("High Value BI-FAST")
+                .type(InitiateTransferRequest.TransactionType.BIFAST_TRANSFER)
+                .build();
+
+        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
+                ReserveBalanceResponse.builder().status("RESERVED").build()
+        );
+
+        when(bifastServicePort.initiateTransfer(any()))
+                .thenThrow(new TimeoutException("BI-FAST Timeout for high value transaction"));
+
+        // When
+        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo("FAILED");
+        verify(eventPublisherPort).publishTransactionFailed(any(), anyString());
+    }
+
+    @Test
+    @DisplayName("should handle BI-FAST service exception gracefully")
+    void shouldHandleException_Gracefully() throws TimeoutException {
+        // Given
+        InitiateTransferRequest request = InitiateTransferRequest.builder()
+                .senderAccountId(UUID.randomUUID())
+                .recipientAccountNumber("123456")
+                .amount(new BigDecimal("50000"))
+                .description("BI-FAST Service Error")
+                .type(InitiateTransferRequest.TransactionType.BIFAST_TRANSFER)
+                .build();
+
+        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
+                ReserveBalanceResponse.builder().status("RESERVED").build()
+        );
+
+        when(bifastServicePort.initiateTransfer(any()))
+                .thenThrow(new RuntimeException("BI-FAST service unavailable"));
+
+        // When
+        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo("FAILED");
+        verify(eventPublisherPort).publishTransactionFailed(any(), contains("unavailable"));
+    }
+
+    @Test
+    @DisplayName("should handle successful BI-FAST transfer with completed status")
+    void shouldHandleCompletedStatus_FromBifast() throws TimeoutException {
+        // Given
+        InitiateTransferRequest request = InitiateTransferRequest.builder()
+                .senderAccountId(UUID.randomUUID())
+                .recipientAccountNumber("123456")
+                .amount(new BigDecimal("50000"))
+                .description("Instant BI-FAST Transfer")
+                .type(InitiateTransferRequest.TransactionType.BIFAST_TRANSFER)
+                .build();
+
+        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
+                ReserveBalanceResponse.builder().status("RESERVED").build()
+        );
+
+        // Simulated completed response
+        when(bifastServicePort.initiateTransfer(any())).thenReturn(
+                BifastTransferResponse.builder()
+                        .transactionId("ext-completed-123")
+                        .status("COMPLETED")
+                        .build()
+        );
+
+        // When
+        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+
+        // Then - Service should still process as completed
+        assertThat(response).isNotNull();
+        verify(bifastServicePort).initiateTransfer(any());
+        verify(eventPublisherPort).publishTransactionInitiated(any());
+    }
+
+    @Test
+    @DisplayName("should reserve balance before calling BI-FAST service")
+    void shouldReserveBalance_BeforeCallingBifast() throws TimeoutException {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        InitiateTransferRequest request = InitiateTransferRequest.builder()
+                .senderAccountId(accountId)
+                .recipientAccountNumber("123456")
+                .amount(new BigDecimal("100000"))
+                .description("BI-FAST with balance check")
+                .type(InitiateTransferRequest.TransactionType.BIFAST_TRANSFER)
+                .build();
+
+        when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
+                ReserveBalanceResponse.builder()
+                        .reservationId("res-123")
+                        .status("RESERVED")
+                        .build()
+        );
+        when(bifastServicePort.initiateTransfer(any())).thenReturn(
+                BifastTransferResponse.builder()
+                        .transactionId("ext-123")
+                        .status("PENDING")
+                        .build()
+        );
+
+        // When
+        transactionService.initiateTransfer(request);
+
+        // Then - Balance should be reserved before BI-FAST call
+        var inOrder = inOrder(walletServicePort, bifastServicePort);
+        inOrder.verify(walletServicePort).reserveBalance(eq(accountId), any(), eq(new BigDecimal("100000")));
+        inOrder.verify(bifastServicePort).initiateTransfer(any());
+    }
 }

@@ -9,17 +9,11 @@ WORKDIR /build
 # Install Maven
 RUN microdnf install -y maven && microdnf clean all
 
-# Copy pom.xml first for dependency caching
-COPY pom.xml ./
+# Copy entire project (needed for shared library dependencies)
+COPY . .
 
-# Download dependencies (cached layer)
-RUN mvn dependency:go-offline -B
-
-# Copy source code
-COPY src ./src
-
-# Build the application
-RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true && \
+# Build the application (includes building shared libraries)
+RUN mvn clean install -DskipTests -Dspring-boot.build-image.skip=true && \
     mv target/*.jar target/app.jar
 
 ####
@@ -27,9 +21,18 @@ RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true && \
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.20
 
+# Metadata labels
 LABEL maintainer="backend-team@payu.id"
 LABEL description="PayU Investment Service - Digital Deposits, Mutual Funds, Digital Gold"
 LABEL version="1.0.0"
+LABEL org.opencontainers.image.title="payu-investment-service"
+LABEL org.opencontainers.image.description="PayU Investment Service - Digital deposits, mutual funds, robo-advisory, digital gold"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.vendor="PayU Indonesia"
+LABEL org.opencontainers.image.url="https://payu.id"
+LABEL org.opencontainers.image.source="https://github.com/payu/backend/investment-service"
+LABEL org.opencontainers.image.licenses="Proprietary"
+LABEL org.opencontainers.image.authors="PayU Backend Team"
 
 # Use non-root user (185 is the default jboss user in UBI images)
 USER 185

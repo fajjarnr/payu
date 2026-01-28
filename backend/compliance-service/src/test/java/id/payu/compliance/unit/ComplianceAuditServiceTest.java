@@ -264,4 +264,47 @@ class ComplianceAuditServiceTest {
 
         verify(persistencePort, times(1)).findByMerchantId(merchantId);
     }
+
+    @Test
+    void shouldReturnWarningStatusWhenChecksHaveWarnings() {
+        UUID transactionId = UUID.randomUUID();
+        String merchantId = "MERCHANT_001";
+
+        ComplianceCheck passedCheck = ComplianceCheck.builder()
+                .checkId("PCIDSS_001")
+                .standard(ComplianceStandard.PCI_DSS)
+                .description("Card data encryption verification")
+                .status(ComplianceCheckResult.PASS)
+                .details("Card data properly encrypted")
+                .checkedAt(LocalDateTime.now())
+                .build();
+
+        ComplianceCheck warningCheck = ComplianceCheck.builder()
+                .checkId("PCIDSS_002")
+                .standard(ComplianceStandard.PCI_DSS)
+                .description("Access control verification")
+                .status(ComplianceCheckResult.WARNING)
+                .details("Multi-factor authentication enabled but password policy needs improvement")
+                .checkedAt(LocalDateTime.now())
+                .build();
+
+        List<ComplianceCheck> checks = List.of(passedCheck, warningCheck);
+
+        AuditReport expectedReport = AuditReport.builder()
+                .transactionId(transactionId)
+                .merchantId(merchantId)
+                .standard(ComplianceStandard.PCI_DSS)
+                .checks(checks)
+                .overallStatus(ComplianceCheckResult.WARNING)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(persistencePort.save(any(AuditReport.class))).thenReturn(expectedReport);
+
+        AuditReport result = auditReportUseCase.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
+
+        assertNotNull(result);
+        assertEquals(ComplianceCheckResult.WARNING, result.getOverallStatus());
+        assertTrue(result.getChecks().stream().anyMatch(c -> c.getStatus() == ComplianceCheckResult.WARNING));
+    }
 }
