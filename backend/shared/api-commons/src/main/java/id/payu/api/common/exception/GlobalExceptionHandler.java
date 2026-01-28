@@ -158,16 +158,55 @@ public class GlobalExceptionHandler {
 
     /**
      * Handles all other unexpected exceptions.
+     *
+     * SECURITY: Stack traces are NOT logged to prevent information leakage.
+     * Full exception details should be logged to a secure logging system.
+     * For production, integrate with a centralized logging system (e.g., Loki, ELK).
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(
             Exception ex,
             HttpServletRequest request
     ) {
-        log.error("Unexpected error in {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        // SECURITY: Only log the exception type and message, NOT the stack trace
+        // This prevents potential information disclosure in logs
+        log.error("Unexpected error in {}: {} - {}",
+                request.getRequestURI(),
+                ex.getClass().getSimpleName(),
+                getSafeErrorMessage(ex));
+
+        // For security auditing, log a correlation ID without sensitive details
+        String correlationId = request.getHeader("X-Correlation-ID");
+        if (correlationId == null) {
+            correlationId = java.util.UUID.randomUUID().toString();
+        }
+        log.info("Error correlation ID: {} for URI: {}", correlationId, request.getRequestURI());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("INTERNAL_ERROR", "An unexpected error occurred. Please try again later."));
+    }
+
+    /**
+     * Extracts a safe error message that doesn't contain sensitive information.
+     *
+     * @param ex The exception
+     * @return A safe error message
+     */
+    private String getSafeErrorMessage(Exception ex) {
+        String message = ex.getMessage();
+
+        // Filter out potentially sensitive information
+        if (message == null) {
+            return "No message";
+        }
+
+        // Remove file paths, passwords, tokens, etc.
+        return message
+                .replaceAll("password[^,]*", "password=***")
+                .replaceAll("secret[^,]*", "secret=***")
+                .replaceAll("token[^,]*", "token=***")
+                .replaceAll("/[a-zA-Z0-9_/\\-]+", "[path]")  // Mask file paths
+                .replaceAll("('[^']*')", "[value]");  // Mask quoted strings
     }
 
     /**

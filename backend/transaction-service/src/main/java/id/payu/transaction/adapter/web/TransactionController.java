@@ -28,6 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,6 +50,22 @@ import java.util.UUID;
 public class TransactionController extends BaseController {
 
     private final TransactionUseCase transactionUseCase;
+
+    /**
+     * Extracts the user ID from the JWT authentication token.
+     *
+     * @return The user ID from the JWT subject claim
+     * @throws IllegalStateException if no authentication is present
+     */
+    private String extractUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getSubject(); // In production, use a specific claim like "user_id" or "sub"
+    }
 
     /**
      * Initiate a fund transfer to another account.
@@ -89,11 +109,13 @@ public class TransactionController extends BaseController {
             )
     })
     @RateLimit(requests = 100, windowSeconds = 60, keyPrefix = "transfer")
+    @PreAuthorize("hasAuthority('write:transaction')")
     public ResponseEntity<ApiResponse<InitiateTransferResponse>> initiateTransfer(
             @Valid @RequestBody InitiateTransferRequest request
     ) {
         try {
-            InitiateTransferResponse response = transactionUseCase.initiateTransfer(request);
+            String userId = extractUserId();
+            InitiateTransferResponse response = transactionUseCase.initiateTransfer(request, userId);
             return created(response, "/api/v1/transactions/" + response.transactionId());
         } catch (BusinessException e) {
             log.warn("Transfer initiation failed: {}", e.getMessage());
@@ -133,12 +155,14 @@ public class TransactionController extends BaseController {
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))
             )
     })
+    @PreAuthorize("hasAuthority('read:transaction')")
     public ResponseEntity<ApiResponse<Transaction>> getTransaction(
             @Parameter(description = "Transaction ID", required = true)
             @PathVariable UUID transactionId
     ) {
         try {
-            Transaction transaction = transactionUseCase.getTransaction(transactionId);
+            String userId = extractUserId();
+            Transaction transaction = transactionUseCase.getTransaction(transactionId, userId);
             return ok(transaction);
         } catch (BusinessException e) {
             log.warn("Transaction not found: {}", transactionId);
@@ -176,6 +200,7 @@ public class TransactionController extends BaseController {
                     description = "Authentication required"
             )
     })
+    @PreAuthorize("hasAuthority('read:transaction')")
     public ResponseEntity<ApiResponse<List<Transaction>>> getAccountTransactions(
             @Parameter(description = "Account ID", required = true)
             @PathVariable UUID accountId,
@@ -199,12 +224,15 @@ public class TransactionController extends BaseController {
             @RequestParam(required = false) String endDate
     ) {
         try {
+            String userId = extractUserId();
+
             // Create pageable from parameters
             var pageable = createPageable(page, size, sort, ApiConstants.DEFAULT_SORT_DIRECTION);
 
             // Get transactions (Note: UseCase might need update for Page return)
             List<Transaction> transactions = transactionUseCase.getAccountTransactions(
                     accountId,
+                    userId,
                     pageable.getPageNumber(),
                     pageable.getPageSize()
             );
@@ -256,11 +284,13 @@ public class TransactionController extends BaseController {
             )
     })
     @RateLimit(requests = 100, windowSeconds = 60, keyPrefix = "qris")
+    @PreAuthorize("hasAuthority('write:payment')")
     public ResponseEntity<ApiResponse<Void>> processQrisPayment(
             @Valid @RequestBody ProcessQrisPaymentRequest request
     ) {
         try {
-            transactionUseCase.processQrisPayment(request);
+            String userId = extractUserId();
+            transactionUseCase.processQrisPayment(request, userId);
             return ResponseEntity.accepted()
                     .body(ApiResponse.<Void>success(null));
         } catch (BusinessException e) {

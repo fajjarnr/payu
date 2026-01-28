@@ -131,7 +131,8 @@ public class AuthController extends BaseController {
             return ResponseEntity.ok(ApiResponse.success(loginResponse));
 
         } catch (Exception e) {
-            log.error("Login failed for user: {}", request.username(), e);
+            // SECURITY: Don't log full stack trace to prevent information disclosure
+            log.error("Login failed for user: {} - {}", request.username(), e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(
                             ErrorCode.INTERNAL_ERROR.getCode(),
@@ -199,7 +200,8 @@ public class AuthController extends BaseController {
                             ErrorCode.AUTH_BUS_004.getMessage()
                     ));
         } catch (Exception e) {
-            log.error("MFA verification failed for user: {}", request.username(), e);
+            // SECURITY: Don't log full stack trace to prevent information disclosure
+            log.error("MFA verification failed for user: {} - {}", request.username(), e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(
                             ErrorCode.INTERNAL_ERROR.getCode(),

@@ -26,10 +26,14 @@ public class TransactionService implements TransactionUseCase {
     private final RgsServicePort rgsServicePort;
     private final QrisServicePort qrisServicePort;
     private final TransactionEventPublisherPort eventPublisherPort;
+    private final AuthorizationService authorizationService;
 
     @Override
     @Transactional
-    public InitiateTransferResponse initiateTransfer(InitiateTransferRequest request) {
+    public InitiateTransferResponse initiateTransfer(InitiateTransferRequest request, String userId) {
+        // Verify the user owns the sender account
+        authorizationService.verifySenderAccountOwnership(request.getSenderAccountId(), userId);
+
         if (request.getIdempotencyKey() != null) {
             return transactionPersistencePort.findByIdempotencyKey(request.getIdempotencyKey())
                     .map(this::mapToInitiateTransferResponse)
@@ -89,19 +93,28 @@ public class TransactionService implements TransactionUseCase {
     }
 
     @Override
-    public Transaction getTransaction(UUID transactionId) {
+    public Transaction getTransaction(UUID transactionId, String userId) {
+        // Verify user has access to this transaction
+        authorizationService.verifyTransactionAccess(transactionId, userId);
+
         return transactionPersistencePort.findById(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
     }
 
     @Override
-    public List<Transaction> getAccountTransactions(UUID accountId, int page, int size) {
+    public List<Transaction> getAccountTransactions(UUID accountId, String userId, int page, int size) {
+        // Verify user owns the account
+        authorizationService.verifyAccountOwnership(accountId, userId);
+
         return transactionPersistencePort.findByAccountId(accountId, page, size);
     }
 
     @Override
     @Transactional
-    public void processQrisPayment(ProcessQrisPaymentRequest request) {
+    public void processQrisPayment(ProcessQrisPaymentRequest request, String userId) {
+        // QRIS payments require account verification through wallet service
+        // The wallet service will verify balance ownership
+        // Additional verification can be added here if needed
         String referenceNumber = generateReferenceNumber();
 
         Transaction transaction = Transaction.builder()

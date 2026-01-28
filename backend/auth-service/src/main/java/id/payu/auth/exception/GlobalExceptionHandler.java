@@ -24,9 +24,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthDomainException.class)
     public ResponseEntity<Map<String, Object>> handleDomainException(AuthDomainException ex) {
         HttpStatus status = determineHttpStatus(ex);
-        
+
         log.warn("Auth domain error [{}]: {}", ex.getErrorCode(), ex.getMessage());
-        
+
         return ResponseEntity.status(status)
                 .body(buildErrorResponse(ex.getErrorCode(), ex.getUserMessage()));
     }
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthDomainException.InvalidPasswordException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidPassword(AuthDomainException.InvalidPasswordException ex) {
         log.warn("Password validation error [{}]: {}", ex.getErrorCode(), ex.getMessage());
-        
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse(ex.getErrorCode(), ex.getUserMessage()));
     }
@@ -48,20 +48,43 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequests(IllegalArgumentException ex) {
         log.warn("Bad request: {}", ex.getMessage());
-        
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse("AUTH_VAL_000", ex.getMessage()));
     }
 
     /**
      * Handle generic exceptions
+     *
+     * SECURITY: Stack traces are NOT logged to prevent information leakage.
+     * Only the exception type and safe message are logged.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
-        log.error("Unexpected error occurred", ex);
-        
+        // SECURITY: Only log exception type, NOT the stack trace
+        log.error("Unexpected error occurred: {} - {}", ex.getClass().getSimpleName(), getSafeErrorMessage(ex));
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(buildErrorResponse("AUTH_SYS_999", "Terjadi kesalahan sistem, silakan coba lagi"));
+    }
+
+    /**
+     * Extracts a safe error message that doesn't contain sensitive information.
+     */
+    private String getSafeErrorMessage(Exception ex) {
+        String message = ex.getMessage();
+
+        if (message == null) {
+            return "No message";
+        }
+
+        // Filter out potentially sensitive information
+        return message
+                .replaceAll("password[^,]*", "password=***")
+                .replaceAll("secret[^,]*", "secret=***")
+                .replaceAll("token[^,]*", "token=***")
+                .replaceAll("/[a-zA-Z0-9_/\\-]+", "[path]")
+                .replaceAll("('[^']*')", "[value]");
     }
 
     /**
@@ -69,12 +92,12 @@ public class GlobalExceptionHandler {
      */
     private HttpStatus determineHttpStatus(AuthDomainException ex) {
         String errorCode = ex.getErrorCode();
-        
+
         // VAL errors (4000-4099) -> 400 Bad Request
         if (errorCode.contains("_VAL_")) {
             return HttpStatus.BAD_REQUEST;
         }
-        
+
         // BUS errors (4100-4199) -> varies
         if (errorCode.contains("_BUS_")) {
             // Account locked, rate limited -> 429 Too Many Requests
@@ -99,7 +122,7 @@ public class GlobalExceptionHandler {
             }
             return HttpStatus.BAD_REQUEST;
         }
-        
+
         // EXT errors (4200-4299) -> 502 Bad Gateway or 503 Service Unavailable
         if (errorCode.contains("_EXT_")) {
             if (ex instanceof AuthDomainException.KeycloakUnavailableException) {
@@ -107,7 +130,7 @@ public class GlobalExceptionHandler {
             }
             return HttpStatus.BAD_GATEWAY;
         }
-        
+
         // SYS errors (4900-4999) -> 500 Internal Server Error
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }
