@@ -167,6 +167,54 @@ frontend/mobile/
 
 ---
 
+## 🏗️ Structural Layout & Composition Patterns
+
+PayU menggunakan **Tailwind CSS** sebagai mesin layout utama. Hindari penggunaan wrapper layout eksternal. Gunakan pola komposisi berikut untuk menjaga konsistensi visual "Premium Emerald".
+
+### 1. Semantic Layouting (Standard Tailwind)
+Gunakan utilitas Flex/Grid secara langsung untuk transparansi kode.
+
+- **Vertical Stack (Default)**: `flex flex-col gap-4` (Gunakan gap, hindari margin-top pada anak).
+- **Horizontal Row**: `flex items-center gap-4`.
+- **The "Center" Utility**: Untuk elemen yang benar-benar di tengah (auth cards, empty states):
+  ```tsx
+  <div className="flex min-h-[400px] w-full items-center justify-center p-8">
+    <div className="max-w-md w-full">{/* Content */}</div>
+  </div>
+  ```
+
+### 2. Scrollable Dashboard Containers
+Gunakan pola **Flex-1 Overflow** untuk dashboard yang tidak pecah:
+- **Parent**: `flex h-screen overflow-hidden` (Gunakan `h-screen` pada shell utama).
+- **Sidebar**: `w-64 flex-shrink-0 overflow-y-auto`.
+- **Main Content**: `flex-1 overflow-y-auto p-6 lg:p-10`.
+
+### 3. Progressive Reveal (Standard Emerald)
+Gunakan `Suspense` dan `Skeleton` untuk setiap blok data-fetching. Jangan biarkan seluruh halaman menunggu satu API yang lambat.
+
+---
+
+## 🧠 State Management & Data Patterns
+
+### 1. Optimized Zustand Selectors
+Hindari men-destructure seluruh store karena akan menyebabkan re-render yang tidak perlu.
+```typescript
+// ✅ Correct: Atomic selectors (High Performance)
+const user = useAuthStore((s) => s.user);
+const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+// ❌ Avoid: Re-renders when ANY part of the store changes
+const { user, isAuthenticated } = useAuthStore();
+```
+
+### 2. No Hybrid Routing Policy
+PayU menggunakan **Next.js 15+ App Router secara eksklusif**.
+- Ganti penggunaan `react-router-dom` dengan `next/navigation`.
+- Gunakan `Link` dari `next/link` untuk navigasi internal.
+- Gunakan `useRouter()` dan `usePathname()` untuk logika rute pada Client Components.
+
+---
+
 ## API Integration Guidelines
 
 ### API Client Architecture
