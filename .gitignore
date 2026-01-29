@@ -103,6 +103,10 @@ yarn-error.log*
 tmp/
 temp/
 
+# --- Frontend E2E Reports ---
+playwright-report/
+test-results/
+
 # --- Agentic Tools ---
 .opencode/
 .claude/

@@ -21,6 +21,8 @@ quarkus:
     jdbc:
       url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
   hibernate-orm:
+    packages:
+      - id.payu.backoffice.domain
     database:
       generation: none
     physical-naming-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
