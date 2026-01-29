@@ -555,7 +555,7 @@ CREATE TABLE ledger_entries (
 
 ---
 
-### 3.4 Testing Strategy
+### 3.5 Testing Strategy
 
 #### Testing Stack
 
@@ -659,7 +659,7 @@ C4Dynamic
   Rel(transaction_svc, user, "11. Return transfer success", "HTTPS")
 ```
 
-### 4.3 Compensating Transactions (Failure Flow)
+### 4.3.1 Compensating Transactions (Failure Flow)
 
 ```mermaid
 C4Dynamic
