@@ -1311,6 +1311,45 @@ export default {
 
 ---
 
+## 🚀 Vercel Performance Shield (PayU Engineering Standard)
+
+Standard performas kritis yang diadopsi dari **Vercel Engineering** untuk memastikan aplikasi PayU memiliki LCP dan TTI kelas dunia.
+
+### 1. Eliminating Waterfalls (CRITICAL)
+Waterfalls adalah pembunuh performa nomor satu. Setiap `await` sekuensial menambah latensi jaringan penuh.
+
+- **Defer Await**: Pindahkan `await` ke dalam cabang logika yang benar-benar membutuhkannya.
+- **Parallel All**: Gunakan `Promise.all()` untuk operasi independen.
+- **Strategic Suspense**: Jangan biarkan seluruh halaman menunggu data. Gunakan `<Suspense>` untuk melakukan *streaming* konten.
+
+```tsx
+// ✅ Correct: Header dan Sidebar fetch secara simultan via komposisi
+export default function Page() {
+  return (
+    <div>
+      <Suspense fallback={<Skeleton />}><Header /></Suspense>
+      <Suspense fallback={<Skeleton />}><Sidebar /></Suspense>
+    </div>
+  )
+}
+```
+
+### 2. Bundle Size Optimization (CRITICAL)
+- **No Barrel Files**: JANGAN impor dari file aggregator `index.ts` besar (seperti `lucide-react` atau `@mui/material`). Impor langsung dari path file aslinya untuk menjaga *tree-shaking*.
+- **Dynamic Imports**: Gunakan `next/dynamic` untuk komponen berat (Charts, PDF, Editors) agar tidak masuk ke *initial bundle*.
+
+### 3. Server-Side Hygiene (HIGH)
+- **Minimize Serialization**: Jangan melewatkan objek besar (seperti seluruh objek `User` dengan 50 field) ke Client Component. Hanya kirim field yang digunakan (misal `name` dan `avatar`).
+- **React.cache()**: Gunakan untuk deduplikasi query database atau perhitungan berat di dalam satu siklus *request*.
+- **Immutability with `.toSorted()`**: Gunakan `.toSorted()`, `.toReversed()`, atau `.toSpliced()` (ES2023) untuk manipulasi array tanpa merusak state asli (immutability native).
+
+```typescript
+// ✅ Correct: Immutability tanpa copy manual
+const sortedTransactions = transactions.toSorted((a, b) => b.date - a.date);
+```
+
+---
+
 ## Frontend Code Review Checklist
 
 - [ ] **TypeScript**: Strict mode enabled, no `any` types
