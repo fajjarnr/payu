@@ -654,11 +654,32 @@ export const disabled = "disabled:pointer-events-none disabled:opacity-50";
 
 ### Don'ts
 
-- **Don't use arbitrary values** - Extend theme instead
-- **Don't nest @apply** - Hurts readability
-- **Don't skip focus states** - Keyboard users need them
 - **Don't hardcode colors** - Use semantic tokens
 - **Don't forget dark mode** - Test both themes
+
+### ⚡ Performance & Maintainability Checklist
+
+#### Structure & Imports
+- [ ] No `import *` from huge icon libraries (import individual icons)
+- [ ] Base styles defined in `globals.css` layer, not scattered
+- [ ] JIT mode enabled (default in v3.x+)
+
+#### Mobile-First Workflow
+- [ ] Default classes are for **Mobile** (`<div className="block md:flex">`)
+- [ ] No `min-width` media queries in JS if Tailwind can handle it
+- [ ] Touch targets are at least 44px (`min-h-[44px]` or `p-3`)
+
+#### Semantic Tokens (Strict Mode)
+- [ ] **NO** `bg-blue-500` used directly (Use `bg-primary` instead)
+- [ ] **NO** `text-slate-900` used directly (Use `text-foreground` instead)
+- [ ] **NO** arbitrary values `text-[13px]` unless absolutely necessary
+- [ ] Dark mode tested for every new component
+
+#### Swiss International Style (PayU Specific)
+If implementing Swiss/Brutalist components:
+- [ ] Use `rounded-none` for strict brutalism
+- [ ] Use hard shadows `shadow-[4px_4px_0_0_#000]`
+- [ ] Use bold borders `border-2 border-black`
 
 ## Resources
 
