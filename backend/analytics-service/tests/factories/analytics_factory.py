@@ -14,11 +14,10 @@ Patterns:
 
 import random
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any
 from faker import Faker
-from decimal import Decimal
 
-fake = Faker('id_ID')
+fake = Faker("id_ID")
 
 
 def transaction_factory(**kwargs) -> Dict[str, Any]:
@@ -44,23 +43,49 @@ def transaction_factory(**kwargs) -> Dict[str, Any]:
         500000.0
         >>> high_value = transaction_factory(amount=25000000.0, type='TRANSFER')
     """
-    transaction_type = kwargs.get('type', random.choice([
-        "TRANSFER", "PAYMENT", "TOPUP", "BILL_PAYMENT",
-        "QR_PAYMENT", "WITHDRAWAL"
-    ]))
+    transaction_type = kwargs.get(
+        "type",
+        random.choice(
+            ["TRANSFER", "PAYMENT", "TOPUP", "BILL_PAYMENT", "QR_PAYMENT", "WITHDRAWAL"]
+        ),
+    )
 
     # Generate realistic amount based on transaction type
-    if 'amount' not in kwargs:
+    if "amount" not in kwargs:
         if transaction_type == "QR_PAYMENT":
-            amount = fake.pyfloat(left_digits=8, right_digits=2, positive=True, min_value=1000, max_value=10000000)
+            amount = fake.pyfloat(
+                left_digits=8,
+                right_digits=2,
+                positive=True,
+                min_value=1000,
+                max_value=10000000,
+            )
         elif transaction_type == "BILL_PAYMENT":
-            amount = fake.pyfloat(left_digits=7, right_digits=2, positive=True, min_value=50000, max_value=5000000)
+            amount = fake.pyfloat(
+                left_digits=7,
+                right_digits=2,
+                positive=True,
+                min_value=50000,
+                max_value=5000000,
+            )
         elif transaction_type == "TRANSFER":
-            amount = fake.pyfloat(left_digits=8, right_digits=2, positive=True, min_value=10000, max_value=50000000)
+            amount = fake.pyfloat(
+                left_digits=8,
+                right_digits=2,
+                positive=True,
+                min_value=10000,
+                max_value=50000000,
+            )
         else:
-            amount = fake.pyfloat(left_digits=8, right_digits=2, positive=True, min_value=10000, max_value=20000000)
+            amount = fake.pyfloat(
+                left_digits=8,
+                right_digits=2,
+                positive=True,
+                min_value=10000,
+                max_value=20000000,
+            )
     else:
-        amount = kwargs['amount']
+        amount = kwargs["amount"]
 
     defaults = {
         "transaction_id": f"txn_{fake.uuid4()[:12]}",
@@ -68,24 +93,41 @@ def transaction_factory(**kwargs) -> Dict[str, Any]:
         "amount": round(amount, 2),
         "currency": "IDR",
         "type": transaction_type,
-        "category": random.choice([
-            "FOOD", "TRANSPORT", "SHOPPING", "BILLS",
-            "ENTERTAINMENT", "HEALTH", "EDUCATION", "TRANSFER", "OTHER"
-        ]),
-        "recipient_id": f"recipient_{fake.uuid4()[:8]}" if random.choice([True, False]) else None,
-        "merchant_id": f"merchant_{fake.uuid4()[:8]}" if random.choice([True, False]) else None,
-        "metadata": {
-            "ip_address": fake.ipv4(),
-            "device_id": f"device_{fake.uuid4()[:8]}",
-            "location": f"{fake.city()}, Indonesia",
-            "user_agent": fake.user_agent(),
-        } if random.choice([True, True, False]) else {},  # 66% have metadata
+        "category": random.choice(
+            [
+                "FOOD",
+                "TRANSPORT",
+                "SHOPPING",
+                "BILLS",
+                "ENTERTAINMENT",
+                "HEALTH",
+                "EDUCATION",
+                "TRANSFER",
+                "OTHER",
+            ]
+        ),
+        "recipient_id": (
+            f"recipient_{fake.uuid4()[:8]}" if random.choice([True, False]) else None
+        ),
+        "merchant_id": (
+            f"merchant_{fake.uuid4()[:8]}" if random.choice([True, False]) else None
+        ),
+        "metadata": (
+            {
+                "ip_address": fake.ipv4(),
+                "device_id": f"device_{fake.uuid4()[:8]}",
+                "location": f"{fake.city()}, Indonesia",
+                "user_agent": fake.user_agent(),
+            }
+            if random.choice([True, True, False])
+            else {}
+        ),  # 66% have metadata
     }
     defaults.update(kwargs)
 
     # Ensure metadata is properly merged
-    if 'metadata' in kwargs and isinstance(kwargs['metadata'], dict):
-        defaults['metadata'].update(kwargs['metadata'])
+    if "metadata" in kwargs and isinstance(kwargs["metadata"], dict):
+        defaults["metadata"].update(kwargs["metadata"])
 
     return defaults
 
@@ -111,28 +153,51 @@ def user_history_factory(**kwargs) -> Dict[str, Any]:
         50
         >>> new_user = user_history_factory(total_transactions=2, total_amount=100000.0)
     """
-    total_transactions = kwargs.get('total_transactions', fake.random_int(min=5, max=500))
-    total_amount = kwargs.get('total_amount', fake.pyfloat(left_digits=8, right_digits=2, positive=True, min_value=500000, max_value=50000000))
-    average_transaction = kwargs.get('average_transaction', round(total_amount / max(total_transactions, 1), 2))
+    total_transactions = kwargs.get(
+        "total_transactions", fake.random_int(min=5, max=500)
+    )
+    total_amount = kwargs.get(
+        "total_amount",
+        fake.pyfloat(
+            left_digits=8,
+            right_digits=2,
+            positive=True,
+            min_value=500000,
+            max_value=50000000,
+        ),
+    )
+    average_transaction = kwargs.get(
+        "average_transaction", round(total_amount / max(total_transactions, 1), 2)
+    )
 
     # Generate recent transactions
-    num_recent = kwargs.get('num_recent', min(20, total_transactions))
+    num_recent = kwargs.get("num_recent", min(20, total_transactions))
     recent_transactions = []
     for i in range(num_recent):
-        txn_time = datetime.utcnow() - timedelta(hours=i*2)
-        recent_transactions.append({
-            "transaction_id": f"txn_{fake.uuid4()[:12]}",
-            "amount": fake.pyfloat(left_digits=7, right_digits=2, positive=True, min_value=50000, max_value=5000000),
-            "type": random.choice(["TRANSFER", "PAYMENT", "TOPUP"]),
-            "timestamp": txn_time.isoformat(),
-            "recipient_id": f"recipient_{fake.random_int(min=1, max=100)}",
-        })
+        txn_time = datetime.utcnow() - timedelta(hours=i * 2)
+        recent_transactions.append(
+            {
+                "transaction_id": f"txn_{fake.uuid4()[:12]}",
+                "amount": fake.pyfloat(
+                    left_digits=7,
+                    right_digits=2,
+                    positive=True,
+                    min_value=50000,
+                    max_value=5000000,
+                ),
+                "type": random.choice(["TRANSFER", "PAYMENT", "TOPUP"]),
+                "timestamp": txn_time.isoformat(),
+                "recipient_id": f"recipient_{fake.random_int(min=1, max=100)}",
+            }
+        )
 
     defaults = {
         "total_transactions": total_transactions,
         "total_amount": round(total_amount, 2),
         "average_transaction": average_transaction,
-        "account_created_at": fake.date_time_between(start_date='-2y', end_date='-1d').isoformat(),
+        "account_created_at": fake.date_time_between(
+            start_date="-2y", end_date="-1d"
+        ).isoformat(),
         "recent_transactions": recent_transactions,
     }
     defaults.update(kwargs)
@@ -166,9 +231,29 @@ def user_metrics_factory(**kwargs) -> Dict[str, Any]:
     defaults = {
         "user_id": f"user_{fake.uuid4()[:8]}",
         "total_transactions": fake.random_int(min=10, max=500),
-        "total_amount": round(fake.pyfloat(left_digits=7, right_digits=0, positive=True, min_value=1000000, max_value=100000000), 2),
-        "average_transaction": round(fake.pyfloat(left_digits=5, right_digits=0, positive=True, min_value=100000, max_value=500000), 2),
-        "last_transaction_date": fake.date_time_between(start_date='-7d', end_date='now'),
+        "total_amount": round(
+            fake.pyfloat(
+                left_digits=7,
+                right_digits=0,
+                positive=True,
+                min_value=1000000,
+                max_value=100000000,
+            ),
+            2,
+        ),
+        "average_transaction": round(
+            fake.pyfloat(
+                left_digits=5,
+                right_digits=0,
+                positive=True,
+                min_value=100000,
+                max_value=500000,
+            ),
+            2,
+        ),
+        "last_transaction_date": fake.date_time_between(
+            start_date="-7d", end_date="now"
+        ),
         "account_age_days": account_age_days,
         "kyc_status": random.choice(["VERIFIED", "PENDING", "UNVERIFIED"]),
     }
@@ -198,9 +283,9 @@ def fraud_score_factory(**kwargs) -> Dict[str, Any]:
         >>> score['risk_score']
         75
     """
-    risk_level = kwargs.get('risk_level', random.choice([
-        "MINIMAL", "LOW", "MEDIUM", "HIGH", "CRITICAL"
-    ]))
+    risk_level = kwargs.get(
+        "risk_level", random.choice(["MINIMAL", "LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    )
 
     # Map risk level to score range
     risk_score_ranges = {
@@ -208,11 +293,20 @@ def fraud_score_factory(**kwargs) -> Dict[str, Any]:
         "LOW": (20, 40),
         "MEDIUM": (40, 60),
         "HIGH": (60, 85),
-        "CRITICAL": (85, 100)
+        "CRITICAL": (85, 100),
     }
 
     min_score, max_score = risk_score_ranges[risk_level]
-    risk_score = kwargs.get('risk_score', fake.pyfloat(left_digits=2, right_digits=0, positive=True, min_value=min_score, max_value=max_score))
+    risk_score = kwargs.get(
+        "risk_score",
+        fake.pyfloat(
+            left_digits=2,
+            right_digits=0,
+            positive=True,
+            min_value=min_score,
+            max_value=max_score,
+        ),
+    )
 
     defaults = {
         "transaction_id": f"txn_{fake.uuid4()[:12]}",
@@ -220,17 +314,41 @@ def fraud_score_factory(**kwargs) -> Dict[str, Any]:
         "risk_score": round(risk_score, 2),
         "risk_level": risk_level,
         "risk_factors": {
-            "amount_anomaly": fake.pyfloat(left_digits=3, right_digits=2, positive=True, min_value=0.1, max_value=100),
-            "location_anomaly": fake.pyfloat(left_digits=3, right_digits=2, positive=True, min_value=0.1, max_value=100),
-            "frequency_anomaly": fake.pyfloat(left_digits=3, right_digits=2, positive=True, min_value=0.1, max_value=100),
-            "device_anomaly": fake.pyfloat(left_digits=3, right_digits=2, positive=True, min_value=0.1, max_value=100),
+            "amount_anomaly": fake.pyfloat(
+                left_digits=3,
+                right_digits=2,
+                positive=True,
+                min_value=0.1,
+                max_value=100,
+            ),
+            "location_anomaly": fake.pyfloat(
+                left_digits=3,
+                right_digits=2,
+                positive=True,
+                min_value=0.1,
+                max_value=100,
+            ),
+            "frequency_anomaly": fake.pyfloat(
+                left_digits=3,
+                right_digits=2,
+                positive=True,
+                min_value=0.1,
+                max_value=100,
+            ),
+            "device_anomaly": fake.pyfloat(
+                left_digits=3,
+                right_digits=2,
+                positive=True,
+                min_value=0.1,
+                max_value=100,
+            ),
         },
         "is_suspicious": risk_level in ["HIGH", "CRITICAL"],
-        "recommended_action": random.choice([
-            "APPROVE", "REVIEW", "BLOCK", "REQUIRE_MFA"
-        ] if risk_level == "MINIMAL" else [
-            "REVIEW", "BLOCK", "REQUIRE_MFA"
-        ]),
+        "recommended_action": random.choice(
+            ["APPROVE", "REVIEW", "BLOCK", "REQUIRE_MFA"]
+            if risk_level == "MINIMAL"
+            else ["REVIEW", "BLOCK", "REQUIRE_MFA"]
+        ),
     }
     defaults.update(kwargs)
     return defaults
@@ -255,18 +373,28 @@ def fraud_detection_result_factory(**kwargs) -> Dict[str, Any]:
         >>> result['is_blocked']
         True
     """
-    fraud_score = fraud_score_factory(**kwargs.get('fraud_score', {}))
-    risk_level = fraud_score['risk_level']
+    fraud_score = fraud_score_factory(**kwargs.get("fraud_score", {}))
+    risk_level = fraud_score["risk_level"]
 
     defaults = {
         "fraud_score": fraud_score,
         "is_blocked": risk_level == "CRITICAL",
         "requires_review": risk_level in ["HIGH", "MEDIUM"],
-        "rule_triggers": fake.random_elements(
-            elements=("HIGH_VALUE_TRANSACTION", "SUSPICIOUS_LOCATION", "NEW_DEVICE",
-                     "RAPID_TRANSACTIONS", "FOREIGN_TRANSACTION", "UNUSUAL_HOURS"),
-            length=fake.random_int(min=0, max=3)
-        ) if risk_level in ["MEDIUM", "HIGH", "CRITICAL"] else [],
+        "rule_triggers": (
+            fake.random_elements(
+                elements=(
+                    "HIGH_VALUE_TRANSACTION",
+                    "SUSPICIOUS_LOCATION",
+                    "NEW_DEVICE",
+                    "RAPID_TRANSACTIONS",
+                    "FOREIGN_TRANSACTION",
+                    "UNUSUAL_HOURS",
+                ),
+                length=fake.random_int(min=0, max=3),
+            )
+            if risk_level in ["MEDIUM", "HIGH", "CRITICAL"]
+            else []
+        ),
     }
     defaults.update(kwargs)
     return defaults
@@ -293,12 +421,37 @@ def spending_pattern_factory(**kwargs) -> Dict[str, Any]:
         1500000.0
     """
     defaults = {
-        "category": kwargs.get('category', random.choice([
-            "FOOD", "TRANSPORT", "SHOPPING", "BILLS",
-            "ENTERTAINMENT", "HEALTH", "EDUCATION", "OTHER"
-        ])),
-        "amount": round(fake.pyfloat(left_digits=6, right_digits=0, positive=True, min_value=100000, max_value=10000000), 2),
-        "percentage": round(fake.pyfloat(left_digits=1, right_digits=2, positive=True, min_value=1, max_value=100), 2),
+        "category": kwargs.get(
+            "category",
+            random.choice(
+                [
+                    "FOOD",
+                    "TRANSPORT",
+                    "SHOPPING",
+                    "BILLS",
+                    "ENTERTAINMENT",
+                    "HEALTH",
+                    "EDUCATION",
+                    "OTHER",
+                ]
+            ),
+        ),
+        "amount": round(
+            fake.pyfloat(
+                left_digits=6,
+                right_digits=0,
+                positive=True,
+                min_value=100000,
+                max_value=10000000,
+            ),
+            2,
+        ),
+        "percentage": round(
+            fake.pyfloat(
+                left_digits=1, right_digits=2, positive=True, min_value=1, max_value=100
+            ),
+            2,
+        ),
         "transaction_count": fake.random_int(min=5, max=100),
         "trend": random.choice(["increasing", "decreasing", "stable"]),
     }
@@ -328,10 +481,19 @@ def recommendation_factory(**kwargs) -> Dict[str, Any]:
         >>> rec['priority']
         5
     """
-    rec_type = kwargs.get('recommendation_type', random.choice([
-        "SAVINGS_GOAL", "BUDGET_ALERT", "SPENDING_TREND",
-        "NEW_FEATURE", "PROMOTION", "INVESTMENT"
-    ]))
+    rec_type = kwargs.get(
+        "recommendation_type",
+        random.choice(
+            [
+                "SAVINGS_GOAL",
+                "BUDGET_ALERT",
+                "SPENDING_TREND",
+                "NEW_FEATURE",
+                "PROMOTION",
+                "INVESTMENT",
+            ]
+        ),
+    )
 
     # Type-specific content
     type_content = {
@@ -358,7 +520,7 @@ def recommendation_factory(**kwargs) -> Dict[str, Any]:
         "INVESTMENT": {
             "title": "Start Investing Today",
             "description": fake.sentence(),
-        }
+        },
     }
 
     content = type_content[rec_type]
@@ -366,14 +528,16 @@ def recommendation_factory(**kwargs) -> Dict[str, Any]:
     defaults = {
         "recommendation_id": f"rec_{fake.uuid4()[:12]}",
         "recommendation_type": rec_type,
-        "title": kwargs.get('title', content['title']),
-        "description": kwargs.get('description', content['description']),
+        "title": kwargs.get("title", content["title"]),
+        "description": kwargs.get("description", content["description"]),
         "action_url": fake.url() if random.choice([True, False]) else None,
         "priority": fake.random_int(min=1, max=10),
         "metadata": {
             "category": rec_type,
-            "created_at": fake.date_time_between(start_date='-30d', end_date='now').isoformat(),
-        }
+            "created_at": fake.date_time_between(
+                start_date="-30d", end_date="now"
+            ).isoformat(),
+        },
     }
     defaults.update(kwargs)
     return defaults
@@ -403,16 +567,43 @@ def risk_assessment_factory(**kwargs) -> Dict[str, Any]:
         35
     """
     age = fake.random_int(min=18, max=65)
-    monthly_income = fake.pyfloat(left_digits=7, right_digits=0, positive=True, min_value=5000000, max_value=100000000)
+    monthly_income = fake.pyfloat(
+        left_digits=7,
+        right_digits=0,
+        positive=True,
+        min_value=5000000,
+        max_value=100000000,
+    )
 
     defaults = {
         "age": age,
         "monthly_income": round(monthly_income, 2),
-        "monthly_expenses": round(monthly_income * fake.pyfloat(left_digits=1, right_digits=2, positive=True, min_value=0.3, max_value=0.8), 2),
-        "total_savings": round(fake.pyfloat(left_digits=8, right_digits=0, positive=True, min_value=10000000, max_value=500000000), 2),
+        "monthly_expenses": round(
+            monthly_income
+            * fake.pyfloat(
+                left_digits=1,
+                right_digits=2,
+                positive=True,
+                min_value=0.3,
+                max_value=0.8,
+            ),
+            2,
+        ),
+        "total_savings": round(
+            fake.pyfloat(
+                left_digits=8,
+                right_digits=0,
+                positive=True,
+                min_value=10000000,
+                max_value=500000000,
+            ),
+            2,
+        ),
         "investment_experience": fake.random_int(min=0, max=10),
         "risk_tolerance": random.choice(["low", "medium", "high"]),
-        "investment_goal": random.choice(["retirement", "wealth_growth", "emergency_fund"]),
+        "investment_goal": random.choice(
+            ["retirement", "wealth_growth", "emergency_fund"]
+        ),
         "time_horizon": random.choice(["SHORT_TERM", "MEDIUM_TERM", "LONG_TERM"]),
     }
     defaults.update(kwargs)
@@ -439,10 +630,12 @@ def portfolio_allocation_factory(**kwargs) -> Dict[str, Any]:
         >>> allocation['allocation_percentage']
         40.0
     """
-    asset_class = kwargs.get('asset_class', random.choice([
-        "CASH", "FIXED_INCOME", "MUTUAL_FUNDS",
-        "DIGITAL_GOLD", "STOCKS", "BONDS"
-    ]))
+    asset_class = kwargs.get(
+        "asset_class",
+        random.choice(
+            ["CASH", "FIXED_INCOME", "MUTUAL_FUNDS", "DIGITAL_GOLD", "STOCKS", "BONDS"]
+        ),
+    )
 
     # Asset class specific data
     asset_data = {
@@ -458,9 +651,23 @@ def portfolio_allocation_factory(**kwargs) -> Dict[str, Any]:
 
     defaults = {
         "asset_class": asset_class,
-        "allocation_percentage": round(fake.pyfloat(left_digits=2, right_digits=0, positive=True, min_value=5, max_value=50), 2),
-        "expected_return": round(fake.pyfloat(left_digits=2, right_digits=0, positive=True, min_value=data['return'][0], max_value=data['return'][1]), 2),
-        "risk_level": data['risk'],
+        "allocation_percentage": round(
+            fake.pyfloat(
+                left_digits=2, right_digits=0, positive=True, min_value=5, max_value=50
+            ),
+            2,
+        ),
+        "expected_return": round(
+            fake.pyfloat(
+                left_digits=2,
+                right_digits=0,
+                positive=True,
+                min_value=data["return"][0],
+                max_value=data["return"][1],
+            ),
+            2,
+        ),
+        "risk_level": data["risk"],
         "description": fake.sentence(),
     }
     defaults.update(kwargs)
@@ -495,23 +702,37 @@ def robo_advisory_response_factory(**kwargs) -> Dict[str, Any]:
     if risk_profile == "CONSERVATIVE":
         allocations = [
             portfolio_allocation_factory(asset_class="CASH", allocation_percentage=30),
-            portfolio_allocation_factory(asset_class="FIXED_INCOME", allocation_percentage=40),
+            portfolio_allocation_factory(
+                asset_class="FIXED_INCOME", allocation_percentage=40
+            ),
             portfolio_allocation_factory(asset_class="BONDS", allocation_percentage=30),
         ]
         expected_return = 6.5
     elif risk_profile == "MODERATE":
         allocations = [
             portfolio_allocation_factory(asset_class="CASH", allocation_percentage=15),
-            portfolio_allocation_factory(asset_class="FIXED_INCOME", allocation_percentage=25),
-            portfolio_allocation_factory(asset_class="MUTUAL_FUNDS", allocation_percentage=40),
-            portfolio_allocation_factory(asset_class="DIGITAL_GOLD", allocation_percentage=20),
+            portfolio_allocation_factory(
+                asset_class="FIXED_INCOME", allocation_percentage=25
+            ),
+            portfolio_allocation_factory(
+                asset_class="MUTUAL_FUNDS", allocation_percentage=40
+            ),
+            portfolio_allocation_factory(
+                asset_class="DIGITAL_GOLD", allocation_percentage=20
+            ),
         ]
         expected_return = 12.0
     else:  # AGGRESSIVE
         allocations = [
-            portfolio_allocation_factory(asset_class="MUTUAL_FUNDS", allocation_percentage=30),
-            portfolio_allocation_factory(asset_class="STOCKS", allocation_percentage=50),
-            portfolio_allocation_factory(asset_class="DIGITAL_GOLD", allocation_percentage=20),
+            portfolio_allocation_factory(
+                asset_class="MUTUAL_FUNDS", allocation_percentage=30
+            ),
+            portfolio_allocation_factory(
+                asset_class="STOCKS", allocation_percentage=50
+            ),
+            portfolio_allocation_factory(
+                asset_class="DIGITAL_GOLD", allocation_percentage=20
+            ),
         ]
         expected_return = 18.0
 
@@ -519,25 +740,65 @@ def robo_advisory_response_factory(**kwargs) -> Dict[str, Any]:
         "user_id": f"user_{fake.uuid4()[:8]}",
         "risk_assessment": {
             "risk_profile": risk_profile,
-            "risk_score": round(fake.pyfloat(left_digits=2, right_digits=0, positive=True, min_value=30, max_value=80), 2),
+            "risk_score": round(
+                fake.pyfloat(
+                    left_digits=2,
+                    right_digits=0,
+                    positive=True,
+                    min_value=30,
+                    max_value=80,
+                ),
+                2,
+            ),
             "description": fake.paragraph(),
-            "suitable_asset_classes": [alloc['asset_class'] for alloc in allocations],
+            "suitable_asset_classes": [alloc["asset_class"] for alloc in allocations],
         },
         "portfolio_allocation": allocations,
-        "investment_recommendations": [
-            fake.sentence() for _ in range(3)
-        ],
-        "monthly_investment_amount": round(fake.pyfloat(left_digits=7, right_digits=0, positive=True, min_value=1000000, max_value=20000000), 2),
-        "expected_annual_return": round(expected_return + fake.pyfloat(left_digits=1, right_digits=2, positive=True, min_value=-2, max_value=2), 2),
+        "investment_recommendations": [fake.sentence() for _ in range(3)],
+        "monthly_investment_amount": round(
+            fake.pyfloat(
+                left_digits=7,
+                right_digits=0,
+                positive=True,
+                min_value=1000000,
+                max_value=20000000,
+            ),
+            2,
+        ),
+        "expected_annual_return": round(
+            expected_return
+            + fake.pyfloat(
+                left_digits=1, right_digits=2, positive=True, min_value=-2, max_value=2
+            ),
+            2,
+        ),
         "recommended_investment_products": [
             {
                 "product_id": f"prod_{fake.uuid4()[:8]}",
                 "product_name": fake.company(),
-                "minimum_investment": round(fake.pyfloat(left_digits=6, right_digits=0, positive=True, min_value=100000, max_value=5000000), 2),
-                "expected_return": round(fake.pyfloat(left_digits=2, right_digits=0, positive=True, min_value=5, max_value=20), 2),
+                "minimum_investment": round(
+                    fake.pyfloat(
+                        left_digits=6,
+                        right_digits=0,
+                        positive=True,
+                        min_value=100000,
+                        max_value=5000000,
+                    ),
+                    2,
+                ),
+                "expected_return": round(
+                    fake.pyfloat(
+                        left_digits=2,
+                        right_digits=0,
+                        positive=True,
+                        min_value=5,
+                        max_value=20,
+                    ),
+                    2,
+                ),
             }
             for _ in range(fake.random_int(min=2, max=5))
-        ]
+        ],
     }
     defaults.update(kwargs)
     return defaults

@@ -1,10 +1,8 @@
 quarkus:
   application:
     name: billing-service
-
   http:
     port: 8085
-
   # Vault Configuration for Secrets
   vault:
     url: ${VAULT_URL:http://localhost:8200}
@@ -14,11 +12,9 @@ quarkus:
     secrets:
       - path: secret/billing-service
         key: encryption.key
-
   # Fault Tolerance Configuration
   fault-tolerance:
     enabled: true
-
     # Circuit Breaker
     circuit-breaker:
       wallet-service:
@@ -26,7 +22,6 @@ quarkus:
         failure-ratio: 0.5
         delay: 30000
         success-threshold: 5
-
     # Retry
     retry:
       wallet-service:
@@ -37,18 +32,15 @@ quarkus:
         retry-on:
           - java.io.IOException
           - java.net.ConnectException
-
     # Timeout
     timeout:
       wallet-service:
         duration: 5000
-
     # Bulkhead
     bulkhead:
       wallet-service:
         value: 20
         waiting-queue: 10
-
   otel:
     service:
       name: billing-service
@@ -59,44 +51,36 @@ quarkus:
       attributes:
         - service.name=billing-service
         - service.version=1.0.0
-
   datasource:
     db-kind: postgresql
     username: postgres
-    password: postgres
+    password: postgres # pragma: allowlist secret
     jdbc:
       url: jdbc:postgresql://localhost:5432/billingdb
-
   hibernate-orm:
     database:
       generation: validate
     log:
       sql: false
     packages: id.payu.billing.domain
-
   flyway:
     migrate-at-start: true
     locations: db/migration
-
   rest-client:
     wallet-service:
       url: http://localhost:8084
       scope: jakarta.enterprise.context.ApplicationScoped
-
   kafka:
     bootstrap-servers: localhost:9092
-
   smallrye-openapi:
     info-title: PayU Billing Service API
     info-version: 1.0.0
     info-description: Bill payment API for PLN, PDAM, Pulsa, etc.
-
   log:
     level: INFO
     category:
       "id.payu.billing":
         level: DEBUG
-
 "%dev":
   quarkus:
     hibernate-orm:
@@ -104,7 +88,6 @@ quarkus:
         generation: drop-and-create
     flyway:
       migrate-at-start: false
-
 "%test":
   quarkus:
     datasource:

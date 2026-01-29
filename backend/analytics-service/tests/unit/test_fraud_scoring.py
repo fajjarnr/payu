@@ -4,13 +4,12 @@ Unit tests for Fraud Scoring and Risk Assessment.
 Tests edge cases and scenarios in the fraud detection engine
 beyond those covered in test_fraud_detection.py.
 """
+
 import pytest
 from datetime import datetime, timedelta
-from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.ml.fraud_detection import FraudDetectionEngine
-from app.models.schemas import FraudScore, FraudRiskLevel
+from app.models.schemas import FraudRiskLevel
 
 
 @pytest.fixture
@@ -31,8 +30,8 @@ def sample_transaction_data():
         "metadata": {
             "ip_address": "192.168.1.1",
             "device_id": "device_123",
-            "location": "Jakarta, Indonesia"
-        }
+            "location": "Jakarta, Indonesia",
+        },
     }
 
 
@@ -48,8 +47,8 @@ def high_value_transaction():
         "metadata": {
             "ip_address": "192.168.1.100",
             "device_id": "device_456",
-            "location": "Singapore"
-        }
+            "location": "Singapore",
+        },
     }
 
 
@@ -66,8 +65,8 @@ def qris_transaction():
             "ip_address": "10.0.0.1",
             "device_id": "device_qris",
             "location": "Bandung, Indonesia",
-            "merchant_id": "merchant_qris"
-        }
+            "merchant_id": "merchant_qris",
+        },
     }
 
 
@@ -85,10 +84,10 @@ def sample_user_history():
                 "amount": 200000.0 + i * 10000,
                 "type": "TRANSFER",
                 "timestamp": (datetime.utcnow() - timedelta(hours=i)).isoformat(),
-                "recipient_id": f"recipient_{i}"
+                "recipient_id": f"recipient_{i}",
             }
             for i in range(10)
-        ]
+        ],
     }
 
 
@@ -106,9 +105,9 @@ def new_user_history():
                 "amount": 50000.0,
                 "type": "TRANSFER",
                 "timestamp": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
-                "recipient_id": "recipient_1"
+                "recipient_id": "recipient_1",
             }
-        ]
+        ],
     }
 
 
@@ -126,10 +125,10 @@ def high_frequency_user_history():
                 "amount": 250000.0,
                 "type": "TRANSFER",
                 "timestamp": (datetime.utcnow() - timedelta(minutes=i * 5)).isoformat(),
-                "recipient_id": f"recipient_{i}"
+                "recipient_id": f"recipient_{i}",
             }
             for i in range(30)  # 30 transactions in last 2.5 hours
-        ]
+        ],
     }
 
 
@@ -145,7 +144,7 @@ class TestFraudScoringEdgeCases:
             "amount": 0.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -163,7 +162,7 @@ class TestFraudScoringEdgeCases:
             "amount": -100000.0,
             "currency": "IDR",
             "type": "REFUND",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -181,7 +180,7 @@ class TestFraudScoringEdgeCases:
             "amount": 999999999.0,  # Nearly 1 billion IDR
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -190,7 +189,9 @@ class TestFraudScoringEdgeCases:
         # High amount should generate significant amount risk (capped at 100 for the factor)
         assert result.fraud_score.risk_factors["amount_anomaly"] > 0
         # Total score includes weighted factors, so verify it's elevated
-        assert result.fraud_score.risk_score >= 20  # With 25% weight on amount anomaly >= 100
+        assert (
+            result.fraud_score.risk_score >= 20
+        )  # With 25% weight on amount anomaly >= 100
 
     @pytest.mark.asyncio
     async def test_missing_metadata(self, fraud_engine):
@@ -200,7 +201,7 @@ class TestFraudScoringEdgeCases:
             "user_id": "user_no_meta",
             "amount": 500000.0,
             "currency": "IDR",
-            "type": "TRANSFER"
+            "type": "TRANSFER",
             # No metadata field
         }
 
@@ -218,7 +219,7 @@ class TestFraudScoringEdgeCases:
             "amount": 500000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -234,7 +235,7 @@ class TestFraudScoringEdgeCases:
             "amount": 500000.0,
             "currency": "IDR",
             "type": "UNKNOWN_TYPE",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -253,8 +254,8 @@ class TestFraudScoringEdgeCases:
             "type": "TRANSFER",
             "metadata": {
                 "ip_address": "203.0.113.1",  # Foreign IP
-                "location": "United States"
-            }
+                "location": "United States",
+            },
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -274,8 +275,8 @@ class TestFraudScoringEdgeCases:
             "metadata": {
                 "ip_address": "10.0.0.0",  # Known suspicious pattern
                 "device_id": "device_123",
-                "location": "Unknown"
-            }
+                "location": "Unknown",
+            },
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -294,8 +295,8 @@ class TestFraudScoringEdgeCases:
             "metadata": {
                 "ip_address": "45.76.123.45",  # Typical VPN range
                 "device_id": "device_vpn",
-                "is_vpn": True
-            }
+                "is_vpn": True,
+            },
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -314,8 +315,8 @@ class TestFraudScoringEdgeCases:
             "metadata": {
                 "ip_address": "192.168.1.1",
                 "device_id": "NEW_DEVICE_123",  # Different device
-                "location": "Jakarta, Indonesia"
-            }
+                "location": "Jakarta, Indonesia",
+            },
         }
 
         # Mock user history showing previous device
@@ -330,10 +331,10 @@ class TestFraudScoringEdgeCases:
                     "amount": 200000.0,
                     "type": "TRANSFER",
                     "timestamp": (datetime.utcnow() - timedelta(hours=i)).isoformat(),
-                    "recipient_id": f"recipient_{i}"
+                    "recipient_id": f"recipient_{i}",
                 }
                 for i in range(10)
-            ]
+            ],
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction, user_history)
@@ -351,7 +352,7 @@ class TestFraudScoringEdgeCases:
                 "amount": 500000.0,
                 "currency": "IDR",
                 "type": "TRANSFER",
-                "metadata": {"ip_address": "192.168.1.1"}
+                "metadata": {"ip_address": "192.168.1.1"},
             }
             for i in range(10)
         ]
@@ -377,11 +378,13 @@ class TestFraudScoringEdgeCases:
                     "transaction_id": f"txn_multi_{i}",
                     "amount": 250000.0,
                     "type": "TRANSFER",
-                    "timestamp": (datetime.utcnow() - timedelta(minutes=i * 10)).isoformat(),
-                    "recipient_id": f"different_recipient_{i}"  # All different
+                    "timestamp": (
+                        datetime.utcnow() - timedelta(minutes=i * 10)
+                    ).isoformat(),
+                    "recipient_id": f"different_recipient_{i}",  # All different
                 }
                 for i in range(15)
-            ]
+            ],
         }
 
         transaction = {
@@ -390,7 +393,7 @@ class TestFraudScoringEdgeCases:
             "amount": 300000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction, user_history)
@@ -407,7 +410,7 @@ class TestFraudScoringEdgeCases:
             "amount": 10000000.0,  # Exactly 10 million - suspicious round number
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -426,8 +429,8 @@ class TestFraudScoringEdgeCases:
             "type": "TRANSFER",
             "metadata": {
                 "ip_address": "192.168.1.1",
-                "timestamp": datetime.utcnow().replace(hour=2, minute=0).isoformat()
-            }
+                "timestamp": datetime.utcnow().replace(hour=2, minute=0).isoformat(),
+            },
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -443,9 +446,7 @@ class TestFraudScoringEdgeCases:
             "amount": 8000000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {
-                "ip_address": "192.168.1.1"
-            }
+            "metadata": {"ip_address": "192.168.1.1"},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -462,7 +463,7 @@ class TestFraudScoringEdgeCases:
                 "amount": 100000.0 * (i + 1),
                 "currency": "IDR",
                 "type": "TRANSFER",
-                "metadata": {}
+                "metadata": {},
             }
             for i in range(10)
         ]
@@ -488,9 +489,7 @@ class TestFraudScoringEdgeCases:
             "amount": 50000000.0,  # Very high
             "currency": "IDR",
             "type": "QRIS",  # QRIS with high amount
-            "metadata": {
-                "ip_address": "10.0.0.0"  # Suspicious IP
-            }
+            "metadata": {"ip_address": "10.0.0.0"},  # Suspicious IP
         }
 
         new_user_history = {
@@ -498,7 +497,7 @@ class TestFraudScoringEdgeCases:
             "total_amount": 50000.0,
             "average_transaction": 50000.0,
             "account_created_at": (datetime.utcnow() - timedelta(days=1)).isoformat(),
-            "recent_transactions": []
+            "recent_transactions": [],
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction, new_user_history)
@@ -518,28 +517,32 @@ class TestFraudScoringEdgeCases:
             "metadata": {
                 "ip_address": "192.168.1.1",
                 "device_id": "trusted_device",
-                "location": "Jakarta, Indonesia"
-            }
+                "location": "Jakarta, Indonesia",
+            },
         }
 
         trusted_user_history = {
             "total_transactions": 1000,
             "total_amount": 300000000.0,
             "average_transaction": 300000.0,
-            "account_created_at": (datetime.utcnow() - timedelta(days=730)).isoformat(),  # 2 years
+            "account_created_at": (
+                datetime.utcnow() - timedelta(days=730)
+            ).isoformat(),  # 2 years
             "recent_transactions": [
                 {
                     "transaction_id": f"txn_{i}",
                     "amount": 300000.0,
                     "type": "TRANSFER",
                     "timestamp": (datetime.utcnow() - timedelta(hours=i)).isoformat(),
-                    "recipient_id": f"recipient_{i}"
+                    "recipient_id": f"recipient_{i}",
                 }
                 for i in range(10)
-            ]
+            ],
         }
 
-        result = await fraud_engine.calculate_fraud_score(transaction, trusted_user_history)
+        result = await fraud_engine.calculate_fraud_score(
+            transaction, trusted_user_history
+        )
 
         assert result.fraud_score.risk_score >= 0
 
@@ -552,10 +555,7 @@ class TestFraudScoringEdgeCases:
             "amount": 5000000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {
-                "ip_address": "192.168.1.1",
-                "device_id": "device_explain"
-            }
+            "metadata": {"ip_address": "192.168.1.1", "device_id": "device_explain"},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -574,7 +574,7 @@ class TestFraudScoringEdgeCases:
             "amount": 30000000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         new_user = {
@@ -582,7 +582,7 @@ class TestFraudScoringEdgeCases:
             "total_amount": 0.0,
             "average_transaction": 0.0,
             "account_created_at": (datetime.utcnow() - timedelta(days=1)).isoformat(),
-            "recent_transactions": []
+            "recent_transactions": [],
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction, new_user)
@@ -600,13 +600,16 @@ class TestFraudScoringEdgeCases:
             "amount": 3000000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
 
         # Medium/High risk should potentially require review
-        if result.fraud_score.risk_level in [FraudRiskLevel.HIGH, FraudRiskLevel.MEDIUM]:
+        if result.fraud_score.risk_level in [
+            FraudRiskLevel.HIGH,
+            FraudRiskLevel.MEDIUM,
+        ]:
             # Either requires review or is blocked
             assert result.requires_review is True or result.is_blocked is True
 
@@ -619,7 +622,7 @@ class TestFraudScoringEdgeCases:
             "amount": 7000000.0,
             "currency": "IDR",
             "type": "QRIS",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -637,10 +640,12 @@ class TestFraudScoringEdgeCases:
             "amount": 500000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
-        result = await fraud_engine.calculate_fraud_score(transaction, user_history=None)
+        result = await fraud_engine.calculate_fraud_score(
+            transaction, user_history=None
+        )
 
         assert result is not None
         # Should handle None history gracefully
@@ -654,7 +659,7 @@ class TestFraudScoringEdgeCases:
             "amount": 500000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction, user_history={})
@@ -671,7 +676,7 @@ class TestFraudScoringEdgeCases:
             "amount": 500000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -688,7 +693,7 @@ class TestFraudScoringEdgeCases:
             "amount": 500000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            "metadata": {}
+            "metadata": {},
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)

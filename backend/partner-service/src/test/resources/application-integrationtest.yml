@@ -15,7 +15,7 @@ quarkus:
       # Testcontainers will override this URL
       url: jdbc:postgresql://localhost:5432/testdb
     username: test
-    password: test
+    password: test # pragma: allowlist secret
   hibernate-orm:
     database:
       generation: drop-and-create
@@ -30,7 +30,6 @@ quarkus:
     enabled: true
   opentelemetry:
     enabled: false
-
   # Log levels
   log:
     category:

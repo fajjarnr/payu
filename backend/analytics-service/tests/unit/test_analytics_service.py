@@ -4,13 +4,11 @@ Unit tests for AnalyticsService.
 Tests the core analytics service methods including user metrics,
 spending trends, cash flow analysis, and recommendations.
 """
+
 import pytest
-from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
-from app.services.analytics_service import AnalyticsService
-from app.database import UserMetricsEntity
 from tests.conftest import create_mock_row
 
 
@@ -28,7 +26,7 @@ class TestAnalyticsService:
         analytics_service,
         mock_db_session,
         sample_user_metrics,
-        mock_scalar_result
+        mock_scalar_result,
     ):
         """Test successful retrieval of user metrics."""
         # Setup mock response using helper fixture
@@ -46,10 +44,7 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_user_metrics_not_found(
-        self,
-        analytics_service,
-        mock_db_session,
-        mock_scalar_result
+        self, analytics_service, mock_db_session, mock_scalar_result
     ):
         """Test retrieval when user metrics don't exist."""
         # Setup mock to return None
@@ -63,28 +58,23 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_spending_trends_by_category(
-        self,
-        analytics_service,
-        mock_db_session,
-        mock_query_result
+        self, analytics_service, mock_db_session, mock_query_result
     ):
         """Test spending trends grouped by category."""
         # Mock rows representing spending by category using helper
         mock_rows = [
             create_mock_row(
-                category="FOOD",
-                total_amount=Decimal("3000000"),
-                transaction_count=30
+                category="FOOD", total_amount=Decimal("3000000"), transaction_count=30
             ),
             create_mock_row(
                 category="TRANSPORT",
                 total_amount=Decimal("1500000"),
-                transaction_count=20
+                transaction_count=20,
             ),
             create_mock_row(
                 category="SHOPPING",
                 total_amount=Decimal("5000000"),
-                transaction_count=10
+                transaction_count=10,
             ),
         ]
 
@@ -106,10 +96,7 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_spending_trends_empty_transactions(
-        self,
-        analytics_service,
-        mock_db_session,
-        mock_query_result
+        self, analytics_service, mock_db_session, mock_query_result
     ):
         """Test spending trends when user has no transactions."""
         mock_db_session.execute.return_value = mock_query_result([])
@@ -128,7 +115,7 @@ class TestAnalyticsService:
         analytics_service,
         mock_db_session,
         mock_scalar_result,
-        mock_execute_sequence
+        mock_execute_sequence,
     ):
         """Test cash flow analysis calculation."""
         # Setup results for income and expenses
@@ -143,7 +130,9 @@ class TestAnalyticsService:
         analytics_service._get_expenses_by_category = AsyncMock(return_value=[])
 
         # Execute
-        result = await analytics_service.get_cash_flow_analysis("user_123", period_days=30)
+        result = await analytics_service.get_cash_flow_analysis(
+            "user_123", period_days=30
+        )
 
         # Verify
         assert result is not None
@@ -158,7 +147,7 @@ class TestAnalyticsService:
         analytics_service,
         mock_db_session,
         mock_scalar_result,
-        mock_execute_sequence
+        mock_execute_sequence,
     ):
         """Test cash flow analysis with no income."""
         income_result = mock_scalar_result(None)
@@ -169,7 +158,9 @@ class TestAnalyticsService:
         analytics_service._get_income_by_source = AsyncMock(return_value=[])
         analytics_service._get_expenses_by_category = AsyncMock(return_value=[])
 
-        result = await analytics_service.get_cash_flow_analysis("user_123", period_days=30)
+        result = await analytics_service.get_cash_flow_analysis(
+            "user_123", period_days=30
+        )
 
         assert result.income == Decimal("0")
         # net_cash_flow = income - expenses = 0 - 5000000 = -5000000
@@ -191,28 +182,23 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_spending_trends_by_category(
-        self,
-        analytics_service,
-        mock_db_session,
-        mock_query_result
+        self, analytics_service, mock_db_session, mock_query_result
     ):
         """Test spending trends grouped by category."""
         # Mock rows representing spending by category using helper
         mock_rows = [
             create_mock_row(
-                category="FOOD",
-                total_amount=Decimal("3000000"),
-                transaction_count=30
+                category="FOOD", total_amount=Decimal("3000000"), transaction_count=30
             ),
             create_mock_row(
                 category="TRANSPORT",
                 total_amount=Decimal("1500000"),
-                transaction_count=20
+                transaction_count=20,
             ),
             create_mock_row(
                 category="SHOPPING",
                 total_amount=Decimal("5000000"),
-                transaction_count=10
+                transaction_count=10,
             ),
         ]
 
@@ -223,7 +209,9 @@ class TestAnalyticsService:
         analytics_service._get_top_merchants = AsyncMock(return_value=[])
 
         # Execute
-        result = await analytics_service.get_spending_trends("user_123", period_days=30, group_by="category")
+        result = await analytics_service.get_spending_trends(
+            "user_123", period_days=30, group_by="category"
+        )
 
         # Verify
         assert result is not None
@@ -232,10 +220,7 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_spending_trends_empty_transactions(
-        self,
-        analytics_service,
-        mock_db_session,
-        mock_query_result
+        self, analytics_service, mock_db_session, mock_query_result
     ):
         """Test spending trends when user has no transactions."""
         mock_db_session.execute.return_value = mock_query_result([])
@@ -261,6 +246,7 @@ class TestAnalyticsService:
 
         # Configure execute to return different results
         execute_call_count = 0
+
         async def mock_execute_func(query):
             nonlocal execute_call_count
             execute_call_count += 1
@@ -276,7 +262,9 @@ class TestAnalyticsService:
         analytics_service._get_expenses_by_category = AsyncMock(return_value=[])
 
         # Execute
-        result = await analytics_service.get_cash_flow_analysis("user_123", period_days=30)
+        result = await analytics_service.get_cash_flow_analysis(
+            "user_123", period_days=30
+        )
 
         # Verify
         assert result is not None
@@ -286,7 +274,9 @@ class TestAnalyticsService:
         assert result.net_cash_flow == Decimal("3000000.00")
 
     @pytest.mark.asyncio
-    async def test_get_cash_flow_analysis_no_income(self, analytics_service, mock_db_session):
+    async def test_get_cash_flow_analysis_no_income(
+        self, analytics_service, mock_db_session
+    ):
         """Test cash flow analysis with no income."""
         mock_income_result = MagicMock()
         mock_income_result.scalar.return_value = None
@@ -295,6 +285,7 @@ class TestAnalyticsService:
         mock_expenses_result.scalar.return_value = Decimal("5000000.00")
 
         execute_call_count = 0
+
         async def mock_execute_func(query):
             nonlocal execute_call_count
             execute_call_count += 1
@@ -307,7 +298,9 @@ class TestAnalyticsService:
         analytics_service._get_income_by_source = AsyncMock(return_value=[])
         analytics_service._get_expenses_by_category = AsyncMock(return_value=[])
 
-        result = await analytics_service.get_cash_flow_analysis("user_123", period_days=30)
+        result = await analytics_service.get_cash_flow_analysis(
+            "user_123", period_days=30
+        )
 
         assert result.income == Decimal("0")
         # net_cash_flow = income - expenses = 0 - 5000000 = -5000000
@@ -318,15 +311,23 @@ class TestAnalyticsService:
         """Test getting personalized recommendations."""
         # Mock dependencies
         analytics_service.get_user_metrics = AsyncMock(return_value=sample_user_metrics)
-        analytics_service.get_spending_trends = AsyncMock(return_value=MagicMock(
-            period="30 days",
-            total_spending=Decimal("5000000.00"),
-            spending_by_category=[],
-            month_over_month_change=10.0,
-            top_merchants=[]
-        ))
+        analytics_service.get_spending_trends = AsyncMock(
+            return_value=MagicMock(
+                period="30 days",
+                total_spending=Decimal("5000000.00"),
+                spending_by_category=[],
+                month_over_month_change=10.0,
+                top_merchants=[],
+            )
+        )
         analytics_service.recommendation_engine.generate_recommendations = MagicMock(
-            return_value=[{"recommendation_type": "savings", "description": "Save more!", "priority": 1}]
+            return_value=[
+                {
+                    "recommendation_type": "savings",
+                    "description": "Save more!",
+                    "priority": 1,
+                }
+            ]
         )
 
         result = await analytics_service.get_recommendations("user_123")
@@ -341,7 +342,7 @@ class TestAnalyticsService:
         analytics_service,
         mock_db_session,
         mock_scalar_result,
-        mock_execute_sequence
+        mock_execute_sequence,
     ):
         """Test month-over-month change calculation with previous period data."""
         # Setup mock responses
@@ -362,7 +363,7 @@ class TestAnalyticsService:
         analytics_service,
         mock_db_session,
         mock_scalar_result,
-        mock_execute_sequence
+        mock_execute_sequence,
     ):
         """Test month-over-month change when no previous period data exists."""
         current_result = mock_scalar_result(Decimal("5000000.00"))
@@ -381,7 +382,7 @@ class TestAnalyticsService:
         analytics_service,
         mock_db_session,
         mock_scalar_result,
-        mock_execute_sequence
+        mock_execute_sequence,
     ):
         """Test month-over-month change when previous period is zero."""
         current_result = mock_scalar_result(Decimal("5000000.00"))
@@ -395,10 +396,7 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_top_merchants(
-        self,
-        analytics_service,
-        mock_db_session,
-        mock_query_result
+        self, analytics_service, mock_db_session, mock_query_result
     ):
         """Test retrieval of top merchants by spending."""
         # Mock merchant data using helper
@@ -406,17 +404,17 @@ class TestAnalyticsService:
             create_mock_row(
                 merchant_id="merchant_1",
                 total_amount=Decimal("2000000"),
-                transaction_count=15
+                transaction_count=15,
             ),
             create_mock_row(
                 merchant_id="merchant_2",
                 total_amount=Decimal("1500000"),
-                transaction_count=10
+                transaction_count=10,
             ),
             create_mock_row(
                 merchant_id="merchant_3",
                 total_amount=Decimal("1000000"),
-                transaction_count=8
+                transaction_count=8,
             ),
         ]
 
@@ -430,10 +428,7 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_top_merchants_no_data(
-        self,
-        analytics_service,
-        mock_db_session,
-        mock_query_result
+        self, analytics_service, mock_db_session, mock_query_result
     ):
         """Test top merchants when no merchant data exists."""
         mock_db_session.execute.return_value = mock_query_result([])
@@ -458,7 +453,7 @@ class TestAnalyticsService:
             category="FOOD",
             amount=Decimal("1000000"),
             percentage=30.0,
-            transaction_count=10
+            transaction_count=10,
         )
 
         analytics_service.get_spending_trends = AsyncMock(

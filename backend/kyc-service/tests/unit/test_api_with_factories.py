@@ -55,9 +55,9 @@ class TestKycApiWithFactories:
 
         mock_entity = KycVerificationEntity(
             verification_id=f"verify_{test_user['user_id']}",
-            user_id=test_user['user_id'],
+            user_id=test_user["user_id"],
             verification_type="FULL_KYC",
-            status=KycStatus.PENDING.value
+            status=KycStatus.PENDING.value,
         )
 
         mock_result = MagicMock()
@@ -74,10 +74,7 @@ class TestKycApiWithFactories:
         ) as client:
             response = await client.post(
                 "/api/v1/kyc/verify/start",
-                json={
-                    "user_id": test_user['user_id'],
-                    "verification_type": "FULL_KYC"
-                }
+                json={"user_id": test_user["user_id"], "verification_type": "FULL_KYC"},
             )
 
             assert response.status_code in [200, 201, 422]
@@ -105,9 +102,9 @@ class TestKycApiWithFactories:
             response = await client.post(
                 "/api/v1/kyc/verify/ktp",
                 json={
-                    "verification_id": test_kyc.get('verification_id', 'verify_123'),
-                    "ktp_image": sample_ktp_image_base64()
-                }
+                    "verification_id": test_kyc.get("verification_id", "verify_123"),
+                    "ktp_image": sample_ktp_image_base64(),
+                },
             )
 
             assert response.status_code in [200, 201, 422, 500]
@@ -134,9 +131,9 @@ class TestKycApiWithFactories:
             response = await client.post(
                 "/api/v1/kyc/verify/selfie",
                 json={
-                    "verification_id": test_kyc.get('verification_id', 'verify_123'),
-                    "selfie_image": sample_selfie_image_base64()
-                }
+                    "verification_id": test_kyc.get("verification_id", "verify_123"),
+                    "selfie_image": sample_selfie_image_base64(),
+                },
             )
 
             assert response.status_code in [200, 201, 422, 500]
@@ -154,10 +151,10 @@ class TestKycApiWithFactories:
             test_kyc = kyc_verification_factory(status=status)
 
             mock_entity = KycVerificationEntity(
-                verification_id=test_kyc.get('verification_id', 'verify_123'),
-                user_id=test_kyc['user_id'],
+                verification_id=test_kyc.get("verification_id", "verify_123"),
+                user_id=test_kyc["user_id"],
                 verification_type="FULL_KYC",
-                status=status
+                status=status,
             )
 
             mock_result = MagicMock()
@@ -190,7 +187,7 @@ class TestKycApiWithFactories:
         test_users = [
             user_factory(kyc_status="VERIFIED"),
             user_factory(kyc_status="PENDING"),
-            user_factory(kyc_status="REJECTED")
+            user_factory(kyc_status="REJECTED"),
         ]
 
         for user in test_users:
@@ -222,8 +219,7 @@ class TestKycApiWithFactories:
 
         # Factory allows easy edge case creation
         new_user = user_factory(
-            kyc_status="UNVERIFIED",
-            account_created_at="2024-01-01T00:00:00"
+            kyc_status="UNVERIFIED", account_created_at="2024-01-01T00:00:00"
         )
 
         mock_result = MagicMock()
@@ -247,8 +243,6 @@ class TestKycApiWithFactories:
     @pytest.mark.asyncio
     async def test_batch_test_generation_with_factories(self, mock_db_session):
         """Demonstrate batch testing with factory-generated data"""
-        from httpx import AsyncClient, ASGITransport
-        from app.database import get_db_session
 
         # Generate 10 different test scenarios
         test_scenarios = [
@@ -260,14 +254,20 @@ class TestKycApiWithFactories:
         assert len(test_scenarios) == 10
 
         # All should have unique user IDs
-        user_ids = [s['user_id'] for s in test_scenarios]
+        user_ids = [s["user_id"] for s in test_scenarios]
         assert len(set(user_ids)) == 10  # All unique
 
         # Verify all scenarios have required fields
         for scenario in test_scenarios:
-            assert 'user_id' in scenario
-            assert 'status' in scenario
-            assert scenario['status'] in ["PENDING", "PROCESSING", "VERIFIED", "REJECTED", "FAILED"]
+            assert "user_id" in scenario
+            assert "status" in scenario
+            assert scenario["status"] in [
+                "PENDING",
+                "PROCESSING",
+                "VERIFIED",
+                "REJECTED",
+                "FAILED",
+            ]
 
 
 @pytest.mark.unit
@@ -282,7 +282,7 @@ class TestFactoryPatternComparison:
             "email": "user123@example.com",
             "phone": "+628123456789",
             "full_name": "TEST USER ONE",
-            "kyc_status": "PENDING"
+            "kyc_status": "PENDING",
         }
 
         user2 = {
@@ -290,10 +290,10 @@ class TestFactoryPatternComparison:
             "email": "user456@example.com",
             "phone": "+628987654321",
             "full_name": "TEST USER TWO",
-            "kyc_status": "VERIFIED"
+            "kyc_status": "VERIFIED",
         }
 
-        assert user1['user_id'] != user2['user_id']
+        assert user1["user_id"] != user2["user_id"]
         assert len(user1) == 5
         assert len(user2) == 5
 
@@ -303,9 +303,9 @@ class TestFactoryPatternComparison:
         user1 = user_factory(kyc_status="PENDING")
         user2 = user_factory(kyc_status="VERIFIED")
 
-        assert user1['user_id'] != user2['user_id']
-        assert user1['kyc_status'] == "PENDING"
-        assert user2['kyc_status'] == "VERIFIED"
+        assert user1["user_id"] != user2["user_id"]
+        assert user1["kyc_status"] == "PENDING"
+        assert user2["kyc_status"] == "VERIFIED"
         assert len(user1) > 5  # More fields generated automatically
 
     def test_factory_enables_rapid_variation(self):
@@ -323,9 +323,9 @@ class TestFactoryPatternComparison:
 
         # All users should be unique
         all_users = (
-            users_by_status["PENDING"] +
-            users_by_status["VERIFIED"] +
-            users_by_status["REJECTED"]
+            users_by_status["PENDING"]
+            + users_by_status["VERIFIED"]
+            + users_by_status["REJECTED"]
         )
-        all_user_ids = [u['user_id'] for u in all_users]
+        all_user_ids = [u["user_id"] for u in all_users]
         assert len(set(all_user_ids)) == 15  # All unique

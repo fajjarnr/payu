@@ -1,10 +1,8 @@
 quarkus:
   application:
     name: notification-service
-
   http:
     port: 8086
-
   otel:
     service:
       name: notification-service
@@ -15,27 +13,22 @@ quarkus:
       attributes:
         - service.name=notification-service
         - service.version=1.0.0
-
   banner:
     path: banner.txt
-
   datasource:
     db-kind: postgresql
     username: postgres
-    password: postgres
+    password: postgres # pragma: allowlist secret
     jdbc:
       url: jdbc:postgresql://localhost:5432/notificationdb
-
   hibernate-orm:
     packages: id.payu.notification.domain
     database:
       generation: validate
     log:
       sql: false
-
   kafka:
     bootstrap-servers: localhost:9092
-
   mailer:
     from: noreply@payu.id
     host: smtp.example.com
@@ -43,19 +36,16 @@ quarkus:
     start-tls: REQUIRED
     username: ${SMTP_USERNAME:}
     password: ${SMTP_PASSWORD:}
-    mock: true  # Use mock mailer in dev
-
+    mock: true # Use mock mailer in dev
   smallrye-openapi:
     info-title: PayU Notification Service API
     info-version: 1.0.0
     info-description: Notification API for Push, SMS, Email
-
   log:
     level: INFO
     category:
       "id.payu.notification":
         level: DEBUG
-
 "%dev":
   quarkus:
     hibernate-orm:
@@ -63,7 +53,6 @@ quarkus:
         generation: drop-and-create
     mailer:
       mock: true
-
 mp:
   messaging:
     incoming:

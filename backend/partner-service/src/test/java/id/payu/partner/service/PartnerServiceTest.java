@@ -35,9 +35,9 @@ public class PartnerServiceTest {
         testPartner.email = "test@example.com";
         testPartner.phone = "+62123456789";
         testPartner.active = true;
-        testPartner.apiKey = "test-api-key";
-        testPartner.clientId = "test-client-id";
-        testPartner.clientSecret = "test-client-secret";
+        testPartner.apiKey = "test-api-key";  // pragma: allowlist secret
+        testPartner.clientId = "test-client-id";  // pragma: allowlist secret
+        testPartner.clientSecret = "test-client-secret";  // pragma: allowlist secret
         testPartner.publicKey = "test-public-key";
     }
 

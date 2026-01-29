@@ -58,7 +58,7 @@ public class BillingIntegrationTest {
         WalletClient.ReserveResponse mockResponse = new WalletClient.ReserveResponse(
                 "res-123", "ACC-001", "REF-BILL-001", "RESERVED"
         );
-        
+
         Mockito.when(walletClient.reserveBalance(Mockito.anyString(), Mockito.any()))
                 .thenReturn(mockResponse);
 
@@ -77,7 +77,7 @@ public class BillingIntegrationTest {
         .then()
                 .statusCode(201)
                 .body("status", equalTo("COMPLETED"))
-                .body("totalAmount", equalTo(52500)) 
+                .body("totalAmount", equalTo(52500))
                 .body("id", notNullValue())
                 .extract().path("id");
 
@@ -91,9 +91,9 @@ public class BillingIntegrationTest {
         // 3. Verify Kafka Event (In-Memory Sink)
         // With 'smallrye-in-memory' connector configured in application.yml, this should work without XA errors
         InMemorySink<Map<String, Object>> eventsSink = connector.sink("payment-events");
-        
+
         await().until(() -> eventsSink.received().size() > 0);
-        
+
         Map<String, Object> event = eventsSink.received().get(0).getPayload();
         Assertions.assertEquals("PLN", event.get("billerCode"));
         Assertions.assertEquals("COMPLETED", event.get("status"));

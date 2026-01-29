@@ -2,10 +2,10 @@
 Unit tests for KYC API endpoints
 Tests cover request validation, response handling, and error scenarios
 """
+
 import pytest
 import sys
-from unittest.mock import MagicMock, AsyncMock, patch
-from base64 import b64encode
+from unittest.mock import MagicMock, AsyncMock
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/kyc-service/src")
 
@@ -49,7 +49,7 @@ class TestKycApi:
             verification_id="verify_123",
             user_id="user_123",
             verification_type="FULL_KYC",
-            status=KycStatus.PENDING.value
+            status=KycStatus.PENDING.value,
         )
 
         mock_result = MagicMock()
@@ -66,10 +66,14 @@ class TestKycApi:
         ) as client:
             response = await client.post(
                 "/api/v1/kyc/verify/start",
-                json={"user_id": "user_123", "verification_type": "FULL_KYC"}
+                json={"user_id": "user_123", "verification_type": "FULL_KYC"},
             )
 
-            assert response.status_code in [200, 201, 422]  # May succeed or fail validation
+            assert response.status_code in [
+                200,
+                201,
+                422,
+            ]  # May succeed or fail validation
 
         app.dependency_overrides.clear()
 
@@ -89,7 +93,7 @@ class TestKycApi:
         ) as client:
             response = await client.post(
                 "/api/v1/kyc/verify/ktp",
-                json={"verification_id": "verify_123"}
+                json={"verification_id": "verify_123"},
                 # Missing ktp_image field
             )
 
@@ -113,7 +117,7 @@ class TestKycApi:
         ) as client:
             response = await client.post(
                 "/api/v1/kyc/verify/selfie",
-                json={"verification_id": "verify_123"}
+                json={"verification_id": "verify_123"},
                 # Missing selfie_image field
             )
 
@@ -163,8 +167,8 @@ class TestKycApi:
                 "/api/v1/kyc/verify/ktp",
                 json={
                     "verification_id": "verify_123",
-                    "ktp_image": "not_valid_base64!!!"
-                }
+                    "ktp_image": "not_valid_base64!!!",
+                },
             )
 
             # May return 422 validation error or 500 processing error
@@ -188,8 +192,7 @@ class TestKycApi:
         ) as client:
             # Missing user_id
             response = await client.post(
-                "/api/v1/kyc/verify/start",
-                json={"verification_type": "FULL_KYC"}
+                "/api/v1/kyc/verify/start", json={"verification_type": "FULL_KYC"}
             )
 
             assert response.status_code == 422  # Validation error
@@ -265,10 +268,7 @@ class TestKycApi:
         ) as client:
             response = await client.post(
                 "/api/v1/kyc/verify/ktp",
-                json={
-                    "verification_id": "verify_123",
-                    "ktp_image": ""
-                }
+                json={"verification_id": "verify_123", "ktp_image": ""},
             )
 
             # Empty string is valid base64, but should fail processing
@@ -292,10 +292,7 @@ class TestKycApi:
         ) as client:
             response = await client.post(
                 "/api/v1/kyc/verify/selfie",
-                json={
-                    "verification_id": "verify_123",
-                    "selfie_image": ""
-                }
+                json={"verification_id": "verify_123", "selfie_image": ""},
             )
 
             # Empty string is valid base64, but should fail processing

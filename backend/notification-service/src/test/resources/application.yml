@@ -35,7 +35,6 @@ quarkus:
       enabled: false
   opentelemetry:
     enabled: false
-
 # Reactive Messaging: Use In-Memory connector to avoid Kafka dependency/errors in tests
 mp:
   messaging:

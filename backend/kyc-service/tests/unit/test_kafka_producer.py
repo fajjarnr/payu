@@ -2,9 +2,10 @@
 Unit tests for Kafka Producer Service
 Tests cover event publishing, error handling, and connection management
 """
+
 import pytest
 import sys
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/kyc-service/src")
 
@@ -27,10 +28,9 @@ class TestKafkaProducerService:
         mock_producer = AsyncMock()
         mock_producer.send_and_wait = AsyncMock()
 
-        with patch.object(kafka_producer, '_get_producer', return_value=mock_producer):
+        with patch.object(kafka_producer, "_get_producer", return_value=mock_producer):
             await kafka_producer.publish_event(
-                topic="test.topic",
-                event={"type": "test", "verification_id": "123"}
+                topic="test.topic", event={"type": "test", "verification_id": "123"}
             )
 
             mock_producer.send_and_wait.assert_called_once()
@@ -41,11 +41,10 @@ class TestKafkaProducerService:
         mock_producer = AsyncMock()
         mock_producer.send_and_wait.side_effect = KafkaError("Kafka connection failed")
 
-        with patch.object(kafka_producer, '_get_producer', return_value=mock_producer):
+        with patch.object(kafka_producer, "_get_producer", return_value=mock_producer):
             with pytest.raises(KafkaError):
                 await kafka_producer.publish_event(
-                    topic="test.topic",
-                    event={"type": "test"}
+                    topic="test.topic", event={"type": "test"}
                 )
 
     @pytest.mark.asyncio
@@ -54,7 +53,7 @@ class TestKafkaProducerService:
         mock_producer_instance = AsyncMock()
         mock_producer_instance.start = AsyncMock()
 
-        with patch('app.messaging.kafka_producer.AIOKafkaProducer') as MockProducer:
+        with patch("app.messaging.kafka_producer.AIOKafkaProducer") as MockProducer:
             MockProducer.return_value = mock_producer_instance
 
             producer = await kafka_producer._get_producer()
@@ -67,7 +66,7 @@ class TestKafkaProducerService:
         """Test that _get_producer reuses existing producer"""
         mock_producer = AsyncMock()
 
-        with patch.object(kafka_producer, '_lock'):
+        with patch.object(kafka_producer, "_lock"):
             kafka_producer.producer = mock_producer
 
             producer = await kafka_producer._get_producer()
@@ -105,14 +104,11 @@ class TestKafkaProducerService:
         large_event = {
             "type": "large_test",
             "verification_id": "123",
-            "data": "x" * 10000  # Large payload
+            "data": "x" * 10000,  # Large payload
         }
 
-        with patch.object(kafka_producer, '_get_producer', return_value=mock_producer):
-            await kafka_producer.publish_event(
-                topic="test.topic",
-                event=large_event
-            )
+        with patch.object(kafka_producer, "_get_producer", return_value=mock_producer):
+            await kafka_producer.publish_event(topic="test.topic", event=large_event)
 
             mock_producer.send_and_wait.assert_called_once()
 
@@ -124,12 +120,9 @@ class TestKafkaProducerService:
 
         topics = ["topic1", "topic2", "topic3"]
 
-        with patch.object(kafka_producer, '_get_producer', return_value=mock_producer):
+        with patch.object(kafka_producer, "_get_producer", return_value=mock_producer):
             for topic in topics:
-                await kafka_producer.publish_event(
-                    topic=topic,
-                    event={"type": "test"}
-                )
+                await kafka_producer.publish_event(topic=topic, event={"type": "test"})
 
             assert mock_producer.send_and_wait.call_count == len(topics)
 
@@ -137,7 +130,7 @@ class TestKafkaProducerService:
     async def test_producer_initialization(self, kafka_producer):
         """Test that producer service initializes correctly"""
         assert kafka_producer.producer is None
-        assert hasattr(kafka_producer, '_lock')
+        assert hasattr(kafka_producer, "_lock")
 
     @pytest.mark.asyncio
     async def test_concurrent_publish_events(self, kafka_producer):
@@ -148,16 +141,13 @@ class TestKafkaProducerService:
         mock_producer.send_and_wait = AsyncMock()
 
         async def publish_event(topic):
-            await kafka_producer.publish_event(
-                topic=topic,
-                event={"type": "test"}
-            )
+            await kafka_producer.publish_event(topic=topic, event={"type": "test"})
 
-        with patch.object(kafka_producer, '_get_producer', return_value=mock_producer):
+        with patch.object(kafka_producer, "_get_producer", return_value=mock_producer):
             await asyncio.gather(
                 publish_event("topic1"),
                 publish_event("topic2"),
-                publish_event("topic3")
+                publish_event("topic3"),
             )
 
     @pytest.mark.asyncio
@@ -168,11 +158,8 @@ class TestKafkaProducerService:
 
         event = {"verification_id": "123", "status": "pending"}
 
-        with patch.object(kafka_producer, '_get_producer', return_value=mock_producer):
-            await kafka_producer.publish_event(
-                topic="test.topic",
-                event=event
-            )
+        with patch.object(kafka_producer, "_get_producer", return_value=mock_producer):
+            await kafka_producer.publish_event(topic="test.topic", event=event)
 
             mock_producer.send_and_wait.assert_called_once()
 

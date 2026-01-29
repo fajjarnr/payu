@@ -12,12 +12,12 @@ Patterns:
 """
 
 import random
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from datetime import datetime
+from typing import Dict, Any
 from faker import Faker
 
 # Indonesian locale for realistic Indonesian names and addresses
-fake = Faker('id_ID')
+fake = Faker("id_ID")
 
 
 def user_factory(**kwargs) -> Dict[str, Any]:
@@ -46,8 +46,10 @@ def user_factory(**kwargs) -> Dict[str, Any]:
         "email": fake.email(),
         "phone": f"+62{fake.msisdn()[3:]}",  # Indonesian format
         "full_name": fake.name().upper(),
-        "kyc_status": random.choice(["PENDING", "PROCESSING", "VERIFIED", "REJECTED", "FAILED"]),
-        "account_created_at": fake.date_time_between(start_date='-2y', end_date='now'),
+        "kyc_status": random.choice(
+            ["PENDING", "PROCESSING", "VERIFIED", "REJECTED", "FAILED"]
+        ),
+        "account_created_at": fake.date_time_between(start_date="-2y", end_date="now"),
         "date_of_birth": fake.date_of_birth(minimum_age=17, maximum_age=80),
     }
     defaults.update(kwargs)
@@ -92,7 +94,7 @@ def ktp_ocr_factory(**kwargs) -> Dict[str, Any]:
 
     # Generate birth date in DD-MM-YYYY format (standard KTP format)
     birth_date_obj = fake.date_of_birth(minimum_age=17, maximum_age=80)
-    birth_date = birth_date_obj.strftime('%d-%m-%Y')
+    birth_date = birth_date_obj.strftime("%d-%m-%Y")
 
     defaults = {
         "nik": nik,
@@ -100,23 +102,55 @@ def ktp_ocr_factory(**kwargs) -> Dict[str, Any]:
         "birth_date": birth_date,
         "gender": random.choice(["LAKI-LAKI", "PEREMPUAN"]),
         "address": f"JL. {fake.street_name().upper()} NO. {fake.random_int(min=1, max=200)}",
-        "province": random.choice([
-            "DKI JAKARTA", "JAWA BARAT", "JAWA TENGAH", "JAWA TIMUR",
-            "BANTEN", "DAERAH ISTIMEWA YOGYAKARTA", "SUMATERA UTARA",
-            "SUMATERA BARAT", "RIAU", "LAMPUNG", "BALI", "SULAWESI SELATAN"
-        ]),
+        "province": random.choice(
+            [
+                "DKI JAKARTA",
+                "JAWA BARAT",
+                "JAWA TENGAH",
+                "JAWA TIMUR",
+                "BANTEN",
+                "DAERAH ISTIMEWA YOGYAKARTA",
+                "SUMATERA UTARA",
+                "SUMATERA BARAT",
+                "RIAU",
+                "LAMPUNG",
+                "BALI",
+                "SULAWESI SELATAN",
+            ]
+        ),
         "city": fake.city().upper(),
         "district": f"KEC. {fake.street_name().upper()}",
-        "religion": random.choice(["ISLAM", "KRISTEN", "KATOLIK", "HINDU", "BUDDHA", "KONGHUCU"]),
-        "marital_status": random.choice(["BELUM KAWIN", "KAWIN", "CERAI HIDUP", "CERAI MATI"]),
-        "occupation": random.choice([
-            "KARYAWAN SWASTA", "PEGAWAI NEGERI", "WIRASWASTA",
-            "PELAJAR/MAHASISWA", "IBU RUMAH TANGGA", "PENSIUNAN",
-            "PETANI", "BURUH", "PEDAGANG"
-        ]),
+        "religion": random.choice(
+            ["ISLAM", "KRISTEN", "KATOLIK", "HINDU", "BUDDHA", "KONGHUCU"]
+        ),
+        "marital_status": random.choice(
+            ["BELUM KAWIN", "KAWIN", "CERAI HIDUP", "CERAI MATI"]
+        ),
+        "occupation": random.choice(
+            [
+                "KARYAWAN SWASTA",
+                "PEGAWAI NEGERI",
+                "WIRASWASTA",
+                "PELAJAR/MAHASISWA",
+                "IBU RUMAH TANGGA",
+                "PENSIUNAN",
+                "PETANI",
+                "BURUH",
+                "PEDAGANG",
+            ]
+        ),
         "nationality": "WNI",
-        "valid_until": random.choice(["SEUMUR HIDUP", fake.date_time_between(start_date='+1y', end_date='+10y').strftime('%d-%m-%Y')]),
-        "confidence": fake.pyfloat(left_digits=1, right_digits=2, positive=True, min_value=0.80, max_value=1.0),
+        "valid_until": random.choice(
+            [
+                "SEUMUR HIDUP",
+                fake.date_time_between(start_date="+1y", end_date="+10y").strftime(
+                    "%d-%m-%Y"
+                ),
+            ]
+        ),
+        "confidence": fake.pyfloat(
+            left_digits=1, right_digits=2, positive=True, min_value=0.80, max_value=1.0
+        ),
     }
     defaults.update(kwargs)
     return defaults
@@ -142,18 +176,36 @@ def liveness_result_factory(**kwargs) -> Dict[str, Any]:
         >>> result['is_live']
         True
     """
-    is_live = kwargs.get('is_live', random.choice([True, True, True, False]))  # 75% pass rate
+    is_live = kwargs.get(
+        "is_live", random.choice([True, True, True, False])
+    )  # 75% pass rate
 
     defaults = {
         "is_live": is_live,
-        "confidence": fake.pyfloat(left_digits=1, right_digits=2, positive=True, min_value=0.70, max_value=1.0),
+        "confidence": fake.pyfloat(
+            left_digits=1, right_digits=2, positive=True, min_value=0.70, max_value=1.0
+        ),
         "face_detected": is_live,
-        "face_quality_score": fake.pyfloat(left_digits=1, right_digits=2, positive=True, min_value=0.60, max_value=1.0),
+        "face_quality_score": fake.pyfloat(
+            left_digits=1, right_digits=2, positive=True, min_value=0.60, max_value=1.0
+        ),
         "details": {
-            "blur_score": fake.pyfloat(left_digits=1, right_digits=2, positive=False, min_value=0.0, max_value=1.0),
-            "brightness_score": fake.pyfloat(left_digits=1, right_digits=2, positive=True, min_value=0.1, max_value=1.0),
+            "blur_score": fake.pyfloat(
+                left_digits=1,
+                right_digits=2,
+                positive=False,
+                min_value=0.0,
+                max_value=1.0,
+            ),
+            "brightness_score": fake.pyfloat(
+                left_digits=1,
+                right_digits=2,
+                positive=True,
+                min_value=0.1,
+                max_value=1.0,
+            ),
             "eye_blink_detected": random.choice([True, False]),
-        }
+        },
     }
     defaults.update(kwargs)
     return defaults
@@ -179,16 +231,24 @@ def face_match_factory(**kwargs) -> Dict[str, Any]:
         >>> match['similarity_score']
         0.85
     """
-    is_match = kwargs.get('is_match', random.choice([True, True, False]))  # 66% match rate
-    similarity_score = fake.pyfloat(left_digits=1, right_digits=2, positive=True,
-                                    min_value=0.85 if is_match else 0.3,
-                                    max_value=1.0 if is_match else 0.6)
+    is_match = kwargs.get(
+        "is_match", random.choice([True, True, False])
+    )  # 66% match rate
+    similarity_score = fake.pyfloat(
+        left_digits=1,
+        right_digits=2,
+        positive=True,
+        min_value=0.85 if is_match else 0.3,
+        max_value=1.0 if is_match else 0.6,
+    )
 
     defaults = {
         "is_match": is_match,
         "similarity_score": similarity_score,
         "threshold": 0.75,  # Standard face recognition threshold
-        "ktp_face_found": random.choice([True, True, True, False]),  # 75% detection rate
+        "ktp_face_found": random.choice(
+            [True, True, True, False]
+        ),  # 75% detection rate
         "selfie_face_found": random.choice([True, True, True, False]),
     }
     defaults.update(kwargs)
@@ -218,20 +278,32 @@ def dukcapil_result_factory(**kwargs) -> Dict[str, Any]:
         >>> result['status']
         'VALID'
     """
-    is_valid = kwargs.get('is_valid', random.choice([True, True, True, False]))  # 75% valid rate
+    is_valid = kwargs.get(
+        "is_valid", random.choice([True, True, True, False])
+    )  # 75% valid rate
 
     birth_date_obj = fake.date_of_birth(minimum_age=17, maximum_age=80)
 
     defaults = {
-        "nik": ktp_ocr_factory()['nik'],
+        "nik": ktp_ocr_factory()["nik"],
         "is_valid": is_valid,
         "name": fake.name().upper(),
-        "birth_date": birth_date_obj.strftime('%d-%m-%Y'),
+        "birth_date": birth_date_obj.strftime("%d-%m-%Y"),
         "gender": random.choice(["LAKI-LAKI", "PEREMPUAN"]),
-        "status": "VALID" if is_valid else random.choice(["INVALID", "NOT_FOUND", "DECEASED"]),
-        "match_score": fake.pyfloat(left_digits=1, right_digits=2, positive=True,
-                                    min_value=0.85 if is_valid else 0.0,
-                                    max_value=1.0 if is_valid else 0.5) if is_valid else None,
+        "status": (
+            "VALID" if is_valid else random.choice(["INVALID", "NOT_FOUND", "DECEASED"])
+        ),
+        "match_score": (
+            fake.pyfloat(
+                left_digits=1,
+                right_digits=2,
+                positive=True,
+                min_value=0.85 if is_valid else 0.0,
+                max_value=1.0 if is_valid else 0.5,
+            )
+            if is_valid
+            else None
+        ),
         "notes": fake.sentence() if not is_valid else None,
     }
     defaults.update(kwargs)
@@ -266,22 +338,35 @@ def kyc_verification_factory(**kwargs) -> Dict[str, Any]:
         >>> kyc['status']
         'VERIFIED'
     """
-    status = kwargs.get('status', random.choice(["PENDING", "PROCESSING", "VERIFIED", "REJECTED", "FAILED"]))
+    status = kwargs.get(
+        "status",
+        random.choice(["PENDING", "PROCESSING", "VERIFIED", "REJECTED", "FAILED"]),
+    )
     is_completed = status in ["VERIFIED", "REJECTED", "FAILED"]
 
     now = datetime.utcnow()
-    created_at = kwargs.get('created_at', fake.date_time_between(start_date='-30d', end_date='now'))
+    created_at = kwargs.get(
+        "created_at", fake.date_time_between(start_date="-30d", end_date="now")
+    )
 
     defaults = {
-        "user_id": user_factory()['user_id'],
+        "user_id": user_factory()["user_id"],
         "verification_type": random.choice(["FULL_KYC", "BASIC_KYC"]),
         "status": status,
         "ktp_image_url": fake.url() if random.choice([True, False]) else None,
         "selfie_image_url": fake.url() if random.choice([True, False]) else None,
-        "ktp_ocr_result": ktp_ocr_factory() if random.choice([True, True, False]) else None,
-        "liveness_result": liveness_result_factory() if random.choice([True, True, False]) else None,
-        "face_match_result": face_match_factory() if random.choice([True, True, False]) else None,
-        "dukcapil_result": dukcapil_result_factory() if random.choice([True, True, False]) else None,
+        "ktp_ocr_result": (
+            ktp_ocr_factory() if random.choice([True, True, False]) else None
+        ),
+        "liveness_result": (
+            liveness_result_factory() if random.choice([True, True, False]) else None
+        ),
+        "face_match_result": (
+            face_match_factory() if random.choice([True, True, False]) else None
+        ),
+        "dukcapil_result": (
+            dukcapil_result_factory() if random.choice([True, True, False]) else None
+        ),
         "rejection_reason": fake.sentence() if status == "REJECTED" else None,
         "created_at": created_at,
         "updated_at": now if is_completed else created_at,

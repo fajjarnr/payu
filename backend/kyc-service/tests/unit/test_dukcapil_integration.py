@@ -2,9 +2,10 @@
 Unit tests for Dukcapil Client - NIK verification functionality
 Tests cover API calls, error handling, and response parsing
 """
+
 import pytest
 import sys
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, patch
 import httpx
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/kyc-service/src")
@@ -35,7 +36,7 @@ class TestDukcapilClient:
             "gender": "LAKI-LAKI",
             "status": "VALID",
             "match_score": 0.95,
-            "notes": "Data matched successfully"
+            "notes": "Data matched successfully",
         }
         mock_resp.raise_for_status = MagicMock()
         return mock_resp
@@ -53,7 +54,7 @@ class TestDukcapilClient:
             "gender": "",
             "status": "INVALID",
             "match_score": 0.1,
-            "notes": "NIK not found in database"
+            "notes": "NIK not found in database",
         }
         mock_resp.raise_for_status = MagicMock()
         return mock_resp
@@ -61,7 +62,9 @@ class TestDukcapilClient:
     @pytest.mark.asyncio
     async def test_verify_nik_success(self, dukcapil_client, mock_success_response):
         """Test successful NIK verification"""
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_success_response) as mock_post:
+        with patch.object(
+            dukcapil_client.client, "post", return_value=mock_success_response
+        ) as mock_post:
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             assert isinstance(result, DukcapilVerificationResult)
@@ -82,7 +85,9 @@ class TestDukcapilClient:
     @pytest.mark.asyncio
     async def test_verify_nik_invalid_nik(self, dukcapil_client, mock_failure_response):
         """Test NIK verification with invalid NIK"""
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_failure_response) as mock_post:
+        with patch.object(
+            dukcapil_client.client, "post", return_value=mock_failure_response
+        ) as mock_post:
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             assert result.is_valid is False
@@ -96,9 +101,11 @@ class TestDukcapilClient:
         """Test NIK verification with 404 HTTP error"""
         mock_resp = MagicMock()
         mock_resp.status_code = 404
-        error = httpx.HTTPStatusError("Not Found", request=MagicMock(), response=mock_resp)
+        error = httpx.HTTPStatusError(
+            "Not Found", request=MagicMock(), response=mock_resp
+        )
 
-        with patch.object(dukcapil_client.client, 'post', side_effect=error):
+        with patch.object(dukcapil_client.client, "post", side_effect=error):
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             assert result.is_valid is False
@@ -110,9 +117,11 @@ class TestDukcapilClient:
         """Test NIK verification with 500 HTTP error"""
         mock_resp = MagicMock()
         mock_resp.status_code = 500
-        error = httpx.HTTPStatusError("Internal Server Error", request=MagicMock(), response=mock_resp)
+        error = httpx.HTTPStatusError(
+            "Internal Server Error", request=MagicMock(), response=mock_resp
+        )
 
-        with patch.object(dukcapil_client.client, 'post', side_effect=error):
+        with patch.object(dukcapil_client.client, "post", side_effect=error):
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             assert result.is_valid is False
@@ -124,7 +133,7 @@ class TestDukcapilClient:
         """Test NIK verification with network error"""
         error = httpx.ConnectError("Connection failed")
 
-        with patch.object(dukcapil_client.client, 'post', side_effect=error):
+        with patch.object(dukcapil_client.client, "post", side_effect=error):
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             assert result.is_valid is False
@@ -136,7 +145,7 @@ class TestDukcapilClient:
         """Test NIK verification with timeout"""
         error = httpx.TimeoutException("Request timed out")
 
-        with patch.object(dukcapil_client.client, 'post', side_effect=error):
+        with patch.object(dukcapil_client.client, "post", side_effect=error):
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             assert result.is_valid is False
@@ -160,7 +169,7 @@ class TestDukcapilClient:
         }
         mock_resp.raise_for_status = MagicMock()
 
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_resp):
+        with patch.object(dukcapil_client.client, "post", return_value=mock_resp):
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             # Should use default values for missing fields
@@ -172,16 +181,22 @@ class TestDukcapilClient:
     @pytest.mark.asyncio
     async def test_verify_nik_empty_nik(self, dukcapil_client, mock_success_response):
         """Test NIK verification with empty NIK"""
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_success_response):
+        with patch.object(
+            dukcapil_client.client, "post", return_value=mock_success_response
+        ):
             result = await dukcapil_client.verify_nik("")
 
             # Should still attempt the call (API will validate)
             assert isinstance(result, DukcapilVerificationResult)
 
     @pytest.mark.asyncio
-    async def test_verify_nik_malformed_nik(self, dukcapil_client, mock_failure_response):
+    async def test_verify_nik_malformed_nik(
+        self, dukcapil_client, mock_failure_response
+    ):
         """Test NIK verification with malformed NIK"""
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_failure_response):
+        with patch.object(
+            dukcapil_client.client, "post", return_value=mock_failure_response
+        ):
             result = await dukcapil_client.verify_nik("ABC123")
 
             assert isinstance(result, DukcapilVerificationResult)
@@ -194,7 +209,7 @@ class TestDukcapilClient:
         mock_resp.json.side_effect = ValueError("Invalid JSON")
         mock_resp.raise_for_status = MagicMock()
 
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_resp):
+        with patch.object(dukcapil_client.client, "post", return_value=mock_resp):
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             # Exception is caught and returns error result
@@ -205,7 +220,9 @@ class TestDukcapilClient:
     @pytest.mark.asyncio
     async def test_verify_nik_generic_exception(self, dukcapil_client):
         """Test NIK verification with unexpected exception"""
-        with patch.object(dukcapil_client.client, 'post', side_effect=Exception("Unexpected error")):
+        with patch.object(
+            dukcapil_client.client, "post", side_effect=Exception("Unexpected error")
+        ):
             result = await dukcapil_client.verify_nik("3201012345678901")
 
             assert result.is_valid is False
@@ -213,15 +230,19 @@ class TestDukcapilClient:
             assert "Error: Unexpected error" in result.notes
 
     @pytest.mark.asyncio
-    async def test_verify_nik_request_payload(self, dukcapil_client, mock_success_response):
+    async def test_verify_nik_request_payload(
+        self, dukcapil_client, mock_success_response
+    ):
         """Test that correct request payload is sent"""
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_success_response) as mock_post:
+        with patch.object(
+            dukcapil_client.client, "post", return_value=mock_success_response
+        ) as mock_post:
             await dukcapil_client.verify_nik("3201012345678901")
 
             # Check that NIK was sent in request body
             call_kwargs = mock_post.call_args[1]
-            assert 'json' in call_kwargs
-            assert call_kwargs['json']['nik'] == "3201012345678901"
+            assert "json" in call_kwargs
+            assert call_kwargs["json"]["nik"] == "3201012345678901"
 
     @pytest.mark.asyncio
     async def test_verify_nik_different_valid_statuses(self, dukcapil_client):
@@ -235,11 +256,11 @@ class TestDukcapilClient:
                 "name": "TEST USER",
                 "birth_date": "1990-01-01",
                 "gender": "LAKI-LAKI",
-                "status": status
+                "status": status,
             }
             mock_resp.raise_for_status = MagicMock()
 
-            with patch.object(dukcapil_client.client, 'post', return_value=mock_resp):
+            with patch.object(dukcapil_client.client, "post", return_value=mock_resp):
                 result = await dukcapil_client.verify_nik("3201012345678901")
                 assert result.status == status
 
@@ -255,11 +276,11 @@ class TestDukcapilClient:
             "birth_date": "1990-01-01",
             "gender": "LAKI-LAKI",
             "status": "VALID",
-            "match_score": 0.87
+            "match_score": 0.87,
         }
         mock_resp.raise_for_status = MagicMock()
 
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_resp):
+        with patch.object(dukcapil_client.client, "post", return_value=mock_resp):
             result = await dukcapil_client.verify_nik("3201012345678901")
             assert result.match_score == 0.87
 
@@ -273,22 +294,26 @@ class TestDukcapilClient:
         """Test that client initializes with correct settings"""
         client = DukcapilClient()
         assert client.client is not None
-        assert hasattr(client, 'base_url')
+        assert hasattr(client, "base_url")
 
     @pytest.mark.asyncio
-    async def test_verify_nik_concurrent_requests(self, dukcapil_client, mock_success_response):
+    async def test_verify_nik_concurrent_requests(
+        self, dukcapil_client, mock_success_response
+    ):
         """Test handling concurrent NIK verification requests"""
         import asyncio
 
         async def verify(nik):
-            with patch.object(dukcapil_client.client, 'post', return_value=mock_success_response):
+            with patch.object(
+                dukcapil_client.client, "post", return_value=mock_success_response
+            ):
                 return await dukcapil_client.verify_nik(nik)
 
         # Run concurrent requests
         results = await asyncio.gather(
             verify("3201012345678901"),
             verify("3201012345678902"),
-            verify("3201012345678903")
+            verify("3201012345678903"),
         )
 
         assert len(results) == 3
@@ -301,9 +326,11 @@ class TestDukcapilClient:
         test_nik = "3201012345678901"
         mock_resp = MagicMock()
         mock_resp.status_code = 500
-        error = httpx.HTTPStatusError("Server Error", request=MagicMock(), response=mock_resp)
+        error = httpx.HTTPStatusError(
+            "Server Error", request=MagicMock(), response=mock_resp
+        )
 
-        with patch.object(dukcapil_client.client, 'post', side_effect=error):
+        with patch.object(dukcapil_client.client, "post", side_effect=error):
             result = await dukcapil_client.verify_nik(test_nik)
 
             assert result.nik == test_nik
@@ -320,11 +347,11 @@ class TestDukcapilClient:
             "name": "SITI AMINAH",
             "birth_date": "1992-05-15",
             "gender": "PEREMPUAN",
-            "status": "VALID"
+            "status": "VALID",
         }
         mock_resp.raise_for_status = MagicMock()
 
-        with patch.object(dukcapil_client.client, 'post', return_value=mock_resp):
+        with patch.object(dukcapil_client.client, "post", return_value=mock_resp):
             result = await dukcapil_client.verify_nik("3201012345678904")
             assert result.gender == "PEREMPUAN"
 
@@ -335,7 +362,7 @@ class TestDukcapilClient:
             "Data matched successfully",
             "Minor discrepancies in name spelling",
             "Address needs verification",
-            "Record expired, please visit Dukcapil"
+            "Record expired, please visit Dukcapil",
         ]
 
         for notes in test_notes:
@@ -348,10 +375,10 @@ class TestDukcapilClient:
                 "birth_date": "1990-01-01",
                 "gender": "LAKI-LAKI",
                 "status": "VALID",
-                "notes": notes
+                "notes": notes,
             }
             mock_resp.raise_for_status = MagicMock()
 
-            with patch.object(dukcapil_client.client, 'post', return_value=mock_resp):
+            with patch.object(dukcapil_client.client, "post", return_value=mock_resp):
                 result = await dukcapil_client.verify_nik("3201012345678901")
                 assert result.notes == notes

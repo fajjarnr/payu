@@ -3,6 +3,7 @@ Unit tests for Analytics API endpoints.
 
 Tests the FastAPI endpoint handlers in the analytics router.
 """
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import status
@@ -15,7 +16,7 @@ from app.api.v1.analytics import (
     get_robo_advisory,
     calculate_fraud_score,
     get_transaction_fraud_score,
-    get_user_high_risk_transactions
+    get_user_high_risk_transactions,
 )
 from app.models.schemas import (
     GetAnalyticsRequest,
@@ -25,7 +26,7 @@ from app.models.schemas import (
     GetFraudScoreRequest,
     UserMetricsResponse,
     SpendingTrendResponse,
-    CashFlowAnalysis
+    CashFlowAnalysis,
 )
 
 
@@ -43,7 +44,7 @@ def sample_user_metrics_response():
         average_transaction=Decimal("100000.00"),
         last_transaction_date=datetime.utcnow(),
         account_age_days=365,
-        kyc_status="VERIFIED"
+        kyc_status="VERIFIED",
     )
 
 
@@ -62,13 +63,17 @@ def sample_spending_trends_response():
                 amount=Decimal("3000000.00"),
                 percentage=37.5,
                 transaction_count=30,
-                trend="stable"
+                trend="stable",
             )
         ],
         month_over_month_change=15.5,
         top_merchants=[
-            {"merchant_id": "merchant_1", "total_amount": 1500000.0, "transaction_count": 20}
-        ]
+            {
+                "merchant_id": "merchant_1",
+                "total_amount": 1500000.0,
+                "transaction_count": 20,
+            }
+        ],
     )
 
 
@@ -83,7 +88,7 @@ def sample_cash_flow_response():
         expenses=Decimal("8000000.00"),
         net_cash_flow=Decimal("7000000.00"),
         income_by_source=[],
-        expenses_by_category=[]
+        expenses_by_category=[],
     )
 
 
@@ -93,7 +98,7 @@ def sample_robo_advisory_request():
     return GetRoboAdvisoryRequest(
         user_id="user_123",
         risk_questions=[3, 4, 3, 4, 3],
-        monthly_investment_amount=2000000.0
+        monthly_investment_amount=2000000.0,
     )
 
 
@@ -106,7 +111,7 @@ def sample_fraud_score_request():
         amount=500000.0,
         currency="IDR",
         transaction_type="TRANSFER",
-        metadata={}
+        metadata={},
     )
 
 
@@ -114,10 +119,12 @@ class TestAnalyticsAPIEndpoints:
     """Test suite for Analytics API endpoints."""
 
     @pytest.mark.asyncio
-    async def test_get_user_metrics_success(self, mock_db_session, sample_user_metrics_response):
+    async def test_get_user_metrics_success(
+        self, mock_db_session, sample_user_metrics_response
+    ):
         """Test successful user metrics retrieval."""
         # Mock the service
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_user_metrics.return_value = sample_user_metrics_response
             mock_service_class.return_value = mock_service
@@ -134,7 +141,7 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_user_metrics_not_found(self, mock_db_session):
         """Test user metrics retrieval when user not found."""
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_user_metrics.return_value = None
             mock_service_class.return_value = mock_service
@@ -151,7 +158,7 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_user_metrics_service_error(self, mock_db_session):
         """Test user metrics retrieval when service raises error."""
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_user_metrics.side_effect = Exception("Database error")
             mock_service_class.return_value = mock_service
@@ -165,17 +172,19 @@ class TestAnalyticsAPIEndpoints:
             assert exc_info.value.detail["error_code"] == "ANA_SYS_001"
 
     @pytest.mark.asyncio
-    async def test_get_spending_trends_success(self, mock_db_session, sample_spending_trends_response):
+    async def test_get_spending_trends_success(
+        self, mock_db_session, sample_spending_trends_response
+    ):
         """Test successful spending trends retrieval."""
         request = GetSpendingTrendsRequest(
-            user_id="user_123",
-            period_days=30,
-            group_by="category"
+            user_id="user_123", period_days=30, group_by="category"
         )
 
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
-            mock_service.get_spending_trends.return_value = sample_spending_trends_response
+            mock_service.get_spending_trends.return_value = (
+                sample_spending_trends_response
+            )
             mock_service_class.return_value = mock_service
 
             result = await get_spending_trends(request, mock_db_session)
@@ -187,12 +196,10 @@ class TestAnalyticsAPIEndpoints:
     async def test_get_spending_trends_service_error(self, mock_db_session):
         """Test spending trends when service raises error."""
         request = GetSpendingTrendsRequest(
-            user_id="user_123",
-            period_days=30,
-            group_by="category"
+            user_id="user_123", period_days=30, group_by="category"
         )
 
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_spending_trends.side_effect = Exception("Query error")
             mock_service_class.return_value = mock_service
@@ -206,14 +213,13 @@ class TestAnalyticsAPIEndpoints:
             assert exc_info.value.detail["error_code"] == "ANA_SYS_002"
 
     @pytest.mark.asyncio
-    async def test_get_cash_flow_analysis_success(self, mock_db_session, sample_cash_flow_response):
+    async def test_get_cash_flow_analysis_success(
+        self, mock_db_session, sample_cash_flow_response
+    ):
         """Test successful cash flow analysis retrieval."""
-        request = GetAnalyticsRequest(
-            user_id="user_123",
-            period_days=30
-        )
+        request = GetAnalyticsRequest(user_id="user_123", period_days=30)
 
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_cash_flow_analysis.return_value = sample_cash_flow_response
             mock_service_class.return_value = mock_service
@@ -227,14 +233,13 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_cash_flow_analysis_service_error(self, mock_db_session):
         """Test cash flow analysis when service raises error."""
-        request = GetAnalyticsRequest(
-            user_id="user_123",
-            period_days=30
-        )
+        request = GetAnalyticsRequest(user_id="user_123", period_days=30)
 
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
-            mock_service.get_cash_flow_analysis.side_effect = Exception("Analysis error")
+            mock_service.get_cash_flow_analysis.side_effect = Exception(
+                "Analysis error"
+            )
             mock_service_class.return_value = mock_service
 
             from fastapi import HTTPException
@@ -248,7 +253,7 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_recommendations_success(self, mock_db_session):
         """Test successful recommendations retrieval."""
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_recommendations.return_value = [
                 {"type": "savings", "message": "Save more!", "priority": "high"}
@@ -264,9 +269,11 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_recommendations_service_error(self, mock_db_session):
         """Test recommendations when service raises error."""
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
-            mock_service.get_recommendations.side_effect = Exception("Recommendation error")
+            mock_service.get_recommendations.side_effect = Exception(
+                "Recommendation error"
+            )
             mock_service_class.return_value = mock_service
 
             from fastapi import HTTPException
@@ -280,13 +287,13 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_robo_advisory_success(self, sample_robo_advisory_request):
         """Test successful robo advisory generation."""
-        with patch('app.api.v1.analytics.RoboAdvisoryEngine') as mock_engine_class:
+        with patch("app.api.v1.analytics.RoboAdvisoryEngine") as mock_engine_class:
             mock_engine = MagicMock()
             mock_engine.generate_robo_advisory.return_value = {
                 "risk_profile": "moderate",
                 "portfolio_allocation": {},
                 "recommendations": [],
-                "expected_annual_return": 12.5
+                "expected_annual_return": 12.5,
             }
             mock_engine_class.return_value = mock_engine
 
@@ -298,7 +305,7 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_robo_advisory_service_error(self, sample_robo_advisory_request):
         """Test robo advisory when service raises error."""
-        with patch('app.api.v1.analytics.RoboAdvisoryEngine') as mock_engine_class:
+        with patch("app.api.v1.analytics.RoboAdvisoryEngine") as mock_engine_class:
             mock_engine = MagicMock()
             mock_engine.generate_robo_advisory.side_effect = Exception("Advisory error")
             mock_engine_class.return_value = mock_engine
@@ -324,14 +331,14 @@ class TestAnalyticsAPIEndpoints:
                 risk_level=RiskLevel.LOW,
                 risk_factors={},
                 is_suspicious=False,
-                recommended_action="ALLOW"
+                recommended_action="ALLOW",
             ),
             is_blocked=False,
             requires_review=False,
-            rule_triggers=[]
+            rule_triggers=[],
         )
 
-        with patch('app.api.v1.analytics.FraudDetectionEngine') as mock_engine_class:
+        with patch("app.api.v1.analytics.FraudDetectionEngine") as mock_engine_class:
             mock_engine = AsyncMock()
             mock_engine.calculate_fraud_score.return_value = mock_result
             mock_engine_class.return_value = mock_engine
@@ -342,11 +349,15 @@ class TestAnalyticsAPIEndpoints:
             assert result.fraud_score.transaction_id == "txn_12345"
 
     @pytest.mark.asyncio
-    async def test_calculate_fraud_score_service_error(self, sample_fraud_score_request):
+    async def test_calculate_fraud_score_service_error(
+        self, sample_fraud_score_request
+    ):
         """Test fraud score calculation when service raises error."""
-        with patch('app.api.v1.analytics.FraudDetectionEngine') as mock_engine_class:
+        with patch("app.api.v1.analytics.FraudDetectionEngine") as mock_engine_class:
             mock_engine = AsyncMock()
-            mock_engine.calculate_fraud_score.side_effect = Exception("Fraud detection error")
+            mock_engine.calculate_fraud_score.side_effect = Exception(
+                "Fraud detection error"
+            )
             mock_engine_class.return_value = mock_engine
 
             from fastapi import HTTPException
@@ -359,10 +370,7 @@ class TestAnalyticsAPIEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_transaction_fraud_score_found(
-        self,
-        mock_db_session,
-        sample_fraud_score_entity,
-        mock_scalar_result
+        self, mock_db_session, sample_fraud_score_entity, mock_scalar_result
     ):
         """Test retrieving existing fraud score for transaction."""
         mock_db_session.execute.return_value = mock_scalar_result(
@@ -376,9 +384,7 @@ class TestAnalyticsAPIEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_transaction_fraud_score_not_found(
-        self,
-        mock_db_session,
-        mock_scalar_result
+        self, mock_db_session, mock_scalar_result
     ):
         """Test retrieving fraud score when transaction not found."""
         mock_db_session.execute.return_value = mock_scalar_result(None)
@@ -406,10 +412,7 @@ class TestAnalyticsAPIEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_user_high_risk_transactions_success(
-        self,
-        mock_db_session,
-        sample_fraud_score_entity,
-        mock_scalars_result
+        self, mock_db_session, sample_fraud_score_entity, mock_scalars_result
     ):
         """Test retrieving high-risk transactions for user."""
         from datetime import datetime, timedelta
@@ -428,7 +431,7 @@ class TestAnalyticsAPIEndpoints:
                 is_blocked=True,
                 requires_review=True,
                 rule_triggers=[],
-                scored_at=datetime.utcnow() - timedelta(days=i)
+                scored_at=datetime.utcnow() - timedelta(days=i),
             )
             for i in range(5)
         ]
@@ -443,9 +446,7 @@ class TestAnalyticsAPIEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_user_high_risk_transactions_empty(
-        self,
-        mock_db_session,
-        mock_scalars_result
+        self, mock_db_session, mock_scalars_result
     ):
         """Test retrieving high-risk transactions when none exist."""
         mock_db_session.execute.return_value = mock_scalars_result([])
@@ -474,23 +475,21 @@ class TestAnalyticsAPIValidation:
     @pytest.mark.asyncio
     async def test_get_spending_trends_different_group_by(self, mock_db_session):
         """Test spending trends with different group_by options."""
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_spending_trends.return_value = SpendingTrendResponse(
                 period="30 days",
                 total_spending=0,
                 spending_by_category=[],
                 month_over_month_change=0,
-                top_merchants=[]
+                top_merchants=[],
             )
             mock_service_class.return_value = mock_service
 
             # Test different group_by values
             for group_by in ["category", "merchant", "day"]:
                 request = GetSpendingTrendsRequest(
-                    user_id="user_123",
-                    period_days=30,
-                    group_by=group_by
+                    user_id="user_123", period_days=30, group_by=group_by
                 )
                 result = await get_spending_trends(request, mock_db_session)
                 assert result is not None
@@ -498,21 +497,19 @@ class TestAnalyticsAPIValidation:
     @pytest.mark.asyncio
     async def test_get_spending_trends_custom_period(self, mock_db_session):
         """Test spending trends with custom period."""
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_spending_trends.return_value = SpendingTrendResponse(
                 period="60 days",
                 total_spending=0,
                 spending_by_category=[],
                 month_over_month_change=0,
-                top_merchants=[]
+                top_merchants=[],
             )
             mock_service_class.return_value = mock_service
 
             request = GetSpendingTrendsRequest(
-                user_id="user_123",
-                period_days=60,
-                group_by="category"
+                user_id="user_123", period_days=60, group_by="category"
             )
             result = await get_spending_trends(request, mock_db_session)
             assert result is not None
@@ -520,7 +517,7 @@ class TestAnalyticsAPIValidation:
     @pytest.mark.asyncio
     async def test_get_cash_flow_analysis_custom_period(self, mock_db_session):
         """Test cash flow analysis with custom period."""
-        with patch('app.api.v1.analytics.AnalyticsService') as mock_service_class:
+        with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_cash_flow_analysis.return_value = CashFlowAnalysis(
                 period="90 days",
@@ -528,14 +525,11 @@ class TestAnalyticsAPIValidation:
                 expenses=0,
                 net_cash_flow=0,
                 income_by_source=[],
-                expenses_by_category=[]
+                expenses_by_category=[],
             )
             mock_service_class.return_value = mock_service
 
-            request = GetAnalyticsRequest(
-                user_id="user_123",
-                period_days=90
-            )
+            request = GetAnalyticsRequest(user_id="user_123", period_days=90)
             result = await get_cash_flow_analysis(request, mock_db_session)
             assert result is not None
 
@@ -548,13 +542,13 @@ class TestAnalyticsAPIValidation:
             [5, 5, 5, 5, 5],  # Aggressive
         ]
 
-        with patch('app.api.v1.analytics.RoboAdvisoryEngine') as mock_engine_class:
+        with patch("app.api.v1.analytics.RoboAdvisoryEngine") as mock_engine_class:
             mock_engine = MagicMock()
             mock_engine.generate_robo_advisory.return_value = {
                 "risk_profile": "moderate",
                 "portfolio_allocation": {},
                 "recommendations": [],
-                "expected_annual_return": 10.0
+                "expected_annual_return": 10.0,
             }
             mock_engine_class.return_value = mock_engine
 
@@ -562,7 +556,7 @@ class TestAnalyticsAPIValidation:
                 request = GetRoboAdvisoryRequest(
                     user_id="user_123",
                     risk_questions=risk_questions,
-                    monthly_investment_amount=1000000.0
+                    monthly_investment_amount=1000000.0,
                 )
                 result = await get_robo_advisory(request)
                 assert result is not None
@@ -572,7 +566,7 @@ class TestAnalyticsAPIValidation:
         """Test fraud score calculation for different transaction types."""
         transaction_types = ["TRANSFER", "QRIS", "PAYMENT", "WITHDRAWAL"]
 
-        with patch('app.api.v1.analytics.FraudDetectionEngine') as mock_engine_class:
+        with patch("app.api.v1.analytics.FraudDetectionEngine") as mock_engine_class:
             from app.models.schemas import FraudDetectionResult, FraudScore, RiskLevel
 
             mock_result = FraudDetectionResult(
@@ -583,11 +577,11 @@ class TestAnalyticsAPIValidation:
                     risk_level=RiskLevel.LOW,
                     risk_factors={},
                     is_suspicious=False,
-                    recommended_action="ALLOW"
+                    recommended_action="ALLOW",
                 ),
                 is_blocked=False,
                 requires_review=False,
-                rule_triggers=[]
+                rule_triggers=[],
             )
 
             mock_engine = AsyncMock()
@@ -601,7 +595,7 @@ class TestAnalyticsAPIValidation:
                     amount=500000.0,
                     currency="IDR",
                     transaction_type=txn_type,
-                    metadata={}
+                    metadata={},
                 )
                 result = await calculate_fraud_score(request)
                 assert result is not None

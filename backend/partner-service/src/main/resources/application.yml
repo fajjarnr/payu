@@ -1,10 +1,8 @@
 quarkus:
   application:
     name: partner-service
-
   http:
     port: 8089
-
   otel:
     service:
       name: partner-service
@@ -15,16 +13,14 @@ quarkus:
       attributes:
         - service.name=partner-service
         - service.version=1.0.0
-
   datasource:
     db-kind: postgresql
     username: postgres
-    password: postgres
+    password: postgres # pragma: allowlist secret
     jdbc:
       url: jdbc:postgresql://localhost:5432/partnerdb
     health: true
     metrics: true
-
   hibernate-orm:
     database:
       generation: validate
@@ -33,21 +29,17 @@ quarkus:
       packages: "id.payu.partner.domain,io.quarkus.smallrye.reactivemessaging.kafka"
     log:
       sql: false
-
   kafka:
     bootstrap-servers: localhost:9092
-
   smallrye-openapi:
     info-title: PayU Partner Service API
     info-version: 1.0.0
     info-description: API for managing external partners
-
   log:
     level: INFO
     category:
       "id.payu.partner":
         level: DEBUG
-
 "%dev":
   quarkus:
     datasource:
@@ -60,7 +52,6 @@ quarkus:
       database:
         generation: drop-and-create
       packages: "id.payu.partner.domain,io.quarkus.smallrye.reactivemessaging.kafka"
-
 "%test":
   quarkus:
     datasource:
