@@ -117,9 +117,14 @@ Always include a health-check step post-deployment.
 - [ ] Is there a `trap` for cleanup?
 - [ ] Are variable assignments quoted?
 
-## 🤖 Agent Delegation
+## 🤖 Agent Delegation & Parallel Execution
 
-Untuk eksekusi otomasi pipeline, git branch management, dan script maintenance, fork **`@orchestrator`**. Agen ini fokus pada efisiensi alur kerja pengiriman kode.
+Untuk manajemen infrastruktur yang gesit dan aman, gunakan pola delegasi paralel (Swarm Mode):
+
+- **Pipeline Orchestration**: Delegasikan ke **`@orchestrator`** untuk manajemen workflow Tekton/ArgoCD dan sinkronisasi Git.
+- **Container Build & Packaging**: Aktifkan **`@builder`** secara paralel untuk optimasi Dockerfile dan build artifact.
+- **Infrastructure Validation**: Saat membuat script atau template, panggil **`@tester`** (bash stubs/BATS) secara simultan untuk memastikan keandalan otomasi.
+- **Security Check**: Panggil **`@auditor`** secara paralel untuk melakukan scan kerentanan pada container image (Snyk/Trivy).
 
 ---
 *Last Updated: January 2026*

@@ -133,5 +133,14 @@ When building LLM-integrated services (e.g., smart analytics, support bots), fol
 - [ ] **Observability**: Prometheus metrics and structured logging implemented?
 - [ ] **Prompt Engineering**: Are prompts externalized, versioned, and follow safety patterns?
 
+## 🤖 Agent Delegation & Parallel Execution
+
+Untuk pengembangan sistem ML yang robust dan terintegrasi, gunakan pola delegasi paralel (Swarm Mode):
+
+- **ML Inference Logic**: Delegasikan ke **`@logic-builder`** untuk implementasi Async Service & Repository patterns di FastAPI.
+- **Data Engineering**: Aktifkan **`@migrator`** secara paralel untuk optimasi skema TimescaleDB dan index data analytics.
+- **Model Observability**: Panggil **`@orchestrator`** secara simultan untuk memastikan metrics Prometheus dan dashboard Grafana terkonfigurasi di OpenShift.
+- **Security Audit**: Jalankan **`@auditor`** untuk memverifikasi masking PII pada data training dan log prediksi.
+
 ---
 *Last Updated: January 2026*

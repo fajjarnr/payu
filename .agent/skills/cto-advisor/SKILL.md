@@ -68,5 +68,14 @@ python scripts/team_scaling_calculator.py
 - **`references/technology_evaluation_framework.md`**: Decision matrix for Build vs Buy vs Open Source.
 - **`references/architecture_decision_records.md`**: Framework for documenting strategic design choices.
 
+## 🤖 Agent Delegation & Parallel Execution (Strategic Planning)
+
+Sebagai perancang strategi, gunakan pola delegasi paralel (Swarm Mode) untuk mengumpulkan data keputusan secara cepat:
+
+- **Deep Analysis**: Delegasikan ke **`@cto-advisor`** (self) atau agen spesialis untuk melakukan "Tech Debt Audit" di berbagai service secara simultan.
+- **Architectural Guardrails**: Aktifkan **`@lifecycle-manager`** secara paralel untuk memastikan rencana strategis diterjemahkan ke dalam task-task SDLC yang konkret.
+- **Compliance Alignment**: Panggil **`@compliance-auditor`** secara simultan untuk memverifikasi roadmap teknologi terhadap regulasi OJK/PCI-DSS terbaru.
+- **Documentation Synthesis**: Jalankan **`@docs-engineer`** via **`@slidev`** untuk mengubah rencana strategis menjadi deck presentasi pimpinan secara otomatis.
+
 ---
 *Last Updated: January 2026*

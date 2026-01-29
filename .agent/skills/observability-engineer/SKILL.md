@@ -80,5 +80,14 @@ Error tanpa konteks itu tidak berguna. Selalu sertakan:
 - [ ] Is sampling rate configured correctly for production (e.g., 10%)?
 - [ ] Are business-critical spans tagged with metadata (e.g., `account_id`, `txn_id`)?
 
+## 🤖 Agent Delegation & Parallel Execution (Observability)
+
+Untuk memastikan visibilitas penuh tanpa celah, gunakan pola delegasi paralel (Swarm Mode):
+
+- **Tracing & Metrics Setup**: Delegasikan ke **`@orchestrator`** untuk konfigurasi agent OpenTelemetry dan dashboard Grafana di OpenShift.
+- **Instrumentation Logic**: Aktifkan **`@logic-builder`** secara paralel untuk penambahan span manual dan tagging metadata bisnis di level code.
+- **Log Verification**: Panggil **`@auditor`** secara simultan untuk memverifikasi bahwa PII dalam log telah di-masking sebelum ter-index di Loki.
+- **Alerting Strategy**: Jalankan **`@tester`** untuk mensimulasikan kegagalan dan memverifikasi pemicu alert (Prometheus Alertmanager) secara paralel.
+
 ---
 *Last Updated: January 2026*

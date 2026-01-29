@@ -58,5 +58,14 @@ git bisect good v2.0.0 # Last known good version
 - [ ] **Async**: Missing `await`, race conditions, timeout issues.
 - [ ] **Env**: Missing variables, incorrect file paths, binary compatibility.
 
+## 🤖 Agent Delegation & Parallel Execution (Debugging)
+
+Untuk investigasi akar masalah (RCA) yang super cepat, gunakan pola delegasi paralel (Swarm Mode):
+
+- **Trace Analysis**: Delegasikan ke **`@observability-engineer`** (via `@orchestrator`) untuk menganalisa grafik Jaeger dan log Loki secara paralel.
+- **Hypothesis Testing**: Aktifkan **`@tester`** secara simultan untuk membuat test case reproduksi minimal (JUnit/Pytest).
+- **Code Audit**: Panggil **`@logic-builder`** secara paralel untuk mereview commit history dan logic domain yang dicurigai sebagai sumber bug.
+- **Fix Implementation**: Jalankan **`@builder`** secara paralel untuk memverifikasi fix di container sandbox segera setelah logic diperbaiki.
+
 ---
 *Last Updated: January 2026*

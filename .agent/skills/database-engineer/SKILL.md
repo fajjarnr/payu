@@ -574,9 +574,14 @@ Before deploying schema changes:
 - [ ] Rollback script prepared
 - [ ] Integration tests pass with Testcontainers
 
-## 🤖 Agent Delegation
+## 🤖 Agent Delegation & Parallel Execution
 
-Untuk pembuatan script migrasi Flyway dan SQL optimization task, fork **`@migrator`**. Agen ini khusus menangani validasi skema dan performa query database.
+Untuk eksekusi database task yang aman dan cepat, gunakan pola delegasi paralel (Swarm Mode):
+
+- **Migration & Schema**: Delegasikan ke **`@migrator`** untuk pembuatan script Flyway dan validasi SQL.
+- **Data-Logic Integration**: Aktifkan **`@logic-builder`** secara paralel untuk memastikan Rich Domain Model selaras dengan skema DB baru.
+- **Performance Analysis**: Panggil **`@builder`** secara simultan jika migrasi butuh penyesuaian dependensi driver atau container optimization.
+- **Security & PII Scan**: Jalankan **`@auditor`** secara paralel untuk memastikan tidak ada data sensitif yang terekspos dalam skema atau log database.
 
 ---
 

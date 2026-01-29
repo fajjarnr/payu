@@ -299,6 +299,11 @@ All financial and security-sensitive actions MUST produce an immutable audit log
 - [ ] **PAN Masking**: Card numbers masked in all UI and reports (6/4 rule)
 - [ ] **Encryption at Rest**: All payment-related PII (PAN, Account IDs) encrypted using AES-256-GCM
 
-## 🤖 Agent Delegation
+## 🤖 Agent Delegation & Parallel Execution
 
-Untuk audit kepatuhan PCI-DSS dan scanning PII pada codebase, fork **`@auditor`**. Gunakan agen ini sebelum fase release untuk memastikan zero security leakage.
+Untuk posture keamanan yang proaktif (SecDevOps), gunakan pola delegasi paralel (Swarm Mode):
+
+- **Security Compliance**: Delegasikan ke **`@auditor`** atau **`@compliance-auditor`** untuk audit PCI-DSS, OJK, dan scan PII.
+- **Secure Implementation**: Jalankan **`@logic-builder`** (Backend) atau **`@styler`** (Frontend) secara paralel untuk mengimplementasikan perbaikan keamanan yang ditemukan.
+- **Deployment Safety**: Panggil **`@orchestrator`** secara simultan untuk memastikan pipeline Tekton/ArgoCD memiliki gate keamanan yang benar.
+- **Data Integrity**: Aktifkan **`@migrator`** secara paralel jika perbaikan keamanan memerlukan perubahan skema database (misal: penambahan kolom enkripsi).

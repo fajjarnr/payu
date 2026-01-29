@@ -218,6 +218,11 @@ mvn test jacoco:report
 # Report: target/site/jacoco/index.html
 ```
 
-## 🤖 Agent Delegation
+## 🤖 Agent Delegation & Parallel Execution
 
-Untuk otomatisasi penulisan dan eksekusi test suite masif, fork **`@tester`**. Agen ini akan menangani setup Testcontainers dan penulisan JUnit 5 boilerplate secara mandiri.
+Untuk cakupan testing yang masif tanpa menghambat kecepatan, gunakan pola delegasi paralel (Swarm Mode):
+
+- **Standard Testing**: Delegasikan ke **`@tester`** untuk setup Testcontainers dan penulisan JUnit/FastAPI boilerplate.
+- **Architecture & Security Audit**: Jalankan **`@auditor`** secara paralel untuk melakukan ArchUnit check dan security scan pada level kode.
+- **Performance Benchmarking**: Jika fitur butuh load test, aktifkan **`@builder`** (untuk build optimasi) dan masifkan eksekusi Gatling secara paralel.
+- **Visual/Design QA**: Jika testing menyangkut UI (Web/Mobile), panggil **`@styler`** untuk memverifikasi kesesuaian "Premium Emerald" design.

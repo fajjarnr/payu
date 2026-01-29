@@ -110,5 +110,14 @@ Use `PersistQueryClientProvider` with `AsyncStorage` to ensure the app works und
 - [ ] **SafeArea** respects device notches?
 - [ ] **Hermes** enabled and logs stripped?
 
+## 🤖 Agent Delegation & Parallel Execution
+
+Untuk pengembangan mobile yang premium dan aman, gunakan pola delegasi paralel (Swarm Mode):
+
+- **UI/UX Excellence**: Delegasikan ke **`@styler`** untuk implementasi NativeWind styling dan micro-animations Reanimated yang sesuai "Premium Emerald".
+- **Business Logic Sync**: Aktifkan **`@logic-builder`** secara paralel untuk memastikan contract API antara Mobile dan Backend tetap sinkron.
+- **Secure Storage & Biometrics**: Panggil **`@auditor`** secara simultan untuk memverifikasi implementasi Expo SecureStore dan flow biometrik sesuai standar OJK.
+- **Automated Mobile QA**: Jalankan **`@tester`** untuk menulis test case Jest dan skrip Maestro secara paralel dengan development fitur.
+
 ---
 *Last Updated: January 2026*

@@ -630,3 +630,12 @@ type OrderConnection {
     }
     ```
 3.  **Deprecation**: Use `@deprecated(reason: "...")` directive.
+
+## 🤖 Agent Delegation & Parallel Execution (API Development)
+
+Untuk siklus design-to-implementation yang cepat, gunakan pola delegasi paralel (Swarm Mode):
+
+- **API Specification**: Delegasikan ke **`@scaffolder`** untuk pembuatan file OpenAPI (YAML/JSON) dan integrasi Swagger UI.
+- **Contract Verification**: Aktifkan **`@tester`** secara paralel untuk menulis REST Assured atau DACTYLE tests berdasarkan spek API.
+- **DTO Implementation**: Panggil **`@logic-builder`** secara simultan untuk mengimplementasikan Java Records atau Pydantic models yang sesuai dengan kontrak.
+- **Security Audit**: Jalankan **`@auditor`** untuk memastikan setiap endpoint memiliki RBAC checks dan input validation yang ketat.

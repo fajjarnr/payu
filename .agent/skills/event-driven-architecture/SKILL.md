@@ -631,6 +631,15 @@ Before implementing event-driven features:
 - [ ] Document event flow in architecture docs
 - [ ] Set up monitoring for consumer lag
 
+## 🤖 Agent Delegation & Parallel Execution (Event-Driven)
+
+Untuk orkestrasi arsitektur berbasis event yang andal, gunakan pola delegasi paralel (Swarm Mode):
+
+- **Messaging Infrastructure**: Delegasikan ke **`@orchestrator`** untuk konfigurasi topic Kafka dan management consumer group.
+- **Saga & Aggregate Logic**: Aktifkan **`@logic-builder`** secara paralel untuk implementasi Saga Orchestrator dan Aggregate reconstruction.
+- **Event Persistence**: Panggil **`@migrator`** secara simultan untuk setup skema Event Store (PostgreSQL) dan snapshotting.
+- **Distributed Verification**: Jalankan **`@tester`** untuk menulis integrasi test yang melibatkan Kafka (Embedded/Testcontainers) secara paralel.
+
 ---
 
 *Last Updated: January 2026*
