@@ -1420,6 +1420,7 @@ Untuk hasil terbaik dan tercepat, gunakan pola delegasi paralel (Swarm Mode):
 | Resource | Path |
 |----------|------|
 | PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| TypeScript Advanced | `.agent/skills/typescript-advanced-types/SKILL.md` |
 | React Modernization | `.agent/skills/react-modernization/SKILL.md` |
 | Modern JS Patterns | `.agent/skills/modern-javascript-patterns/SKILL.md` |
 | Next.js App Router | `.agent/skills/nextjs-app-router-patterns/SKILL.md` |
