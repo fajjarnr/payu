@@ -236,7 +236,61 @@
 
 ## 🚨 CRITICAL: TDD & Test Fixes (Priority #1)
 
-### Known Test Issues Summary
+### 🔄 Parallel QA Execution (January 29, 2026)
+
+**Backend Tasks (10 Parallel Tracks):**
+- [ ] **Task #2**: Add ArchitectureTest for partner-service (SNAP BI compliance)
+- [ ] **Task #3**: Add ArchitectureTest for promotion-service (layered architecture)
+- [ ] **Task #4**: Increase kyc-service coverage from 65% to 80%
+- [ ] **Task #5**: Fix partner-service integration tests (14 failing tests)
+- [ ] **Task #6**: Fix analytics-service failing tests (13 WebSocket/Kafka)
+- [ ] **Task #7**: Add notification-service integration tests (Kafka pub/sub)
+- [ ] **Task #8**: Add gateway-service integration tests (filter chain)
+- [ ] **Task #9**: Add compliance-service integration tests (AML screening)
+- [ ] **Task #10**: Add backoffice-service integration tests (admin workflows)
+- [ ] **Task #11**: Add promotion-service integration tests (rewards engine)
+
+**Frontend Tasks (3 Parallel Tracks):**
+- [ ] **Task #12**: Fix web-app test failures (65 minor issues)
+- [ ] **Task #13**: Setup mobile app test infrastructure (Jest + React Native)
+- [ ] **Task #14**: Add mobile component tests (screens, stores, navigation)
+
+### Known Test Issues Summary (Detailed Analysis - January 29, 2026)
+
+#### Backend Services Status
+
+| Service | Unit Tests | Integration Tests | Architecture Tests | Coverage | Status |
+|---------|------------|-------------------|-------------------|----------|--------|
+| `account-service` | ✅ 44/44 | ✅ 1 Docker | ✅ Has ArchitectureTest | 85% | **Complete** |
+| `auth-service` | ✅ 67/67 | ✅ 1 Docker | ✅ Has ArchitectureTest | 85% | **Complete** |
+| `transaction-service` | ✅ 75/75 | ⚠️ 3 Docker | ✅ Has ArchitectureTest | 80% | **Integration tests need Docker** |
+| `wallet-service` | ✅ 85/85 | ⚠️ 1 Docker | ✅ Has ArchitectureTest | 80% | **Integration tests need Docker** |
+| `billing-service` | ✅ 51/51 | ✅ 1 Docker | ✅ Has ArchitectureTest | 80% | **Complete** |
+| `notification-service` | ✅ 23/23 | ❌ 0 | ❌ Missing | 80% | **Needs integration tests** |
+| `gateway-service` | ✅ 85/85 | ❌ 0 | ✅ Has ArchitectureTest | 75% | **Needs integration tests** |
+| `support-service` | ✅ 17/17 | ❌ 0 | ✅ Has ArchitectureTest | 83% | **Needs integration tests** |
+| `compliance-service` | ✅ 55/55 | ❌ 0 | ✅ Has ArchitectureTest | 75% | **Needs integration tests** |
+| `partner-service` | ⚠️ 88/102 | ✅ 1 Docker | ❌ **MISSING** | 86% | **Need ArchitectureTest + fix 14 tests** |
+| `backoffice-service` | ✅ 79/79 | ❌ 0 | ✅ Has ArchitectureTest | 83% | **Needs integration tests** |
+| `promotion-service` | ✅ 102/102 | ❌ 0 | ❌ **MISSING** | 70% | **Need ArchitectureTest + integration tests** |
+| `kyc-service` | ✅ 116/116 | ✅ 0/0 | ✅ Has ArchitectureTest | 65% | **Coverage below 80% target** |
+| `analytics-service` | ⚠️ 128/141 | ✅ 9 marked | ✅ Has ArchitectureTest | 78% | **13 failing tests, below 80%** |
+
+#### Frontend Applications Status
+
+| Application | Test Files | Test Cases | Passing | Coverage | Status |
+|-------------|-----------|------------|---------|----------|--------|
+| **web-app** | 53 files | 829 tests | 763 (92%) | ~108% | **65 minor failures, mostly cosmetic** |
+| **mobile** | 0 files | 0 tests | N/A | 0% | **No test infrastructure** |
+| **developer-docs** | 3 files | ~21 tests | ~21 | ~15% | **Minimal coverage** |
+
+**Frontend Test Breakdown:**
+- ✅ **Components**: 20+ test files covering Dashboard, CMS, Personalization, Experiments, Feedback
+- ✅ **Hooks**: 7 React Query hooks (useAuth, useCMS, useTransactions, etc.)
+- ✅ **Services**: 7 API service layer tests
+- ✅ **Utilities**: Currency, date, validation tests
+- ✅ **E2E**: 10 Playwright flows (login, registration, transfer, QRIS, etc.)
+- ❌ **Mobile**: Complete gap - 0 tests implemented
 
 | Service | Unit Tests | Integration Tests | Issue |
 |---------|------------|-------------------|-------|
