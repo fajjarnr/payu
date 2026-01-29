@@ -583,6 +583,14 @@ Untuk eksekusi database task yang aman dan cepat, gunakan pola delegasi paralel 
 - **Performance Analysis**: Panggil **`@builder`** secara simultan jika migrasi butuh penyesuaian dependensi driver atau container optimization.
 - **Security & PII Scan**: Jalankan **`@auditor`** secara paralel untuk memastikan tidak ada data sensitif yang terekspos dalam skema atau log database.
 
+## Related Resources
+
+| Resource | Path |
+|----------|------|
+| Backend Patterns | `.agent/skills/backend-patterns/SKILL.md` |
+| PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| Backend Engineer | `.agent/skills/backend-engineer/SKILL.md` |
+
 ---
 
 *Last Updated: January 2026*

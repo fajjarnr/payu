@@ -307,3 +307,11 @@ Untuk posture keamanan yang proaktif (SecDevOps), gunakan pola delegasi paralel 
 - **Secure Implementation**: Jalankan **`@logic-builder`** (Backend) atau **`@styler`** (Frontend) secara paralel untuk mengimplementasikan perbaikan keamanan yang ditemukan.
 - **Deployment Safety**: Panggil **`@orchestrator`** secara simultan untuk memastikan pipeline Tekton/ArgoCD memiliki gate keamanan yang benar.
 - **Data Integrity**: Aktifkan **`@migrator`** secara paralel jika perbaikan keamanan memerlukan perubahan skema database (misal: penambahan kolom enkripsi).
+
+## Related Resources
+
+| Resource | Path |
+|----------|------|
+| Auth Implementation Patterns | `.agent/skills/auth-implementation-patterns/SKILL.md` |
+| PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| Backend Engineer | `.agent/skills/backend-engineer/SKILL.md` |

@@ -46,11 +46,11 @@ payu/backend/
 
 | Task Category             | Use Skill                                                                                          | Description                                              |
 | ------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| **Backend & DB**          | `@backend-engineer`, `@database-engineer`, `@error-handling-engineer`                              | Microservices, SQL Optimization, Error Handling Patterns |
+| **Backend & DB**          | `@backend-engineer`, `@database-engineer`, `@backend-patterns`, `@fastapi-templates`               | Microservices, SQL, Architecture Patterns, FastAPI       |
 | **Frontend & Mobile**     | `@frontend-engineer`, `@mobile-engineer`                                                           | Next.js, React Native, UI/UX, Design Systems             |
 | **API & Messaging**       | `@api-design`, `@event-driven-architecture`                                                        | REST/OpenAPI, Kafka, Saga Patterns, CloudEvents          |
 | **Testing & QA**          | `@qa-engineer`                                                                                     | Integration Tests, Performance, Strategy                 |
-| **Security & Compliance** | `@security-engineer`                                                                               | PCI-DSS, Encryption, OJK Compliance, PII                 |
+| **Security & Compliance** | `@security-engineer`, `@auth-implementation-patterns`                                              | PCI-DSS, Encryption, OAuth2/JWT, RBAC                    |
 | **DevOps & Infra**        | `@devops-engineer`, `@container-engineer`                                                          | CI/CD, Tekton, ArgoCD, Automation Scripts                |
 | **Observability**         | `@observability-engineer`                                                                          | Distributed Tracing, Jaeger, Logs (Loki), Metrics        |
 | **Automation**            | `@debugging-engineer`                                                                              | Root Cause Analysis, Performance Debugging               |
