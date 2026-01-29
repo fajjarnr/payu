@@ -17,6 +17,7 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@payu-development`  | `@lifecycle-manager`  | Pengelola SDLC penuh (End-to-End).             |
 | `@payu-development`  | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
 | `@security-engineer` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
+| `@web-artifacts-builder` | `@builder`           | Scaffolding dan bundling single-file artifacts. |
 
 ## 🔄 Execution Workflow
 

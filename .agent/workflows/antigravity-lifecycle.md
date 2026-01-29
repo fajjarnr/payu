@@ -62,6 +62,12 @@ This workflow guides the AI agent through the standard Antigravity lifecycle, st
       - **Infrastructure Layer** (Output Adapters): JPA Implementations (Repositories), Kafka Producers, External Clients. Implements Ports.
       - **API Layer** (Driving Adapters): REST Controllers, gRPC. Calls Application Layer.
 
+4.  **Frontend Implementation Standards**
+    - **Aesthetics**: Follow the **Premium Emerald Design Engine** (Outfit for Headers, Inter for UI, Staggered Reveals).
+    - **Performance**: Apply **Vercel Performance Shield** (No waterfalls, direct imports, dynamic loading for heavy components).
+    - **State**: Use **Optimistic Updates** for smooth UI transitions (Rollback on failure).
+    - **Accessibility**: Ensure WCAG AA compliance (ARIA labels, keyboard navigation).
+
 ## Phase 3: Verification
 
 **Goal**: Prove that the changes work and adhere to standards.
