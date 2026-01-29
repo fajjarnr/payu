@@ -49,4 +49,4 @@ bash ../.agent/skills/web-artifacts-builder/scripts/bundle-artifact.sh
 This creates `bundle.html` in the artifact directory.
 
 ## Reference
-Local components are located in `/components/ui`.
+Local components are located in `.agent/resources/shadcn/ui`.

@@ -36,7 +36,7 @@ fi
 
 PROJECT_NAME="$1"
 PAYU_ROOT="/home/ubuntu/payu"
-LOCAL_COMPONENTS="$PAYU_ROOT/components/ui"
+LOCAL_COMPONENTS="$PAYU_ROOT/.agent/resources/shadcn/ui"
 # Use utils from developer-docs as a fallback if not found elsewhere
 LOCAL_UTILS="$PAYU_ROOT/frontend/developer-docs/src/lib/utils.ts"
 
