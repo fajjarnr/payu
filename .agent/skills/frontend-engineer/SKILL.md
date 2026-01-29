@@ -226,17 +226,24 @@ Gunakan `Suspense` dan `Skeleton` untuk setiap blok data-fetching. Jangan biarka
 ## 🧠 State Management & Data Patterns
 
 ### 1. Optimized Zustand Selectors
-Hindari men-destructure seluruh store karena akan menyebabkan re-render yang tidak perlu.
+Gunakan objek `xxxSelectors` untuk merangkum logika pengambilan data yang kompleks dan menjaga performa render.
+
 ```typescript
 // ✅ Correct: Atomic selectors (High Performance)
 const user = useAuthStore((s) => s.user);
-const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-// ❌ Avoid: Re-renders when ANY part of the store changes
-const { user, isAuthenticated } = useAuthStore();
+// ✅ Correct: Memoized complex selector
+const activePockets = usePocketStore(pocketSelectors.getActivePockets);
 ```
 
-### 2. No Hybrid Routing Policy
+### 2. Enterprise Slice Pattern
+Bagi store besar menjadi slice-slice kecil berdasarkan domain fungsional.
+- `initialState.ts`: Definisi state awal dan interface.
+- `actions.ts`: Logika bisnis dan mutasi state.
+- `selectors.ts`: Logika pengambilan data (Atomic).
+- `index.ts`: Aggregator slice ke dalam store utama.
+
+### 3. No Hybrid Routing Policy
 PayU menggunakan **Next.js 15+ App Router secara eksklusif**.
 - Ganti penggunaan `react-router-dom` dengan `next/navigation`.
 - Gunakan `Link` dari `next/link` untuk navigasi internal.
@@ -447,58 +454,64 @@ export const BiometricSetupScreen = () => {
 
 ## State Management
 
-### Zustand (Client State)
+### Zustand (Enterprise State Management)
 
+Gunakan pola **Slice Aggregation** untuk mengelola state lintas domain (Auth, Pockets, Transactions).
+
+#### 1. Slice Organization (Example: `pocketSlice`)
 ```typescript
-// store/authStore.ts
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+// store/pocket/pocketSlice.ts
+import { StateCreator } from 'zustand';
+import { produce } from 'immer'; // Gunakan Immer untuk state kompleks
 
-interface AuthState {
-  user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-  isAuthenticated: boolean;
-  
-  login: (tokens: AuthTokens, user: User) => void;
-  logout: () => void;
-  setTokens: (tokens: Partial<AuthTokens>) => void;
+export interface PocketSlice {
+  pockets: Pocket[];
+  loadingIds: string[];
+  addPocket: (name: string) => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      
-      login: (tokens, user) => set({
-        user,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        isAuthenticated: true,
-      }),
-      
-      logout: () => set({
-        user: null,
-        accessToken: null,
-        refreshToken: null,
-        isAuthenticated: false,
-      }),
-      
-      setTokens: (tokens) => set((state) => ({
-        ...state,
-        ...tokens,
-      })),
-    }),
-    {
-      name: 'auth-storage',
-      // For mobile: use AsyncStorage
-      // For web: use localStorage (or sessionStorage for sensitive data)
+export const createPocketSlice: StateCreator<PocketSlice> = (set, get) => ({
+  pockets: [],
+  loadingIds: [],
+  
+  // Pattern: Optimistic Update
+  addPocket: async (name) => {
+    const tempId = crypto.randomUUID();
+    const tempPocket = { id: tempId, name, balance: 0, status: 'PENDING' };
+
+    // 1. UI Update Instan
+    set(produce((state) => {
+      state.pockets.push(tempPocket);
+    }));
+
+    try {
+      const realPocket = await pocketService.create(name);
+      // 2. Sync dengan data asli dari server
+      set(produce((state) => {
+        const index = state.pockets.findIndex(p => p.id === tempId);
+        state.pockets[index] = realPocket;
+      }));
+    } catch (error) {
+      // 3. Rollback jika gagal
+      set(produce((state) => {
+        state.pockets = state.pockets.filter(p => p.id !== tempId);
+      }));
     }
-  )
-);
+  },
+});
+```
+
+#### 2. Store Aggregation
+```typescript
+// store/useStore.ts
+import { create } from 'zustand';
+import { createAuthSlice } from './authSlice';
+import { createPocketSlice } from './pocketSlice';
+
+export const useStore = create<AuthSlice & PocketSlice>()((...a) => ({
+  ...createAuthSlice(...a),
+  ...createPocketSlice(...a),
+}));
 ```
 
 ### React Query (Server State)
