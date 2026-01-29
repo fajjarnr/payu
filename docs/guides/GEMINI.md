@@ -278,6 +278,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `security-engineer`         | PCI-DSS, Encryption, OJK Compliance                 |
 | `tailwind-design-system`   | Tailwind CSS design tokens & component variants     |
 | `typescript-advanced-types` | Utility types, generics, inference, and type guards |
+| `ui-ux-designer`            | Expert UI/UX Design Intelligence. Guidelines for palettes, typography, and accessibility. |
 | `web-artifacts-builder`    | Scaffolding & Bundling single-file HTML Artifacts   |
 | `web-component-design`    | Master React, Vue, and Svelte component patterns including CSS-in-JS, composition strategies, and reusable component architecture. |
 | `slidev`                   | Presentation slides for developers (Markdown-based) |
