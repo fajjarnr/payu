@@ -3,6 +3,10 @@ name: backend-engineer
 description: Expert Backend Engineer for PayU Digital Banking Platform - specializing in Spring Boot, Quarkus, FastAPI, database design, and high-performance system architecture.
 ---
 
+# Senior Backend Engineer Skill
+
+Complete toolkit for senior backend engineer with modern tools and best practices.
+
 ## Related Resources
 
 | Resource | Path |
@@ -14,437 +18,483 @@ description: Expert Backend Engineer for PayU Digital Banking Platform - special
 | API Design | `.agent/skills/api-design/SKILL.md` |
 | Database Engineer | `.agent/skills/database-engineer/SKILL.md` |
 
-# PayU Backend Engineer Skill
+## Core Capabilities
 
-You are a senior Backend Engineer for the **PayU Digital Banking Platform**. You build scalable, high-performance financial microservices using Spring Boot (Core Banking), Quarkus (Supporting Services), and FastAPI (Data/ML).
+### 1. Api Scaffolder (Pattern)
+Standardized API creation using the best practices found in `references/api_design_patterns.md`.
 
-## 🎯 TDD & Dev Philosophy
+### 2. Database Optimization
+Optimization strategies and indexing guides found in `references/database_optimization_guide.md`.
 
-PayU follows strict **Test-Driven Development (TDD)** to prevent errors before they occur.
-1. **RED**: Write a failing test first.
-2. **GREEN**: Write minimal code to pass.
-3. **REFACTOR**: Clean up while keeping tests green (Extract methods, apply patterns).
+### 3. Security Hardening
+Security checklist and implementation details in `references/backend_security_practices.md`.
 
-## 🏗️ Pattern Selection Decision Tree
+## Reference Library
+- Recommendations
+- Automated fixes
 
-Gunakan panduan ini SEBELUM mengimplementasikan pola arsitektur:
-
-1. **Kompleksitas Query**: 
-   - Tinggi (Multi-source, Testable) -> **Repository Pattern**
-   - Rendah (Simple CRUD) -> **Direct ORM Access**
-2. **Aturan Bisnis**:
-   - Tinggi (Banyak domain rules) -> **Full DDD (Aggregates/Value Objects)**
-   - Rendah (Hanya validasi data) -> **Transaction Script**
-3. **Kebutuhan Scaling**:
-   - Independen (Tim > 10, Beban berbeda) -> **Microservices**
-   - Seragam (Tim kecil, Startup) -> **Modular Monolith**
-4. **Real-time/Async**:
-   - Urgent (Immediate sync) -> **Event-Driven (Kafka)**
-   - Tidak (Request/Response OK) -> **REST/Synchronous**
-
-### The 3 Questions (Simplicity Principle)
-- **Problem Solved**: Masalah SPESIFIK apa yang diselesaikan pola ini?
-- **Simpler Alternative**: Apakah ada solusi yang lebih sederhana?
-- **Deferred Complexity**: Bisakah kita menambahkannya NANTI saat benar-benar dibutuhkan?
-
-## ⚡ Reactive & Non-Blocking Patterns (Async I/O)
-
-PayU menggunakan **Quarkus (Mutiny)** dan **Spring WebFlux (Reactor)**. Prinsip utamanya adalah **JANGAN MEMBLOKIR EVENT LOOP**.
-
-### 1. The Golden Rule: No Blocking
-Dosa terbesar dalam code reactive adalah melakukan I/O blocking (DB call, HTTP call, Thread.sleep) di main thread.
-- **Salah**: `var user = repo.findById(id);` (Blocking)
-- **Benar**: `repo.findById(id).subscribe().with(...)` (Non-blocking)
-- **Deteksi**: Gunakan **BlockHound** saat testing untuk mendeteksi blocking call tersembunyi.
-
-### 2. Async Composition (Completion Group)
-Jangan menunggu secara serial. Jalankan tugas independen secara paralel lalu gabungkan hasilnya ('Zip').
-```java
-// Quarkus Mutiny Example
-Uni<User> user = userService.getUser(id);
-Uni<Wallet> wallet = walletService.getWallet(id);
-
-Uni<Summary> result = Uni.combine().all().unis(user, wallet)
-    .asTuple()
-    .map(tuple -> new Summary(tuple.getItem1(), tuple.getItem2()));
+**Usage:**
+```bash
+python scripts/database_migration_tool.py <target-path> [--verbose]
 ```
 
-### 3. Backpressure Handling
-Saat producer lebih cepat dari consumer, jangan biarkan memori meledak.
-- **Strategy**: Gunakan operator `onOverflow().drop()` atau `buffer()` untuk mengontrol aliran data.
+### 3. Api Load Tester
 
-### 3. Backpressure Handling
-Saat producer lebih cepat dari consumer, jangan biarkan memori meledak.
-- **Strategy**: Gunakan operator `onOverflow().drop()` atau `buffer()` untuk mengontrol aliran data.
+Advanced tooling for specialized tasks.
 
-## 🏛️ Tactical DDD Implementation
+**Features:**
+- Expert-level automation
+- Custom configurations
+- Integration ready
+- Production-grade output
 
-Implementasi detail untuk "Inner Core" (Domain Layer) agar tidak terjebak "Anemic Domain Model".
+**Usage:**
+```bash
+python scripts/api_load_tester.py [arguments] [options]
+```
 
-### 1. Rich Domain Models (vs Anemic)
-Entity harus memiliki *behavior*, bukan hanya getter/setter.
-- **❌ Anemic**:
-  ```java
-  service.transfer(from, to, amount) {
-      if (from.getBalance() < amount) throw Error();
-      from.setBalance(from.getBalance() - amount);
-  }
-  ```
-- **✅ Rich (Domain Logic in Entity)**:
-  ```java
-  // In Entity
-  public void debit(Money amount) {
-      if (this.balance.isLessThan(amount)) throw new InsufficientFundsException();
-      this.balance = this.balance.minus(amount);
-  }
-  // In Service
-  fromAccount.debit(amount);
-  ```
+## Reference Documentation
 
-### 2. Value Objects
-Gunakan Class immutable untuk atribut yang memiliki validasi/format khusus. Jangan pakai primitive types!
-- **Contoh**: `Money`, `Email`, `PhoneNumber`, `ReferenceId`.
-- **Aturan**: Dua Value Object dianggap sama jika nilainya sama (implement `equals()` & `hashCode()`).
+### Api Design Patterns
 
-### 3. Application Service Pattern (The Orchestrator)
-Application Service hanya boleh mengkoordinasikan, TIDAK BOLEH ada business logic kompleks.
-**Standard Flow (`execute` method):**
-1.  **Validate** Command/Input.
-2.  **Load** Aggregate dari Repository.
-3.  **Invoking** Domain Logic pada Aggregate (`aggregate.doSomething()`).
-4.  **Persist** perubahan ke Repository.
-5.  **Publish** Domain Events (jika ada side effect ke service lain via Kafka).
+Comprehensive guide available in `references/api_design_patterns.md`:
 
-## Tech Stack Guidelines
+- Detailed patterns and practices
+- Code examples
+- Best practices
+- Anti-patterns to avoid
+- Real-world scenarios
 
-### 1. Spring Boot 3.4 (Core Banking)
-For services: `account-service`, `auth-service`, `transaction-service`, `wallet-service`
+### Database Optimization Guide
 
-**Architecture (Hexagonal/Clean):**
-- **Domain**: Pure Java/Python, no frameworks. Contains **Entities**, **Value Objects**, and **Domain Services**.
-- **Application**: **Use Cases** (Orchestration) and **Ports** (Interfaces like `IUserRepository`).
-- **Infrastructure**: **Adapters** (JPA, WebClient, Kafka, Postgres). Implementation of Ports.
+Complete workflow documentation in `references/database_optimization_guide.md`:
 
-**Best Practices:**
-- Use **Java 21** features (Records, Pattern Matching).
-- Use **Constructor Injection** (`@RequiredArgsConstructor`).
-- **Transactional**: Service layer `@Transactional`.
-- **Validation**: JSR-380 (`@NotNull`, `@Size`) on DTOs.
-- **Exceptions**: Extend `RuntimeException`, handled by `@ControllerAdvice`.
+- Step-by-step processes
+- Optimization strategies
+- Tool integrations
+- Performance tuning
+- Troubleshooting guide
 
-### 2. Quarkus 3.x (Supporting Services)
-For services: `billing-service`, `notification-service`, `gateway-service`
+### Backend Security Practices
 
-**Architecture:** Layered or Resource-Service-Repository.
+Technical reference guide in `references/backend_security_practices.md`:
 
-**Best Practices:**
-- **Native Build**: Verify with `./mvnw package -Pnative`.
-- **Reactive**: Use Mutiny (`Uni`, `Multi`) for I/O operations.
-- **Panache**: ApplicationScoped repositories over Active Record.
-- **Reflection**: Register classes for reflection if needed (`@RegisterForReflection`).
+- Technology stack details
+- Configuration examples
+- Integration patterns
+- Security considerations
+- Scalability guidelines
 
-### 3. FastAPI (Python 3.12)
-For services: `kyc-service`, `analytics-service`
+## Tech Stack
 
-**Best Practices:**
-- **Async**: Use `async def` everywhere defined.
-- **Type Hints**: Strict typing with Pydantic v2.
-- **Dependencies**: Use Dependency Injection for DB sessions.
+**Languages:** TypeScript, JavaScript, Python, Go, Swift, Kotlin
+**Frontend:** React, Next.js, React Native, Flutter
+**Backend:** Node.js, Express, GraphQL, REST APIs
+**Database:** PostgreSQL, Prisma, NeonDB, Supabase
+**DevOps:** Docker, Kubernetes, Terraform, GitHub Actions, CircleCI
+**Cloud:** AWS, GCP, Azure
 
-### 4. CQRS & Mediator Pattern
-Untuk service dengan *high-throughput* (`transaction-service`, `wallet-service`), pisahkan model Write (Command) dan Read (Query) secara eksplisit.
+## Development Workflow
 
-#### A. The Pattern (Why?)
-- **Loose Coupling**: Controller tidak tahu logic, cuma kirim "Task".
-- **Performance**: Write side bisa dioptimalkan untuk *Consistency* (3NF), Read side untuk *Query Speed* (Denormalized/Materialized View).
+### 1. Setup and Configuration
 
-#### B. Implementation (Java Interfaces)
-Gunakan pendekatan **Message Bus** sederhana (tanpa library berat jika tidak perlu).
+```bash
+# Install dependencies
+npm install
+# or
+pip install -r requirements.txt
 
-1.  **Contracts**:
-    ```java
-    // Marker interfaces
-    public interface Command<R> {}
-    public interface Query<R> {}
+# Configure environment
+cp .env.example .env
+```
 
-    // Handler interfaces
-    public interface CommandHandler<C extends Command<R>, R> { R handle(C command); }
-    public interface QueryHandler<Q extends Query<R>, R> { R handle(Q query); }
-    ```
+### 2. Run Quality Checks
 
-2.  **Usage Example**:
-    ```java
-    // Command (Write) - Return ID only or Void
-    public record CreateTransferCmd(UUID from, UUID to, BigDecimal amount) implements Command<UUID> {}
+```bash
+# Use the analyzer script
+python scripts/database_migration_tool.py .
 
-    // Query (Read) - Return DTO
-    public record GetTransferHistoryQuery(UUID accountId) implements Query<List<TransferDto>> {}
+# Review recommendations
+# Apply fixes
+```
 
-    // Handler
-    @Service
-    public class CreateTransferHandler implements CommandHandler<CreateTransferCmd, UUID> {
-        public UUID handle(CreateTransferCmd cmd) {
-            // Domain Logic here
-            return transactionRepo.save(...).getId();
-        }
-    }
-    ```
+### 3. Implement Best Practices
 
-#### C. Asynchronous Projection
-Sinkronisasi Read Model (e.g., Elasticsearch, Redis View) via **Domain Events** (Kafka).
-- **Flow**: `Command -> Core DB -> Kafka Event -> Projector -> Read DB`.
+Follow the patterns and practices documented in:
+- `references/api_design_patterns.md`
+- `references/database_optimization_guide.md`
+- `references/backend_security_practices.md`
 
----
+## Best Practices Summary
 
-## 🏗️ Advanced Architecture Patterns
+### Code Quality
+- Follow established patterns
+- Write comprehensive tests
+- Document decisions
+- Review regularly
 
-### 1. Hexagonal & Clean Architecture
-PayU follows the **Dependency Rule**: Dependencies always point inward.
-- **Inner Core**: Business logic + Domain objects.
-- **Outer Shell**: Frameworks (Spring/FastAPI), DBs, UI, External APIs.
+### Performance
+- Measure before optimizing
+- Use appropriate caching
+- Optimize critical paths
+- Monitor in production
 
-### 2. DDD Tactical Patterns
-- **Entities**: Objects with identity (e.g., `User`, `Transaction`).
-- **Value Objects**: Immutable attributes (e.g., `Money`, `Email`). No identity.
-- **Aggregates**: A cluster of objects treated as a single unit (e.g., `Account` aggregate root). Consistency boundary.
-- **Domain Events**: Records of state changes (e.g., `AccountOpenedEvent`).
+### Security
+- Validate all inputs
+- Use parameterized queries
+- Implement proper authentication
+- Keep dependencies updated
 
-### 4. Immutable Value Objects
-Use records (Java) or Pydantic (Python) for immutability.
-```java
-public record Money(BigDecimal amount, Currency currency) {
-    public Money {
-        if (amount.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException();
-    }
+### Maintainability
+- Write clear code
+- Use consistent naming
+- Add helpful comments
+- Keep it simple
+
+## Common Commands
+
+```bash
+# Development
+npm run dev
+npm run build
+npm run test
+npm run lint
+
+# Analysis
+python scripts/database_migration_tool.py .
+python scripts/api_load_tester.py --analyze
+
+# Deployment
+docker build -t app:latest .
+docker-compose up -d
+kubectl apply -f k8s/
+```
+
+## Troubleshooting
+
+### Common Issues
+
+Check the comprehensive troubleshooting section in `references/backend_security_practices.md`.
+
+### Getting Help
+
+- Review reference documentation
+- Check script output messages
+- Consult tech stack documentation
+- Review error logs
+
+## Resources
+
+- Pattern Reference: `references/api_design_patterns.md`
+- Workflow Guide: `references/database_optimization_guide.md`
+- Technical Guide: `references/backend_security_practices.md`
+- Tool Scripts: `scripts/` directory
+# Api Design Patterns
+
+## Overview
+
+This reference guide provides comprehensive information for senior backend.
+
+## Patterns and Practices
+
+### Pattern 1: Best Practice Implementation
+
+**Description:**
+Detailed explanation of the pattern.
+
+**When to Use:**
+- Scenario 1
+- Scenario 2
+- Scenario 3
+
+**Implementation:**
+```typescript
+// Example code implementation
+export class Example {
+  // Implementation details
 }
 ```
 
-### 3. Port-Adapter Pattern
-- **Port**: Interface defined in the *Application* layer (e.g., `NotificationPort`).
-- **Adapter**: Concrete implementation in the *Infrastructure* layer (e.g., `SmsAdapter`, `EmailAdapter`).
-- **Benefit**: Swap adapters (mock vs production) without touching business logic.
+**Benefits:**
+- Benefit 1
+- Benefit 2
+- Benefit 3
 
----
+**Trade-offs:**
+- Consider 1
+- Consider 2
+- Consider 3
 
-## Database Design & Implementation
+### Pattern 2: Advanced Technique
 
-### PostgreSQL Convention
-- **UUID Keys**: Use `uuid` type for PKs.
-- **Audit Columns**: `created_at`, `updated_at` (UTC).
-- **JSONB**: Use for flexible schemas (e.g., user profiles).
+**Description:**
+Another important pattern for senior backend.
 
-### Flyway Migrations
-Migration file pattern: `V{version}__{description}.sql`
-
-```sql
--- V1__create_transactions_table.sql
-CREATE TABLE transactions (
-    id UUID PRIMARY KEY,
-    amount DECIMAL(19,4) NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_txn_created_at ON transactions(created_at);
-```
-
-**Advanced Patterns:**
-- **N+1 Prevention**: Avoid loading related entities inside loops. Use `JOIN FETCH` (JPA/Hibernate) or batch fetch logic.
-- **Batch Processing**: When processing large datasets, use cursor-based pagination or chunked batching to prevent OOM.
-- **Atomic Transactions**: Wrap multiple related inserts/updates in a single transaction. For microservices, use the **Saga Pattern** for cross-service atomicity.
-```
-
-**Rules:**
-1. **Never modify** released migration files.
-2. Use **idempotent** operations (`IF NOT EXISTS`).
-3. Include **Rollback** comments.
-
-### Caching Strategy (Redis)
-- **Cache-Aside**: Read from cache, fallback to DB, write to cache.
-- **TTL**: Always set expiration (e.g., 1 hour for reference data).
-- **Keys**: Namespaced keys `payu:service:entity:id`.
-
-## 🧩 Modular Monolith Strategy (PayU Standard)
-
-PayU menggunakan pendekatan **Modular Monolith** untuk service kompleks (`account-service` is too big) atau saat startup fase awal.
-**Struktur Module:**
-```
-src/Modules/
-  ├── Investment/
-  │   ├── Investment.Api/      # Controller/Endpoints
-  │   ├── Investment.Core/     # Domain Entities, Use Cases
-  │   ├── Investment.Infra/    # DB Config, Adapters
-  │   └── Investment.Contracts/# Shared DTOs (Public API)
-```
-
-### Protocol: Adding a New Module
-1.  **Scaffold**: Buat folder structure di `src/Modules/{ModuleName}`.
-2.  **Contracts First**: Definisikan `IModule` interface dan DTO di `.Contracts`.
-3.  **Registration**: Daftarkan module di `Application.java` atau `Program.cs`.
-    ```java
-    @Import({InvestmentModule.class, CoreModule.class})
-    public class PayUApplication { ... }
-    ```
-4.  **Isolation**: Module A TIDAK BOLEH akses DB Module B. Komunikasi harus lewat `Interface` atau `EventBus`.
-
-## Observability & Logging
-
-### Structured Logging (JSON)
-Do not log raw strings. Use structured arguments.
-
-```java
-log.info("Transaction processed", 
-    kv("txnId", txn.getId()), 
-    kv("status", "SUCCESS"),
-    kv("amount", txn.getAmount()));
-```
-
-### Distributed Tracing
-- Propagate `traceparent` headers for custom calls.
-- Trace across Kafka using headers.
-- Tag spans with business IDs (e.g., `account_id`).
-
-## API Design Guidelines
-
-### REST Standards
-- **Resources**: Nouns, plural (`/accounts`, `/wallets`).
-- **Versioning**: URI versioning (`/api/v1/...`).
-- **Status Codes**:
-  - `200 OK`: Success (sync).
-  - `202 Accepted`: Async processing started.
-  - `400 Bad Request`: Validation failure.
-  - `404 Not Found`: Resource missing.
-  - `422 Unprocessable`: Business rule violation.
-
-### Error Response Format
-```json
-{
-  "errorCode": "ACCT_VAL_001",
-  "message": "Invalid ID format",
-  "traceId": "abc-123",
-  "timestamp": "2026-01-20T10:00:00Z"
+**Implementation:**
+```typescript
+// Advanced example
+async function advancedExample() {
+  // Code here
 }
 ```
 
-## Kafka Event Patterns
+## Guidelines
 
-### Topic Naming
-`payu.<domain>.<event-type>` (e.g., `payu.transactions.created`)
+### Code Organization
+- Clear structure
+- Logical separation
+- Consistent naming
+- Proper documentation
 
-### Event Structure
-```json
-{
-  "eventId": "uuid",
-  "eventType": "transaction-created",
-  "payload": { ... },
-  "metadata": {
-    "traceId": "..."
-  }
+### Performance Considerations
+- Optimization strategies
+- Bottleneck identification
+- Monitoring approaches
+- Scaling techniques
+
+### Security Best Practices
+- Input validation
+- Authentication
+- Authorization
+- Data protection
+
+## Common Patterns
+
+### Pattern A
+Implementation details and examples.
+
+### Pattern B
+Implementation details and examples.
+
+### Pattern C
+Implementation details and examples.
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1
+What not to do and why.
+
+### Anti-Pattern 2
+What not to do and why.
+
+## Tools and Resources
+
+### Recommended Tools
+- Tool 1: Purpose
+- Tool 2: Purpose
+- Tool 3: Purpose
+
+### Further Reading
+- Resource 1
+- Resource 2
+- Resource 3
+
+## Conclusion
+
+Key takeaways for using this reference guide effectively.
+# Backend Security Practices
+
+## Overview
+
+This reference guide provides comprehensive information for senior backend.
+
+## Patterns and Practices
+
+### Pattern 1: Best Practice Implementation
+
+**Description:**
+Detailed explanation of the pattern.
+
+**When to Use:**
+- Scenario 1
+- Scenario 2
+- Scenario 3
+
+**Implementation:**
+```typescript
+// Example code implementation
+export class Example {
+  // Implementation details
 }
 ```
 
-### Consumer Guidelines
-- **Idempotency**: Consumers must handle duplicate events.
-- **DLQ**: Configure Dead Letter Queues for processing failures.
-- **Serialization**: Use JSON serializer/deserializer.
+**Benefits:**
+- Benefit 1
+- Benefit 2
+- Benefit 3
 
-## Backend Code Review Checklist
+**Trade-offs:**
+- Consider 1
+- Consider 2
+- Consider 3
 
-- [ ] **Data Classes**: Use `record` (Java) or `@dataclass` (Python) for DTOs and Value Objects.
-- [ ] **Money**: Use `BigDecimal` (Java) or specialized `Money` Value Object. Never floats.
-- [ ] **DDD Compliance**: Are business rules inside Entities/Aggregates?
-- [ ] **TDD Cycle**: Does the code reflect a minimal path to pass the current tests?
-- [ ] **ArchUnit**: Does the service pass `ArchitectureTest` layering checks?
-- [ ] **N+1 Problem**: Check for lazy loading loops in JPA. Use batch fetching where applicable.
-- [ ] **Resilience**: Are external calls protected by retries with exponential backoff and circuit breakers?
-- [ ] **CQRS Boundary**: Are commands strictly isolated from queries? No state changes in GET requests.
-- [ ] **Eventual Consistency**: If using CQRS, is the UI aware of potential lag?
-- [ ] **Resource Cleanup**: Try-with-resources used for I/O and DB connections?
-- [ ] **Async Safety**: For async paths, is the event loop/main thread protected from blocking operations?
+### Pattern 2: Advanced Technique
 
-## 🔴 Global Error Content & Extraction
-Inspired by industry leaders, PayU maintains a strict global error catalog.
+**Description:**
+Another important pattern for senior backend.
 
-### 1. Error Code Scaffolding
-Every microservice must define its errors in a centralized `ErrorCode` enum or constant class within the domain layer.
-
-```java
-public enum AccountError {
-    ACC_001("User not found"),
-    ACC_002("Insufficient balance"),
-    ACC_003("Pocket limit exceeded");
-    // ...
+**Implementation:**
+```typescript
+// Advanced example
+async function advancedExample() {
+  // Code here
 }
 ```
 
-### 2. Standardized Extraction
-Ensure all error messages are "extractable" for documentation.
-- Use a consistent prefix (e.g., `ACC_`, `TXN_`).
-- In CI/CD, a script scans for these patterns to update the **Global Error Catalog** in `docs/api/ERRORS.md`.
+## Guidelines
 
-### 3. Unknown Error Handling
-- Never return raw Java exceptions to the client.
-- Always map to `GEN_500` if no specific code exists.
+### Code Organization
+- Clear structure
+- Logical separation
+- Consistent naming
+- Proper documentation
 
----
+### Performance Considerations
+- Optimization strategies
+- Bottleneck identification
+- Monitoring approaches
+- Scaling techniques
 
-## 🛡️ Resilience & Reliability
-Implement the following patterns for all external service interactions:
+### Security Best Practices
+- Input validation
+- Authentication
+- Authorization
+- Data protection
 
-### 1. Retry with Exponential Backoff
-Always wait longer between retries to give the failing service time to recover.
-- **Base delay**: 1s
-- **Multiplier**: 2.0
-- **Max retries**: 3-5
+## Common Patterns
 
-### 2. Batch Fetching (Efficiency)
-Avoid multiple round-trips for related data.
-- **Example**: Fetch all user profiles for a list of transactions in ONE call using a `List<UUID>`.
+### Pattern A
+Implementation details and examples.
 
-### 3. Read-Your-Writes Consistency (CQRS)
-When immediate consistency is required on the query side, use a Version-Check or Token-Wait pattern:
-1. **Command** returns a `version_id`.
-2. **Query** includes `min_version=version_id`.
-3. **Query Handler** waits (up to a timeout) until the Read Model matches the requested version.
+### Pattern B
+Implementation details and examples.
 
-## 🔌 External API Integration Patterns
+### Pattern C
+Implementation details and examples.
 
-When consuming third-party APIs (e.g., Stripe, SendGrid), follow these patterns:
+## Anti-Patterns to Avoid
 
-### 1. Robust Client Wrapper (Facade)
-Jangan panggil `HttpClient` langsung di Service. Bungkus dalam Adapter.
-```java
-// ✅ Correct: Facade Pattern
-public class StripePaymentAdapter implements PaymentPort {
-    private final StripeClient client;
+### Anti-Pattern 1
+What not to do and why.
 
-    public void charge(ChargeRequest req) {
-        try {
-            client.createCharge(req);
-        } catch (StripeException e) {
-            // Translate external error to internal domain exception
-            throw new PaymentGatewayException(e.getCode(), "Stripe failure");
-        }
-    }
+### Anti-Pattern 2
+What not to do and why.
+
+## Tools and Resources
+
+### Recommended Tools
+- Tool 1: Purpose
+- Tool 2: Purpose
+- Tool 3: Purpose
+
+### Further Reading
+- Resource 1
+- Resource 2
+- Resource 3
+
+## Conclusion
+
+Key takeaways for using this reference guide effectively.
+# Database Optimization Guide
+
+## Overview
+
+This reference guide provides comprehensive information for senior backend.
+
+## Patterns and Practices
+
+### Pattern 1: Best Practice Implementation
+
+**Description:**
+Detailed explanation of the pattern.
+
+**When to Use:**
+- Scenario 1
+- Scenario 2
+- Scenario 3
+
+**Implementation:**
+```typescript
+// Example code implementation
+export class Example {
+  // Implementation details
 }
 ```
 
-### 2. Resilience Decorators
-Gunakan **Resilience4j** untuk melindungi sistem dari *cascading failures*.
-- **Circuit Breaker**: Stop request jika error rate > 50%.
-- **Retry**: Gunakan *Exponential Backoff* (1s, 2s, 4s). Hati-hati dengan *Non-Idempotent* operations (POST).
-- **Time Limiter**: Jangan biarkan thread hang selamanya. (Default: 5s).
+**Benefits:**
+- Benefit 1
+- Benefit 2
+- Benefit 3
 
-### 3. Webhook Handling
-- **Signature Verification**: Wajib verifikasi `X-Signature` header untuk mencegah *spoofing*.
-- **Async Processing**: Terima webhook -> Masukkan ke Queue -> Balas 200 OK segera. Proses logic di worker.
+**Trade-offs:**
+- Consider 1
+- Consider 2
+- Consider 3
 
-## 🤖 Agent Delegation & Parallel Execution
+### Pattern 2: Advanced Technique
 
-Untuk mencapai kecepatan ekstrim dan kualitas standar enterprise, gunakan pola delegasi paralel (Swarm Mode):
+**Description:**
+Another important pattern for senior backend.
 
-- **Scaffolding & Boilerplate**: Delegasikan ke **`@scaffolder`** untuk pembuatan struktur service, Dockerfile, dan konfigurasi Maven.
-- **Domain & Business Logic**: Aktifkan **`@logic-builder`** untuk implementasi DDD, Aggregates, dan Value Objects.
-- **Async & Event-Driven**: Jika menyangkut Kafka atau Event Sourcing, gunakan skill **`event-driven-architecture`**.
-- **Automated Testing**: Jalankan **`@tester`** secara paralel untuk menulis unit dan integration tests segera setelah DTO/Service interface didefinisikan.
-- **Infrastructure & Security Sync**: Jika butuh audit keamanan proaktif atau setup koki Loki/Prometheus, delegasikan ke **`@compliance-auditor`** atau **`observability-engineer`**.
+**Implementation:**
+```typescript
+// Advanced example
+async function advancedExample() {
+  // Code here
+}
+```
+
+## Guidelines
+
+### Code Organization
+- Clear structure
+- Logical separation
+- Consistent naming
+- Proper documentation
+
+### Performance Considerations
+- Optimization strategies
+- Bottleneck identification
+- Monitoring approaches
+- Scaling techniques
+
+### Security Best Practices
+- Input validation
+- Authentication
+- Authorization
+- Data protection
+
+## Common Patterns
+
+### Pattern A
+Implementation details and examples.
+
+### Pattern B
+Implementation details and examples.
+
+### Pattern C
+Implementation details and examples.
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1
+What not to do and why.
+
+### Anti-Pattern 2
+What not to do and why.
+
+## Tools and Resources
+
+### Recommended Tools
+- Tool 1: Purpose
+- Tool 2: Purpose
+- Tool 3: Purpose
+
+### Further Reading
+- Resource 1
+- Resource 2
+- Resource 3
+
+## Conclusion
+
+Key takeaways for using this reference guide effectively.
