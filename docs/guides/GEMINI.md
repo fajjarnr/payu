@@ -86,6 +86,17 @@
 
 ---
 
+## ⚡ Decentralized Orchestration (Swarm Mode)
+
+Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Parallel Execution**. AI Assistant tidak bekerja sebagai monolit, melainkan sebagai orkestrator yang mendispatch tugas ke agen spesialis secara simultan.
+
+### Swarm Principles:
+1. **Parallel Dispatching**: Tugas Full-stack didelegasikan ke `@styler` (Frontend) dan `@logic-builder` (Backend) secara bersamaan untuk reduksi waktu eksekusi hingga 80%.
+2. **Specialized Handshake**: Setiap Skill (misal: `@backend-engineer`) memiliki instruksi eksplisit untuk memanggil spesialis lain (misal: `@tester` atau `@migrator`) jika tugas menyentuh domain mereka.
+3. **Implicit Interconnectivity**: Asisten wajib secara proaktif mendispatch agen pendukung (seperti `@auditor` untuk security atau `@styler` untuk slidev) berdasarkan jenis perubahan kode tanpa menunggu perintah manual.
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -315,6 +326,12 @@ Claude Code SHOULD follow established workflows in `.agent/workflows/` for compl
 - **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes. **(Principally handled by Main AI)**
 - **`/new-service-scaffolding`**: Workflow untuk scaffolding microservice baru di platform PayU dengan arsitektur Hexagonal dan konfigurasi standar.
 - **`/security-audit`**: Workflow untuk melakukan audit keamanan pada service PayU sesuai standar PCI-DSS dan OJK.
+
+## ⚡ Global Orchestration Guidelines (MUST FOLLOW)
+
+1. **Parallelism by Default**: Jika tugas besar dapat dipecah, gunakan `@multi-agent-coordination` untuk eksekusi paralel.
+2. **Context Sharing**: Gunakan `docs/context/active_task.md` (jika ada) sebagai memori bersama antar agen yang berjalan paralel.
+3. **Proactive Delegation**: Jangan kerjakan tugas lintas-domain sendirian. Selalu fork agen spesialis (misal: `@migrator` untuk DB task) untuk menjamin kualitas standar PayU.
 
 ## 🤖 Specialized AI Agents
 
