@@ -19,6 +19,11 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@security-engineer` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
 | `@web-artifacts-builder` | `@builder`           | Scaffolding dan bundling single-file artifacts. |
 | `@slidev`            | `@styler`             | Desain layout dan animasi presentasi premium. |
+| `@mobile-engineer`   | `@styler`             | Styling React Native (NativeWind/Reanimated).  |
+| `@mobile-engineer`   | `@logic-builder`      | Logic React Native, Offline sync, State mgmt.  |
+| `@ui-ux-designer`    | `@styler`             | Design Tokens, Palettes, Typography systems.   |
+| `@react-performance` | `@auditor`            | Performance audit (waterfalls, bundle size).   |
+| `@react-native-architecture` | `@scaffolder` | Expo Router setup & Native Modules config.     |
 
 ## 🔄 Execution Workflow
 

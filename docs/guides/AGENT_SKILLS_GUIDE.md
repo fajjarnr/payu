@@ -34,6 +34,19 @@ payu/
 
 ---
 
+### 📱 Frontend & Mobile Ecosystem (New)
+The PayU platform now features a complete suite of frontend skills:
+
+| Spec | Skill | Description |
+| :--- | :--- | :--- |
+| **Logic** | `react-state-management` | Zustand/Query patterns for complex state. |
+| **Mobile** | `react-native-architecture` | Expo Router & Native Modules architecture. |
+| **Design** | `ui-ux-designer` | Design tokens, typography, and palette intelligence. |
+| **Perf** | `react-performance` | optimization rules for elimination of waterfalls. |
+| **Style** | `tailwind-design-system` | Scalable atomic CSS architecture. |
+
+---
+
 ## 🤖 Specialized AI Agents (The Workers)
 
 Agen dirancang untuk eksekusi tugas yang terisolasi.
