@@ -261,6 +261,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `docs-engineer`             | Documentation & Tech Writing                        |
 | `event-driven-architecture` | Kafka, Saga, Event Sourcing                         |
 | `frontend-engineer`         | Next.js, React, Design Systems                      |
+| `frontend-patterns`         | React/Next.js component & performance patterns      |
 | `git-workflow`              | Git standards & PR workflows                        |
 | `ml-engineer`               | Fraud Scoring, Python & Analytics                   |
 | `mobile-engineer`           | React Native, Expo, Mobile Security                 |

@@ -1420,6 +1420,7 @@ Untuk hasil terbaik dan tercepat, gunakan pola delegasi paralel (Swarm Mode):
 | Resource | Path |
 |----------|------|
 | PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| Frontend Patterns | `.agent/skills/frontend-patterns/SKILL.md` |
 | Security Specialist | `.agent/skills/security-specialist/SKILL.md` |
 | QA Expert | `.agent/skills/qa-expert/SKILL.md` |
 | Architecture | `ARCHITECTURE.md` |
