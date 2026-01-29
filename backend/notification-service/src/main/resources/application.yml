@@ -27,6 +27,7 @@ quarkus:
       url: jdbc:postgresql://localhost:5432/notificationdb
 
   hibernate-orm:
+    packages: id.payu.notification.domain
     database:
       generation: validate
     log:
@@ -57,18 +58,6 @@ quarkus:
 
 "%dev":
   quarkus:
-    hibernate-orm:
-      database:
-        generation: drop-and-create
-    mailer:
-      mock: true
-
-"%test":
-  quarkus:
-    datasource:
-      db-kind: h2
-      jdbc:
-        url: jdbc:h2:mem:testdb
     hibernate-orm:
       database:
         generation: drop-and-create

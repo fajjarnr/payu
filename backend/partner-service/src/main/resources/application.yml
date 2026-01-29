@@ -22,10 +22,15 @@ quarkus:
     password: postgres
     jdbc:
       url: jdbc:postgresql://localhost:5432/partnerdb
+    health: true
+    metrics: true
 
   hibernate-orm:
     database:
       generation: validate
+      # Explicitly map entity packages to avoid persistence unit issues
+      # Include both our entities and Kafka checkpoint entities
+      packages: "id.payu.partner.domain,io.quarkus.smallrye.reactivemessaging.kafka"
     log:
       sql: false
 
@@ -45,9 +50,16 @@ quarkus:
 
 "%dev":
   quarkus:
+    datasource:
+      db-kind: h2
+      jdbc:
+        url: jdbc:h2:mem:devdb
+      health: false
+      metrics: false
     hibernate-orm:
       database:
         generation: drop-and-create
+      packages: "id.payu.partner.domain,io.quarkus.smallrye.reactivemessaging.kafka"
 
 "%test":
   quarkus:
@@ -55,6 +67,32 @@ quarkus:
       db-kind: h2
       jdbc:
         url: jdbc:h2:mem:testdb
+      username: sa
+      password:
+      health: false
+      metrics: false
     hibernate-orm:
       database:
         generation: drop-and-create
+        dialect: org.hibernate.dialect.H2Dialect
+      packages: "id.payu.partner.domain"
+      log:
+        sql: false
+    # Completely disable SmallRye Reactive Messaging and Kafka checkpointing
+    kafka:
+      enabled: false
+      devservices:
+        enabled: false
+    messaging:
+      enabled: false
+    smallrye:
+      messaging:
+        health:
+          enabled: false
+    # Disable reactive messaging
+    mp:
+      messaging:
+        incoming:
+          payment-events: not-used
+        outgoing:
+          payment-events: not-used

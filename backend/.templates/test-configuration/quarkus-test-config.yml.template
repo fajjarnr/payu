@@ -1,0 +1,30 @@
+# Test Configuration Template for Quarkus Services
+# Copy to: src/test/resources/application.yml
+# Or add to: src/main/resources/application.yml under "%test" profile
+
+quarkus:
+  datasource:
+    db-kind: h2
+    jdbc:
+      # PostgreSQL compatibility mode prevents test/production divergence
+      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
+    username: sa
+    password:
+  hibernate-orm:
+    database:
+      generation: drop-and-create
+      dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    migrate-at-start: false
+  kafka:
+    devservices:
+      enabled: false
+  opentelemetry:
+    enabled: false
+
+mp:
+  messaging:
+    incoming:
+      # Replace with actual topic names
+      example-events:
+        connector: smallrye-in-memory

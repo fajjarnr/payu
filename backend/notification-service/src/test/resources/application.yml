@@ -1,0 +1,48 @@
+# Test Configuration for Notification Service
+#
+# Docker Requirements:
+# - Unit tests (Architecture tests, SimpleTest): No Docker required
+# - Integration tests (@QuarkusTest tests): Require Docker for Kafka DevServices
+#
+# Run tests with Docker (enables all tests including integration tests):
+#   mvn test -Ddocker.enabled=true
+# Run unit tests only (no Docker required):
+#   mvn test
+#
+# Note: Integration tests are annotated with @EnabledIfSystemProperty and will be
+# skipped when docker.enabled system property is not set to "true"
+
+quarkus:
+  # Use H2 in-memory database for unit tests (no Docker required)
+  datasource:
+    db-kind: h2
+    jdbc:
+      # PostgreSQL compatibility mode prevents test/production divergence
+      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
+    username: sa
+    password:
+  hibernate-orm:
+    packages:
+      - id.payu.notification.domain
+    database:
+      generation: drop-and-create
+      dialect: org.hibernate.dialect.H2Dialect
+  mailer:
+    mock: true
+  # Disable Kafka DevServices for tests - use In-Memory connector instead
+  kafka:
+    devservices:
+      enabled: false
+  opentelemetry:
+    enabled: false
+
+# Reactive Messaging: Use In-Memory connector to avoid Kafka dependency/errors in tests
+mp:
+  messaging:
+    incoming:
+      wallet-events:
+        connector: smallrye-in-memory
+      transaction-events:
+        connector: smallrye-in-memory
+      payment-events:
+        connector: smallrye-in-memory

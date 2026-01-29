@@ -10,6 +10,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -17,6 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
+@EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Integration tests require Docker for Kafka DevServices and PostgreSQL")
 @DisplayName("Notification Resource Tests")
 class NotificationResourceTest {
 

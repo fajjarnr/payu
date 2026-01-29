@@ -3,9 +3,7 @@ package id.payu.billing.integration;
 import id.payu.billing.client.WalletClient;
 import id.payu.billing.domain.BillPayment;
 import id.payu.billing.dto.CreatePaymentRequest;
-import id.payu.billing.test.resource.PostgresTestResource;
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -17,6 +15,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.mockito.Mockito;
 
 import java.math.BigDecimal;
@@ -27,8 +26,15 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
+/**
+ * Integration tests for Billing Service.
+ *
+ * NOTE: These tests require Docker to be running for PostgreSQL Testcontainers.
+ * To run these tests: mvn test -Dtest=BillingIntegrationTest -Ddocker.enabled=true
+ * To skip these tests: mvn test (they will be skipped by default)
+ */
 @QuarkusTest
-@QuarkusTestResource(PostgresTestResource.class)
+@EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Docker not available")
 public class BillingIntegrationTest {
 
     @InjectMock

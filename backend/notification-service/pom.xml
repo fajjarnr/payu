@@ -185,6 +185,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <quarkus.hibernate-orm.packages>id.payu.notification.domain</quarkus.hibernate-orm.packages>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

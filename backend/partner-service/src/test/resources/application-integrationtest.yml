@@ -1,0 +1,38 @@
+# Integration Test Configuration for Partner Service
+# This profile requires Docker to be running with PostgreSQL and Kafka containers
+#
+# Usage: mvn test -Dtest=*IntegrationTest -Ddocker.enabled=true
+#
+# Prerequisites:
+# - Docker must be running
+# - Testcontainers will automatically start PostgreSQL and Kafka containers
+
+quarkus:
+  # Use Testcontainers for integration tests
+  datasource:
+    db-kind: postgresql
+    jdbc:
+      # Testcontainers will override this URL
+      url: jdbc:postgresql://localhost:5432/testdb
+    username: test
+    password: test
+  hibernate-orm:
+    database:
+      generation: drop-and-create
+    sql-load-script: no-file
+    packages: "id.payu.partner.domain"
+  # Enable Kafka for integration tests
+  kafka:
+    enabled: true
+    devservices:
+      enabled: true
+  messaging:
+    enabled: true
+  opentelemetry:
+    enabled: false
+
+  # Log levels
+  log:
+    category:
+      "id.payu.partner": DEBUG
+      "io.quarkus": INFO

@@ -12,6 +12,7 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @QuarkusTest
+@EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Integration tests require Docker for Kafka DevServices and PostgreSQL")
 @DisplayName("Notification Service Unit Tests")
 class NotificationServiceTest {
 

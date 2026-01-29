@@ -18,14 +18,12 @@ Gunakan jika output satu agen menjadi input bagi agen berikutnya.
 
 > "Gunakan `@explorer-agent` untuk memetakan struktur kode, lalu berikan hasilnya ke `@backend-engineer` untuk mereview API."
 
-### 2. Swarm Mode (Parallel Dispatch)
-
-Gunakan untuk tugas independen yang masif (Scatter-Gather).
-
-> "Dispatch `@security-engineer` (Audit), `@database-engineer` (Schema), dan `@frontend-engineer` (UI) secara bersamaan."
-
+### 2. Swarm Mode (Parallel Dispatch - up to 12 Agents)
+Gunakan untuk tugas independen yang masif (Scatter-Gather). Platform PayU mendukung hingga **12 agen paralel** secara bersamaan untuk efisiensi ekstrim.
+> "Dispatch `@security-auditor` (Audit), `@migrator` (Schema), `@tester` (Test Case), `@styler` (UI), dan `@logic-builder` (Domain) secara bersamaan di 12 titik berbeda."
 - **Topology**: Mesh (Peer-to-Peer).
-- **Syarat**: Tugas tidak boleh saling bergantung.
+- **Syarat**: Tugas tidak boleh saling bergantung secara langsung pada *write-access* terhadap file yang sama.
+- **Speed**: Dapat mereduksi waktu eksekusi tugas masif hingga 80%.
 
 ### 3. Hierarchical Mode (Queen-Worker)
 
