@@ -694,6 +694,51 @@ UI components should receive state via **Generic Context Interfaces**, not be ha
 
 ---
 
+## 💎 Premium Overlays & Imperative Modal Pattern
+
+Untuk modal dialog dan overlay yang premium, gunakan pola **Imperative API** untuk mengurangi boilerplate state. Pola ini memungkinkan pemanggilan modal langsung dari fungsi/callback tanpa mengelola state `open` secara manual di level page.
+
+### 1. Struktur Folder (Feature-Driven)
+Gunakan pendekatan mandiri untuk setiap modal besar:
+```
+features/
+└── MyTransactionModal/
+    ├── index.tsx           # Export createMyTransactionModal()
+    └── TransactionContent.tsx # UI Komponen Modal
+```
+
+### 2. Implementasi Komponen Konten (`TransactionContent.tsx`)
+Gunakan `framer-motion` untuk standar transisi PayU.
+
+```tsx
+'use client';
+
+import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+
+export const TransactionContent = ({ onClose }: { onClose: () => void }) => {
+  const t = useTranslations('transfers');
+
+  return (
+    <div className="p-8">
+      <h2 className="text-2xl font-black mb-4">{t('confirmTitle')}</h2>
+      <button onClick={onClose} className="btn-emerald w-full">
+        {t('submit')}
+      </button>
+    </div>
+  );
+};
+```
+
+### 3. Golden Rules Overlay PayU:
+- **Backdrop**: WAJIB `bg-black/60 backdrop-blur-sm` (Glassmorphism).
+- **Modal Container**: `bg-card rounded-3xl shadow-2xl overflow-hidden`.
+- **Animation**: Spring physics (`stiffness: 300, damping: 25`) via Framer Motion.
+- **i18n**: Gunakan `useTranslations` di dalam komponen konten untuk menjaga context.
+- **Seamless Exit**: Pastikan menggunakan `AnimatePresence` untuk menghindari elemen "terputus" saat tutup.
+
+---
+
 ## Component Design Patterns
 
 ### 1. Form Components (React Hook Form + Zod)
