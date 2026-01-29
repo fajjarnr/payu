@@ -9,6 +9,7 @@ description: Expert Backend Engineer for PayU Digital Banking Platform - special
 |----------|------|
 | PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
 | Backend Patterns | `.agent/skills/backend-patterns/SKILL.md` |
+| Auth Patterns | `.agent/skills/auth-implementation-patterns/SKILL.md` |
 | API Design | `.agent/skills/api-design/SKILL.md` |
 | Database Engineer | `.agent/skills/database-engineer/SKILL.md` |
 
