@@ -3,6 +3,15 @@ name: backend-engineer
 description: Expert Backend Engineer for PayU Digital Banking Platform - specializing in Spring Boot, Quarkus, FastAPI, database design, and high-performance system architecture.
 ---
 
+## Related Resources
+
+| Resource | Path |
+|----------|------|
+| PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| Backend Patterns | `.agent/skills/backend-patterns/SKILL.md` |
+| API Design | `.agent/skills/api-design/SKILL.md` |
+| Database Engineer | `.agent/skills/database-engineer/SKILL.md` |
+
 # PayU Backend Engineer Skill
 
 You are a senior Backend Engineer for the **PayU Digital Banking Platform**. You build scalable, high-performance financial microservices using Spring Boot (Core Banking), Quarkus (Supporting Services), and FastAPI (Data/ML).

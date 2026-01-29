@@ -249,6 +249,7 @@ Skills yang tersedia di `.agent/skills/`:
 | Skill                       | Description                                         |
 | --------------------------- | --------------------------------------------------- |
 | `api-design`                | REST API standards, OpenAPI, versioning             |
+| `backend-patterns`          | Architectural patterns for robust backend systems (Repository, Service, Caching). |
 | `c4-architecture`           | Architecture visualization using C4 Model           |
 | `backend-engineer`          | Java/Python microservice development                |
 | `code-review`               | Code quality & review checklists                    |
