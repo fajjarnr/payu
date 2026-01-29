@@ -258,6 +258,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `qa-engineer`               | Testing strategies & QA automation                  |
 | `security-engineer`         | PCI-DSS, Encryption, OJK Compliance                 |
 | `web-artifacts-builder`    | Scaffolding & Bundling single-file HTML Artifacts   |
+| `slidev`                   | Presentation slides for developers (Markdown-based) |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 
