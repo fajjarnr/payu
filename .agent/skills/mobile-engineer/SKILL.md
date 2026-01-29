@@ -116,6 +116,7 @@ Use `PersistQueryClientProvider` with `AsyncStorage` to ensure the app works und
 |----------|------|
 | React Native Architecture | `.agent/skills/react-native-architecture/SKILL.md` |
 | React Native Design | `.agent/skills/react-native-design/SKILL.md` |
+| Modern JS Patterns | `.agent/skills/modern-javascript-patterns/SKILL.md` |
 | Security Specialist | `.agent/skills/security-specialist/SKILL.md` |
 | Backend Sync | `.agent/skills/backend-engineer/SKILL.md` |
 

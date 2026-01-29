@@ -265,6 +265,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `git-workflow`              | Git standards & PR workflows                        |
 | `ml-engineer`               | Fraud Scoring, Python & Analytics                   |
 | `mobile-engineer`           | React Native, Expo, Mobile Security                 |
+| `modern-javascript-patterns`| Modern ES6+ syntax, functional patterns, async programming, and performance optimization strategies. |
 | `nextjs-app-router-patterns`| Master Next.js App Router patterns, Server Components, Data Fetching, and Caching strategies |
 | `observability-engineer`    | Distributed Tracing, Logs, and Metrics              |
 | `payu-development`          | Pathfinding & Core Architecture                     |
