@@ -25,12 +25,18 @@ quarkus:
     database:
       generation: validate
       # Explicitly map entity packages to avoid persistence unit issues
-      # Include both our entities and Kafka checkpoint entities
-      packages: "id.payu.partner.domain,io.quarkus.smallrye.reactivemessaging.kafka"
+      # Only include our entities (exclude Kafka checkpoint entities)
+      packages: "id.payu.partner.domain"
     log:
       sql: false
   kafka:
     bootstrap-servers: localhost:9092
+    # Disable Kafka checkpointing store entirely to avoid Hibernate Reactive dependency
+  smallrye:
+    kafka:
+      checkpoint:
+        enabled: false
+        state-store: none
   smallrye-openapi:
     info-title: PayU Partner Service API
     info-version: 1.0.0
@@ -51,7 +57,7 @@ quarkus:
     hibernate-orm:
       database:
         generation: drop-and-create
-      packages: "id.payu.partner.domain,io.quarkus.smallrye.reactivemessaging.kafka"
+      packages: "id.payu.partner.domain"
 "%test":
   quarkus:
     datasource:
@@ -80,6 +86,10 @@ quarkus:
       messaging:
         health:
           enabled: false
+      kafka:
+        checkpoint:
+          enabled: false
+          state-store: none
     # Disable reactive messaging
     mp:
       messaging:

@@ -1,10 +1,12 @@
 package id.payu.partner.service;
 
+import id.payu.partner.PartnerTestProfile;
 import id.payu.partner.domain.Partner;
 import id.payu.partner.dto.PartnerDTO;
 import id.payu.partner.repository.PartnerRepository;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -16,6 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
+@TestProfile(PartnerTestProfile.class)
 public class PartnerServiceTest {
 
     @Inject
