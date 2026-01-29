@@ -269,6 +269,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `payu-development`          | Pathfinding & Core Architecture                     |
 | `qa-engineer`               | Testing strategies & QA automation                  |
 | `security-engineer`         | PCI-DSS, Encryption, OJK Compliance                 |
+| `tailwind-design-system`   | Tailwind CSS design tokens & component variants     |
 | `web-artifacts-builder`    | Scaffolding & Bundling single-file HTML Artifacts   |
 | `slidev`                   | Presentation slides for developers (Markdown-based) |
 
