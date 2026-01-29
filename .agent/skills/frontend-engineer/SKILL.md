@@ -1420,6 +1420,7 @@ Untuk hasil terbaik dan tercepat, gunakan pola delegasi paralel (Swarm Mode):
 | Resource | Path |
 |----------|------|
 | PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| Web Component Design | `.agent/skills/web-component-design/SKILL.md` |
 | Responsive Design | `.agent/skills/responsive-design/SKILL.md` |
 | React State Management | `.agent/skills/react-state-management/SKILL.md` |
 | Tailwind Design System | `.agent/skills/tailwind-design-system/SKILL.md` |

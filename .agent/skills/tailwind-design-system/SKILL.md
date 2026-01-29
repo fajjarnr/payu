@@ -667,3 +667,4 @@ export const disabled = "disabled:pointer-events-none disabled:opacity-50";
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Radix Primitives](https://www.radix-ui.com/primitives)
 - [Responsive Design Skill](.agent/skills/responsive-design/SKILL.md)
+- [Web Component Design Skill](.agent/skills/web-component-design/SKILL.md)
