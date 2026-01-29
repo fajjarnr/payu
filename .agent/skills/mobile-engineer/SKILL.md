@@ -110,6 +110,14 @@ Use `PersistQueryClientProvider` with `AsyncStorage` to ensure the app works und
 - [ ] **SafeArea** respects device notches?
 - [ ] **Hermes** enabled and logs stripped?
 
+## 📚 Related Resources
+
+| Resource | Path |
+|----------|------|
+| React Native Architecture | `.agent/skills/react-native-architecture/SKILL.md` |
+| Security Specialist | `.agent/skills/security-specialist/SKILL.md` |
+| Backend Sync | `.agent/skills/backend-engineer/SKILL.md` |
+
 ## 🤖 Agent Delegation & Parallel Execution
 
 Untuk pengembangan mobile yang premium dan aman, gunakan pola delegasi paralel (Swarm Mode):
