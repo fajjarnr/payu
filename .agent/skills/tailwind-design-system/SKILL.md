@@ -689,3 +689,20 @@ If implementing Swiss/Brutalist components:
 - [Radix Primitives](https://www.radix-ui.com/primitives)
 - [Responsive Design Skill](.agent/skills/responsive-design/SKILL.md)
 - [Web Component Design Skill](.agent/skills/web-component-design/SKILL.md)
+
+## 🛠️ Tooling
+
+### Design Token Generator
+This skill includes a Python script to automatically generate comprehensive design tokens (colors, typography, spacing) based on a brand color.
+
+**Location**: `.agent/skills/tailwind-design-system/scripts/design_token_generator.py`
+
+**Usage**:
+```bash
+python3 .agent/skills/tailwind-design-system/scripts/design_token_generator.py [brand_color] [style] [format]
+```
+
+**Features**:
+- Generates harmonious color palettes
+- Creates modular typography scales
+- Outputs JSON/CSS compatible with Tailwind config
