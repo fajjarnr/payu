@@ -189,7 +189,36 @@ Gunakan pola **Flex-1 Overflow** untuk dashboard yang tidak pecah:
 - **Sidebar**: `w-64 flex-shrink-0 overflow-y-auto`.
 - **Main Content**: `flex-1 overflow-y-auto p-6 lg:p-10`.
 
-### 3. Progressive Reveal (Standard Emerald)
+### 3. Recipe: Three-Column Enterprise Dashboard
+Pola standard untuk dashboard perbankan yang kompleks (Sidebar + Content + Secondary Panel/Activity).
+
+```tsx
+<div className="flex h-screen w-full overflow-hidden bg-background">
+  {/* 1. Left Sidebar (Navigation) */}
+  <aside className="w-64 border-r border-border/40 overflow-y-auto hidden lg:flex flex-col">
+    <SidebarContent />
+  </aside>
+
+  {/* 2. Main Center Area (Actionable Content) */}
+  <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <header className="h-16 border-b border-border/40 flex items-center px-6">
+      <h1 className="text-xl font-bold">Dashboard</h1>
+    </header>
+    <div className="flex-1 overflow-y-auto p-8">
+      <MainContent />
+    </div>
+  </main>
+
+  {/* 3. Right Panel (Secondary/Activity/Context) */}
+  <aside className="w-80 border-l border-border/40 overflow-y-auto hidden xl:block bg-muted/30">
+    <SecondaryPanel />
+  </aside>
+</div>
+```
+
+> **Filosofi Layout**: PayU mengikuti prinsip "Vertical-First". Jika sebuah container tidak memiliki orientasi yang jelas, asumsikan itu adalah kolom (`flex-col`). Gunakan `gap` secara eksplisit alih-alih `margin` pada elemen anak untuk konsistensi spasi.
+
+### 4. Progressive Reveal (Standard Emerald)
 Gunakan `Suspense` dan `Skeleton` untuk setiap blok data-fetching. Jangan biarkan seluruh halaman menunggu satu API yang lambat.
 
 ---
