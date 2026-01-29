@@ -269,6 +269,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `payu-development`          | Pathfinding & Core Architecture                     |
 | `qa-engineer`               | Testing strategies & QA automation                  |
 | `react-state-management`    | Master modern React state management with Redux Toolkit, Zustand, Jotai, and React Query |
+| `responsive-design`        | Breakpoints strategies, fluid layouts, and container queries |
 | `security-engineer`         | PCI-DSS, Encryption, OJK Compliance                 |
 | `tailwind-design-system`   | Tailwind CSS design tokens & component variants     |
 | `web-artifacts-builder`    | Scaffolding & Bundling single-file HTML Artifacts   |
