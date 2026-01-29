@@ -90,10 +90,11 @@
 
 ```
 payu/
-├── .claude/              # Claude Code Configuration (Native)
-│   ├── skills/           # 20+ AI Skills (auto-discovery, slash commands)
-│   ├── agents/           # 7 Specialized Subagents
-│   └── settings.json     # Permissions & hooks
+├── .agent/               # AI Agent Ecosystem (Symlinked to .claude/)
+│   ├── skills/           # 20+ AI Skills (Logic, Stack, Standards)
+│   ├── agents/           # Specialized Sub-agents (System-level prompts)
+│   ├── workflows/        # SOP for complex tasks (MUST READ BEFORE EXECUTION)
+│   └── resources/        # Shared assets (shadcn components, templates)
 ├── backend/             # Microservices implementation (20+ services)
 │   ├── shared/          # Shared Spring Boot starters
 │   │   ├── security-starter/    # PII encryption, audit logging
@@ -256,6 +257,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `payu-development`          | Pathfinding & Core Architecture                     |
 | `qa-engineer`               | Testing strategies & QA automation                  |
 | `security-engineer`         | PCI-DSS, Encryption, OJK Compliance                 |
+| `web-artifacts-builder`    | Scaffolding & Bundling single-file HTML Artifacts   |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 
@@ -306,7 +308,7 @@ To align with the user's intent, adopt one of these modes when requested:
 
 ## 🔄 Workflows & Procedures
 
-Claude Code SHOULD follow established workflows in `.agent/workflows/` for complex operations:
+Claude Code SHOULD follow established workflows in `.agent/workflows/` for complex operations. **URGENT**: Karena Claude Code tidak auto-discover folder `workflows`, AI asisten wajib melakukan `ls .agent/workflows/` atau membaca file di dalamnya secara proaktif sebelum memulai tugas arsitektural.
 
 - **`/antigravity-lifecycle`**: Standard SDLC lifecycle (Observe -> Plan -> Execute -> Verify).
 - **`/multi-agent-coordination`**: Parallel task coordination and synthesis for multi-service changes. **(Principally handled by Main AI)**
