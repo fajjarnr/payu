@@ -541,3 +541,33 @@ export async function updateProduct(id: string, data: ProductData) {
 - [Next.js App Router Documentation](https://nextjs.org/docs/app)
 - [Server Components RFC](https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md)
 - [Vercel Templates](https://vercel.com/templates/next.js)
+
+## ⚡ Performance Critical Checklist
+
+### Waterfalls & Data Fetching
+- Use `Promise.all()` for independent fetches
+- Wrap slow data in `<Suspense>` boundaries
+- Defer `await` into branches where needed
+
+### Bundle Size Optimization
+- **NO** barrel imports: `import X from 'lucide-react'` ❌
+- **YES** direct imports: `import X from 'lucide-react/dist/esm/icons/x'` ✅
+- Use `next/dynamic` for heavy components (editors, charts, PDF viewers)
+- Defer analytics with `ssr: false`
+
+### Server Actions Security
+- **ALWAYS** check auth **INSIDE** the action, not just in middleware
+- Verify resource ownership before mutations
+
+### Production Hygiene
+- Users run `npm run build && npm run start`, NOT `npm run dev`
+- Docker must use standalone output, not dev mode
+
+### Quick Optimization Review:
+```markdown
+[ ] No sequential awaits for independent data
+[ ] Icons imported directly
+[ ] Heavy components use next/dynamic
+[ ] Server Actions have auth inside
+[ ] Suspense boundaries around slow fetches
+```
