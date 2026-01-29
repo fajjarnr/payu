@@ -12,6 +12,7 @@ Complete toolkit for senior backend engineer with modern tools and best practice
 | Resource | Path |
 |----------|------|
 | PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| API Integration Specialist | `.agent/skills/api-integration-specialist/SKILL.md` |
 | Backend Patterns | `.agent/skills/backend-patterns/SKILL.md` |
 | Auth Patterns | `.agent/skills/auth-implementation-patterns/SKILL.md` |
 | FastAPI Templates | `.agent/skills/fastapi-templates/SKILL.md` |

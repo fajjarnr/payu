@@ -248,6 +248,7 @@ Skills yang tersedia di `.agent/skills/`:
 
 | Skill                       | Description                                         |
 | --------------------------- | --------------------------------------------------- |
+| `api-integration-specialist` | Expert in integrating third-party APIs with proper authentication, error handling, rate limiting, and retry logic. Use when integrating REST APIs, GraphQL endpoints, webhooks, or external services. Specializes in OAuth flows, API key management, request/response transformation, and building robust API clients. |
 | `api-design`                | REST API standards, OpenAPI, versioning             |
 | `auth-implementation-patterns`| JWT, OAuth2, RBAC, session management patterns      |
 | `backend-patterns`          | Architectural patterns for robust backend systems (Repository, Service, Caching). |

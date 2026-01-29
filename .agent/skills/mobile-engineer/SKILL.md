@@ -114,11 +114,12 @@ Use `PersistQueryClientProvider` with `AsyncStorage` to ensure the app works und
 
 | Resource | Path |
 |----------|------|
+| API Integration Specialist | `.agent/skills/api-integration-specialist/SKILL.md` |
 | UI/UX Design | `.agent/skills/ui-ux-designer/SKILL.md` |
 | React Native Architecture | `.agent/skills/react-native-architecture/SKILL.md` |
 | React Native Design | `.agent/skills/react-native-design/SKILL.md` |
 | Modern JS Patterns | `.agent/skills/modern-javascript-patterns/SKILL.md` |
-| Security Specialist | `.agent/skills/security-specialist/SKILL.md` |
+| Security Engineer | `.agent/skills/security-engineer/SKILL.md` |
 | Backend Sync | `.agent/skills/backend-engineer/SKILL.md` |
 
 ## 🤖 Agent Delegation & Parallel Execution

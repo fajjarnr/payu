@@ -1420,6 +1420,7 @@ Untuk hasil terbaik dan tercepat, gunakan pola delegasi paralel (Swarm Mode):
 | Resource | Path |
 |----------|------|
 | PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| API Integration Specialist | `.agent/skills/api-integration-specialist/SKILL.md` |
 | UI/UX Design | `.agent/skills/ui-ux-designer/SKILL.md` |
 | TypeScript Advanced | `.agent/skills/typescript-advanced-types/SKILL.md` |
 | React Performance | `.agent/skills/react-performance/SKILL.md` |
@@ -1431,8 +1432,8 @@ Untuk hasil terbaik dan tercepat, gunakan pola delegasi paralel (Swarm Mode):
 | React State Management | `.agent/skills/react-state-management/SKILL.md` |
 | Tailwind Design System | `.agent/skills/tailwind-design-system/SKILL.md` |
 | Frontend Patterns | `.agent/skills/frontend-patterns/SKILL.md` |
-| Security Specialist | `.agent/skills/security-specialist/SKILL.md` |
-| QA Expert | `.agent/skills/qa-expert/SKILL.md` |
+| Security Engineer | `.agent/skills/security-engineer/SKILL.md` |
+| QA Engineer | `.agent/skills/qa-engineer/SKILL.md` |
 | Architecture | `ARCHITECTURE.md` |
 
 ---

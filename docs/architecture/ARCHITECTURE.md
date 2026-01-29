@@ -16,10 +16,10 @@
 7. [API Gateway & Service Mesh](#7-api-gateway--service-mesh)
 8. [Infrastructure & DevOps](#8-infrastructure--devops)
 9. [Monitoring & Observability](#9-monitoring--observability)
-10. [External Service Simulators](#10-external-service-simulators)
+10. [TokoBapak Integration](#10-tokobapak-integration)
 11. [Frontend Architecture](#11-frontend-architecture)
-12. [TokoBapak Integration](#12-tokobapak-integration)
-13. [Disaster Recovery & High Availability](#13-disaster-recovery--high-availability)
+12. [Disaster Recovery & High Availability](#12-disaster-recovery--high-availability)
+13. [External Service Simulators](#13-external-service-simulators)
 14. [Lab Configuration & Decisions](#14-lab-configuration--decisions)
 
 ---
@@ -98,81 +98,129 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 
 ### 2.1 High-Level Architecture
 
+#### C4 Level 1: System Context
+
+```mermaid
+C4Context
+  title PayU Digital Banking - System Context
+
+  Person(customer, "Bank Customer", "Individual or business user")
+  Person(admin, "Bank Admin", "Internal operations staff")
+  System_Ext(tokobapak, "TokoBapak", "E-commerce partner platform")
+  System_Ext(bi_fast, "BI-FAST", "Bank Indonesia real-time transfer")
+  System_Ext(dukcapil, "Dukcapil", "Indonesian population database")
+  System_Ext(qris, "QRIS", "National QR payment standard")
+
+  System(payu, "PayU Digital Banking", "Digital banking platform with microservices architecture")
+
+  Rel(customer, payu, "Uses", "Mobile App / Web Browser")
+  Rel(admin, payu, "Manages", "Admin Dashboard")
+  Rel(payu, tokobapak, "Processes payments", "REST API")
+  Rel(payu, bi_fast, "Transfers funds", "REST API")
+  Rel(payu, dukcapil, "Verifies identity", "REST API")
+  Rel(payu, qris, "Processes QR payments", "REST API")
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                               EXTERNAL CLIENTS                                   │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │
-│  │  Mobile App  │  │   Web App    │  │  Admin Web   │  │  External Partners   │ │
-│  │  (iOS/Android)│  │  (Next.js)  │  │  (Next.js)   │  │  (TokoBapak, etc)    │ │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘ │
-└─────────┼──────────────────┼──────────────────┼────────────────────┼────────────┘
-          │                  │                  │                    │
-          └──────────────────┴────────┬─────────┴────────────────────┘
-                                      │
-                           ┌──────────▼──────────┐
-                           │    Load Balancer    │
-                           │  (AWS ALB / Nginx)  │
-                           └──────────┬──────────┘
-                                      │
-                           ┌──────────▼──────────┐
-                           │    WAF & DDoS       │
-                           │   (AWS WAF/Shield)  │
-                           └──────────┬──────────┘
-                                      │
-┌─────────────────────────────────────┼─────────────────────────────────────────┐
-│                          API GATEWAY LAYER                                     │
-│                    ┌────────────────▼────────────────┐                        │
-│                    │    Spring Cloud Gateway          │                        │
-│                    │    - Rate Limiting               │                        │
-│                    │    - JWT Validation              │                        │
-│                    │    - Request Routing             │                        │
-│                    └────────────────┬────────────────┘                        │
-└─────────────────────────────────────┼─────────────────────────────────────────┘
-                                      │
-┌─────────────────────────────────────┼─────────────────────────────────────────┐
-│                          SERVICE MESH (Istio)                                  │
-│  ┌────────────┬────────────┬────────┴───────┬────────────┬────────────┐       │
-│  │            │            │                │            │            │       │
-│  ▼            ▼            ▼                ▼            ▼            ▼       │
-│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
-│ │ Account  │ │   Auth   │ │Transaction│ │  Wallet  │ │ Billing  │ │   KYC    │ │
-│ │ Service  │ │ Service  │ │ Service  │ │ Service  │ │ Service  │ │ Service  │ │
-│ │(Spring)  │ │(Spring)  │ │ (Spring) │ │(Spring)  │ │(Quarkus) │ │(Python)  │ │
-│ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ │
-└──────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────┘
-       │            │            │            │            │            │
-       └────────────┴────────────┴─────┬──────┴────────────┴────────────┘
-                                       │
-┌──────────────────────────────────────┼────────────────────────────────────────┐
-│                    HYBRID MESSAGING (AMQ Streams + AMQ Broker)                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐  │
-│  │                      AMQ STREAMS (Kafka)                                 │  │
-│  │  ┌─────────────────▼─────────────────┐                                   │  │
-│  │  │  Event Sourcing & Saga            │  Topics:                          │  │
-│  │  │  - Transaction events             │  - payu.transactions.*            │  │
-│  │  │  - Audit logs                     │  - payu.accounts.*                │  │
-│  │  │  - CDC (Debezium)                 │  - payu.wallet.*                  │  │
-│  │  └───────────────────────────────────┘                                   │  │
-│  └─────────────────────────────────────────────────────────────────────────┘  │
-│  ┌─────────────────────────────────────────────────────────────────────────┐  │
-│  │                      AMQ BROKER (AMQP 1.0)                               │  │
-│  │  ┌───────────────────────────────────┐                                   │  │
-│  │  │  Point-to-Point Messaging         │  Queues:                          │  │
-│  │  │  - Notification delivery          │  - notification.send              │  │
-│  │  │  - External callbacks             │  - webhook.outbound               │  │
-│  │  │  - Legacy integration             │  - legacy.bridge                  │  │
-│  │  └───────────────────────────────────┘                                   │  │
-│  └─────────────────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────┼────────────────────────────────────────┘
-                                       │
-┌──────────────────────────────────────┼────────────────────────────────────────┐
-│                           DATA LAYER                                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │  PostgreSQL  │  │   MongoDB    │  │    Redis     │  │Elasticsearch │       │
-│  │  (Primary)   │  │  (Activity)  │  │   (Cache)    │  │  (Search)    │       │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘       │
-└───────────────────────────────────────────────────────────────────────────────┘
+
+#### C4 Level 2: Container Architecture
+
+```mermaid
+C4Container
+  title PayU Digital Banking - Container Architecture
+
+  Person(customer, "Bank Customer")
+  Person(admin, "Bank Admin")
+
+  System_Boundary(payu_platform, "PayU Digital Banking Platform") {
+    Container(mobile, "Mobile App", "React Native / Expo", "Customer-facing mobile application")
+    Container(web_app, "Web App", "Next.js 15", "Customer web portal")
+    Container(admin_web, "Admin Dashboard", "Next.js 15", "Internal administration interface")
+    Container(gateway, "API Gateway", "Spring Cloud Gateway", "Rate limiting, JWT validation, routing")
+
+    System_Boundary(core_banking, "Core Banking Services") {
+      Container(account_svc, "Account Service", "Spring Boot 3.4", "User accounts, multi-pocket, profile")
+      Container(auth_svc, "Auth Service", "Spring Boot 3.4", "Authentication, MFA, OAuth2")
+      Container(transaction_svc, "Transaction Service", "Spring Boot 3.4", "Transfers, BI-FAST, QRIS")
+      Container(wallet_svc, "Wallet Service", "Spring Boot 3.4", "Double-entry ledger, balance management")
+      Container(investment_svc, "Investment Service", "Spring Boot 3.4", "Mutual funds, Gold investment")
+      Container(lending_svc, "Lending Service", "Spring Boot 3.4", "Loans, PayLater, credit scoring")
+      Container(fx_svc, "FX Service", "Spring Boot 3.4", "Currency exchange rates")
+      Container(statement_svc, "Statement Service", "Spring Boot 3.4", "PDF E-Statement generation")
+    }
+
+    System_Boundary(supporting_services, "Supporting Services") {
+      Container(kyc_svc, "KYC Service", "Python FastAPI", "OCR, liveness detection")
+      Container(notification_svc, "Notification Service", "Quarkus Native", "Push, SMS, Email")
+      Container(billing_svc, "Billing Service", "Quarkus Native", "Bill payments")
+      Container(gateway_svc, "Gateway Service", "Quarkus Native", "Internal API gateway")
+      Container(api_portal_svc, "API Portal Service", "Quarkus Native", "OpenAPI docs & sandbox")
+      Container(analytics_svc, "Analytics Service", "Python FastAPI", "Fraud scoring, insights")
+    }
+
+    System_Boundary(admin_services, "Admin & Supporting Services") {
+      Container(backoffice_svc, "Backoffice Service", "Spring Boot 3.4", "Internal admin operations")
+      Container(partner_svc, "Partner Service", "Spring Boot 3.4", "Partner integration, webhooks")
+      Container(promotion_svc, "Promotion Service", "Spring Boot 3.4", "Campaigns, vouchers, rewards")
+      Container(support_svc, "Support Service", "Spring Boot 3.4", "Customer support, ticketing")
+      Container(compliance_svc, "Compliance Service", "Spring Boot 3.4", "Regulatory compliance, AML")
+      Container(cms_svc, "CMS Service", "Spring Boot 3.4", "Banners, promos, dynamic content")
+      Container(ab_testing_svc, "AB Testing Service", "Spring Boot 3.4", "Feature flags, experimentation")
+    }
+
+    ContainerDb(accounts_db, "Accounts Database", "PostgreSQL 16", "User accounts, pockets")
+    ContainerDb(transactions_db, "Transactions Database", "PostgreSQL 16 + Event Store", "Transaction records, events")
+    ContainerDb(wallet_db, "Wallet Database", "PostgreSQL 16", "Double-entry ledger")
+    ContainerDb(kyc_db, "KYC Database", "PostgreSQL 16", "eKYC data (JSONB)")
+    ContainerDb(analytics_db, "Analytics Database", "TimescaleDB", "Time-series analytics")
+
+    ContainerQueue(kafka_streams, "AMQ Streams (Kafka)", "Apache Kafka 3.7", "Event streaming, CDC")
+    ContainerQueue(amq_broker, "AMQ Broker (Artemis)", "AMQP 1.0", "Point-to-point messaging")
+
+    Container(cache, "Data Grid", "Redis RESP (Red Hat Data Grid)", "Multi-layer caching, rate limiting")
+
+    Container(sso, "Red Hat SSO (Keycloak)", "Keycloak 24", "Identity & access management")
+  }
+
+  System_Ext(bi_fast, "BI-FAST Simulator", "External transfer network")
+  System_Ext(dukcapil, "Dukcapil Simulator", "Identity verification")
+  System_Ext(qris, "QRIS Simulator", "QR payment standard")
+  System_Ext(tokobapak, "TokoBapak", "E-commerce partner")
+
+  Rel(customer, mobile, "Uses")
+  Rel(customer, web_app, "Uses")
+  Rel(admin, admin_web, "Uses")
+  Rel(mobile, gateway, "HTTPS", "JWT")
+  Rel(web_app, gateway, "HTTPS", "JWT")
+  Rel(admin_web, gateway, "HTTPS", "JWT")
+  Rel(gateway, sso, "Validates tokens", "OIDC")
+  Rel(gateway, account_svc, "Routes to")
+  Rel(gateway, auth_svc, "Routes to")
+  Rel(gateway, transaction_svc, "Routes to")
+  Rel(gateway, wallet_svc, "Routes to")
+  Rel(gateway, kyc_svc, "Routes to")
+  Rel(gateway, backoffice_svc, "Routes to")
+  Rel(gateway, partner_svc, "Routes to")
+
+  Rel(account_svc, accounts_db, "Connects to")
+  Rel(transaction_svc, transactions_db, "Connects to")
+  Rel(wallet_svc, wallet_db, "Connects to")
+  Rel(kyc_svc, kyc_db, "Connects to")
+  Rel(analytics_svc, analytics_db, "Connects to")
+
+  Rel(transaction_svc, kafka_streams, "Publishes events")
+  Rel(account_svc, kafka_streams, "Publishes events")
+  Rel(wallet_svc, kafka_streams, "Publishes events")
+  Rel(analytics_svc, kafka_streams, "Consumes events")
+
+  Rel(notification_svc, amq_broker, "Consumes messages")
+
+  Rel(account_svc, cache, "Reads/Writes")
+  Rel(auth_svc, cache, "Reads/Writes")
+  Rel(wallet_svc, cache, "Reads/Writes")
+
+  Rel(transaction_svc, bi_fast, "Initiates transfer")
+  Rel(kyc_svc, dukcapil, "Verifies identity")
+  Rel(transaction_svc, qris, "Processes QR payment")
+  Rel(partner_svc, tokobapak, "Payment integration", "Webhooks")
 ```
 
 ### 2.2 Design Principles
@@ -585,45 +633,50 @@ payu.                              # Namespace prefix
     └── notifications-dlq
 ```
 
-### 4.2 Saga Pattern - Transfer Flow
+### 4.2 Saga Pattern - Transfer Flow (C4 Dynamic)
 
+```mermaid
+C4Dynamic
+  title Transfer Saga Orchestration - Transaction Flow
+
+  Person(user, "Customer")
+  System(transaction_svc, "Transaction Service")
+  System(wallet_svc, "Wallet Service")
+  System(account_svc, "Account Service")
+  System(notification_svc, "Notification Service")
+  Queue(events, "payu.transactions", "Kafka Topic")
+
+  Rel(user, transaction_svc, "1. POST /v1/transfers", "HTTPS")
+  Rel(transaction_svc, wallet_svc, "2. Reserve balance command", "gRPC")
+  Rel(wallet_svc, transaction_svc, "3. BalanceReserved event", "Kafka")
+  Rel(transaction_svc, account_svc, "4. Validate recipient query", "gRPC")
+  Rel(account_svc, transaction_svc, "5. RecipientValid response", "gRPC")
+  Rel(transaction_svc, wallet_svc, "6. Commit transfer command", "gRPC")
+  Rel(wallet_svc, transaction_svc, "7. BalanceCommitted event", "Kafka")
+  Rel(transaction_svc, events, "8. Publish TransactionCompleted", "Kafka")
+  Rel(events, notification_svc, "9. Consume event", "Kafka")
+  Rel(notification_svc, user, "10. Send push notification", "FCM")
+  Rel(transaction_svc, user, "11. Return transfer success", "HTTPS")
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        TRANSFER SAGA ORCHESTRATION                           │
-└─────────────────────────────────────────────────────────────────────────────┘
 
-     User                Transaction        Wallet            Account      Notification
-      │                    Service          Service           Service         Service
-      │                       │                │                 │               │
-      │  1. Transfer Request  │                │                 │               │
-      ├──────────────────────▶│                │                 │               │
-      │                       │                │                 │               │
-      │                       │ 2. Reserve     │                 │               │
-      │                       │    Balance     │                 │               │
-      │                       ├───────────────▶│                 │               │
-      │                       │                │                 │               │
-      │                       │ 3. Reserved OK │                 │               │
-      │                       │◀───────────────┤                 │               │
-      │                       │                │                 │               │
-      │                       │ 4. Validate Recipient            │               │
-      │                       ├──────────────────────────────────▶               │
-      │                       │                │                 │               │
-      │                       │ 5. Recipient Valid               │               │
-      │                       │◀──────────────────────────────────               │
-      │                       │                │                 │               │
-      │                       │ 6. Commit      │                 │               │
-      │                       │    Transfer    │                 │               │
-      │                       ├───────────────▶│                 │               │
-      │                       │                │                 │               │
-      │                       │ 7. Committed   │                 │               │
-      │                       │◀───────────────┤                 │               │
-      │                       │                │                 │               │
-      │                       │ 8. Send Notification             │               │
-      │                       ├───────────────────────────────────────────────────▶
-      │                       │                │                 │               │
-      │  9. Transfer Success  │                │                 │               │
-      │◀──────────────────────┤                │                 │               │
-      │                       │                │                 │               │
+### 4.3 Compensating Transactions (Failure Flow)
+
+```mermaid
+C4Dynamic
+  title Transfer Saga - Compensating Transaction Flow
+
+  Person(user, "Customer")
+  System(transaction_svc, "Transaction Service")
+  System(wallet_svc, "Wallet Service")
+  System(dlq, "payu.transactions.dlq", "Dead Letter Queue")
+
+  Rel(user, transaction_svc, "1. POST /v1/transfers", "HTTPS")
+  Rel(transaction_svc, wallet_svc, "2. Reserve balance command", "gRPC")
+  Rel(wallet_svc, transaction_svc, "3. BalanceReservationFailed event", "Kafka")
+  Rel(transaction_svc, wallet_svc, "4. Release balance command", "gRPC (Compensation)")
+  Rel(wallet_svc, transaction_svc, "5. BalanceReleased event", "Kafka")
+  Rel(transaction_svc, dlq, "6. Publish failed event", "Kafka")
+  Rel(transaction_svc, user, "7. Return transfer failed", "HTTPS")
 ```
 
 ### 4.3 Compensating Transactions
@@ -686,78 +739,94 @@ public class TransferSaga {
 
 ## 5. Data Architecture
 
-### 5.1 Database Strategy
+### 5.1 Database Strategy (C4 Container)
 
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│              UNIFIED POSTGRESQL + DATA GRID STRATEGY                        │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+C4Container
+  title PayU Data Architecture - Database per Service Pattern
 
-                        PRIMARY DATABASE (Crunchy PostgreSQL 16)
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│ Account Service │     │Transaction Svc  │     │  Wallet Service │
-└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   PostgreSQL    │     │   PostgreSQL    │     │   PostgreSQL    │
-│  payu_accounts  │     │payu_transactions│     │   payu_wallet   │
-│                 │     │  + Event Store  │     │  (Double-entry) │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+  System_Boundary(core_banking_db, "Core Banking Data Layer") {
+    ContainerDb(accounts_db, "Accounts Database", "PostgreSQL 16", "User accounts, pockets, profiles")
+    ContainerDb(transactions_db, "Transactions Database", "PostgreSQL 16 + Event Store", "Transaction records, audit trail")
+    ContainerDb(wallet_db, "Wallet Database", "PostgreSQL 16", "Double-entry ledger")
+    ContainerDb(auth_db, "Auth Database", "PostgreSQL 16", "Sessions, devices, MFA")
+    ContainerDb(investment_db, "Investment Database", "PostgreSQL 16", "Portfolios, mutual funds")
+    ContainerDb(lending_db, "Lending Database", "PostgreSQL 16", "Loans, credit scoring")
+  }
 
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   KYC Service   │     │Notification Svc │     │Analytics Service│
-└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   PostgreSQL    │     │   PostgreSQL    │     │   TimescaleDB   │
-│    payu_kyc     │     │payu_notification│     │  payu_analytics │
-│    (JSONB)      │     │                 │     │  (Time-series)  │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+  System_Boundary(supporting_db, "Supporting Services Data Layer") {
+    ContainerDb(kyc_db, "KYC Database", "PostgreSQL 16 (JSONB)", "eKYC documents, OCR results")
+    ContainerDb(notification_db, "Notification Database", "PostgreSQL 16", "Notification history")
+    ContainerDb(analytics_db, "Analytics Database", "TimescaleDB", "Time-series metrics, fraud data")
+    ContainerDb(cms_db, "CMS Database", "PostgreSQL 16", "Banners, promotions, content")
+  }
 
-                        CACHING LAYER (Red Hat Data Grid - RESP Mode)
-                        ┌─────────────────────────────────────────────┐
-                        │  • Session Store (TTL-based)            │
-                        │  • Rate Limiting Counters                │
-                        │  • Token Cache                           │
-                        │  • Hot Data Cache (account balances)     │
-                        │                                          │
-                        │  Redis Protocol (RESP) = Portable Code   │
-                        └─────────────────────────────────────────────┘
+  System_Boundary(caching_layer, "Caching Layer") {
+    Container(data_grid, "Data Grid", "Red Hat Data Grid (Redis RESP)", "Multi-layer caching")
+  }
+
+  System_Boundary(event_streaming, "Event Streaming") {
+    ContainerQueue(kafka, "AMQ Streams (Kafka)", "Apache Kafka 3.7", "Event log, CDC")
+    ContainerQueue(event_store, "Event Store", "PostgreSQL 16", "Event sourcing storage")
+  }
+
+  System_Boundary(message_queue, "Message Queue") {
+    ContainerQueue(amq, "AMQ Broker (Artemis)", "AMQP 1.0", "Notification queue")
+  }
+
+  Container(account_svc, "Account Service", "Spring Boot 3.4")
+  Container(transaction_svc, "Transaction Service", "Spring Boot 3.4")
+  Container(wallet_svc, "Wallet Service", "Spring Boot 3.4")
+  Container(kyc_svc, "KYC Service", "Python FastAPI")
+  Container(notification_svc, "Notification Service", "Quarkus Native")
+  Container(analytics_svc, "Analytics Service", "Python FastAPI")
+
+  Rel(account_svc, accounts_db, "Reads/Writes")
+  Rel(account_svc, data_grid, "Cache hit/miss")
+  Rel(account_svc, kafka, "Publishes events")
+
+  Rel(transaction_svc, transactions_db, "Reads/Writes")
+  Rel(transaction_svc, event_store, "Appends events")
+  Rel(transaction_svc, kafka, "Publishes events")
+  Rel(transaction_svc, data_grid, "Idempotency check")
+
+  Rel(wallet_svc, wallet_db, "Reads/Writes")
+  Rel(wallet_svc, data_grid, "Balance cache")
+  Rel(wallet_svc, kafka, "Publishes events")
+
+  Rel(kyc_svc, kyc_db, "Stores JSONB")
+  Rel(kyc_svc, data_grid, "Temporary cache")
+
+  Rel(notification_svc, amq, "Consumes messages")
+  Rel(notification_svc, notification_db, "Logs status")
+
+  Rel(analytics_svc, analytics_db, "Writes metrics")
+  Rel(analytics_svc, kafka, "Consumes events")
 ```
 
 > **Portability**: All services use standard Redis clients (`spring-data-redis`, `quarkus-redis-client`).
 > Can switch to AWS ElastiCache, Azure Cache, or plain Redis by changing configuration only.
 
-### 5.2 CQRS Implementation
+### 5.2 CQRS Implementation (C4 Dynamic)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CQRS PATTERN                                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+C4Dynamic
+  title CQRS Pattern - Command Query Responsibility Segregation
 
-        COMMAND SIDE                          QUERY SIDE
-    ┌───────────────────┐                ┌───────────────────┐
-    │   Mobile/Web App  │                │   Mobile/Web App  │
-    └─────────┬─────────┘                └─────────┬─────────┘
-              │ POST/PUT/DELETE                    │ GET
-              ▼                                    ▼
-    ┌───────────────────┐                ┌───────────────────┐
-    │  Command Handler  │                │   Query Handler   │
-    └─────────┬─────────┘                └─────────┬─────────┘
-              │                                    │
-              ▼                                    ▼
-    ┌───────────────────┐                ┌───────────────────┐
-    │   Write Model     │───── CDC ─────▶│    Read Model     │
-    │   (PostgreSQL)    │    (Debezium)  │    (Data Grid)    │
-    └───────────────────┘                └───────────────────┘
-              │
-              ▼
-    ┌───────────────────┐
-    │   Event Store     │
-    │   (PostgreSQL)    │
-    └───────────────────┘
+  Person(user, "User")
+  Container(write_api, "Command API", "Spring MVC", "Handles POST/PUT/DELETE")
+  Container(read_api, "Query API", "Spring MVC", "Handles GET requests")
+  ContainerDb(write_db, "Write Model", "PostgreSQL", "Source of truth")
+  ContainerCache(read_cache, "Read Model", "Data Grid (Redis)", "Denormalized view")
+  Queue(cdc, "CDC Events", "Kafka Connect (Debezium)", "Change data capture")
+
+  Rel(user, write_api, "1. POST /v1/accounts", "Command")
+  Rel(write_api, write_db, "2. Execute command")
+  Rel(write_db, cdc, "3. Publish change", "CDC")
+  Rel(cdc, read_cache, "4. Update cache", "Projection")
+  Rel(read_cache, user, "5. Return cached", "Query")
+  Rel(user, read_api, "6. GET /v1/accounts", "Query")
+  Rel(read_api, read_cache, "7. Read from cache")
 ```
 
 ### 5.3 Event Store Schema
@@ -835,72 +904,91 @@ CREATE TABLE event_snapshots (
 
 ## 6. Security Architecture
 
-### 6.1 Security Layers
+### 6.1 Security Layers (C4 Deployment)
 
+```mermaid
+C4Deployment
+  title PayU Security Architecture - Defense in Depth
+
+  Deployment_Node(internet, "Internet", "External Network") {
+    Container(client_app, "Client Applications", "Mobile App, Web Browser")
+  }
+
+  Deployment_Node(perimeter, "Perimeter Security Layer", "AWS WAF + Shield") {
+    Container(waf, "Web Application Firewall", "AWS WAF", "Bot protection, rate limiting")
+    Container(ddos, "DDoS Protection", "AWS Shield", "DDoS mitigation")
+  }
+
+  Deployment_Node(network, "Network Security Layer", "AWS VPC") {
+    Container(lb, "Load Balancer", "AWS ALB", "SSL termination, routing")
+    Container(vpn, "VPN Gateway", "AWS VPN", "Internal access")
+  }
+
+  Deployment_Node(platform, "Application Platform", "OpenShift 4.20") {
+    Deployment_Node(gateway_zone, "DMZ Zone") {
+      Container(api_gateway, "API Gateway", "Spring Cloud Gateway", "JWT validation, rate limiting")
+      Container(ingress, "Ingress Gateway", "Istio", "mTLS termination")
+    }
+
+    Deployment_Node(service_zone, "Service Zone (mTLS)") {
+      Container(services, "Microservices", "Spring Boot/Quarkus/Python", "Business logic")
+      ContainerDb(databases, "Databases", "PostgreSQL", "Encrypted data at rest")
+    }
+
+    Deployment_Node(infra_zone, "Infrastructure Zone") {
+      Container(sso, "SSO (Keycloak)", "Keycloak 24", "OAuth2/OIDC provider")
+      Container(vault, "HashiCorp Vault", "Vault", "Secret management")
+    }
+  }
+
+  Deployment_Node(monitoring, "Security Monitoring", "Dedicated") {
+    Container(falco, "Falco", "Runtime security", "Container threat detection")
+    Container(siem, "Wazuh", "SIEM", "Security monitoring")
+  }
+
+  Rel(client_app, waf, "HTTPS", "TLS 1.3")
+  Rel(waf, ddos, "Protected traffic")
+  Rel(ddos, lb, "HTTPS")
+  Rel(lb, ingress, "HTTPS")
+  Rel(ingress, api_gateway, "mTLS")
+  Rel(api_gateway, sso, "Validate token", "OIDC")
+  Rel(api_gateway, services, "mTLS", "Service mesh")
+  Rel(services, vault, "Fetch secrets", "AppRole")
+  Rel(services, databases, "Encrypted connection")
+  Rel(vpn, service_zone, "Internal access")
+  Rel(services, falco, "Security events", "Syslog")
+  Rel(falco, siem, "Forward logs")
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          SECURITY ARCHITECTURE                               │
-└─────────────────────────────────────────────────────────────────────────────┘
 
-Layer 1: PERIMETER SECURITY
-├── AWS WAF (Web Application Firewall)
-├── AWS Shield (DDoS Protection)
-├── CloudFlare (CDN + Bot Protection)
-└── Rate Limiting (per IP, per user)
+### 6.2 Authentication Flow (C4 Dynamic)
 
-Layer 2: NETWORK SECURITY
-├── VPC with Private Subnets
-├── Security Groups (whitelist)
-├── Network ACLs
-└── VPN for internal access
+```mermaid
+C4Dynamic
+  title Risk-Based Authentication Flow with MFA
 
-Layer 3: APPLICATION SECURITY
-├── mTLS (Service Mesh - Istio)
-├── OAuth2 / OIDC (Keycloak)
-├── JWT with short expiry (15 min)
-└── CORS strict policy
+  Person(user, "User")
+  Container(mobile, "Mobile App", "React Native")
+  Container(auth_svc, "Auth Service", "Spring Boot 3.4")
+  Container(sso, "Red Hat SSO (Keycloak)", "Keycloak 24")
+  ContainerCache(cache, "Data Grid", "Redis", "Token cache, rate limits")
+  ContainerQueue(notification, "Notification Queue", "AMQ Broker", "OTP delivery")
+  Container(notification_svc, "Notification Service", "Quarkus")
+  ContainerDb(user_db, "User Database", "PostgreSQL", "Credentials, devices")
 
-Layer 4: DATA SECURITY
-├── Encryption at rest (AES-256)
-├── Encryption in transit (TLS 1.3)
-├── Field-level encryption (PII)
-└── HSM for key management
-
-Layer 5: COMPLIANCE
-├── PCI DSS Level 1
-├── ISO 27001
-├── GDPR / UU PDP
-└── OJK Regulations
-```
-
-### 6.2 Authentication Flow
-
-```
-┌──────────┐                    ┌──────────┐                    ┌──────────┐
-│  Client  │                    │ Keycloak │                    │  Service │
-└────┬─────┘                    └────┬─────┘                    └────┬─────┘
-     │                               │                               │
-     │  1. Login (phone + PIN)       │                               │
-     ├──────────────────────────────▶│                               │
-     │                               │                               │
-     │  2. Challenge (OTP/Biometric) │                               │
-     │◀──────────────────────────────┤                               │
-     │                               │                               │
-     │  3. OTP/Biometric Response    │                               │
-     ├──────────────────────────────▶│                               │
-     │                               │                               │
-     │  4. Access Token + Refresh    │                               │
-     │◀──────────────────────────────┤                               │
-     │                               │                               │
-     │  5. API Request + Bearer Token│                               │
-     ├───────────────────────────────┼──────────────────────────────▶│
-     │                               │                               │
-     │                               │  6. Validate Token (cached)   │
-     │                               │◀──────────────────────────────┤
-     │                               │                               │
-     │  7. Response                  │                               │
-     │◀──────────────────────────────┼───────────────────────────────┤
-     │                               │                               │
+  Rel(user, mobile, "1. Enter phone + PIN")
+  Rel(mobile, auth_svc, "2. POST /v1/auth/login", "HTTPS")
+  Rel(auth_svc, cache, "3. Check rate limit")
+  Rel(auth_svc, user_db, "4. Validate credentials")
+  Rel(auth_svc, sso, "5. Request token", "OIDC")
+  Rel(sso, auth_svc, "6. Return access token")
+  Rel(auth_svc, notification, "7. Send OTP request")
+  Rel(notification, notification_svc, "8. Deliver OTP")
+  Rel(notification_svc, user, "9. SMS/Push OTP")
+  Rel(user, mobile, "10. Enter OTP")
+  Rel(mobile, auth_svc, "11. POST /v1/auth/verify", "HTTPS")
+  Rel(auth_svc, cache, "12. Verify OTP")
+  Rel(auth_svc, user_db, "13. Update last login")
+  Rel(auth_svc, mobile, "14. Return JWT + Refresh token")
 ```
 
 ### 6.3 Transaction Security
@@ -942,43 +1030,30 @@ encryption:
 
 ## 7. API Gateway & Service Mesh
 
-### 7.1 Spring Cloud Gateway Configuration
+### 7.1 Spring Cloud Gateway Configuration (C4 Component)
 
-```yaml
-spring:
-  cloud:
-    gateway:
-      routes:
-        - id: account-service
-          uri: lb://account-service
-          predicates:
-            - Path=/v1/accounts/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 100
-                redis-rate-limiter.burstCapacity: 200
-            - name: CircuitBreaker
-              args:
-                name: accountServiceCB
-                fallbackUri: forward:/fallback/account
+```mermaid
+C4Component
+  title API Gateway Internal Architecture
 
-        - id: transaction-service
-          uri: lb://transaction-service
-          predicates:
-            - Path=/v1/transactions/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 50
-                redis-rate-limiter.burstCapacity: 100
+  Container(gateway, "API Gateway", "Spring Cloud Gateway")
 
-      default-filters:
-        - name: Retry
-          args:
-            retries: 3
-            statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
-        - AddRequestHeader=X-Request-ID, ${random.uuid}
+  Component(rate_limiter, "Rate Limiter", "RedisRateLimiter", "Per-IP and per-user limits")
+  Component(jwt_filter, "JWT Filter", "GlobalFilter", "Token validation and extraction")
+  Component(router, "Route Locator", "RouteLocator", "Request routing to services")
+  Component(circuit_breaker, "Circuit Breaker", "Resilience4j", "Failure handling")
+  Component(load_balancer, "Load Balancer", "Spring Cloud LoadBalancer", "Service discovery")
+
+  ComponentCache(redis, "Data Grid", "Redis", "Rate limit counters, token cache")
+
+  Rel(gateway, rate_limiter, "Checks")
+  Rel(rate_limiter, redis, "Reads/Writes")
+  Rel(rate_limiter, jwt_filter, "Passes to")
+  Rel(jwt_filter, router, "Passes to")
+  Rel(router, load_balancer, "Queries")
+  Rel(load_balancer, router, "Returns service URL")
+  Rel(router, circuit_breaker, "Passes to")
+  Rel(circuit_breaker, gateway, "Returns response or fallback")
 ```
 
 ### 7.2 Istio Service Mesh
@@ -1019,39 +1094,54 @@ spec:
 
 ## 8. Infrastructure & DevOps
 
-### 8.1 Kubernetes Architecture
+### 8.1 Kubernetes Architecture (C4 Deployment)
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        AWS EKS CLUSTER (Multi-AZ)                            │
-│                                                                              │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │                        NAMESPACE: payu-production                       │ │
-│  │                                                                         │ │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │ │
-│  │  │  account    │  │transaction  │  │   wallet    │  │    auth     │   │ │
-│  │  │  service    │  │  service    │  │   service   │  │   service   │   │ │
-│  │  │ replicas: 3 │  │ replicas: 5 │  │ replicas: 3 │  │ replicas: 3 │   │ │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘   │ │
-│  │                                                                         │ │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │ │
-│  │  │   billing   │  │     kyc     │  │notification │  │  analytics  │   │ │
-│  │  │   service   │  │   service   │  │   service   │  │   service   │   │ │
-│  │  │ replicas: 2 │  │ replicas: 2 │  │ replicas: 3 │  │ replicas: 2 │   │ │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘   │ │
-│  │                                                                         │ │
-│  │  ┌───────────────────────────────────────────────────────────────────┐ │ │
-│  │  │                    Istio Ingress Gateway                           │ │ │
-│  │  └───────────────────────────────────────────────────────────────────┘ │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-│                                                                              │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │                     NAMESPACE: payu-infrastructure                      │ │
-│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │ │
-│  │  │ Kafka  │ │ Redis  │ │Keycloak│ │Grafana │ │Prometheus│ │ Jaeger │   │ │
-│  │  └────────┘ └────────┘ └────────┘ └────────┘ └────────┘ └────────┘   │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+C4Deployment
+  title PayU on OpenShift 4.20+ - Production Deployment
+
+  Deployment_Node(aws_region, "AWS Region: ap-southeast-1", "Cloud Region") {
+
+    Deployment_Node(az_a, "Availability Zone A", "AWS AZ") {
+      Node(eks_a, "EKS Node Group", "Kubernetes Worker Nodes") {
+        Container(account_pod, "Account Service", "Pod: 3 replicas")
+        Container(wallet_pod, "Wallet Service", "Pod: 3 replicas")
+        ContainerDb(pg_primary, "PostgreSQL Primary", "RDS Multi-AZ")
+      }
+    }
+
+    Deployment_Node(az_b, "Availability Zone B", "AWS AZ") {
+      Node(eks_b, "EKS Node Group", "Kubernetes Worker Nodes") {
+        Container(transaction_pod, "Transaction Service", "Pod: 5 replicas")
+        Container(auth_pod, "Auth Service", "Pod: 3 replicas")
+        ContainerDb(pg_standby, "PostgreSQL Standby", "RDS Multi-AZ (Sync Replication)")
+      }
+    }
+
+    Deployment_Node(infra_namespace, "Namespace: payu-infrastructure", "OpenShift") {
+      ContainerQueue(kafka_cluster, "AMQ Streams", "Kafka 3.7 Cluster")
+      ContainerCache(redis_cluster, "Data Grid", "Redis Cluster")
+      Container(sso_cluster, "Red Hat SSO", "Keycloak 24")
+      Container(monitoring, "Monitoring Stack", "Prometheus + Grafana")
+      Container(tracing, "Distributed Tracing", "Jaeger")
+    }
+
+    Deployment_Node(ingress_layer, "Ingress Layer", "Istio") {
+      Container(istio_ingress, "Istio Ingress Gateway", "Load Balancer + mTLS")
+      Container(waf, "WAF + DDoS", "AWS Shield + WAF")
+    }
+  }
+
+  Rel(az_a, az_b, "DB Replication", "Sync")
+  Rel(istio_ingress, account_pod, "mTLS", "Service Mesh")
+  Rel(istio_ingress, transaction_pod, "mTLS", "Service Mesh")
+  Rel(account_pod, pg_primary, "ReadWrite")
+  Rel(transaction_pod, pg_primary, "ReadWrite")
+  Rel(account_pod, kafka_cluster, "Events")
+  Rel(transaction_pod, kafka_cluster, "Events")
+  Rel(auth_pod, redis_cluster, "Sessions")
+  Rel(istio_ingress, sso_cluster, "OIDC")
+  Rel(waf, istio_ingress, "HTTPS")
 ```
 
 ### 8.2 Helm Chart Structure
@@ -1209,34 +1299,39 @@ groups:
 
 ## 10. TokoBapak Integration
 
-### 10.1 Integration Architecture
+### 10.1 Integration Architecture (C4 Context)
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      TOKOBAPAK ↔ PAYU INTEGRATION                            │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+C4Context
+  title PayU ↔ TokoBapak Partner Integration
 
-┌─────────────────────────────┐           ┌─────────────────────────────┐
-│         TOKOBAPAK           │           │            PAYU             │
-│                             │           │                             │
-│  ┌───────────────────────┐  │           │  ┌───────────────────────┐  │
-│  │    payment-service    │  │   HTTPS   │  │  Integration Gateway  │  │
-│  │    (Spring Boot)      │◄─┼───────────┼─▶│   (Rate Limited)      │  │
-│  └───────────┬───────────┘  │           │  └───────────┬───────────┘  │
-│              │              │           │              │              │
-│              │              │           │              ▼              │
-│              │              │           │  ┌───────────────────────┐  │
-│              │              │           │  │  Transaction Service  │  │
-│              │              │           │  └───────────────────────┘  │
-│              │              │           │                             │
-│              │              │  Webhook  │                             │
-│              │◄─────────────┼───────────┼─────Callback────────────────│
-│              │              │           │                             │
-│              ▼              │           │                             │
-│  ┌───────────────────────┐  │           │                             │
-│  │   Order Service       │  │           │                             │
-│  └───────────────────────┘  │           │                             │
-└─────────────────────────────┘           └─────────────────────────────┘
+  System_Boundary(tokobapak_boundary, "TokoBapak E-commerce Platform") {
+    System(tokobapak_web, "TokoBapak Web", "Customer-facing e-commerce website")
+    System(tokobapak_api, "TokoBapak API", "Internal backend services")
+    System(tokobapak_payment, "Payment Service", "Spring Boot payment processing")
+  }
+
+  System_Boundary(payu_boundary, "PayU Digital Banking") {
+    Container(partner_api, "Partner API", "REST API", "External payment gateway")
+    Container(transaction_svc, "Transaction Service", "Spring Boot 3.4", "Payment processing")
+    ContainerQueue(webhook_queue, "Webhook Queue", "AMQ Broker", "Async callbacks")
+    ContainerDb(transactions_db, "Transactions DB", "PostgreSQL", "Payment records")
+  }
+
+  System_Ext(kyc_service, "KYC Service", "Customer verification")
+
+  Person(customer, "E-commerce Customer")
+
+  Rel(customer, tokobapak_web, "Browses & shops")
+  Rel(tokobapak_web, tokobapak_api, "Places order")
+  Rel(tokobapak_api, tokobapak_payment, "Requests payment")
+  Rel(tokobapak_payment, partner_api, "POST /v1/partner/payments", "HTTPS + JWT")
+  Rel(partner_api, transaction_svc, "Routes payment request")
+  Rel(transaction_svc, transactions_db, "Store payment")
+  Rel(transaction_svc, webhook_queue, "Publish callback")
+  Rel(webhook_queue, tokobapak_payment, "Webhook callback", "HTTPS + Signature")
+  Rel(tokobapak_payment, tokobapak_api, "Update order status")
+  Rel(tokobapak_api, tokobapak_web, "Notify customer")
 ```
 
 ### 10.2 API Specification
@@ -1434,36 +1529,65 @@ Payment status = payu.payments().get(payment.getId());
 
 ---
 
-## 11. Disaster Recovery & High Availability
+## 11. Frontend Architecture
 
-### 11.1 Multi-AZ Deployment
+### 11.1 Frontend Architecture (C4 Container)
 
+```mermaid
+C4Container
+  title PayU Frontend Architecture - Multi-Platform
+
+  Person(customer, "Bank Customer")
+  Person(admin, "Bank Administrator")
+  Person(partner_dev, "Partner Developer")
+
+  System_Boundary(frontend_apps, "Frontend Applications") {
+    Container(mobile_app, "Mobile App", "Expo (React Native)", "iOS/Android customer app")
+    Container(web_app, "Web App", "Next.js 15 + Tailwind CSS 4", "Customer web portal")
+    Container(admin_dashboard, "Admin Dashboard", "Next.js 15 + shadcn/ui", "Internal admin UI")
+    Container(developer_docs, "Developer Portal", "Next.js 15 + shadcn/ui", "API documentation & sandbox")
+  }
+
+  System_Boundary(shared_layer, "Shared Frontend Layer") {
+    Container(api_client, "API Client", "TanStack Query (React Query)", "Data fetching, caching")
+    Container(state_store, "State Store", "Zustand", "Global state management")
+    Container(auth_store, "Auth Store", "Zustand + TanStack", "Authentication state")
+    Container(types, "Type Definitions", "TypeScript", "Shared types & interfaces")
+    Container(validation, "Validation", "Zod", "Schema validation")
+  }
+
+  System_Boundary(backend, "Backend Services") {
+    Container(api_gateway, "API Gateway", "Spring Cloud Gateway", "Rate limiting, routing")
+    Container(account_svc, "Account Service", "Spring Boot 3.4", "User accounts")
+    Container(transaction_svc, "Transaction Service", "Spring Boot 3.4", "Transactions")
+    Container(partner_svc, "Partner Service", "Spring Boot 3.4", "Partner integration")
+  }
+
+  Rel(customer, mobile_app, "Uses")
+  Rel(customer, web_app, "Uses")
+  Rel(admin, admin_dashboard, "Uses")
+  Rel(partner_dev, developer_docs, "Uses")
+
+  Rel(mobile_app, api_client, "Imports")
+  Rel(web_app, api_client, "Imports")
+  Rel(admin_dashboard, api_client, "Imports")
+
+  Rel(api_client, state_store, "Updates")
+  Rel(api_client, auth_store, "Stores tokens")
+
+  Rel(api_client, api_gateway, "HTTPS", "JWT authentication")
+  Rel(api_gateway, account_svc, "Routes to")
+  Rel(api_gateway, transaction_svc, "Routes to")
+  Rel(api_gateway, partner_svc, "Routes to")
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        AWS REGION: ap-southeast-1                            │
-│                                                                              │
-│  ┌─────────────────────────────┐  ┌─────────────────────────────┐           │
-│  │      Availability Zone A     │  │      Availability Zone B     │           │
-│  │                              │  │                              │           │
-│  │  ┌────────────────────────┐ │  │  ┌────────────────────────┐ │           │
-│  │  │    EKS Node Group      │ │  │  │    EKS Node Group      │ │           │
-│  │  │    (3 nodes)           │ │  │  │    (3 nodes)           │ │           │
-│  │  └────────────────────────┘ │  │  └────────────────────────┘ │           │
-│  │                              │  │                              │           │
-│  │  ┌────────────────────────┐ │  │  │  PostgreSQL Primary    │ │           │
-│  │  │  PostgreSQL Primary    │ │  │  │  (RDS Multi-AZ)        │ │           │
-│  │  │  (RDS Multi-AZ)        │◄┼──┼─▶│  (Sync Replication)    │ │           │
-│  │  └────────────────────────┘ │  │  └────────────────────────┘ │           │
-│  │                              │  │                              │           │
-│  │  ┌────────────────────────┐ │  │  ┌────────────────────────┐ │           │
-│  │  │  Redis Primary         │ │  │  │  Redis Replica         │ │           │
-│  │  │  (ElastiCache)         │◄┼──┼─▶│  (ElastiCache)         │ │           │
-│  │  └────────────────────────┘ │  │  └────────────────────────┘ │           │
-│  └─────────────────────────────┘  └─────────────────────────────┘           │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
 
-### 11.2 Recovery Objectives
+---
+
+## 12. Disaster Recovery & High Availability
+
+### 12.1 Multi-AZ Deployment
+
+### 12.2 Recovery Objectives
 
 | Metric                             | Target                           |
 | ---------------------------------- | -------------------------------- |
@@ -1472,7 +1596,7 @@ Payment status = payu.payments().get(payment.getId());
 | **Backup Frequency**               | Continuous + Daily snapshots     |
 | **Backup Retention**               | 30 days (7 years for compliance) |
 
-### 11.3 Backup Strategy
+### 12.3 Backup Strategy
 
 | Data Type      | Backup Method            | Frequency  | Retention        |
 | -------------- | ------------------------ | ---------- | ---------------- |
@@ -1484,11 +1608,11 @@ Payment status = payu.payments().get(payment.getId());
 
 ---
 
-## 12. External Service Simulators
+## 13. External Service Simulators
 
 > For lab/development environment, external banking integrations use simulators.
 
-### 12.1 BI-FAST Simulator
+### 13.1 BI-FAST Simulator
 
 ```text
 bi-fast-simulator (Quarkus Native)
@@ -1513,7 +1637,7 @@ Features:
 | MANDIRI   | 1111222233     | Test Blocked | Blocked |
 | BNI       | 9999888877     | Test Timeout | Timeout |
 
-### 12.2 Dukcapil Simulator
+### 13.2 Dukcapil Simulator
 
 ```text
 dukcapil-simulator (Quarkus Native)
@@ -1537,7 +1661,7 @@ Features:
 | 3201234567890003 | BLOCKED USER | Blocked | N/A         |
 | 3299999999999999 | INVALID NIK  | Invalid | N/A         |
 
-### 12.3 QRIS Simulator
+### 13.3 QRIS Simulator
 
 ```text
 qris-simulator (Quarkus Native)
@@ -1553,11 +1677,7 @@ Features:
 • Multiple merchant simulation
 ```
 
----
-
-## 13. Frontend Architecture
-
-### 13.1 Technology Stack
+### 11.2 Technology Stack
 
 | Platform             | Technology                          | Purpose           | Directory               |
 | -------------------- | ----------------------------------- | ----------------- | ----------------------- |
@@ -1568,42 +1688,7 @@ Features:
 
 > **Note:** Admin Dashboard functionality is provided by `backoffice-service` backend with a separate admin UI.
 
-### 13.2 Architecture
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         FRONTEND ARCHITECTURE                                │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────────┐│
-│  │                        SHARED LAYER                                      ││
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    ││
-│  │  │  API Client │  │   Stores    │  │    Types    │  │ Validation  │    ││
-│  │  │ (TanStack)  │  │  (Zustand)  │  │(TypeScript) │  │   (Zod)     │    ││
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    ││
-│  └─────────────────────────────────────────────────────────────────────────┘│
-│                                                                              │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐          │
-│  │    WEB APP       │  │ DEVELOPER PORTAL │  │   MOBILE APP     │          │
-│  │   (Next.js 15)   │  │   (Next.js 15)   │  │    (Expo)        │          │
-│  │  web-app/        │  │  developer-docs/ │  │  mobile/         │          │
-│  │                  │  │                  │  │                  │          │
-│  │ • SSR/SSG        │  │ • API Docs       │  │ • iOS/Android    │          │
-│  │ • App Router     │  │ • Sandbox        │  │ • Web preview    │          │
-│  │ • Tailwind CSS 4 │  │ • Partner Portal │  │ • Push notif     │          │
-│  │ • shadcn/ui      │  │ • shadcn/ui      │  │ • Biometrics     │          │
-│  └──────────────────┘  └──────────────────┘  └──────────────────┘          │
-│           │                    │                    │                       │
-│           └────────────────────┴────────────────────┘                       │
-│                                │                                            │
-│                    ┌───────────▼───────────┐                               │
-│                    │     API Gateway       │                               │
-│                    │   (gateway-service)   │                               │
-│                    └───────────────────────┘                               │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 13.3 Mobile Development Workflow
+### 11.3 Mobile Development Workflow
 
 ```text
 Directory: frontend/mobile/ (React Native Expo)
