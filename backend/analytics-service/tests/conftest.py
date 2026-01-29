@@ -1,10 +1,8 @@
 import pytest
 import sys
 
-sys.path.insert(
-    0, "/home/ubuntu/payu/backend/analytics-service/src"
-)  # noqa: E402
-from unittest.mock import AsyncMock  # noqa: E402
+sys.path.insert(0, "/home/ubuntu/payu/backend/analytics-service/src")  # noqa: E402
+from unittest.mock import AsyncMock, MagicMock  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 
@@ -40,3 +38,16 @@ def mock_analytics_service(mock_db_session):
 def sample_user_id():
     """Sample user ID"""
     return "user_123456789"
+
+
+@pytest.fixture
+def create_mock_row():
+    """Create a mock database row"""
+
+    def _create_row(**kwargs):
+        row = MagicMock()
+        for key, value in kwargs.items():
+            setattr(row, key, value)
+        return row
+
+    return _create_row
