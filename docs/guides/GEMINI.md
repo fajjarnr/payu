@@ -273,6 +273,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `react-native-architecture` | Build production React Native apps with Expo, navigation, native modules, offline sync, and cross-platform patterns. Use when developing mobile apps, implementing native integrations, or architecting React Native projects. |
 | `react-native-design`       | Create polished React Native UIs with Reanimated, Expo Router, and NativeWind/StyleSheet. |
 | `react-modernization`       | Upgrade older React apps to modern standards (Functions, Hooks, Concurrent Features). |
+| `react-performance`         | Eliminate waterfalls, optimize bundles (40+ rules for Next.js/React). |
 | `react-state-management`    | Master modern React state management with Redux Toolkit, Zustand, Jotai, and React Query |
 | `responsive-design`        | Breakpoints strategies, fluid layouts, and container queries |
 | `security-engineer`         | PCI-DSS, Encryption, OJK Compliance                 |
