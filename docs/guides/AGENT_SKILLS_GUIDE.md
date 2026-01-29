@@ -34,16 +34,34 @@ payu/
 
 ---
 
-### 📱 Frontend & Mobile Ecosystem (New)
-The PayU platform now features a complete suite of frontend skills:
+### 🧩 Ecosystem Mapping
+The PayU platform is powered by specialized skill clusters:
 
+#### ☕ Backend & Logic
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Logic** | `react-state-management` | Zustand/Query patterns for complex state. |
-| **Mobile** | `react-native-architecture` | Expo Router & Native Modules architecture. |
+| **Core** | `backend-engineer` | Java Spring Boot 3.4 & Quarkus Native standards. |
+| **Logic** | `backend-patterns` | Repository, Service, and Multi-layer caching patterns. |
+| **API** | `api-design` | REST, OpenAPI 3.0, and Zod synchronization. |
+| **Events** | `event-driven-architecture` | Kafka messaging and Saga/Distributed Transactions. |
+| **Python** | `fastapi-templates` | Async Python APIs for ML/Analytics services. |
+
+#### 📱 Frontend & Mobile
+| Spec | Skill | Description |
+| :--- | :--- | :--- |
+| **Logic/Perf** | `react-patterns` | State management (Zustand) and Performance (waterfalls). |
+| **Mobile** | `mobile-engineer` | Native UI (SF Symbols) and Secure Storage patterns. |
+| **Next.js** | `nextjs-app-router-patterns` | Server Components and Streaming architecture. |
 | **Design** | `ui-ux-designer` | Design tokens, typography, and palette intelligence. |
-| **Perf** | `react-performance` | optimization rules for elimination of waterfalls. |
-| **Style** | `tailwind-design-system` | Scalable atomic CSS architecture. |
+| **Style** | `tailwind-design-system` | Scalable atomic CSS architecture (Emerald Green). |
+
+#### 🛡️ Security & Observability
+| Spec | Skill | Description |
+| :--- | :--- | :--- |
+| **Audit** | `security-engineer` | PCI-DSS, OJK Compliance, and Incident Response. |
+| **Auth** | `auth-implementation-patterns` | JWT, OAuth2, and Risk-based MFA implementation. |
+| **Metrics** | `observability-engineer` | OpenTelemetry, Jaeger Tracing, and LokiStack logs. |
+| **QA** | `qa-engineer` | TDD, REST Assured, and Maestro for Mobile E2E. |
 
 ---
 
@@ -53,17 +71,17 @@ Agen dirancang untuk eksekusi tugas yang terisolasi.
 
 | Agent                     | Deskripsi Peran                    | Target Output                               |
 | :------------------------ | :--------------------------------- | :------------------------------------------ |
-| **`@scaffolder`**         | Spesialis boilerplate & struktur.  | Folder structure, pom.xml, Dockerfile.      |
-| **`@logic-builder`**      | Spesialis DDD & Business Logic.    | Rich Domain Entities, Application Services. |
-| **`@tester`**             | Gatekeeper kualitas & testing.     | JUnit 5, Integration Tests, Coverage.       |
-| **`@auditor`**            | Penjaga kepatuhan & kualitas.      | Security scans, Code review findings.       |
-| **`@migrator`**           | Administrasi Database.             | Flyway scripts, SQL optimization.           |
-| **`@builder`**            | Build & Packaging.                 | Compiled artifacts, Container images.       |
-| **`@styler`**             | Spesialis UI/UX "Premium Emerald". | CSS, A11y compliance.                       |
-| **`@orchestrator`**       | Automasi Git & CI/CD.              | PR logic, Branch management.                |
-| **`@lifecycle-manager`**  | Pengelola siklus SDLC penuh.       | End-to-end task execution.                  |
-| **`@scaffolding-expert`** | Setup service E2E terintegrasi.    | Full service initialization.                |
-| **`@compliance-auditor`** | Audit standar OJK/PCI-DSS.         | Security Attestation documents.             |
+| **`@scaffolder`**         | Spesialis boilerplate & struktur.  | Hexagonal structure, pom.xml, Dockerfile.   |
+| **`@logic-builder`**      | Spesialis DDD & Business Logic.    | Rich Domain Models, Ports, Use Cases.       |
+| **`@tester`**             | Gatekeeper kualitas & testing.     | JUnit 5, Mockito, Maestro (Mobile E2E).     |
+| **`@auditor`**            | Penjaga kepatuhan & kualitas.      | Security Audit Reports, Complexity scans.   |
+| **`@migrator`**           | Administrasi Database & Flyway.    | Optimized SQL migrations, JSONB indexing.  |
+| **`@builder`**            | Build & Packaging Specialist.      | Native Images (Quarkus), Web Artifacts.     |
+| **`@styler`**             | Spesialis UI/UX Emerald Design.    | Premium CSS, Glassmorphism, Animations.     |
+| **`@orchestrator`**       | Automasi Git & CI/CD Pipelines.    | Conventional Commits, Tekton/ArgoCD config. |
+| **`@lifecycle-manager`**  | Pengelola siklus SDLC Antigravity. | Step-by-step feature implementation plan.   |
+| **`@scaffolding-expert`** | Setup service E2E terintegrasi.    | Fully functional microservice scaffold.     |
+| **`@compliance-auditor`** | Audit standar OJK/PCI-DSS.         | Compliance Checklists, Risk Matrix (ALE).   |
 
 ---
 

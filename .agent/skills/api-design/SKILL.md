@@ -125,13 +125,117 @@ Inspired by large-scale platforms (e.g., React), PayU uses an **"Extractable Err
 ### 1. The Pattern
 Error codes are the **source of truth**. The `message` field is for human convenience, but the `code` is what clients (Web/Mobile) use for logic and localization.
 
-### 2. Error Extraction Workflow
+### 2. Error Code Naming Convention
+
+PayU error codes follow the pattern: `{DOMAIN}_{SEQUENCE}`
+
+| Domain | Description | Examples |
+|--------|-------------|----------|
+| `ACC` | Account Service | `ACC_001`, `ACC_002` |
+| `TXN` | Transaction Service | `TXN_001`, `TXN_002` |
+| `AUTH` | Authentication Service | `AUTH_001`, `AUTH_002` |
+| `WAL` | Wallet Service | `WAL_001`, `WAL_002` |
+| `KYC` | KYC Service | `KYC_001`, `KYC_002` |
+| `BIF` | BI-FAST Integration | `BIF_001`, `BIF_002` |
+| `QRS` | QRIS Integration | `QRS_001`, `QRS_002` |
+| `VAL` | Validation Errors | `VAL_001`, `VAL_002` |
+| `SYS` | System Errors | `SYS_001`, `SYS_002` |
+
+### 3. Error Code Categories
+
+```java
+// Business Logic Errors (4xx)
+INSUFFICIENT_BALANCE    // WAL_001 - Not enough funds
+ACCOUNT_FROZEN          // ACC_001 - Account is frozen
+DAILY_LIMIT_EXCEEDED    // TXN_001 - Transaction limit reached
+INVALID_DESTINATION     // BIF_001 - Invalid bank account
+
+// Validation Errors (400)
+VALIDATION_ERROR        // VAL_001 - Generic validation failure
+REQUIRED_FIELD_MISSING  // VAL_002 - Missing required field
+INVALID_FORMAT          // VAL_003 - Format validation failed
+
+// Authentication Errors (401/403)
+UNAUTHORIZED            // AUTH_001 - Invalid or expired token
+FORBIDDEN               // AUTH_002 - No permission for action
+MFA_REQUIRED            // AUTH_003 - Multi-factor auth needed
+
+// System Errors (5xx)
+INTERNAL_ERROR          // SYS_001 - Unexpected server error
+SERVICE_UNAVAILABLE     // SYS_002 - Service temporarily down
+TIMEOUT_ERROR           // SYS_003 - Request timeout
+```
+
+### 4. Error Extraction Workflow
 1. **Define**: Add unique codes in the backend domain layer (e.g., `ACC_001`).
 2. **Extract**: Run `./scripts/extract-errors.sh` during the build process to generate a master JSON mapping.
 3. **Synchronize**: The generated JSON is consumed by Frontend/Mobile to provide mapped, user-friendly, and localized messages.
 
-### 3. "Unknown Error" Handling
+### 5. "Unknown Error" Handling
 If a client encounters a code not found in their local mapping, they must fallback to a generic message but log the unknown code for developer investigation.
+
+### 6. Error Response Examples
+
+```json
+// Business Logic Error
+{
+    "success": false,
+    "error": {
+        "code": "WAL_001",
+        "message": "Saldo tidak mencukupi untuk transaksi ini",
+        "details": [
+            {
+                "field": "amount",
+                "message": "Jumlah melebihi saldo tersedia (Rp 500.000)",
+                "code": "VAL_001"
+            }
+        ]
+    },
+    "meta": {
+        "requestId": "req-abc-456",
+        "timestamp": "2026-01-26T10:30:00Z"
+    }
+}
+
+// Validation Error
+{
+    "success": false,
+    "error": {
+        "code": "VAL_001",
+        "message": "Validasi gagal",
+        "details": [
+            {
+                "field": "accountNumber",
+                "message": "Nomor rekening harus 10 digit",
+                "code": "VAL_002"
+            },
+            {
+                "field": "amount",
+                "message": "Jumlah minimal transfer Rp 10.000",
+                "code": "VAL_003"
+            }
+        ]
+    },
+    "meta": {
+        "requestId": "req-abc-789",
+        "timestamp": "2026-01-26T10:30:00Z"
+    }
+}
+
+// Authentication Error
+{
+    "success": false,
+    "error": {
+        "code": "AUTH_001",
+        "message": "Token tidak valid atau sudah kadaluarsa",
+        "details": []
+    },
+    "meta": {
+        "requestId": "req-abc-999",
+        "timestamp": "2026-01-26T10:30:00Z"
+    }
+}
+```
 
 ### Pagination
 
@@ -592,12 +696,149 @@ Before publishing an API:
 - [ ] Request validation with clear error messages
 
 ---
-
 *Last Updated: January 2026*
 
 ---
 
-## 🕸️ GraphQL Design Patterns (Reference)
+## 🔄 OpenAPI to TypeScript Generation
+
+### Overview
+
+Generate type-safe TypeScript interfaces and Zod schemas from OpenAPI 3.0 specifications for seamless frontend-backend integration.
+
+### When to Use
+
+- Creating TypeScript types from backend OpenAPI specs
+- Generating Zod validation schemas for API responses
+- Building type-safe React Query hooks
+- Synchronizing frontend types with backend API changes
+
+### Type Mapping
+
+| OpenAPI | TypeScript | Zod Schema |
+|---------|------------|------------|
+| `string` | `string` | `z.string()` |
+| `number` | `number` | `z.number()` |
+| `integer` | `number` | `z.number().int()` |
+| `boolean` | `boolean` | `z.boolean()` |
+| `uuid` | `string` | `z.string().uuid()` |
+| `email` | `string` | `z.string().email()` |
+| `date-time` | `string` | `z.string().datetime()` |
+| `enum` | union type | `z.enum([...])` |
+
+### PayU-Specific Patterns
+
+```typescript
+// Generated from OpenAPI - PayU Response Wrapper
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: FieldError[];
+  };
+  meta: {
+    requestId: string;
+    timestamp: string;
+  };
+}
+
+// Zod Schema for Runtime Validation
+export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.boolean(),
+    data: dataSchema,
+    error: z.object({
+      code: z.string(),
+      message: z.string(),
+      details: z.array(z.object({
+        field: z.string(),
+        message: z.string()
+      })).optional()
+    }).optional(),
+    meta: z.object({
+      requestId: z.string(),
+      timestamp: z.string()
+    })
+  });
+
+// Example: Account Response Type
+export interface Account {
+  id: string;
+  accountNumber: string;
+  balance: Money;
+  status: 'ACTIVE' | 'FROZEN' | 'CLOSED';
+  createdAt: string;
+}
+
+export const AccountSchema = z.object({
+  id: z.string().uuid(),
+  accountNumber: z.string().regex(/^[0-9]{10}$/),
+  balance: MoneySchema,
+  status: z.enum(['ACTIVE', 'FROZEN', 'CLOSED']),
+  createdAt: z.string().datetime()
+});
+
+export type AccountResponse = z.infer<typeof AccountSchema>;
+```
+
+### React Query Integration
+
+```typescript
+// hooks/useAccounts.ts - Generated from OpenAPI
+import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
+
+const AccountListResponseSchema = ApiResponseSchema(z.array(AccountSchema));
+
+export function useAccounts(page: number = 1, size: number = 20) {
+  return useQuery({
+    queryKey: ['accounts', page, size],
+    queryFn: async () => {
+      const response = await fetch(`/v1/accounts?page=${page}&size=${size}`);
+      const data = await response.json();
+      // Runtime validation with Zod
+      return AccountListResponseSchema.parse(data);
+    },
+  });
+}
+
+// Usage in component
+function AccountList() {
+  const { data, isLoading, error } = useAccounts();
+  
+  if (isLoading) return <Skeleton />;
+  if (error) return <ErrorMessage code={error.error?.code} />;
+  
+  return (
+    <ul>
+      {data?.data.map(account => (
+        <li key={account.id}>{account.accountNumber}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Workflow
+
+1. **Export OpenAPI**: Backend exports OpenAPI spec (e.g., `account-service.openapi.json`)
+2. **Generate Types**: Run generation script to create TypeScript interfaces + Zod schemas
+3. **Validate at Runtime**: Use Zod schemas to validate API responses
+4. **Type Safety**: Full TypeScript support with auto-completion
+
+### Best Practices
+
+- **Always validate** API responses with Zod schemas at runtime
+- **Regenerate types** when OpenAPI spec changes
+- **Use discriminated unions** for error handling
+- **Keep schemas colocated** with API hooks
+- **Version control** generated types for traceability
+
+---
+
+## �️ GraphQL Design Patterns (Reference)
 
 For services requiring flexible data fetching (e.g., Mobile BFF), use these GraphQL standards.
 

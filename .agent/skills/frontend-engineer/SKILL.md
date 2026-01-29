@@ -1423,13 +1423,11 @@ Untuk hasil terbaik dan tercepat, gunakan pola delegasi paralel (Swarm Mode):
 | API Integration Specialist | `.agent/skills/api-integration-specialist/SKILL.md` |
 | UI/UX Design | `.agent/skills/ui-ux-designer/SKILL.md` |
 | TypeScript Advanced | `.agent/skills/typescript-advanced-types/SKILL.md` |
-| React Performance | `.agent/skills/react-performance/SKILL.md` |
-| React Modernization | `.agent/skills/react-modernization/SKILL.md` |
+| React Patterns | `.agent/skills/react-patterns/SKILL.md` |
 | Modern JS Patterns | `.agent/skills/modern-javascript-patterns/SKILL.md` |
 | Next.js App Router | `.agent/skills/nextjs-app-router-patterns/SKILL.md` |
 | Web Component Design | `.agent/skills/web-component-design/SKILL.md` |
 | Responsive Design | `.agent/skills/responsive-design/SKILL.md` |
-| React State Management | `.agent/skills/react-state-management/SKILL.md` |
 | Tailwind Design System | `.agent/skills/tailwind-design-system/SKILL.md` |
 | Frontend Patterns | `.agent/skills/frontend-patterns/SKILL.md` |
 | Security Engineer | `.agent/skills/security-engineer/SKILL.md` |

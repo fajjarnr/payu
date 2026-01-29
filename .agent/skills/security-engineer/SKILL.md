@@ -245,14 +245,339 @@ spec:
 
 ## Security Incident Response
 
-**Severity Levels:**
+### Incident Response Lifecycle
 
-| Level        | Description                             | Response SLA |
-| ------------ | --------------------------------------- | ------------ |
-| **Critical** | Data breach, RCE, Authentication Bypass | 1 Hour       |
-| **High**     | Privilege Escalation, SQLi, stored XSS  | 4 Hours      |
-| **Medium**   | Reflected XSS, CSRF, Info Disclosure    | 24 Hours     |
-| **Low**      | Config issues, Best practices           | Next Sprint  |
+**Phase 1: Preparation**
+- Maintain incident response plan and playbooks
+- Conduct regular tabletop exercises
+- Establish CIRT (Computer Incident Response Team)
+- Set up communication channels (Slack, PagerDuty)
+- Prepare forensic tools and procedures
+
+**Phase 2: Detection & Analysis**
+- Monitor SIEM alerts and anomalies
+- Classify incident severity
+- Preserve evidence (logs, memory dumps)
+- Determine scope and impact
+
+**Phase 3: Containment**
+- Short-term: Isolate affected systems
+- Long-term: Implement network segmentation
+- Prevent further damage
+
+**Phase 4: Eradication**
+- Remove malware/root cause
+- Close vulnerabilities
+- Verify system integrity
+
+**Phase 5: Recovery**
+- Restore from clean backups
+- Verify system functionality
+- Monitor for recurrence
+
+**Phase 6: Post-Incident**
+- Conduct lessons learned session
+- Update IR plan and controls
+- Document findings for compliance
+
+### Severity Levels
+
+| Level        | Description                             | Response SLA | Examples |
+| ------------ | --------------------------------------- | ------------ |----------|
+| **P0 - Critical** | Active breach, data exfiltration | 1 Hour | Ransomware in progress, unauthorized DB access, auth bypass |
+| **P1 - High** | Confirmed security incident | 4 Hours | Malware on prod, privilege escalation, SQLi exploitation |
+| **P2 - Medium** | Suspicious activity | 24 Hours | Failed login spikes, policy violations, suspicious traffic |
+| **P3 - Low** | Minor issues | Next Sprint | Config drift, best practice gaps |
+
+### Incident Classification Matrix
+
+```
+Impact →    Low      Medium     High      Critical
+Likelihood
+Almost      P3       P2         P1        P0
+Certain
+Likely      P3       P2         P1        P0
+Possible      P3       P3         P2        P1
+Unlikely      P3       P3         P3        P2
+Rare        P3       P3         P3        P3
+```
+
+### Common Incident Playbooks
+
+**Ransomware Response:**
+1. Isolate infected systems immediately
+2. Disable VPN and remote access
+3. Activate backup systems (offline backups)
+4. Notify CIRT and legal team
+5. Assess scope of encryption
+6. DO NOT pay ransom (company policy)
+7. Restore from clean backups
+8. Post-incident review
+
+**Data Breach Response:**
+1. Contain the breach (stop ongoing exfiltration)
+2. Assess what data was accessed/stolen
+3. Notify legal and compliance teams
+4. Prepare breach notifications (GDPR: 72 hours, OJK: 2x24 hours)
+5. Communicate with affected customers
+6. Implement additional controls
+7. Regulatory reporting
+
+**Insider Threat Response:**
+1. Monitor without alerting the suspect
+2. Preserve evidence covertly
+3. Engage HR and legal
+4. Conduct forensic investigation
+5. Terminate access if confirmed
+6. Legal action if warranted
+
+---
+
+## Risk Assessment Framework
+
+### Quantitative Risk Analysis (ALE Method)
+
+**Formula:**
+```
+Risk = Annualized Loss Expectancy (ALE)
+ALE = Single Loss Expectancy (SLE) × Annualized Rate of Occurrence (ARO)
+
+Where:
+SLE = Asset Value (AV) × Exposure Factor (EF)
+ARO = Expected number of occurrences per year
+```
+
+**Example Calculation:**
+```
+Asset: Production Database Server
+Asset Value (AV): $500,000
+Exposure Factor (EF): 80% (if breached)
+ARO: 0.5 (once every 2 years)
+
+SLE = $500,000 × 0.80 = $400,000
+ALE = $400,000 × 0.5 = $200,000 per year
+
+Control Cost-Benefit:
+Control Cost: $50,000/year
+Risk Reduction: 75%
+New ALE: $50,000/year
+
+ROI = ($200,000 - $50,000 - $50,000) / $50,000 = 200%
+→ Implement the control
+```
+
+### Qualitative Risk Matrix
+
+| Likelihood | Impact: Low (1) | Medium (2) | High (3) | Critical (4) |
+|------------|-----------------|------------|----------|--------------|
+| **Almost Certain (4)** | Medium (4) | High (8) | Critical (12) | Critical (16) |
+| **Likely (3)** | Medium (3) | Medium (6) | High (9) | Critical (12) |
+| **Possible (2)** | Low (2) | Medium (4) | Medium (6) | High (8) |
+| **Unlikely (1)** | Low (1) | Low (2) | Medium (3) | Medium (4) |
+
+**Risk Levels:**
+- **Critical (9-16)**: Immediate action required
+- **High (6-8)**: Action within 30 days
+- **Medium (3-5)**: Action within 90 days
+- **Low (1-2)**: Monitor and accept
+
+### PayU Risk Register Template
+
+```csv
+Risk ID,Description,Asset,Threat,Vulnerability,Likelihood,Impact,Risk Level,Owner,Mitigation,Status
+R001,SQL Injection in transaction API,Database,External attacker,Unsanitized input,Possible,Critical,High,Backend Team,Implement parameterized queries,In Progress
+R002,Insider data exfiltration,Customer PII,Disgruntled employee,Excessive access,Likely,High,Critical,Security Team,Implement DLP and access reviews,Planned
+R003,DDoS attack on payment gateway,API Gateway,Hacktivists,No rate limiting,Likely,Medium,High,DevOps Team,Deploy WAF and DDoS protection,Implemented
+```
+
+---
+
+## OJK (Otoritas Jasa Keuangan) Compliance
+
+### Key Regulations for PayU
+
+**POJK No. 77/POJK.01/2016**: Information Technology Implementation for Financial Services
+
+**Key Requirements:**
+1. **Risk Management**: IT risk must be integrated into enterprise risk management
+2. **Data Protection**: Customer data must be protected with encryption
+3. **Business Continuity**: DR plan must be tested annually
+4. **Incident Reporting**: Security incidents must be reported within 2x24 hours
+5. **Audit Trail**: All transactions must be logged immutably
+
+**POJK No. 12/POJK.03/2021**: Digital Banking Services
+
+**Key Requirements:**
+1. **Customer Authentication**: Multi-factor authentication for high-risk transactions
+2. **Transaction Limits**: Daily limits must be configurable per customer
+3. **Fraud Detection**: Real-time monitoring for suspicious transactions
+4. **Customer Education**: Security awareness materials must be provided
+
+### OJK Compliance Checklist
+
+**Data Protection:**
+- [ ] Customer data encrypted at rest (AES-256)
+- [ ] Data in transit encrypted (TLS 1.3)
+- [ ] Data retention policies documented
+- [ ] Secure data disposal procedures
+- [ ] Cross-border data transfer agreements
+
+**Access Control:**
+- [ ] Role-based access control (RBAC) implemented
+- [ ] Privileged access monitoring
+- [ ] Regular access reviews (quarterly)
+- [ ] Strong password policies enforced
+- [ ] Session timeout after 15 minutes inactivity
+
+**Audit & Logging:**
+- [ ] All financial transactions logged
+- [ ] Logs retained for minimum 5 years
+- [ ] Immutable audit trail
+- [ ] Log integrity verification
+- [ ] Regular log reviews
+
+**Incident Management:**
+- [ ] Incident response plan documented
+- [ ] CIRT team established
+- [ ] Incident reporting procedure to OJK
+- [ ] Post-incident review process
+- [ ] Annual IR plan testing
+
+**Business Continuity:**
+- [ ] BCP/DR plan documented
+- [ ] RTO < 4 hours for critical systems
+- [ ] RPO < 1 hour for transaction data
+- [ ] Annual DR drill conducted
+- [ ] Backup testing quarterly
+
+### OJK Reporting Requirements
+
+**Incident Reporting Timeline:**
+```
+Hour 0:     Incident detected
+Hour 2:     Internal escalation to CIRT
+Hour 12:    Initial assessment complete
+Hour 24:    Report to OJK (first notification)
+Hour 48:    Detailed report to OJK (if required)
+Day 7:      Progress update
+Day 30:     Final report with lessons learned
+```
+
+**Required Information for OJK Report:**
+- Incident date and time
+- Systems affected
+- Data potentially compromised
+- Root cause (preliminary)
+- Containment actions taken
+- Customer impact assessment
+- Remediation plan
+
+---
+
+## Vulnerability Management
+
+### Vulnerability Prioritization Framework
+
+**Enhanced CVSS with Business Context:**
+```
+Priority Score = CVSS Base Score × Business Context Multiplier
+
+Business Context Multipliers:
+- Internet-facing production: 2.0×
+- Internal production: 1.5×
+- Sensitive data access: 1.5×
+- Development/test: 0.5×
+- Active exploit available: 2.0×
+- Compensating controls: 0.7×
+
+Priority Levels:
+- P0 (Critical): Score ≥ 14 → Patch within 24-48 hours
+- P1 (High): Score 10-13.9 → Patch within 7 days
+- P2 (Medium): Score 6-9.9 → Patch within 30 days
+- P3 (Low): Score < 6 → Patch within 90 days
+```
+
+### Vulnerability Scanning Schedule
+
+| System Type | SAST | DAST | Container Scan | Penetration Test |
+|-------------|------|------|----------------|------------------|
+| Production | Every commit | Weekly | Daily | Quarterly |
+| Staging | Every commit | Daily | Every build | Pre-release |
+| Development | Every commit | N/A | Every build | N/A |
+
+### Patch Management SLA
+
+| Severity | Production | Staging | Development |
+|----------|------------|---------|-------------|
+| Critical | 24-48 hours | 7 days | 14 days |
+| High | 7 days | 14 days | 30 days |
+| Medium | 30 days | 60 days | 90 days |
+| Low | 90 days | 120 days | Next release |
+
+---
+
+## Security Metrics & KPIs
+
+### Executive Dashboard Metrics
+
+**Risk Management:**
+- Open critical/high risks
+- Mean time to remediate (MTTR) risks
+- Risk acceptance rate
+
+**Vulnerability Management:**
+- Mean time to patch (MTTP) by severity
+- Vulnerability backlog trend
+- Patch compliance rate
+
+**Security Operations:**
+- Mean time to detect (MTTD)
+- Mean time to respond (MTTR)
+- Mean time to contain (MTTC)
+- False positive rate (target <20%)
+
+**Compliance:**
+- Control effectiveness rate
+- Audit findings open/closed
+- Compliance score by framework
+
+**Application Security:**
+- Vulnerabilities per 1000 LOC
+- Security defects in production
+- SAST/DAST coverage percentage
+
+### Sample Security Scorecard
+
+```
+PayU Security Posture - Q1 2026
+================================
+
+Overall Security Score: 87/100 (Good)
+
+Risk Management:        90/100 ✓
+- 3 critical risks (target: 0)
+- 12 high risks (target: <10)
+- MTTR: 15 days (target: <30)
+
+Vulnerability Mgmt:     85/100 ✓
+- P0: 0 open (target: 0)
+- P1: 5 open (target: <5)
+- Patch compliance: 92% (target: >95%)
+
+Incident Response:      95/100 ✓
+- MTTD: 2 hours (target: <4)
+- MTTR: 4 hours (target: <8)
+- Zero P0 incidents this quarter
+
+Compliance:             88/100 ✓
+- PCI-DSS: 98% compliant
+- OJK: 95% compliant
+- ISO 27001: In progress
+
+App Security:           82/100 ⚠
+- SAST coverage: 85% (target: >90%)
+- 2 vulns escaped to prod (target: 0)
+```
 
 ## Audit Trails
 

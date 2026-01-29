@@ -244,50 +244,64 @@ AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
 
 ## 🤖 Available AI Skills
 
-Skills yang tersedia di `.agent/skills/`:
+Skills are categorized by domain to help you choose the right tool for the task. All skills are located in `.agent/skills/`.
 
-| Skill                       | Description                                         |
-| --------------------------- | --------------------------------------------------- |
-| `api-integration-specialist` | Expert in integrating third-party APIs with proper authentication, error handling, rate limiting, and retry logic. Use when integrating REST APIs, GraphQL endpoints, webhooks, or external services. Specializes in OAuth flows, API key management, request/response transformation, and building robust API clients. |
-| `api-design`                | REST API standards, OpenAPI, versioning             |
-| `auth-implementation-patterns`| JWT, OAuth2, RBAC, session management patterns      |
-| `backend-patterns`          | Architectural patterns for robust backend systems (Repository, Service, Caching). |
-| `c4-architecture`           | Architecture visualization using C4 Model           |
-| `backend-engineer`          | Java/Python microservice development                |
-| `code-review`               | Code quality & review checklists                    |
-| `container-engineer`        | UBI Images & OpenShift containers                   |
-| `cto-advisor`               | Strategic technical leadership & metrics            |
-| `database-engineer`         | PostgreSQL, JSONB, migrations                       |
-| `debugging-engineer`        | Systematic root cause analysis & debugging          |
-| `fastapi-templates`         | Production-ready FastAPI project templates & patterns |
-| `error-handling-engineer`   | Error patterns, Circuit Breakers, fallbacks         |
-| `devops-engineer`           | CI/CD Pipelines, Tekton, ArgoCD, Automation Scripts |
-| `docs-engineer`             | Documentation & Tech Writing                        |
-| `event-driven-architecture` | Kafka, Saga, Event Sourcing                         |
-| `frontend-engineer`         | Next.js, React, Design Systems                      |
-| `frontend-patterns`         | React/Next.js component & performance patterns      |
-| `git-workflow`              | Git standards & PR workflows                        |
-| `ml-engineer`               | Fraud Scoring, Python & Analytics                   |
-| `mobile-engineer`           | React Native, Expo, Mobile Security                 |
-| `modern-javascript-patterns`| Modern ES6+ syntax, functional patterns, async programming, and performance optimization strategies. |
-| `nextjs-app-router-patterns`| Master Next.js App Router patterns, Server Components, Data Fetching, and Caching strategies |
-| `observability-engineer`    | Distributed Tracing, Logs, and Metrics              |
-| `payu-development`          | Pathfinding & Core Architecture                     |
-| `qa-engineer`               | Testing strategies & QA automation                  |
-| `react-native-architecture` | Build production React Native apps with Expo, navigation, native modules, offline sync, and cross-platform patterns. Use when developing mobile apps, implementing native integrations, or architecting React Native projects. |
-| `react-native-design`       | Create polished React Native UIs with Reanimated, Expo Router, and NativeWind/StyleSheet. |
-| `react-modernization`       | Upgrade older React apps to modern standards (Functions, Hooks, Concurrent Features). |
-| `react-performance`         | Eliminate waterfalls, optimize bundles (40+ rules for Next.js/React). |
-| `react-state-management`    | Master modern React state management with Redux Toolkit, Zustand, Jotai, and React Query |
-| `responsive-design`        | Breakpoints strategies, fluid layouts, and container queries |
-| `security-engineer`         | PCI-DSS, Encryption, OJK Compliance                 |
-| `tailwind-design-system`   | Tailwind CSS design tokens & component variants     |
-| `typescript-advanced-types` | Utility types, generics, inference, and type guards |
-| `typescript-backend-engineer` | Comprehensive backend development guide for Node.js/Express/TypeScript services. Covers layered architecture, Prisma, Zod, and Sentry integration. Use when building BFFs or Node-based microservices. |
-| `ui-ux-designer`            | Expert UI/UX Design Intelligence. Guidelines for palettes, typography, and accessibility. |
-| `web-artifacts-builder`    | Scaffolding & Bundling single-file HTML Artifacts   |
-| `web-component-design`    | Master React, Vue, and Svelte component patterns including CSS-in-JS, composition strategies, and reusable component architecture. |
-| `slidev`                   | Presentation slides for developers (Markdown-based) |
+### 🏗️ Core & Architecture
+| Skill | Description |
+| :--- | :--- |
+| `payu-development` | High-level development guide - architecture overview, technology stack, and entry point. |
+| `c4-architecture` | Architecture visualization using C4 Model (Context, Container, Component, Code). |
+| `cto-advisor` | Strategic technical leadership, engineering metrics (DORA), and scaling strategies. |
+| `docs-engineer` | Documentation maintenance and technical writing standards. |
+
+### ☕ Backend & Logic
+| Skill | Description |
+| :--- | :--- |
+| `backend-engineer` | **Master Skill**: Spring Boot 3.4, Quarkus Native, Hexagonal Architecture, and Microservices. |
+| `backend-patterns` | Architectural patterns (Repository, Service, Caching) for robust backend systems. |
+| `api-design` | **Master Skill**: REST API standards, OpenAPI 3.0, Error Codes, and Zod synchronization. |
+| `api-integration-specialist` | Expert in integrating 3rd party APIs (OAuth2, retry logic, rate limiting). |
+| `event-driven-architecture` | Kafka messaging, Saga patterns, and event sourcing. |
+| `error-handling-engineer` | Design robust error patterns, circuit breakers, and graceful degradation. |
+| `database-engineer` | PostgreSQL design, JSONB patterns, and Flyway migrations. |
+| `typescript-backend-engineer` | Node.js/Express/TypeScript services (BFFs, microservices) with Prisma and Zod. |
+| `fastapi-templates` | Production-ready Python APIs with Pydantic v2 and async patterns. |
+| `ml-engineer` | Fraud scoring, Python data analytics, and model implementation. |
+
+### 📱 Frontend & Mobile
+| Skill | Description |
+| :--- | :--- |
+| `frontend-engineer` | **Master Skill**: Next.js 15+, React, and modern web application architecture. |
+| `mobile-engineer` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), and Mobile Security. |
+| `react-patterns` | **Consolidated**: State mgmt (Zustand/Query), Performance, and Hooks migration. |
+| `react-native-architecture` | Production React Native architecture spanning navigation and offline sync. |
+| `react-native-design` | Polished mobile UIs with Reanimated, Expo Router, and NativeWind. |
+| `nextjs-app-router-patterns` | Master Next.js App Router, Server Components, and Streaming. |
+| `frontend-patterns` | Reusable React/Next.js component and performance patterns. |
+| `web-component-design` | Atomic design, CSS-in-JS, and reusable component architecture. |
+| `tailwind-design-system` | Scalable design tokens and atomic CSS architecture. |
+| `responsive-design` | Breakpoints, fluid layouts, and container queries. |
+| `web-artifacts-builder` | Scaffolding and bundling single-file HTML/React artifacts for documentation. |
+
+### 🛡️ Security & Quality
+| Skill | Description |
+| :--- | :--- |
+| `security-engineer` | **Master Skill**: PCI-DSS, OJK Compliance, Encription, and Incident Response. |
+| `auth-implementation-patterns` | JWT, OAuth2, RBAC, and session management patterns. |
+| `qa-engineer` | **Master Skill**: TDD, REST Assured, Maestro (Mobile E2E), and Performance testing. |
+| `code-review` | Automated code quality checks and PR review checklists. |
+| `debugging-engineer` | Systematic root cause analysis and performance debugging. |
+
+### ⚙️ DevOps & Automation
+| Skill | Description |
+| :--- | :--- |
+| `devops-engineer` | **Master Skill**: CI/CD Pipelines, Tekton, ArgoCD, and automation scripts. |
+| `container-engineer` | UBI-9 images, multi-stage builds, and OpenShift container optimization. |
+| `observability-engineer` | Expert in Distributed Tracing (Jaeger), Logs (Loki), and Metrics (Prometheus). |
+| `git-workflow` | Branching strategies, conventional commits, and PR standards. |
+| `typescript-advanced-types` | Advanced Type safety for complex application logic. |
+| `modern-javascript-patterns` | Modern ES6+ syntax and functional programming patterns. |
+| `slidev` | Presentation slides for developers (Markdown-based). |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 

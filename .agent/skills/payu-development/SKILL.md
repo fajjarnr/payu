@@ -46,11 +46,11 @@ payu/backend/
 
 | Task Category             | Use Skill                                                                                          | Description                                              |
 | ------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| **Backend & DB**          | `@backend-engineer`, `@database-engineer`, `@backend-patterns`, `@fastapi-templates`               | Microservices, SQL, Architecture Patterns, FastAPI       |
-| **Frontend & Mobile**     | `@frontend-engineer`, `@mobile-engineer`                                                           | Next.js, React Native, UI/UX, Design Systems             |
-| **API & Messaging**       | `@api-design`, `@event-driven-architecture`                                                        | REST/OpenAPI, Kafka, Saga Patterns, CloudEvents          |
-| **Testing & QA**          | `@qa-engineer`                                                                                     | Integration Tests, Performance, Strategy                 |
-| **Security & Compliance** | `@security-engineer`, `@auth-implementation-patterns`                                              | PCI-DSS, Encryption, OAuth2/JWT, RBAC                    |
+| **Backend & DB**          | `@backend-engineer`, `@database-engineer`, `@backend-patterns`, `@fastapi-templates`, `@typescript-backend-engineer` | Microservices, SQL, Architecture Patterns, FastAPI, BFF  |
+| **Frontend & Mobile**     | `@frontend-engineer`, `@mobile-engineer`, `@react-patterns`, `@react-native-architecture/design`   | Next.js, React Native, UI/UX, Design Systems, State/Perf |
+| **API & Messaging**       | `@api-design`, `@event-driven-architecture`, `@api-integration-specialist`                         | REST/OpenAPI, Kafka, Saga Patterns, 3rd Party APIs       |
+| **Testing & QA**          | `@qa-engineer`                                                                                     | Integration Tests, Performance, Mobile E2E, Strategy     |
+| **Security & Compliance** | `@security-engineer`, `@auth-implementation-patterns`                                              | PCI-DSS, Encryption, OAuth2/JWT, RBAC, OJK Compliance    |
 | **DevOps & Infra**        | `@devops-engineer`, `@container-engineer`                                                          | CI/CD, Tekton, ArgoCD, Automation Scripts                |
 | **Observability**         | `@observability-engineer`                                                                          | Distributed Tracing, Jaeger, Logs (Loki), Metrics        |
 | **Automation**            | `@debugging-engineer`                                                                              | Root Cause Analysis, Performance Debugging               |

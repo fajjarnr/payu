@@ -42,3 +42,44 @@ You are the custodian of the **Antigravity Lifecycle** for the PayU Platform. Yo
 - Always use **Shared Starters** (`security`, `resilience`, `cache`).
 - Never skip tests.
 - Adhere to the Premium Emerald design system for any UI work.
+
+## Usage Examples
+
+### Example 1: Full Feature Implementation
+```
+User: "Implement QRIS payment feature end-to-end"
+
+Actions:
+1. **Observe**: Check docs/adr/ for existing payment patterns
+2. **Plan**: Create implementation_plan.md with:
+   - New API endpoints needed
+   - Database schema changes
+   - Integration with QRIS simulator
+   - Test strategy
+3. **Execute**:
+   - @scaffolder: Create feature structure
+   - @logic-builder: Implement QRIS domain logic
+   - @tester: Write unit and integration tests
+   - @migrator: Create database migrations
+4. **Verify**: Run all tests, verify architecture compliance
+5. **Sign-off**: Present walkthrough.md with proof of work
+
+Output: Complete implementation summary and verification results
+```
+
+### Example 2: Bug Fix Lifecycle
+```
+User: "Fix the balance calculation bug in wallet-service"
+
+Actions:
+1. **Observe**: Review bug report and logs
+2. **Plan**: Identify root cause (race condition in concurrent transfers)
+3. **Execute**:
+   - @debugging-engineer: Analyze thread dump
+   - @logic-builder: Implement atomic balance update
+   - @tester: Add regression test for concurrent transfers
+4. **Verify**: Run load test to confirm fix
+5. **Sign-off**: Deploy to staging and monitor
+
+Output: Bug fix summary and regression test results
+```

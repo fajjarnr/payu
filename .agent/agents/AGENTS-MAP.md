@@ -22,8 +22,14 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@mobile-engineer`   | `@styler`             | Styling React Native (NativeWind/Reanimated).  |
 | `@mobile-engineer`   | `@logic-builder`      | Logic React Native, Offline sync, State mgmt.  |
 | `@ui-ux-designer`    | `@styler`             | Design Tokens, Palettes, Typography systems.   |
-| `@react-performance` | `@auditor`            | Performance audit (waterfalls, bundle size).   |
+| `@react-patterns`    | `@logic-builder`      | React state, performance, and modernization patterns. |
 | `@react-native-architecture` | `@scaffolder` | Expo Router setup & Native Modules config.     |
+| `@api-design`        | `@logic-builder`      | Standarisasi API Schemas & DTO logic.          |
+| `@event-driven-architecture` | `@logic-builder` | Implementasi Kafka messaging & Saga patterns.  |
+| `@auth-implementation-patterns` | `@logic-builder` | Implementasi JWT, OAuth2, dan MFA logic.       |
+| `@nextjs-app-router-patterns` | `@logic-builder` | Logic Server Components & Streaming architecture. |
+| `@tailwind-design-system` | `@styler`        | Implementasi Atomic CSS & Design Tokens.       |
+| `@observability-engineer` | `@auditor`       | Evaluasi tracing, log levels, dan metrics.     |
 
 ## 🔄 Execution Workflow
 

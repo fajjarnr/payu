@@ -169,34 +169,304 @@ async function rateLimitedRequest(endpoint, options) {
 }
 ```
 
-### 5. Webhook Handling
+### 5. Webhook Handling (Inbound)
 
-**Webhook Verification:**
-```javascript
-function verifyWebhookSignature(payload, signature, secret) {
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
+Webhooks are critical for PayU's partner integrations (BI-FAST, QRIS, external payment gateways). Follow these patterns for secure, reliable webhook handling.
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+#### Webhook Verification
+
+**Spring Boot Implementation with HMAC Signature:**
+```java
+@RestController
+@RequestMapping("/api/v1/webhooks")
+@Slf4j
+@RequiredArgsConstructor
+public class WebhookController {
+    
+    private final WebhookService webhookService;
+    private final ObjectMapper objectMapper;
+    
+    @PostMapping("/bifast")
+    public ResponseEntity<Void> handleBifastWebhook(
+            @RequestBody String payload,
+            @RequestHeader("X-BIFAST-Signature") String signature,
+            @RequestHeader("X-BIFAST-Timestamp") String timestamp,
+            @RequestHeader("X-BIFAST-Idempotency-Key") String idempotencyKey) {
+        
+        // 1. Verify timestamp (prevent replay attacks)
+        if (!isTimestampValid(timestamp)) {
+            log.warn("Webhook timestamp too old: {}", timestamp);
+            return ResponseEntity.status(401).build();
+        }
+        
+        // 2. Verify signature
+        String secret = webhookService.getWebhookSecret("BIFAST");
+        if (!verifySignature(payload, signature, secret, timestamp)) {
+            log.warn("Invalid webhook signature from BI-FAST");
+            return ResponseEntity.status(401).build();
+        }
+        
+        // 3. Check idempotency
+        if (webhookService.isProcessed(idempotencyKey)) {
+            log.info("Duplicate webhook received: {}", idempotencyKey);
+            return ResponseEntity.ok().build(); // Already processed, return success
+        }
+        
+        // 4. Process asynchronously
+        webhookService.processBifastWebhookAsync(payload, idempotencyKey);
+        
+        return ResponseEntity.accepted().build(); // 202 Accepted
+    }
+    
+    private boolean verifySignature(String payload, String signature, String secret, String timestamp) {
+        try {
+            String data = timestamp + "." + payload;
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(secretKey);
+            byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            String expectedSignature = Base64.getEncoder().encodeToString(hash);
+            
+            return MessageDigest.isEqual(
+                signature.getBytes(StandardCharsets.UTF_8),
+                expectedSignature.getBytes(StandardCharsets.UTF_8)
+            );
+        } catch (Exception e) {
+            log.error("Signature verification failed", e);
+            return false;
+        }
+    }
+    
+    private boolean isTimestampValid(String timestamp) {
+        try {
+            Instant webhookTime = Instant.ofEpochSecond(Long.parseLong(timestamp));
+            Instant now = Instant.now();
+            // Allow 5 minutes tolerance
+            return Duration.between(webhookTime, now).abs().toMinutes() <= 5;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+}
+```
+
+**Webhook Service with Retry Logic:**
+```java
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class WebhookService {
+    
+    private final WebhookEventRepository repository;
+    private final KafkaTemplate<String, WebhookEvent> kafkaTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
+    
+    @Async("webhookExecutor")
+    public void processBifastWebhookAsync(String payload, String idempotencyKey) {
+        try {
+            BifastWebhookEvent event = parsePayload(payload);
+            
+            // Store event for audit trail
+            WebhookEventEntity entity = WebhookEventEntity.builder()
+                .idempotencyKey(idempotencyKey)
+                .source("BIFAST")
+                .eventType(event.getEventType())
+                .payload(payload)
+                .status(WebhookStatus.PROCESSING)
+                .receivedAt(Instant.now())
+                .build();
+            
+            repository.save(entity);
+            
+            // Publish to Kafka for async processing
+            kafkaTemplate.send("bifast.webhooks", event.getTransactionId(), event);
+            
+            // Mark as processed
+            entity.setStatus(WebhookStatus.PROCESSED);
+            entity.setProcessedAt(Instant.now());
+            repository.save(entity);
+            
+            // Cache idempotency key
+            redisTemplate.opsForValue().set(
+                "webhook:" + idempotencyKey,
+                "processed",
+                Duration.ofHours(24)
+            );
+            
+        } catch (Exception e) {
+            log.error("Failed to process BI-FAST webhook: {}", idempotencyKey, e);
+            // Store for retry
+            storeForRetry(idempotencyKey, payload, e);
+        }
+    }
+    
+    @Scheduled(fixedDelay = 60000) // Every minute
+    public void retryFailedWebhooks() {
+        List<WebhookEventEntity> failed = repository.findByStatusAndRetryCountLessThan(
+            WebhookStatus.FAILED, 5
+        );
+        
+        for (WebhookEventEntity event : failed) {
+            try {
+                processBifastWebhookAsync(event.getPayload(), event.getIdempotencyKey());
+                event.setRetryCount(event.getRetryCount() + 1);
+                repository.save(event);
+            } catch (Exception e) {
+                log.error("Retry failed for webhook: {}", event.getIdempotencyKey(), e);
+                event.setRetryCount(event.getRetryCount() + 1);
+                if (event.getRetryCount() >= 5) {
+                    event.setStatus(WebhookStatus.PERMANENTLY_FAILED);
+                    alertOpsTeam(event);
+                }
+                repository.save(event);
+            }
+        }
+    }
+    
+    public boolean isProcessed(String idempotencyKey) {
+        return Boolean.TRUE.equals(
+            redisTemplate.hasKey("webhook:" + idempotencyKey)
+        );
+    }
+    
+    public String getWebhookSecret(String source) {
+        // Fetch from Vault or secure config
+        return System.getenv(source + "_WEBHOOK_SECRET");
+    }
+}
+```
+
+**QRIS Webhook Handler:**
+```java
+@RestController
+@RequestMapping("/api/v1/webhooks/qris")
+@Slf4j
+@RequiredArgsConstructor
+public class QrisWebhookController {
+    
+    private final QrisPaymentService qrisService;
+    private final WebhookSignatureValidator signatureValidator;
+    
+    @PostMapping
+    public ResponseEntity<QrisWebhookResponse> handleQrisPayment(
+            @RequestBody QrisCallbackRequest request,
+            @RequestHeader("X-QRIS-Signature") String signature) {
+        
+        // Validate signature
+        String secret = System.getenv("QRIS_WEBHOOK_SECRET");
+        if (!signatureValidator.validate(request, signature, secret)) {
+            return ResponseEntity.status(401)
+                .body(new QrisWebhookResponse("99", "Invalid signature"));
+        }
+        
+        try {
+            // Process payment callback
+            QrisPaymentResult result = qrisService.processCallback(request);
+            
+            // Return QRIS standard response
+            return ResponseEntity.ok(new QrisWebhookResponse(
+                "00", 
+                "Success",
+                result.getTransactionId()
+            ));
+            
+        } catch (PaymentNotFoundException e) {
+            log.error("QRIS payment not found: {}", request.getReferenceNo());
+            return ResponseEntity.ok(new QrisWebhookResponse(
+                "01", 
+                "Transaction not found"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to process QRIS webhook", e);
+            return ResponseEntity.ok(new QrisWebhookResponse(
+                "99", 
+                "System error"
+            ));
+        }
+    }
+}
+```
+
+**Webhook Event Entity:**
+```java
+@Entity
+@Table(name = "webhook_events", indexes = {
+    @Index(name = "idx_webhook_idempotency", columnList = "idempotency_key", unique = true),
+    @Index(name = "idx_webhook_status", columnList = "status")
+})
+@Data
+@Builder
+public class WebhookEventEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+    
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private String idempotencyKey;
+    
+    @Column(nullable = false)
+    private String source; // BIFAST, QRIS, STRIPE, etc.
+    
+    @Column(nullable = false)
+    private String eventType;
+    
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String payload;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private WebhookStatus status;
+    
+    @Column(nullable = false)
+    private Instant receivedAt;
+    
+    private Instant processedAt;
+    
+    @Version
+    private Long version;
+    
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer retryCount = 0;
+    
+    @Column(columnDefinition = "TEXT")
+    private String errorMessage;
 }
 
-app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, res) => {
-  const signature = req.headers['stripe-signature'];
+public enum WebhookStatus {
+    PROCESSING,
+    PROCESSED,
+    FAILED,
+    PERMANENTLY_FAILED
+}
+```
 
-  if (!verifyWebhookSignature(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET)) {
-    return res.status(401).send('Invalid signature');
-  }
+#### Webhook Best Practices
 
-  const event = JSON.parse(req.body);
-  handleWebhookEvent(event);
+1. **Always verify signatures** - Use HMAC-SHA256 with timing-safe comparison
+2. **Check timestamps** - Reject webhooks older than 5 minutes (replay protection)
+3. **Implement idempotency** - Store processed webhook IDs to prevent duplicates
+4. **Return 202 Accepted** - Acknowledge receipt immediately, process asynchronously
+5. **Implement retries** - Use exponential backoff for failed webhooks
+6. **Store raw payloads** - Keep audit trail of all received webhooks
+7. **Alert on failures** - Notify ops team when webhooks fail permanently
+8. **Use separate thread pool** - Don't block main request threads
 
-  res.status(200).send('Received');
-});
+```java
+@Configuration
+public class WebhookConfig {
+    
+    @Bean(name = "webhookExecutor")
+    public Executor webhookExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(50);
+        executor.setQueueCapacity(1000);
+        executor.setThreadNamePrefix("webhook-");
+        executor.initialize();
+        return executor;
+    }
+}
 ```
 
 ## Integration Patterns
