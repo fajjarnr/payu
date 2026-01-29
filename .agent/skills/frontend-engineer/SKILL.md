@@ -766,12 +766,24 @@ DILARANG menggunakan warna solid `#000` atau `#fff` murni tanpa tekstur.
 - **Mesh Gradients**: Gunakan gradasi mesh yang subtil di sudut layar untuk kedalaman atmosfer.
 - **Shadows**: Gunakan *Soft Layered Shadows* (2-3 lapis shadow dengan blur berbeda) alih-alih satu shadow pekat.
 
-### 4. Anti-AI Slop Checklist
+### 4. Intentional Motion (High-Impact Display)
+DILARANG memberikan animasi kecil yang tersebar tidak teratur. Fokus pada "High-Impact Moments".
+- **Staggered Orchestration**: Gunakan `animation-delay` untuk memunculkan elemen satu per satu saat halaman dimuat (reveal effect) alih-alih muncul sekaligus.
+- **Scroll-Triggered Surprises**: Gunakan `Motion` library untuk memberikan animasi masuk yang subtil saat user scroll ke bagian tertentu.
+- **Hover Micro-interactions**: Berikan feedback visual yang mengejutkan (misal: pergeseran shadow halus atau perubahan tekstur noise) saat elemen interaktif di-hover.
+
+### 5. Editorial Spatial Composition
+DILARANG menggunakan grid simetris yang membosankan tanpa variasi.
+- **Grid-Breaking Elements**: Sesekali biarkan gambar atau card keluar dari garis container utama (overlap).
+- **Asymmetric Balance**: Gunakan ruang negatif (whitespace) secara berani untuk menekankan elemen penting (CTA).
+- **Diagonal Flow**: Gunakan kemiringan subtil atau elemen dekoratif diagonal untuk memandu mata pengguna ke arah navigasi utama.
+
+### 6. Anti-AI Slop Checklist
 JANGAN lakukan hal berikut:
 - [ ] **Purple-White Gradients**: Terlalu sering digunakan oleh AI generik.
 - [ ] **Cookie-Cutter Cards**: Kartu dengan border-radius kecil dan shadow standar. (Gunakan `rounded-3xl` dan shadow khusus).
 - [ ] **Generic Icons**: Gunakan library yang konsisten (Lucide) dengan perlakuan visual khusus (dua warna atau gradient).
-- [ ] **Symmetric Perfect Grids**: Sesekali gunakan asimetri atau elemen yang memotong garis grid (*grid-breaking*) untuk kesan desain manual.
+- [ ] **Symmetric Perfect Grids**: Gunakan sesekali asimetri atau elemen yang memotong garis grid (*grid-breaking*) untuk kesan desain manual.
 
 ---
 
