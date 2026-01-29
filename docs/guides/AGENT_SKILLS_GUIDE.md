@@ -84,6 +84,15 @@ Gunakan alur berikut untuk mengorkestrasi ekosistem AI secara efektif:
 1. Gunakan `@builder` untuk memastikan build dan container sukses.
 2. Gunakan `@orchestrator` untuk merapikan branch dan push ke remote.
 
+## ⚡ Hyper-Parallelism (Native Claude Code Capability)
+
+Platform PayU memanfaatkan kapabilitas native dari **Claude Code** untuk menjalankan hingga **12 Agen Paralel** secara bersamaan. Kapabilitas ini memungkinkan:
+- **Massive Refactoring**: Merombak multiple microservices sekaligus menggunakan subagents spesialis.
+- **Full-Scale Audit**: Menjalankan security audit, test suite, dan performance validation secara serentak melalui delegasi pararel.
+- **Cross-Platform Sync**: Sinkronisasi perubahan di Backend, Web, dan Mobile dalam satu siklus dispatch.
+
+> **Cara Menggunakan**: Gunakan workflow `/multi-agent-coordination` dalam mode **Swarm** untuk mendistribusikan beban tugas berat ke agen-agen Anda menggunakan fitur subagent orkestrasi dari Claude Code.
+
 ---
 
 ## 📜 Golden Rules
