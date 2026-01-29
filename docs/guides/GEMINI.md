@@ -258,6 +258,7 @@ Skills yang tersedia di `.agent/skills/`:
 | `cto-advisor`               | Strategic technical leadership & metrics            |
 | `database-engineer`         | PostgreSQL, JSONB, migrations                       |
 | `debugging-engineer`        | Systematic root cause analysis & debugging          |
+| `fastapi-templates`         | Production-ready FastAPI project templates & patterns |
 | `error-handling-engineer`   | Error patterns, Circuit Breakers, fallbacks         |
 | `devops-engineer`           | CI/CD Pipelines, Tekton, ArgoCD, Automation Scripts |
 | `docs-engineer`             | Documentation & Tech Writing                        |
