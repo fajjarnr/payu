@@ -744,6 +744,35 @@ localStorage.setItem("theme", "dark");
 
 ---
 
+## 🎨 The Premium Emerald Design Engine (Anti-AI Slop Policy)
+
+Adopsi dari **Claude Frontend Design Standards** untuk menghindari estetika AI generik yang membosankan. PayU harus terasa **Bespoke**, **Luxury**, dan **Memorable**.
+
+### 1. Unified Aesthetic Strategy
+Jangan menjadi "rata-rata". Pilih arah yang berani:
+- **Tone PayU**: *Luxury Refined* (Elite, Clean, Powerful).
+- **Primary Color**: `bank-green` (#10b981) sebagai aksen tajam, bukan warna yang membanjiri layar.
+- **Surface**: Gunakan **Glassmorphism** (`backdrop-blur`) dan **Z-axis depth** alih-alih flat design.
+
+### 2. Typography Pairing (Bespoke Standard)
+DILARANG menggunakan satu font generik (seperti Inter saja atau Arial) untuk seluruh aplikasi.
+- **Headers (Display)**: WAJIB gunakan **Outfit** (Modern, Geometric, Premium).
+- **Body UI**: Gunakan **Inter** (Clean, Readable) dengan *letter-spacing* yang diatur ketat (`tracking-tight` untuk headers).
+- **Mixing**: Gunakan kontras ukuran yang ekstrem antara header dan sub-header untuk efek editorial.
+
+### 3. Backgrounds & Textures
+DILARANG menggunakan warna solid `#000` atau `#fff` murni tanpa tekstur.
+- **Noise & Grain**: Gunakan overlay noise halus (opacity 2-3%) untuk memberikan kesan material organik.
+- **Mesh Gradients**: Gunakan gradasi mesh yang subtil di sudut layar untuk kedalaman atmosfer.
+- **Shadows**: Gunakan *Soft Layered Shadows* (2-3 lapis shadow dengan blur berbeda) alih-alih satu shadow pekat.
+
+### 4. Anti-AI Slop Checklist
+JANGAN lakukan hal berikut:
+- [ ] **Purple-White Gradients**: Terlalu sering digunakan oleh AI generik.
+- [ ] **Cookie-Cutter Cards**: Kartu dengan border-radius kecil dan shadow standar. (Gunakan `rounded-3xl` dan shadow khusus).
+- [ ] **Generic Icons**: Gunakan library yang konsisten (Lucide) dengan perlakuan visual khusus (dua warna atau gradient).
+- [ ] **Symmetric Perfect Grids**: Sesekali gunakan asimetri atau elemen yang memotong garis grid (*grid-breaking*) untuk kesan desain manual.
+
 ---
 
 ## 🏗️ Component Architecture (Composition Patterns)
