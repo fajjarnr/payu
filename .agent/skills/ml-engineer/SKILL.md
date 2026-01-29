@@ -142,5 +142,14 @@ Untuk pengembangan sistem ML yang robust dan terintegrasi, gunakan pola delegasi
 - **Model Observability**: Panggil **`@orchestrator`** secara simultan untuk memastikan metrics Prometheus dan dashboard Grafana terkonfigurasi di OpenShift.
 - **Security Audit**: Jalankan **`@auditor`** untuk memverifikasi masking PII pada data training dan log prediksi.
 
+## Related Resources
+
+| Resource | Path |
+|----------|------|
+| FastAPI Templates | `.agent/skills/fastapi-templates/SKILL.md` |
+| PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
+| Backend Patterns | `.agent/skills/backend-patterns/SKILL.md` |
+| Database Engineer | `.agent/skills/database-engineer/SKILL.md` |
+
 ---
 *Last Updated: January 2026*
