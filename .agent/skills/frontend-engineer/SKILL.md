@@ -61,6 +61,7 @@ function isUser(input: unknown): input is User {
 - **Framework:** Next.js 15+ with App Router
 - **Language:** TypeScript 5+
 - **Styling:** Tailwind CSS + shadcn/ui components
+- **Animations:** Framer Motion (UI/UX) + GSAP (Complex Visuals/Timelines)
 - **State Management:** Zustand (client state) + React Query (server state)
 - **Forms:** React Hook Form + Zod validation
 - **Charts:** Recharts / Chart.js
@@ -736,6 +737,48 @@ export const TransactionContent = ({ onClose }: { onClose: () => void }) => {
 - **Animation**: Spring physics (`stiffness: 300, damping: 25`) via Framer Motion.
 - **i18n**: Gunakan `useTranslations` di dalam komponen konten untuk menjaga context.
 - **Seamless Exit**: Pastikan menggunakan `AnimatePresence` untuk menghindari elemen "terputus" saat tutup.
+
+---
+
+## 🎭 Animation Strategy: Framer Motion vs GSAP
+
+PayU menggunakan pendekatan sistem ganda untuk animasi guna menjamin performa dan kualitas visual:
+
+### 1. Framer Motion (Default UI/UX)
+**Gunakan untuk**: Micro-interactions, Page transitions, Modals, Sidebars, dan List animations.
+- **Kelebihan**: Integrasi native dengan React lifecycle (`AnimatePresence`), deklaratif, dan performa tinggi untuk layout transitions.
+
+### 2. GSAP (Complex Visuals & Timelines)
+**Gunakan untuk**: Landing pages artistik, marketing storytelling yang berat, visualisasi data finansial yang kompleks, dan koordinasi animasi multi-elemen yang butuh sinkronisasi timeline ketat.
+- **Kelebihan**: Kontrol timeline imperatif yang absolut, performa ekstrim untuk ribuan objek, dan toolset melimpah untuk SVG/Canvas.
+
+#### 💡 GSAP Usage Pattern (React)
+Selalu gunakan `useGSAP` hook (atau `useLayoutEffect` dengan `gsap.context()`) untuk pembersihan memory otomatis.
+
+```tsx
+'use client';
+
+import { useRef } from 'react';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+export const MarketingTeaser = () => {
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // Definisi Timeline yang kompleks
+    const tl = gsap.timeline({ repeat: -1, yoyo: true });
+    tl.to(".coin", { y: -20, rotation: 360, duration: 2, stagger: 0.2 })
+      .to(".glow", { opacity: 0.8, scale: 1.2, duration: 1 }, "-=1");
+  }, { scope: container });
+
+  return (
+    <div ref={container} className="relative overflow-hidden">
+      {/* Visual elements */}
+    </div>
+  );
+};
+```
 
 ---
 
