@@ -428,9 +428,12 @@ Gunakan **Resilience4j** untuk melindungi sistem dari *cascading failures*.
 - **Signature Verification**: Wajib verifikasi `X-Signature` header untuk mencegah *spoofing*.
 - **Async Processing**: Terima webhook -> Masukkan ke Queue -> Balas 200 OK segera. Proses logic di worker.
 
-## 🤖 Agent Delegation
+## 🤖 Agent Delegation & Parallel Execution
 
-Untuk eksekusi tugas spesifik, fork agen berikut:
-- **Scaffolding Service**: Fork `@scaffolder` untuk inisialisasi project.
-- **Domain logic**: Fork `@logic-builder` untuk implementasi Rich Domain Model.
-- **Testing**: Fork `@tester` untuk menulis test suite (Unit/Integration).
+Untuk mencapai kecepatan ekstrim dan kualitas standar enterprise, gunakan pola delegasi paralel (Swarm Mode):
+
+- **Scaffolding & Boilerplate**: Delegasikan ke **`@scaffolder`** untuk pembuatan struktur service, Dockerfile, dan konfigurasi Maven.
+- **Domain & Business Logic**: Aktifkan **`@logic-builder`** untuk implementasi DDD, Aggregates, dan Value Objects.
+- **Async & Event-Driven**: Jika menyangkut Kafka atau Event Sourcing, gunakan skill **`event-driven-architecture`**.
+- **Automated Testing**: Jalankan **`@tester`** secara paralel untuk menulis unit dan integration tests segera setelah DTO/Service interface didefinisikan.
+- **Infrastructure & Security Sync**: Jika butuh audit keamanan proaktif atau setup koki Loki/Prometheus, delegasikan ke **`@compliance-auditor`** atau **`observability-engineer`**.

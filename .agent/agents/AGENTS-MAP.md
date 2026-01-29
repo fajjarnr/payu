@@ -18,6 +18,7 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@payu-development`  | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
 | `@security-engineer` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
 | `@web-artifacts-builder` | `@builder`           | Scaffolding dan bundling single-file artifacts. |
+| `@slidev`            | `@styler`             | Desain layout dan animasi presentasi premium. |
 
 ## 🔄 Execution Workflow
 
@@ -39,3 +40,15 @@ Berdasarkan `antigravity-lifecycle`, berikut adalah bagaimana kolaborasi terjadi
 - **Single Responsibility**: Setiap agen hanya memiliki satu tujuan spesifik.
 - **Context Isolation**: Penggunaan agen mengisolasi context eksekusi.
 - **Unattended Execution**: Agents dirancang untuk berjalan secara mandiri.
+
+---
+
+## ⚡ Parallel Execution & Skill Interconnectivity
+
+Untuk mencapai kecepatan ekstrim, asisten AI harus menjalankan agen secara paralel ketika menangani tugas yang melibatkan banyak skill:
+
+1. **Parallel Dispatching**: Jika tugas melibatkan Frontend (`@frontend-engineer`) dan Backend (`@backend-engineer`), aktifkan `@styler` dan `@logic-builder` secara bersamaan (Swarm Mode).
+2. **Skill-to-Agent Handshake**:
+   - Jika `@frontend-engineer` butuh visualisasi data, delegasikan ke `@web-artifacts-builder` -> `@builder`.
+   - Jika pengembangan fitur butuh presentasi, delegasikan ke `@slidev` -> `@styler`.
+3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama (misal: penulisan dokumen teknis di `@docs-engineer` didelegasikan ke `@slidev` jika butuh deck).

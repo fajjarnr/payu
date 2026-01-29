@@ -1404,9 +1404,14 @@ const sortedTransactions = transactions.toSorted((a, b) => b.date - a.date);
 - [ ] **API Integration**: React Query configured, proper error handling
 - [ ] **Internationalization**: All user-facing text uses translation keys
 
-## 🤖 Agent Delegation
+## 🤖 Agent Delegation & Parallel Execution
 
-Untuk implementasi detail UI/UX (CSS, Gradients, Animations) sesuai standar "Premium Emerald", fork **`@styler`**. Agen ini fokus pada visual excellence dan aksesibilitas.
+Untuk hasil terbaik dan tercepat, gunakan pola delegasi paralel (Swarm Mode):
+
+- **Visual Aesthetics**: Delegasikan ke **`@styler`** untuk implementasi CSS, Gradients, dan "Premium Emerald" look.
+- **Complex UI Components**: Gunakan **`@web-artifacts-builder`** -> **`@builder`** untuk membuat POC atau demo komponen interaktif secara terpisah.
+- **Project Documentation/Training**: Jika butuh deck presentasi untuk fitur frontend baru, delegasikan ke **`@slidev`** -> **`@styler`**.
+- **Backend Sync**: Jika butuh penyesuaian API DTO, aktifkan **`@logic-builder`** secara paralel dengan pengerjaan UI.
 
 ---
 
