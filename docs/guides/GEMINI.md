@@ -92,7 +92,7 @@ Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Paral
 
 ### Swarm Principles:
 1. **Parallel Dispatching**: Tugas Full-stack didelegasikan ke `@styler` (Frontend) dan `@logic-builder` (Backend) secara bersamaan untuk reduksi waktu eksekusi hingga 80%.
-2. **Specialized Handshake**: Setiap Skill (misal: `@backend-engineer`) memiliki instruksi eksplisit untuk memanggil spesialis lain (misal: `@tester` atau `@migrator`) jika tugas menyentuh domain mereka.
+2. **Specialized Handshake**: Setiap Skill (misal: `@core-banking-engineer`) memiliki instruksi eksplisit untuk memanggil spesialis lain (misal: `@tester` atau `@migrator`) jika tugas menyentuh domain mereka.
 3. **Implicit Interconnectivity**: Asisten wajib secara proaktif mendispatch agen pendukung (seperti `@auditor` untuk security atau `@styler` untuk slidev) berdasarkan jenis perubahan kode tanpa menunggu perintah manual.
 
 ---
@@ -353,7 +353,6 @@ Claude Code SHOULD follow established workflows in `.agent/workflows/` for compl
 Untuk eksekusi tugas yang terisolasi dan spesifik, agen berikut tersedia di `.agent/agents/` (diakses via `.claude/agents/`):
 
 - `@scaffolder`, `@logic-builder`, `@tester`, `@auditor`, `@migrator`, `@builder`, `@styler`, `@orchestrator`, `@lifecycle-manager`, `@scaffolding-expert`, `@compliance-auditor`.
-| `@enterprise-architect` | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
 
 _Usage_: When tasked with complex refactoring or multi-service updates, read the relevant workflow file first.
 

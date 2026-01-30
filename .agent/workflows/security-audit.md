@@ -14,7 +14,7 @@ Gunakan workflow ini sebelum release fitur yang menyentuh data sensitif (PII, fi
    - Data sensitivity level (PII, Financial, Public)
 
 2. **Load Security Context**
-   - Baca `@security-engineer` skill untuk checklist PCI-DSS.
+   - Baca `@cybersecurity-architect` skill untuk checklist PCI-DSS.
    - Review `docs/security/SECURITY_POLICY.md`.
 
 ## Phase 1: Static Analysis
@@ -45,7 +45,7 @@ Gunakan workflow ini sebelum release fitur yang menyentuh data sensitif (PII, fi
 ## Phase 3: Runtime Verification
 
 1. **Penetration Test (Optional)**
-   - Gunakan `@security-engineer` untuk scan OWASP Top 10.
+   - Gunakan `@cybersecurity-architect` untuk scan OWASP Top 10.
 
 2. **Audit Log Verification**
    - [ ] Semua akses ke data sensitif tercatat di audit log?

@@ -18,7 +18,7 @@ Gunakan workflow ini saat membuat microservice baru di PayU platform.
 
 1. **Load Context**
    - Baca `docs/architecture/ARCHITECTURE.md` untuk memahami landscape service.
-   - Baca `@payu-development` skill untuk tech stack dan konvensi.
+   - Baca `@principal-architect` skill untuk tech stack dan konvensi.
 
 2. **Define Service Type**
    | Type | Framework | Use Case |

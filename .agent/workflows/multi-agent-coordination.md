@@ -16,7 +16,7 @@ Gunakan pola ini untuk mempercepat siklus SDLC (Discovery -> Analysis -> Impleme
 
 Gunakan jika output satu agen menjadi input bagi agen berikutnya.
 
-> "Gunakan `@explorer-agent` untuk memetakan struktur kode, lalu berikan hasilnya ke `@backend-engineer` untuk mereview API."
+> "Gunakan `@information-architect` untuk memetakan struktur kode, lalu berikan hasilnya ke `@core-banking-engineer` untuk mereview API."
 
 ### 2. Swarm Mode (Parallel Dispatch - up to 12 Agents)
 Gunakan untuk tugas independen yang masif (Scatter-Gather). Platform PayU mendukung hingga **12 agen paralel** secara bersamaan untuk efisiensi ekstrim.
@@ -29,7 +29,7 @@ Gunakan untuk tugas independen yang masif (Scatter-Gather). Platform PayU menduk
 
 Gunakan untuk tugas besar yang butuh _central planner_.
 
-> "Gunakan `@cto-advisor` sebagai 'Queen' untuk memecah strategi migrasi, lalu delegasikan ke `@backend-engineer` dan `@devops-engineer` sebagai 'Workers'."
+> "Gunakan `@principal-architect` sebagai 'Queen' untuk memecah strategi migrasi, lalu delegasikan ke `@core-banking-engineer` dan `@platform-engineer` sebagai 'Workers'."
 
 - **Topology**: Hierarchical.
 - **Flow**: Architect Planning -> Worker Execution -> Architect Review.
@@ -80,9 +80,9 @@ Setelah semua agen selesai bekerja, lakukan sintesis laporan dengan format:
 
 | Agent               | Findings / Actions                                |
 | :------------------ | :------------------------------------------------ |
-| @debugging-engineer | Menemukan null pointer di AccountService line 45  |
-| @backend-engineer   | Mengimplementasikan null-check dan fallback logic |
-| @qa-engineer        | Menambahkan unit test untuk skenario null         |
+| @sdet-solutions-engineer | Menemukan null pointer di AccountService line 45  |
+| @core-banking-engineer   | Mengimplementasikan null-check dan fallback logic |
+| @sdet-solutions-engineer        | Menambahkan unit test untuk skenario null         |
 
 ### Consitencies & Action Items
 
@@ -94,7 +94,7 @@ Setelah semua agen selesai bekerja, lakukan sintesis laporan dengan format:
 
 ## 💡 Best Practices untuk Kecepatan (Speed)
 
-1. **Discovery First**: Selalu mulai dengan `@explorer-agent` atau tool `grep_search` untuk memastikan konteks benar sebelum agen domain mulai bekerja.
+1. **Discovery First**: Selalu mulai dengan `@information-architect` atau tool `grep_search` untuk memastikan konteks benar sebelum agen domain mulai bekerja.
 2. **Context Passing**: Pastikan temuan dari satu langkah dikirimkan secara eksplisit ke langkah berikutnya.
 3. **Synthesis Single-Report**: Mintalah satu laporan terpadu (Synthesis) daripada laporan terpisah-pisah untuk efisiensi review.
 4. **Resume Capability**: Jika agen terhenti, gunakan instruksi "Resume agent [id]" untuk melanjutkan pekerjaan tanpa kehilangan konteks.

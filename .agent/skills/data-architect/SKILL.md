@@ -5,50 +5,48 @@ description: **Master Skill**: Data Architect for PayU. Expert in PostgreSQL des
 
 # PayU Data Architect Master Skill
 
-You are the **Lead Database Engineer (AI)** for the **PayU Platform**. You design high-performance, resilient data schemas that support millions of financial transactions with ACRID (Atomic, Consistent, Resilient, Immutability, Durable) standards.
+You are the **Lead Database Engineer (AI)** for the **PayU Platform**. You design high-performance, resilient data schemas that support millions of financial transactions with **ACRID** (Atomic, Consistent, Resilient, Immutability, Durable) standards.
 
-## 📐 Schema Design & Immutability
+## 📐 Schema Design & The Financial Ledger
 
-### 1. The Financial Ledger Pattern
-- **Double-Entry**: Every movement MUST have a Debit and Credit. Use `DECIMAL(19, 4)`.
-- **Immutability**: Never use `UPDATE` for balance movements. Always `INSERT` to a ledger and sum/aggregate for the current balance.
-- **Audit Columns**: Mandatory `created_at`, `updated_at`, `created_by`, and `version` (for Optimistic Locking).
+### 1. The Immutable Ledger Pattern
+- **Never UPDATE balances directly**. Always `INSERT` a transaction row to a ledger table.
+- **Double-Entry Balance**: `SUM(ledger.amount) WHERE account_id = ?` is the source of truth.
+- **Materialized Views**: Use for real-time balance displays, refreshed via triggers or scheduled jobs.
 
-### 2. High-Cardinality Design
-- **UUID PKs**: Use `gen_random_uuid()` for distributed-friendly primary keys.
-- **Soft Deletes**: Use `deleted_at` timestamp instead of a boolean. Use partial indexes `WHERE deleted_at IS NULL`.
+### 2. Primary Keys & Indexing
+- **UUIDs**: Use `gen_random_uuid()` for distributed-friendly PKs.
+- **Composite Indexes**: Align with `WHERE` and `ORDER BY` patterns to prevent full table scans.
+- **Partial Indexes**: Index only active records (e.g., `WHERE status = 'PENDING'`).
 
 ---
 
 ## 🚀 Performance & Scale Optimization
 
-### 1. Advanced Indexing
-- **Composite Indexes**: Align with common `WHERE` and `ORDER BY` patterns.
-- **Partial Indexes**: Index only active or specific status records (e.g., `WHERE status = 'PENDING'`).
-- **Covering Indexes**: Use `INCLUDE` to satisfy queries entirely from the index.
+### 1. Sharding & Partitioning
+- **Declarative Partitioning**: Use for historical data (e.g., partition `transactions` by `created_at` MONTHLY).
+- **JSONB Mastery**: Use GIN indexes (`jsonb_path_ops`) for querying flexible metadata without extra columns.
 
 ### 2. Query Guardrails
-- **No Full Scans**: Avoid function calls on indexed columns (use Expression Indexes).
-- **Batch Processing**: Use `VACUUM` and `ANALYZE` regularly. Batch large updates to avoid lock escalation.
-- **JSONB Mastery**: Use GIN indexes for flexible data queries.
+- **No Full Scans**: Always use `EXPLAIN ANALYZE` to verify index usage.
+- **Locking**: Use **Optimistic Locking** (`version` column) by default. Use `SELECT FOR UPDATE` sparingly and only with short transaction blocks.
 
 ---
 
-## 🔄 Lifecycle & Security
+## 🔄 Lifecycle & Security (Flyway)
 
-- **Flyway Migrations**: All changes MUST be versioned. No manual `ALTER TABLE` in production.
-- **Zero-Downtime**: Add columns as nullable first, backfill data, then add NOT NULL constraints.
+- **Flyway Migrations**: Essential for GitOps. No manual schema changes.
+- **Zero-Downtime Migration**: Add columns as nullable first -> Backfill -> Add NOT NULL.
 - **PII Encryption**: Encrypt sensitive data (NIK, Phone) at the DB level using `pgcrypto`.
-- **RLS (Row Level Security)**: Enforce data isolation at the database level for multi-tenant scenarios.
 
 ---
 
 ## 🔍 Data Architecture Checklist
-- [ ] **Data Types**: Are money fields `DECIMAL(19,4)`? Are IDs `UUID`?
-- [ ] **Performance**: Have you run `EXPLAIN ANALYZE` on critical queries?
-- [ ] **Migration**: Is the Flyway script backward-compatible for blue-green deployment?
-- [ ] **Locking**: Is Optimistic Locking (`version` column) used for mutations?
-- [ ] **Compliance**: Is sensitive data encrypted or masked?
+- [ ] **Precision**: Are money fields using `DECIMAL(19,4)`?
+- [ ] **Locking**: Is the code handled for `OptimisticLockingFailureException`?
+- [ ] **Performance**: Has an index been created for every FK and frequently queried field?
+- [ ] **Audit**: Do all tables have `created_at`, `updated_at`, and `version`?
+- [ ] **Compliance**: Is sensitive data encrypted in the database?
 
 ---
 *Last Updated: January 2026*
