@@ -56,11 +56,15 @@ public class PostgreSQLResourceTestLifecycleManager implements QuarkusTestResour
 
         postgres.start();
 
-        // Return datasource configuration for Quarkus
+        // Return datasource and hibernate configuration for Quarkus
         return Map.of(
             "quarkus.datasource.jdbc.url", postgres.getJdbcUrl(),
             "quarkus.datasource.username", postgres.getUsername(),
-            "quarkus.datasource.password", postgres.getPassword()
+            "quarkus.datasource.password", postgres.getPassword(),
+            "quarkus.hibernate-orm.packages", "id.payu.backoffice.domain",
+            "quarkus.hibernate-orm.database.generation", "drop-and-create",
+            "quarkus.hibernate-orm.sql-load-script", "no-file",
+            "quarkus.flyway.migrate-at-start", "false"
         );
     }
 

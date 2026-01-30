@@ -10,11 +10,14 @@ import id.payu.backoffice.dto.KycReviewRequest;
 import id.payu.backoffice.service.CustomerCaseService;
 import id.payu.backoffice.service.FraudCaseService;
 import id.payu.backoffice.service.KycReviewService;
+import id.payu.backoffice.testutil.PostgreSQLResourceTestLifecycleManager;
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -38,9 +41,12 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * Uses @Tag("integration") to allow selective test execution.
  *
+ * Tests require Docker to be running with: mvn test -Ddocker.enabled=true
+ *
  * @author PayU Backend Team
  */
 @QuarkusTest
+@EnabledIfSystemProperty(named = "docker.enabled", matches = "true")
 @DisplayName("Backoffice Service Integration Tests")
 @Tag("integration")
 class BackofficeIntegrationTest {

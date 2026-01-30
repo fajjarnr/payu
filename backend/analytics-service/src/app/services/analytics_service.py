@@ -57,12 +57,14 @@ class AnalyticsService:
                 .order_by(desc('total_amount'))
             )
 
-            total_amount = Decimal(str(result.column_descriptions[0]['type'].__name__))
+            rows = result.all()
+            total_amount = sum(Decimal(str(row.total_amount or 0)) for row in rows)
+            
             spending_by_category = []
             
-            for row in result:
+            for row in rows:
                 category = row.category
-                amount = Decimal(str(row.total_amount))
+                amount = Decimal(str(row.total_amount or 0))
                 count = row.transaction_count
                 percentage = float(amount / total_amount * 100) if total_amount > 0 else 0.0
 
@@ -99,27 +101,25 @@ class AnalyticsService:
         start_date = end_date - timedelta(days=period_days)
 
         income_result = await self.db.execute(
-            select(func.sum(TransactionAnalyticsEntity.amount))
+            select(func.sum(WalletBalanceEntity.change_amount))
             .where(
                 and_(
-                    TransactionAnalyticsEntity.user_id == user_id,
-                    TransactionAnalyticsEntity.status == 'COMPLETED',
-                    TransactionAnalyticsEntity.timestamp >= start_date,
-                    TransactionAnalyticsEntity.timestamp <= end_date,
-                    TransactionAnalyticsEntity.change_type == 'CREDIT'
+                    WalletBalanceEntity.user_id == user_id,
+                    WalletBalanceEntity.timestamp >= start_date,
+                    WalletBalanceEntity.timestamp <= end_date,
+                    WalletBalanceEntity.change_type == 'CREDIT'
                 )
             )
         )
 
         expenses_result = await self.db.execute(
-            select(func.sum(TransactionAnalyticsEntity.amount))
+            select(func.sum(WalletBalanceEntity.change_amount))
             .where(
                 and_(
-                    TransactionAnalyticsEntity.user_id == user_id,
-                    TransactionAnalyticsEntity.status == 'COMPLETED',
-                    TransactionAnalyticsEntity.timestamp >= start_date,
-                    TransactionAnalyticsEntity.timestamp <= end_date,
-                    TransactionAnalyticsEntity.change_type == 'DEBIT'
+                    WalletBalanceEntity.user_id == user_id,
+                    WalletBalanceEntity.timestamp >= start_date,
+                    WalletBalanceEntity.timestamp <= end_date,
+                    WalletBalanceEntity.change_type == 'DEBIT'
                 )
             )
         )

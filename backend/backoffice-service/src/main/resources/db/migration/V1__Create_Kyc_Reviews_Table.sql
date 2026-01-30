@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS kyc_reviews (
     full_name VARCHAR(100),
     address TEXT,
     phone_number VARCHAR(50),
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
     notes TEXT,
     reviewed_by VARCHAR(100),
     reviewed_at TIMESTAMP,

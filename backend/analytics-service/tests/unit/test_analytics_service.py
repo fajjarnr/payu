@@ -9,7 +9,12 @@ import pytest
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
-from tests.conftest import create_mock_row, mock_scalar_result, mock_query_result
+from tests.conftest import (  # noqa: E402
+    create_mock_row,
+    mock_scalar_result_fn,
+    mock_query_result,
+    mock_execute_sequence,
+)
 
 
 class TestAnalyticsService:
@@ -26,10 +31,11 @@ class TestAnalyticsService:
         analytics_service,
         mock_db_session,
         sample_user_metrics,
+        mock_scalar_result_fn,
     ):
         """Test successful retrieval of user metrics."""
         # Setup mock response using helper function
-        mock_db_session.execute.return_value = mock_scalar_result(sample_user_metrics)
+        mock_db_session.execute.return_value = mock_scalar_result_fn(sample_user_metrics)
 
         # Execute
         result = await analytics_service.get_user_metrics("user_123")
@@ -42,10 +48,10 @@ class TestAnalyticsService:
         assert result.kyc_status == "VERIFIED"
 
     @pytest.mark.asyncio
-    async def test_get_user_metrics_not_found(self, analytics_service, mock_db_session):
+    async def test_get_user_metrics_not_found(self, analytics_service, mock_db_session, mock_scalar_result_fn):
         """Test retrieval when user metrics don't exist."""
         # Setup mock to return None
-        mock_db_session.execute.return_value = mock_scalar_result(None)
+        mock_db_session.execute.return_value = mock_scalar_result_fn(None)
 
         # Execute
         result = await analytics_service.get_user_metrics("nonexistent_user")
@@ -93,7 +99,7 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_spending_trends_empty_transactions(
-        self, analytics_service, mock_db_session, mock_query_result
+        self, analytics_service, mock_db_session
     ):
         """Test spending trends when user has no transactions."""
         mock_db_session.execute.return_value = mock_query_result([])
@@ -111,13 +117,13 @@ class TestAnalyticsService:
         self,
         analytics_service,
         mock_db_session,
-        mock_scalar_result,
+        mock_scalar_result_fn,
         mock_execute_sequence,
     ):
         """Test cash flow analysis calculation."""
         # Setup results for income and expenses
-        income_result = mock_scalar_result(Decimal("10000000.00"))
-        expenses_result = mock_scalar_result(Decimal("7000000.00"))
+        income_result = mock_scalar_result_fn(Decimal("10000000.00"))
+        expenses_result = mock_scalar_result_fn(Decimal("7000000.00"))
 
         # Configure execute to return different results in sequence
         mock_execute_sequence(mock_db_session, [income_result, expenses_result])
@@ -143,12 +149,12 @@ class TestAnalyticsService:
         self,
         analytics_service,
         mock_db_session,
-        mock_scalar_result,
+        mock_scalar_result_fn,
         mock_execute_sequence,
     ):
         """Test cash flow analysis with no income."""
-        income_result = mock_scalar_result(None)
-        expenses_result = mock_scalar_result(Decimal("5000000.00"))
+        income_result = mock_scalar_result_fn(None)
+        expenses_result = mock_scalar_result_fn(Decimal("5000000.00"))
 
         mock_execute_sequence(mock_db_session, [income_result, expenses_result])
 
@@ -198,13 +204,13 @@ class TestAnalyticsService:
         self,
         analytics_service,
         mock_db_session,
-        mock_scalar_result,
+        mock_scalar_result_fn,
         mock_execute_sequence,
     ):
         """Test month-over-month change calculation with previous period data."""
         # Setup mock responses
-        current_result = mock_scalar_result(Decimal("6000000.00"))
-        previous_result = mock_scalar_result(Decimal("5000000.00"))
+        current_result = mock_scalar_result_fn(Decimal("6000000.00"))
+        previous_result = mock_scalar_result_fn(Decimal("5000000.00"))
 
         mock_execute_sequence(mock_db_session, [current_result, previous_result])
 
@@ -219,12 +225,12 @@ class TestAnalyticsService:
         self,
         analytics_service,
         mock_db_session,
-        mock_scalar_result,
+        mock_scalar_result_fn,
         mock_execute_sequence,
     ):
         """Test month-over-month change when no previous period data exists."""
-        current_result = mock_scalar_result(Decimal("5000000.00"))
-        previous_result = mock_scalar_result(None)
+        current_result = mock_scalar_result_fn(Decimal("5000000.00"))
+        previous_result = mock_scalar_result_fn(None)
 
         mock_execute_sequence(mock_db_session, [current_result, previous_result])
 
@@ -238,12 +244,12 @@ class TestAnalyticsService:
         self,
         analytics_service,
         mock_db_session,
-        mock_scalar_result,
+        mock_scalar_result_fn,
         mock_execute_sequence,
     ):
         """Test month-over-month change when previous period is zero."""
-        current_result = mock_scalar_result(Decimal("5000000.00"))
-        previous_result = mock_scalar_result(Decimal("0"))
+        current_result = mock_scalar_result_fn(Decimal("5000000.00"))
+        previous_result = mock_scalar_result_fn(Decimal("0"))
 
         mock_execute_sequence(mock_db_session, [current_result, previous_result])
 
@@ -253,7 +259,7 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_top_merchants(
-        self, analytics_service, mock_db_session, mock_query_result
+        self, analytics_service, mock_db_session
     ):
         """Test retrieval of top merchants by spending."""
         # Mock merchant data using helper
@@ -285,7 +291,7 @@ class TestAnalyticsService:
 
     @pytest.mark.asyncio
     async def test_get_top_merchants_no_data(
-        self, analytics_service, mock_db_session, mock_query_result
+        self, analytics_service, mock_db_session
     ):
         """Test top merchants when no merchant data exists."""
         mock_db_session.execute.return_value = mock_query_result([])

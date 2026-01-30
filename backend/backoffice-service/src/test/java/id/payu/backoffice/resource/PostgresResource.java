@@ -7,13 +7,24 @@ import java.util.Map;
 
 public class PostgresResource implements QuarkusTestResourceLifecycleManager {
 
-    static PostgreSQLContainer<?> db = new PostgreSQLContainer<>("postgres:15-alpine")
+    private static final String DOCKER_ENABLED_PROPERTY = "docker.enabled";
+    static PostgreSQLContainer<?> db;
+
+    @Override
+    public Map<String, String> start() {
+        // Skip container startup if Docker is not explicitly enabled
+        if (!isDockerEnabled()) {
+            throw new IllegalStateException(
+                "Docker is not enabled. This test requires Docker.\n" +
+                "To run tests with Docker, use: mvn test -Ddocker.enabled=true"
+            );
+        }
+
+        db = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("payu_backoffice")
             .withUsername("payu")
             .withPassword("payu123");
 
-    @Override
-    public Map<String, String> start() {
         db.start();
         return Map.of(
                 "quarkus.datasource.jdbc.url", db.getJdbcUrl(),
@@ -24,6 +35,15 @@ public class PostgresResource implements QuarkusTestResourceLifecycleManager {
 
     @Override
     public void stop() {
-        db.stop();
+        if (db != null && db.isRunning()) {
+            db.stop();
+        }
+    }
+
+    /**
+     * Check if Docker is enabled via system property.
+     */
+    private boolean isDockerEnabled() {
+        return "true".equals(System.getProperty(DOCKER_ENABLED_PROPERTY));
     }
 }

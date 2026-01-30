@@ -95,9 +95,20 @@ def sample_cash_flow_response():
 @pytest.fixture
 def sample_robo_advisory_request():
     """Create sample robo advisory request."""
+    from app.models.schemas import RiskAssessmentQuestions, InvestmentTimeHorizon
+
     return GetRoboAdvisoryRequest(
         user_id="user_123",
-        risk_questions=[3, 4, 3, 4, 3],
+        risk_questions=RiskAssessmentQuestions(
+            age=30,
+            monthly_income=10000000.0,
+            monthly_expenses=5000000.0,
+            total_savings=50000000.0,
+            investment_experience=3,
+            risk_tolerance="medium",
+            investment_goal="wealth_growth",
+            time_horizon=InvestmentTimeHorizon.MEDIUM_TERM,
+        ),
         monthly_investment_amount=2000000.0,
     )
 
@@ -331,14 +342,14 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_calculate_fraud_score_success(self, sample_fraud_score_request):
         """Test successful fraud score calculation."""
-        from app.models.schemas import FraudDetectionResult, FraudScore, RiskLevel
+        from app.models.schemas import FraudDetectionResult, FraudScore, FraudRiskLevel
 
         mock_result = FraudDetectionResult(
             fraud_score=FraudScore(
                 transaction_id="txn_12345",
                 user_id="user_67890",
                 risk_score=25,
-                risk_level=RiskLevel.LOW,
+                risk_level=FraudRiskLevel.LOW,
                 risk_factors={},
                 is_suspicious=False,
                 recommended_action="ALLOW",
@@ -380,24 +391,24 @@ class TestAnalyticsAPIEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_transaction_fraud_score_found(
-        self, mock_db_session, sample_fraud_score_entity, mock_scalar_result
+        self, mock_db_session, sample_fraud_score_entity, mock_scalar_result_fn
     ):
         """Test retrieving existing fraud score for transaction."""
-        mock_db_session.execute.return_value = mock_scalar_result(
+        mock_db_session.execute.return_value = mock_scalar_result_fn(
             sample_fraud_score_entity
         )
 
         result = await get_transaction_fraud_score("txn_12345", mock_db_session)
 
         assert result is not None
-        assert result.fraud_score["transaction_id"] == "txn_12345"
+        assert result.fraud_score.transaction_id == "txn_12345"
 
     @pytest.mark.asyncio
     async def test_get_transaction_fraud_score_not_found(
-        self, mock_db_session, mock_scalar_result
+        self, mock_db_session, mock_scalar_result_fn
     ):
         """Test retrieving fraud score when transaction not found."""
-        mock_db_session.execute.return_value = mock_scalar_result(None)
+        mock_db_session.execute.return_value = mock_scalar_result_fn(None)
 
         from fastapi import HTTPException
 
@@ -422,7 +433,7 @@ class TestAnalyticsAPIEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_user_high_risk_transactions_success(
-        self, mock_db_session, sample_fraud_score_entity, mock_scalars_result
+        self, mock_db_session, sample_fraud_score_entity, mock_scalars_result_fn
     ):
         """Test retrieving high-risk transactions for user."""
         from datetime import datetime, timedelta
@@ -446,7 +457,7 @@ class TestAnalyticsAPIEndpoints:
             for i in range(5)
         ]
 
-        mock_db_session.execute.return_value = mock_scalars_result(mock_entities)
+        mock_db_session.execute.return_value = mock_scalars_result_fn(mock_entities)
 
         result = await get_user_high_risk_transactions("user_123", mock_db_session)
 
@@ -456,10 +467,10 @@ class TestAnalyticsAPIEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_user_high_risk_transactions_empty(
-        self, mock_db_session, mock_scalars_result
+        self, mock_db_session, mock_scalars_result_fn
     ):
         """Test retrieving high-risk transactions when none exist."""
-        mock_db_session.execute.return_value = mock_scalars_result([])
+        mock_db_session.execute.return_value = mock_scalars_result_fn([])
 
         result = await get_user_high_risk_transactions("user_123", mock_db_session)
 
@@ -546,10 +557,24 @@ class TestAnalyticsAPIValidation:
     @pytest.mark.asyncio
     async def test_robo_advisory_various_risk_profiles(self):
         """Test robo advisory with various risk profiles."""
+        from app.models.schemas import RiskAssessmentQuestions, InvestmentTimeHorizon
+
         risk_profiles = [
-            [1, 1, 1, 1, 1],  # Conservative
-            [3, 3, 3, 3, 3],  # Moderate
-            [5, 5, 5, 5, 5],  # Aggressive
+            RiskAssessmentQuestions(
+                age=25, monthly_income=5000000.0, monthly_expenses=3000000.0,
+                total_savings=10000000.0, investment_experience=1, risk_tolerance="low",
+                investment_goal="retirement", time_horizon=InvestmentTimeHorizon.LONG_TERM
+            ),  # Conservative
+            RiskAssessmentQuestions(
+                age=35, monthly_income=15000000.0, monthly_expenses=8000000.0,
+                total_savings=50000000.0, investment_experience=5, risk_tolerance="medium",
+                investment_goal="wealth_growth", time_horizon=InvestmentTimeHorizon.MEDIUM_TERM
+            ),  # Moderate
+            RiskAssessmentQuestions(
+                age=45, monthly_income=30000000.0, monthly_expenses=15000000.0,
+                total_savings=200000000.0, investment_experience=10, risk_tolerance="high",
+                investment_goal="emergency_fund", time_horizon=InvestmentTimeHorizon.SHORT_TERM
+            ),  # Aggressive
         ]
 
         with patch("app.api.v1.analytics.RoboAdvisoryEngine") as mock_engine_class:
@@ -577,14 +602,14 @@ class TestAnalyticsAPIValidation:
         transaction_types = ["TRANSFER", "QRIS", "PAYMENT", "WITHDRAWAL"]
 
         with patch("app.api.v1.analytics.FraudDetectionEngine") as mock_engine_class:
-            from app.models.schemas import FraudDetectionResult, FraudScore, RiskLevel
+            from app.models.schemas import FraudDetectionResult, FraudScore, FraudRiskLevel
 
             mock_result = FraudDetectionResult(
                 fraud_score=FraudScore(
                     transaction_id="txn_123",
                     user_id="user_123",
                     risk_score=20,
-                    risk_level=RiskLevel.LOW,
+                    risk_level=FraudRiskLevel.LOW,
                     risk_factors={},
                     is_suspicious=False,
                     recommended_action="ALLOW",

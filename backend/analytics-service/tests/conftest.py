@@ -41,8 +41,14 @@ def mock_query_result(rows: list) -> MagicMock:
 def mock_scalars_result(values: list) -> AsyncMock:
     """Create a mock result for scalars() queries"""
     result = AsyncMock()
-    result.all = AsyncMock(return_value=values)
-    result.first = AsyncMock(return_value=values[0] if values else None)
+    # Create a mock scalars() result that has all() and first() methods
+    scalars_obj = MagicMock()
+    scalars_obj.all = MagicMock(return_value=values)
+    scalars_obj.first = MagicMock(return_value=values[0] if values else None)
+    result.scalars = MagicMock(return_value=scalars_obj)
+    # Also set all() and first() directly on result for backward compatibility
+    result.all = MagicMock(return_value=values)
+    result.first = MagicMock(return_value=values[0] if values else None)
     return result
 
 
@@ -101,3 +107,46 @@ def sample_user_metrics():
         account_age_days=180,
         kyc_status="VERIFIED",
     )
+
+
+@pytest.fixture
+def sample_fraud_score_entity():
+    """Create sample fraud score entity for testing"""
+    from app.database import FraudScoreEntity
+
+    return FraudScoreEntity(
+        score_id="score_12345",
+        transaction_id="txn_12345",
+        user_id="user_67890",
+        risk_score=25.5,
+        risk_level="LOW",
+        risk_factors={"amount": 10.0, "velocity": 5.0, "behavioral": 10.5},
+        is_suspicious=False,
+        recommended_action="ALLOW",
+        is_blocked=False,
+        requires_review=False,
+        rule_triggers=[],
+        scored_at=datetime.utcnow(),
+    )
+
+
+# Additional fixtures for tests that need helper functions as parameters
+@pytest.fixture
+def mock_scalars_result_fn():
+    """Fixture providing the mock_scalars_result helper function for tests"""
+    return mock_scalars_result
+
+
+@pytest.fixture
+def mock_scalar_result_fn():
+    """Fixture providing the mock_scalar_result helper function for tests"""
+    return mock_scalar_result
+
+
+@pytest.fixture
+def mock_execute_sequence():
+    """Helper to configure mock execute to return different results in sequence"""
+    def _setup_execute_sequence(mock_session, results: list):
+        """Setup execute to return different results on each call"""
+        mock_session.execute.side_effect = results
+    return _setup_execute_sequence

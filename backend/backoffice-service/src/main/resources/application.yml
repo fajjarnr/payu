@@ -16,13 +16,12 @@ quarkus:
         - service.version=1.0.0
   datasource:
     db-kind: postgresql
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    username: ${DB_USER:payu}
+    password: ${DB_PASSWORD:payu123}
     jdbc:
-      url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payu_backoffice}
   hibernate-orm:
-    packages:
-      - id.payu.backoffice.domain
+    packages: id.payu.backoffice.domain
     database:
       generation: none
     physical-naming-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
@@ -35,10 +34,23 @@ quarkus:
     category:
       "id.payu.backoffice":
         level: INFO
+  test:
+    disabled-profiles:
+      - docker
+
 "%test":
   quarkus:
     datasource:
+      db-kind: postgresql
       jdbc:
-        url:
+        url: jdbc:postgresql://localhost:5432/backoffice_test
+      username: test
+      password: test
+    hibernate-orm:
+      packages: id.payu.backoffice.domain
+      database:
+        generation: none
+      sql-load-script: no-file
     flyway:
       migrate-at-start: true
+      baseline-on-migrate: true

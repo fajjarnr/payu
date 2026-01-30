@@ -21,6 +21,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -309,13 +310,13 @@ class PromotionIntegrationTest {
                 .body("completedAt", notNullValue());
 
         // 3. Verify referrer reward was granted
-        var referrerRewards = Reward.list("accountId", TEST_REFERRER_ID);
+        List<Reward> referrerRewards = Reward.list("accountId", TEST_REFERRER_ID);
         Assertions.assertTrue(referrerRewards.stream()
             .anyMatch(r -> r.type == Reward.RewardType.REFERRAL_BONUS
                 && r.amount.compareTo(new BigDecimal("50000")) == 0));
 
         // 4. Verify referee reward was granted
-        var refereeRewards = Reward.list("accountId", TEST_REFEREE_ID);
+        List<Reward> refereeRewards = Reward.list("accountId", TEST_REFEREE_ID);
         Assertions.assertTrue(refereeRewards.stream()
             .anyMatch(r -> r.type == Reward.RewardType.REFERRAL_BONUS
                 && r.amount.compareTo(new BigDecimal("25000")) == 0));
@@ -365,13 +366,13 @@ class PromotionIntegrationTest {
                 .body("status", equalTo("COMPLETED"));
 
         // Verify points were awarded to referrer
-        var referrerPoints = LoyaltyPoints.list("accountId", TEST_REFERRER_ID + "-points");
+        List<LoyaltyPoints> referrerPoints = LoyaltyPoints.list("accountId", TEST_REFERRER_ID + "-points");
         Assertions.assertTrue(referrerPoints.stream()
             .anyMatch(p -> p.transactionType == LoyaltyPoints.TransactionType.REFERRAL_BONUS
                 && p.points == 100));
 
         // Verify points were awarded to referee
-        var refereePoints = LoyaltyPoints.list("accountId", TEST_REFEREE_ID + "-points");
+        List<LoyaltyPoints> refereePoints = LoyaltyPoints.list("accountId", TEST_REFEREE_ID + "-points");
         Assertions.assertTrue(refereePoints.stream()
             .anyMatch(p -> p.transactionType == LoyaltyPoints.TransactionType.REFERRAL_BONUS
                 && p.points == 50));

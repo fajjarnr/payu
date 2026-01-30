@@ -21,12 +21,21 @@ quarkus:
       url: jdbc:postgresql://localhost:5432/partnerdb
     health: true
     metrics: true
+    # Configure datasource for Kafka checkpointing "database" persistence unit
+    "database":
+      db-kind: postgresql
+      username: postgres
+      password: postgres # pragma: allowlist secret
+      jdbc:
+        url: jdbc:postgresql://localhost:5432/partnerdb_checkpoint
   hibernate-orm:
     database:
       generation: validate
       # Explicitly map entity packages to avoid persistence unit issues
       # Only include our entities (exclude Kafka checkpoint entities)
       packages: "id.payu.partner.domain"
+    # Exclude Kafka checkpoint entities from our persistence unit
+    exclude-packages: "io.quarkus.smallrye.reactivemessaging.kafka"
     log:
       sql: false
   kafka:
@@ -68,28 +77,26 @@ quarkus:
       password:
       health: false
       metrics: false
-    hibernate-orm:
-      database:
-        generation: drop-and-create
-        dialect: org.hibernate.dialect.H2Dialect
-      packages: "id.payu.partner.domain"
-      log:
-        sql: false
-    # Configure datasource for Kafka checkpointing "database" persistence unit
-    datasource:
+      # Configure datasource for Kafka checkpointing "database" persistence unit
       "database":
         db-kind: h2
         jdbc:
           url: jdbc:h2:mem:testdb-checkpoint
         username: sa
         password:
-    # Completely disable SmallRye Reactive Messaging and Kafka checkpointing
+    hibernate-orm:
+      database:
+        generation: drop-and-create
+        dialect: org.hibernate.dialect.H2Dialect
+      packages: "id.payu.partner.domain"
+      exclude-packages: "io.quarkus.smallrye.reactivemessaging.kafka"
+      log:
+        sql: false
+    # Disable Kafka for unit tests
     kafka:
       enabled: false
       devservices:
         enabled: false
-    messaging:
-      enabled: false
     smallrye:
       messaging:
         health:
@@ -97,11 +104,12 @@ quarkus:
       kafka:
         checkpoint:
           enabled: false
-          state-store: none
-    # Disable reactive messaging
+    # Reactive Messaging: Override outgoing channels with In-Memory connector
     mp:
       messaging:
-        incoming:
-          payment-events: not-used
         outgoing:
-          payment-events: not-used
+          payment-events:
+            connector: smallrye-in-memory
+    # Disable OpenTelemetry in tests
+    opentelemetry:
+      enabled: false
