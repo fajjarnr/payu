@@ -6,6 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -15,8 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,15 +24,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.support.TestPropertySourceUtils;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -43,21 +42,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Kafka Integration Tests for Wallet Service Event Publishing.
- * 
+ *
  * Tests verify that wallet operations properly publish events to Kafka topics:
  * - wallet.created
  * - wallet.balance.changed
  * - wallet.balance.reserved
  * - wallet.reservation.committed
  * - wallet.reservation.released
- * 
+ *
+ * Uses Testcontainers to spin up PostgreSQL and Kafka Docker containers for testing.
+ *
  * @author PayU Backend Team
  */
 @SpringBootTest(
     classes = WalletServiceApplication.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-@ContextConfiguration(initializers = WalletKafkaIntegrationTest.ContainerInitializer.class)
 @Testcontainers
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -65,6 +65,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class WalletKafkaIntegrationTest {
 
     @Container
+    @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("wallet_test")
             .withUsername("test")
@@ -83,23 +84,23 @@ public class WalletKafkaIntegrationTest {
 
     private Consumer<String, Map<String, Object>> consumer;
 
-    static class ContainerInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        @Override
-        public void initialize(ConfigurableApplicationContext ctx) {
-            postgres.start();
-            kafka.start();
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.producer.key-serializer", () -> "org.apache.kafka.common.serialization.StringSerializer");
+        registry.add("spring.kafka.producer.value-serializer", () -> "org.springframework.kafka.support.serializer.JsonSerializer");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+        registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> "http://localhost:8080/realms/payu");
+    }
 
-            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(ctx,
-                    "spring.datasource.url=" + postgres.getJdbcUrl(),
-                    "spring.datasource.username=" + postgres.getUsername(),
-                    "spring.datasource.password=" + postgres.getPassword(),
-                    "spring.kafka.bootstrap-servers=" + kafka.getBootstrapServers(),
-                    "spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer",
-                    "spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer",
-                    "spring.jpa.hibernate.ddl-auto=create-drop",
-                    "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8080/realms/payu"
-            );
-        }
+    @BeforeAll
+    static void beforeAll() {
+        // Ensure containers are started before running tests
+        postgres.start();
+        kafka.start();
     }
 
     @BeforeEach

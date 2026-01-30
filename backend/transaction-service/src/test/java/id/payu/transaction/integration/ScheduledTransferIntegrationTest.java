@@ -6,14 +6,20 @@ import id.payu.transaction.adapter.persistence.ScheduledTransferPersistenceAdapt
 import id.payu.transaction.adapter.persistence.repository.ScheduledTransferJpaRepository;
 import id.payu.transaction.application.service.ScheduledTransferService;
 import id.payu.transaction.dto.CreateScheduledTransferRequest;
-import id.payu.transaction.dto.InitiateTransferRequest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -22,11 +28,18 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@Testcontainers
+@Tag("integration")
+@DisplayName("Scheduled Transfer Integration Test")
 @Transactional
-@Disabled("Integration tests require Docker/Testcontainers. Enable with -Ddocker.available=true when Docker daemon is running.")
 class ScheduledTransferIntegrationTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("payu_transactions")
+            .withUsername("test")
+            .withPassword("test");
 
     @Autowired
     private ScheduledTransferService scheduledTransferService;
@@ -39,6 +52,29 @@ class ScheduledTransferIntegrationTest {
 
     private CreateScheduledTransferRequest request;
     private UUID accountId;
+
+    @BeforeAll
+    static void startContainer() {
+        postgres.start();
+    }
+
+    @AfterAll
+    static void stopContainer() {
+        if (postgres != null && postgres.isRunning()) {
+            postgres.stop();
+        }
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        // Configure datasource properties for cache-starter's DataSourceConfiguration
+        registry.add("spring.datasource.primary.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.primary.username", postgres::getUsername);
+        registry.add("spring.datasource.primary.password", postgres::getPassword);
+        registry.add("spring.datasource.primary.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+    }
 
     @BeforeEach
     void setUp() {

@@ -1,4 +1,11 @@
+# Test configuration for wallet-service
+# This configuration is used for unit tests (H2 in-memory database)
+# Integration tests override these with Testcontainers (PostgreSQL + Kafka)
 spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  # H2 Database for unit tests (fast)
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
@@ -8,23 +15,42 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+    show-sql: false
     properties:
       hibernate:
+        format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
 
+  # Disable Flyway for tests (using ddl-auto)
   flyway:
     enabled: false
 
+  # Kafka configuration (overridden by integration tests)
   kafka:
     bootstrap-servers: localhost:9092
+    consumer:
+      auto-startup: false
 
+  # OAuth2 Resource Server (JWT issuer URI)
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/payu
+          issuer-uri: http://localhost:8080/realms/payu
 
+# Actuator endpoint configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  health:
+    defaults:
+      enabled: true
+
+# Logging configuration
 logging:
   level:
     root: WARN
     id.payu.wallet: DEBUG
+    org.springframework.security: WARN

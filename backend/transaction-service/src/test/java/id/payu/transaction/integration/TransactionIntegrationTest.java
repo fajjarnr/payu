@@ -10,17 +10,15 @@ import id.payu.transaction.domain.port.out.QrisServicePort;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.dto.InitiateTransferRequest;
-import id.payu.transaction.dto.InitiateTransferResponse;
 import id.payu.transaction.dto.ReserveBalanceResponse;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -31,19 +29,22 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Testcontainers
-@Disabled("Integration tests require Docker/Testcontainers. Enable with -Ddocker.available=true when Docker daemon is running.")
+@Tag("integration")
 @DisplayName("Transaction Integration Test")
 class TransactionIntegrationTest {
 
     @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("payu_transactions")
+            .withUsername("test")
+            .withPassword("test");
 
     @Autowired
     private TransactionService transactionService;
@@ -65,7 +66,9 @@ class TransactionIntegrationTest {
 
     @AfterAll
     static void stopContainer() {
-        postgres.stop();
+        if (postgres != null && postgres.isRunning()) {
+            postgres.stop();
+        }
     }
 
     // ==================== CQRS Pattern Tests ====================
@@ -87,7 +90,7 @@ class TransactionIntegrationTest {
         InitiateTransferCommand command = new InitiateTransferCommand(
                 senderAccountId,
                 "1234567890",
-                Money.idr("100000"),
+                Money.of(new BigDecimal("100000"), "IDR"),
                 "CQRS test transfer",
                 InitiateTransferRequest.TransactionType.BIFAST_TRANSFER,
                 null,
@@ -112,9 +115,9 @@ class TransactionIntegrationTest {
     @DisplayName("Money Value Object should enforce equality correctly")
     void moneyValueObjectShouldEnforceEqualityCorrectly() {
         // Given
-        Money money1 = Money.idr("100000");
-        Money money2 = Money.idr("100000");
-        Money money3 = Money.idr("200000");
+        Money money1 = Money.of(new BigDecimal("100000"), "IDR");
+        Money money2 = Money.of(new BigDecimal("100000"), "IDR");
+        Money money3 = Money.of(new BigDecimal("200000"), "IDR");
 
         // When & Then
         assertThat(money1).isEqualTo(money2);
@@ -126,11 +129,11 @@ class TransactionIntegrationTest {
     @DisplayName("Money should perform arithmetic operations correctly")
     void moneyShouldPerformArithmeticOperationsCorrectly() {
         // Given
-        Money baseAmount = Money.idr("100000");
+        Money baseAmount = Money.of(new BigDecimal("100000"), "IDR");
 
         // When
-        Money added = baseAmount.add(Money.idr("50000"));
-        Money subtracted = baseAmount.subtract(Money.idr("30000"));
+        Money added = baseAmount.add(Money.of(new BigDecimal("50000"), "IDR"));
+        Money subtracted = baseAmount.subtract(Money.of(new BigDecimal("30000"), "IDR"));
         Money multiplied = baseAmount.multiply(2);
 
         // Then
@@ -143,10 +146,10 @@ class TransactionIntegrationTest {
     @DisplayName("Money should throw exception for negative operations")
     void moneyShouldThrowExceptionForNegativeOperations() {
         // Given
-        Money money = Money.idr("100000");
+        Money money = Money.of(new BigDecimal("100000"), "IDR");
 
         // When & Then
-        assertThatThrownBy(() -> money.subtract(Money.idr("200000")))
+        assertThatThrownBy(() -> money.subtract(Money.of(new BigDecimal("200000"), "IDR")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("cannot be negative");
 
@@ -159,8 +162,8 @@ class TransactionIntegrationTest {
     @DisplayName("Money should validate currency in operations")
     void moneyShouldValidateCurrencyInOperations() {
         // Given
-        Money idrMoney = Money.idr("100000");
-        Money usdMoney = Money.usd("50");
+        Money idrMoney = Money.of(new BigDecimal("100000"), "IDR");
+        Money usdMoney = Money.of(new BigDecimal("50"), "USD");
 
         // When & Then
         assertThatThrownBy(() -> idrMoney.add(usdMoney))
@@ -172,8 +175,8 @@ class TransactionIntegrationTest {
     @DisplayName("Money should provide formatted display")
     void moneyShouldProvideFormattedDisplay() {
         // Given
-        Money idr = Money.idr("1000000");
-        Money usd = Money.usd("100");
+        Money idr = Money.of(new BigDecimal("1000000"), "IDR");
+        Money usd = Money.of(new BigDecimal("100"), "USD");
 
         // When
         String idrFormatted = idr.format();
@@ -211,23 +214,26 @@ class TransactionIntegrationTest {
         request.setType(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER);
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(request, userId.toString());
+        InitiateTransferCommandResult response = transactionService.initiateTransfer(request, userId.toString());
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getTransactionId()).isNotNull();
+        assertThat(response.transactionId()).isNotNull();
 
         // Verify fetching from DB
-        Transaction saved = transactionService.getTransaction(response.getTransactionId(), userId.toString());
+        Transaction saved = transactionService.getTransaction(response.transactionId(), userId.toString());
         assertThat(saved.getAmount()).isNotNull();
         assertThat(saved.getStatus()).isEqualTo(Transaction.TransactionStatus.VALIDATING);
     }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        // Configure datasource properties for cache-starter's DataSourceConfiguration
+        registry.add("spring.datasource.primary.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.primary.username", postgres::getUsername);
+        registry.add("spring.datasource.primary.password", postgres::getPassword);
+        registry.add("spring.datasource.primary.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
     }
 }

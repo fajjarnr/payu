@@ -413,14 +413,14 @@ debts:
 | **AI** | `@ai-engineer` | Intelligent Systems, FastAPI, GenAI |
 | **Security** | `@cybersecurity-architect` | Zero Trust, Auth, Compliance |
 | **Data** | `@data-architect` | PostgreSQL, Flyway, CQRS |
-| **QA** | `@qa-automation-engineer` | TDD, E2E, Financial Recon |
+| **QA** | `@quality-engineer` | TDD, E2E, Financial Recon |
 | **Design** | `@product-designer` | Premium UI, Atomic Design |
 | **Frontend** | `@frontend-architect` | Next.js 15+, React, Web Perf |
 | **Mobile** | `@mobile-architect` | React Native, Expo, Security |
 | **Platform** | `@platform-engineer` | Tekton/ArgoCD, OpenShift |
 | **SRE** | `@sre` | SLOs, Golden Signals, Observability |
 | **DX** | `@dx-engineer` | Git, Conventional Commits, Tooling |
-| **Docs** | `@technical-writer` | Documentation, C4, ADRs |
+| **Docs** | `@information-architect` | Documentation, C4, ADRs |
 
 ---
 

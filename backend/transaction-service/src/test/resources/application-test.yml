@@ -1,0 +1,65 @@
+# Test configuration for transaction-service integration tests
+# Uses Testcontainers for PostgreSQL and Kafka
+
+spring:
+  application:
+    name: transaction-service
+  datasource:
+    primary:
+      url: ${TEST_DATABASE_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+      username: ${TEST_DATABASE_USERNAME:sa}
+      password: ${TEST_DATABASE_PASSWORD:}
+      driver-class-name: ${TEST_DATABASE_DRIVER:org.h2.Driver}
+    read-replica:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: ${TEST_HIBERNATE_DIALECT:org.hibernate.dialect.H2Dialect}
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: ${TEST_KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      retries: 0
+      acks: 1
+    consumer:
+      auto-offset-reset: earliest
+      group-id: transaction-service-test
+
+# Disable external service calls for tests
+services:
+  wallet:
+    url: http://localhost:8084
+  bifast:
+    url: http://localhost:9000
+  qris:
+    url: http://localhost:9001
+
+# Disable security for integration tests
+spring.security.oauth2.resourceserver.jwt:
+  issuer-uri: http://localhost:8180/realms/payu
+  jwk-set-uri: http://localhost:8180/realms/payu/protocol/openid-connect/certs
+
+# Disable caching
+payu:
+  cache:
+    enabled: false
+
+# Disable sharding for tests
+sharding:
+  enabled: false
+
+# Disable scheduling
+scheduling:
+  enabled: false
+
+# Logging
+logging:
+  level:
+    id.payu.transaction: DEBUG
+    org.springframework.test: INFO
+    org.testcontainers: INFO

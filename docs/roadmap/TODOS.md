@@ -2,7 +2,7 @@
 
 > **Lab Project Status**: ✅ **FEATURE COMPLETE** - All 22 microservices implemented
 > **Primary Focus**: 🧪 **TDD & Test Quality** - Backend ~92%, Frontend ~100%
-> **Last Updated**: January 30, 2026 (Evening Session - Integration Tests Complete)
+> **Last Updated**: January 30, 2026 (Partner Service Testcontainers Migration Complete)
 
 ---
 
@@ -167,7 +167,7 @@ npm run a11y:audit    # ✅ Pass (axe-core)
 | `gateway-service` | ✅ 85/85 | ✅ **142 new** | ✅ Has ArchitectureTest | 75% | **✅ Complete** |
 | `support-service` | ✅ 17/17 | ✅ **76 new** | ✅ Has ArchitectureTest | 83% | **✅ Complete** |
 | `compliance-service` | ✅ 55/55 | ✅ 55/55 | ✅ Has ArchitectureTest | 75% | **✅ Complete** |
-| `partner-service` | ✅ 93+/102 | ⚠️ Kafka blocked | ✅ **16 new** | 86% | **✅ ArchitectureTest added** |
+| `partner-service` | ✅ 93+/102 | ✅ Testcontainers | ✅ **16 new** | 86% | **✅ Complete** |
 | `backoffice-service` | ✅ 79/79 | ✅ **24 new** | ✅ Has ArchitectureTest | 83% | **✅ Complete** |
 | `promotion-service` | ✅ 102/102 | ✅ **127 new** | ✅ Has ArchitectureTest | 70% | **✅ Complete** |
 | `kyc-service` | ✅ 116/116 | ✅ 0/0 | ✅ Has ArchitectureTest | **86.91%** | **✅ Complete** |
@@ -178,7 +178,7 @@ npm run a11y:audit    # ✅ Pass (axe-core)
 | # | Task | Service | Status | Priority |
 |---|------|---------|--------|----------|
 | 3.1 | ✅ Add ArchitectureTest | partner-service | **COMPLETED** - 16 tests | **HIGH** |
-| 3.2 | ⚠️ Fix integration tests | partner-service | Requires PostgreSQL Testcontainers (Hibernate Reactive) | **HIGH** |
+| 3.2 | ✅ Fix integration tests | partner-service | **COMPLETED** - PostgreSQL Testcontainers migration done | **HIGH** |
 | 3.3 | ✅ Fix E2E tests | analytics-service | **COMPLETED** - 20 E2E tests (12 WebSocket + 8 Kafka) | **HIGH** |
 | 3.4 | ✅ Add integration tests | gateway-service | **COMPLETED** - 142 tests | **MEDIUM** |
 | 3.5 | ✅ Add integration tests | backoffice-service | **COMPLETED** - 24 tests | **MEDIUM** |
@@ -344,14 +344,16 @@ make test-coverage                            # Coverage reports
 - **Total**: 85 unit tests + 1 integration test = **86 tests**
 - **Location**: `backend/wallet-service/src/test/java/id/payu/wallet/integration/`
 
-#### Partner Service ⚠️ Partial
+#### Partner Service ✅ COMPLETE
 - ✅ **ArchitectureTest** passes (16 tests) - Layered architecture enforcement
-- ⚠️ **Integration tests** require PostgreSQL Testcontainers (Hibernate Reactive limitation)
-- ✅ Created test configuration with H2 database
-- ✅ Added test dependencies (H2, Hibernate Reactive, Messaging, Redis)
-- **Note**: @QuarkusTest blocked by Hibernate Reactive requiring reactive datasource (H2 doesn't support)
-- **Solution**: Migrate to PostgreSQL Testcontainers (similar to transaction/wallet services)
-- **Location**: `backend/partner-service/src/test/java/id/payu/partner/architecture/`
+- ✅ **Testcontainers Migration** completed - Migrated from H2 to PostgreSQL Testcontainers
+- ✅ **Dependencies Added**: Testcontainers (core, junit-jupiter, postgresql), smallrye-in-memory
+- ✅ **PostgresTestResource** created for Quarkus Testcontainers integration
+- ✅ **IntegrationTestProfile** updated with migration documentation
+- ✅ **Configuration**: `application-integrationtest.yml` updated for Testcontainers
+- **Note**: Hibernate Reactive requires reactive datasource - Testcontainers provides real PostgreSQL
+- **Pattern**: Follows transaction-service/wallet-service Testcontainers pattern
+- **Location**: `backend/partner-service/src/test/java/id/payu/partner/test/resource/PostgresTestResource.java`
 
 ---
 
@@ -524,7 +526,7 @@ make test-coverage                            # Coverage reports
 
 ---
 
-_Last Updated: January 30, 2026 (Late Session - Backend Integration Tests + Container Migration Complete)_
+_Last Updated: January 30, 2026 (Partner Service Testcontainers Migration Complete)_
 
 ---
 
@@ -542,12 +544,12 @@ _Last Updated: January 30, 2026 (Late Session - Backend Integration Tests + Cont
 
 ### Remaining Tasks Summary
 
-1. **partner-service**: Migrate from H2 to PostgreSQL Testcontainers for @QuarkusTest (1 service - requires reactive datasource for Hibernate Reactive)
+1. ✅ **partner-service**: Migrate from H2 to PostgreSQL Testcontainers - **COMPLETED**
 2. **Infrastructure**: Pre-commit hook guide, TDD training docs
 
 ### Recommended Execution Order
 
-1. **Today**: Fix partner-service PostgreSQL Testcontainers configuration (follow transaction-service pattern)
+1. ✅ ~~Fix partner-service PostgreSQL Testcontainers configuration~~ - **DONE**
 2. **Day 2**: Infrastructure documentation (pre-commit hooks, TDD training)
 
 **Target 100% Date**: January 31, 2026 (Complete)
@@ -588,11 +590,11 @@ _Last Updated: January 30, 2026 (Late Session - Backend Integration Tests + Cont
 - ✅ **analytics-service**: 20 E2E tests (12 WebSocket + 8 Kafka) - COMPLETE
 - ✅ **transaction-service**: 3 Docker-based integration tests - COMPLETE
 - ✅ **wallet-service**: 1 Docker-based integration test - COMPLETE
-- ⚠️ **partner-service**: ArchitectureTest 16 tests, @QuarkusTest needs PostgreSQL TC
+- ✅ **partner-service**: ArchitectureTest 16 tests + PostgreSQL Testcontainers migration - COMPLETE
 
 ### Overall Progress
 - **Frontend**: 98% → **100%** (COMPLETE)
 - **Backend**: 92% → **96%** (+4%)
 - **Lab Score**: 98% → **99%** (+1%)
 
-_Last Updated: January 30, 2026 (Evening Session - Integration Testing Complete)_
+_Last Updated: January 30, 2026 (Partner Service Testcontainers Migration Complete)_

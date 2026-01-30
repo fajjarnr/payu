@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/analytics-service/src")  # noqa: E402
-from unittest.mock import AsyncMock, MagicMock  # noqa: E402
+from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 
@@ -70,6 +70,7 @@ def mock_db_session():
     """Mock database session"""
     session = AsyncMock(spec=AsyncSession)
     session.commit = AsyncMock()
+    session.add = MagicMock()
     return session
 
 
@@ -150,3 +151,57 @@ def mock_execute_sequence():
         """Setup execute to return different results on each call"""
         mock_session.execute.side_effect = results
     return _setup_execute_sequence
+
+
+# E2E Test Fixtures
+@pytest.fixture(scope="session")
+def test_settings():
+    """Test settings with disabled Kafka and tracing for E2E tests"""
+    from app.config import Settings
+
+    original_settings = Settings._settings if hasattr(Settings, '_settings') else None
+    test_settings = Settings(
+        database_url="sqlite+aiosqlite:///:memory:",
+        kafka_bootstrap_servers="localhost:9092",
+        enable_tracing=False,
+        enable_metrics=False,
+    )
+
+    with patch("app.config.get_settings", return_value=test_settings):
+        yield test_settings
+
+    # Restore original settings
+    if original_settings:
+        Settings._settings = original_settings
+
+
+@pytest.fixture
+def mock_kafka_consumer():
+    """Mock Kafka consumer for E2E tests to avoid connection errors"""
+    with patch("app.main.KafkaConsumerService") as mock_consumer_class:
+        mock_consumer = MagicMock()
+        mock_consumer.start = AsyncMock()
+        mock_consumer.stop = AsyncMock()
+        mock_consumer_class.return_value = mock_consumer
+        yield mock_consumer
+
+
+@pytest.fixture
+def client(mock_kafka_consumer):
+    """Create a test client with mocked Kafka"""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    with TestClient(app) as c:
+        yield c
+
+
+@pytest.fixture
+def reset_manager():
+    """Reset the global connection manager"""
+    from app.websocket.connection_manager import manager
+    manager.active_connections.clear()
+    manager.user_subscriptions.clear()
+    yield manager
+    manager.active_connections.clear()
+    manager.user_subscriptions.clear()

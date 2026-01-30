@@ -411,7 +411,57 @@ The **Gateway Service** (Quarkus Native) is the entry point for all mobile and p
 ## 📜 OpenAPI & Type Synchronization
 - **Contract-First**: Use OpenAPI 3.1 to define schemas before coding.
 - **Zod Sync**: Generate Zod schemas and TypeScript interfaces from OpenAPI for Frontend/Mobile type safety.
-- **Spectral**: Lint OpenAPI files for standard compliance.
+
+---
+
+## 🛡️ Contract-First Enforcement (Spectral)
+
+To maintain high API quality, every microservice must validate its OpenAPI specification against PayU standards using **Spectral**.
+
+### 1. PayU Spectral Ruleset (.spectral.yaml)
+```yaml
+extends: ["spectral:oas", "spectral:oas3"]
+rules:
+  # Ensure standard envelope usage
+  use-standard-envelope:
+    description: All responses must follow the PayU standard envelope (success, data, error, meta).
+    severity: error
+    given: $.paths.*.*.responses[200,201].content.application/json.schema
+    then:
+      field: properties
+      function: contains
+      functionOptions:
+        fields: ["success", "data", "meta"]
+
+  # Enforce kebab-case for paths
+  path-kebab-case:
+    description: Path segments must be in kebab-case.
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/[a-z0-0-]+)+$"
+
+  # Mandatory Idempotency-Key for POST/PUT
+  mandatory-idempotency:
+    description: All mutation endpoints must require Idempotency-Key header.
+    severity: error
+    given: $.paths.*[post,put].parameters
+    then:
+      field: name
+      function: contains
+      functionOptions:
+        fields: ["Idempotency-Key"]
+```
+
+### 2. CI/CD Pipeline Enforcement (Tekton/GitHub Actions)
+```bash
+# Fail the build if OpenAPI spec doesn't match standards
+spectral lint ./docs/openapi/service-spec.yaml --ruleset .spectral.yaml --fail-severity error
+```
+
+---
 
 ---
 

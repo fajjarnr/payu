@@ -1,35 +1,64 @@
 # Integration Test Configuration for Partner Service
-# This profile requires Docker to be running with PostgreSQL and Kafka containers
 #
-# Usage: mvn test -Dtest=*IntegrationTest -Ddocker.enabled=true
+# MIGRATION NOTE: This service has been migrated from H2 to PostgreSQL Testcontainers
+# for integration tests to support Hibernate Reactive datasource requirements.
+#
+# This profile requires Docker to be running for PostgreSQL Testcontainers.
+#
+# Usage:
+#   mvn test -Ddocker.enabled=true
 #
 # Prerequisites:
 # - Docker must be running
-# - Testcontainers will automatically start PostgreSQL and Kafka containers
+# - Testcontainers will automatically start PostgreSQL container
+#
+# Configuration Approach:
+# - Datasource URLs are dynamically provided by PostgresTestResource
+# - This file provides fallback configuration and Hibernate ORM settings
 
 quarkus:
-  # Use Testcontainers for integration tests
+  # Datasource configuration (overridden by PostgresTestResource)
   datasource:
     db-kind: postgresql
-    jdbc:
-      # Testcontainers will override this URL
-      url: jdbc:postgresql://localhost:5432/testdb
-    username: test
-    password: test # pragma: allowlist secret
+    devservices:
+      enabled: false  # Disable DevServices, Testcontainers manages the database
+    # Named datasource for Kafka checkpointing (database persistence unit)
+    database:
+      db-kind: postgresql
+      devservices:
+        enabled: false
+
+  # Hibernate ORM configuration
   hibernate-orm:
+    # Default persistence unit
     database:
       generation: drop-and-create
+      dialect: org.hibernate.dialect.PostgreSQLDialect
     sql-load-script: no-file
     packages: "id.payu.partner.domain"
+    # Exclude Kafka checkpoint entities from default persistence unit
+    exclude-packages: "io.quarkus.smallrye.reactivemessaging.kafka"
+    # Named persistence unit for Kafka checkpointing (referenced as "database")
+    "database":
+      database:
+        generation: drop-and-create
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+      packages: "io.quarkus.smallrye.reactivemessaging.kafka"
+      datasource: database
+
   # Enable Kafka for integration tests
   kafka:
     enabled: true
     devservices:
-      enabled: true
+      enabled: true  # Use Kafka DevServices for integration tests
+
   messaging:
     enabled: true
+
+  # Disable OpenTelemetry in tests
   opentelemetry:
     enabled: false
+
   # Log levels
   log:
     category:

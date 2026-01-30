@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/analytics-service/src")  # noqa: E402
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch, MagicMock
 
 from app.messaging.kafka_consumer import KafkaConsumerService
 from app.models.schemas import DashboardEventType
@@ -17,10 +17,23 @@ def kafka_consumer():
 
 @pytest.fixture
 def mock_session():
-    """Mock database session"""
+    """Mock database session with proper async context manager support"""
     session = AsyncMock()
     session.commit = AsyncMock()
     session.add = Mock()
+    session.execute = AsyncMock()
+
+    # Setup scalars() chain for query results
+    mock_scalars = MagicMock()
+    mock_scalars.all = Mock(return_value=[])
+    mock_scalars.first = Mock(return_value=None)
+    session.scalars = MagicMock(return_value=mock_scalars)
+
+    # Setup scalar_one_or_none for single result queries
+    mock_result = AsyncMock()
+    mock_result.scalar_one_or_none = AsyncMock(return_value=None)
+    session.execute = AsyncMock(return_value=mock_result)
+
     return session
 
 
@@ -64,22 +77,25 @@ async def test_process_transaction_completed_message(kafka_consumer, mock_sessio
         "merchant_id": "merchant_101",
     }
 
+    # Setup mock for _update_user_metrics
     with patch.object(
         kafka_consumer, "_update_user_metrics", new_callable=AsyncMock
-    ) as mock_update_metrics, patch.object(kafka_consumer, "manager") as mock_manager:
-        mock_manager.broadcast_to_user = AsyncMock()
+    ) as mock_update_metrics:
+        # Mock the manager module's broadcast_to_user
+        with patch("app.messaging.kafka_consumer.manager") as mock_manager:
+            mock_manager.broadcast_to_user = AsyncMock()
 
-        await kafka_consumer._handle_transaction_completed(mock_session, message)
+            await kafka_consumer._handle_transaction_completed(mock_session, message)
 
-        mock_update_metrics.assert_called_once_with(
-            mock_session, "test_user_123", 5000.0
-        )
-        mock_session.add.assert_called_once()
-        mock_manager.broadcast_to_user.assert_called_once()
+            mock_update_metrics.assert_called_once_with(
+                mock_session, "test_user_123", 5000.0
+            )
+            mock_session.add.assert_called_once()
+            mock_manager.broadcast_to_user.assert_called_once()
 
-        call_args = mock_manager.broadcast_to_user.call_args
-        broadcast_msg = call_args[0][0]
-        assert broadcast_msg["event_type"] == DashboardEventType.TRANSACTION_COMPLETED
+            call_args = mock_manager.broadcast_to_user.call_args
+            broadcast_msg = call_args[0][0]
+            assert broadcast_msg["event_type"] == DashboardEventType.TRANSACTION_COMPLETED
 
 
 @pytest.mark.asyncio
@@ -94,7 +110,8 @@ async def test_process_wallet_balance_changed_message(kafka_consumer, mock_sessi
         "change_type": "CREDIT",
     }
 
-    with patch.object(kafka_consumer, "manager") as mock_manager:
+    # Mock the manager module's broadcast_to_user
+    with patch("app.messaging.kafka_consumer.manager") as mock_manager:
         mock_manager.broadcast_to_user = AsyncMock()
 
         await kafka_consumer._handle_wallet_balance_changed(mock_session, message)
@@ -113,11 +130,14 @@ async def test_process_kyc_verified_message(kafka_consumer, mock_session):
     message = {"user_id": "test_user_123"}
 
     with patch("app.messaging.kafka_consumer.select"):  # noqa: F841
-        mock_result = AsyncMock()
+        # Create a mock result where scalar_one_or_none is a Mock (not AsyncMock)
+        # since it's not an async method
+        mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute = AsyncMock(return_value=mock_result)
 
-        with patch.object(kafka_consumer, "manager") as mock_manager:
+        # Mock the manager module's broadcast_to_user
+        with patch("app.messaging.kafka_consumer.manager") as mock_manager:
             mock_manager.broadcast_to_user = AsyncMock()
 
             await kafka_consumer._handle_kyc_verified(mock_session, message)
@@ -138,11 +158,14 @@ async def test_update_user_metrics_existing_user(kafka_consumer, mock_session):
     mock_metrics.total_transactions = 10
     mock_metrics.total_amount = 100000.0
 
-    mock_result = AsyncMock()
+    # Create a mock result where scalar_one_or_none is a Mock (not AsyncMock)
+    # since it's not an async method
+    mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = mock_metrics
     mock_session.execute = AsyncMock(return_value=mock_result)
 
-    with patch.object(kafka_consumer, "manager") as mock_manager:
+    # Mock the manager module's broadcast_to_user
+    with patch("app.messaging.kafka_consumer.manager") as mock_manager:
         mock_manager.broadcast_to_user = AsyncMock()
 
         await kafka_consumer._update_user_metrics(mock_session, "test_user_123", 5000.0)
@@ -155,11 +178,14 @@ async def test_update_user_metrics_existing_user(kafka_consumer, mock_session):
 @pytest.mark.asyncio
 async def test_update_user_metrics_new_user(kafka_consumer, mock_session):
     """Test creating metrics for a new user"""
-    mock_result = AsyncMock()
+    # Create a mock result where scalar_one_or_none is a Mock (not AsyncMock)
+    # since it's not an async method
+    mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = None
     mock_session.execute = AsyncMock(return_value=mock_result)
 
-    with patch.object(kafka_consumer, "manager") as mock_manager:
+    # Mock the manager module's broadcast_to_user
+    with patch("app.messaging.kafka_consumer.manager") as mock_manager:
         mock_manager.broadcast_to_user = AsyncMock()
 
         await kafka_consumer._update_user_metrics(mock_session, "test_user_123", 5000.0)

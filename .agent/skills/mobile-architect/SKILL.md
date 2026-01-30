@@ -18,6 +18,8 @@ You are a **Lead Mobile Architect** for the **PayU Digital Banking Platform**. Y
 - **Core**: Expo SDK 50+, React Native 0.75+
 - **Navigation**: `Expo Router` (File-based, Native Tabs)
 - **Styling**: `NativeWind` (Tailwind for Native) / CSS Box Shadows
+- **Networking**: `Native fetch` (Preferred over Axios), `React Query`
+- **DOM Components**: `'use dom'` (Expo SDK 52+) for complex web-first UI
 - **Animations**: `Reanimated 3` (Native Thread/60 FPS)
 
 ---
@@ -281,6 +283,223 @@ export const useAuth = () => {
   if (!context) throw new Error('useAuth must be used within AuthProvider')
   return context
 }
+
+---
+
+## 🚀 Networking & Environment Configuration
+
+### 1. Environment Variables (EXPO_PUBLIC_)
+Expo supports environment variables with the `EXPO_PUBLIC_` prefix. These are inlined at build time.
+
+```ts
+// .env
+EXPO_PUBLIC_API_URL=https://api.payu.id/v1
+EXPO_PUBLIC_API_KEY=your_public_key
+
+// src/types/env.d.ts
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      EXPO_PUBLIC_API_URL: string;
+      EXPO_PUBLIC_API_KEY: string;
+    }
+  }
+}
+
+// src/config/env.ts
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+if (!API_URL) throw new Error("EXPO_PUBLIC_API_URL is missing");
+```
+
+> **⚠️ WARNING**: Never put secrets (private keys, DB passwords) in `EXPO_PUBLIC_` variables. They are visible in the plain-text bundle.
+
+### 2. Robust Error Handling (ApiError)
+Standardize API error parsing to handle business logic errors and network failures consistently.
+
+```typescript
+class ApiError extends Error {
+  constructor(
+    public message: string, 
+    public status: number, 
+    public code?: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+const fetchWithErrorHandling = async (url: string, options?: RequestInit) => {
+  try {
+    const response = await fetch(url, options);
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new ApiError(
+        error.message || "Request failed",
+        response.status,
+        error.code
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    // Handle network errors
+    throw new ApiError("Jaringan bermasalah", 0, "NETWORK_ERROR");
+  }
+};
+```
+
+### 3. Request Cancellation (AbortController)
+Prevent state updates on unmounted components and cancel unnecessary inflight requests.
+
+```typescript
+useEffect(() => {
+  const controller = new AbortController();
+
+  fetch(url, { signal: controller.signal })
+    .then(res => res.json())
+    .then(setData)
+    .catch(err => {
+      if (err.name !== "AbortError") setError(err);
+    });
+
+  return () => controller.abort();
+}, [url]);
+```
+
+---
+
+## 🌐 Expo DOM Components (`'use dom'`)
+
+Introduced in **Expo SDK 52**, DOM components allow rendering React DOM inside a native app via a high-performance bridge. 
+
+### 1. When to Use
+- **Complex UI**: Libraries like **D3.js**, **Three.js**, or rich-text editors (**Tiptap**).
+- **Web Migration**: Incremental porting of existing React web components.
+- **High-Fidelity Layouts**: When CSS Grid/Flexbox is mandatory for complex designs.
+
+### 2. Technical Implementation
+Mark the file with the `'use dom'` directive. Props are automatically serialized across the bridge.
+
+```tsx
+// src/components/WebViewChart.tsx
+'use dom';
+
+export default function WebViewChart({ 
+  data, 
+  onPointClick 
+}: { 
+  data: number[], 
+  onPointClick: (val: number) => Promise<void> 
+}) {
+  return (
+    <div className="flex h-64 bg-slate-900 items-end gap-1 p-4">
+      {data.map((val, i) => (
+        <button 
+          key={i}
+          style={{ height: `${val}%` }}
+          className="bg-emerald-500 flex-1 rounded-t-sm hover:bg-emerald-400"
+          onClick={() => onPointClick(val)}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+### 3. Native Actions (Calling Native from DOM)
+Pass `async` functions as props. They are treated as **Native Actions** that run on the native thread.
+
+```tsx
+// src/app/(tabs)/analytics.tsx
+import WebViewChart from '@/components/WebViewChart';
+
+export default function Analytics() {
+  const handlePointClick = async (val: number) => {
+    'use native'; // Explicitly mark native context (optional but clear)
+    Alert.alert("Data Point", `Selected value: ${val}`);
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <WebViewChart 
+        data={[20, 45, 80, 50, 90]} 
+        onPointClick={handlePointClick}
+        dom={{ scrollEnabled: false }} // WebView props
+      />
+    </View>
+  );
+}
+```
+
+### 4. Constraints
+- **Asynchronous**: All communication via props is async.
+- **Serialization**: Props must be JSON-serializable (no classes/functions except Native Actions).
+- **Render Context**: No shared React Context/State between native and DOM components.
+
+---
+
+## 🛠️ Expo API Routes (`+api.ts`)
+
+API Routes allow you to build a lightweight backend within your Expo app. They are executed on the server-side (EAS Hosting/Cloudflare Workers).
+
+### 1. Use Cases
+- **Server-side Secrets**: Hide API keys (OpenAI, Stripe) from the client bundle.
+- **Webhook Endpoints**: Receive callbacks from external services (Payment providers, Auth providers).
+- **Proxying**: Mask complex external API calls behind a simple endpoint.
+
+### 2. Implementation
+API routes live in the `app` directory with the `+api.ts` suffix.
+
+```typescript
+// app/api/secure-payment+api.ts
+export async function POST(request: Request) {
+  const { amount, currency } = await request.json();
+  
+  // Call internal PayU core service using server-side secret
+  const response = await fetch(`${process.env.INTERNAL_URL}/payments`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ amount, currency })
+  });
+
+  const data = await response.json();
+  return Response.json(data);
+}
+```
+
+### 3. Middleware Pattern (requireAuth)
+```typescript
+// utils/api-auth.ts
+export async function requireApiAuth(request: Request) {
+  const token = request.headers.get("Authorization")?.replace("Bearer ", "");
+  if (!token) {
+    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  // Verify token logic...
+  return { userId: "user-123" };
+}
+
+// app/api/user-data+api.ts
+import { requireApiAuth } from '@/utils/api-auth';
+
+export async function GET(request: Request) {
+  const user = await requireApiAuth(request);
+  return Response.json({ id: user.userId, data: "Sensitive data" });
+}
+```
+
+### 4. Deployment
+Deployed as **Edge Functions** via `eas deploy`.
+- Use `process.env` (NOT `EXPO_PUBLIC_`) for secrets in these files.
+- Ensure `eas.json` has `server` configuration for hostings if needed.
 ```
 
 ---
@@ -566,6 +785,74 @@ const styles = StyleSheet.create({
 
 ---
 
+## 🎨 Modern Styling (Tailwind v4 + NativeWind v5)
+
+PayU adopts the **CSS-first** approach provided by Tailwind v4 and NativeWind v5 for universal styling.
+
+### 1. Core Stack
+- **Tailwind CSS v4**: Modern CSS-first engine.
+- **NativeWind v5**: Metro transformer for React Native.
+- **react-native-css**: Runtime for CSS variables and platform colors.
+
+### 2. Configuration (CSS-First)
+Unlike v3, v4 does not require `tailwind.config.js`. Use `@theme` in `global.css`.
+
+```css
+/* src/styles/global.css */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@layer theme {
+  @theme {
+    --color-bank-green: #10b981;
+    --font-rounded: "SF Pro Rounded", sans-serif;
+  }
+}
+
+/* Platform-specific refinements */
+@media ios {
+  :root {
+    --sf-bg: platformColor(systemBackground);
+    --sf-text: platformColor(label);
+  }
+}
+
+@media android {
+  :root {
+    --sf-bg: #ffffff;
+    --sf-text: #000000;
+  }
+}
+```
+
+### 3. Usage Patterns
+NativeWind v5 requires components to be wrapped for `className` support. Use a shared `tw` utility or wrapped components.
+
+```tsx
+import { View, Text } from '@/components/ui/tw-wrapped';
+
+export function PremiumCard() {
+  return (
+    <View className="bg-bank-green/10 p-6 rounded-3xl border border-bank-green/20">
+      <Text className="text-bank-green font-bold text-xl">
+        Premium Account
+      </Text>
+    </View>
+  );
+}
+```
+
+### 4. Key Differences (Migration Guide)
+| Feature | Legacy (v3/v4) | Modern (v5 + TW v4) |
+| :--- | :--- | :--- |
+| **Config** | `tailwind.config.js` | `@theme` in CSS |
+| **Babel** | `nativewind/babel` | **NONE** (Remove from babel.config) |
+| **Engine** | JavaScript-heavy | CSS-first (Metro handled) |
+| **Variables** | `native-wind` vars | Standard CSS Variable support |
+
+---
+
 ## ✨ Reanimated 3 Animations
 
 ### Basic Animated Values
@@ -734,7 +1021,7 @@ export function ProductList({ products, onProductPress }: ProductListProps) {
 ```json
 // eas.json
 {
-  "cli": { "version": ">= 5.0.0" },
+  "cli": { "version": ">= 5.0.0", "appVersionSource": "remote" },
   "build": {
     "development": {
       "developmentClient": true,
@@ -756,6 +1043,27 @@ export function ProductList({ products, onProductPress }: ProductListProps) {
     }
   }
 }
+```
+
+### 1. Expo Go vs. Dev Client
+- **Expo Go**: Use for rapid prototyping and basic UI work.
+- **Dev Client**: MANDATORY when using local Expo modules, custom native code, or third-party native libraries not present in Expo Go.
+
+### 2. Build for TestFlight (Cloud)
+Build and submit in a single flow:
+```bash
+eas build -p ios --profile development --submit
+```
+
+### 3. Build Locally (Faster Iteration)
+Requires local build environment (Xcode for iOS, Android Studio for Android).
+```bash
+eas build -p ios --profile development --local
+```
+
+### 4. Running the Dev Client
+```bash
+npx expo start --dev-client
 ```
 
 ```bash
