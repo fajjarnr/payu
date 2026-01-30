@@ -268,7 +268,7 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | `product-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
 | `frontend-architect` | **Master Skill**: Next.js 15+, React, and modern web application architecture. |
 | `mobile-architect` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), and Mobile Security. |
-| `web-artifacts-builder` | Scaffolding and bundling single-file HTML/React artifacts for documentation. |
+| `web-artifacts-builder` | **Master Skill**: Scaffolding and bundling single-file HTML/React artifacts for documentation. |
 
 ### 🛡️ Security & Quality
 | Skill | Description |
