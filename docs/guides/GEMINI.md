@@ -93,7 +93,7 @@ Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Paral
 ### Swarm Principles:
 1. **Parallel Dispatching**: Tugas Full-stack didelegasikan ke `@styler` (Frontend) dan `@logic-builder` (Backend) secara bersamaan untuk reduksi waktu eksekusi hingga 80%.
 2. **Specialized Handshake**: Setiap Skill (misal: `@core-banking-engineer`) memiliki instruksi eksplisit untuk memanggil spesialis lain (misal: `@tester` atau `@migrator`) jika tugas menyentuh domain mereka.
-3. **Implicit Interconnectivity**: Asisten wajib secara proaktif mendispatch agen pendukung (seperti `@auditor` untuk security atau `@developer-experience` untuk presentasi) berdasarkan jenis perubahan kode tanpa menunggu perintah manual.
+3. **Implicit Interconnectivity**: Asisten wajib secara proaktif mendispatch agen pendukung (seperti `@auditor` untuk security atau `@dx-engineer` untuk presentasi) berdasarkan jenis perubahan kode tanpa menunggu perintah manual.
 
 ---
 
@@ -257,10 +257,10 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | :--- | :--- |
 | `core-banking-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
 | `api-architect` | **Master Skill**: REST API standards, OpenAPI, & 3rd-party Integrations. |
-| `event-systems-architect` | **Master Skill**: Sagas, Event Sourcing, & Kafka/AMQ Streams (CDC). |
+| `integration-architect` | **Master Skill**: Sagas, Event Sourcing, & Kafka/AMQ Streams (CDC). |
 | `data-architect` | **Master Skill**: PostgreSQL Design, Performance, and Flyway. |
 | `data-governance-architect` | **Master Skill**: Data Lineage, PII Classification, Retention Policies, & UU PDP Compliance. |
-| `nodejs-bff-architect` | **Master Skill**: Node.js/Express, Prisma, and Zod (BFF). |
+| `bff-architect` | **Master Skill**: Node.js/Express, Prisma, and Zod (BFF). |
 | `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, TimescaleDB, & GenAI. |
 
 ### 📱 Frontend & Mobile
@@ -281,10 +281,10 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | :--- | :--- |
 | `platform-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container (UBI9) Engineering. |
 | `release-engineer` | **Master Skill**: Feature Flags, Blue-Green/Canary Deployments, & Argo Rollouts. |
-| `reliability-engineer` | **UNIFIED**: SRE + Chaos Engineering + Disaster Recovery. Observability, Game Days, RTO/RPO, BCP. |
+| `sre` | **UNIFIED**: SRE + Chaos Engineering + Disaster Recovery. Observability, Game Days, RTO/RPO, BCP. |
 | `quality-engineer` | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact, CDC. |
 | `finops-engineer` | **UNIFIED**: Financial Ops + Cloud FinOps + Cost Optimization. Recon, GL, Cloud Cost, Regulatory (OJK/BI). |
-| `developer-experience` | **UNIFIED**: Git + TypeScript + Slidev. Workflows, Type patterns, Presentations. |
+| `dx-engineer` | **UNIFIED**: Git + TypeScript + Slidev. Workflows, Type patterns, Presentations. |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 

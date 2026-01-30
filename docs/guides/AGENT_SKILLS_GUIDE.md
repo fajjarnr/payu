@@ -49,8 +49,8 @@ The PayU platform is powered by specialized skill clusters:
 | **Core** | `core-banking-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
 | **API** | `api-architect` | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
 | **DB** | `data-architect` | **Master Skill**: PostgreSQL Design, Performance, & Flyway. |
-| **Events** | `event-systems-architect` | **Master Skill**: Sagas, Event Sourcing, & Kafka (CDC). |
-| **Logic** | `nodejs-bff-architect` | **Master Skill**: Node.js BFFs, Prisma, and Zod (Type-Safe APIs). |
+| **Events** | `integration-architect` | **Master Skill**: Sagas, Event Sourcing, & Kafka (CDC). |
+| **Logic** | `bff-architect` | **Master Skill**: Node.js BFFs, Prisma, and Zod (Type-Safe APIs). |
 | **AI** | `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, & TimescaleDB. |
 
 #### 📱 Frontend & Mobile
@@ -71,10 +71,10 @@ The PayU platform is powered by specialized skill clusters:
 | :--- | :--- | :--- |
 | **Infra** | `platform-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container Hardening. |
 | **Release** | `release-engineer` | **Master Skill**: Feature Flags, Blue-Green/Canary, & Argo Rollouts. |
-| **Reliability** | `reliability-engineer` | **UNIFIED**: SRE + Chaos + DR. Observability, Game Days, RTO/RPO, BCP. |
+| **Reliability** | `sre` | **UNIFIED**: SRE + Chaos + DR. Observability, Game Days, RTO/RPO, BCP. |
 | **Quality** | `quality-engineer` | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact. |
 | **FinOps** | `finops-engineer` | **UNIFIED**: Financial Ops + Cloud FinOps. Recon, GL, Cost Management. |
-| **DX** | `developer-experience` | **UNIFIED**: Git + TypeScript + Slidev. Workflows, Patterns, Presentations. |
+| **DX** | `dx-engineer` | **UNIFIED**: Git + TypeScript + Slidev. Workflows, Patterns, Presentations. |
 
 ---
 
