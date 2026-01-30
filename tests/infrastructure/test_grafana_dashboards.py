@@ -10,7 +10,7 @@ import pytest
 class TestGrafanaDashboards:
     """Test Grafana dashboard configurations"""
 
-    DASHBOARD_DIR = "infrastructure/docker/grafana/dashboards"
+    DASHBOARD_DIR = "infrastructure/containers/grafana/dashboards"
 
     REQUIRED_DASHBOARDS = [
         "service-health.json",

@@ -1,0 +1,26 @@
+[Unit]
+Description=PayU PostgreSQL Database
+After=network.target container.service
+Requires=network.target container.service
+PartOf=podman-payu.service
+
+[Container]
+Image=postgres:16-alpine
+ContainerName=payu-postgres
+PodmanArgs=--pod=payu-data-pod --net=payu-network
+Network=payu-network
+EnvFile=-/home/ubuntu/payu/.env
+Environment=POSTGRES_USER=${POSTGRES_USER:-payu}
+Environment=POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-payu_secret}
+Environment=POSTGRES_DB=${POSTGRES_DB:-payu_account}
+Volume=postgres_data:/var/lib/postgresql/data:Z
+Volume=/home/ubuntu/payu/infrastructure/docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+HealthCmd=pg_isready -U payu
+HealthInterval=10s
+HealthTimeout=5s
+HealthStartPeriod=10s
+HealthRetries=5
+AutoUpdate=registry
+
+[Install]
+WantedBy=podman-payu.service

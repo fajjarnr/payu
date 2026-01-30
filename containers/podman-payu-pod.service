@@ -1,0 +1,36 @@
+[Unit]
+Description=PayU Pod Compose Environment
+Documentation=man:podman-compose(1)
+After=network.target container.service
+Requires=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=300
+
+# Environment
+Environment=USER=%U
+Environment=HOME=%h
+
+# Create networks
+ExecStart=podman network create payu-network
+ExecStart=podman network create payu-test-network
+
+# Start services in development environment
+ExecStart=podman play /home/ubuntu/payu/containers/podman-compose.yml
+
+# Start services in test environment
+ExecStart=podman play /home/ubuntu/payu/containers/podman-compose.test.yml
+
+# Stop all services
+ExecStop=podman down --all
+
+# Remove containers
+ExecStop=podman rm -f payu-*
+
+# Clean up volumes
+ExecStopPost=podman volume rm $(podman volume ls | grep payu | awk '{print $2}') || true
+
+[Install]
+WantedBy=multi-user.target

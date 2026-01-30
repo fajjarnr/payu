@@ -1,0 +1,15 @@
+[Network]
+Name=payu-test-network
+Type=bridge
+Description=PayU Test Environment Network
+InterfaceName=payu-test-br
+DNS=8.8.8.8
+DNS=8.8.4.4
+
+[IPv4]
+Address=172.21.0.1/24
+Gateway=172.21.0.1
+
+[IPv6]
+Address=fd7a:115c:a1e1::/64
+Gateway=fd7a:115c:a1e1::1

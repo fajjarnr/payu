@@ -1,0 +1,48 @@
+# PayU PostgreSQL Database - Quadlet Container File
+
+[Container]
+Image=docker.io/library/postgres:16-alpine
+ContainerName=payu-postgres
+AutoUpdate=registry
+Network=payu-network
+
+# Port mapping
+PublishPort=5432:5432
+
+# Environment variables
+Environment=POSTGRES_USER=payu
+Environment=POSTGRES_DB=payu_account
+
+# Secrets (create with: podman secret create postgres-password)
+Secret=postgres-password,type=env,target=POSTGRES_PASSWORD
+
+# Volumes
+Volume=postgres_data:/var/lib/postgresql/data
+Volume=./infrastructure/containers/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+
+# Health check
+HealthCmd=pg_isready -U payu
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=5
+HealthStartPeriod=10s
+
+# Resource limits
+Memory=2G
+MemorySwap=4G
+
+# Security options
+NoNewPrivileges=true
+
+# Logging
+LogDriver=journald
+LogOpt=tag=postgres
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=default.target

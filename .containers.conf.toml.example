@@ -1,0 +1,416 @@
+# PayU Podman Configuration Example
+# =============================================================================
+# Copy this file to /etc/containers/containers.conf or ~/.config/containers/containers.conf
+# This configuration provides optimized settings for PayU Digital Banking Platform
+# =============================================================================
+
+[containers]
+# Security settings
+default_capabilities = []
+default_sysctls = {
+    "net.ipv4.ip_forward" = 1,
+    "net.ipv6.conf.all.disable_ipv6" = 0,
+    "net.ipv6.conf.all.forwarding" = 1,
+}
+
+# Storage settings
+image_default_transport = "docker://"
+storage_driver = "overlay"
+storage_options = [
+    "overlay.size=10G",
+    "overlay.mount_program=/usr/bin/fuse-overlayfs",
+]
+
+# Network settings
+network_config_dir = "/etc/containers/networks"
+network_backend = "cni"
+cni_plugin_dir = "/usr/libexec/cni/"
+cni_network_dir = "/etc/cni/net.d/"
+
+# Logging settings
+log_driver = "journald"
+log_size_max = 1073741824  # 1GB
+log_rotation = true
+log_rotation_max_size = 536870912  # 512MB
+log_rotation_max_file = 3
+log_tag = "{{.ImageName}}|{{.Name}}|{{.ID}}"
+
+[engine]
+# Service settings
+service_timeout = 300
+runtime_supports_kvm = true
+cgroup_manager = "systemd"
+event_logger = "journald"
+timeouts = [
+    "stop=10",
+    "start=30",
+    "kill=10",
+    "create=10",
+    "attach=30",
+]
+
+# Image settings
+storage_tmp_dir = "/tmp"
+pull_policy = ["always", "missing", "never"]
+signature_policy = "/etc/containers/policy.json"
+namespace = ""
+insecure_registries = []
+registries = [
+    "registry.payu.internal",
+    "docker.io",
+    "registry.access.redhat.com",
+    "registry.redhat.io",
+]
+
+[engine.opts]
+# Additional engine options
+rootless = false
+cgroupns = "private"
+
+[store]
+# Image store settings
+graph_root = "/var/lib/containers/storage"
+runroot = "/run/containers/storage"
+temporary_blob_storage = "/var/tmp/containers"
+enable_writeable_tmpfs = true
+compatibility_layer = true
+
+# Registry mirror configuration for Red Hat
+[engine.registry_mirrors."https://registry.access.redhat.com"]
+endpoint = [
+    "https://registry.payu.internal/redhat",
+    "https://registry-proxy.redhat.com",
+]
+
+[engine.registry_mirrors."https://registry.redhat.io"]
+endpoint = [
+    "https://registry.payu.internal/redhat",
+    "https://registry-proxy.redhat.com",
+]
+
+# Container runtime
+[engine.runtimes]
+runc = {
+    command = "/usr/bin/runc"
+    root = "/run/runc"
+}
+crun = {
+    command = "/usr/bin/crun"
+    root = "/run/crun"
+}
+
+# Volume configuration
+[volumes]
+size = "100G"
+driver = "local"
+
+# Network configuration
+[network]
+cni_plugin_dir = "/usr/libexec/cni/"
+network_config_dir = "/etc/containers/networks"
+default_network = "payu-net"
+
+[network.backends.cni]
+type = "cni"
+
+[network.backends.pasta]
+type = "pasta"
+
+# Additional networks configuration
+[network.networks.payu-net]
+type = "bridge"
+bridge = "payu-br0"
+ipam_options = {
+    "driver" = "host-local",
+    "subnet" = "10.88.0.0/16",
+    "gateway" = "10.88.0.1",
+    "routes" = [
+        {
+            "dst" = "0.0.0.0/0",
+            "gw" = "10.88.0.1",
+        },
+    ],
+}
+dns_enabled = true
+dns = [
+    "8.8.8.8",
+    "8.8.4.4",
+    "1.1.1.1",
+]
+
+[network.networks.payu-external]
+type = "bridge"
+bridge = "payu-external"
+ipam_options = {
+    "driver" = "host-local",
+    "subnet" = "10.89.0.0/16",
+    "gateway" = "10.89.0.1",
+}
+
+# Additional network options
+[network.options]
+mtu = 1500
+enable_ipv6 = true
+
+# Podman Compose specific settings
+[podman]
+# Compose settings
+auto_remove = false
+env_file = ".env"
+networks_default = []
+volumes_default = []
+tmpfs_size = "100m"
+log_driver = "json-file"
+log_opts = {
+    "max-size" = "100m",
+    "max-file" = "3",
+    "compress" = "true",
+}
+
+# Storage
+[storage]
+driver = "overlay"
+runroot = "/run/containers/storage"
+graphroot = "/var/lib/containers/storage"
+rootless_storage_path = ""
+
+# Additional storage options
+[storage.options]
+additionalimagestores = []
+remap_user = ""
+remap_group = ""
+remap_uid = ""
+remap_gid = ""
+size = ""
+mountopt = []
+tmp_dir = ""
+writeable = true
+
+# Podman system settings
+[system]
+cgroup_manager = "systemd"
+cgroupns = "private"
+events_logger = "journald"
+live_restore = false
+namespace = ""
+network_cmd_options = []
+podmansh = true
+remote_socket = "/run/podman/podman.sock"
+service_timeout = 300
+signature_policy = "/etc/containers/policy.json"
+static_dir = "/usr/share/containers"
+tmp_dir = "/var/tmp/containers"
+volume_path = "/var/lib/containers/storage/volumes"
+hooks_dir = "/usr/share/containers/oci/hooks.d"
+
+# Logging configuration
+[log]
+driver = "journald"
+size_max = 1073741824  # 1GB
+rotation = true
+rotation_max_size = 536870912  # 512MB
+rotation_max_file = 3
+tag = "{{.ImageName}}|{{.Name}}|{{.ID}}"
+log_size_max = 1073741824  # 1GB
+
+# Security policy
+[seccomp]
+default = true
+syscalls = [
+    {
+        "name" = "openat",
+        "action" = "SCMP_ACT_ALLOW",
+    },
+    {
+        "name" = "execve",
+        "action" = "SCMP_ACT_ALLOW",
+    },
+]
+
+# Apparmor profile
+[apparmor]
+enabled = true
+profile = "containers-default"
+
+# SELinux configuration
+[selinux]
+enabled = true
+
+# Seccomp filter
+[seccomp]
+default = true
+syscalls = [
+    {
+        "name" = "openat",
+        "action" = "SCMP_ACT_ALLOW",
+    },
+    {
+        "name" = "execve",
+        "action" = "SCMP_ACT_ALLOW",
+    },
+]
+
+# User namespace
+[userns]
+enabled = true
+
+# Cgroup namespace
+[cgroupns]
+mode = "private"
+
+# PID namespace
+[pidns]
+enabled = true
+
+# IPC namespace
+[ipcns]
+enabled = true
+
+# UTS namespace
+[utsns]
+enabled = true
+
+# Network namespace
+[netns]
+enabled = true
+
+# Time namespace
+[timens]
+enabled = true
+
+# User settings
+[user]
+default = "root"
+capabilities = []
+cgroups = "enabled"
+
+# Path settings
+[paths]
+runroot = "/run/containers/storage"
+graphroot = "/var/lib/containers/storage"
+
+# Timeout settings
+[timeouts]
+stop = 10
+start = 30
+kill = 10
+create = 10
+attach = 30
+
+# Volume settings
+[volume]
+driver = "local"
+size = "100G"
+
+# Network timeout
+[network.timeouts]
+connect = 30
+ready = 30
+
+# Image settings
+[images]
+signature_policy = "/etc/containers/policy.json"
+additionalimagestores = []
+insecure_registries = []
+registries = [
+    "registry.payu.internal",
+    "docker.io",
+    "registry.access.redhat.com",
+    "registry.redhat.io",
+]
+
+# Machine settings
+[machine]
+cpus = "2"
+disk_size = "20"
+memory = "4096"
+vm_type = "kvm"
+
+# Podman Pod settings
+[pods]
+managed = false
+network_cmd_options = []
+
+# Additional pod options
+[pods.options]
+infra_container = true
+
+# Container-specific settings
+[containers.restart]
+policy = "always"
+
+[containers.restart]
+policy = "unless-stopped"
+
+[containers.restart]
+policy = "on-failure"
+
+[containers.restart]
+policy = "no"
+
+[containers.cpus]
+limit = "2"
+
+[containers.memory]
+limit = "4G"
+
+[containers.memory]
+limit = "2G"
+
+[containers.memory]
+limit = "1G"
+
+[containers.memory]
+limit = "512M"
+
+[containers.swap]
+limit = "8G"
+
+# Docker compatibility
+[docker]
+compatibility = true
+
+[docker.endpoint]
+unix = "unix:///var/run/docker.sock"
+
+# Additional configuration for Red Hat environments
+[rhel]
+content_signatures = true
+package_managers = ["yum", "dnf", "microdnf"]
+
+# Logging configuration for pods
+[containers]
+log_driver = "journald"
+log_tag = "{{.ImageName}}|{{.Name}}|{{.ID}}"
+log_size_max = 1073741824
+log_rotation = true
+log_rotation_max_size = 536870912
+log_rotation_max_file = 3
+
+# Security settings
+[secrets]
+enabled = true
+opts = {}
+
+# Buildah configuration
+[buildah]
+buildah_format = "docker"
+buildah_isolation = "chroot"
+buildah_layers = true
+buildah_compress = true
+
+# Buildah storage
+[buildah.storage]
+driver = "overlay"
+runroot = "/run/containers/storage"
+graphroot = "/var/lib/containers/storage"
+
+# Note: This is a TOML format configuration file.
+# To use it:
+# 1. Copy to the appropriate location:
+#    - System-wide: /etc/containers/containers.conf
+#    - User-specific: ~/.config/containers/containers.conf
+# 2. Adjust permissions:
+#    - System: chmod 644 /etc/containers/containers.conf
+#    - User: chmod 644 ~/.config/containers/containers.conf
+# 3. Ensure containers.conf is not world-readable if containing sensitive data

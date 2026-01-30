@@ -1,13 +1,10 @@
 server:
   http_listen_port: 9080
   grpc_listen_port: 0
-
 positions:
   filename: /tmp/positions.yaml
-
 clients:
   - url: http://loki:3100/loki/api/v1/push
-
 scrape_configs:
   # PayU Service Logs
   - job_name: payu-services
@@ -18,7 +15,6 @@ scrape_configs:
           job: payu-services
           environment: development
           __path__: /var/log/payu/*.log
-
   # Docker Container Logs
   - job_name: docker-containers
     docker_sd_configs:
@@ -34,7 +30,6 @@ scrape_configs:
         target_label: service_name
       - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
         target_label: project
-
   # System Logs
   - job_name: system-logs
     static_configs:
@@ -43,7 +38,6 @@ scrape_configs:
         labels:
           job: system
           __path__: /var/log/syslog
-
   # Application-specific logs with structured JSON parsing
   - job_name: payu-application-json
     static_configs:

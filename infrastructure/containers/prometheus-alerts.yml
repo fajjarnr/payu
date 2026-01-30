@@ -12,7 +12,6 @@ groups:
         annotations:
           summary: "Service {{ $labels.job }} is down"
           description: "Service {{ $labels.job }} has been down for more than 2 minutes."
-
       - alert: HighErrorRate
         expr: |
           (
@@ -27,7 +26,6 @@ groups:
         annotations:
           summary: "High error rate on {{ $labels.job }}"
           description: "Error rate on {{ $labels.job }} is {{ $value | humanizePercentage }}"
-
   - name: payu_performance
     interval: 30s
     rules:
@@ -44,7 +42,6 @@ groups:
         annotations:
           summary: "High response time on {{ $labels.job }}"
           description: "95th percentile response time is {{ $value }}s"
-
       - alert: VeryHighResponseTime
         expr: |
           histogram_quantile(0.95,
@@ -57,7 +54,6 @@ groups:
         annotations:
           summary: "Critical response time on {{ $labels.job }}"
           description: "95th percentile response time is {{ $value }}s"
-
       # Memory Alerts
       - alert: HighMemoryUsage
         expr: |
@@ -73,7 +69,6 @@ groups:
         annotations:
           summary: "High memory usage on {{ $labels.job }}"
           description: "Heap memory usage is {{ $value | humanizePercentage }}"
-
       - alert: CriticalMemoryUsage
         expr: |
           (
@@ -88,7 +83,6 @@ groups:
         annotations:
           summary: "Critical memory usage on {{ $labels.job }}"
           description: "Heap memory usage is {{ $value | humanizePercentage }}"
-
       # CPU Alerts
       - alert: HighCPUUsage
         expr: |
@@ -104,7 +98,6 @@ groups:
         annotations:
           summary: "High CPU usage on {{ $labels.job }}"
           description: "CPU usage is {{ $value }}%"
-
   - name: payu_transactions
     interval: 30s
     rules:
@@ -119,7 +112,6 @@ groups:
         annotations:
           summary: "Low transaction rate"
           description: "Transaction rate is below expected threshold"
-
       - alert: FailedTransactionRate
         expr: |
           (
@@ -134,7 +126,6 @@ groups:
         annotations:
           summary: "High failed transaction rate"
           description: "Failed transaction rate is {{ $value | humanizePercentage }}"
-
   - name: payu_databases
     interval: 30s
     rules:
@@ -148,7 +139,6 @@ groups:
         annotations:
           summary: "PostgreSQL is down"
           description: "PostgreSQL database is unreachable"
-
       - alert: PostgresSlowQueries
         expr: |
           sum(rate(pg_stat_statements_calls{datname="payu.*"}[5m])) > 100
@@ -159,7 +149,6 @@ groups:
         annotations:
           summary: "High query rate on PostgreSQL"
           description: "PostgreSQL is experiencing high query load"
-
       - alert: PostgresConnectionPoolExhaustion
         expr: |
           (
@@ -174,7 +163,6 @@ groups:
         annotations:
           summary: "High connection pool usage on {{ $labels.datname }}"
           description: "Connection pool usage is {{ $value | humanizePercentage }}"
-
   - name: payu_infrastructure
     interval: 30s
     rules:
@@ -188,7 +176,6 @@ groups:
         annotations:
           summary: "Redis is down"
           description: "Redis cache is unreachable"
-
       - alert: RedisHighMemoryUsage
         expr: |
           (
@@ -203,7 +190,6 @@ groups:
         annotations:
           summary: "High memory usage on Redis"
           description: "Redis memory usage is {{ $value | humanizePercentage }}"
-
       # Kafka Alerts
       - alert: KafkaDown
         expr: kafka_server_broker_state == 0
@@ -214,7 +200,6 @@ groups:
         annotations:
           summary: "Kafka is down"
           description: "Kafka broker is unreachable"
-
       - alert: KafkaConsumerLag
         expr: kafka_consumergroup_lag > 1000
         for: 10m
@@ -224,7 +209,6 @@ groups:
         annotations:
           summary: "High consumer lag on {{ $labels.consumergroup }}"
           description: "Consumer lag is {{ $value }} messages"
-
       - alert: DiskSpaceLow
         expr: |
           (
@@ -239,7 +223,6 @@ groups:
         annotations:
           summary: "Low disk space on {{ $labels.instance }}"
           description: "Available disk space is {{ $value | humanizePercentage }}"
-
   - name: payu_business
     interval: 60s
     rules:
@@ -253,7 +236,6 @@ groups:
         annotations:
           summary: "Negative account balance detected"
           description: "Account {{ $labels.account_id }} has negative balance"
-
       - alert: UnusualTransactionVolume
         expr: |
           abs(

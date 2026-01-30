@@ -1,0 +1,43 @@
+# PayU Redis Cache - Quadlet Container File
+
+[Container]
+Image=docker.io/library/redis:7-alpine
+ContainerName=payu-redis
+AutoUpdate=registry
+Network=payu-network
+
+# Port mapping
+PublishPort=6379:6379
+
+# Command with memory limits
+Exec=redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes
+
+# Volumes
+Volume=redis_data:/data
+
+# Health check
+HealthCmd=redis-cli ping
+HealthInterval=10s
+HealthTimeout=3s
+HealthRetries=3
+HealthStartPeriod=5s
+
+# Resource limits
+Memory=1G
+MemorySwap=1G
+
+# Security options
+NoNewPrivileges=true
+
+# Logging
+LogDriver=journald
+LogOpt=tag=redis
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=30s
+TimeoutStopSec=10s
+
+[Install]
+WantedBy=default.target

@@ -1,24 +1,27 @@
-# PayU Digital Banking - Docker Compose Setup
+# PayU Digital Banking - Container Compose Setup
 # Local Development Environment & E2E Testing
 # With optimized resource limits and health checks for production readiness
+#
+# NOTE: This file is maintained for backward compatibility.
+# For Podman, use podman-compose.yml instead.
 
 services:
   # ============================================
   # DATA LAYER
   # ============================================
-
   postgres:
     image: postgres:16-alpine
     container_name: payu-postgres
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: payu
-      POSTGRES_PASSWORD: payu_secret
-      POSTGRES_DB: payu_account
+      # REQUIRED: Set in .env file
+      POSTGRES_USER: ${POSTGRES_USER:-payu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-payu_account}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ./infrastructure/containers/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U payu"]
       interval: 10s
@@ -35,7 +38,6 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   redis:
     image: redis:7-alpine
     container_name: payu-redis
@@ -60,11 +62,9 @@ services:
           memory: 128M
     networks:
       - payu-network
-
   # ============================================
   # MESSAGE BROKER
   # ============================================
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: payu-zookeeper
@@ -90,7 +90,6 @@ services:
           memory: 256M
     networks:
       - payu-network
-
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: payu-kafka
@@ -126,7 +125,6 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: payu-kafka-ui
@@ -150,24 +148,24 @@ services:
           memory: 128M
     networks:
       - payu-network
-
   # ============================================
   # SECRETS MANAGEMENT
   # ============================================
-
   vault:
     image: hashicorp/vault:1.15
     container_name: payu-vault
     ports:
       - "8200:8200"
     environment:
-      VAULT_DEV_ROOT_TOKEN_ID: dev-only-token
+      # REQUIRED: Set in .env file
+      # WARNING: Default token is for development only. Never use in production!
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID:-dev-only-token}
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
     cap_add:
       - IPC_LOCK
     volumes:
       - vault_data:/vault/data
-      - ./infrastructure/docker/vault-config.json:/vault/config/vault-config.json:ro
+      - ./infrastructure/containers/vault-config.json:/vault/config/vault-config.json:ro
     healthcheck:
       test: ["CMD", "vault", "status"]
       interval: 10s
@@ -184,23 +182,23 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   # ============================================
   # IDENTITY & ACCESS MANAGEMENT
   # ============================================
-
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: payu-keycloak
     ports:
       - "8099:8080"
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      # REQUIRED: Set in .env file
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: payu
-      KC_DB_PASSWORD: payu_secret
+      KC_DB_USERNAME: ${POSTGRES_USER:-payu}
+      # REQUIRED: Set in .env file
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-payu_secret}
       KC_HEALTH_ENABLED: "true"
       JAVA_OPTS_APPEND: "-Xmx1024M -Xms512M"
     command: start-dev
@@ -223,11 +221,9 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   # ============================================
   # SIMULATORS (Quarkus Native)
   # ============================================
-
   bi-fast-simulator:
     build:
       context: ./backend/simulators/bi-fast-simulator
@@ -238,8 +234,9 @@ services:
     environment:
       QUARKUS_HTTP_PORT: 8080
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_bifast
-      QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER:-payu}
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
       postgres:
         condition: service_healthy
@@ -259,7 +256,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   dukcapil-simulator:
     build:
       context: ./backend/simulators/dukcapil-simulator
@@ -270,8 +266,9 @@ services:
     environment:
       QUARKUS_HTTP_PORT: 8080
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_dukcapil
-      QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER:-payu}
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
       postgres:
         condition: service_healthy
@@ -291,7 +288,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   qris-simulator:
     build:
       context: ./backend/simulators/qris-simulator
@@ -302,8 +298,9 @@ services:
     environment:
       QUARKUS_HTTP_PORT: 8080
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_qris
-      QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER:-payu}
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
     depends_on:
       postgres:
         condition: service_healthy
@@ -323,11 +320,9 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   # ============================================
   # CORE BANKING SERVICES (Spring Boot)
   # ============================================
-
   account-service:
     build:
       context: ./backend/account-service
@@ -338,18 +333,14 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_account
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_DUKCAPIL_URL: http://dukcapil-simulator:8080
       SERVICES_AUTH_URL: http://auth-service:8002
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
-        -Xmx768M -Xms512M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof
-        -Djava.security.egd=file:/dev/./urandom
+        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -375,7 +366,6 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   auth-service:
     build:
       context: ./backend/auth-service
@@ -386,19 +376,16 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_auth
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KEYCLOAK_SERVER_URL: http://keycloak:8080
       KEYCLOAK_REALM: payu
       KEYCLOAK_CLIENT_ID: payu-backend
-      KEYCLOAK_CLIENT_SECRET: secret
+      # REQUIRED: Set in .env file
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-secret}
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
-        -Xmx768M -Xms512M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof
-        -Djava.security.egd=file:/dev/./urandom
+        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -422,7 +409,6 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   transaction-service:
     build:
       context: ./backend/transaction-service
@@ -433,19 +419,15 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_transaction
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_WALLET_URL: http://wallet-service:8004
       SERVICES_BIFAST_URL: http://bi-fast-simulator:8080
       SERVICES_QRIS_URL: http://qris-simulator:8080
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
-        -Xmx768M -Xms512M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof
-        -Djava.security.egd=file:/dev/./urandom
+        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -469,7 +451,6 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   wallet-service:
     build:
       context: ./backend/wallet-service
@@ -480,16 +461,12 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_wallet
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
-        -Xmx768M -Xms512M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof
-        -Djava.security.egd=file:/dev/./urandom
+        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -513,7 +490,6 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   compliance-service:
     build:
       context: ./backend/compliance-service
@@ -524,16 +500,12 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_compliance
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
-        -Xmx768M -Xms512M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof
-        -Djava.security.egd=file:/dev/./urandom
+        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -557,7 +529,6 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   investment-service:
     build:
       context: ./backend/investment-service
@@ -568,17 +539,13 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_investment
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       WALLET_SERVICE_URL: http://wallet-service:8004
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
-        -Xmx768M -Xms512M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof
-        -Djava.security.egd=file:/dev/./urandom
+        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -602,7 +569,6 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   lending-service:
     build:
       context: ./backend/lending-service
@@ -613,18 +579,14 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_lending
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
-        -Xmx768M -Xms512M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof
-        -Djava.security.egd=file:/dev/./urandom
+        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -650,11 +612,9 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   # ============================================
   # SUPPORTING SERVICES (Quarkus Native)
   # ============================================
-
   billing-service:
     build:
       context: ./backend/billing-service
@@ -665,7 +625,8 @@ services:
     environment:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_billing
       QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_WALLET_URL: http://wallet-service:8004
       OTEL_ENDPOINT: http://jaeger:4317
@@ -692,7 +653,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   notification-service:
     build:
       context: ./backend/notification-service
@@ -703,7 +663,8 @@ services:
     environment:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_notification
       QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
@@ -729,7 +690,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   gateway-service:
     build:
       context: ./backend/gateway-service
@@ -781,7 +741,6 @@ services:
           memory: 128M
     networks:
       - payu-network
-
   backoffice-service:
     build:
       context: ./backend/backoffice-service
@@ -792,7 +751,8 @@ services:
     environment:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_backoffice
       QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_KYC_URL: http://kyc-service:8007
       SERVICES_WALLET_URL: http://wallet-service:8004
@@ -820,7 +780,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   partner-service:
     build:
       context: ./backend/partner-service
@@ -831,7 +790,8 @@ services:
     environment:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_partner
       QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
@@ -857,7 +817,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   promotion-service:
     build:
       context: ./backend/promotion-service
@@ -868,7 +827,8 @@ services:
     environment:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_promotion
       QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
@@ -894,7 +854,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   support-service:
     build:
       context: ./backend/support-service
@@ -905,7 +864,8 @@ services:
     environment:
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_support
       QUARKUS_DATASOURCE_USERNAME: payu
-      QUARKUS_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
@@ -931,7 +891,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   api-portal-service:
     build:
       context: ./backend/api-portal-service
@@ -1003,11 +962,9 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   # ============================================
   # BUSINESS & OPERATIONS SERVICES (Spring Boot)
   # ============================================
-
   statement-service:
     build:
       context: ./backend/statement-service
@@ -1018,19 +975,15 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_statement
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_WALLET_URL: http://wallet-service:8004
       SERVICES_TRANSACTION_URL: http://transaction-service:8003
       KEYCLOAK_SERVER_URL: http://keycloak:8080
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
-        -Xmx512M -Xms256M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
-        -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof
-        -Djava.security.egd=file:/dev/./urandom
+        -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -1054,11 +1007,9 @@ services:
           memory: 256M
     networks:
       - payu-network
-
   # ============================================
   # ML SERVICES (Python FastAPI)
   # ============================================
-
   kyc-service:
     build:
       context: ./backend/kyc-service
@@ -1067,7 +1018,8 @@ services:
     ports:
       - "8007:8007"
     environment:
-      DATABASE_URL: postgresql+asyncpg://payu:payu_secret@postgres:5432/payu_kyc
+      # REQUIRED: Set in .env file
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-payu}:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_kyc
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       DUKCAPIL_URL: http://dukcapil-simulator:8080/api/v1
       OTLP_ENDPOINT: http://jaeger:4317
@@ -1096,7 +1048,6 @@ services:
           memory: 256M
     networks:
       - payu-network
-
   analytics-service:
     build:
       context: ./backend/analytics-service
@@ -1105,7 +1056,8 @@ services:
     ports:
       - "8008:8008"
     environment:
-      DATABASE_URL: postgresql+asyncpg://payu:payu_secret@postgres:5432/payu_analytics
+      # REQUIRED: Set in .env file
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-payu}:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_analytics
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTLP_ENDPOINT: http://jaeger:4317
       PYTHONUNBUFFERED: "1"
@@ -1133,11 +1085,9 @@ services:
           memory: 256M
     networks:
       - payu-network
-
   # ============================================
   # FRONTEND SERVICES
   # ============================================
-
   web-app:
     build:
       context: ./frontend/web-app
@@ -1167,11 +1117,9 @@ services:
           memory: 128M
     networks:
       - payu-network
-
   # ============================================
   # MONITORING & ALERTING
   # ============================================
-
   jaeger:
     image: jaegertracing/all-in-one:1.58
     container_name: payu-jaeger
@@ -1206,15 +1154,14 @@ services:
           memory: 256M
     networks:
       - payu-network
-
   prometheus:
     image: prom/prometheus:v2.54.1
     container_name: payu-prometheus
     ports:
       - "9090:9090"
     volumes:
-      - ./infrastructure/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./infrastructure/docker/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro
+      - ./infrastructure/containers/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/containers/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -1239,14 +1186,13 @@ services:
           memory: 512M
     networks:
       - payu-network
-
   loki:
     image: grafana/loki:2.9.10
     container_name: payu-loki
     ports:
       - "3100:3100"
     volumes:
-      - ./infrastructure/docker/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - ./infrastructure/containers/loki-config.yml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
     healthcheck:
@@ -1265,12 +1211,11 @@ services:
           memory: 256M
     networks:
       - payu-network
-
   promtail:
     image: grafana/promtail:2.9.10
     container_name: payu-promtail
     volumes:
-      - ./infrastructure/docker/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./infrastructure/containers/promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/log:/var/log:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     command: -config.file=/etc/promtail/config.yml
@@ -1287,22 +1232,22 @@ services:
           memory: 32M
     networks:
       - payu-network
-
   grafana:
     image: grafana/grafana:11.1.4
     container_name: payu-grafana
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      # REQUIRED: Set in .env file
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_INSTALL_PLUGINS: grafana-piechart-panel
       GF_SERVER_ROOT_URL: http://localhost:3000
       GF_ANALYTICS_REPORTING_ENABLED: "false"
     volumes:
-      - ./infrastructure/docker/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./infrastructure/docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./infrastructure/containers/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/containers/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     depends_on:
       prometheus:
@@ -1325,14 +1270,13 @@ services:
           memory: 128M
     networks:
       - payu-network
-
   alertmanager:
     image: prom/alertmanager:v0.27.0
     container_name: payu-alertmanager
     ports:
       - "9093:9093"
     volumes:
-      - ./infrastructure/docker/alertmanager-config.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./infrastructure/containers/alertmanager-config.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
@@ -1353,7 +1297,6 @@ services:
           memory: 64M
     networks:
       - payu-network
-
   # ============================================
   # TRAEFIK DASHBOARD (Optional)
   # ============================================
@@ -1380,15 +1323,12 @@ services:
           memory: 32M
     networks:
       - payu-network
-
 # ============================================
 # NETWORKS & VOLUMES
 # ============================================
-
 networks:
   payu-network:
     driver: bridge
-
 volumes:
   postgres_data:
   redis_data:

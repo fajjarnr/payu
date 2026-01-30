@@ -1,0 +1,13 @@
+[Volume]
+Name=postgres_data
+Type=local
+Description=PayU PostgreSQL Data Volume
+Driver=local
+DevicePath=/var/lib/containers/storage/volumes/payu_postgres_data
+Size=10G
+
+[Mount]
+What=/var/lib/containers/storage/volumes/payu_postgres_data
+Where=/var/lib/postgresql/data
+Type=bind
+Options=Z

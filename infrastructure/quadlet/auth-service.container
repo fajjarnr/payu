@@ -1,0 +1,48 @@
+# PayU Auth Service - Quadlet Container File
+# Authentication, Risk-based MFA, Biometrics
+
+[Container]
+Image=registry.payu.internal/payu/auth-service:latest
+ContainerName=payu-auth-service
+AutoUpdate=registry
+Network=payu-network
+
+# Port mapping
+PublishPort=8002:8002
+
+# Environment variables
+Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://payu-postgres:5432/payu_auth
+Environment=SPRING_DATASOURCE_USERNAME=payu
+Environment=KEYCLOAK_SERVER_URL=http://payu-keycloak:8080
+Environment=KEYCLOAK_REALM=payu
+Environment=KEYCLOAK_CLIENT_ID=payu-backend
+Environment=OTEL_ENDPOINT=http://payu-jaeger:4317
+Environment=JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
+
+# Health check
+HealthCmd=curl -f http://localhost:8002/actuator/health/liveness || exit 1
+HealthInterval=15s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=30s
+
+# Resource limits
+Memory=1G
+MemorySwap=2G
+
+# Security options
+NoNewPrivileges=true
+RunInit=true
+
+# Logging
+LogDriver=journald
+LogOpt=tag=auth-service
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=default.target

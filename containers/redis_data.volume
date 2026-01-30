@@ -1,0 +1,13 @@
+[Volume]
+Name=redis_data
+Type=local
+Description=PayU Redis Data Volume
+Driver=local
+DevicePath=/var/lib/containers/storage/volumes/payu_redis_data
+Size=2G
+
+[Mount]
+What=/var/lib/containers/storage/volumes/payu_redis_data
+Where=/data
+Type=bind
+Options=Z

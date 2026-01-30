@@ -19,7 +19,6 @@ repos:
       - id: detect-private-key
       - id: no-commit-to-branch
         args: ['--branch', 'main']
-
   # Secrets detection
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
@@ -27,7 +26,6 @@ repos:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
         exclude: package-lock\.json|\.env\.example
-
   # Java/Maven - Checkstyle
   - repo: local
     hooks:
@@ -37,7 +35,6 @@ repos:
         language: system
         files: \.java$
         pass_filenames: false
-
   # Python - Black formatter
   - repo: https://github.com/psf/black
     rev: 24.1.1
@@ -45,7 +42,6 @@ repos:
       - id: black
         language_version: python3.12
         files: ^backend/(kyc-service|analytics-service)/
-
   # Python - Ruff linter
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.14
@@ -53,7 +49,6 @@ repos:
       - id: ruff
         args: [--fix]
         files: ^backend/(kyc-service|analytics-service)/
-
   # Python - Type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
@@ -61,35 +56,31 @@ repos:
       - id: mypy
         files: ^backend/(kyc-service|analytics-service)/
         additional_dependencies: [types-requests, fastapi]
-
-  # Dockerfile linting
+  # Containerfile linting (supports Dockerfile and Containerfile)
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:
       - id: hadolint-docker
         args: ['--ignore', 'DL3008', '--ignore', 'DL3013']
-
+        files: (Dockerfile|Containerfile)$
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.9.0.6
     hooks:
       - id: shellcheck
         files: ^scripts/
-
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.39.0
     hooks:
       - id: markdownlint
         args: ['--fix', '--disable', 'MD013', 'MD033', 'MD041']
-
   # YAML formatting
   - repo: https://github.com/google/yamlfmt
     rev: v0.10.0
     hooks:
       - id: yamlfmt
         exclude: 'helm/|openshift/'
-
 # CI configuration
 ci:
   autofix_commit_msg: 'style: auto-fix by pre-commit hooks'

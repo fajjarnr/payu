@@ -6,7 +6,7 @@ updated: 2026-01-30
 author: payu-platform-team
 requires: [core-banking-engineer]
 tags: [qa, testing, automation, contract-testing]
-related: [sdet-solutions-engineer]
+related: []
 description: **Master Skill**: Quality Engineering & Testing Architecture. Unified expertise in Full-Stack Testing, Contract Testing, Performance Engineering, Test Automation, and Financial Integrity Verification.
 ---
 

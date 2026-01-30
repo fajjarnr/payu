@@ -26,7 +26,7 @@ docker-compose up -d vault
 Run the initialization script to populate Vault with secrets:
 
 ```bash
-./infrastructure/docker/init-vault.sh
+./infrastructure/containers/init-vault.sh
 ```
 
 This script creates the following secret paths:

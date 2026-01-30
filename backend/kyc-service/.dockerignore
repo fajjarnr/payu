@@ -1,4 +1,10 @@
-# Python
+# ============================================
+# PayU KYC Service - Python FastAPI Docker Ignore
+# ============================================
+# This file provides dockerignore patterns for the
+# KYC service (Python FastAPI with ML/OCR components).
+
+# --- Python Build Artifacts & Cache ---
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,51 +22,162 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual environments
+# --- Virtual Environments ---
 venv/
 env/
 ENV/
-.venv
+.venv/
+env.bak/
+venv.bak/
 
-# IDE
-.vscode/
+# --- PyCharm, JetBrains, VSCode ---
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
 .project
 .pydevproject
 .settings/
+*.iml
+.history/
 
-# Testing
-.pytest_cache/
-.coverage
+# --- Jupyter Notebook ---
+.ipynb_checkpoints
+*.ipynb
+
+# --- PyInstaller ---
+*.manifest
+*.spec
+
+# --- Unit Test / Coverage Reports ---
 htmlcov/
 .tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+*.pytest_cache
 
-# Documentation
-docs/_build/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment
+# --- Environments & Secrets ---
 .env
+.env.*
 .env.local
-*.log
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+*.secret
+credentials.json
+*.key
+.secrets/
+vault-token/
 
-# Database
-*.db
-*.sqlite
-
-# ML Models
+# --- Machine Learning / Model Files ---
 models/
 checkpoints/
 *.pth
 *.pkl
 *.onnx
+*.h5
+*.pb
+*.savedmodel
+*.safetensors
+!models/.gitkeep
+
+# --- Data & Datasets ---
+data/
+datasets/
+*.csv
+*.jsonl
+*.parquet
+!data/.gitkeep
+
+# --- Logs ---
+*.log
+logs/
+log/*.log
+*.log.*
+
+# --- Documentation ---
+*.md
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+!docs/build/
+docs/_build/
+
+# --- Docker (prevent self-inclusion) ---
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# --- Git ---
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# --- OS Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Database ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- MyPy & Type Checking ---
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# --- Ruff (Python Linter) ---
+.ruff_cache/
+
+# --- CI/CD ---
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
+.jenkinsfile
+.circleci/
+
+# --- Misc ---
+.editorconfig
+*.bak
+*.tmp
+temp/
+tmp/
+
+# --- MLflow (if used) ---
+mlruns/
+mlflow.db
+
+# --- Weights & Biases (if used) ---
+wandb/

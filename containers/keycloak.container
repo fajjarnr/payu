@@ -1,0 +1,31 @@
+[Unit]
+Description=PayU Keycloak Identity Server
+After=postgres.target container.service
+Requires=postgres.target container.service
+PartOf=podman-payu.service
+
+[Container]
+Image=quay.io/keycloak/keycloak:26.0
+ContainerName=payu-keycloak
+PodmanArgs=--pod=payu-identity-pod --net=payu-network
+Network=payu-network
+EnvFile=-/home/ubuntu/payu/.env
+Environment=KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+Environment=KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
+Environment=KC_DB=postgres
+Environment=KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+Environment=KC_DB_USERNAME=${POSTGRES_USER:-payu}
+Environment=KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD:-payu_secret}
+Environment=KC_HEALTH_ENABLED=true
+Environment=JAVA_OPTS_APPEND=-Xmx1024M -Xms512M
+Command=start-dev
+Port=8099:8080
+HealthCmd=exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1
+HealthInterval=15s
+HealthTimeout=5s
+HealthStartPeriod=30s
+HealthRetries=5
+AutoUpdate=registry
+
+[Install]
+WantedBy=podman-payu.service

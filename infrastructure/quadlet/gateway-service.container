@@ -1,0 +1,59 @@
+# PayU Gateway Service - Quadlet Container File
+# This file enables systemd management of the gateway-service container
+
+[Container]
+Image=registry.payu.internal/payu/gateway-service:latest
+ContainerName=payu-gateway-service
+AutoUpdate=registry
+Network=payu-network
+
+# Port mapping
+PublishPort=8080:8080
+
+# Environment variables
+Environment=QUARKUS_REDIS_HOSTS=payu-redis:6379
+Environment=KAFKA_BOOTSTRAP_SERVERS=payu-kafka:29092
+Environment=KEYCLOAK_URL=http://payu-keycloak:8080
+Environment=OTEL_ENDPOINT=http://payu-jaeger:4317
+Environment=ROUTES_ACCOUNT_URL=http://payu-account-service:8001
+Environment=ROUTES_AUTH_URL=http://payu-auth-service:8002
+Environment=ROUTES_TRANSACTION_URL=http://payu-transaction-service:8003
+Environment=ROUTES_WALLET_URL=http://payu-wallet-service:8004
+Environment=ROUTES_BILLING_URL=http://payu-billing-service:8080
+Environment=ROUTES_NOTIFICATION_URL=http://payu-notification-service:8080
+Environment=ROUTES_KYC_URL=http://payu-kyc-service:8007
+Environment=ROUTES_ANALYTICS_URL=http://payu-analytics-service:8008
+Environment=ROUTES_COMPLIANCE_URL=http://payu-compliance-service:8087
+Environment=ROUTES_INVESTMENT_URL=http://payu-investment-service:8080
+Environment=ROUTES_LENDING_URL=http://payu-lending-service:8087
+
+# Health check
+HealthCmd=curl -f http://localhost:8080/q/health || exit 1
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=15s
+
+# Resource limits
+Memory=512M
+MemorySwap=1G
+
+# Security options
+NoNewPrivileges=true
+RunInit=true
+
+# Logging
+LogDriver=journald
+LogOpt=tag=gateway-service
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+
+# Ensure dependencies are started first
+ExecStartPre=/usr/bin/podman start payu-redis payu-keycloak payu-jaeger
+
+[Install]
+WantedBy=default.target

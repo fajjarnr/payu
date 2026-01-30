@@ -1,0 +1,115 @@
+# ============================================
+# PayU Backend - Java/Spring Boot Docker Ignore
+# ============================================
+# This file provides dockerignore patterns for Java microservices
+# including Spring Boot and Quarkus services.
+
+# --- Version Control ---
+.git
+.gitignore
+.gitattributes
+.github
+
+# --- Java Build Artifacts ---
+target/
+!target/*.jar
+!target/quarkus-app/
+.m2/
+*.class
+*.jar
+*.war
+*.ear
+*.class
+hs_err_pid*
+replay_pid*
+
+# --- Maven ---
+.mvn/
+mvnw
+mvnw.cmd
+
+# --- Gradle (if used) ---
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+build/
+!build/libs/
+
+# --- Testing ---
+src/test/
+test/
+*.test
+test-results/
+*.test.ts
+**/__tests__/
+**/test/**/*.java
+**/test/resources/**
+
+# --- IDE Files ---
+.idea/
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*~
+.cache/
+.loadpath
+
+# --- Logs ---
+*.log
+logs/
+log/
+
+# --- Environment & Secrets ---
+.env
+.env.*
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+*.secret
+credentials.json
+application-local.yml
+application-local.properties
+
+# --- Documentation ---
+*.md
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+!docs/build/
+
+# --- Docker (prevent self-inclusion) ---
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# --- OS Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Misc ---
+.editorconfig
+.prettierignore
+.eslintrc*
+.prettierrc*
+CLEANUP.md

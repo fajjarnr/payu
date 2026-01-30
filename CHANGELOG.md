@@ -964,8 +964,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated docker-compose.yml to use environment variables with fallback defaults
   - Added Spring Cloud Vault dependencies to account-service and auth-service
   - Configured Vault integration in application.yaml files with enabled/disabled flag
-  - Created Vault initialization script (`infrastructure/docker/init-vault.sh`) for populating secrets
-  - Created Vault configuration file (`infrastructure/docker/vault-config.json`)
+  - Created Vault initialization script (`infrastructure/containers/init-vault.sh`) for populating secrets
+  - Created Vault configuration file (`infrastructure/containers/vault-config.json`)
   - Added Vault configuration tests for both services
   - Updated test profiles to disable Vault for unit tests
   - Created comprehensive Vault integration guide (`docs/guides/VAULT.md`)
@@ -1197,8 +1197,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Loki log aggregation (v2.9.10) with 744h (31 days) retention
   - Grafana dashboards (v11.1.4) with pre-built monitoring dashboards
   - Alertmanager (v0.27.0) with Slack and webhook notifications
-  - Promtail (v2.9.10) for log collection from Docker containers
-  - Configuration files in `infrastructure/docker/`:
+  - Promtail (v2.9.10) for log collection from containers
+  - Configuration files in `infrastructure/containers/`:
     - `loki-config.yml` - Loki server configuration
     - `promtail-config.yml` - Log collection agent configuration
     - `prometheus-alerts.yml` - 33 alert rules for services, performance, transactions, databases, and infrastructure

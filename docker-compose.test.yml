@@ -1,23 +1,26 @@
-# PayU Digital Banking - Docker Compose Test Environment
+# PayU Digital Banking - Container Compose Test Environment
 # Isolated test environment with clean databases and test data
+#
+# NOTE: This file is maintained for backward compatibility.
+# For Podman, use podman-compose.test.yml instead.
 
 services:
   # ============================================
   # DATA LAYER (Test-specific)
   # ============================================
-
   postgres-test:
     image: postgres:16-alpine
     container_name: payu-postgres-test
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_USER: payu_test
-      POSTGRES_PASSWORD: test_secret
-      POSTGRES_DB: payu_test_account
+      # REQUIRED: Set in .env file
+      POSTGRES_USER: ${TEST_POSTGRES_USER:-payu_test}
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
+      POSTGRES_DB: ${TEST_POSTGRES_DB:-payu_test_account}
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+      - ./infrastructure/containers/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U payu_test"]
       interval: 5s
@@ -34,7 +37,6 @@ services:
           memory: 256M
     networks:
       - payu-test-network
-
   redis-test:
     image: redis:7-alpine
     container_name: payu-redis-test
@@ -57,7 +59,6 @@ services:
           memory: 64M
     networks:
       - payu-test-network
-
   # TimescaleDB for Analytics Service
   timescaledb-test:
     image: timescale/timescaledb:latest-pg16
@@ -66,8 +67,9 @@ services:
       - "5434:5432"
     environment:
       POSTGRES_DB: payu_test_analytics
-      POSTGRES_USER: payu_test
-      POSTGRES_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      POSTGRES_USER: ${TEST_POSTGRES_USER:-payu_test}
+      POSTGRES_PASSWORD: ${TEST_TIMESCALE_PASSWORD:-test_secret}
     volumes:
       - timescaledb_test_data:/var/lib/postgresql/data
     healthcheck:
@@ -85,11 +87,9 @@ services:
           memory: 256M
     networks:
       - payu-test-network
-
   # ============================================
   # MESSAGE BROKER (Test)
   # ============================================
-
   zookeeper-test:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: payu-zookeeper-test
@@ -115,7 +115,6 @@ services:
           memory: 128M
     networks:
       - payu-test-network
-
   kafka-test:
     image: confluentinc/cp-kafka:7.5.0
     container_name: payu-kafka-test
@@ -151,23 +150,23 @@ services:
           memory: 256M
     networks:
       - payu-test-network
-
   # ============================================
   # IDENTITY (Test)
   # ============================================
-
   keycloak-test:
     image: quay.io/keycloak/keycloak:26.0
     container_name: payu-keycloak-test
     ports:
       - "8100:8080"
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      # REQUIRED: Set in .env file
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres-test:5432/keycloak_test
-      KC_DB_USERNAME: payu_test
-      KC_DB_PASSWORD: test_secret
+      KC_DB_USERNAME: ${TEST_POSTGRES_USER:-payu_test}
+      # REQUIRED: Set in .env file
+      KC_DB_PASSWORD: ${TEST_KEYCLOAK_DB_PASSWORD:-test_secret}
       KC_HEALTH_ENABLED: "true"
       JAVA_OPTS_APPEND: "-Xmx512M -Xms256M"
     command: start-dev
@@ -190,11 +189,9 @@ services:
           memory: 256M
     networks:
       - payu-test-network
-
   # ============================================
   # SIMULATORS (Test)
   # ============================================
-
   bi-fast-simulator-test:
     build:
       context: ./backend/simulators/bi-fast-simulator
@@ -206,7 +203,8 @@ services:
       QUARKUS_HTTP_PORT: 8080
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_bifast
       QUARKUS_DATASOURCE_USERNAME: payu_test
-      QUARKUS_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -226,7 +224,6 @@ services:
           memory: 32M
     networks:
       - payu-test-network
-
   dukcapil-simulator-test:
     build:
       context: ./backend/simulators/dukcapil-simulator
@@ -238,7 +235,8 @@ services:
       QUARKUS_HTTP_PORT: 8080
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_dukcapil
       QUARKUS_DATASOURCE_USERNAME: payu_test
-      QUARKUS_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -258,7 +256,6 @@ services:
           memory: 32M
     networks:
       - payu-test-network
-
   qris-simulator-test:
     build:
       context: ./backend/simulators/qris-simulator
@@ -270,7 +267,8 @@ services:
       QUARKUS_HTTP_PORT: 8080
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_qris
       QUARKUS_DATASOURCE_USERNAME: payu_test
-      QUARKUS_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -290,11 +288,9 @@ services:
           memory: 32M
     networks:
       - payu-test-network
-
   # ============================================
   # CORE BANKING SERVICES (Test)
   # ============================================
-
   account-service-test:
     build:
       context: ./backend/account-service
@@ -306,14 +302,13 @@ services:
       SPRING_PROFILES_ACTIVE: test
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_account
       SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
       SERVICES_DUKCAPIL_URL: http://dukcapil-simulator-test:8080
       SERVICES_AUTH_URL: http://auth-service-test:8002
       JAVA_OPTS: >-
-        -Xmx384M -Xms256M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
+        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -337,7 +332,6 @@ services:
           memory: 256M
     networks:
       - payu-test-network
-
   auth-service-test:
     build:
       context: ./backend/auth-service
@@ -349,15 +343,15 @@ services:
       SPRING_PROFILES_ACTIVE: test
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_auth
       SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
       KEYCLOAK_SERVER_URL: http://keycloak-test:8080
       KEYCLOAK_REALM: payu-test
       KEYCLOAK_CLIENT_ID: payu-backend-test
-      KEYCLOAK_CLIENT_SECRET: test_secret
+      # REQUIRED: Set in .env file
+      KEYCLOAK_CLIENT_SECRET: ${TEST_KEYCLOAK_CLIENT_SECRET:-test_secret}
       JAVA_OPTS: >-
-        -Xmx384M -Xms256M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
+        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -379,7 +373,6 @@ services:
           memory: 256M
     networks:
       - payu-test-network
-
   transaction-service-test:
     build:
       context: ./backend/transaction-service
@@ -391,15 +384,14 @@ services:
       SPRING_PROFILES_ACTIVE: test
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_transaction
       SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
       SERVICES_WALLET_URL: http://wallet-service-test:8004
       SERVICES_BIFAST_URL: http://bi-fast-simulator-test:8080
       SERVICES_QRIS_URL: http://qris-simulator-test:8080
       JAVA_OPTS: >-
-        -Xmx384M -Xms256M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
+        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -421,7 +413,6 @@ services:
           memory: 256M
     networks:
       - payu-test-network
-
   wallet-service-test:
     build:
       context: ./backend/wallet-service
@@ -433,12 +424,11 @@ services:
       SPRING_PROFILES_ACTIVE: test
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_wallet
       SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      SPRING_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
       JAVA_OPTS: >-
-        -Xmx384M -Xms256M
-        -XX:+UseG1GC
-        -XX:MaxGCPauseMillis=200
+        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -460,7 +450,6 @@ services:
           memory: 256M
     networks:
       - payu-test-network
-
   billing-service-test:
     build:
       context: ./backend/billing-service
@@ -472,7 +461,8 @@ services:
       QUARKUS_PROFILE: test
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_billing
       QUARKUS_DATASOURCE_USERNAME: payu_test
-      QUARKUS_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
       SERVICES_WALLET_URL: http://wallet-service-test:8004
     depends_on:
@@ -496,7 +486,6 @@ services:
           memory: 32M
     networks:
       - payu-test-network
-
   notification-service-test:
     build:
       context: ./backend/notification-service
@@ -508,7 +497,8 @@ services:
       QUARKUS_PROFILE: test
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_notification
       QUARKUS_DATASOURCE_USERNAME: payu_test
-      QUARKUS_DATASOURCE_PASSWORD: test_secret
+      # REQUIRED: Set in .env file
+      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
     depends_on:
       postgres-test:
@@ -531,7 +521,6 @@ services:
           memory: 32M
     networks:
       - payu-test-network
-
   gateway-service-test:
     build:
       context: ./backend/gateway-service
@@ -571,11 +560,9 @@ services:
           memory: 32M
     networks:
       - payu-test-network
-
   # ============================================
   # ML SERVICES (Test)
   # ============================================
-
   kyc-service-test:
     build:
       context: ./backend/kyc-service
@@ -584,7 +571,8 @@ services:
     ports:
       - "8107:8007"
     environment:
-      DATABASE_URL: postgresql+asyncpg://payu_test:test_secret@postgres-test:5432/payu_test_kyc
+      # REQUIRED: Set in .env file
+      DATABASE_URL: postgresql+asyncpg://${TEST_POSTGRES_USER:-payu_test}:${TEST_POSTGRES_PASSWORD:-test_secret}@postgres-test:5432/payu_test_kyc
       KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
       DUKCAPIL_URL: http://dukcapil-simulator-test:8080/api/v1
       PYTHONUNBUFFERED: "1"
@@ -610,7 +598,6 @@ services:
           memory: 128M
     networks:
       - payu-test-network
-
   analytics-service-test:
     build:
       context: ./backend/analytics-service
@@ -619,7 +606,8 @@ services:
     ports:
       - "8108:8008"
     environment:
-      DATABASE_URL: postgresql+asyncpg://payu_test:test_secret@timescaledb-test:5432/payu_test_analytics
+      # REQUIRED: Set in .env file
+      DATABASE_URL: postgresql+asyncpg://${TEST_POSTGRES_USER:-payu_test}:${TEST_TIMESCALE_PASSWORD:-test_secret}@timescaledb-test:5432/payu_test_analytics
       KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
       PYTHONUNBUFFERED: "1"
       PYTHONDONTWRITEBYTECODE: "1"
@@ -644,11 +632,9 @@ services:
           memory: 128M
     networks:
       - payu-test-network
-
   # ============================================
   # FRONTEND (Test)
   # ============================================
-
   web-app-test:
     build:
       context: ./frontend/web-app
@@ -678,11 +664,9 @@ services:
           memory: 64M
     networks:
       - payu-test-network
-
   # ============================================
   # MONITORING (Test)
   # ============================================
-
   jaeger-test:
     image: jaegertracing/all-in-one:1.58
     container_name: payu-jaeger-test
@@ -717,14 +701,13 @@ services:
           memory: 128M
     networks:
       - payu-test-network
-
   prometheus-test:
     image: prom/prometheus:v2.54.1
     container_name: payu-prometheus-test
     ports:
       - "9190:9090"
     volumes:
-      - ./infrastructure/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/containers/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_test_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -747,15 +730,12 @@ services:
           memory: 128M
     networks:
       - payu-test-network
-
 # ============================================
 # NETWORKS & VOLUMES (Test)
 # ============================================
-
 networks:
   payu-test-network:
     driver: bridge
-
 volumes:
   postgres_test_data:
   timescaledb_test_data:

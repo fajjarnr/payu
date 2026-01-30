@@ -1,0 +1,7 @@
+[Unit]
+Description=PayU Kafka Target
+After=zookeeper.target container.service
+PartOf=podman-payu.service
+
+[Install]
+WantedBy=podman-payu.service

@@ -1,11 +1,11 @@
-# Docker Compose for Gatling Performance Tests
+# Container Compose for Gatling Performance Tests
+# NOTE: For Podman, use podman-compose with this file
 version: '3.8'
-
 services:
   gatling:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-gatling
     environment:
       # Base URL for the services under test
@@ -32,6 +32,7 @@ services:
     # Command override to run specific simulation
     command: >
       sh -c "
+
         java $$JAVA_OPTS
         -cp lib/*:$(find . -name '*.jar' | tr '\n' ':')
         io.gatling.app.Gatling
@@ -57,7 +58,6 @@ services:
       - payu-network
     profiles:
       - monitoring
-
   # Optional: Prometheus for metrics
   prometheus:
     image: prom/prometheus:latest
@@ -74,12 +74,10 @@ services:
       - payu-network
     profiles:
       - monitoring
-
 networks:
   payu-network:
     external: true
     name: payu-network
-
 volumes:
   grafana-data:
   prometheus-data:

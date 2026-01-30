@@ -10,15 +10,15 @@
 #   ./setup.sh              # Full install
 #   ./setup.sh --backend    # Backend only (Java, Maven, Python)
 #   ./setup.sh --frontend   # Frontend only (Node.js, npm)
-#   ./setup.sh --docker     # Docker only
+#   ./setup.sh --podman     # Podman only
 #   ./setup.sh --check      # Check installed versions
 #
 # Requirements:
 #   - Java 21 (GraalVM CE or Temurin)
 #   - Maven 3.9+
 #   - Python 3.12+
-#   - Node.js 20+ LTS
-#   - Docker + Docker Compose
+#   - Node.js 22+ LTS
+#   - Podman (Rootless)
 #   - Git
 #
 
@@ -132,52 +132,30 @@ install_base_packages() {
     print_success "Base packages installed"
 }
 
-install_docker() {
-    print_section "Installing Docker"
+install_podman() {
+    print_section "Installing Podman (The PayU Standard)"
 
-    if command_exists docker; then
-        print_warning "Docker already installed: $(docker --version)"
+    if command_exists podman; then
+        print_warning "Podman already installed: $(podman --version)"
         return 0
     fi
 
     case $OS in
         ubuntu|debian|pop)
-            # Remove old versions
-            sudo apt remove -y docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc 2>/dev/null || true
-
-            # Add Docker's official GPG key
-            sudo install -m 0755 -d /etc/apt/keyrings
-            sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-            sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-            # Add the repository to Apt sources
-            echo \
-              "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-              $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-              sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
             sudo apt update -y
-            sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            sudo apt install -y podman podman-compose
             ;;
         fedora|rhel|centos|rocky|almalinux)
-            sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-            sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            sudo dnf install -y podman podman-compose
             ;;
         macos)
-            brew install --cask docker
-            echo -e "${YELLOW}Please open Docker Desktop to complete installation${NC}"
+            brew install podman podman-compose
+            podman machine init
+            podman machine start
             ;;
     esac
 
-    # Add user to docker group (Linux only)
-    if [[ "$OS" != "macos" ]]; then
-        sudo usermod -aG docker $USER
-        sudo systemctl enable docker
-        sudo systemctl start docker
-        print_warning "Log out and back in for docker group changes to take effect"
-    fi
-
-    print_success "Docker installed"
+    print_success "Podman installed"
 }
 
 install_java() {
@@ -303,7 +281,7 @@ install_nodejs() {
     esac
 
     # Install global npm packages
-    sudo npm install -g pnpm yarn
+    sudo npm install -g pnpm yarn @subosito/pact-js-cli @slidev/cli
 
     print_success "Node.js $NODE_VERSION installed"
 }
@@ -353,9 +331,9 @@ install_db_clients() {
 }
 
 install_additional_tools() {
-    print_section "Installing Additional Development Tools"
+    print_section "Installing Additional Development & Quality Tools"
 
-    # Install jq (JSON processor)
+    # Install jq, httpie, pre-commit
     case $OS in
         ubuntu|debian|pop)
             sudo apt install -y jq httpie pre-commit
@@ -367,6 +345,48 @@ install_additional_tools() {
             brew install jq httpie pre-commit
             ;;
     esac
+
+    # Install Maestro (Mobile Testing)
+    if ! command_exists maestro; then
+        echo "Installing Maestro..."
+        curl -Ls "https://get.maestro.mobile.dev" | bash
+    fi
+
+    # Install k6 (Performance Testing)
+    if ! command_exists k6; then
+        echo "Installing k6..."
+        case $OS in
+            ubuntu|debian|pop)
+                sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+                echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/bin/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+                sudo apt update && sudo apt install k6
+                ;;
+            fedora|rhel|centos|rocky|almalinux)
+                sudo dnf install k6
+                ;;
+            macos)
+                brew install k6
+                ;;
+        esac
+    fi
+
+    # Install Trivy (Security Scanning)
+    if ! command_exists trivy; then
+        echo "Installing Trivy..."
+        case $OS in
+            ubuntu|debian|pop)
+                wget -qO - https://aquasecurity.github.io/trivy-repo/dab/gpg.key | sudo apt-key add -
+                echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+                sudo apt update && sudo apt install trivy
+                ;;
+            fedora|rhel|centos|rocky|almalinux)
+                sudo dnf install -y trivy
+                ;;
+            macos)
+                brew install aquasecurity/trivy/trivy
+                ;;
+        esac
+    fi
 
     # Install k9s (Kubernetes TUI) - optional
     if ! command_exists k9s; then
@@ -381,7 +401,7 @@ install_additional_tools() {
         esac
     fi
 
-    print_success "Additional tools installed"
+    print_success "Additional tools installed (Maestro, k6, Trivy, k9s)"
 }
 
 # ============================================================================
@@ -512,14 +532,14 @@ check_versions() {
         print_error "Git: Not installed"
     fi
 
-    # Docker
-    if command_exists docker; then
-        print_success "Docker: $(docker --version)"
-        if command_exists docker-compose || docker compose version >/dev/null 2>&1; then
-            print_success "Docker Compose: $(docker compose version 2>/dev/null || docker-compose --version)"
+    # Podman
+    if command_exists podman; then
+        print_success "Podman: $(podman --version)"
+        if command_exists podman-compose; then
+            print_success "Podman Compose: $(podman-compose --version | head -n 1)"
         fi
     else
-        print_error "Docker: Not installed"
+        print_error "Podman: Not installed"
     fi
 
     # Java
@@ -640,9 +660,9 @@ main() {
             install_nodejs
             check_versions
             ;;
-        --docker|-d)
+        --podman|-d)
             install_base_packages
-            install_docker
+            install_podman
             check_versions
             ;;
         --project|-p)
@@ -655,7 +675,7 @@ main() {
             echo "  (none)       Full installation (all components)"
             echo "  --backend    Install backend tools (Java, Maven, Python)"
             echo "  --frontend   Install frontend tools (Node.js, npm)"
-            echo "  --docker     Install Docker only"
+            echo "  --podman     Install Podman only"
             echo "  --project    Setup project dependencies (npm install, etc)"
             echo "  --check      Check installed versions"
             echo "  --help       Show this help message"
@@ -664,7 +684,7 @@ main() {
         *)
             # Full installation
             install_base_packages
-            install_docker
+            install_podman
             install_java
             install_maven
             install_python
@@ -678,9 +698,8 @@ main() {
             print_section "Installation Complete!"
             echo ""
             echo "Next steps:"
-            echo "  1. Log out and back in (for docker group)"
-            echo "  2. Run: docker-compose up -d"
-            echo "  3. Run: cd frontend/web-app && npm run dev"
+            echo "  1. Run: podman-compose up -d"
+            echo "  2. Run: cd frontend/web-app && npm run dev"
             echo ""
             echo "For help: ./setup.sh --help"
             echo ""

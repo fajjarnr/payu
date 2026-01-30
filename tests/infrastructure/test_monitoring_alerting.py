@@ -338,12 +338,12 @@ class TestMonitoringInfrastructure:
         import os
 
         config_files = [
-            "infrastructure/docker/loki-config.yml",
-            "infrastructure/docker/promtail-config.yml",
-            "infrastructure/docker/prometheus-alerts.yml",
-            "infrastructure/docker/alertmanager-config.yml",
-            "infrastructure/docker/grafana/provisioning/datasources/datasources.yml",
-            "infrastructure/docker/grafana/provisioning/dashboards/dashboards.yml"
+            "infrastructure/containers/loki-config.yml",
+            "infrastructure/containers/promtail-config.yml",
+            "infrastructure/containers/prometheus-alerts.yml",
+            "infrastructure/containers/alertmanager-config.yml",
+            "infrastructure/containers/grafana/provisioning/datasources/datasources.yml",
+            "infrastructure/containers/grafana/provisioning/dashboards/dashboards.yml"
         ]
 
         for config_file in config_files:
@@ -355,14 +355,14 @@ class TestMonitoringInfrastructure:
         import os
 
         dashboard_files = [
-            "infrastructure/docker/grafana/dashboards/service-health.json",
-            "infrastructure/docker/grafana/dashboards/transactions.json",
-            "infrastructure/docker/grafana/dashboards/infrastructure.json",
-            "infrastructure/docker/grafana/dashboards/core-banking-services.json",
-            "infrastructure/docker/grafana/dashboards/supporting-services.json",
-            "infrastructure/docker/grafana/dashboards/ml-analytics-services.json",
-            "infrastructure/docker/grafana/dashboards/business-operations-services.json",
-            "infrastructure/docker/grafana/dashboards/infrastructure-monitoring.json"
+            "infrastructure/containers/grafana/dashboards/service-health.json",
+            "infrastructure/containers/grafana/dashboards/transactions.json",
+            "infrastructure/containers/grafana/dashboards/infrastructure.json",
+            "infrastructure/containers/grafana/dashboards/core-banking-services.json",
+            "infrastructure/containers/grafana/dashboards/supporting-services.json",
+            "infrastructure/containers/grafana/dashboards/ml-analytics-services.json",
+            "infrastructure/containers/grafana/dashboards/business-operations-services.json",
+            "infrastructure/containers/grafana/dashboards/infrastructure-monitoring.json"
         ]
 
         for dashboard_file in dashboard_files:

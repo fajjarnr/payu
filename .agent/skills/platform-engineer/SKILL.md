@@ -154,7 +154,7 @@ spec:
   workspaces:
     - name: source
     - name: maven-cache
-    - name: docker-credentials
+    - name: container-credentials
   tasks:
     - name: git-clone
       taskRef:
@@ -231,13 +231,15 @@ spec:
       params:
         - name: IMAGE
           value: $(params.image-name):$(params.git-revision)
+        - name: TLSVERIFY
+          value: "false"
         - name: DOCKERFILE
-          value: ./Dockerfile
+          value: ./Containerfile
       workspaces:
         - name: source
           workspace: source
         - name: dockerconfig
-          workspace: docker-credentials
+          workspace: container-credentials
 
     - name: update-manifests
       taskRef:
@@ -317,12 +319,14 @@ spec:
 
 ---
 
-## 🏗️ Container Hardening (UBI9)
+## 🏗️ Container Hardening (Podman/UBI9)
 
-### 1. Production Dockerfile Template
+PayU menggunakan **Podman** secara eksklusif karena arsitekturnya yang *daemonless* dan kemampuan eksekusi *rootless* secara native, yang jauh lebih aman dibanding Docker.
+
+### 1. Production Containerfile Template
 
 ```dockerfile
-# Dockerfile - Multi-stage build for Java service
+# Containerfile (Podman) - Multi-stage build for Java service
 # Stage 1: Build
 FROM registry.access.redhat.com/ubi9/openjdk-21:1.18 AS builder
 WORKDIR /build
@@ -397,11 +401,43 @@ spec:
           emptyDir: {}
 ```
 
-### 3. OCI & Metadata Standards (Legacy Container Engineer)
+### 3. SELinux Guardrails (Red Hat Best Practices)
 
-Semua container image PayU **WAJIB** memiliki metadata standar untuk auditability dan traceability.
+Platform PayU mengandalkan SELinux untuk pertahanan *Enforced* secara default. Jangan pernah mematikan SELinux (`setenforce 0`) di lingkungan produksi.
 
-#### Dockerfile Labels (Build Time)
+#### Volume Labeling (`:Z` vs `:z`)
+Saat mounting volume di Podman, label SELinux harus dikelola agar proses kontainer memiliki izin akses.
+
+*   **`:Z`**: Private unshared volume. Mencegah kontainer lain mengakses data ini. (Direkomendasikan).
+*   **`:z`**: Shared volume. Bisa diakses oleh beberapa kontainer.
+
+```bash
+# Contoh running rootless podman dengan SELinux labeling
+podman run -v /data/db:/var/lib/postgresql/data:Z postgres:16
+```
+
+#### OpenShift MCS (Multi-Category Security)
+Di OpenShift, setiap namespace mendapatkan kategori SELinux yang unik (misal: `s0:c12,c34`). Ini mencegah kontainer di Namespace A mengakses volume di Namespace B meskipun UUID-nya sama.
+
+#### Security Context Constraints (SCC)
+Gunakan SCC `restricted-v2` (default di OCP 4.12+) yang secara otomatis:
+1.  Mengalokasikan UID unik dari range namespace.
+2.  Menerapkan tipe SELinux `container_t`.
+3.  Memaksa penggunaan `seccompProfile` tipe `RuntimeDefault`.
+
+#### Troubleshooting Commands
+Jika terjadi `Permission Denied` meskipun permission file di host (Linux) sudah `777`:
+1.  Cek audit log: `ausearch -m avc -ts recent`
+2.  Lihat konteks file: `ls -Z /path/to/data`
+3.  Perbaiki label: `restorecon -Rv /path/to/data`
+
+---
+
+### 4. OCI & Metadata Standards (Legacy Container Engineer)
+
+Semua container image PayU **WAJIB** memiliki metadata standar untuk auditability dan traceability, menggunakan standar OCI (Open Container Initiative).
+
+#### Containerfile Labels (Build Time)
 
 ```dockerfile
 # Standard OCI Labels
@@ -717,7 +753,8 @@ metadata:
 ## 🛡️ Platform Integrity Checklist
 
 ### Security
-- [ ] Dockerfile uses UBI9-minimal and non-root USER
+- [ ] Containerfile menggunakan UBI9-minimal dan non-root USER
+- [ ] Dijalankan menggunakan Podman rootless (UID 1001)
 - [ ] SecurityContext drops all capabilities
 - [ ] NetworkPolicies isolate service traffic
 - [ ] Secrets managed via Vault/SealedSecrets (not Git)

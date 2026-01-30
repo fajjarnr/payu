@@ -1,0 +1,34 @@
+[Unit]
+Description=PayU Podman Compose Services
+Documentation=man:podman-systemd(1)
+After=network.target
+Requires=payu-network.target
+Requires=payu-test-network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=300
+
+# Environment variables
+Environment=USER=%U
+Environment=HOME=%h
+
+# Start services
+ExecStart=/usr/bin/podman play /home/ubuntu/payu/containers/podman-compose.yml
+ExecStart=/usr/bin/podman play /home/ubuntu/payu/containers/podman-compose.test.yml
+
+# Stop services
+ExecStop=/usr/bin/podman down --all
+ExecStop=/usr/bin/podman rm -f
+
+# Cleanup
+ExecStopPost=/usr/bin/podman system prune -f
+
+[Install]
+WantedBy=multi-user.target
+Also=postgres.target
+Also=redis.target
+Also=zookeeper.target
+Also=kafka.target
+Also=keycloak.target

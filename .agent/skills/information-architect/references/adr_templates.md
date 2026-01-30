@@ -450,5 +450,5 @@ We will use **URL Path Versioning** with the following conventions:
 |:---|:-----|:---------|:----------|:--------|:------|
 | D001 | 2025-06-01 | Use PostgreSQL over MySQL | Better JSON support, partitioning | Approved | @data-architect |
 | D002 | 2025-06-15 | Spring Boot 3.4 over Quarkus | Team expertise, ecosystem | Approved | @principal-architect |
-| D003 | 2025-07-01 | Kafka over RabbitMQ | Higher throughput, CDC support | Approved | @event-systems-architect |
+| D003 | 2025-07-01 | Kafka over RabbitMQ | Higher throughput, CDC support | Approved | @integration-architect |
 ```

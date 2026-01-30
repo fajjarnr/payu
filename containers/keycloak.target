@@ -1,0 +1,7 @@
+[Unit]
+Description=PayU Keycloak Target
+After=postgres.target container.service
+PartOf=podman-payu.service
+
+[Install]
+WantedBy=podman-payu.service

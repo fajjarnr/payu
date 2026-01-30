@@ -1,0 +1,32 @@
+[Unit]
+Description=PayU Kafka Broker
+After=zookeeper.target container.service
+Requires=zookeeper.target container.service
+PartOf=podman-payu.service
+
+[Container]
+Image=confluentinc/cp-kafka:7.5.0
+ContainerName=payu-kafka
+PodmanArgs=--pod=payu-messaging-pod --net=payu-network
+Network=payu-network
+EnvFile=-/home/ubuntu/payu/.env
+Environment=KAFKA_BROKER_ID=1
+Environment=KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+Environment=KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+Environment=KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+Environment=KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+Environment=KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+Environment=KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+Environment=KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+Environment=KAFKA_HEAP_OPTS=-Xmx1G -Xms1G
+Port=9092:9092
+Port=29092:29092
+HealthCmd=kafka-broker-api-versions --bootstrap-server localhost:9092
+HealthInterval=30s
+HealthTimeout=10s
+HealthStartPeriod=30s
+HealthRetries=5
+AutoUpdate=registry
+
+[Install]
+WantedBy=podman-payu.service

@@ -1,6 +1,5 @@
 server:
   http_listen_port: 3100
-
 common:
   instance_addr: 127.0.0.1
   path_prefix: /tmp/loki
@@ -12,14 +11,12 @@ common:
   ring:
     kvstore:
       store: inmemory
-
 query_range:
   results_cache:
     cache:
       embedded_cache:
         enabled: true
         max_size_mb: 100
-
 schema_config:
   configs:
     - from: 2024-01-01
@@ -29,10 +26,8 @@ schema_config:
       index:
         prefix: index_
         period: 24h
-
 ruler:
   alertmanager_url: http://alertmanager:9093
-
 limits_config:
   enforce_metric_name: false
   reject_old_samples: true
@@ -45,7 +40,6 @@ limits_config:
   max_global_streams_per_user: 0
   max_query_parallelism: 32
   max_query_length: 721h
-
 compactor:
   working_directory: /tmp/loki/compactor
   shared_store: filesystem
@@ -53,10 +47,8 @@ compactor:
   delete_request_store: filesystem
   retention_delete_delay: 2h
   retention_delete_worker_count: 150
-
 chunk_store_config:
   max_look_back_period: 744h
-
 table_manager:
   retention_deletes_enabled: true
   retention_period: 744h
