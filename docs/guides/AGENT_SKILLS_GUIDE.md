@@ -30,6 +30,43 @@ payu/
     ├── workflows -> ../.agent/workflows
     ├── commands -> ../.agent/commands
     └── settings.json -> ../.agent/settings.json
+
+### 🧠 Semantic Skill Registry (v2.0.0)
+
+Since January 2026, PayU uses a **Self-Aware Skill System** defined in `.agent/skills/REGISTRY.yaml`.
+Each skill now declares its dependencies and maturity level:
+
+```yaml
+# .agent/skills/REGISTRY.yaml
+skills:
+  - name: finops-engineer
+    version: 2.0.0
+    maturity: stable
+    requires: [data-architect] # Orchestrator will auto-load Data context
+    tags: [finops, cloud-cost, finance]
+```
+
+This enables **Dependency Injection**: When you call `@finops-engineer`, the system automatically loads architectural context from `@data-architect` to prevent silos.
+
+### 🕸️ Skill Dependency Graph
+
+```mermaid
+graph TD
+    PA[principal-architect] --> IA[information-architect]
+    DA[data-architect] --> CBE[core-banking-engineer]
+    DA --> DGA[data-governance-architect]
+    DA --> AI[ai-engineer]
+    DA --> FE[finops-engineer]
+    CBE --> INT[integration-architect]
+    CBE --> QE[quality-engineer]
+    API[api-architect] --> BFF[bff-architect]
+    PD[product-designer] --> FA[frontend-architect]
+    PD --> MA[mobile-architect]
+    FA --> WAB[web-artifacts-builder]
+    PE[platform-engineer] --> RE[release-engineer]
+    PE --> SRE[sre]
+```
+
 ```
 
 ---
