@@ -316,10 +316,20 @@ resilience4j:
     instances:
       fxService:
         registerHealthIndicator: true
-        slidingWindowSize: 10
-        failureRateThreshold: 50
-        waitDurationInOpenState: 30s
-        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 100            # Count-based to reduce jitter
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 10
+        permittedNumberOfCallsInHalfOpenState: 10
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s       # Fast recovery
+        failureRateThreshold: 50           # Fail if >50% errors
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000ms
+        recordExceptions:
+            - java.net.SocketTimeoutException
+            - org.springframework.web.client.ResourceAccessException
+        ignoreExceptions:
+            - id.payu.core.exception.BusinessException # Don't trip on logic errors
   
   bulkhead:
     instances:

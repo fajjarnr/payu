@@ -118,7 +118,9 @@ DLQ Topics:
 - payu.wallet.transfer-initiated.v1.dlq
 ```
 
-### 4. Topic Configuration
+### 4. Topic Configuration & Deep-Dive Internals
+
+Konfigurasi topik ini dirancang untuk throughput tinggi dengan jaminan data durability nol-kompromi.
 
 ```yaml
 # Strimzi KafkaTopic CR
@@ -129,14 +131,63 @@ metadata:
   labels:
     strimzi.io/cluster: payu-kafka
 spec:
-  partitions: 12  # Match expected throughput
-  replicas: 3     # High availability
+  partitions: 12  # Formula: Max(Consumer Group Parallelism) * Buffer
+  replicas: 3     # Standar HA (survive 1 node failure)
   config:
-    retention.ms: 604800000       # 7 days
-    min.insync.replicas: 2       # At least 2 replicas must ack
-    cleanup.policy: delete
-    max.message.bytes: 1048576   # 1MB max
-    compression.type: lz4
+    # DURABILITY
+    min.insync.replicas: 2       # Wajib! Producer akan gagal jika hanya 1 replika yang aktif.
+    unclean.leader.election.enable: "false" # Jangan pernah promote replica yang lag.
+    
+    # RETENTION
+    retention.ms: 604800000       # 7 hari
+    retention.bytes: -1          # Unlimited size (storage bound)
+    
+    # PERFORMANCE & BATCHING
+    segment.bytes: 1073741824    # 1GB log segments
+    max.message.bytes: 1048576   # 1MB cap (cegah payload bloating)
+    compression.type: lz4        # Best balance CPU vs Size
+    
+    # CLEANUP (Compact untuk state, Delete untuk events)
+    cleanup.policy: delete 
+```
+
+#### 🧠 Partitioning Strategy Calculator
+
+Jangan menebak jumlah partisi. Gunakan rumus ini:
+
+$$ Partitions = Max(T_p, T_c) $$
+
+*   $T_p$: Target Throughput Producer (MB/s)
+*   $T_c$: Target Throughput Consumer (MB/s)
+
+**Skenario PayU**:
+*   Target: 50,000 TPS (Transactions Per Second)
+*   Avg Msg Size: 1KB
+*   Throughput: 50 MB/s
+*   Single Consumer speed: 10 MB/s (heavy processing)
+*   **Result**: Butuh minimal 5 consumer paralel -> **set 6 atau 12 partisi** (untuk scaling room).
+
+#### ☣️ Poison Pill Handling Strategy
+
+Pesan rusak (*malformed JSON*) bisa memacetkan consumer selamanya.
+
+**Implementasi `ErrorHandlingDeserializer`**:
+
+```java
+// Spring Boot Properties
+spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+spring.kafka.consumer.properties.spring.deserializer.value.delegate.class=org.springframework.kafka.support.serializer.JsonDeserializer
+
+// Dead Letter Publishing (Dlt)
+@RetryableTopic(
+    attempts = "3",
+    backoff = @Backoff(delay = 1000, multiplier = 2.0),
+    topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE
+)
+@KafkaListener(topics = "payu.wallet.transfer")
+public void listen(TransferEvent event) {
+    // Process
+}
 ```
 
 ---

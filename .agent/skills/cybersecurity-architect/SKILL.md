@@ -483,6 +483,46 @@ app.use((req, res, next) => {
 - **Secrets Management**: Use **HashiCorp Vault** or OpenShift Secrets. NEVER hardcode keys.
 - **Container Hardening**: Use UBI9-minimal images. Run as non-root user.
 
+### 4. Fraud Detection Rules (Compliance @OJK)
+
+Setiap transaksi harus melewati *Deterministic Rule Engine* sebelum dinyatakan valid.
+
+#### Velocity Checks (Rate of Transaction)
+
+```typescript
+// patterns/fraud-rules.ts
+export const fraudRules = [
+  {
+    id: "VELOCITY_1MIN",
+    condition: (txs) => txs.filter(t => t.timestamp > Date.now() - 60000).length > 3,
+    action: "BLOCK",
+    reason: "Too many transactions in 1 minute"
+  },
+  {
+    id: "MIDNIGHT_SURGE",
+    condition: (txs, currentTx) => {
+        const hour = new Date(currentTx.timestamp).getHours();
+        return (hour >= 0 && hour <= 4) && currentTx.amount > 5000000;
+    },
+    action: "CHALLENGE_MFA",
+    reason: "High value transaction during sleeping hours"
+  }
+];
+```
+
+#### Geo-Fencing (Impossible Travel)
+Jika user login di Jakarta jam 10:00, lalu login di Russia jam 10:05 -> **BLOCK**.
+
+### 5. Audit Evidence (POJK 12/2017)
+
+Data yang wajib tersedia saat audit OJK:
+
+1.  **Audit Trail**: `who`, `what`, `when`, `where` (IP/Location), `status` (Success/Fail).
+2.  **Change Management**: Bukti approval PR untuk setiap deployment ke Production.
+3.  **Access Review**: Laporan bulanan user yang punya akses ke Production DB (harus 0 atau *Just-In-Time*).
+
+---
+
 ---
 
 ## ⚠️ Security Best Practices

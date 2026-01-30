@@ -470,6 +470,48 @@ changelog:
 
 ---
 
+## 🏗️ Internal Developer Portal (Backstage)
+
+PayU menggunakan portal terpusat (IDP) agar developer tidak perlu menghapal URL 20+ services.
+
+### 1. Service Catalog Definition
+
+Setiap service wajib memiliki `catalog-info.yaml` di root repository.
+
+```yaml
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: wallet-service
+  description: Core ledger and balance management
+  annotations:
+    github.com/project-slug: payu/wallet-service
+    backstage.io/techdocs-ref: dir:.
+    sonarqube.org/project-key: payu_wallet-service
+spec:
+  type: service
+  lifecycle: production
+  owner: squad-wallet
+  system: core-banking
+  providesApis:
+    - wallet-api
+  dependsOn:
+    - resource:wallet-db
+    - component:transaction-service
+```
+
+### 2. Software Templates (Scaffolding)
+Jangan buat repo manual! Gunakan template standar PayU di IDP.
+
+*   **Spring Boot 3.4 Service**: Hexagonal Arch + Resilience4j + Kafka.
+*   **Next.js 15 Frontend**: Tailwind + React Query + ShadcnUI.
+*   **Python AI Service**: FastAPI + Pydantic + PyTorch.
+
+--- 
+
+
+---
+
 ## 🎬 Slidev - Developer Presentations
 
 ### Quick Start

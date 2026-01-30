@@ -22,6 +22,8 @@ You are the **Lead Quality Engineer (AI)** for the **PayU Platform**. You don't 
 | **Contract Testing** | API Compatibility | Pact/Spring Cloud Contract, CDC |
 | **Performance** | Load Testing | Gatling/k6 scripts, Capacity planning |
 | **Financial Integrity** | Accuracy | Ledger invariants, Reconciliation tests |
+| **Mobile Quality** | User Experience | Appium/Maestro flows, Device Farm Strategy |
+| **Visual Regression** | Pixel Perfect | Percy/Chromatic snapshots, Storybook tests |
 
 ---
 
@@ -306,6 +308,97 @@ jobs:
             --pacticipant wallet-service \
             --version ${{ github.sha }} \
             --to production
+```
+
+---
+
+## 📱 Mobile Test Automation (Maestro)
+
+Mobile testing di PayU menggunakan **Maestro** karena sintaks YAML-nya yang deklaratif dan toleransi tinggi terhadap *flakiness* (intelligent waiting).
+
+### 1. Critical User Journey (Transfer Flow)
+
+```yaml
+# flows/transfer/bi-fast-transfer.yaml
+appId: id.payu.mobile
+tags:
+  - critical
+  - transfer
+
+---
+- launchApp
+- runFlow:
+    file: ../auth/login-flow.yaml
+    env:
+        USERNAME: "user_tester_01"
+        PASSWORD: "Password123!"
+
+- tapOn: "Transfer"
+- tapOn: "BI-FAST"
+- inputText: "1234567890" # Destination Account
+- tapOn: "Lanjut"
+- assertVisible: "John Doe" # Verify Account Name
+
+- inputText: "50000" # Amount
+- tapOn: "Lanjut"
+- tapOn: "Konfirmasi Transfer"
+
+- inputText: "123456" # PIN
+- assertVisible: "Transfer Berhasil"
+- assertVisible: "Rp 50.000"
+```
+
+### 2. Deep Linking Test
+
+```yaml
+- openLink: "payu://transfer?vc=12345"
+- assertVisible: "Pembayaran Virtual Account"
+- assertVisible: "12345"
+```
+
+### 3. Device Farm Strategy (AWS Device Farm / BrowserStack)
+
+Kami menggunakan strategi **Tiered Device Matrix** untuk regresi:
+
+| Tier | Devices | OS Versions | Frequency |
+|:-----|:--------|:------------|:----------|
+| **Tier 1 (Smoke)** | Pixel 7, iPhone 14 | Android 14, iOS 17 | Every PR |
+| **Tier 2 (Regression)** | Samsung S23, S21, Xiaomi 13, iPhone 12 | Android 12-14, iOS 16-17 | Nightly |
+| **Tier 3 (Compatibility)** | Oppo A series, Realme, iPhone SE | Android 10-11, iOS 15 | Weekly |
+
+---
+
+## 👁️ Visual Regression Testing
+
+Jangan biarkan CSS refactor merusak UI. Gunakan **Percy** atau **Chromatic** yang terintegrasi dengan Storybook.
+
+### 1. Storybook Integration
+
+```javascript
+// wallet-card.stories.tsx
+export const Default: Story = {
+  args: {
+    balance: 5000000,
+    accountNumber: '123-456-7890',
+    variant: 'emerald',
+  },
+  play: async ({ canvasElement }) => {
+    // Percy automatically takes a snapshot here
+    await expect(canvasElement).toBeVisible();
+  },
+};
+```
+
+### 2. CI/CD Check
+
+```yaml
+# .github/workflows/visual-test.yml
+- name: Visual Test with Perecy
+  run: npx percy storybook-build
+  env:
+    PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+    
+# Result: GitHub status check will FAIL if pixels changed > 1% check
 ```
 
 ---

@@ -271,6 +271,49 @@ spec:
 | `notification-service` | 500m | 200m | 60% |
 | `analytics-service` | 1000m | 400m | 60% |
 
+#### 3. Strategic Cost Reduction (Cloud FinOps Architect)
+
+Selain right-sizing, gunakan pilar strategi ini untuk memangkas *Cloud Bill* hingga 40%.
+
+##### Spot Instance Strategy (Non-Prod)
+Gunakan Spot Instances untuk workload yang *stateless* dan *tolerant to interruption*.
+
+```yaml
+# openshift/machine-set-spot.yaml
+spec:
+  template:
+    spec:
+      providerSpec:
+        value:
+          spotMarketOptions: 
+            maxPrice: "0.05"  # Max $0.05/hour
+```
+
+##### Auto-Stopping Environments
+Environment Development & Staging TIDAK BOLEH menyala 24/7.
+*   **Schedule**: Auto-shutdown jam 20:00 WIB. Auto-start jam 07:00 WIB.
+*   **Result**: Hemat ~33% biaya compute per bulan.
+
+##### S3 Lifecycle Policy
+Jangan simpan log selamanya di Standard Storage.
+
+```json
+{
+  "Rules": [
+    {
+      "ID": "LogRetention",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "logs/" },
+      "Transitions": [
+        { "Days": 30, "StorageClass": "STANDARD_IA" },
+        { "Days": 90, "StorageClass": "GLACIER" }
+      ],
+      "Expiration": { "Days": 365 }
+    }
+  ]
+}
+```
+
 ### 3. Operate (Unit Economics)
 
 #### Cost Per Transaction (CPT) Tracking

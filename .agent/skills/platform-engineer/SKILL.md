@@ -397,6 +397,53 @@ spec:
           emptyDir: {}
 ```
 
+### 3. OCI & Metadata Standards (Legacy Container Engineer)
+
+Semua container image PayU **WAJIB** memiliki metadata standar untuk auditability dan traceability.
+
+#### Dockerfile Labels (Build Time)
+
+```dockerfile
+# Standard OCI Labels
+LABEL org.opencontainers.image.vendor="PayU Digital Banking" \
+      org.opencontainers.image.authors="platform@payu.id" \
+      org.opencontainers.image.title="Wallet Service" \
+      org.opencontainers.image.description="Core ledger and balance management service" \
+      org.opencontainers.image.licenses="Proprietary" \
+      org.opencontainers.image.source="https://github.com/payu/wallet-service" \
+      org.opencontainers.image.documentation="https://docs.payu.internal/services/wallet" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.revision="${GIT_COMMIT}"
+
+# PayU Specific Metadata
+LABEL id.payu.service.tier="1" \
+      id.payu.service.domain="transaction" \
+      id.payu.compliance.pci-dss="true" \
+      id.payu.security.scan-level="critical"
+```
+
+#### Kubernetes Annotations (Runtime)
+
+```yaml
+metadata:
+  annotations:
+    # Build Info
+    image.openshift.io/triggers: "[{'from':{'kind':'ImageStreamTag','name':'wallet-service:latest'},'fieldPath':'spec.template.spec.containers[?(@.name==\"app\")].image'}]"
+    
+    # Ownership & Contact
+    start.payu.id/owner: "Wallet Team <wallet@payu.id>"
+    start.payu.id/slack-channel: "#dev-wallet"
+    
+    # Operational Metadata
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/actuator/prometheus"
+    
+    # Documentation
+    link.argocd.argoproj.io/external-link: "https://docs.payu.internal/services/wallet"
+```
+
 ---
 
 ## 📦 Helm Chart Standards

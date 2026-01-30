@@ -269,6 +269,41 @@ max_client_conn = 1000
 default_pool_size = 25
 reserve_pool_size = 5
 reserve_pool_timeout = 3
+
+### 5. PostgreSQL Performance Tuning (The "Secret Sauce")
+
+Konfigurasi berikut diwajibkan untuk instance PostgreSQL yang menangani beban transaksi tinggi (>10k TPS). Jangan andalkan default config!
+
+```ini
+# postgresql.conf
+
+# MEMORY
+shared_buffers = 25%_RAM         # Alokasi RAM utama untuk cache DB (misal: 4GB untuk 16GB RAM)
+effective_cache_size = 75%_RAM   # Estimasi cache OS + DB (untuk query planner)
+work_mem = 16MB                  # Memory per operasi sort/hash (waspada OOM jika koneksi banyak)
+maintenance_work_mem = 512MB     # Memory untuk VACUUM dan index creation
+
+# WAL (Write Ahead Log)
+wal_level = replica
+synchronous_commit = off         # PERINGATAN: `off` boost write 3x lipat, tapi risiko hilang data <100ms saat crash. 
+                                 # GUNAKAN 'on' UNTUK FINANCIAL LEDGER, 'off' untuk LOGS/AUDIT.
+wal_buffers = 16MB
+max_wal_size = 4GB               # Checkpoint jarang terjadi = Write lancar
+min_wal_size = 1GB
+checkpoint_timeout = 15min       # Kurangi IO spike akibat checkpoint terlalu sering
+
+# AUTOVACUUM (Kritis untuk Update/Delete berat)
+autovacuum = on
+autovacuum_max_workers = 5       # Paralelisasi cleanup
+autovacuum_naptime = 10s         # Cek tabel mati lebih sering
+autovacuum_vacuum_scale_factor = 0.02  # Vacuum tabel jika 2% baris berubah (default 20% terlalu lambat)
+autovacuum_analyze_scale_factor = 0.01
+
+# CONNECTION & PROCESS
+max_connections = 200            # Gunakan PgBouncer untuk multiplexing ribuan user
+random_page_cost = 1.1           # Asumsi SSD NVMe (default 4.0 untuk HDD putar)
+effective_io_concurrency = 200   # Concurrent IO requests yang bisa ditangani storage
+```
 ```
 
 ---
