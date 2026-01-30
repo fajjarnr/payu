@@ -1,7 +1,12 @@
 ---
 name: data-governance-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [data-architect]
+tags: [data, compliance, pii, lineage]
+related: [cybersecurity-architect]
 description: **Master Skill**: Data Governance & Lineage Architect. Covers Data Cataloging, Lineage Tracking, PII Classification, Retention Policies, and Regulatory Compliance (POJK, UU PDP).
 ---
 

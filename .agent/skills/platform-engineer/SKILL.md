@@ -1,7 +1,12 @@
 ---
 name: platform-engineer
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: []
+tags: [devops, k8s, openshift, infrastructure]
+related: [sre, cybersecurity-architect]
 description: **Master Skill**: Platform & DevOps Architect for PayU. Expert in OpenShift 4.20+, Tekton Pipelines, ArgoCD (GitOps), and Container Hardening (UBI9).
 ---
 

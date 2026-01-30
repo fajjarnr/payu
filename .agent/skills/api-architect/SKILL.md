@@ -1,7 +1,12 @@
 ---
 name: api-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: []
+tags: [api, rest, openapi, governance]
+related: [bff-architect]
 description: **Master Skill**: REST API design, OpenAPI standards, and robust 3rd-party integrations (OAuth2, Webhooks, Retries).
 ---
 

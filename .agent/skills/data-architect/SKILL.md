@@ -1,7 +1,12 @@
 ---
 name: data-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: []
+tags: [database, postgres, sql, performance]
+related: [data-governance-architect]
 description: **Master Skill**: Data Architect for PayU. Expert in PostgreSQL design, Performance Tuning (Indexing/Locking), Flyway migrations, and high-scale JSONB patterns.
 ---
 

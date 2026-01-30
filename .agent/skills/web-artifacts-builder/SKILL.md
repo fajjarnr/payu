@@ -1,7 +1,12 @@
 ---
 name: web-artifacts-builder
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [frontend-architect]
+tags: [tools, bundling, scaffolding]
+related: [frontend-architect]
 description: **Master Skill**: Frontend Artifact Specialist. Suite of tools for creating elaborate, multi-component PayU HTML artifacts using React, Tailwind CSS, and shadcn/ui.
 ---
 

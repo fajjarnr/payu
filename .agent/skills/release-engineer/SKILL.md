@@ -1,7 +1,12 @@
 ---
 name: release-engineer
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [platform-engineer]
+tags: [release, cicd, feature-flags, rollouts]
+related: [platform-engineer]
 description: **Master Skill**: Release Engineering & Deployment Strategies. Covers Feature Flags, Blue-Green/Canary Deployments, Progressive Rollouts, and Rollback Automation.
 ---
 

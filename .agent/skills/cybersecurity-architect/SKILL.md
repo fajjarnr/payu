@@ -1,7 +1,12 @@
 ---
 name: cybersecurity-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: []
+tags: [security, compliance, zero-trust, vault]
+related: [platform-engineer, data-governance-architect]
 description: **Master Skill**: Zero Trust Security Architect for PayU. Covers Keycloak (OIDC/SAML), JWT validation, Field Encryption, Secure Coding (OWASP), and Compliance (PCI-DSS).
 ---
 

@@ -1,7 +1,12 @@
 ---
 name: mobile-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [product-designer]
+tags: [mobile, react-native, expo, security]
+related: [frontend-architect]
 description: **Master Skill**: React Native, Expo, and Native UI design. Includes architectural patterns for navigation, security, and offline-first performance.
 ---
 

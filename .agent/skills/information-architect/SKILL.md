@@ -1,7 +1,12 @@
 ---
 name: information-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [principal-architect]
+tags: [docs, architecture, c4, adr]
+related: [principal-architect]
 description: **Master Skill**: Documentation & Knowledge Architect. Expert in documentation systems, technical writing, C4 architecture mapping, and ADR maintenance for PayU.
 ---
 

@@ -1,7 +1,12 @@
 ---
 name: core-banking-engineer
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [data-architect]
+tags: [backend, java, spring, hexagonal]
+related: [integration-architect]
 description: **Master Skill**: Backend Systems Architect for PayU. Specialized in Spring Boot 3.4, Quarkus Native, Hexagonal Architecture, high-performance Java patterns, and multi-service Resilience.
 ---
 

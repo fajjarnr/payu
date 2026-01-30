@@ -1,7 +1,12 @@
 ---
 name: quality-engineer
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [core-banking-engineer]
+tags: [qa, testing, automation, contract-testing]
+related: [sdet-solutions-engineer]
 description: **Master Skill**: Quality Engineering & Testing Architecture. Unified expertise in Full-Stack Testing, Contract Testing, Performance Engineering, Test Automation, and Financial Integrity Verification.
 ---
 

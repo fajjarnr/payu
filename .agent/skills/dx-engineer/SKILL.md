@@ -1,7 +1,12 @@
 ---
 name: dx-engineer
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: []
+tags: [dev-experience, git, typescript, tooling]
+related: [platform-engineer]
 description: **Master Skill**: Developer Experience Engineering. Unified expertise in Git Workflows, TypeScript Patterns, Documentation Tools (Slidev), Code Review Standards, and Developer Tooling.
 ---
 

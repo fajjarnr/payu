@@ -1,7 +1,12 @@
 ---
 name: sre
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [platform-engineer]
+tags: [reliability, observability, chaos, dr]
+related: [finops-engineer]
 description: **Master Skill**: Site Reliability Engineering. Unified expertise in Observability (LGTM Stack), Chaos Engineering, Disaster Recovery, SLO/SLI Management, and Incident Response.
 ---
 

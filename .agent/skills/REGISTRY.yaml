@@ -1,0 +1,83 @@
+version: 1.0.0
+last_updated: 2026-01-30
+skills:
+  - name: ai-engineer
+    version: 2.0.0
+    maturity: stable
+    tags: [ai, ml, python, fastapi]
+  - name: api-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [api, rest, openapi, governance]
+  - name: bff-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [backend, nodejs, bff, graphql]
+  - name: core-banking-engineer
+    version: 2.0.0
+    maturity: stable
+    tags: [backend, java, spring, hexagonal]
+  - name: cybersecurity-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [security, compliance, zero-trust, vault]
+  - name: data-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [database, postgres, sql, performance]
+  - name: data-governance-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [data, compliance, pii, lineage]
+  - name: dx-engineer
+    version: 2.0.0
+    maturity: stable
+    tags: [dev-experience, git, typescript, tooling]
+  - name: finops-engineer
+    version: 2.0.0
+    maturity: stable
+    tags: [finops, cloud-cost, finance, reconciliation]
+  - name: frontend-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [frontend, react, nextjs, performance]
+  - name: information-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [docs, architecture, c4, adr]
+  - name: integration-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [events, kafka, integration, cdc]
+  - name: mobile-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [mobile, react-native, expo, security]
+  - name: platform-engineer
+    version: 2.0.0
+    maturity: stable
+    tags: [devops, k8s, openshift, infrastructure]
+  - name: principal-architect
+    version: 2.0.0
+    maturity: stable
+    tags: [architecture, strategy, leadership, dora]
+  - name: product-designer
+    version: 2.0.0
+    maturity: stable
+    tags: [design, ui, ux, a11y]
+  - name: quality-engineer
+    version: 2.0.0
+    maturity: stable
+    tags: [qa, testing, automation, contract-testing]
+  - name: release-engineer
+    version: 2.0.0
+    maturity: stable
+    tags: [release, cicd, feature-flags, rollouts]
+  - name: sre
+    version: 2.0.0
+    maturity: stable
+    tags: [reliability, observability, chaos, dr]
+  - name: web-artifacts-builder
+    version: 2.0.0
+    maturity: stable
+    tags: [tools, bundling, scaffolding]

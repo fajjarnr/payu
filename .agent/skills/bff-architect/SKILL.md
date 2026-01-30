@@ -1,7 +1,12 @@
 ---
 name: bff-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [api-architect]
+tags: [backend, nodejs, bff, graphql]
+related: [api-architect, frontend-architect]
 description: **Master Skill**: BFF (Backend-for-Frontend) Architect. Expert in Node.js/TypeScript, Prisma ORM, Zod validation, and high-performance Express/Fastify patterns.
 ---
 

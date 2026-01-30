@@ -1,7 +1,12 @@
 ---
 name: frontend-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [product-designer]
+tags: [frontend, react, nextjs, performance]
+related: [product-designer, bff-architect]
 description: **Master Skill**: Next.js 15+ Architecture for PayU. Covers Server Components, React Query/Zustand patterns, Streaming, and high-performance Web infrastructure.
 ---
 

@@ -1,7 +1,12 @@
 ---
 name: integration-architect
 version: 2.0.0
+maturity: stable
+updated: 2026-01-30
+author: payu-platform-team
 requires: [core-banking-engineer]
+tags: [events, kafka, integration, cdc]
+related: [core-banking-engineer]
 description: **Master Skill**: Integration & Event Systems Architect. Covers Distributed Transactions (Sagas), Event Sourcing, Kafka/AMQ Streams engineering, CDC (Debezium), and Exactly-Once semantics.
 ---
 
