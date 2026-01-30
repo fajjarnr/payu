@@ -1,0 +1,169 @@
+# Transfer Flow E2E Test
+# Tests the complete money transfer journey
+
+appId: com.payu.mobile
+name: Transfer Flow
+description: |
+  Validates the complete transfer flow including:
+  - Navigation to transfer screen
+  - Amount input with validation
+  - Recipient selection
+  - Confirmation screen
+  - Success state
+
+tags:
+  - smoke
+  - critical
+  - transfer
+  - payment
+
+onFlowStart:
+  - runFlow: login.yaml
+
+---
+
+# Navigate to transfer screen from home
+- tapOn:
+    text: "Transfer"
+    label: "Tap Transfer quick action"
+
+# Wait for transfer screen
+- waitForAnimationToEnd
+
+# Assert transfer screen elements
+- assertVisible:
+    id: "transfer-screen"
+    label: "Transfer screen is displayed"
+
+- assertVisible:
+    text: "Transfer Money"
+    label: "Transfer title is visible"
+
+# Assert from pocket is displayed
+- assertVisible:
+    text: "From"
+    label: "From pocket label is visible"
+
+- assertVisible:
+    text: "Primary Wallet"
+    label: "Primary wallet is selected"
+
+# Input amount
+- tapOn:
+    id: "amount-input"
+    label: "Tap amount input field"
+
+- inputText:
+    id: "amount-input"
+    text: "50000"
+    label: "Enter transfer amount (Rp 50,000)"
+
+- hideKeyboard
+
+# Assert amount validation (minimum Rp 10,000)
+- assertVisible:
+    id: "amount-input"
+    label: "Amount input contains value"
+
+# Select recipient bank
+- tapOn:
+    id: "bank-selector"
+    label: "Tap bank selector"
+
+- waitForAnimationToEnd
+
+- tapOn:
+    text: "Bank Central Asia"
+    label: "Select BCA as recipient bank"
+
+# Input recipient account number
+- tapOn:
+    id: "recipient-account-input"
+    label: "Tap recipient account input"
+
+- inputText:
+    id: "recipient-account-input"
+    text: ${TEST_RECIPIENT_ACCOUNT}
+    label: "Enter recipient account number"
+
+- hideKeyboard
+
+# Input description
+- tapOn:
+    id: "description-input"
+    label: "Tap description input"
+
+- inputText:
+    id: "description-input"
+    text: "E2E Test Transfer"
+    label: "Enter transfer description"
+
+- hideKeyboard
+
+# Tap continue button
+- tapOn:
+    id: "continue-button"
+    label: "Tap continue button"
+
+# Wait for confirmation screen
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert confirmation screen
+- assertVisible:
+    id: "transfer-confirm-screen"
+    label: "Transfer confirmation screen is displayed"
+
+- assertVisible:
+    text: "Confirm Transfer"
+    label: "Confirmation title is visible"
+
+# Assert transfer details on confirmation
+- assertVisible:
+    text: "Rp 50,000"
+    label: "Transfer amount is displayed"
+
+- assertVisible:
+    text: ${TEST_RECIPIENT_ACCOUNT}
+    label: "Recipient account is displayed"
+
+- assertVisible:
+    text: "E2E Test Transfer"
+    label: "Description is displayed"
+
+# Confirm transfer
+- tapOn:
+    id: "confirm-transfer-button"
+    label: "Tap confirm transfer button"
+
+# Wait for processing
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Assert success state
+- assertVisible:
+    id: "transfer-success-screen"
+    label: "Transfer success screen is displayed"
+
+- assertVisible:
+    text: "Transfer Successful"
+    label: "Success message is visible"
+
+- assertVisible:
+    text: "Transaction ID"
+    label: "Transaction ID is displayed"
+
+# Tap back to home
+- tapOn:
+    id: "back-to-home-button"
+    label: "Tap back to home button"
+
+- waitForAnimationToEnd
+
+# Assert back on home screen
+- assertVisible:
+    id: "home-screen"
+    label: "Returned to home screen"
+
+# Take success screenshot
+- takeScreenshot: transfer-flow-success

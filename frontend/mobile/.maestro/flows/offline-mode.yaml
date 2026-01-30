@@ -1,0 +1,227 @@
+# Offline Mode E2E Test
+# Tests app functionality when network is unavailable
+
+appId: com.payu.mobile
+name: Offline Mode Flow
+description: |
+  Validates offline functionality including:
+  - Network status detection
+  - Offline indicator display
+  - Cached data accessibility
+  - Offline queue for pending actions
+  - Sync when back online
+
+tags:
+  - smoke
+  - offline
+  - resilience
+  - critical
+
+onFlowStart:
+  - runFlow: login.yaml
+
+---
+
+# Assert initial online state
+- assertVisible:
+    id: "online-indicator"
+    label: "Online indicator is visible"
+
+# Navigate to transfers to cache some data
+- tapOn:
+    text: "Transfer"
+    label: "Tap Transfer quick action"
+
+- waitForAnimationToEnd
+
+# Go back to home
+- tapOn:
+    id: "back-button"
+    label: "Tap back button"
+
+- waitForAnimationToEnd
+
+# Disable network (airplane mode)
+- toggleAirplaneMode:
+    enabled: true
+    label: "Enable airplane mode"
+
+# Wait for offline detection
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Assert offline indicator is shown
+- assertVisible:
+    id: "offline-banner"
+    label: "Offline banner is displayed"
+
+- assertVisible:
+    text: "You're offline"
+    label: "Offline message is visible"
+
+# Assert cached data is still accessible
+- assertVisible:
+    id: "balance-card"
+    label: "Balance card is still visible (cached)"
+
+- assertVisible:
+    id: "quick-actions"
+    label: "Quick actions are still accessible"
+
+# Try to perform an action while offline
+- tapOn:
+    text: "Transfer"
+    label: "Tap Transfer while offline"
+
+- waitForAnimationToEnd
+
+# Assert offline warning on transfer screen
+- assertVisible:
+    id: "offline-warning"
+    label: "Offline warning is displayed"
+
+- assertVisible:
+    text: "Limited functionality while offline"
+    label: "Limited functionality message is shown"
+
+# Attempt to fill transfer form (should be queued)
+- tapOn:
+    id: "amount-input"
+    label: "Tap amount input"
+
+- inputText:
+    id: "amount-input"
+    text: "25000"
+    label: "Enter transfer amount"
+
+- hideKeyboard
+
+- tapOn:
+    id: "recipient-account-input"
+    label: "Tap recipient account"
+
+- inputText:
+    id: "recipient-account-input"
+    text: "1234567890"
+    label: "Enter recipient account"
+
+- hideKeyboard
+
+- tapOn:
+    id: "description-input"
+    label: "Tap description"
+
+- inputText:
+    id: "description-input"
+    text: "Offline test transfer"
+    label: "Enter description"
+
+- hideKeyboard
+
+# Try to continue - should show offline queue message
+- tapOn:
+    id: "continue-button"
+    label: "Tap continue button"
+
+- waitForAnimationToEnd
+
+# Assert action is queued
+- assertVisible:
+    id: "offline-queue-toast"
+    label: "Offline queue toast is shown"
+
+- assertVisible:
+    text: "Transfer queued for when you're back online"
+    label: "Queue confirmation message is visible"
+
+# Navigate back to home
+- tapOn:
+    id: "back-button"
+    label: "Tap back button"
+
+- waitForAnimationToEnd
+
+# Assert pending actions indicator
+- assertVisible:
+    id: "pending-actions-badge"
+    label: "Pending actions badge is visible"
+
+- assertVisible:
+    text: "1 pending"
+    label: "Pending count is displayed"
+
+# Re-enable network
+- toggleAirplaneMode:
+    enabled: false
+    label: "Disable airplane mode (back online)"
+
+# Wait for reconnection and sync
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Assert online indicator returns
+- assertVisible:
+    id: "online-indicator"
+    label: "Online indicator is visible again"
+
+# Assert offline banner is hidden
+- assertNotVisible:
+    id: "offline-banner"
+    label: "Offline banner is hidden"
+
+# Wait for background sync
+- extendedWaitUntil:
+    visible:
+      id: "sync-complete-indicator"
+    timeout: 30000
+    label: "Wait for sync to complete"
+
+# Assert pending actions are processed
+- assertNotVisible:
+    id: "pending-actions-badge"
+    label: "Pending actions badge is cleared"
+
+# Assert success notification for synced transfer
+- assertVisible:
+    id: "sync-success-toast"
+    label: "Sync success toast is shown"
+
+- assertVisible:
+    text: "Transfer completed"
+    label: "Transfer completion message is visible"
+
+# Navigate to transaction history to verify synced transfer
+- tapOn:
+    text: "See All"
+    label: "Tap See All for transactions"
+
+- waitForAnimationToEnd
+
+# Assert the synced transaction appears
+- assertVisible:
+    text: "Offline test transfer"
+    label: "Synced transaction is visible in history"
+
+# Take success screenshot
+- takeScreenshot: offline-mode-success
+
+# Cleanup: Clear offline queue
+- tapOn:
+    id: "profile-tab"
+    label: "Tap profile tab"
+
+- waitForAnimationToEnd
+
+- tapOn:
+    text: "Settings"
+    label: "Tap Settings"
+
+- waitForAnimationToEnd
+
+- tapOn:
+    text: "Clear Offline Data"
+    label: "Clear offline data"
+
+- tapOn:
+    text: "Confirm"
+    label: "Confirm clear data"

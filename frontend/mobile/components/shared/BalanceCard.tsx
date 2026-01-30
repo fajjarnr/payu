@@ -4,6 +4,7 @@ import { useTheme } from '@react-navigation/native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { formatCurrency } from '@/utils/currency';
 import { Card } from '@/components/ui/Card';
+import { formatCurrencyForA11y } from '@/src/utils/accessibility';
 
 interface BalanceCardProps {
   balance: number;
@@ -29,9 +30,16 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.label}>Total Balance</Text>
+        <Text style={styles.label} accessibilityLabel="Total Balance">Total Balance</Text>
         {onToggleBalance && (
-          <TouchableOpacity onPress={onToggleBalance} style={styles.eyeButton}>
+          <TouchableOpacity
+            onPress={onToggleBalance}
+            style={styles.eyeButton}
+            accessibilityLabel={showBalance ? 'Hide balance' : 'Show balance'}
+            accessibilityHint="Toggles balance visibility"
+            accessibilityRole="button"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             {showBalance ? (
               <Eye size={20} stroke="#ffffff" />
             ) : (
@@ -44,23 +52,41 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
       {/* Balance */}
       <View style={styles.balanceContainer}>
         {showBalance ? (
-          <Text style={styles.balance}>{formatCurrency(balance)}</Text>
+          <Text
+            style={styles.balance}
+            accessibilityLabel={`Balance: ${formatCurrencyForA11y(balance, 'IDR', 'id')}`}
+            accessibilityRole="text"
+          >
+            {formatCurrency(balance)}
+          </Text>
         ) : (
-          <Text style={styles.balance}>••••••••</Text>
+          <Text
+            style={styles.balance}
+            accessibilityLabel="Balance hidden"
+            accessibilityRole="text"
+          >
+            ••••••••
+          </Text>
         )}
       </View>
 
       {/* Account Number */}
       {accountNumber && (
         <View style={styles.accountContainer}>
-          <Text style={styles.accountLabel}>Account Number</Text>
-          <Text style={styles.accountNumber}>{accountNumber}</Text>
+          <Text style={styles.accountLabel} accessibilityLabel="Account Number">Account Number</Text>
+          <Text
+            style={styles.accountNumber}
+            accessibilityLabel={`Account number: ${accountNumber}`}
+            accessibilityRole="text"
+          >
+            {accountNumber}
+          </Text>
         </View>
       )}
 
-      {/* Decorative gradient effect */}
-      <View style={styles.decorativeCircle1} />
-      <View style={styles.decorativeCircle2} />
+      {/* Decorative gradient effect - hidden from screen readers */}
+      <View style={styles.decorativeCircle1} accessible={false} importantForAccessibility="no" />
+      <View style={styles.decorativeCircle2} accessible={false} importantForAccessibility="no" />
     </Card>
   );
 };

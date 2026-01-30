@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>id.payu</groupId>
+    <artifactId>payu-backend-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>PayU Backend Parent</name>
+    <description>Parent POM for PayU Digital Banking Platform Backend Services</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- PayU Shared Modules Versions -->
+        <payu.shared.version>1.0.0-SNAPSHOT</payu.shared.version>
+
+        <!-- Third-party Versions -->
+        <resilience4j.version>2.2.0</resilience4j.version>
+        <cloudevents.version>4.0.1</cloudevents.version>
+        <hypersistence.version>3.9.0</hypersistence.version>
+        <spring-cloud.version>2024.0.0</spring-cloud.version>
+        <springdoc.version>2.3.0</springdoc.version>
+    </properties>
+
+    <modules>
+        <!-- Shared Libraries - Build First (No inter-dependencies) -->
+        <module>shared/api-commons</module>
+        <module>shared/events-starter</module>
+        <module>shared/security-starter</module>
+        <module>shared/resilience-starter</module>
+        <module>shared/cache-starter</module>
+        <module>shared/outbox-starter</module>
+        <module>shared/saga-starter</module>
+
+        <!-- Simulators -->
+        <module>simulators/bi-fast-simulator</module>
+        <module>simulators/dukcapil-simulator</module>
+        <module>simulators/qris-simulator</module>
+
+        <!-- Core Services -->
+        <module>account-service</module>
+        <module>auth-service</module>
+        <module>wallet-service</module>
+        <module>transaction-service</module>
+        <module>investment-service</module>
+        <module>lending-service</module>
+        <module>statement-service</module>
+        <module>billing-service</module>
+        <module>notification-service</module>
+        <module>gateway-service</module>
+        <module>backoffice-service</module>
+        <module>partner-service</module>
+        <module>promotion-service</module>
+        <module>support-service</module>
+        <module>compliance-service</module>
+        <module>fx-service</module>
+        <module>cms-service</module>
+        <module>ab-testing-service</module>
+        <module>api-portal-service</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- PayU Shared Modules -->
+            <dependency>
+                <groupId>id.payu.shared</groupId>
+                <artifactId>api-commons</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>events-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>security-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>resilience-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>cache-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>outbox-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>saga-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+
+            <!-- Spring Cloud Dependencies -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Resilience4j -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-retry</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bulkhead</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-timelimiter</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-micrometer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+
+            <!-- CloudEvents -->
+            <dependency>
+                <groupId>io.cloudevents</groupId>
+                <artifactId>cloudevents-core</artifactId>
+                <version>${cloudevents.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.cloudevents</groupId>
+                <artifactId>cloudevents-json-jackson</artifactId>
+                <version>${cloudevents.version}</version>
+            </dependency>
+
+            <!-- Hypersistence Utils for JSONB -->
+            <dependency>
+                <groupId>io.hypersistence</groupId>
+                <artifactId>hypersistence-utils-hibernate-63</artifactId>
+                <version>${hypersistence.version}</version>
+            </dependency>
+
+            <!-- SpringDoc OpenAPI -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <configuration>
+                        <excludes>
+                            <exclude>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                            </exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <source>21</source>
+                        <target>21</target>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.11</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <!-- Profile for building only shared libraries -->
+        <profile>
+            <id>shared-only</id>
+            <modules>
+                <module>shared/api-commons</module>
+                <module>shared/events-starter</module>
+                <module>shared/security-starter</module>
+                <module>shared/resilience-starter</module>
+                <module>shared/cache-starter</module>
+                <module>shared/outbox-starter</module>
+                <module>shared/saga-starter</module>
+            </modules>
+        </profile>
+
+        <!-- Profile for building only simulators -->
+        <profile>
+            <id>simulators</id>
+            <modules>
+                <module>simulators/bi-fast-simulator</module>
+                <module>simulators/dukcapil-simulator</module>
+                <module>simulators/qris-simulator</module>
+            </modules>
+        </profile>
+
+        <!-- Profile for building only core services -->
+        <profile>
+            <id>services</id>
+            <modules>
+                <module>account-service</module>
+                <module>auth-service</module>
+                <module>wallet-service</module>
+                <module>transaction-service</module>
+                <module>investment-service</module>
+                <module>lending-service</module>
+                <module>statement-service</module>
+                <module>billing-service</module>
+                <module>notification-service</module>
+                <module>gateway-service</module>
+                <module>backoffice-service</module>
+                <module>partner-service</module>
+                <module>promotion-service</module>
+                <module>support-service</module>
+                <module>compliance-service</module>
+                <module>fx-service</module>
+                <module>cms-service</module>
+                <module>ab-testing-service</module>
+                <module>api-portal-service</module>
+            </modules>
+        </profile>
+    </profiles>
+</project>

@@ -18,6 +18,16 @@ const quickActions: QuickAction[] = [
   { id: '4', label: 'Pay', icon: '💳', route: '/pay', color: '#8b5cf6' },
 ];
 
+const getA11yHint = (label: string): string => {
+  const hints: Record<string, string> = {
+    'Transfer': 'Opens transfer screen to send money',
+    'QRIS': 'Opens QRIS scanner for payments',
+    'Top Up': 'Opens top up options for adding balance',
+    'Pay': 'Opens payment options',
+  };
+  return hints[label] || `Opens ${label} screen`;
+};
+
 interface QuickActionsProps {
   onActionPress?: (action: QuickAction) => void;
 }
@@ -36,7 +46,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onActionPress }) => 
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessibilityRole="menu">
       {quickActions.map((action) => (
         <TouchableOpacity
           key={action.id}
@@ -48,6 +58,10 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onActionPress }) => 
           ]}
           onPress={() => handlePress(action)}
           activeOpacity={0.7}
+          accessibilityLabel={action.label}
+          accessibilityHint={getA11yHint(action.label)}
+          accessibilityRole="menuitem"
+          accessibilityState={{ selected: false }}
         >
           <View
             style={[
@@ -56,10 +70,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onActionPress }) => 
                 backgroundColor: `${action.color}20`,
               },
             ]}
+            accessible={false}
+            importantForAccessibility="no"
           >
-            <Text style={styles.icon}>{action.icon}</Text>
+            <Text style={styles.icon} accessible={false}>{action.icon}</Text>
           </View>
-          <Text style={[styles.label, { color: colors.text }]}>{action.label}</Text>
+          <Text style={[styles.label, { color: colors.text }]} accessible={false}>
+            {action.label}
+          </Text>
         </TouchableOpacity>
       ))}
     </View>

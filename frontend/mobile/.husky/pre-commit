@@ -1,0 +1,21 @@
+#!/bin/sh
+# PayU Mobile - Pre-commit Hook
+# Runs on every commit to ensure code quality
+
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged (eslint --fix and prettier --write on staged files)
+echo "📝 Running lint-staged..."
+npx lint-staged
+
+# Run TypeScript type checking
+echo "🔷 Running TypeScript type check..."
+npx tsc --noEmit
+
+# Run tests related to changed files only (fast feedback)
+echo "🧪 Running tests for changed files..."
+npx jest --findRelatedTests --passWithNoTests --silent
+
+echo "✅ Pre-commit checks passed!"

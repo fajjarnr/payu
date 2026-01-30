@@ -79,6 +79,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- JPA for Money Value Object persistence (optional) -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- AOP for aspects -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -104,3 +104,74 @@ jest.mock('lucide-react-native', () => ({
   Lock: () => null,
   Unlock: () => null,
 }));
+
+// ============================================================================
+// Accessibility Testing Setup
+// ============================================================================
+
+// Mock react-native AccessibilityInfo for a11y tests
+const mockAccessibilityEventListeners = new Map();
+
+jest.mock('react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo', () => ({
+  isScreenReaderEnabled: jest.fn(() => Promise.resolve(false)),
+  isVoiceOverRunning: jest.fn(() => Promise.resolve(false)),
+  isBoldTextEnabled: jest.fn(() => Promise.resolve(false)),
+  isGrayscaleEnabled: jest.fn(() => Promise.resolve(false)),
+  isInvertColorsEnabled: jest.fn(() => Promise.resolve(false)),
+  isReduceMotionEnabled: jest.fn(() => Promise.resolve(false)),
+  isReduceTransparencyEnabled: jest.fn(() => Promise.resolve(false)),
+  announceForAccessibility: jest.fn(),
+  setAccessibilityFocus: jest.fn(),
+  addEventListener: jest.fn((event, handler) => {
+    mockAccessibilityEventListeners.set(event, handler);
+    return {
+      remove: () => mockAccessibilityEventListeners.delete(event),
+    };
+  }),
+  removeEventListener: jest.fn((event) => {
+    mockAccessibilityEventListeners.delete(event);
+  }),
+}));
+
+// Helper to trigger accessibility events in tests
+global.triggerAccessibilityEvent = (event, data) => {
+  const handler = mockAccessibilityEventListeners.get(event);
+  if (handler) {
+    handler(data);
+  }
+};
+
+// Extend expect with accessibility matchers (if needed)
+expect.extend({
+  toHaveValidA11yProps(received) {
+    const hasLabel = received.accessibilityLabel || received.accessibilityLabel === '';
+    const hasRole = received.accessibilityRole;
+    const pass = hasLabel && hasRole;
+
+    return {
+      pass,
+      message: () =>
+        pass
+          ? 'Expected element not to have valid accessibility props'
+          : 'Expected element to have both accessibilityLabel and accessibilityRole',
+    };
+  },
+
+  toHaveMinimumTouchTarget(received, minSize = 44) {
+    const { width, height } = received;
+    const pass = width >= minSize && height >= minSize;
+
+    return {
+      pass,
+      message: () =>
+        pass
+          ? `Expected element not to have minimum touch target of ${minSize}x${minSize}`
+          : `Expected element to have minimum touch target of ${minSize}x${minSize}, but got ${width}x${height}`,
+    };
+  },
+});
+
+// Cleanup after each test
+afterEach(() => {
+  mockAccessibilityEventListeners.clear();
+});

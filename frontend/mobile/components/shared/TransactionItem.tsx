@@ -53,18 +53,49 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
     }
   };
 
+  const getA11yLabel = () => {
+    const typeText = transaction.type === 'transfer'
+      ? (isIncome ? 'Received transfer' : 'Sent transfer')
+      : transaction.type;
+    const amountText = `${isIncome ? 'Plus' : 'Minus'} ${formatCurrency(transaction.amount)}`;
+    const statusText = transaction.status !== 'completed'
+      ? `Status: ${transaction.status}`
+      : '';
+    return `${typeText}: ${transaction.description}, ${amountText}. ${statusText}`.trim();
+  };
+
+  const getA11yHint = () => {
+    return `Double tap to view transaction details for ${transaction.description}`;
+  };
+
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityLabel={getA11yLabel()}
+      accessibilityHint={getA11yHint()}
+      accessibilityRole="button"
+    >
       <Card variant="flat" padding="md" style={style as any}>
         <View style={styles.leftContainer}>
-          <View style={[styles.iconContainer, { backgroundColor: `${'#10b981'}20` }]}>
-            <Text style={styles.icon}>{getIcon()}</Text>
+          <View
+            style={[styles.iconContainer, { backgroundColor: `${'#10b981'}20` }]}
+            accessible={false}
+            importantForAccessibility="no"
+          >
+            <Text style={styles.icon} accessible={false}>{getIcon()}</Text>
           </View>
           <View style={styles.textContainer}>
-            <Text style={[styles.description, { color: colors.text }]}>
+            <Text
+              style={[styles.description, { color: colors.text }]}
+              accessibilityLabel={`Description: ${transaction.description}`}
+            >
               {transaction.description}
             </Text>
-            <Text style={[styles.time, { color: (colors as typeof colors & { textSecondary?: string }).textSecondary ?? '#6b7280' }]}>
+            <Text
+              style={[styles.time, { color: (colors as typeof colors & { textSecondary?: string }).textSecondary ?? '#6b7280' }]}
+              accessibilityLabel={`Time: ${formatRelativeTime(transaction.createdAt)}`}
+            >
               {formatRelativeTime(transaction.createdAt)}
             </Text>
           </View>
@@ -76,11 +107,16 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
               styles.amount,
               { color: isIncome ? '#10b981' : colors.text },
             ]}
+            accessibilityLabel={`Amount: ${isIncome ? 'Plus' : 'Minus'} ${formatCurrency(transaction.amount)}`}
           >
             {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
           </Text>
           {transaction.status !== 'completed' && (
-            <Badge text={transaction.status} variant={getStatusVariant()} size="sm" />
+            <Badge
+              text={transaction.status}
+              variant={getStatusVariant()}
+              size="sm"
+            />
           )}
         </View>
       </Card>

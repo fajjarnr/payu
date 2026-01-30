@@ -64,3 +64,10 @@ web-build/
 .env
 .env.local
 .env.*.local
+
+# Maestro E2E Testing
+.maestro/reports/
+.maestro/screenshots/
+maestro-reports/
+*.mp4  # Test recordings
+.maestro/.cache/

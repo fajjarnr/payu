@@ -1,0 +1,130 @@
+# Login Flow E2E Test
+# Tests the complete login journey from launch to home screen
+
+appId: com.payu.mobile
+name: Login Flow
+description: |
+  Validates the complete login flow including:
+  - Splash screen display
+  - Phone number input
+  - PIN entry
+  - Home screen navigation
+  - Balance visibility
+
+tags:
+  - smoke
+  - critical
+  - auth
+
+---
+
+# Launch app and wait for splash screen
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: allow
+      camera: allow
+
+# Wait for splash screen and initial load
+- waitForAnimationToEnd
+
+# Assert login screen elements are visible
+- assertVisible:
+    id: "login-screen"
+    label: "Login screen is displayed"
+
+- assertVisible:
+    text: "Welcome Back"
+    label: "Welcome text is visible"
+
+- assertVisible:
+    id: "phone-input"
+    label: "Phone number input is visible"
+
+# Input phone number
+- tapOn:
+    id: "phone-input"
+    label: "Tap phone input field"
+
+- inputText:
+    id: "phone-input"
+    text: ${TEST_PHONE}
+    label: "Enter test phone number"
+
+# Dismiss keyboard
+- hideKeyboard
+
+# Tap continue button
+- tapOn:
+    id: "continue-button"
+    label: "Tap continue button"
+
+# Wait for PIN screen
+- waitForAnimationToEnd
+
+# Assert PIN screen
+- assertVisible:
+    id: "pin-screen"
+    label: "PIN entry screen is displayed"
+
+- assertVisible:
+    text: "Enter PIN"
+    label: "PIN prompt is visible"
+
+# Input PIN digits
+- tapOn:
+    id: "pin-input"
+    label: "Tap PIN input"
+
+- inputText:
+    id: "pin-input"
+    text: ${TEST_PIN}
+    label: "Enter PIN"
+
+# Tap login button
+- tapOn:
+    id: "login-button"
+    label: "Tap login button"
+
+# Wait for home screen to load
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Assert home screen is displayed
+- assertVisible:
+    id: "home-screen"
+    label: "Home screen is displayed"
+
+- assertVisible:
+    text: "Good Morning"
+    label: "Greeting is visible"
+
+# Assert balance card is visible
+- assertVisible:
+    id: "balance-card"
+    label: "Balance card is visible"
+
+- assertVisible:
+    id: "balance-amount"
+    label: "Balance amount is displayed"
+
+# Assert quick actions are available
+- assertVisible:
+    id: "quick-actions"
+    label: "Quick actions section is visible"
+
+- assertVisible:
+    text: "Transfer"
+    label: "Transfer action is available"
+
+- assertVisible:
+    text: "Top Up"
+    label: "Top Up action is available"
+
+# Assert recent transactions section
+- assertVisible:
+    text: "Recent Transactions"
+    label: "Recent transactions section is visible"
+
+# Take success screenshot
+- takeScreenshot: login-flow-success

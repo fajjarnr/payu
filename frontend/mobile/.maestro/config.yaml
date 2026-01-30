@@ -1,0 +1,62 @@
+# Maestro E2E Testing Configuration for PayU Mobile App
+# https://maestro.mobile.dev/
+
+# App Configuration
+appId: com.payu.mobile
+
+# Default timeouts (in milliseconds)
+timeouts:
+  implicitWait: 5000
+  explicitWait: 10000
+  animationTimeout: 3000
+
+# Execution Configuration
+execution:
+  # Number of times to retry failed tests
+  retries: 2
+  # Continue on failure for non-critical flows
+  continueOnFailure: false
+
+# Device Configuration
+device:
+  # Orientation: PORTRAIT or LANDSCAPE
+  orientation: PORTRAIT
+
+# Environment Variables (can be overridden via CLI)
+env:
+  # Test credentials - use environment-specific values
+  TEST_PHONE: ${TEST_PHONE:-081234567890}
+  TEST_PIN: ${TEST_PIN:-123456}
+  TEST_RECIPIENT_ACCOUNT: ${TEST_RECIPIENT_ACCOUNT:-9876543210}
+  BASE_URL: ${BASE_URL:-http://localhost:8080}
+
+# Tags for organizing tests
+tags:
+  - smoke
+  - regression
+  - critical
+  - biometric
+  - offline
+
+# Flow Configuration
+flows:
+  # Order of execution
+  - flows/login.yaml
+  - flows/transfer.yaml
+  - flows/biometric-auth.yaml
+  - flows/offline-mode.yaml
+
+# Reporting Configuration
+report:
+  enabled: true
+  format: junit
+  outputDir: ./maestro-reports
+
+# Advanced Configuration
+advanced:
+  # Disable animations for faster test execution
+  disableAnimations: true
+  # Screenshot on failure
+  screenshotOnFailure: true
+  # Video recording (useful for CI)
+  recordVideo: false

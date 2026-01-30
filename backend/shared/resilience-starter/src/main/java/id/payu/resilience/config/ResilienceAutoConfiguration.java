@@ -7,6 +7,8 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -49,8 +51,8 @@ public class ResilienceAutoConfiguration {
 
         Map<String, CircuitBreakerConfig> configs = new HashMap<>();
 
-        // Default circuit breaker config
-        CircuitBreakerConfig defaultConfig = CircuitBreakerConfig.custom()
+        // Default circuit breaker config with PayU financial services standards
+        CircuitBreakerConfig.Builder cbBuilder = CircuitBreakerConfig.custom()
                 .failureRateThreshold(properties.getCircuitBreaker().getFailureRateThreshold())
                 .waitDurationInOpenState(properties.getCircuitBreaker().getWaitDurationInOpenState())
                 .permittedNumberOfCallsInHalfOpenState(
@@ -60,7 +62,22 @@ public class ResilienceAutoConfiguration {
                 .slidingWindowType(toCircuitBreakerWindowType(properties.getCircuitBreaker().getSlidingWindowType()))
                 .automaticTransitionFromOpenToHalfOpenEnabled(
                         properties.getCircuitBreaker().isAutomaticTransitionFromOpenToHalfOpenEnabled())
-                .build();
+                .slowCallRateThreshold(properties.getCircuitBreaker().getSlowCallRateThreshold())
+                .slowCallDurationThreshold(properties.getCircuitBreaker().getSlowCallDurationThreshold());
+
+        // Add ignored exceptions (BusinessException should not trigger circuit breaker)
+        if (properties.getCircuitBreaker().getIgnoreExceptionClassNames() != null) {
+            for (String className : properties.getCircuitBreaker().getIgnoreExceptionClassNames()) {
+                try {
+                    Class<?> exceptionClass = Class.forName(className);
+                    cbBuilder.ignoreException(exceptionClass::isInstance);
+                } catch (ClassNotFoundException e) {
+                    log.warn("Exception class not found for circuit breaker ignore: {}", className);
+                }
+            }
+        }
+
+        CircuitBreakerConfig defaultConfig = cbBuilder.build();
 
         configs.put("default", defaultConfig);
 
@@ -103,7 +120,7 @@ public class ResilienceAutoConfiguration {
 
         Map<String, RetryConfig> configs = new HashMap<>();
 
-        // Default retry config
+        // Default retry config with PayU financial services standards
         IntervalFunction intervalFunction = properties.getRetry().isEnableExponentialBackoff()
                 ? IntervalFunction.ofExponentialBackoff(
                         properties.getRetry().getWaitDuration().toMillis(),
@@ -112,11 +129,31 @@ public class ResilienceAutoConfiguration {
 
         RetryConfig.Builder<?> builder = RetryConfig.custom()
                 .maxAttempts(properties.getRetry().getMaxAttempts())
-                .intervalFunction(intervalFunction)
-                .retryOnException(e -> true);
+                .intervalFunction(intervalFunction);
 
-        // Note: randomizeWait() is not available in Resilience4j 2.x
-        // Randomization can be achieved through custom IntervalFunction if needed
+        // Add retry exceptions (IO and network exceptions)
+        if (properties.getRetry().getRetryExceptionClassNames() != null) {
+            for (String className : properties.getRetry().getRetryExceptionClassNames()) {
+                try {
+                    Class<? extends Throwable> exceptionClass = (Class<? extends Throwable>) Class.forName(className);
+                    builder.retryExceptions(exceptionClass);
+                } catch (ClassNotFoundException | ClassCastException e) {
+                    log.warn("Exception class not found for retry: {}", className);
+                }
+            }
+        }
+
+        // Add ignored exceptions (BusinessException should not be retried)
+        if (properties.getRetry().getIgnoreExceptionClassNames() != null) {
+            for (String className : properties.getRetry().getIgnoreExceptionClassNames()) {
+                try {
+                    Class<? extends Throwable> exceptionClass = (Class<? extends Throwable>) Class.forName(className);
+                    builder.ignoreExceptions(exceptionClass);
+                } catch (ClassNotFoundException | ClassCastException e) {
+                    log.warn("Exception class not found for retry ignore: {}", className);
+                }
+            }
+        }
 
         configs.put("default", builder.build());
 
@@ -231,6 +268,47 @@ public class ResilienceAutoConfiguration {
         // io.github.resilience4j.micrometer.tagged.TaggedTimeLimiterMetricsPublisher
         //         .ofTimeLimiterRegistry(meterRegistry)
         //         .register(registry);
+
+        return registry;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public RateLimiterRegistry rateLimiterRegistry(@Autowired(required = false) MeterRegistry meterRegistry) {
+        log.info("Initializing Rate Limiter Registry with PayU financial services configuration");
+
+        Map<String, RateLimiterConfig> configs = new HashMap<>();
+
+        // Default rate limiter config
+        RateLimiterConfig defaultConfig = RateLimiterConfig.custom()
+                .limitForPeriod(properties.getRateLimiter().getLimitForPeriod())
+                .limitRefreshPeriod(properties.getRateLimiter().getLimitRefreshPeriod())
+                .timeoutDuration(properties.getRateLimiter().getTimeoutDuration())
+                .build();
+
+        configs.put("default", defaultConfig);
+
+        // Service-specific configurations
+        if (properties.getServices() != null) {
+            properties.getServices().forEach((serviceName, serviceConfig) -> {
+                if (serviceConfig.getRateLimiter() != null) {
+                    ResilienceProperties.RateLimiter rlConfig = serviceConfig.getRateLimiter();
+                    RateLimiterConfig customConfig = RateLimiterConfig.custom()
+                            .limitForPeriod(rlConfig.getLimitForPeriod())
+                            .limitRefreshPeriod(rlConfig.getLimitRefreshPeriod())
+                            .timeoutDuration(rlConfig.getTimeoutDuration())
+                            .build();
+
+                    configs.put(serviceName, customConfig);
+                    log.info("Configured rate limiter for service: {}", serviceName);
+                }
+            });
+        }
+
+        RateLimiterRegistry registry = RateLimiterRegistry.of(configs);
+
+        // Register Micrometer metrics
+        // Note: In Spring Boot 3 with resilience4j-spring-boot3, metrics are auto-registered
 
         return registry;
     }

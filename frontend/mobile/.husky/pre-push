@@ -1,0 +1,38 @@
+#!/bin/sh
+# PayU Mobile - Pre-push Hook
+# Runs before pushing to remote repository
+
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push checks..."
+
+# Run full test suite
+echo "🧪 Running full test suite..."
+npm test -- --coverage --passWithNoTests
+
+# Run TypeScript type checking
+echo "🔷 Running TypeScript type check..."
+npx tsc --noEmit
+
+# Check for secrets/credentials using git-secrets (if available)
+echo "🔒 Checking for secrets/credentials..."
+if command -v git-secrets &> /dev/null; then
+    git-secrets --scan
+else
+    # Fallback: Basic secret detection patterns
+    if git diff --cached --name-only | xargs grep -l -E "(password|secret|key|token)\s*=\s*[\"'][^\"']{8,}[\"']" 2>/dev/null; then
+        echo "⚠️  Warning: Potential secrets detected in staged files"
+        echo "Please review and use environment variables or secure storage"
+        exit 1
+    fi
+fi
+
+# Check for console.log statements in production code
+echo "🔍 Checking for console.log statements..."
+if git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' | xargs grep -l "console\.log" 2>/dev/null; then
+    echo "⚠️  Warning: console.log statements found in staged files"
+    echo "Please remove or replace with proper logging utility"
+    exit 1
+fi
+
+echo "✅ Pre-push checks passed!"

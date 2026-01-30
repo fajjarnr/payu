@@ -8,9 +8,11 @@ module.exports = {
     'store/**/*.{ts,tsx}',
     'services/**/*.{ts,tsx}',
     'components/**/*.{ts,tsx}',
+    'src/**/*.{ts,tsx}',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^@/src/(.*)$': '<rootDir>/src/$1',
     ...jestExpoPreset.moduleNameMapper,
   },
   globals: {
