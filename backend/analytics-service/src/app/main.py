@@ -91,11 +91,12 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=[
-            "*",
             "Idempotency-Key",
             "X-Request-ID",
             "Authorization",
             "Content-Type",
+            "X-Client-Id",
+            "X-Correlation-Id",
         ],
         expose_headers=["X-Request-ID"],
     )

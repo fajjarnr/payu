@@ -1,15 +1,24 @@
 package id.payu.account.entity;
 
 import id.payu.account.multitenancy.TenantAware;
+import id.payu.security.converter.EncryptedStringConverter;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.Comment;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Profile entity representing user profile data.
+ *
+ * <p><b>Security:</b> NIK (Nomor Induk Kependudukan - Indonesian ID Number)
+ * is encrypted at rest using field-level encryption via {@link EncryptedStringConverter}.
+ * This ensures compliance with Indonesian UU PDP (Personal Data Protection Law) requirements.</p>
+ */
 @Entity
 @Table(name = "profiles")
 @TenantAware
@@ -29,7 +38,15 @@ public class Profile {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(name = "nik", unique = true, length = 16)
+    /**
+     * NIK (Nomor Induk Kependudukan) encrypted at rest using AES-GCM (256-bit key).
+     * The EncryptedStringConverter handles automatic encryption/decryption.
+     *
+     * @see <a href="https://www.dpr.go.id/jdih/jdih-ppuu">UU PDP No. 27 of 2022</a>
+     */
+    @Convert(converter = EncryptedStringConverter.class)
+    @Comment("NIK encrypted at rest for UU PDP compliance")
+    @Column(name = "nik", unique = true, length = 512, nullable = false)
     private String nik;
 
     @Column(name = "birth_date")

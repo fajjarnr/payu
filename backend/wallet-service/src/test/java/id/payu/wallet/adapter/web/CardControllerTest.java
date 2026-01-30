@@ -42,7 +42,6 @@ class CardControllerTest {
                 .id(UUID.randomUUID())
                 .walletId(walletId)
                 .cardNumber("4111222233334444")
-                .cvv("123")
                 .expiryDate("12/30")
                 .cardHolderName("John Doe")
                 .status(Card.CardStatus.ACTIVE)

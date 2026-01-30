@@ -20,14 +20,14 @@ import java.util.UUID;
 
 @Service
 public class CardService implements CardUseCase {
-    
+
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CardService.class);
 
     private final CardPersistencePort cardPersistencePort;
     private final WalletPersistencePort walletPersistencePort;
     private final Random random = new Random();
 
-    public CardService(CardPersistencePort cardPersistencePort, 
+    public CardService(CardPersistencePort cardPersistencePort,
                        WalletPersistencePort walletPersistencePort) {
         this.cardPersistencePort = cardPersistencePort;
         this.walletPersistencePort = walletPersistencePort;
@@ -47,13 +47,15 @@ public class CardService implements CardUseCase {
         } while (cardPersistencePort.existsByCardNumber(cardNumber));
 
         String expiry = LocalDateTime.now().plusYears(5).format(DateTimeFormatter.ofPattern("MM/yy"));
+
+        // CVV is generated for authorization but NEVER stored (PCI-DSS compliant)
         String cvv = String.format("%03d", random.nextInt(1000));
+        log.debug("CVV generated for authorization only (will not be stored)");
 
         Card card = Card.builder()
                 .id(UUID.randomUUID())
                 .walletId(wallet.getId())
                 .cardNumber(cardNumber)
-                .cvv(cvv)
                 .expiryDate(expiry)
                 .cardHolderName(cardHolderName)
                 .status(Card.CardStatus.ACTIVE)

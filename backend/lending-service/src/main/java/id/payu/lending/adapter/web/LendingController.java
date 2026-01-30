@@ -1,6 +1,7 @@
 package id.payu.lending.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
+import id.payu.lending.application.security.LendingSecurityService;
 import id.payu.lending.application.service.LendingApplicationService;
 import id.payu.lending.application.service.LoanManagementService;
 import id.payu.lending.application.service.PayLaterTransactionService;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -45,6 +47,7 @@ public class LendingController extends BaseController {
     private final LoanManagementService loanManagementService;
     private final PayLaterTransactionService payLaterTransactionService;
     private final id.payu.lending.application.service.LoanPreApprovalService preApprovalService;
+    private final LendingSecurityService lendingSecurityService;
 
     @PostMapping("/loans")
     @Operation(summary = "Apply for a loan", description = "Submit a new loan application")
@@ -71,11 +74,13 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/loans/{loanId}")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isLoanOwner(#loanId, authentication.principal.userId)")
     @Operation(summary = "Get loan by ID", description = "Retrieve loan details by loan ID")
     @ApiResponse(responseCode = "200", description = "Loan found",
             content = @Content(schema = @Schema(implementation = Loan.class)))
     @ApiResponse(responseCode = "404", description = "Loan not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden - loan access denied")
     public ResponseEntity<ApiResponse<Loan>> getLoan(
             @Parameter(description = "Loan ID", required = true) @PathVariable UUID loanId) {
         log.info("Fetching loan details for loan: {}", loanId);
@@ -163,11 +168,13 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/paylater/{userId}")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, authentication.principal.userId)")
     @Operation(summary = "Get PayLater details", description = "Retrieve PayLater account details for a user")
     @ApiResponse(responseCode = "200", description = "PayLater details found",
             content = @Content(schema = @Schema(implementation = PayLater.class)))
     @ApiResponse(responseCode = "404", description = "PayLater not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden - PayLater access denied")
     public ResponseEntity<ApiResponse<PayLater>> getPayLater(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching PayLater details for user: {}", userId);
@@ -223,10 +230,12 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/paylater/{userId}/transactions")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, authentication.principal.userId)")
     @Operation(summary = "Get transaction history", description = "Retrieve PayLater transaction history for a user")
     @ApiResponse(responseCode = "200", description = "Transaction history retrieved successfully",
             content = @Content(schema = @Schema(implementation = PayLaterTransaction.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden - PayLater access denied")
     public ResponseEntity<ApiResponse<List<PayLaterTransaction>>> getTransactionHistory(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching transaction history for user: {}", userId);
@@ -245,11 +254,13 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/credit-score/{userId}")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isCreditScoreOwner(#userId, authentication.principal.userId)")
     @Operation(summary = "Get credit score", description = "Retrieve credit score for a user")
     @ApiResponse(responseCode = "200", description = "Credit score found",
             content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.CreditScore.class)))
     @ApiResponse(responseCode = "404", description = "Credit score not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden - credit score access denied")
     public ResponseEntity<ApiResponse<id.payu.lending.domain.model.CreditScore>> getCreditScore(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching credit score for user: {}", userId);
@@ -293,11 +304,13 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/pre-approval/user/{userId}/active")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPreApprovalOwner(#userId, authentication.principal.userId)")
     @Operation(summary = "Get active pre-approval", description = "Retrieve active pre-approval for a user")
     @ApiResponse(responseCode = "200", description = "Active pre-approval found",
             content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.LoanPreApproval.class)))
     @ApiResponse(responseCode = "404", description = "No active pre-approval found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden - pre-approval access denied")
     public ResponseEntity<ApiResponse<id.payu.lending.domain.model.LoanPreApproval>> getActivePreApproval(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching active pre-approval for user: {}", userId);

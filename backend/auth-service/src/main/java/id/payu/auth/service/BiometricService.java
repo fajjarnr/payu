@@ -109,14 +109,16 @@ public class BiometricService {
                 throw new BiometricException("BIO_002", "Invalid biometric signature");
             }
 
-            log.info("Successful biometric authentication for user {} on device {}", 
+            log.info("Successful biometric authentication for user {} on device {}",
                     request.username(), request.deviceId());
 
+            // Access token expiration: 15 minutes (900 seconds)
+            // This follows PCI-DSS and OWASP recommendations for short-lived access tokens
             return new BiometricAuthenticationResponse(
                     "mock-jwt-access-token-" + UUID.randomUUID(),
                     "mock-jwt-refresh-token-" + UUID.randomUUID(),
                     "Bearer",
-                    3600L,
+                    900L,
                     registration.deviceId(),
                     registration.registrationId(),
                     "Biometric authentication successful"
@@ -172,7 +174,7 @@ public class BiometricService {
     private void validateDeviceLimit(String username) {
         long activeCount = getUserRegistrations(username).size();
         if (activeCount >= maxRegistrationsPerUser) {
-            throw new BiometricException("BIO_006", 
+            throw new BiometricException("BIO_006",
                     String.format("Maximum %d biometric registrations allowed", maxRegistrationsPerUser));
         }
     }
@@ -180,7 +182,7 @@ public class BiometricService {
     private void validateDeviceUniqueness(String username, String deviceId) {
         Optional<BiometricRegistration> existing = findRegistration(username, deviceId);
         if (existing.isPresent()) {
-            throw new BiometricException("BIO_007", 
+            throw new BiometricException("BIO_007",
                     String.format("Device %s already registered for user %s", deviceId, username));
         }
     }

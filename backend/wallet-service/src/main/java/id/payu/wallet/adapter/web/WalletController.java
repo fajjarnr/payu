@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,11 +42,13 @@ public class WalletController extends BaseController {
     }
 
     @GetMapping("/{accountId}/balance")
+    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
     @Operation(summary = "Get wallet balance", description = "Retrieve current balance, available balance, and reserved balance for an account")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Balance retrieved successfully",
             content = @Content(schema = @Schema(implementation = BalanceResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Wallet not found for the given account")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized - valid JWT token required")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<BalanceResponse>> getBalance(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId) {
         log.info("Getting balance for account: {}", accountId);
@@ -66,12 +69,14 @@ public class WalletController extends BaseController {
 
     @PostMapping("/{accountId}/reserve")
     @Idempotent(required = true)
+    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
     @Operation(summary = "Reserve balance", description = "Reserve a specific amount from wallet balance for pending transactions")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Balance reserved successfully",
             content = @Content(schema = @Schema(implementation = ReserveBalanceResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request - insufficient balance or validation error")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Wallet not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<ReserveBalanceResponse>> reserveBalance(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Valid @RequestBody ReserveBalanceRequest request) {
@@ -121,11 +126,13 @@ public class WalletController extends BaseController {
 
     @PostMapping("/{accountId}/credit")
     @Idempotent(required = true)
+    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
     @Operation(summary = "Credit wallet", description = "Credit amount to wallet balance")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Amount credited successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Wallet not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<Map<String, String>>> credit(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Valid @RequestBody CreditRequest request) {
@@ -142,10 +149,12 @@ public class WalletController extends BaseController {
     }
 
     @GetMapping("/{accountId}/ledger")
+    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
     @Operation(summary = "Get ledger entries", description = "Retrieve all ledger entries for an account")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Ledger entries retrieved successfully",
             content = @Content(schema = @Schema(implementation = LedgerEntry.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<List<LedgerEntry>>> getLedgerEntries(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId) {
         log.info("Getting ledger entries for account: {}", accountId);
@@ -154,10 +163,12 @@ public class WalletController extends BaseController {
     }
 
     @GetMapping("/{accountId}/ledger/transaction/{transactionId}")
+    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
     @Operation(summary = "Get ledger entries by transaction", description = "Retrieve ledger entries for a specific transaction")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Ledger entries retrieved successfully",
             content = @Content(schema = @Schema(implementation = LedgerEntry.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<List<LedgerEntry>>> getLedgerEntriesByTransaction(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId) {
@@ -167,10 +178,12 @@ public class WalletController extends BaseController {
     }
 
     @GetMapping("/{accountId}/transactions")
+    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
     @Operation(summary = "Get transaction history", description = "Retrieve paginated transaction history for an account")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Transaction history retrieved successfully",
             content = @Content(schema = @Schema(implementation = WalletTransaction.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<List<WalletTransaction>>> getTransactionHistory(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Parameter(description = "Page number (default: 0)") @RequestParam(defaultValue = "0") int page,

@@ -4,10 +4,17 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Card response DTO.
+ *
+ * <p><b>Security:</b> Card numbers are masked in API responses to show only
+ * the last 4 digits (e.g., ****-****-****-1234). This prevents exposure of
+ * full card numbers via API responses.</p>
+ */
 public class CardResponse {
     private UUID id;
     private UUID walletId;
-    private String cardNumber;
+    private String cardNumber; // Internal field for mapping
     private String expiryDate;
     private String cardHolderName;
     private String status;
@@ -36,8 +43,28 @@ public class CardResponse {
     public void setId(UUID id) { this.id = id; }
     public UUID getWalletId() { return walletId; }
     public void setWalletId(UUID walletId) { this.walletId = walletId; }
+
+    /**
+     * Returns the masked card number showing only last 4 digits.
+     * Format: ****-****-****-1234
+     *
+     * @return masked card number
+     */
+    public String getMaskedCardNumber() {
+        if (cardNumber == null || cardNumber.length() < 4) {
+            return "****";
+        }
+        return "****-****-****-" + cardNumber.substring(cardNumber.length() - 4);
+    }
+
+    /**
+     * @deprecated Use {@link #getMaskedCardNumber()} instead for security.
+     * This method is kept for internal mapping but should not be exposed.
+     */
+    @Deprecated
     public String getCardNumber() { return cardNumber; }
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
+
     public String getExpiryDate() { return expiryDate; }
     public void setExpiryDate(String expiryDate) { this.expiryDate = expiryDate; }
     public String getCardHolderName() { return cardHolderName; }

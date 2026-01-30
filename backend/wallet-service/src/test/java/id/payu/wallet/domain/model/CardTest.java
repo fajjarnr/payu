@@ -19,7 +19,6 @@ class CardTest {
                 .id(UUID.randomUUID())
                 .walletId(walletId)
                 .cardNumber("4111222233334444")
-                .cvv("123")
                 .expiryDate("12/30")
                 .cardHolderName("John Doe")
                 .status(Card.CardStatus.ACTIVE)
@@ -32,6 +31,7 @@ class CardTest {
         assertThat(card.getWalletId()).isEqualTo(walletId);
         assertThat(card.getCardNumber()).isEqualTo("4111222233334444");
         assertThat(card.getStatus()).isEqualTo(Card.CardStatus.ACTIVE);
+        // CVV is no longer stored (PCI-DSS compliant)
     }
 
     @Test
@@ -101,12 +101,13 @@ class CardTest {
         LocalDateTime now = LocalDateTime.now();
 
         Card card = new Card(
-                id, walletId, "4111222233334444", "123", "12/30", "John Doe",
+                id, walletId, "4111222233334444", "12/30", "John Doe",
                 Card.CardStatus.ACTIVE, new BigDecimal("10000000"), now, now
         );
 
         assertThat(card.getId()).isEqualTo(id);
         assertThat(card.getWalletId()).isEqualTo(walletId);
         assertThat(card.getCardNumber()).isEqualTo("4111222233334444");
+        // CVV is no longer stored (PCI-DSS compliant)
     }
 }

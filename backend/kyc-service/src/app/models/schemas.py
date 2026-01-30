@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
 from enum import Enum
 
@@ -18,6 +18,14 @@ class KycVerificationType(str, Enum):
 
 
 class KtpOcrResult(BaseModel):
+    """
+    KTP OCR result with masked NIK for API responses.
+
+    <p><b>Security:</b> NIK is masked in API responses to show only
+    first 4 and last 4 digits (e.g., 1234********5678). This prevents
+    exposure of full NIK via API responses.</p>
+    """
+
     nik: str = Field(..., description="Nomor Induk Kependudukan")
     name: str = Field(..., description="Nama sesuai KTP")
     birth_date: str = Field(..., description="Tanggal lahir")
@@ -33,6 +41,16 @@ class KtpOcrResult(BaseModel):
     valid_until: Optional[str] = Field(None, description="Berlaku hingga")
     confidence: float = Field(..., description="OCR confidence score")
 
+    @property
+    def masked_nik(self) -> str:
+        """
+        Returns the masked NIK showing only first 4 and last 4 digits.
+        Format: 1234********5678
+        """
+        if not self.nik or len(self.nik) < 8:
+            return "****"
+        return self.nik[:4] + "********" + self.nik[-4:]
+
     @field_validator("nik")
     def validate_nik(cls, v):
         if len(v) != 16 or not v.isdigit():
@@ -45,7 +63,9 @@ class LivenessCheckResult(BaseModel):
     confidence: float = Field(..., description="Liveness confidence score")
     face_detected: bool = Field(..., description="Face detected in image")
     face_quality_score: float = Field(..., description="Face image quality score")
-    details: dict = Field(default_factory=dict, description="Additional liveness details")
+    details: dict = Field(
+        default_factory=dict, description="Additional liveness details"
+    )
 
 
 class FaceMatchResult(BaseModel):
@@ -57,6 +77,13 @@ class FaceMatchResult(BaseModel):
 
 
 class DukcapilVerificationResult(BaseModel):
+    """
+    Dukcapil verification result with masked NIK.
+
+    <p><b>Security:</b> NIK is masked in API responses to comply with
+    Indonesian UU PDP (Personal Data Protection Law).</p>
+    """
+
     nik: str
     is_valid: bool
     name: str
@@ -65,6 +92,16 @@ class DukcapilVerificationResult(BaseModel):
     status: str
     match_score: Optional[float] = None
     notes: Optional[str] = None
+
+    @property
+    def masked_nik(self) -> str:
+        """
+        Returns the masked NIK showing only first 4 and last 4 digits.
+        Format: 1234********5678
+        """
+        if not self.nik or len(self.nik) < 8:
+            return "****"
+        return self.nik[:4] + "********" + self.nik[-4:]
 
 
 class KycVerification(BaseModel):

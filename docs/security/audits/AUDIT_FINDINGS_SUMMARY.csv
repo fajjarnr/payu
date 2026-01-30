@@ -1,0 +1,20 @@
+ID,Severity,Category,Component,File,Line,Description,Status,Recommended Fix
+1,High,Data Protection,account-service,/home/ubuntu/payu/backend/account-service/src/main/java/id/payu/account/entity/Profile.java,32-33,NIK stored in plain text,OPEN,Add field-level encryption using @Convert with EncryptionService
+2,High,Data Protection,wallet-service,/home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/adapter/persistence/entity/CardEntity.java,28-31,Card number and CVV stored in plain text,OPEN,Implement AES-256-GCM encryption for card_number, remove CVV entirely
+3,High,Data Protection,account-service,/home/ubuntu/payu/backend/account-service/src/main/java/id/payu/account/entity/User.java,32-33,Phone number stored without encryption,OPEN,Consider encryption or implement access controls
+4,Medium,Data Protection,account-service,/home/ubuntu/payu/backend/account-service/src/main/java/id/payu/account/entity/User.java,29-30,Email stored without encryption,OPEN,Implement access logging and monitoring
+5,High,API Security,wallet-service,/home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/dto/CardResponse.java,10,39-40,Full card number exposed in API response,OPEN,Mask card number showing only last 4 digits
+6,High,API Security,kyc-service,/home/ubuntu/payu/backend/kyc-service/src/app/models/schemas.py,21,Full NIK exposed in API response,OPEN,Implement NIK masking (first 4 + last 4 digits)
+7,Critical,Data Protection,wallet-service,/home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/domain/model/Card.java,25-26,CVV potentially exposed in domain model,OPEN,Remove CVV from domain model, use payment gateway tokens
+8,High,Logging Security,multiple,multiple entity classes,-,Missing @Sensitive annotation on PII fields,OPEN,Add @Sensitive annotation to all PII fields
+9,High,Configuration,multiple,multiple services,-,DataMaskingAspect not configured for all services,OPEN,Verify security-starter dependency, enable masking in application.yml
+10,Medium,Configuration,backoffice-service,/home/ubuntu/payu/backend/backoffice-service/src/main/resources/application.yml,20,Hardcoded default database password,OPEN,Remove default values, use environment variables without defaults
+11,Medium,Configuration,backoffice-service,/home/ubuntu/payu/backend/backoffice-service/src/main/resources/application.yml,48,Hardcoded test password,OPEN,Remove test credentials from config files
+12,Medium,Configuration,billing-service,/home/ubuntu/payu/backend/billing-service/src/main/resources/application.yml,57,Hardcoded postgres password with allowlist,OPEN,Remove default password, require environment variable
+13,Medium,Configuration,partner-service,/home/ubuntu/payu/backend/partner-service/src/main/resources/application.yml,19,Hardcoded postgres password with allowlist,OPEN,Remove default password, require environment variable
+14,Medium,Configuration,notification-service,/home/ubuntu/payu/backend/notification-service/src/main/resources/application.yml,21,Hardcoded postgres password with allowlist,OPEN,Remove default password, require environment variable
+15,Medium,Configuration,promotion-service,/home/ubuntu/payu/backend/promotion-service/src/main/resources/application.yml,22,Hardcoded postgres password,OPEN,Remove default password, require environment variable
+16,Low,Database Security,saga-starter,/home/ubuntu/payu/backend/shared/saga-starter/src/main/java/id/payu/saga/repository/SagaRepository.java,106,Native SQL query,ACCEPTABLE,Uses parameter binding - secure
+17,Medium,OJK Compliance,account-service,/home/ubuntu/payu/backend/account-service/src/main/java/id/payu/account/adapter/persistence/UserPersistenceAdapter.java,-,Missing audit trail for PII access,OPEN,Add @Audited annotation and DataAccessAuditService calls
+18,Medium,OJK Compliance,kyc-service,/home/ubuntu/payu/backend/kyc-service/src/app/api/v1/kyc.py,-,KYC data not using Data Access Audit,OPEN,Integrate with compliance-service audit logging
+19,Medium,OJK Compliance,multiple,-,-,Data retention policy not implemented,OPEN,Implement automated data retention and cleanup

@@ -1,5 +1,6 @@
 package id.payu.wallet.adapter.persistence.entity;
 
+import id.payu.security.converter.EncryptedStringConverter;
 import id.payu.wallet.domain.model.Card;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * JPA Entity for Card persistence.
+ *
+ * <p><b>Security:</b> Card number is encrypted at rest using field-level encryption
+ * via {@link EncryptedStringConverter}. This ensures compliance with PCI-DSS requirements
+ * for storage of sensitive cardholder data.</p>
+ *
+ * <p><b>Note:</b> CVV is NEVER stored in the database as per PCI-DSS requirements.
+ * CVV is only used during authorization and immediately discarded.</p>
+ */
 @Entity
 @Table(name = "cards")
 @Data
@@ -25,11 +36,13 @@ public class CardEntity {
     @Column(name = "wallet_id", nullable = false)
     private UUID walletId;
 
-    @Column(name = "card_number", nullable = false, length = 16)
+    /**
+     * Card number encrypted at rest using AES-GCM (256-bit key).
+     * The EncryptedStringConverter handles automatic encryption/decryption.
+     */
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "card_number", nullable = false, length = 512)
     private String cardNumber;
-
-    @Column(nullable = false, length = 3)
-    private String cvv;
 
     @Column(name = "expiry_date", nullable = false, length = 5)
     private String expiryDate;
@@ -55,7 +68,6 @@ public class CardEntity {
                 .id(this.id)
                 .walletId(this.walletId)
                 .cardNumber(this.cardNumber)
-                .cvv(this.cvv)
                 .expiryDate(this.expiryDate)
                 .cardHolderName(this.cardHolderName)
                 .status(this.status)
@@ -70,7 +82,6 @@ public class CardEntity {
                 .id(card.getId())
                 .walletId(card.getWalletId())
                 .cardNumber(card.getCardNumber())
-                .cvv(card.getCvv())
                 .expiryDate(card.getExpiryDate())
                 .cardHolderName(card.getCardHolderName())
                 .status(card.getStatus())

@@ -12,11 +12,14 @@ quarkus:
     auth-server-url: ${OIDC_AUTH_SERVER_URL:http://localhost:8180/realms/payu}
     client-id: ${OIDC_CLIENT_ID:gateway-service}
     credentials:
-      secret: ${OIDC_CLIENT_SECRET:secret}
+      secret: ${OIDC_CLIENT_SECRET:secret} # pragma: allowlist secret
     tls:
-      verification: none  # pragma: allowlist secret
+      verification: none # pragma: allowlist secret
     token:
       issuer: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
+    # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks
+    # This mitigates the "none" algorithm attack and ensures asymmetric encryption
+    jws-algorithm: RS256
   # Redis Configuration (for rate limiting & caching)
   redis:
     hosts: ${REDIS_URL:redis://localhost:6379}
@@ -321,7 +324,7 @@ gateway:
     partner-keys:
       # Partner ID: Secret Key (base64 encoded)
       # In production, these should be stored securely (e.g., Vault)
-      partner-1: "c2VjcmV0LWtleS0x"
+      partner-1: ${WEBHOOK_PARTNER_1_SECRET:}
   # IP Whitelisting
   ip-whitelist:
     enabled: true

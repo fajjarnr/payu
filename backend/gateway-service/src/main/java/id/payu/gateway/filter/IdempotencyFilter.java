@@ -22,6 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * Supports both standard "Idempotency-Key" header and legacy "X-Idempotency-Key" header
  * for backward compatibility.
+ *
+ * For financial operations (transfers, payments), idempotency key is REQUIRED.
  */
 @Provider
 @ApplicationScoped
@@ -34,6 +36,16 @@ public class IdempotencyFilter implements ContainerRequestFilter {
     private static final String STANDARD_IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
     // Legacy header name for backward compatibility
     private static final String LEGACY_IDEMPOTENCY_KEY_HEADER = "X-Idempotency-Key";
+
+    // Financial operation paths that require idempotency key
+    private static final Set<String> FINANCIAL_PATHS = Set.of(
+        "/api/v1/transfers",
+        "/api/v1/payments",
+        "/api/v1/wallets/debit",
+        "/api/v1/wallets/credit",
+        "/v1/transfers",
+        "/v1/payments"
+    );
 
     @Inject
     GatewayConfig config;
@@ -87,10 +99,24 @@ public class IdempotencyFilter implements ContainerRequestFilter {
             headerUsed = configuredHeader;
         }
 
+        // Check if this is a financial operation that requires idempotency key
+        boolean isFinancialOperation = FINANCIAL_PATHS.stream()
+            .anyMatch(financialPath -> path.startsWith(financialPath));
+
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            // For write operations, idempotency key should be required
-            // But we'll make it optional for backward compatibility
-            Log.debugf("No idempotency key provided for %s %s", method, path);
+            if (isFinancialOperation) {
+                // Financial operations MUST have idempotency key
+                Log.warnf("Idempotency key required for financial operation %s %s", method, path);
+                requestContext.abortWith(
+                    Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"IDEMPOTENCY_KEY_REQUIRED\",\"message\":\"Idempotency-Key header is required for financial operations\",\"code\":\"GAT_IDM_001\"}")
+                        .header("Content-Type", "application/json")
+                        .build()
+                );
+                return;
+            }
+            // For non-financial write operations, idempotency key is optional
+            Log.debugf("No idempotency key provided for non-financial %s %s", method, path);
             return;
         }
 

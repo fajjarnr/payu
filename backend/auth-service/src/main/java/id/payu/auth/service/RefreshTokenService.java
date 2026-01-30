@@ -59,11 +59,16 @@ public class RefreshTokenService {
                 .createdAt(Instant.now())
                 .expiresAt(Instant.now().plus(REFRESH_TOKEN_TTL))
                 .rotationCount(0)
+                .hashedToken(hashedToken)
                 .build();
 
         // Store the hashed token in Redis
         String redisKey = buildRedisKey(userId, tokenId);
         redisTemplate.opsForValue().set(redisKey, metadata, REFRESH_TOKEN_TTL);
+
+        // Store reverse index: tokenId -> userId for O(1) lookup
+        String reverseIndexKey = buildReverseIndexKey(tokenId);
+        redisTemplate.opsForValue().set(reverseIndexKey, userId, REFRESH_TOKEN_TTL);
 
         log.info("Created refresh token for user: {}, tokenId: {}", maskUserId(userId), tokenId);
 
@@ -133,7 +138,9 @@ public class RefreshTokenService {
      */
     public void invalidateToken(String userId, String tokenId) {
         String redisKey = buildRedisKey(userId, tokenId);
+        String reverseIndexKey = buildReverseIndexKey(tokenId);
         redisTemplate.delete(redisKey);
+        redisTemplate.delete(reverseIndexKey);
         log.info("Invalidated refresh token for user: {}, tokenId: {}", maskUserId(userId), tokenId);
     }
 
@@ -180,13 +187,30 @@ public class RefreshTokenService {
 
     /**
      * Finds token metadata by token ID.
-     * In production, implement a reverse index for O(1) lookup.
+     * Uses reverse index mapping for O(1) lookup performance.
+     *
+     * @param tokenId The token ID to lookup
+     * @return RefreshTokenMetadata if found, null otherwise
      */
     private RefreshTokenMetadata findTokenMetadata(String tokenId) {
-        // Simplified implementation - in production, use a reverse index
-        // For now, return null as we'd need to iterate through all keys
-        // TODO: Implement reverse index mapping tokenId -> userId
-        return null;
+        // Use reverse index to find userId from tokenId
+        String reverseIndexKey = buildReverseIndexKey(tokenId);
+        String userId = (String) redisTemplate.opsForValue().get(reverseIndexKey);
+
+        if (userId == null) {
+            log.debug("Token ID not found in reverse index: {}", tokenId);
+            return null;
+        }
+
+        // Now fetch the full metadata using userId and tokenId
+        String redisKey = buildRedisKey(userId, tokenId);
+        RefreshTokenMetadata metadata = (RefreshTokenMetadata) redisTemplate.opsForValue().get(redisKey);
+
+        if (metadata == null) {
+            log.warn("Metadata not found for token ID: {} and user: {}", tokenId, maskUserId(userId));
+        }
+
+        return metadata;
     }
 
     /**
@@ -222,6 +246,14 @@ public class RefreshTokenService {
      */
     private String buildRedisKey(String userId, String tokenId) {
         return REFRESH_TOKEN_PREFIX + userId + ":" + tokenId;
+    }
+
+    /**
+     * Builds reverse index key for O(1) token lookup by ID.
+     * Maps tokenId -> userId for fast metadata retrieval.
+     */
+    private String buildReverseIndexKey(String tokenId) {
+        return REFRESH_TOKEN_PREFIX + "index:" + tokenId;
     }
 
     /**

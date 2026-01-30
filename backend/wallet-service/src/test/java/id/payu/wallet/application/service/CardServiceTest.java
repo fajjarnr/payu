@@ -50,7 +50,6 @@ class CardServiceTest {
                 .id(UUID.randomUUID())
                 .walletId(testWallet.getId())
                 .cardNumber("4111222233334444")
-                .cvv("123")
                 .expiryDate("12/30")
                 .cardHolderName("John Doe")
                 .status(Card.CardStatus.ACTIVE)
@@ -78,6 +77,7 @@ class CardServiceTest {
         assertThat(createdCard.getDailyLimit()).isEqualByComparingTo(new BigDecimal("5000000"));
         assertThat(createdCard.getCardNumber()).startsWith("4"); // Visa
         assertThat(createdCard.getStatus()).isEqualTo(Card.CardStatus.ACTIVE);
+        // CVV is no longer stored (PCI-DSS compliant)
 
         verify(cardPersistencePort).save(any(Card.class));
     }

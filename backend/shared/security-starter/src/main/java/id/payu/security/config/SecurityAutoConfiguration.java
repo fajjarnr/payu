@@ -7,6 +7,7 @@ import id.payu.security.masking.DataMaskingAspect;
 import id.payu.security.masking.LogbackMaskingFilter;
 import id.payu.security.audit.AuditAspect;
 import id.payu.security.audit.AuditLogPublisher;
+import id.payu.security.converter.EncryptedStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -54,6 +55,20 @@ public class SecurityAutoConfiguration {
         }
 
         return new EncryptionService(properties.getEncryption().getPassword());
+    }
+
+    /**
+     * Configure the EncryptedStringConverter with the EncryptionService.
+     * This enables field-level encryption for JPA entities.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "payu.security", name = "encryption-enabled", havingValue = "true", matchIfMissing = false)
+    public EncryptedStringConverter encryptedStringConverter(EncryptionService encryptionService) {
+        log.info("Initializing EncryptedStringConverter for field-level encryption");
+        EncryptedStringConverter converter = new EncryptedStringConverter();
+        converter.setEncryptionService(encryptionService);
+        return converter;
     }
 
     @Bean

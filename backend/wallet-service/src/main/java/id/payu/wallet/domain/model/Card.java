@@ -4,11 +4,19 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Card domain model representing a virtual card.
+ *
+ * <p><b>Security Note:</b> CVV is NEVER stored after card creation
+ * as per PCI-DSS requirements. CVV is only used during authorization
+ * and immediately discarded.</p>
+ *
+ * @see <a href="https://pcisecuritystandards.org/">PCI-DSS Requirements</a>
+ */
 public class Card {
     private UUID id;
     private UUID walletId;
     private String cardNumber;
-    private String cvv;
     private String expiryDate; // MM/YY
     private String cardHolderName;
     private CardStatus status;
@@ -19,11 +27,10 @@ public class Card {
     public Card() {
     }
 
-    public Card(UUID id, UUID walletId, String cardNumber, String cvv, String expiryDate, String cardHolderName, CardStatus status, BigDecimal dailyLimit, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Card(UUID id, UUID walletId, String cardNumber, String expiryDate, String cardHolderName, CardStatus status, BigDecimal dailyLimit, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.walletId = walletId;
         this.cardNumber = cardNumber;
-        this.cvv = cvv;
         this.expiryDate = expiryDate;
         this.cardHolderName = cardHolderName;
         this.status = status;
@@ -65,8 +72,6 @@ public class Card {
     public void setWalletId(UUID walletId) { this.walletId = walletId; }
     public String getCardNumber() { return cardNumber; }
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
-    public String getCvv() { return cvv; }
-    public void setCvv(String cvv) { this.cvv = cvv; }
     public String getExpiryDate() { return expiryDate; }
     public void setExpiryDate(String expiryDate) { this.expiryDate = expiryDate; }
     public String getCardHolderName() { return cardHolderName; }
@@ -84,7 +89,6 @@ public class Card {
         private UUID id;
         private UUID walletId;
         private String cardNumber;
-        private String cvv;
         private String expiryDate;
         private String cardHolderName;
         private CardStatus status;
@@ -97,7 +101,6 @@ public class Card {
         public CardBuilder id(UUID id) { this.id = id; return this; }
         public CardBuilder walletId(UUID walletId) { this.walletId = walletId; return this; }
         public CardBuilder cardNumber(String cardNumber) { this.cardNumber = cardNumber; return this; }
-        public CardBuilder cvv(String cvv) { this.cvv = cvv; return this; }
         public CardBuilder expiryDate(String expiryDate) { this.expiryDate = expiryDate; return this; }
         public CardBuilder cardHolderName(String cardHolderName) { this.cardHolderName = cardHolderName; return this; }
         public CardBuilder status(CardStatus status) { this.status = status; return this; }
@@ -106,7 +109,7 @@ public class Card {
         public CardBuilder updatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; return this; }
 
         public Card build() {
-            return new Card(id, walletId, cardNumber, cvv, expiryDate, cardHolderName, status, dailyLimit, createdAt, updatedAt);
+            return new Card(id, walletId, cardNumber, expiryDate, cardHolderName, status, dailyLimit, createdAt, updatedAt);
         }
     }
 }
