@@ -1,8 +1,8 @@
 # Project Roadmap & Todo List
 
 > **Lab Project Status**: ✅ **FEATURE COMPLETE** - All 22 microservices implemented
-> **Primary Focus**: 🧪 **TDD & Test Quality** - Backend ~92%, Frontend ~100%
-> **Last Updated**: January 30, 2026 (Partner Service Testcontainers Migration Complete)
+> **Primary Focus**: 🧪 **TDD & Test Quality** - Backend ~96%, Frontend ~100%
+> **Last Updated**: January 30, 2026 (Frontend Best Practices Review Complete)
 
 ---
 
@@ -35,12 +35,13 @@
 
 | Priority | Category | Progress | Target | Status |
 |----------|----------|----------|--------|--------|
-| **P0** | Web App Quality | 100% | 100% | 🟢 Complete |
-| **P1** | Mobile App Tests | 100% | 80% | 🟢 Exceeds Target |
+| **P0** | Web App Quality | 100% | 100% | 🟢 Complete (8.5/10 score) |
+| **P1** | Mobile App Tests | 100% | 80% | 🟢 Exceeds Target (7.5/10 score) |
 | **P2** | Backend Integration Tests | 96% | 80% | 🟢 Exceeds Target |
 | **P3** | Developer Docs Tests | 100% | 50% | 🟢 Exceeds Target |
 | **P4** | Test Infrastructure | 90% | 80% | 🟢 Complete |
 | **P5** | Container Migration (Docker → Podman) | 100% | 100% | 🟢 Complete |
+| **P6** | Frontend Best Practices Review | 100% | 100% | 🟢 Complete |
 
 ---
 
@@ -545,12 +546,19 @@ _Last Updated: January 30, 2026 (Partner Service Testcontainers Migration Comple
 ### Remaining Tasks Summary
 
 1. ✅ **partner-service**: Migrate from H2 to PostgreSQL Testcontainers - **COMPLETED**
-2. **Infrastructure**: Pre-commit hook guide, TDD training docs
+2. ✅ **Frontend Best Practices Review** - COMPLETED with improvement recommendations
+3. **Infrastructure**: Pre-commit hook guide, TDD training docs
+4. **Frontend Security**: Migrate web app from localStorage to httpOnly cookies
+5. **Frontend Performance**: Address LCP issues (9.3s → 2.5s target)
+6. **Mobile Enhancement**: Add TanStack Query and E2E testing
 
 ### Recommended Execution Order
 
 1. ✅ ~~Fix partner-service PostgreSQL Testcontainers configuration~~ - **DONE**
-2. **Day 2**: Infrastructure documentation (pre-commit hooks, TDD training)
+2. ✅ ~~Frontend Best Practices Review~~ - **DONE**
+3. **Day 3**: Infrastructure documentation (pre-commit hooks, TDD training)
+4. **Day 4**: Frontend security improvements (httpOnly cookies)
+5. **Day 5**: Frontend performance optimization (LCP)
 
 **Target 100% Date**: January 31, 2026 (Complete)
 
@@ -592,9 +600,60 @@ _Last Updated: January 30, 2026 (Partner Service Testcontainers Migration Comple
 - ✅ **wallet-service**: 1 Docker-based integration test - COMPLETE
 - ✅ **partner-service**: ArchitectureTest 16 tests + PostgreSQL Testcontainers migration - COMPLETE
 
+### Frontend Best Practices Review ✅
+
+> **Status**: Comprehensive review completed for Web App and Mobile App
+
+#### Web App (Next.js 16) - Score: 8.5/10 ⭐
+
+| Category | Score | Notes |
+|----------|-------|-------|
+| **Accessibility** | ⭐⭐⭐⭐⭐ | Excellent - jest-axe, custom a11y hooks, keyboard navigation tests |
+| **Testing** | ⭐⭐⭐⭐⭐ | 829+ tests, Vitest + Playwright + A11y audit |
+| **State Management** | ⭐⭐⭐⭐⭐ | TanStack Query + Zustand pattern |
+| **TypeScript** | ⭐⭐⭐⭐⭐ | Strict mode, path aliases |
+| **Performance** | ⭐⭐⭐ | LCP 9.3s needs optimization (target <2.5s) |
+| **Security** | ⭐⭐⭐ | localStorage for tokens - should use httpOnly cookies |
+
+**Critical Improvements Needed:**
+- 🔴 **Security**: Migrate token storage from localStorage to httpOnly cookies
+- 🔴 **Performance**: Address LCP issues (9.3s → target 2.5s)
+- 🟡 **Code Quality**: Add Husky pre-commit hooks
+- 🟡 **CSP**: Implement Content Security Policy headers
+
+#### Mobile App (Expo SDK 52) - Score: 7.5/10 ✅
+
+| Category | Score | Notes |
+|----------|-------|-------|
+| **Security** | ⭐⭐⭐⭐⭐ | Expo Secure Store (encrypted) - better than web |
+| **Biometric Auth** | ⭐⭐⭐⭐⭐ | useBiometrics hook implemented |
+| **Navigation** | ⭐⭐⭐⭐ | Expo Router v4 with typed routes |
+| **State Management** | ⭐⭐⭐ | Zustand only - needs TanStack Query |
+| **Testing** | ⭐⭐⭐ | Jest + RNTL - needs E2E (Detox/Maestro) |
+| **Accessibility** | ⭐⭐ | Basic - needs screen reader tests |
+
+**Critical Improvements Needed:**
+- 🔴 **Server State**: Add TanStack Query for server state management
+- 🔴 **E2E Testing**: Add Detox or Maestro for end-to-end testing
+- 🟡 **A11y Testing**: Add React Native accessibility testing
+- 🟡 **Pre-commit Hooks**: Add Husky + lint-staged
+
+#### Comparative Analysis
+
+| Aspect | Web | Mobile | Better |
+|--------|-----|--------|--------|
+| Aksesibilitas | ✅ Excellent | ⚠️ Basic | Web |
+| Keamanan Storage | ⚠️ localStorage | ✅ Secure Store | Mobile |
+| Testing Coverage | ✅ 829+ tests | ✅ 153+ tests | Web (E2E) |
+| State Management | ✅ TanStack Query | ⚠️ Zustand only | Web |
+
+**Documentation**: `docs/guides/FRONTEND_BEST_PRACTICES.md` (to be created)
+
+---
+
 ### Overall Progress
-- **Frontend**: 98% → **100%** (COMPLETE)
+- **Frontend**: 98% → **100%** (COMPLETE) - With identified improvements
 - **Backend**: 92% → **96%** (+4%)
 - **Lab Score**: 98% → **99%** (+1%)
 
-_Last Updated: January 30, 2026 (Partner Service Testcontainers Migration Complete)_
+_Last Updated: January 30, 2026 (Frontend Best Practices Review Complete)_
