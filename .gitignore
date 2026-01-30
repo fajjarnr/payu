@@ -117,3 +117,4 @@ test-results/
 !.claude/workflows
 # Note: .agent/ is NOT ignored as it contains project-specific AI instructions
 # Note: .ralphy/ is NOT ignored as it contains project rules
+node_modules/

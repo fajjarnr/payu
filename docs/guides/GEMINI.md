@@ -244,7 +244,7 @@ AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
 
 ## 🤖 Available AI Skills
 
-Skills are categorized by domain to help you choose the right tool for the task. All skills are located in `.agent/skills/`.
+Skills are categorized by domain to help you choose the right tool for the task. All skills are located in `.agent/skills/` and indexed in `REGISTRY.yaml` (v2.0.0).
 
 ### 🏗️ Core & Architecture
 | Skill | Description |
