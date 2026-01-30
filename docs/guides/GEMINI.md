@@ -249,8 +249,7 @@ Skills are categorized by domain to help you choose the right tool for the task.
 ### 🏗️ Core & Architecture
 | Skill | Description |
 | :--- | :--- |
-| `enterprise-architect` | High-level development guide - architecture overview, technology stack, and entry point. |
-| `cto-advisor` | Strategic technical leadership, engineering metrics (DORA), and scaling strategies. |
+| `enterprise-architect` | **Master Skill**: High-level Architecture, DORA metrics, and Strategy. |
 | `docs-engineer` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
 
 ### ☕ Backend & Logic
@@ -259,8 +258,8 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | `backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, and advanced Resilience. |
 | `api-design` | **Master Skill**: REST API standards, OpenAPI, and 3rd-party Integrations. |
 | `event-driven-architecture` | **Master Skill**: Sagas, Event Sourcing, & Kafka/AMQ Streams (CDC). |
-| `database-engineer` | **Advanced**: Postgres Performance (Indexing/Locking), Design Rules, and Flyway. |
-| `typescript-backend-engineer` | Node.js/Express/TypeScript services (BFFs, microservices) with Prisma and Zod. |
+| `database-engineer` | **Master Skill**: PostgreSQL Design, Performance, and Flyway. |
+| `typescript-backend-engineer` | **Master Skill**: Node.js/Express, Prisma, and Zod (BFF). |
 | `ml-engineer` | **Master Skill**: Intelligent Systems, FastAPI, TimescaleDB, & GenAI. |
 
 ### 📱 Frontend & Mobile
@@ -282,8 +281,8 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | Skill | Description |
 | :--- | :--- |
 | `devops-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container (UBI9) Engineering. |
-| `observability-engineer` | **Advanced**: SLO/Burn Rate Alerts, Runbooks, Golden Signals (Jaeger/Loki/Prom). |
-| `git-workflow` | Branching strategies, conventional commits, and PR standards. |
+| `observability-engineer` | **Master Skill**: SRE, Golden Signals, and Distributed Tracing. |
+| `git-workflow` | **Master Skill**: Git Strategy, Conventional Commits, and PR Review. |
 | `typescript-advanced-types` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
 | `slidev` | Presentation slides for developers (Markdown-based). |
 

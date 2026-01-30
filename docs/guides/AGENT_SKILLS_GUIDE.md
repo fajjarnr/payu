@@ -40,8 +40,7 @@ The PayU platform is powered by specialized skill clusters:
 #### 🏗️ Core & Architecture
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Dev/Arch** | `enterprise-architect` | **Master Skill**: Architecture Decision Matrix & Immutable Laws. |
-| **Advisor** | `cto-advisor` | Strategic technical leadership and engineering metrics (DORA). |
+| **Dev/Arch** | `enterprise-architect` | **Master Skill**: High-level Architecture, DORA & Strategy. |
 | **Knowledge**| `docs-engineer` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
 
 #### ☕ Backend & Logic
@@ -49,9 +48,9 @@ The PayU platform is powered by specialized skill clusters:
 | :--- | :--- | :--- |
 | **Core** | `backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
 | **API** | `api-design` | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
-| **DB** | `database-engineer` | **Advanced**: Performance (Idx/Locking), Design Rules, Flyway. |
+| **DB** | `database-engineer` | **Master Skill**: PostgreSQL Design, Performance, & Flyway. |
 | **Events** | `event-driven-architecture` | **Master Skill**: Sagas, Event Sourcing, & Kafka (CDC). |
-| **Logic** | `typescript-backend-engineer` | Node.js BFFs, Prisma, and Zod validation patterns. |
+| **Logic** | `typescript-backend-engineer` | **Master Skill**: Node.js BFFs, Prisma, and Zod (Type-Safe APIs). |
 | **AI** | `ml-engineer` | **Master Skill**: Intelligent Systems, FastAPI, & TimescaleDB. |
 
 #### 📱 Frontend & Mobile
@@ -65,7 +64,7 @@ The PayU platform is powered by specialized skill clusters:
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
 | **Audit** | `security-engineer` | **Master Skill**: Zero Trust, Auth Patterns, & Compliance. |
-| **Metrics** | `observability-engineer` | **Advanced**: SLO/Burn Rate Alerts, Runbooks, Golden Signals. |
+| **Metrics** | `observability-engineer` | **Master Skill**: SRE, Golden Signals, Logs, & Tracing. |
 | **QA** | `qa-engineer` | **Master Skill**: TDD, E2E, RCA, & Financial Recon. |
 | **FinOps** | `finops-engineer` | **New**: Recon, Settlement, GL Integration, and Regulatory Reporting. |
 
@@ -73,9 +72,8 @@ The PayU platform is powered by specialized skill clusters:
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
 | **Infra** | `devops-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container Hardening. |
-| **Obs** | `observability-engineer` | **Advanced**: SLOs, Golden Signals, Jaeger, and LokiStack. |
 | **Logic** | `typescript-advanced-types` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
-| **Git** | `git-workflow` | Branching strategies, conventional commits, and PR standards. |
+| **Git** | `git-workflow` | **Master Skill**: Git Strategy, Conventional Commits, and PR Mastery. |
 | **Tools** | `slidev` | Presentation slides for developers (Markdown-based). |
 
 ---

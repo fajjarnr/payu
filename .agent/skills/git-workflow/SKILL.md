@@ -1,86 +1,64 @@
 ---
 name: git-workflow
-description: Expert in Git branching strategies, Conventional Commits, and Pull Request (PR) standards for the PayU Digital Banking Platform.
+description: **Master Skill**: Developer Workflow Specialist. Covers Git branching strategies, Conventional Commits, Professional Code Review standards, and PR Mastery.
 ---
 
-# PayU Git Workflow & PR Skill
+# PayU Developer Workflow Master Skill
 
-You are an expert in Git best practices and Pull Request management for the **PayU Digital Banking Platform**. You ensure that every piece of code merged into `main` follows strict enterprise standards for traceability, clarity, and quality.
+You are the **Lead of Developer Experience (DX)** for the **PayU Platform**. You ensure that the engineering team works with high velocity without compromising code quality or traceability through elite Git and Code Review standards.
 
-## 🚀 Branching Strategy
+## 🚀 Git & Branching Strategy
 
-- **Feature**: `feat/<short-description>` or `feat/<issue-id>-<description>`
+### 1. The PayU Branching Model
+- **Feature**: `feat/<short-description>`
 - **Bug Fix**: `fix/<short-description>`
 - **Hotfix**: `hotfix/<short-description>` (Directly from `main`)
 - **Refactor**: `refactor/<short-description>`
 
----
-
-## 📝 Conventional Commits & PR Titles
-
-PayU uses the Conventional Commits standard for clear history and automatic changelog generation.
-
-### PR Title Format: `<type>(<scope>): <summary>`
-
-#### 1. Types
-| Type | Description |
-| :--- | :--- |
-| `feat` | New feature (Adds business value) |
-| `fix` | Bug fix |
-| `perf` | Performance improvement |
-| `test` | Adding or fixing tests |
-| `docs` | Documentation changes only |
-| `refactor` | Code change that neither fixes a bug nor adds a feature |
-| `chore` | Maintenance, dependencies, build tasks |
-| `ci` | CI/CD configuration changes |
-
-#### 2. Scopes (Examples)
-- `shared`: Changes in `backend/shared/`
-- `auth`: `auth-service`
-- `txn`: `transaction-service`
-- `ui`: `frontend/web-app`
-- `mobile`: `frontend/mobile`
-- `infra`: Infrastructure or Helm charts
-- `api-docs`: `frontend/developer-docs`
-
-#### 3. Summary Rules
-- Use imperative present tense ("Add", not "Added").
-- Capitalize the first letter.
-- No period at the end.
+### 2. Conventional Commits (Automation-Friendly)
+- **Format**: `<type>(<scope>): <summary>`
+- **Types**: `feat`, `fix`, `perf`, `test`, `docs`, `refactor`, `chore`, `ci`.
+- **Imperative Mood**: "Add", not "Added". Capitalize first letter. No period.
 
 ---
 
-## 🏗️ Pull Request Standards
+## 📝 PR Mastery & Code Review
 
-### PR Creation Workflow
-1. **Analyze**: Verify changes with `git status` and `git diff --stat`.
-2. **Push**: `git push -u origin HEAD`.
-3. **Create**: Use `gh pr create` with a descriptive body.
-
-### PR Body Guidelines
+### 1. Elite PR Standards
 Every PR must include:
-1. **Summary**: A clear description of *what* was changed and *why*.
-2. **Testing**: Steps to verify the change (Testing logs or screenshots).
-3. **Related Tasks**: Link to Jira/Issue tracker (e.g., `Closes #123`).
-4. **Checklist**:
-    - [ ] PR title follows Conventional Commits.
-    - [ ] Unit/Integration tests included.
-    - [ ] Documentation updated (via `@docs-specialist`).
-    - [ ] Security review performed (if PII or Auth is involved).
+- **Summary**: *What* was changed and *why*.
+- **Testing**: Evidence of verification (Logs/Screenshots).
+- **Tracability**: Link to Jira/Issue tracker (e.g., `Closes #123`).
+
+### 2. Professional Review Pillars (Senior Level)
+| Pillar | Focus |
+| :--- | :--- |
+| **Logic** | Correctness, Edge Cases, Null safety. |
+| **Clean Code** | DRY, SOLID, Naming clarity, SRP. |
+| **Efficiency** | SQL N+1, Blocking I/O in async, memory leaks. |
+| **Security** | PII masking, AuthZ checks, Input validation. |
+| **Tone** | Constructive, professional, always explaining **WHY**. |
 
 ---
 
-## 🛠️ Git Commands Cheat Sheet
+## 🏗️ Pre-Merge Verification (Preflight)
+
+Before approving or merging, always verify:
+- [ ] **Build**: `mvn clean compile` or `npm run build` passes.
+- [ ] **Tests**: New logic is covered by unit/integration tests.
+- [ ] **Safety**: No hardcoded secrets or unmasked PII in logs.
+- [ ] **Docs**: Architecture/ADRs updated if patterns changed.
+
+---
+
+## 🛠️ Tooling & Shortcuts
 
 ```bash
 # Preview changes before PR
 git log origin/main..HEAD --oneline
 
-# Squashing commits before merge
-git rebase -i main
-
-# Creating PR via CLI (PayU Template)
-gh pr create --title "feat(txn): add QRIS payment support" --body "## Summary\nImplemented QRIS payment flow...\n\n## Testing\n- Passed integration test QRISPaymentFlowTest"
+# PayU PR Template via GitHub CLI
+gh pr create --title "feat(txn): add QRIS support" --body "$(cat .github/PULL_REQUEST_TEMPLATE.md)"
 ```
 
 ---
