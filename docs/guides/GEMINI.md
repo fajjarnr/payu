@@ -249,41 +249,41 @@ Skills are categorized by domain to help you choose the right tool for the task.
 ### 🏗️ Core & Architecture
 | Skill | Description |
 | :--- | :--- |
-| `enterprise-architect` | **Master Skill**: High-level Architecture, DORA metrics, and Strategy. |
-| `docs-engineer` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
+| `principal-architect` | **Master Skill**: High-level Architecture, DORA metrics, and Strategy. |
+| `information-architect` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
 
 ### ☕ Backend & Logic
 | Skill | Description |
 | :--- | :--- |
-| `backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, and advanced Resilience. |
-| `api-design` | **Master Skill**: REST API standards, OpenAPI, and 3rd-party Integrations. |
-| `event-driven-architecture` | **Master Skill**: Sagas, Event Sourcing, & Kafka/AMQ Streams (CDC). |
-| `database-engineer` | **Master Skill**: PostgreSQL Design, Performance, and Flyway. |
-| `typescript-backend-engineer` | **Master Skill**: Node.js/Express, Prisma, and Zod (BFF). |
-| `ml-engineer` | **Master Skill**: Intelligent Systems, FastAPI, TimescaleDB, & GenAI. |
+| `core-banking-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
+| `api-architect` | **Master Skill**: REST API standards, OpenAPI, & 3rd-party Integrations. |
+| `event-systems-architect` | **Master Skill**: Sagas, Event Sourcing, & Kafka/AMQ Streams (CDC). |
+| `data-architect` | **Master Skill**: PostgreSQL Design, Performance, and Flyway. |
+| `nodejs-bff-architect` | **Master Skill**: Node.js/Express, Prisma, and Zod (BFF). |
+| `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, TimescaleDB, & GenAI. |
 
 ### 📱 Frontend & Mobile
 | Skill | Description |
 | :--- | :--- |
-| `ui-ux-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
-| `frontend-engineer` | **Master Skill**: Next.js 15+, React, and modern web application architecture. |
-| `mobile-engineer` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), and Mobile Security. |
+| `product-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
+| `frontend-architect` | **Master Skill**: Next.js 15+, React, and modern web application architecture. |
+| `mobile-architect` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), and Mobile Security. |
 | `web-artifacts-builder` | Scaffolding and bundling single-file HTML/React artifacts for documentation. |
 
 ### 🛡️ Security & Quality
 | Skill | Description |
 | :--- | :--- |
-| `security-engineer` | **Master Skill**: Zero Trust K8s, Vault, Auth Patterns, & Compliance (PCI/OJK). |
-| `qa-engineer` | **Master Skill**: TDD, E2E Testing, RCA, & Financial Reconciliation. |
-| `finops-engineer` | **New**: Reconciliation, Settlement, GL Integration, and Regulatory Reporting. |
+| `cybersecurity-architect` | **Master Skill**: Zero Trust K8s, Vault, Auth Patterns, & Compliance (PCI/OJK). |
+| `sdet-solutions-engineer` | **Master Skill**: TDD, E2E Testing, RCA, & Financial Reconciliation. |
+| `finops-architect` | **New**: Reconciliation, Settlement, GL Integration, and Regulatory Reporting. |
 
 ### ⚙️ DevOps & Automation
 | Skill | Description |
 | :--- | :--- |
-| `devops-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container (UBI9) Engineering. |
-| `observability-engineer` | **Master Skill**: SRE, Golden Signals, and Distributed Tracing. |
-| `git-workflow` | **Master Skill**: Git Strategy, Conventional Commits, and PR Review. |
-| `typescript-advanced-types` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
+| `platform-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container (UBI9) Engineering. |
+| `sre-engineer` | **Master Skill**: SRE, Golden Signals, and Distributed Tracing. |
+| `developer-experience-specialist` | **Master Skill**: Git Strategy, Conventional Commits, and PR Review. |
+| `typescript-specialist` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
 | `slidev` | Presentation slides for developers (Markdown-based). |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).

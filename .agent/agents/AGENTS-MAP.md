@@ -6,31 +6,27 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 
 | Triggering Skill     | Orchestrated Agent    | Rationale                                      |
 | :------------------- | :-------------------- | :--------------------------------------------- |
-| `@enterprise-architect` | `@scaffolder`         | Mengotomatisasi pembuatan service baru.        |
-| `@backend-engineer`  | `@logic-builder`      | Implementasi Domain logic dan DDD entities.    |
-| `@qa-engineer`       | `@tester`             | Penulisan test code dan eksekusi.              |
-| `@security-engineer` | `@auditor`            | Audit keamanan dan kepatuhan (PCI-DSS/OJK).    |
-| `@database-engineer` | `@migrator`           | Pengelolaan skema database dan migrasi Flyway. |
-| `@devops-engineer`   | `@builder`            | Build, packaging, dan containerization.        |
-| `@frontend-engineer` | `@styler`             | Estetika "Premium Emerald" dan A11y.           |
-| `@devops-engineer`   | `@orchestrator`       | Alur CI/CD dan sinkronisasi git.               |
-| `@enterprise-architect` | `@lifecycle-manager`  | Pengelola SDLC penuh (End-to-End).             |
-| `@enterprise-architect` | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
-| `@security-engineer` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
+| `@principal-architect` | `@scaffolder`         | Mengotomatisasi pembuatan service baru.        |
+| `@core-banking-engineer` | `@logic-builder`    | Implementasi Domain logic dan DDD entities.    |
+| `@sdet-solutions-engineer` | `@tester`           | Penulisan test code dan eksekusi.              |
+| `@cybersecurity-architect` | `@auditor`          | Audit keamanan dan kepatuhan (PCI-DSS/OJK).    |
+| `@data-architect`    | `@migrator`           | Pengelolaan skema database dan migrasi Flyway. |
+| `@platform-engineer` | `@builder`            | Build, packaging, dan containerization.        |
+| `@frontend-architect`| `@styler`             | Estetika "Premium Emerald" dan A11y.           |
+| `@platform-engineer` | `@orchestrator`       | Alur CI/CD dan sinkronisasi git.               |
+| `@principal-architect` | `@lifecycle-manager`  | Pengelola SDLC penuh (End-to-End).             |
+| `@principal-architect` | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
+| `@cybersecurity-architect` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
 | `@web-artifacts-builder` | `@builder`           | Scaffolding dan bundling single-file artifacts. |
 | `@slidev`            | `@styler`             | Desain layout dan animasi presentasi premium. |
-| `@mobile-engineer`   | `@styler`             | Styling React Native (NativeWind/Reanimated).  |
-| `@mobile-engineer`   | `@logic-builder`      | Logic React Native, Offline sync, State mgmt.  |
-| `@ui-ux-designer`    | `@styler`             | Design Tokens, Palettes, Typography systems.   |
-| `@react-patterns`    | `@logic-builder`      | React state, performance, and modernization patterns. |
-| `@react-native-architecture` | `@scaffolder` | Expo Router setup & Native Modules config.     |
-| `@api-design`        | `@logic-builder`      | Standarisasi API Schemas & DTO logic.          |
-| `@event-driven-architecture` | `@logic-builder` | Implementasi Kafka messaging & Saga patterns.  |
-| `@auth-implementation-patterns` | `@logic-builder` | Implementasi JWT, OAuth2, dan MFA logic.       |
-| `@nextjs-app-router-patterns` | `@logic-builder` | Logic Server Components & Streaming architecture. |
-| `@tailwind-design-system` | `@styler`        | Implementasi Atomic CSS & Design Tokens.       |
-| `kafka-stream-specialist` | `@logic-builder` | Implementasi Kafka Streams topology & CDC connectors. |
-| `@observability-engineer` | `@auditor`       | Evaluasi tracing, log levels, dan metrics.     |
+| `@mobile-architect`  | `@styler`             | Styling React Native (NativeWind/Reanimated).  |
+| `@mobile-architect`  | `@logic-builder`      | Logic React Native, Offline sync, State mgmt.  |
+| `@product-designer`  | `@styler`             | Design Tokens, Palettes, Typography systems.   |
+| `@api-architect`     | `@logic-builder`      | Standarisasi API Schemas & DTO logic.          |
+| `@event-systems-architect` | `@logic-builder` | Implementasi Kafka messaging & Saga patterns.  |
+| `@ai-engineer`       | `@logic-builder`      | Implementasi Async Service, Repository, & ETL. |
+| `@sre-engineer`      | `@auditor`            | Evaluasi tracing, log levels, dan metrics.     |
+| `@finops-architect`  | `@logic-builder`      | Implementasi Recon & GL Integration logic.     |
 
 ## 🔄 Execution Workflow
 
@@ -59,8 +55,11 @@ Berdasarkan `antigravity-lifecycle`, berikut adalah bagaimana kolaborasi terjadi
 
 Untuk mencapai kecepatan ekstrim, asisten AI harus menjalankan agen secara paralel ketika menangani tugas yang melibatkan banyak skill:
 
-1. **Parallel Dispatching**: Jika tugas melibatkan Frontend (`@frontend-engineer`) dan Backend (`@backend-engineer`), aktifkan `@styler` dan `@logic-builder` secara bersamaan (Swarm Mode).
+1. **Parallel Dispatching**: Jika tugas melibatkan Frontend (`@frontend-architect`) dan Backend (`@core-banking-engineer`), aktifkan `@styler` and `@logic-builder` secara bersamaan (Swarm Mode).
 2. **Skill-to-Agent Handshake**:
-   - Jika `@frontend-engineer` butuh visualisasi data, delegasikan ke `@web-artifacts-builder` -> `@builder`.
+   - Jika `@frontend-architect` butuh visualisasi data, delegasikan ke `@web-artifacts-builder` -> `@builder`.
    - Jika pengembangan fitur butuh presentasi, delegasikan ke `@slidev` -> `@styler`.
-3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama (misal: penulisan dokumen teknis di `@docs-engineer` didelegasikan ke `@slidev` jika butuh deck).
+3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama (misal: penulisan dokumen teknis di `@information-architect` didelegasikan ke `@slidev` jika butuh deck).
+
+---
+*Last Updated: January 2026*

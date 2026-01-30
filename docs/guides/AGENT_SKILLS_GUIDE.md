@@ -40,40 +40,40 @@ The PayU platform is powered by specialized skill clusters:
 #### 🏗️ Core & Architecture
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Dev/Arch** | `enterprise-architect` | **Master Skill**: High-level Architecture, DORA & Strategy. |
-| **Knowledge**| `docs-engineer` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
+| **Dev/Arch** | `principal-architect` | **Master Skill**: High-level Architecture, DORA & Strategy. |
+| **Knowledge**| `information-architect` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
 
 #### ☕ Backend & Logic
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Core** | `backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
-| **API** | `api-design` | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
-| **DB** | `database-engineer` | **Master Skill**: PostgreSQL Design, Performance, & Flyway. |
-| **Events** | `event-driven-architecture` | **Master Skill**: Sagas, Event Sourcing, & Kafka (CDC). |
-| **Logic** | `typescript-backend-engineer` | **Master Skill**: Node.js BFFs, Prisma, and Zod (Type-Safe APIs). |
-| **AI** | `ml-engineer` | **Master Skill**: Intelligent Systems, FastAPI, & TimescaleDB. |
+| **Core** | `core-banking-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
+| **API** | `api-architect` | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
+| **DB** | `data-architect` | **Master Skill**: PostgreSQL Design, Performance, & Flyway. |
+| **Events** | `event-systems-architect` | **Master Skill**: Sagas, Event Sourcing, & Kafka (CDC). |
+| **Logic** | `nodejs-bff-architect` | **Master Skill**: Node.js BFFs, Prisma, and Zod (Type-Safe APIs). |
+| **AI** | `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, & TimescaleDB. |
 
 #### 📱 Frontend & Mobile
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Web** | `frontend-engineer` | **Master Skill**: Next.js 15+, React, & Web Perf. |
-| **Mobile** | `mobile-engineer` | **Master Skill**: React Native, Expo, & Mobile Security. |
-| **Design** | `ui-ux-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
+| **Web** | `frontend-architect` | **Master Skill**: Next.js 15+, React, & Web Perf. |
+| **Mobile** | `mobile-architect` | **Master Skill**: React Native, Expo, & Mobile Security. |
+| **Design** | `product-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
 
 #### 🛡️ Security & Observability
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Audit** | `security-engineer` | **Master Skill**: Zero Trust, Auth Patterns, & Compliance. |
-| **Metrics** | `observability-engineer` | **Master Skill**: SRE, Golden Signals, Logs, & Tracing. |
-| **QA** | `qa-engineer` | **Master Skill**: TDD, E2E, RCA, & Financial Recon. |
-| **FinOps** | `finops-engineer` | **New**: Recon, Settlement, GL Integration, and Regulatory Reporting. |
+| **Audit** | `cybersecurity-architect` | **Master Skill**: Zero Trust, Auth Patterns, & Compliance. |
+| **Metrics** | `sre-engineer` | **Master Skill**: SRE, Golden Signals, Logs, & Tracing. |
+| **QA** | `sdet-solutions-engineer` | **Master Skill**: TDD, E2E, RCA, & Financial Recon. |
+| **FinOps** | `finops-architect` | **New**: Recon, Settlement, GL Integration, and Regulatory Reporting. |
 
 #### ⚙️ DevOps & Automation
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Infra** | `devops-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container Hardening. |
-| **Logic** | `typescript-advanced-types` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
-| **Git** | `git-workflow` | **Master Skill**: Git Strategy, Conventional Commits, and PR Mastery. |
+| **Infra** | `platform-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container Hardening. |
+| **Logic** | `typescript-specialist` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
+| **Git** | `developer-experience-specialist` | **Master Skill**: Git Strategy, Conventional Commits, and PR Mastery. |
 | **Tools** | `slidev` | Presentation slides for developers (Markdown-based). |
 
 ---
@@ -104,7 +104,7 @@ Gunakan alur berikut untuk mengorkestrasi ekosistem AI secara efektif:
 
 ### Fase 1: Discovery & Planning
 
-1. Gunakan skill **`@enterprise-architect`** untuk memahami konteks arsitektur global.
+1. Gunakan skill **`@principal-architect`** untuk memahami konteks arsitektur global.
 2. Gunakan `@lifecycle-manager` untuk merancang dokumen rencana implementasi.
 
 ### Fase 2: Scaffolding & Setup
