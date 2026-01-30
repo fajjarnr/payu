@@ -1,5 +1,7 @@
 ---
 name: product-designer
+version: 2.0.0
+requires: []
 description: **Master Skill**: Design & Frontend Intelligence for PayU. Covers Premium Aesthetics, Tailwind Design Systems, Responsive Patterns (Container Queries), and Accessible User Experience.
 ---
 

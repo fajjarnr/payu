@@ -1,5 +1,7 @@
 ---
 name: information-architect
+version: 2.0.0
+requires: [principal-architect]
 description: **Master Skill**: Documentation & Knowledge Architect. Expert in documentation systems, technical writing, C4 architecture mapping, and ADR maintenance for PayU.
 ---
 

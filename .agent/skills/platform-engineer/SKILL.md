@@ -1,5 +1,7 @@
 ---
 name: platform-engineer
+version: 2.0.0
+requires: []
 description: **Master Skill**: Platform & DevOps Architect for PayU. Expert in OpenShift 4.20+, Tekton Pipelines, ArgoCD (GitOps), and Container Hardening (UBI9).
 ---
 

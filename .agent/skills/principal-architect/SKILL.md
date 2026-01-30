@@ -1,5 +1,7 @@
 ---
 name: principal-architect
+version: 2.0.0
+requires: []
 description: **Master Skill**: High-level Architecture & Strategic Leadership. Covers Decentralized Orchestration, Technology Radar, DORA metrics, and Technical Debt management.
 ---
 

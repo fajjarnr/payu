@@ -1,5 +1,7 @@
 ---
 name: web-artifacts-builder
+version: 2.0.0
+requires: [frontend-architect]
 description: **Master Skill**: Frontend Artifact Specialist. Suite of tools for creating elaborate, multi-component PayU HTML artifacts using React, Tailwind CSS, and shadcn/ui.
 ---
 

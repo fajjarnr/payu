@@ -1,5 +1,7 @@
 ---
 name: integration-architect
+version: 2.0.0
+requires: [core-banking-engineer]
 description: **Master Skill**: Integration & Event Systems Architect. Covers Distributed Transactions (Sagas), Event Sourcing, Kafka/AMQ Streams engineering, CDC (Debezium), and Exactly-Once semantics.
 ---
 

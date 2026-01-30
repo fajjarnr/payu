@@ -1,5 +1,7 @@
 ---
 name: data-architect
+version: 2.0.0
+requires: []
 description: **Master Skill**: Data Architect for PayU. Expert in PostgreSQL design, Performance Tuning (Indexing/Locking), Flyway migrations, and high-scale JSONB patterns.
 ---
 

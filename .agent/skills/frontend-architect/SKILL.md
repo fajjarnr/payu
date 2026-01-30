@@ -1,5 +1,7 @@
 ---
 name: frontend-architect
+version: 2.0.0
+requires: [product-designer]
 description: **Master Skill**: Next.js 15+ Architecture for PayU. Covers Server Components, React Query/Zustand patterns, Streaming, and high-performance Web infrastructure.
 ---
 

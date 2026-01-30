@@ -1,6 +1,7 @@
-```markdown
 ---
 name: release-engineer
+version: 2.0.0
+requires: [platform-engineer]
 description: **Master Skill**: Release Engineering & Deployment Strategies. Covers Feature Flags, Blue-Green/Canary Deployments, Progressive Rollouts, and Rollback Automation.
 ---
 

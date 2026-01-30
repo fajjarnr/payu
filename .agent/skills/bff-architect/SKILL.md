@@ -1,5 +1,7 @@
 ---
 name: bff-architect
+version: 2.0.0
+requires: [api-architect]
 description: **Master Skill**: BFF (Backend-for-Frontend) Architect. Expert in Node.js/TypeScript, Prisma ORM, Zod validation, and high-performance Express/Fastify patterns.
 ---
 

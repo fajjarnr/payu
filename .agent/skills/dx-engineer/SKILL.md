@@ -1,5 +1,7 @@
 ---
 name: dx-engineer
+version: 2.0.0
+requires: []
 description: **Master Skill**: Developer Experience Engineering. Unified expertise in Git Workflows, TypeScript Patterns, Documentation Tools (Slidev), Code Review Standards, and Developer Tooling.
 ---
 

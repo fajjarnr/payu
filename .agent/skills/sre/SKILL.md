@@ -1,5 +1,7 @@
 ---
 name: sre
+version: 2.0.0
+requires: [platform-engineer]
 description: **Master Skill**: Site Reliability Engineering. Unified expertise in Observability (LGTM Stack), Chaos Engineering, Disaster Recovery, SLO/SLI Management, and Incident Response.
 ---
 

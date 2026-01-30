@@ -1,6 +1,7 @@
-```markdown
 ---
 name: data-governance-architect
+version: 2.0.0
+requires: [data-architect]
 description: **Master Skill**: Data Governance & Lineage Architect. Covers Data Cataloging, Lineage Tracking, PII Classification, Retention Policies, and Regulatory Compliance (POJK, UU PDP).
 ---
 

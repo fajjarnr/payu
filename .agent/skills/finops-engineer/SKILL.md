@@ -1,6 +1,7 @@
-```markdown
 ---
 name: finops-engineer
+version: 2.0.0
+requires: [data-architect]
 description: **Master Skill**: Financial Operations & Cloud Cost Engineering. Unified expertise in Reconciliation, Settlement, GL Integration, Cloud Cost Optimization, FinOps Foundation Principles, and Regulatory Reporting (OJK/BI).
 ---
 

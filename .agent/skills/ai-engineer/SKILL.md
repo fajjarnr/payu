@@ -1,5 +1,7 @@
 ---
 name: ai-engineer
+version: 2.0.0
+requires: [data-architect]
 description: **Master Skill**: Intelligent Systems Architect. Covers ML Lifecycle (Scikit-Learn/ONNX), Python API Scaffolding (FastAPI/Pydantic v2), Data Engineering (TimescaleDB), and Generative AI patterns.
 ---
 

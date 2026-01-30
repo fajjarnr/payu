@@ -1,5 +1,7 @@
 ---
 name: mobile-architect
+version: 2.0.0
+requires: [product-designer]
 description: **Master Skill**: React Native, Expo, and Native UI design. Includes architectural patterns for navigation, security, and offline-first performance.
 ---
 

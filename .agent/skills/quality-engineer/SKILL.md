@@ -1,6 +1,7 @@
-```markdown
 ---
 name: quality-engineer
+version: 2.0.0
+requires: [core-banking-engineer]
 description: **Master Skill**: Quality Engineering & Testing Architecture. Unified expertise in Full-Stack Testing, Contract Testing, Performance Engineering, Test Automation, and Financial Integrity Verification.
 ---
 
