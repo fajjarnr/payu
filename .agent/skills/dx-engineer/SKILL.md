@@ -470,6 +470,128 @@ changelog:
 
 ---
 
+## 🎬 Slidev - Developer Presentations
+
+### Quick Start
+
+```bash
+pnpm create slidev    # Create project
+pnpm run dev          # Start dev server
+pnpm run export       # Export to PDF
+```
+
+### Basic Syntax
+
+```md
+---
+theme: default
+title: My Presentation
+---
+
+# First Slide
+
+Content here
+
+---
+
+# Second Slide
+
+More content
+
+<!--
+Presenter notes go here
+-->
+```
+
+### Code Highlighting
+
+```md
+# Code Example
+
+\`\`\`typescript {2,3}
+function transfer(amount: number) {
+  validateAmount(amount);  // highlighted
+  executeTransfer(amount); // highlighted
+  return { success: true };
+}
+\`\`\`
+```
+
+### Click-Based Animations
+
+```md
+\`\`\`typescript {1|2-3|all}
+const user = await fetchUser()
+const balance = await getBalance(user.id)
+return { user, balance }
+\`\`\`
+```
+
+### Two-Column Layout
+
+```md
+---
+layout: two-cols
+---
+
+# Left Column
+
+Content on the left side
+
+::right::
+
+# Right Column
+
+Content on the right side
+```
+
+### Monaco Editor (Live Code)
+
+```md
+\`\`\`typescript {monaco}
+// Editable code block
+const greeting = "Hello World"
+console.log(greeting)
+\`\`\`
+```
+
+### Mermaid Diagrams
+
+```md
+\`\`\`mermaid
+sequenceDiagram
+    Client->>BFF: POST /transfer
+    BFF->>AccountService: validate()
+    AccountService-->>BFF: OK
+    BFF-->>Client: 201 Created
+\`\`\`
+```
+
+### Common Layouts
+
+| Layout | Purpose |
+|--------|---------|
+| `cover` | Title/cover slide |
+| `center` | Centered content |
+| `two-cols` | Two columns (use `::right::`) |
+| `image-right` | Content + image |
+| `section` | Section divider |
+
+### Export Options
+
+```bash
+# Export to PDF
+slidev export
+
+# Export with dark mode
+slidev export --dark
+
+# Export to PPTX
+slidev export --format pptx
+```
+
+---
+
 ## 🔍 Developer Experience Checklist
 
 ### Git & PR
