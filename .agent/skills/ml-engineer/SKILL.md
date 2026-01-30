@@ -22,8 +22,8 @@ You are a senior ML & Backend Engineer for the **PayU Digital Banking Platform**
 - **Languages:** Python 3.12 (Strict Typing), SQL.
 - **ML Frameworks:** Scikit-learn, TensorFlow/Keras, PyTorch, ONNX.
 - **API Framework:** FastAPI, SQLAlchemy 2.0 (Async), Pydantic v2.
-- **Security:** OAuth2, JWT, Passlib (Bcrypt).
-- **Data Tools:** Pandas, NumPy, TimescaleDB (PostgreSQL).
+- **Data Engineering:** Pandas, Polars, Apache Kafka (via AIOKafka).
+- **Database:** PostgreSQL 16 + TimescaleDB (Time-series optimization).
 - **Deployment:** Docker (UBI9), OpenShift, Prometheus/Grafana.
 
 ---
@@ -82,6 +82,55 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
 
 ---
 
+## 📊 Data Engineering & Pipelines
+
+For high-performance data processing in PayU (Analytics & ML):
+
+### 1. TimescaleDB Optimization
+Use Hypertables for time-series data (e.g., transaction history, logs).
+
+```sql
+-- Create Hypertable partitioned by time
+SELECT create_hypertable('transaction_events', 'created_at');
+
+-- Set retention policy (Drop data older than 1 year)
+SELECT add_retention_policy('transaction_events', INTERVAL '1 year');
+```
+
+### 2. Async Kafka Consumption (Event-Driven)
+Consume events efficiently for real-time inference or ETL.
+
+```python
+# consumers/transaction_consumer.py
+async def consume_transactions():
+    consumer = AIOKafkaConsumer(
+        'transaction.created',
+        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+        group_id='ml-fraud-detector'
+    )
+    await consumer.start()
+    try:
+        async for msg in consumer:
+            data = json.loads(msg.value)
+            # Process strictly in non-blocking way
+            await fraud_service.process_event(data)
+    finally:
+        await consumer.stop()
+```
+
+### 3. Efficient Dataframe Processing (Pandas/Polars)
+When handling bulk data (e.g., training), use efficient I/O.
+
+```python
+# utils/data_loader.py
+def load_training_data(query: str):
+    # Use generic SQL connector but load to Polars for 10x speedup over Pandas
+    df = pl.read_database_uri(query, uri=DB_CONNECTION_STRING)
+    return df
+```
+
+---
+
 ## 🏭 Production ML Patterns
 
 ### Pattern 1: ML Model Deployment (PayU Standard)
@@ -129,6 +178,8 @@ When building LLM-integrated services (e.g., smart analytics, support bots), fol
 - [ ] **Architecture**: Repository & Service layers used?
 - [ ] **Type Safety**: Pydantic models typed strictly (No `Any`)?
 - [ ] **Async Native**: All I/O is awaited (`asyncpg`, `httpx`)?
+- [ ] **Data Pipeline**: Kafka consumers handle backpressure?
+- [ ] **DB Optimization**: Hypertables used for time-series (if applicable)?
 - [ ] **Performance**: Model inference offloaded from main thread?
 - [ ] **Observability**: Prometheus metrics and structured logging implemented?
 - [ ] **Prompt Engineering**: Are prompts externalized, versioned, and follow safety patterns?
@@ -137,8 +188,8 @@ When building LLM-integrated services (e.g., smart analytics, support bots), fol
 
 Untuk pengembangan sistem ML yang robust dan terintegrasi, gunakan pola delegasi paralel (Swarm Mode):
 
-- **ML Inference Logic**: Delegasikan ke **`@logic-builder`** untuk implementasi Async Service & Repository patterns di FastAPI.
-- **Data Engineering**: Aktifkan **`@migrator`** secara paralel untuk optimasi skema TimescaleDB dan index data analytics.
+- **ML/Data Logic**: Delegasikan ke **`@logic-builder`** untuk implementasi Async Service, Repository, dan ETL pipelines.
+- **Database Schema**: Aktifkan **`@migrator`** secara paralel untuk optimasi skema TimescaleDB dan manajemen migrasi Flyway.
 - **Model Observability**: Panggil **`@orchestrator`** secara simultan untuk memastikan metrics Prometheus dan dashboard Grafana terkonfigurasi di OpenShift.
 - **Security Audit**: Jalankan **`@auditor`** untuk memverifikasi masking PII pada data training dan log prediksi.
 
@@ -152,4 +203,5 @@ Untuk pengembangan sistem ML yang robust dan terintegrasi, gunakan pola delegasi
 | Database Engineer | `.agent/skills/database-engineer/SKILL.md` |
 
 ---
+
 *Last Updated: January 2026*

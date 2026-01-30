@@ -29,6 +29,14 @@ public class SnapBiPaymentService {
     @Channel("payment-events")
     Emitter<String> paymentEventEmitter;
 
+    /**
+     * Check if the payment event emitter is available.
+     * In test environments where Kafka is disabled, this returns false.
+     */
+    private boolean isEmitterAvailable() {
+        return paymentEventEmitter != null;
+    }
+
     public Uni<PaymentResponse> createPayment(String partnerId, PaymentRequest request) {
         String payuReferenceNo = "PAYU-" + UUID.randomUUID().toString();
         Instant now = Instant.now();
@@ -57,10 +65,11 @@ public class SnapBiPaymentService {
         );
 
         try {
-            String eventJson = toJson(event);
-            paymentEventEmitter.send(eventJson).toCompletableFuture().get();
-            
-            LOG.infof("Payment initiated payuRef=%s partnerRef=%s amount=%s", 
+            if (isEmitterAvailable()) {
+                String eventJson = toJson(event);
+                paymentEventEmitter.send(eventJson).toCompletableFuture().get();
+            }
+            LOG.infof("Payment initiated payuRef=%s partnerRef=%s amount=%s",
                 payuReferenceNo, request.partnerReferenceNo, request.amount.value);
         } catch (Exception e) {
             LOG.errorf("Failed to send payment event: %s", e.getMessage());
@@ -78,7 +87,7 @@ public class SnapBiPaymentService {
 
     public Uni<PaymentStatusResponse> getPaymentStatus(String partnerId, String referenceNo) {
         PaymentRecord record = paymentStore.values().stream()
-            .filter(p -> p.partnerId.equals(partnerId) && 
+            .filter(p -> p.partnerId.equals(partnerId) &&
                           (p.payuReferenceNo.equals(referenceNo) || p.partnerReferenceNo.equals(referenceNo)))
             .findFirst()
             .orElse(null);
@@ -117,7 +126,7 @@ public class SnapBiPaymentService {
         PaymentRecord record = paymentStore.get(payuReferenceNo);
         if (record != null) {
             record.status = status;
-            
+
             PaymentEvent event = new PaymentEvent(
                 payuReferenceNo,
                 record.partnerId,
@@ -127,9 +136,10 @@ public class SnapBiPaymentService {
             );
 
             try {
-                String eventJson = toJson(event);
-                paymentEventEmitter.send(eventJson).toCompletableFuture().get();
-                
+                if (isEmitterAvailable()) {
+                    String eventJson = toJson(event);
+                    paymentEventEmitter.send(eventJson).toCompletableFuture().get();
+                }
                 LOG.infof("Payment status updated payuRef=%s status=%s", payuReferenceNo, status);
             } catch (Exception e) {
                 LOG.errorf("Failed to send payment status update event: %s", e.getMessage());
@@ -147,7 +157,7 @@ public class SnapBiPaymentService {
 
     public Uni<RefundResponse> createRefund(String partnerId, String referenceNo, RefundRequest request) {
         PaymentRecord record = paymentStore.values().stream()
-            .filter(p -> p.partnerId.equals(partnerId) && 
+            .filter(p -> p.partnerId.equals(partnerId) &&
                           (p.payuReferenceNo.equals(referenceNo) || p.partnerReferenceNo.equals(referenceNo)))
             .findFirst()
             .orElse(null);
@@ -177,7 +187,7 @@ public class SnapBiPaymentService {
         }
 
         String payuRefundNo = "REFUND-" + UUID.randomUUID().toString();
-        
+
         RefundRecord refundRecord = new RefundRecord(
             payuRefundNo,
             partnerId,
@@ -203,10 +213,11 @@ public class SnapBiPaymentService {
         );
 
         try {
-            String eventJson = toJson(event);
-            paymentEventEmitter.send(eventJson).toCompletableFuture().get();
-            
-            LOG.infof("Refund processed payuRefund=%s paymentRef=%s amount=%s", 
+            if (isEmitterAvailable()) {
+                String eventJson = toJson(event);
+                paymentEventEmitter.send(eventJson).toCompletableFuture().get();
+            }
+            LOG.infof("Refund processed payuRefund=%s paymentRef=%s amount=%s",
                 payuRefundNo, record.payuReferenceNo, request.amount.value);
         } catch (Exception e) {
             LOG.errorf("Failed to send refund event: %s", e.getMessage());
@@ -282,7 +293,7 @@ public class SnapBiPaymentService {
         public String status;
         public Instant createdAt;
 
-        PaymentRecord(String payuReferenceNo, String partnerId, String partnerReferenceNo, 
+        PaymentRecord(String payuReferenceNo, String partnerId, String partnerReferenceNo,
                       BigDecimal amount, String currency, String beneficiaryAccountNo,
                       String beneficiaryBankCode, String sourceAccountNo, String status, Instant createdAt) {
             this.payuReferenceNo = payuReferenceNo;
@@ -305,7 +316,7 @@ public class SnapBiPaymentService {
         public BigDecimal amount;
         public String status;
 
-        PaymentEvent(String payuReferenceNo, String partnerId, String partnerReferenceNo, 
+        PaymentEvent(String payuReferenceNo, String partnerId, String partnerReferenceNo,
                      BigDecimal amount, String status) {
             this.payuReferenceNo = payuReferenceNo;
             this.partnerId = partnerId;

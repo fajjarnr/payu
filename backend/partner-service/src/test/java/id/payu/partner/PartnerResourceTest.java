@@ -2,6 +2,7 @@ package id.payu.partner;
 
 import id.payu.partner.dto.PartnerDTO;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
+@TestProfile(PartnerTestProfile.class)
 @Disabled("Resource tests require Docker/Testcontainers - disabled when Docker not available")
 public class PartnerResourceTest {
 

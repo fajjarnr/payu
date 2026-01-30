@@ -406,21 +406,26 @@ Workflows or Aggregate logic MUST be deterministic. No `now()`, `random()`, or n
 
 ---
 
-## 📊 Event Sourcing Implementation
+## 📊 Event Sourcing Implementation (PayU Standard)
 
 ### Event Store Entity
+Represent immutable fact in time.
 
 ```java
 @Entity
 @Table(name = "event_store")
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class StoredEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long sequenceNumber;
     
-    private String aggregateId;
-    private String aggregateType;
-    private String eventType;
+    private String aggregateId;   // "WALLET-123"
+    private String aggregateType; // "Wallet"
+    private String eventType;     // "BalanceCredited"
     
     @Column(columnDefinition = "jsonb")
     private String payload;
@@ -430,41 +435,66 @@ public class StoredEvent {
 }
 ```
 
-### Aggregate Reconstruction
+### Event Sourcing Service
+Manages persistence and rehydration.
+
+```java
+@Service
+@RequiredArgsConstructor
+public class EventSourcingService {
+    private final EventStoreRepository eventStoreRepository;
+    private final ObjectMapper objectMapper;
+
+    @Transactional
+    public void storeEvent(String aggregateId, DomainEvent event, Long expectedVersion) {
+         // Optimistic lock check
+        long lastVersion = eventStoreRepository.findLastVersion(aggregateId).orElse(0L);
+        if (lastVersion != expectedVersion) {
+            throw new ConcurrentModificationException("Version mismatch");
+        }
+
+        StoredEvent storedEvent = StoredEvent.builder()
+            .aggregateId(aggregateId)
+            .eventType(event.getClass().getSimpleName())
+            .payload(objectMapper.writeValueAsString(event))
+            .occurredAt(Instant.now())
+            .version(expectedVersion + 1)
+            .build();
+            
+        eventStoreRepository.save(storedEvent);
+    }
+
+    public List<DomainEvent> getEventHistory(String aggregateId) {
+        return eventStoreRepository.findByAggregateIdOrderBySequenceAsc(aggregateId)
+            .stream()
+            .map(this::deserialize)
+            .collect(Collectors.toList());
+    }
+}
+```
+
+### Aggregate Reconstruction Logic
+Replay history to build state.
 
 ```java
 public class WalletAggregate {
     private String walletId;
     private BigDecimal balance = BigDecimal.ZERO;
-    private List<DomainEvent> uncommittedEvents = new ArrayList<>();
 
-    public static WalletAggregate reconstruct(List<StoredEvent> events) {
+    public static WalletAggregate reconstruct(List<DomainEvent> history) {
         var aggregate = new WalletAggregate();
-        events.forEach(e -> aggregate.apply(deserialize(e)));
+        history.forEach(aggregate::apply);
         return aggregate;
     }
 
     private void apply(DomainEvent event) {
         if (event instanceof WalletCreatedEvent e) {
             this.walletId = e.walletId();
-            this.balance = BigDecimal.ZERO;
         } else if (event instanceof BalanceCreditedEvent e) {
             this.balance = this.balance.add(e.amount());
         } else if (event instanceof BalanceDebitedEvent e) {
             this.balance = this.balance.subtract(e.amount());
         }
-    }
-
-    public void credit(BigDecimal amount) {
-        // Business rule validation
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException();
-        }
-        
-        // Raise event
-        var event = new BalanceCreditedEvent(walletId, amount, Instant.now());
-        apply(event);
-        uncommittedEvents.add(event);
     }
 }
 ```

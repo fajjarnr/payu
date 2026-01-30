@@ -773,10 +773,107 @@ describe('App Performance', () => {
 | **P3** | Edge Cases | Very long names, Special characters |
         .post("/v1/transfers");
     
-    assertThat(first.body().path("data.id"))
-        .isEqualTo(second.body().path("data.id"));
+## 💶 Financial Compliance Verification
+
+Sebagai bank digital, testing harus fokus pada **Data Integrity** dan **Financial Correctness** melampaui sekadar functional test.
+
+### 1. 3-Way Reconciliation Testing
+Verifikasi bahwa data di 3 sumber berbeda selalu sinkron.
+- **Source A**: Service Database (Operational)
+- **Source B**: Event Log (Kafka/Audit Table)
+- **Source C**: External Partner Report (CSV/API)
+
+```java
+@Test
+void shouldMatchThreeWayReconciliation() {
+    // 1. Trigger Transaction
+    var txn = executeTransfer(100_000);
+    
+    // 2. Verify Operational DB
+    assertThat(walletRepo.getBalance(ID)).isEqualTo(expected);
+    
+    // 3. Verify Event Log (Audit)
+    var audit = auditRepo.findByTxnId(txn.getId());
+    assertThat(audit.getAmount()).isEqualByComparingTo(txn.getAmount());
+    
+    // 4. Verify GL Entry (Double Entry)
+    var entries = glRepo.findEntries(txn.getId());
+    assertThat(entries.stream().map(GLEntry::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add))
+        .isZero(); // Debit + Credit must be zero
 }
 ```
+
+### 2. Double-Entry Integrity Test
+Memastikan setiap transaksi menghasilkan entri Debit dan Credit yang seimbang.
+
+```java
+@Test
+@DisplayName("Transaction must result in balanced GL entries")
+void shouldHaveBalancedGLEntries() {
+    transactionService.process(topupRequest);
+    
+    var journal = glService.getJournal(topupRequest.getId());
+    BigDecimal sum = journal.getEntries().stream()
+        .map(e -> e.getType() == DEBIT ? e.getAmount() : e.getAmount().negate())
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+    assertThat(sum).isEqualByComparingTo(BigDecimal.ZERO);
+}
+```
+
+### 3. Floating-Point & Precision Testing
+HINDARI error pembulatan pada perhitungan bunga atau kurs $(\text{FX})$.
+
+```java
+@Test
+void shouldHandleInterestCalculationPrecision() {
+    BigDecimal balance = new BigDecimal("1000000.55");
+    BigDecimal rate = new BigDecimal("0.0525"); // 5.25%
+    
+    BigDecimal interest = service.calculateDailyInterest(balance, rate);
+    
+    // Verifikasi sampai 8 angka di belakang koma (Internal)
+    // dan 2 angka untuk display/final
+    assertThat(interest.scale()).isGreaterThanOrEqualTo(2);
+}
+```
+
+### 4. Negative Case: Over-limit & Negative Balance
+Verifikasi strict validation pada saldo dan limit.
+
+- [ ] **Test**: Transfer > Current Balance (Must Fail)
+- [ ] **Test**: Transfer > Daily Limit (Must Fail)
+- [ ] **Test**: Concurrent Transfers (Race condition check - balance must not go negative)
+
+---
+
+## 🛡️ Idempotency Verification (Advanced)
+
+```java
+@Test
+void shouldBeStrictlyIdempotentAcrossParallelRequests() {
+    String key = UUID.randomUUID().toString();
+    var request = createPaymentRequest();
+    
+    // Simulate 5 parallel requests with same key
+    List<CompletableFuture<Response>> futures = IntStream.range(0, 5)
+        .mapToObj(i -> CompletableFuture.supplyAsync(() -> 
+            given().header("Idempotency-Key", key).body(request).post("/v1/payments")
+        ))
+        .toList();
+
+    List<Response> responses = futures.stream().map(CompletableFuture::join).toList();
+    
+    // 1. All must return same status/body
+    responses.forEach(r -> assertThat(r.statusCode()).isEqualTo(201));
+    
+    // 2. ONLY 1 actual database insert/wallet debit must happen
+    assertThat(walletService.getTransactionCount(key)).isEqualTo(1);
+    assertThat(auditService.getAuditCount(key)).isEqualTo(1);
+}
+```
+
+---
 
 ## 🤖 Agent Delegation & Parallel Execution
 

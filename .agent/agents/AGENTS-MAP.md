@@ -29,6 +29,7 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@auth-implementation-patterns` | `@logic-builder` | Implementasi JWT, OAuth2, dan MFA logic.       |
 | `@nextjs-app-router-patterns` | `@logic-builder` | Logic Server Components & Streaming architecture. |
 | `@tailwind-design-system` | `@styler`        | Implementasi Atomic CSS & Design Tokens.       |
+| `kafka-stream-specialist` | `@logic-builder` | Implementasi Kafka Streams topology & CDC connectors. |
 | `@observability-engineer` | `@auditor`       | Evaluasi tracing, log levels, dan metrics.     |
 
 ## 🔄 Execution Workflow

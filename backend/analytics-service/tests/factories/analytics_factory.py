@@ -159,7 +159,7 @@ def user_history_factory(**kwargs) -> Dict[str, Any]:
     total_amount = kwargs.get(
         "total_amount",
         fake.pyfloat(
-            left_digits=8,
+            left_digits=9,
             right_digits=2,
             positive=True,
             min_value=500000,
@@ -233,7 +233,7 @@ def user_metrics_factory(**kwargs) -> Dict[str, Any]:
         "total_transactions": fake.random_int(min=10, max=500),
         "total_amount": round(
             fake.pyfloat(
-                left_digits=7,
+                left_digits=9,
                 right_digits=0,
                 positive=True,
                 min_value=1000000,
@@ -243,7 +243,7 @@ def user_metrics_factory(**kwargs) -> Dict[str, Any]:
         ),
         "average_transaction": round(
             fake.pyfloat(
-                left_digits=5,
+                left_digits=6,
                 right_digits=0,
                 positive=True,
                 min_value=100000,
@@ -289,7 +289,7 @@ def fraud_score_factory(**kwargs) -> Dict[str, Any]:
 
     # Map risk level to score range
     risk_score_ranges = {
-        "MINIMAL": (0, 20),
+        "MINIMAL": (1, 20),
         "LOW": (20, 40),
         "MEDIUM": (40, 60),
         "HIGH": (60, 85),
@@ -373,7 +373,13 @@ def fraud_detection_result_factory(**kwargs) -> Dict[str, Any]:
         >>> result['is_blocked']
         True
     """
-    fraud_score = fraud_score_factory(**kwargs.get("fraud_score", {}))
+    # Extract fraud_score kwargs if provided, otherwise use empty dict
+    fraud_score_kwargs = kwargs.get("fraud_score", {})
+    # If risk_level is in top-level kwargs, pass it to fraud_score_factory
+    if "risk_level" in kwargs and "risk_level" not in fraud_score_kwargs:
+        fraud_score_kwargs["risk_level"] = kwargs["risk_level"]
+
+    fraud_score = fraud_score_factory(**fraud_score_kwargs)
     risk_level = fraud_score["risk_level"]
 
     defaults = {
@@ -396,8 +402,12 @@ def fraud_detection_result_factory(**kwargs) -> Dict[str, Any]:
             else []
         ),
     }
-    defaults.update(kwargs)
-    return defaults
+    # Don't override fraud_score with kwargs if it was already generated
+    result = defaults.copy()
+    for key, value in kwargs.items():
+        if key != "fraud_score":
+            result[key] = value
+    return result
 
 
 def spending_pattern_factory(**kwargs) -> Dict[str, Any]:
@@ -438,7 +448,7 @@ def spending_pattern_factory(**kwargs) -> Dict[str, Any]:
         ),
         "amount": round(
             fake.pyfloat(
-                left_digits=6,
+                left_digits=8,
                 right_digits=0,
                 positive=True,
                 min_value=100000,
@@ -448,7 +458,7 @@ def spending_pattern_factory(**kwargs) -> Dict[str, Any]:
         ),
         "percentage": round(
             fake.pyfloat(
-                left_digits=1, right_digits=2, positive=True, min_value=1, max_value=100
+                left_digits=3, right_digits=2, positive=True, min_value=1, max_value=100
             ),
             2,
         ),
@@ -568,7 +578,7 @@ def risk_assessment_factory(**kwargs) -> Dict[str, Any]:
     """
     age = fake.random_int(min=18, max=65)
     monthly_income = fake.pyfloat(
-        left_digits=7,
+        left_digits=9,
         right_digits=0,
         positive=True,
         min_value=5000000,
@@ -591,7 +601,7 @@ def risk_assessment_factory(**kwargs) -> Dict[str, Any]:
         ),
         "total_savings": round(
             fake.pyfloat(
-                left_digits=8,
+                left_digits=9,
                 right_digits=0,
                 positive=True,
                 min_value=10000000,
@@ -757,7 +767,7 @@ def robo_advisory_response_factory(**kwargs) -> Dict[str, Any]:
         "investment_recommendations": [fake.sentence() for _ in range(3)],
         "monthly_investment_amount": round(
             fake.pyfloat(
-                left_digits=7,
+                left_digits=8,
                 right_digits=0,
                 positive=True,
                 min_value=1000000,
@@ -768,7 +778,7 @@ def robo_advisory_response_factory(**kwargs) -> Dict[str, Any]:
         "expected_annual_return": round(
             expected_return
             + fake.pyfloat(
-                left_digits=1, right_digits=2, positive=True, min_value=-2, max_value=2
+                left_digits=1, right_digits=2, positive=False, min_value=-2, max_value=2
             ),
             2,
         ),
@@ -778,7 +788,7 @@ def robo_advisory_response_factory(**kwargs) -> Dict[str, Any]:
                 "product_name": fake.company(),
                 "minimum_investment": round(
                     fake.pyfloat(
-                        left_digits=6,
+                        left_digits=7,
                         right_digits=0,
                         positive=True,
                         min_value=100000,

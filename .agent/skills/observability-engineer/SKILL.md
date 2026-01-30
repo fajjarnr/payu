@@ -89,5 +89,11 @@ Untuk memastikan visibilitas penuh tanpa celah, gunakan pola delegasi paralel (S
 - **Log Verification**: Panggil **`@auditor`** secara simultan untuk memverifikasi bahwa PII dalam log telah di-masking sebelum ter-index di Loki.
 - **Alerting Strategy**: Jalankan **`@tester`** untuk mensimulasikan kegagalan dan memverifikasi pemicu alert (Prometheus Alertmanager) secara paralel.
 
+## Related Resources
+- **`references/prometheus-rules.md`**: Standard PrometheusRules for Alerts (Golden Signals, JVM) & Recording Rules.
+- **`references/grafana-dashboards.md`**: JSON Patterns for Golden Signals & ConfigMap Provisioning.
+- **`references/operational-runbooks.md`**: SOP for Service Outage & Database Incidents.
+- **`references/slo-implementation.md`**: SRE-style SLOs & Multi-Window Burn Rate Alerts.
+
 ---
 *Last Updated: January 2026*

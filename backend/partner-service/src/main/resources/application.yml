@@ -75,6 +75,14 @@ quarkus:
       packages: "id.payu.partner.domain"
       log:
         sql: false
+    # Configure datasource for Kafka checkpointing "database" persistence unit
+    datasource:
+      "database":
+        db-kind: h2
+        jdbc:
+          url: jdbc:h2:mem:testdb-checkpoint
+        username: sa
+        password:
     # Completely disable SmallRye Reactive Messaging and Kafka checkpointing
     kafka:
       enabled: false

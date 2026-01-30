@@ -1,9 +1,11 @@
 package id.payu.partner.service;
 
+import id.payu.partner.PartnerTestProfile;
 import id.payu.partner.domain.Partner;
 import id.payu.partner.domain.PartnerCertificate;
 import id.payu.partner.repository.PartnerCertificateRepository;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.quarkus.test.junit.mockito.InjectMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -21,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 
 @QuarkusTest
+@TestProfile(PartnerTestProfile.class)
 @Disabled("Service tests require Docker/Testcontainers - disabled when Docker not available")
 public class CertificateRotationServiceTest {
 

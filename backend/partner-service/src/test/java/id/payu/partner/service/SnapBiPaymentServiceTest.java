@@ -1,13 +1,16 @@
 package id.payu.partner.service;
 
+import id.payu.partner.PartnerTestProfile;
 import id.payu.partner.dto.snap.PaymentRequest;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigDecimal;
 
 @QuarkusTest
+@TestProfile(PartnerTestProfile.class)
 @Disabled("Service tests require Docker/Testcontainers - disabled when Docker not available")
 public class SnapBiPaymentServiceTest {
 

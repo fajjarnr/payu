@@ -197,6 +197,13 @@ Saat melakukan sharding atau partitioning:
 ### 4. Single-Table Pattern (via JSONB)
 Simpan data relasi yang sering dibaca bersamaan dalam satu kolom JSONB (seperti pola Adjacency List pada NoSQL).
 - **Kapan?**: Untuk metadata transaksi atau preferensi user yang strukturnya dinamis.
+- **Why?**: Mengurangi round-trip ke database dan kompleksitas JOIN.
+
+### 5. Access Patterns First
+Jangan mulai dengan ER Diagram klasik. Mulailah dengan daftar pertanyaan query:
+1. "Ambil semua transaksi user X bulan ini"
+2. "Ambil user berdasarkan email"
+Desain tabel/index untuk menjawab pertanyaan ini secara langsung (O(1)).
 
 ---
 
@@ -590,6 +597,8 @@ Untuk eksekusi database task yang aman dan cepat, gunakan pola delegasi paralel 
 | Backend Patterns | `.agent/skills/backend-patterns/SKILL.md` |
 | PayU Development Skill | `.agent/skills/payu-development/SKILL.md` |
 | Backend Engineer | `.agent/skills/backend-engineer/SKILL.md` |
+| Postgres Performance | `.agent/skills/database-engineer/references/postgres-performance.md` |
+| Postgres Design Rules | `.agent/skills/database-engineer/references/postgres-design-rules.md` |
 
 ---
 
