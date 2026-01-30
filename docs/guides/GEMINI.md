@@ -15,7 +15,6 @@
 | **Project Name**      | PayU                                  |
 | **Type**              | Standalone Digital Banking Platform   |
 | **Architecture**      | Scalable Microservices + Event-Driven |
-| **Platform**          | Red Hat OpenShift 4.20+               |
 | **Primary Languages** | Java 21, Python 3.12, TypeScript      |
 | **Last Updated**      | January 2026                          |
 
@@ -55,34 +54,35 @@
 | Service                | Technology         | Domain                                     |
 | ---------------------- | ------------------ | ------------------------------------------ |
 | `account-service`      | Spring Boot 3.4    | User accounts, profile, multi-pocket       |
-| `auth-service`         | Spring Boot 3.4    | Authentication, Risk-based MFA, Biometrics |
-| `transaction-service`  | Spring Boot 3.4    | Transfers, BI-FAST, QRIS, Sharding         |
-| `wallet-service`       | Spring Boot 3.4    | Double-entry ledger, balance management    |
-| `investment-service`   | Spring Boot 3.4    | Mutual funds, Gold, Robo-advisory          |
-| `lending-service`      | Spring Boot 3.4    | Loans, PayLater, Credit Scoring            |
-| `fx-service`           | Spring Boot 3.4    | Currency exchange rates & conversion       |
-| `statement-service`    | Spring Boot 3.4    | PDF E-Statement generation                 |
-| `backoffice-service`   | Spring Boot 3.4    | Internal admin dashboard, audit            |
-| `partner-service`      | Spring Boot 3.4    | Partner integration & management           |
-| `promotion-service`    | Spring Boot 3.4    | Promo campaigns, vouchers, rewards         |
-| `support-service`      | Spring Boot 3.4    | Customer support, ticketing                |
-| `compliance-service`   | Spring Boot 3.4    | Regulatory compliance, AML                 |
-| `billing-service`      | Quarkus 3.x Native | Bill payments (PLN, PDAM, etc)             |
-| `notification-service` | Quarkus 3.x Native | Push, SMS, Email, WhatsApp                 |
-| `gateway-service`      | Quarkus 3.x Native | API Gateway, Rate limiting                 |
-| `cms-service`          | Spring Boot 3.4    | Banners, Promos, Dynamic Content           |
-| `ab-testing-service`   | Spring Boot 3.4    | UI/Feature experimentation                 |
-| `api-portal-service`   | Quarkus 3.x Native | Centralized OpenAPI Docs & Sandbox         |
-| `kyc-service`          | Python FastAPI     | OCR, Liveness Detection                    |
-| `analytics-service`    | Python FastAPI     | Fraud Scoring, User Insights               |
+| `account-service` | Spring Boot 3.4 | User accounts, profile, multi-pocket |
+| `auth-service` | Spring Boot 3.4 | Authentication, Risk-based MFA, Biometrics |
+| `transaction-service` | Spring Boot 3.4 | Transfers, BI-FAST, QRIS, Sharding |
+| `wallet-service` | Spring Boot 3.4 | Double-entry ledger, balance management |
+| `investment-service` | Spring Boot 3.4 | Mutual funds, Gold, Robo-advisory |
+| `lending-service` | Spring Boot 3.4 | Loans, PayLater, Credit Scoring |
+| `fx-service` | Spring Boot 3.4 | Currency exchange rates & conversion |
+| `statement-service` | Spring Boot 3.4 | PDF E-Statement generation |
+| `backoffice-service` | Spring Boot 3.4 | Internal admin dashboard, audit |
+| `partner-service` | Spring Boot 3.4 | Partner integration & management |
+| `promotion-service` | Spring Boot 3.4 | Promo campaigns, vouchers, rewards |
+| `support-service` | Spring Boot 3.4 | Customer support, ticketing |
+| `compliance-service` | Spring Boot 3.4 | Regulatory compliance, AML |
+| `billing-service` | Quarkus 3.x Native | Bill payments (PLN, PDAM, etc) |
+| `notification-service` | Quarkus 3.x Native | Push, SMS, Email, WhatsApp |
+| `gateway-service` | Quarkus 3.x Native | API Gateway, Rate limiting |
+| `cms-service` | Spring Boot 3.4 | Banners, Promos, Dynamic Content |
+| `ab-testing-service` | Spring Boot 3.4 | UI/Feature experimentation |
+| `api-portal-service` | Quarkus 3.x Native | Centralized OpenAPI Docs & Sandbox |
+| `kyc-service` | Python FastAPI | OCR, Liveness Detection |
+| `analytics-service` | Python FastAPI | Fraud Scoring, User Insights |
 
 ### Shared Libraries (backend/shared/)
 
-| Library              | Purpose                                         |
+| Library | Purpose |
 | -------------------- | ----------------------------------------------- |
-| `security-starter`   | Field encryption, Data masking, Audit logging   |
+| `security-starter` | Field encryption, Data masking, Audit logging |
 | `resilience-starter` | Circuit Breaker, Retry, Bulkhead (Resilience4j) |
-| `cache-starter`      | Multi-layer caching (Redis + Caffeine)          |
+| `cache-starter` | Multi-layer caching (Redis + Caffeine) |
 
 ---
 
@@ -249,10 +249,9 @@ Skills are categorized by domain to help you choose the right tool for the task.
 ### 🏗️ Core & Architecture
 | Skill | Description |
 | :--- | :--- |
-| `payu-development` | High-level development guide - architecture overview, technology stack, and entry point. |
-| `c4-architecture` | Architecture visualization using C4 Model (Context, Container, Component, Code). |
+| `enterprise-architect` | High-level development guide - architecture overview, technology stack, and entry point. |
 | `cto-advisor` | Strategic technical leadership, engineering metrics (DORA), and scaling strategies. |
-| `docs-engineer` | Documentation maintenance and technical writing standards. |
+| `docs-engineer` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
 
 ### ☕ Backend & Logic
 | Skill | Description |
@@ -347,7 +346,7 @@ To align with the user's intent, adopt one of these modes when requested:
 | **Driver Mode**    | Implement code actively, proposing solutions.                        | "Implement this feature", "Fix this bug"     |
 | **Navigator Mode** | Plan, review, and guide; let User code.                              | "Help me plan", "What do you think of this?" |
 | **TDD Mode**       | **Strictly** write tests before implementation (Red-Green-Refactor). | "Test first", "Ensure high coverage"         |
-| **Review Mode**    | Audit code for security, style, and logic. No implementation.        | "Review my PR", "Check for bugs"             |
+| **Review Mode**    | Audit code for security, style, and logic. No implementation.        | "Review my PR", "Check for bugs"            |
 | **Mentor Mode**    | Explain concepts, provide examples, avoid direct solution.           | "Explain how this works", "Teach me"         |
 
 ---
@@ -372,6 +371,7 @@ Claude Code SHOULD follow established workflows in `.agent/workflows/` for compl
 Untuk eksekusi tugas yang terisolasi dan spesifik, agen berikut tersedia di `.agent/agents/` (diakses via `.claude/agents/`):
 
 - `@scaffolder`, `@logic-builder`, `@tester`, `@auditor`, `@migrator`, `@builder`, `@styler`, `@orchestrator`, `@lifecycle-manager`, `@scaffolding-expert`, `@compliance-auditor`.
+| `@enterprise-architect` | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
 
 _Usage_: When tasked with complex refactoring or multi-service updates, read the relevant workflow file first.
 

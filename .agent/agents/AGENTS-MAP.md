@@ -6,7 +6,7 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 
 | Triggering Skill     | Orchestrated Agent    | Rationale                                      |
 | :------------------- | :-------------------- | :--------------------------------------------- |
-| `@payu-development`  | `@scaffolder`         | Mengotomatisasi pembuatan service baru.        |
+| `@enterprise-architect` | `@scaffolder`         | Mengotomatisasi pembuatan service baru.        |
 | `@backend-engineer`  | `@logic-builder`      | Implementasi Domain logic dan DDD entities.    |
 | `@qa-engineer`       | `@tester`             | Penulisan test code dan eksekusi.              |
 | `@security-engineer` | `@auditor`            | Audit keamanan dan kepatuhan (PCI-DSS/OJK).    |
@@ -14,8 +14,8 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@devops-engineer`   | `@builder`            | Build, packaging, dan containerization.        |
 | `@frontend-engineer` | `@styler`             | Estetika "Premium Emerald" dan A11y.           |
 | `@devops-engineer`   | `@orchestrator`       | Alur CI/CD dan sinkronisasi git.               |
-| `@payu-development`  | `@lifecycle-manager`  | Pengelola SDLC penuh (End-to-End).             |
-| `@payu-development`  | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
+| `@enterprise-architect` | `@lifecycle-manager`  | Pengelola SDLC penuh (End-to-End).             |
+| `@enterprise-architect` | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
 | `@security-engineer` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
 | `@web-artifacts-builder` | `@builder`           | Scaffolding dan bundling single-file artifacts. |
 | `@slidev`            | `@styler`             | Desain layout dan animasi presentasi premium. |

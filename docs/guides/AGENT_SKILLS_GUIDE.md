@@ -37,6 +37,13 @@ payu/
 ### 🧩 Ecosystem Mapping
 The PayU platform is powered by specialized skill clusters:
 
+#### 🏗️ Core & Architecture
+| Spec | Skill | Description |
+| :--- | :--- | :--- |
+| **Dev/Arch** | `enterprise-architect` | **Master Skill**: Architecture Decision Matrix & Immutable Laws. |
+| **Advisor** | `cto-advisor` | Strategic technical leadership and engineering metrics (DORA). |
+| **Knowledge**| `docs-engineer` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
+
 #### ☕ Backend & Logic
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
@@ -95,7 +102,7 @@ Gunakan alur berikut untuk mengorkestrasi ekosistem AI secara efektif:
 
 ### Fase 1: Discovery & Planning
 
-1. Gunakan skill **`/backend-engineer`** atau **`/payu-development`** untuk memahami konteks.
+1. Gunakan skill **`@enterprise-architect`** untuk memahami konteks arsitektur global.
 2. Gunakan `@lifecycle-manager` untuk merancang dokumen rencana implementasi.
 
 ### Fase 2: Scaffolding & Setup

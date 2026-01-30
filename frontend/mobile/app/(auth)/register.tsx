@@ -219,7 +219,7 @@ export default function RegisterScreen() {
   const renderPersonalStep = () => (
     <View>
       <Text style={styles.title}>Create Account</Text>
-      <Text style={styles.subtitle}>Let's start with your personal information</Text>
+      <Text style={styles.subtitle}>Let&apos;s start with your personal information</Text>
 
       <Input
         label="Full Name"
@@ -284,7 +284,7 @@ export default function RegisterScreen() {
 
       <Text style={styles.title}>Enter OTP</Text>
       <Text style={styles.subtitle}>
-        We've sent a 6-digit code to {formData.phoneNumber}
+        We&apos;ve sent a 6-digit code to {formData.phoneNumber}
       </Text>
 
       <Input
