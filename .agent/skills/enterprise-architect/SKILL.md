@@ -56,9 +56,10 @@ Arsitektur harus mendukung segmentasi jaringan, tokenisasi, dan audit trail otom
 
 | Domain | Master Skill | Description |
 | :--- | :--- | :--- |
-| **Backend** | `@backend-engineer` | Spring Boot 3.4, Quarkus, Hexagonal Logic. |
-| **Data** | `@database-engineer` | Postgres Performance, Flyway, Sharding. |
-| **Events** | `@event-driven-architecture` | Kafka Topologies, Sagas, Idempotency. |
+| **Backend** | `@backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal, & Resilience. |
+| **API**     | `@api-design`      | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
+| **Data**    | `@database-engineer` | **Advanced**: Postgres Performance, Flyway, Sharding. |
+| **Events**  | `@event-driven-architecture` | Kafka Topologies, Sagas, Idempotency. |
 | **Security** | `@security-engineer` | Zero Trust K8s, Vault, PCI-DSS. |
 | **Frontend** | `@frontend-engineer` | Next.js 15+, Emerald Design, Web Perf. |
 | **Mobile** | `@mobile-engineer` | React Native, Expo, Mobile Security. |

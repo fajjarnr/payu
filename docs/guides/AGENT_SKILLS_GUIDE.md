@@ -47,10 +47,9 @@ The PayU platform is powered by specialized skill clusters:
 #### ☕ Backend & Logic
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Core** | `backend-engineer` | Java Spring Boot 3.4 & Quarkus Native standards. |
+| **Core** | `backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
+| **API** | `api-design` | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
 | **DB** | `database-engineer` | **Advanced**: Performance (Idx/Locking), Design Rules, Flyway. |
-| **Logic** | `backend-patterns` | Repository, Service, and Multi-layer caching patterns. |
-| **API** | `api-design` | REST, OpenAPI 3.0, and Zod synchronization. |
 | **Events** | `event-driven-architecture` | Kafka messaging and Saga/Distributed Transactions. |
 | **Streams** | `kafka-stream-specialist` | **Advanced**: Topologies, Windowing/Joins, State Stores, and CDC. |
 | **Python** | `fastapi-templates` | Async Python APIs for ML/Analytics services. |

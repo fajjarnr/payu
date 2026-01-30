@@ -256,13 +256,10 @@ Skills are categorized by domain to help you choose the right tool for the task.
 ### ☕ Backend & Logic
 | Skill | Description |
 | :--- | :--- |
-| `backend-engineer` | **Master Skill**: Spring Boot 3.4, Quarkus Native, Hexagonal Architecture, and Microservices. |
-| `backend-patterns` | Architectural patterns (Repository, Service, Caching) for robust backend systems. |
-| `api-design` | **Master Skill**: REST API standards, OpenAPI 3.0, Error Codes, and Zod synchronization. |
-| `api-integration-specialist` | Expert in integrating 3rd party APIs (OAuth2, retry logic, rate limiting). |
+| `backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, and advanced Resilience. |
+| `api-design` | **Master Skill**: REST API standards, OpenAPI, and 3rd-party Integrations. |
 | `event-driven-architecture` | Kafka messaging, Saga patterns, and event sourcing. |
 | `kafka-stream-specialist` | **Advanced**: Topologies, Windowing/Joins, State Stores, and CDC (Debezium). |
-| `error-handling-engineer` | Design robust error patterns, circuit breakers, and graceful degradation. |
 | `database-engineer` | **Advanced**: Postgres Performance (Indexing/Locking), Design Rules, and Flyway. |
 | `typescript-backend-engineer` | Node.js/Express/TypeScript services (BFFs, microservices) with Prisma and Zod. |
 | `fastapi-templates` | Production-ready Python APIs with Pydantic v2 and async patterns. |

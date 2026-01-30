@@ -1,882 +1,100 @@
 ---
 name: api-design
-description: Expert in REST API design, OpenAPI specifications, versioning, and API best practices for PayU Digital Banking Platform.
+description: **Master Skill**: REST API design, OpenAPI standards, and robust 3rd-party integrations (OAuth2, Webhooks, Retries).
 ---
 
-# PayU API Design Skill
+# PayU API Expert Skill
 
-You are an API design expert for the **PayU Digital Banking Platform**. Your expertise covers REST API standards, OpenAPI specifications, versioning strategies, and API security patterns.
+You are the **Lead API Architect** for the **PayU Digital Banking Platform**. You own the standards for RESTful design, contract-first development, and robust integration with external financial partners (BI-FAST, QRIS, Payment Gateways).
 
 ## 🎯 Core Principles
 
 | Principle | Description |
 |-----------|-------------|
-| **Consistency** | Same patterns across all services |
-| **Predictability** | Developers know what to expect |
-| **Simplicity** | Easy to understand and use |
-| **Evolvability** | APIs can change without breaking clients |
+| **Consistency** | Same URL patterns and envelope across all services. |
+| **Idempotency** | Mandatory for all mutations to prevent double-spending. |
+| **Resilience** | Integration must handle upstream slow-downs and failures gracefully. |
+| **Security** | Zero-trust authentication, signed requests, and PII masking. |
 
 ---
 
 ## 📐 REST API Standards
 
-### URL Structure
+### URL Structure & Naming
+- **Version**: Always include version in URI (e.g., `/v1/accounts`).
+- **Resource**: Use nouns, plural, kebab-case (e.g., `/bank-accounts`).
+- **Successors**: Use `Deprecation` and `Sunset` headers for old versions.
 
-```
-https://api.payu.id/v1/{resource}/{id}/{sub-resource}
-
-Examples:
-GET    /v1/accounts                    # List accounts
-POST   /v1/accounts                    # Create account
-GET    /v1/accounts/{id}               # Get account
-PUT    /v1/accounts/{id}               # Update account
-DELETE /v1/accounts/{id}               # Delete account
-GET    /v1/accounts/{id}/transactions  # Get account transactions
-POST   /v1/accounts/{id}/pockets       # Create pocket for account
-```
-
-### Naming Conventions
-
-| Rule | Example |
-|------|---------|
-| Use nouns, not verbs | ✅ `/accounts` ❌ `/getAccounts` |
-| Use plural nouns | ✅ `/users` ❌ `/user` |
-| Use kebab-case | ✅ `/bank-accounts` ❌ `/bankAccounts` |
-| Use lowercase | ✅ `/transactions` ❌ `/Transactions` |
-
-### HTTP Methods
-
-| Method | Usage | Idempotent | Safe |
-|--------|-------|------------|------|
-| `GET` | Retrieve resource | ✅ | ✅ |
-| `POST` | Create resource | ❌ | ❌ |
-| `PUT` | Replace resource | ✅ | ❌ |
-| `PATCH` | Partial update | ❌ | ❌ |
-| `DELETE` | Remove resource | ✅ | ❌ |
-
-### HTTP Status Codes
-
-```java
-// Success
-200 OK              // GET, PUT, PATCH success
-201 Created         // POST success (include Location header)
-204 No Content      // DELETE success
-
-// Client Errors
-400 Bad Request     // Validation error
-401 Unauthorized    // Missing/invalid authentication
-403 Forbidden       // Authenticated but not authorized
-404 Not Found       // Resource doesn't exist
-409 Conflict        // Duplicate or state conflict
-422 Unprocessable   // Business rule violation
-429 Too Many Req    // Rate limit exceeded
-
-// Server Errors
-500 Internal Error  // Unexpected server error
-502 Bad Gateway     // Upstream service error
-503 Unavailable     // Service temporarily down
-504 Gateway Timeout // Upstream timeout
-```
+### HTTP Methods & Status
+- **GET**: Retrieve (200 OK).
+- **POST**: Create (201 Created) - include `Location` header.
+- **PUT/PATCH**: Update (200 OK).
+- **DELETE**: Remove (204 No Content).
+- **Errors**: 400 (Validation), 401 (Auth), 403 (Forbidden), 422 (Business Rule), 429 (Rate Limit).
 
 ---
 
-## 📦 Request/Response Format
-
-### Standard Response Envelope
-
-```java
-// Success Response
-{
-    "success": true,
-    "data": {
-        "id": "acc-123",
-        "accountNumber": "1234567890",
-        "balance": 1000000.00
-    },
-    "meta": {
-        "requestId": "req-abc-123",
-        "timestamp": "2026-01-26T10:30:00Z"
-    }
-}
-
-// Error Response
-{
-    "success": false,
-    "error": {
-        "code": "INSUFFICIENT_BALANCE",
-        "message": "Saldo tidak mencukupi untuk transaksi ini",
-        "details": [
-            {
-                "field": "amount",
-                "message": "Jumlah melebihi saldo tersedia (Rp 500.000)"
-            }
-        ]
-    },
-    "meta": {
-        "requestId": "req-abc-456",
-        "timestamp": "2026-01-26T10:30:00Z"
-    }
-}
-```
-
-## 🔴 Centralized Error Code Management
-Inspired by large-scale platforms (e.g., React), PayU uses an **"Extractable Error Codes"** pattern.
-
-### 1. The Pattern
-Error codes are the **source of truth**. The `message` field is for human convenience, but the `code` is what clients (Web/Mobile) use for logic and localization.
-
-### 2. Error Code Naming Convention
-
-PayU error codes follow the pattern: `{DOMAIN}_{SEQUENCE}`
-
-| Domain | Description | Examples |
-|--------|-------------|----------|
-| `ACC` | Account Service | `ACC_001`, `ACC_002` |
-| `TXN` | Transaction Service | `TXN_001`, `TXN_002` |
-| `AUTH` | Authentication Service | `AUTH_001`, `AUTH_002` |
-| `WAL` | Wallet Service | `WAL_001`, `WAL_002` |
-| `KYC` | KYC Service | `KYC_001`, `KYC_002` |
-| `BIF` | BI-FAST Integration | `BIF_001`, `BIF_002` |
-| `QRS` | QRIS Integration | `QRS_001`, `QRS_002` |
-| `VAL` | Validation Errors | `VAL_001`, `VAL_002` |
-| `SYS` | System Errors | `SYS_001`, `SYS_002` |
-
-### 3. Error Code Categories
-
-```java
-// Business Logic Errors (4xx)
-INSUFFICIENT_BALANCE    // WAL_001 - Not enough funds
-ACCOUNT_FROZEN          // ACC_001 - Account is frozen
-DAILY_LIMIT_EXCEEDED    // TXN_001 - Transaction limit reached
-INVALID_DESTINATION     // BIF_001 - Invalid bank account
-
-// Validation Errors (400)
-VALIDATION_ERROR        // VAL_001 - Generic validation failure
-REQUIRED_FIELD_MISSING  // VAL_002 - Missing required field
-INVALID_FORMAT          // VAL_003 - Format validation failed
-
-// Authentication Errors (401/403)
-UNAUTHORIZED            // AUTH_001 - Invalid or expired token
-FORBIDDEN               // AUTH_002 - No permission for action
-MFA_REQUIRED            // AUTH_003 - Multi-factor auth needed
-
-// System Errors (5xx)
-INTERNAL_ERROR          // SYS_001 - Unexpected server error
-SERVICE_UNAVAILABLE     // SYS_002 - Service temporarily down
-TIMEOUT_ERROR           // SYS_003 - Request timeout
-```
-
-### 4. Error Extraction Workflow
-1. **Define**: Add unique codes in the backend domain layer (e.g., `ACC_001`).
-2. **Extract**: Run `./scripts/extract-errors.sh` during the build process to generate a master JSON mapping.
-3. **Synchronize**: The generated JSON is consumed by Frontend/Mobile to provide mapped, user-friendly, and localized messages.
-
-### 5. "Unknown Error" Handling
-If a client encounters a code not found in their local mapping, they must fallback to a generic message but log the unknown code for developer investigation.
-
-### 6. Error Response Examples
+## 📦 Request/Response Format (Standard Envelope)
 
 ```json
-// Business Logic Error
 {
-    "success": false,
+    "success": true,
+    "data": { ... },
     "error": {
         "code": "WAL_001",
-        "message": "Saldo tidak mencukupi untuk transaksi ini",
-        "details": [
-            {
-                "field": "amount",
-                "message": "Jumlah melebihi saldo tersedia (Rp 500.000)",
-                "code": "VAL_001"
-            }
-        ]
+        "message": "Saldo tidak mencukupi",
+        "details": [ { "field": "amount", "message": "Minimal Rp 10.000" } ]
     },
     "meta": {
-        "requestId": "req-abc-456",
-        "timestamp": "2026-01-26T10:30:00Z"
-    }
-}
-
-// Validation Error
-{
-    "success": false,
-    "error": {
-        "code": "VAL_001",
-        "message": "Validasi gagal",
-        "details": [
-            {
-                "field": "accountNumber",
-                "message": "Nomor rekening harus 10 digit",
-                "code": "VAL_002"
-            },
-            {
-                "field": "amount",
-                "message": "Jumlah minimal transfer Rp 10.000",
-                "code": "VAL_003"
-            }
-        ]
-    },
-    "meta": {
-        "requestId": "req-abc-789",
-        "timestamp": "2026-01-26T10:30:00Z"
-    }
-}
-
-// Authentication Error
-{
-    "success": false,
-    "error": {
-        "code": "AUTH_001",
-        "message": "Token tidak valid atau sudah kadaluarsa",
-        "details": []
-    },
-    "meta": {
-        "requestId": "req-abc-999",
-        "timestamp": "2026-01-26T10:30:00Z"
-    }
-}
-```
-
-### Pagination
-
-```java
-// Request
-GET /v1/transactions?page=1&size=20&sort=createdAt,desc
-
-// Response
-{
-    "success": true,
-    "data": [...],
-    "pagination": {
-        "page": 1,
-        "size": 20,
-        "totalElements": 150,
-        "totalPages": 8,
-        "hasNext": true,
-        "hasPrevious": false
-    },
-    "links": {
-        "self": "/v1/transactions?page=1&size=20",
-        "next": "/v1/transactions?page=2&size=20",
-        "last": "/v1/transactions?page=8&size=20"
-    }
-}
-```
-
-### Cursor-Based Pagination (for Real-time Data)
-
-```java
-// Request
-GET /v1/notifications?cursor=eyJpZCI6MTIzfQ&limit=20
-
-// Response
-{
-    "success": true,
-    "data": [...],
-    "pagination": {
-        "nextCursor": "eyJpZCI6MTQzfQ",
-        "hasMore": true
+        "requestId": "req-123",
+        "timestamp": "2026-01-30T10:30:00Z"
     }
 }
 ```
 
 ---
 
-## 🔍 Filtering & Searching
+## 🔗 Internal & External Integration Patterns
 
-### Query Parameters
-
+### 1. Robust API Client (Java/Spring)
 ```java
-// Filtering
-GET /v1/transactions?status=COMPLETED&type=TRANSFER
-
-// Date Range
-GET /v1/transactions?startDate=2026-01-01&endDate=2026-01-31
-
-// Search
-GET /v1/users?search=john
-
-// Combined
-GET /v1/transactions?status=COMPLETED&minAmount=100000&startDate=2026-01-01&sort=amount,desc&page=1&size=20
-```
-
-### Filter Operators (Advanced)
-
-```java
-// For complex filtering, use filter parameter
-GET /v1/transactions?filter=amount:gte:100000,status:in:COMPLETED|PENDING
-
-// Operators:
-// eq  - equals (default)
-// ne  - not equals
-// gt  - greater than
-// gte - greater than or equals
-// lt  - less than
-// lte - less than or equals
-// in  - in list (pipe separated)
-// like - contains (for strings)
-```
-
----
-
-## 🔐 API Security
-
-### Authentication Header
-
-```http
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### Required Headers
-
-```http
-X-Request-ID: req-abc-123          # Unique request identifier
-X-Correlation-ID: corr-xyz-789     # For distributed tracing
-X-Client-Version: 1.0.0            # Mobile app version
-Accept-Language: id-ID             # Localization
-```
-
-### Rate Limiting Headers
-
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1706267400
-Retry-After: 60                    # Only when 429
-```
-
-### Idempotency Key
-
-```http
-# For POST requests that should be idempotent
-Idempotency-Key: idem-123-456-789
-
-# Server checks if request was already processed
-# Returns cached response if key exists
-```
-
----
-
-## 📝 OpenAPI Specification
-
-### Standard Schema
-
-```yaml
-openapi: 3.0.3
-info:
-  title: PayU Account Service API
-  version: 1.0.0
-  description: API for managing user accounts and pockets
-  contact:
-    email: api-support@payu.id
-
-servers:
-  - url: https://api.payu.id/v1
-    description: Production
-  - url: https://api.staging.payu.id/v1
-    description: Staging
-
-security:
-  - bearerAuth: []
-
-paths:
-  /accounts:
-    get:
-      summary: List accounts
-      operationId: listAccounts
-      tags:
-        - Accounts
-      parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccountListResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-```
-
-### Reusable Components
-
-```yaml
-components:
-  schemas:
-    Account:
-      type: object
-      required:
-        - id
-        - accountNumber
-        - status
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
-        accountNumber:
-          type: string
-          pattern: "^[0-9]{10}$"
-          example: "1234567890"
-        balance:
-          $ref: '#/components/schemas/Money'
-        status:
-          type: string
-          enum: [ACTIVE, FROZEN, CLOSED]
-        createdAt:
-          type: string
-          format: date-time
-    
-    Money:
-      type: object
-      required:
-        - amount
-        - currency
-      properties:
-        amount:
-          type: number
-          format: decimal
-          example: 1000000.00
-        currency:
-          type: string
-          pattern: "^[A-Z]{3}$"
-          default: "IDR"
-    
-    Error:
-      type: object
-      required:
-        - code
-        - message
-      properties:
-        code:
-          type: string
-          example: "INSUFFICIENT_BALANCE"
-        message:
-          type: string
-          example: "Saldo tidak mencukupi"
-        details:
-          type: array
-          items:
-            $ref: '#/components/schemas/FieldError'
-
-  parameters:
-    PageParam:
-      name: page
-      in: query
-      schema:
-        type: integer
-        minimum: 1
-        default: 1
-    
-    SizeParam:
-      name: size
-      in: query
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 20
-
-  responses:
-    Unauthorized:
-      description: Authentication required
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            code: "UNAUTHORIZED"
-            message: "Token tidak valid atau sudah kadaluarsa"
-
-```yaml
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-```
-
-## 📜 OpenAPI 3.1 Advanced Patterns
-
-### Design Approaches
-| Approach | Best For | PayU Context |
-| :--- | :--- | :--- |
-| **Design-First** | New Services | Use Spectral to lint before coding. |
-| **Code-First** | Existing Services | Generate via SpringDoc/FastAPI. |
-
-### Best Practices Checklist
-- [ ] **Reuse Components**: Use `$ref` for shared Error schemas and Paging.
-- [ ] **Real Examples**: Every schema MUST have an `example` or `examples` map.
-- [ ] **Security Explicit**: Define global `security` and override per-path if needed.
-- [ ] **Semantic Versioning**: API version matches Spec version.
-
-
----
-
-## 🔄 API Versioning
-
-### URI Versioning (Preferred)
-
-```
-/v1/accounts
-/v2/accounts
-```
-
-### Deprecation Strategy
-
-```http
-# Response headers for deprecated endpoints
-Deprecation: true
-Sunset: Sat, 01 Jul 2026 00:00:00 GMT
-Link: </v2/accounts>; rel="successor-version"
-```
-
-### Breaking vs Non-Breaking Changes
-
-| Non-Breaking (OK) | Breaking (New Version) |
-|-------------------|------------------------|
-| Add optional field | Remove field |
-| Add new endpoint | Rename field |
-| Add enum value | Change field type |
-| Increase limit | Remove endpoint |
-| Add optional param | Change URL structure |
-
----
-
-## 🛠️ Implementation Patterns
-
-### Controller Structure (Spring Boot)
-
-```java
-@RestController
-@RequestMapping("/v1/accounts")
-@RequiredArgsConstructor
-@Tag(name = "Accounts", description = "Account management")
-public class AccountController {
-
-    private final AccountService accountService;
-
-    @GetMapping
-    @Operation(summary = "List accounts")
-    public ResponseEntity<ApiResponse<Page<AccountDto>>> listAccounts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        var accounts = accountService.findByUserId(principal.getUserId(), 
-            PageRequest.of(page, size));
-        return ResponseEntity.ok(ApiResponse.success(accounts));
-    }
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Get account by ID")
-    public ResponseEntity<ApiResponse<AccountDto>> getAccount(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        var account = accountService.findById(id, principal.getUserId());
-        return ResponseEntity.ok(ApiResponse.success(account));
-    }
-
-    @PostMapping
-    @Operation(summary = "Create account")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<ApiResponse<AccountDto>> createAccount(
-            @Valid @RequestBody CreateAccountRequest request,
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        var account = accountService.create(request, principal.getUserId());
-        var location = URI.create("/v1/accounts/" + account.getId());
-        return ResponseEntity.created(location)
-            .body(ApiResponse.success(account));
+@Service
+public class PartnerGatewayClient {
+    @CircuitBreaker(name = "partner-api", fallbackMethod = "fallback")
+    @Retry(name = "partner-api")
+    public ApiResponse<Result> send(Request req) {
+        // Use RestTemplate/WebClient with strict timeouts (Connect: 1s, Read: 2s)
+        return restTemplate.postForObject(url, req, ApiResponse.class);
     }
 }
 ```
 
-### API Response Wrapper
+### 2. Authentication & Key Management
+- **API Keys**: Store in Vault/Environment, never in code.
+- **OAuth2**: Use Client Credentials flow for service-to-service.
+- **Request Signing**: Use HMAC-SHA256 for high-security partner calls.
 
-```java
-@Data
-@Builder
-public class ApiResponse<T> {
-    private boolean success;
-    private T data;
-    private ErrorInfo error;
-    private MetaInfo meta;
-
-    public static <T> ApiResponse<T> success(T data) {
-        return ApiResponse.<T>builder()
-            .success(true)
-            .data(data)
-            .meta(MetaInfo.now())
-            .build();
-    }
-
-    public static <T> ApiResponse<T> error(String code, String message) {
-        return ApiResponse.<T>builder()
-            .success(false)
-            .error(new ErrorInfo(code, message))
-            .meta(MetaInfo.now())
-            .build();
-    }
-}
-
-@Data
-@AllArgsConstructor
-public class MetaInfo {
-    private String requestId;
-    private Instant timestamp;
-
-    public static MetaInfo now() {
-        return new MetaInfo(
-            MDC.get("requestId"),
-            Instant.now()
-        );
-    }
-}
-```
-
-### Global Exception Handler
-
-```java
-@RestControllerAdvice
-@Slf4j
-public class GlobalExceptionHandler {
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
-        log.warn("Resource not found: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(ApiResponse.error("NOT_FOUND", ex.getMessage()));
-    }
-
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {
-        log.warn("Business rule violation: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-            .body(ApiResponse.error(ex.getCode(), ex.getMessage()));
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
-        var errors = ex.getBindingResult().getFieldErrors().stream()
-            .map(e -> new FieldError(e.getField(), e.getDefaultMessage()))
-            .toList();
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(ApiResponse.<Void>builder()
-                .success(false)
-                .error(ErrorInfo.builder()
-                    .code("VALIDATION_ERROR")
-                    .message("Request validation failed")
-                    .details(errors)
-                    .build())
-                .meta(MetaInfo.now())
-                .build());
-    }
-}
-```
+### 3. Webhook Handling (Inbound)
+PayU relies heavily on webhooks for async payment confirmations.
+- **Verification**: Always verify HMAC signatures using a rolling timestamp (prevent replay).
+- **Quick ACK**: Return `202 Accepted` immediately, process logic via Kafka.
+- **Idempotency**: Check `webhook_id` in Redis/DB before processing.
 
 ---
 
-## 📋 API Design Checklist
+## 📜 OpenAPI & Type Synchronization
+- **Contract-First**: Use OpenAPI 3.1 to define schemas before coding.
+- **Zod Sync**: Generate Zod schemas and TypeScript interfaces from OpenAPI for Frontend/Mobile type safety.
+- **Spectral**: Lint OpenAPI files for standard compliance.
 
-Before publishing an API:
+---
 
-- [ ] URL follows REST conventions (nouns, plural, kebab-case)
-- [ ] Correct HTTP methods and status codes
-- [ ] Request/response follows standard envelope
-- [ ] Pagination implemented for list endpoints
-- [ ] Proper error responses with codes
-- [ ] OpenAPI specification documented
-- [ ] Authentication required on protected endpoints
-- [ ] Rate limiting configured
-- [ ] Idempotency key supported for mutations
-- [ ] Request validation with clear error messages
+## 🛠️ Integration Checklist
+- [ ] **Idempotency**: Does the POST endpoint support `Idempotency-Key`?
+- [ ] **Timeouts**: Are Connect/Read timeouts configured or using defaults (danger)?
+- [ ] **Retries**: Does it use exponential backoff for 5xx/429?
+- [ ] **Webhooks**: Is signature verification and idempotency implemented?
+- [ ] **PII**: Are sensitive fields (PIN, CVV) encrypted/masked in transit?
 
 ---
 *Last Updated: January 2026*
-
----
-
-## 🔄 OpenAPI to TypeScript Generation
-
-### Overview
-
-Generate type-safe TypeScript interfaces and Zod schemas from OpenAPI 3.0 specifications for seamless frontend-backend integration.
-
-### When to Use
-
-- Creating TypeScript types from backend OpenAPI specs
-- Generating Zod validation schemas for API responses
-- Building type-safe React Query hooks
-- Synchronizing frontend types with backend API changes
-
-### Type Mapping
-
-| OpenAPI | TypeScript | Zod Schema |
-|---------|------------|------------|
-| `string` | `string` | `z.string()` |
-| `number` | `number` | `z.number()` |
-| `integer` | `number` | `z.number().int()` |
-| `boolean` | `boolean` | `z.boolean()` |
-| `uuid` | `string` | `z.string().uuid()` |
-| `email` | `string` | `z.string().email()` |
-| `date-time` | `string` | `z.string().datetime()` |
-| `enum` | union type | `z.enum([...])` |
-
-### PayU-Specific Patterns
-
-```typescript
-// Generated from OpenAPI - PayU Response Wrapper
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  error?: {
-    code: string;
-    message: string;
-    details?: FieldError[];
-  };
-  meta: {
-    requestId: string;
-    timestamp: string;
-  };
-}
-
-// Zod Schema for Runtime Validation
-export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
-  z.object({
-    success: z.boolean(),
-    data: dataSchema,
-    error: z.object({
-      code: z.string(),
-      message: z.string(),
-      details: z.array(z.object({
-        field: z.string(),
-        message: z.string()
-      })).optional()
-    }).optional(),
-    meta: z.object({
-      requestId: z.string(),
-      timestamp: z.string()
-    })
-  });
-
-// Example: Account Response Type
-export interface Account {
-  id: string;
-  accountNumber: string;
-  balance: Money;
-  status: 'ACTIVE' | 'FROZEN' | 'CLOSED';
-  createdAt: string;
-}
-
-export const AccountSchema = z.object({
-  id: z.string().uuid(),
-  accountNumber: z.string().regex(/^[0-9]{10}$/),
-  balance: MoneySchema,
-  status: z.enum(['ACTIVE', 'FROZEN', 'CLOSED']),
-  createdAt: z.string().datetime()
-});
-
-export type AccountResponse = z.infer<typeof AccountSchema>;
-```
-
-### React Query Integration
-
-```typescript
-// hooks/useAccounts.ts - Generated from OpenAPI
-import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
-
-const AccountListResponseSchema = ApiResponseSchema(z.array(AccountSchema));
-
-export function useAccounts(page: number = 1, size: number = 20) {
-  return useQuery({
-    queryKey: ['accounts', page, size],
-    queryFn: async () => {
-      const response = await fetch(`/v1/accounts?page=${page}&size=${size}`);
-      const data = await response.json();
-      // Runtime validation with Zod
-      return AccountListResponseSchema.parse(data);
-    },
-  });
-}
-
-// Usage in component
-function AccountList() {
-  const { data, isLoading, error } = useAccounts();
-  
-  if (isLoading) return <Skeleton />;
-  if (error) return <ErrorMessage code={error.error?.code} />;
-  
-  return (
-    <ul>
-      {data?.data.map(account => (
-        <li key={account.id}>{account.accountNumber}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-### Workflow
-
-1. **Export OpenAPI**: Backend exports OpenAPI spec (e.g., `account-service.openapi.json`)
-2. **Generate Types**: Run generation script to create TypeScript interfaces + Zod schemas
-3. **Validate at Runtime**: Use Zod schemas to validate API responses
-4. **Type Safety**: Full TypeScript support with auto-completion
-
-### Best Practices
-
-- **Always validate** API responses with Zod schemas at runtime
-- **Regenerate types** when OpenAPI spec changes
-- **Use discriminated unions** for error handling
-- **Keep schemas colocated** with API hooks
-- **Version control** generated types for traceability
-
----
-
-## �️ GraphQL Design Patterns (Reference)
-
-For services requiring flexible data fetching (e.g., Mobile BFF), use these GraphQL standards.
-
-### 1. Schema-First Design
-Define types before code.
-```graphql
-type User {
-  id: ID!
-  orders(first: Int = 10, after: String): OrderConnection! # Relay Pagination
-}
-
-type OrderConnection {
-  edges: [OrderEdge!]!
-  pageInfo: PageInfo!
-}
-```
-
-### 2. Best Practices
-1.  **Avoid N+1**: MUST use **DataLoaders** for field resolvers.
-    ```python
-    # Bad: SQL query inside loop
-    # Good: Loader batches IDs -> Single Query -> Map results
-    orders = await loader.load(user["id"])
-    ```
-2.  **Mutations**: Return specific payloads with error arrays.
-    ```graphql
-    type CreateUserPayload {
-      user: User
-      errors: [Error!]
-    }
-    ```
-3.  **Deprecation**: Use `@deprecated(reason: "...")` directive.
-
-## 🤖 Agent Delegation & Parallel Execution (API Development)
-
-Untuk siklus design-to-implementation yang cepat, gunakan pola delegasi paralel (Swarm Mode):
-
-- **API Specification**: Delegasikan ke **`@scaffolder`** untuk pembuatan file OpenAPI (YAML/JSON) dan integrasi Swagger UI.
-- **Contract Verification**: Aktifkan **`@tester`** secara paralel untuk menulis REST Assured atau DACTYLE tests berdasarkan spek API.
-- **DTO Implementation**: Panggil **`@logic-builder`** secara simultan untuk mengimplementasikan Java Records atau Pydantic models yang sesuai dengan kontrak.
-- **Security Audit**: Jalankan **`@auditor`** untuk memastikan setiap endpoint memiliki RBAC checks dan input validation yang ketat.
