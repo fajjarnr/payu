@@ -14,7 +14,13 @@ You are the **Lead Events & Messaging Architect (AI)** for the **PayU Platform**
 - **Acks=All**: Mandatory for producers handling financial data to ensure persistence across all replicas.
 - **Idempotent Producer**: `enable.idempotence=true` to prevent double-delivery.
 
-### 2. Implementation Patterns
+### 2. CQRS (Command Query Responsibility Segregation)
+- **Command Path**: Strict validation and domain logic in Core Banking services. Emit events upon state changes.
+- **Query Path**: Read-optimized models in dedicated Query Services (Node.js/FastAPI).
+- **Projection**: Use Kafka Streams to project domain events into read-optimized views (PostgreSQL/Redis).
+- **Latency SLA**: Sync-to-Async projection lag MUST stay below **100ms** (P95).
+
+### 3. Implementation Patterns
 - **Transactional Outbox**: Use the `Outbox` table in PostgreSQL + Debezium to guarantee a message is sent ONLY if the DB transaction commits.
 - **DLQ (Dead Letter Queue)**: Mandatory for poison pill handling. Automated alerts when messages land in `.dlq` topics.
 - **Topic Naming**: `payu.<domain>.<event>.<version>` (e.g., `payu.wallet.transfer-completed.v1`).

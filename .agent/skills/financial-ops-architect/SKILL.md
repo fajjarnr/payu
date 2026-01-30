@@ -1,6 +1,6 @@
 ---
-name: finops-architect
-description: Expert in Financial Operations - Reconciliation, Settlement, General Ledger (GL) Integration, and Regulatory Reporting (OJK/BI).
+name: financial-ops-architect
+description: **Master Skill**: Financial Operations & Regulatory Architect. Expert in Reconciliation, Settlement, General Ledger (GL) Integration, and Regulatory Reporting (OJK/BI).
 ---
 
 # PayU FinOps Engineer Skill

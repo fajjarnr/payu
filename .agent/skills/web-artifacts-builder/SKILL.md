@@ -1,52 +1,51 @@
 ---
 name: web-artifacts-builder
-description: Suite of tools for creating elaborate, multi-component PayU HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components.
+description: **Master Skill**: Frontend Artifact Specialist. Suite of tools for creating elaborate, multi-component PayU HTML artifacts using React, Tailwind CSS, and shadcn/ui.
 ---
 
 # Web Artifacts Builder (PayU Edition)
 
-To build powerful frontend artifacts for PayU, follow ini steps:
-1. Initialize the artifact project using `.agent/skills/web-artifacts-builder/scripts/init-artifact.sh`
-2. Develop your artifact by editing the generated code (uses local components from `/components/ui`)
-3. Bundle all code into a single HTML file using `.agent/skills/web-artifacts-builder/scripts/bundle-artifact.sh`
-4. Display/Share the artifact
+You are the **Specialized Frontend Artifact Builder** for the PayU platform. You create standalone, high-fidelity React-based interactive artifacts used for documentation, PRDs, and advanced system demos.
 
-**Stack**: React 18 + TypeScript + Vite + Parcel (bundling) + Tailwind CSS + shadcn/ui
+## 🚀 Workflow: From Idea to Single-File
+1. **Initialize**: `bash .agent/skills/web-artifacts-builder/scripts/init-artifact.sh <name>`
+2. **Develop**: Build the UI in `src/App.tsx`. Use local shadcn/ui components.
+3. **Bundle**: `bash ../.agent/skills/web-artifacts-builder/scripts/bundle-artifact.sh`.
+4. **Deliver**: The output is a single `bundle.html` (approx. 2MB) containing all CSS, JS, and Assets.
 
-## Design & Style Guidelines
+## 🎨 Premium Design Standards
+To maintain the **PayU Premium Emerald** aesthetic in artifacts:
 
-Follow the **Premium Emerald** design system:
-- **Primary Color**: `#10b981` (emerald-500)
-- **Typography**: Outfit (Headers) & Inter (UI)
-- **Aesthetics**: Glassmorphism, subtle noise, layered shadows.
+### 1. The Emerald Token Set
+- **Primary**: `emerald-500` (#10b981) for actions.
+- **Surface**: `slate-900` or `gray-950` for dark-mode depth.
+- **Glassmorphism**: 
+  ```tsx
+  <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl">
+  ```
 
-## Quick Start
+### 2. High-Tech Visuals
+- **Gradients**: Use `bg-gradient-to-br from-emerald-500/20 to-transparent`.
+- **Micro-animations**: Use `framer-motion` for staggered reveals and hover scale effects.
+- **Typography**: Force `Outfit` for display headers and `Inter` for data tables.
 
-### Step 1: Initialize Artifact Project
+---
 
-Run the initialization script to create a new React project. This will automatically copy shadcn/ui components from the project root.
+## 🏗️ Complex Component Examples
 
-```bash
-bash .agent/skills/web-artifacts-builder/scripts/init-artifact.sh <artifact-name>
-cd <artifact-name>
-```
+### Interactive Ledger Table
+When demoing FinOps logic, use a rich data table with "Type-Ahead" filtering and "Optimistic" row deletion to show system responsiveness.
 
-### Step 2: Develop Your Artifact
+### Real-time Transaction Monitor
+Use `useEffect` with a mock interval to simulate a live Kafka stream feed within the artifact, showing how the UI handles incoming events.
 
-Edit `src/App.tsx`. You can import components like this:
-```tsx
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-```
+---
 
-### Step 3: Bundle to Single HTML File
+## 🛡️ Artifact Quality Checklist
+- [ ] **Responsiveness**: Does it look premium on both Desktop and Tablet viewports?
+- [ ] **Self-Contained**: Are all images converted to Base64 or using external CDN URLs?
+- [ ] **Performance**: Does the single-file bundle load in < 2 seconds?
+- [ ] **Interactivity**: Are all buttons and filters functional (using React state)?
 
-To bundle the app into a single HTML file:
-```bash
-bash ../.agent/skills/web-artifacts-builder/scripts/bundle-artifact.sh
-```
-
-This creates `bundle.html` in the artifact directory.
-
-## Reference
-Local components are located in `.agent/resources/shadcn/ui`.
+---
+*Last Updated: January 2026*

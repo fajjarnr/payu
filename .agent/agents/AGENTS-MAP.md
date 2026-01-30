@@ -26,7 +26,8 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@event-systems-architect` | `@logic-builder` | Implementasi Kafka messaging & Saga patterns.  |
 | `@ai-engineer`       | `@logic-builder`      | Implementasi Async Service, Repository, & ETL. |
 | `@sre-engineer`      | `@auditor`            | Evaluasi tracing, log levels, dan metrics.     |
-| `@finops-architect`  | `@logic-builder`      | Implementasi Recon & GL Integration logic.     |
+| `@financial-ops-architect`  | `@logic-builder`      | Implementasi Recon & GL Integration logic.     |
+| `@cloud-finops-architect`   | `@auditor`            | Audit alokasi biaya dan optimasi cloud spend. |
 
 ## 🔄 Execution Workflow
 

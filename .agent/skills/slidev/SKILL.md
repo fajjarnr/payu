@@ -1,6 +1,6 @@
 ---
 name: slidev
-description: Create and present web-based slides for developers using Markdown, Vue components, code highlighting, animations, and interactive features. Use when building technical presentations, conference talks, or teaching materials.
+description: **Master Skill**: Technical Presentation Specialist. Expert in Slidev (Markdown-to-Slides) with Vue support, code animations, and developer-centric layouts.
 ---
 
 # Slidev - Presentation Slides for Developers

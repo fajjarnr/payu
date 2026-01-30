@@ -273,9 +273,10 @@ Skills are categorized by domain to help you choose the right tool for the task.
 ### 🛡️ Security & Quality
 | Skill | Description |
 | :--- | :--- |
-| `cybersecurity-architect` | **Master Skill**: Zero Trust K8s, Vault, Auth Patterns, & Compliance (PCI/OJK). |
+| `cybersecurity-architect` | **Master Skill**: Zero Trust K8s, Vault, Auth Patterns, & Compliance (PCI-DSS/OJK). |
 | `sdet-solutions-engineer` | **Master Skill**: TDD, E2E Testing, RCA, & Financial Reconciliation. |
-| `finops-architect` | **New**: Reconciliation, Settlement, GL Integration, and Regulatory Reporting. |
+| `financial-ops-architect` | **Master Skill**: Reconciliation, Settlement, GL Integration, and Regulatory Reporting. |
+| `cloud-finops-architect` | **Master Skill**: Cloud Cost Management, Right-sizing, and AWS/OpenShift Optimization. |
 
 ### ⚙️ DevOps & Automation
 | Skill | Description |
@@ -284,7 +285,7 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | `sre-engineer` | **Master Skill**: SRE, Golden Signals, and Distributed Tracing. |
 | `developer-experience-specialist` | **Master Skill**: Git Strategy, Conventional Commits, and PR Review. |
 | `typescript-specialist` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
-| `slidev` | Presentation slides for developers (Markdown-based). |
+| `slidev` | **Master Skill**: Technical Presentation Specialist (Markdown-based). |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 

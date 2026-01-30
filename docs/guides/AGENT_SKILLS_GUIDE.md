@@ -66,7 +66,8 @@ The PayU platform is powered by specialized skill clusters:
 | **Audit** | `cybersecurity-architect` | **Master Skill**: Zero Trust, Auth Patterns, & Compliance. |
 | **Metrics** | `sre-engineer` | **Master Skill**: SRE, Golden Signals, Logs, & Tracing. |
 | **QA** | `sdet-solutions-engineer` | **Master Skill**: TDD, E2E, RCA, & Financial Recon. |
-| **FinOps** | `finops-architect` | **New**: Recon, Settlement, GL Integration, and Regulatory Reporting. |
+| **FinOps** | `financial-ops-architect` | **Master Skill**: Reconciliation, Settlement, & GL Integration. |
+| **CloudOps**| `cloud-finops-architect` | **Master Skill**: Cloud Cost Management & Optimization. |
 
 #### ⚙️ DevOps & Automation
 | Spec | Skill | Description |
@@ -74,7 +75,7 @@ The PayU platform is powered by specialized skill clusters:
 | **Infra** | `platform-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container Hardening. |
 | **Logic** | `typescript-specialist` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
 | **Git** | `developer-experience-specialist` | **Master Skill**: Git Strategy, Conventional Commits, and PR Mastery. |
-| **Tools** | `slidev` | Presentation slides for developers (Markdown-based). |
+| **Tools** | `slidev` | **Master Skill**: Technical Presentation Specialist (Markdown-based). |
 
 ---
 

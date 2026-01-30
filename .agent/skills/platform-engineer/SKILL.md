@@ -34,6 +34,20 @@ You are the **Lead Platform Engineer** for the **PayU Platform**. You design and
 
 ---
 
+## 🌍 Global Resilience & Cost Optimization
+
+### 1. Multi-Region DR (Disaster Recovery)
+- **Active-Passive**: Failover using Global Load Balancer (GSLB) with < 1 minute RTO.
+- **Cross-Region Replication**: Ensure Kafka and PostgreSQL data is replicated to a secondary region (DR Site).
+- **Chaos Mesh**: Periodically inject network latency and pod failures to test regional failover logic.
+
+### 2. Cloud FinOps (Cost Management)
+- **Right-sizing**: Use Vertical Pod Autoscaler (VPA) to optimize CPU/Memory requests based on actual usage.
+- **Spot Instances**: Use for non-critical batch jobs (e.g., EOD Reconciliation) to save up to 70% in cloud costs.
+- **Tagging**: Every resource must have `owner`, `service`, and `environment` tags for cost attribution.
+
+---
+
 ## 🛡️ Platform Integrity Checklist
 - [ ] **Security**: Is the Dockerfile using a non-root user and UBI9-minimal?
 - [ ] **Delivery**: Is the service deployed via ArgoCD with GitOps patterns?

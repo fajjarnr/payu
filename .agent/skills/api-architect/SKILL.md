@@ -82,6 +82,20 @@ PayU relies heavily on webhooks for async payment confirmations.
 
 ---
 
+## ⛩️ API Gateway Patterns (Gateway-Service)
+The **Gateway Service** (Quarkus Native) is the entry point for all mobile and partner traffic.
+
+### 1. Security & Traffic Control
+- **Rate-Limiting**: Enforced per `API-Key` and `IP Address`. Return `429 Too Many Requests` when limits are exceeded.
+- **PII Striping**: Automatically strip or mask sensitive headers before forwarding requests to internal microservices.
+- **TLS Termination**: Handle HTTPS at the gateway to offload compute from internal pods.
+
+### 2. Request Transformation
+- **Header Injection**: Inject `X-User-Id` and `X-Request-Correlation-Id` into the internal request context.
+- **BFF Aggregation**: Use the gateway or dedicated Node.js BFF to aggregate data from multiple services (Account + Recent Transactions) into a single response.
+
+---
+
 ## 📜 OpenAPI & Type Synchronization
 - **Contract-First**: Use OpenAPI 3.1 to define schemas before coding.
 - **Zod Sync**: Generate Zod schemas and TypeScript interfaces from OpenAPI for Frontend/Mobile type safety.

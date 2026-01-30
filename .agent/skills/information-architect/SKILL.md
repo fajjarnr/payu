@@ -1,6 +1,6 @@
 ---
 name: information-architect
-description: Expert in documentation maintenance, technical writing, and mapping code changes to documentation for PayU Digital Banking Platform.
+description: **Master Skill**: Documentation & Knowledge Architect. Expert in documentation systems, technical writing, C4 architecture mapping, and ADR maintenance for PayU.
 ---
 
 # PayU Documentation Specialist Skill
@@ -164,10 +164,12 @@ Untuk tugas yang melibatkan banyak langkah (refactor, fitur baru), buatlah renca
 
 ---
 
-### 3. Verification Criteria
+## ✅ Knowledge Integrity Checklist
 - [ ] Is the ADR linked in `docs/adr/README.md`?
 - [ ] Are trade-offs explicitly listed?
 - [ ] Does the decision status reflect reality (e.g., `accepted` vs `proposed`)?
+- [ ] **A11y**: Are all diagrams accessible or have text descriptions?
+- [ ] **Staleness**: Are there references to deprecated services/patterns?
 
 ## 🧠 Skill Maintenance (Meta-Documentation)
 

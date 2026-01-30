@@ -21,6 +21,14 @@ Monitor these for every service:
 - **Error Budget**: The amount of downtime/errors allowed per month.
 - **Burn Rate Alerts**: Alert when the error budget is depleting too quickly (Multi-window approach).
 
+### 3. Performance Targets (Enterprise SLAs)
+| Metric | Target (P95) | Target (P99) |
+| :--- | :--- | :--- |
+| **API Latency (Core)** | < 150ms | < 300ms |
+| **API Latency (Supporting)** | < 300ms| < 600ms |
+| **Kafka End-to-End** | < 100ms | < 250ms |
+| **DB Query Latency** | < 50ms | < 150ms |
+
 ---
 
 ## 📍 Distributed Tracing (Jaeger/Tempo)
