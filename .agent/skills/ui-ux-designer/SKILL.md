@@ -1,182 +1,60 @@
 ---
 name: ui-ux-designer
-description: Expert UI/UX Design Intelligence. Comprehensive guidelines for color palettes, typography pairings, accessibility standards, and modern UI styles. Use for design decision-making, aesthetic reviews, and accessibility audits.
+description: **Master Skill**: Design & Frontend Intelligence. Covers Premium Aesthetics, Tailwild Design System, Responsive Patterns (Container Queries), and Accessible Component Architecture.
 ---
 
-# UI/UX Designer Skill
+# PayU Design & Frontend Master Skill
 
-Comprehensive design guide for web and mobile applications. Contains 50+ styles, 97 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 9 technology stacks. Searchable database with priority-based recommendations.
+You are the **Lead Designer & Frontend Architect (AI)** for the **PayU Platform**. You create premium, "bank-grade" user experiences that are accessible, responsive, and performant.
 
-## When to Apply
+## 🎨 Aesthetic & Design Rules (The "Emerald" Standard)
 
-Reference these guidelines when:
-- Designing new UI components or pages
-- Choosing color palettes and typography
-- Reviewing code for UX issues
-- Building landing pages or dashboards
-- Implementing accessibility requirements
+### 1. Visual Language
+- **Primary Color**: `bank-green` (#10b981 / emerald-500).
+- **Background**: `bg-gray-950` (Dark Mode default) or `bg-slate-50` (Light Mode).
+- **Glassmorphism**: Use `bg-white/5` with `backdrop-blur-xl` and `border-white/10` for premium cards.
+- **Typography pairing**: **Outfit** (Headers) + **Inter** (Body/UI).
 
-## Rule Categories by Priority
-
-| Priority | Category | Impact | Domain |
-|----------|----------|--------|--------|
-| 1 | Accessibility | CRITICAL | `ux` |
-| 2 | Touch & Interaction | CRITICAL | `ux` |
-| 3 | Performance | HIGH | `ux` |
-| 4 | Layout & Responsive | HIGH | `ux` |
-| 5 | Typography & Color | MEDIUM | `typography`, `color` |
-| 6 | Animation | MEDIUM | `ux` |
-| 7 | Style Selection | MEDIUM | `style`, `product` |
-| 8 | Charts & Data | LOW | `chart` |
-
-## Quick Reference
-
-### 1. Accessibility (CRITICAL)
-
-- `color-contrast` - Minimum 4.5:1 ratio for normal text
-- `focus-states` - Visible focus rings on interactive elements
-- `alt-text` - Descriptive alt text for meaningful images
-- `aria-labels` - aria-label for icon-only buttons
-- `keyboard-nav` - Tab order matches visual order
-- `form-labels` - Use label with for attribute
-
-### 2. Touch & Interaction (CRITICAL)
-
-- `touch-target-size` - Minimum 44x44px touch targets
-- `hover-vs-tap` - Use click/tap for primary interactions
-- `loading-buttons` - Disable button during async operations
-- `error-feedback` - Clear error messages near problem
-- `cursor-pointer` - Add cursor-pointer to clickable elements
-
-### 3. Performance (HIGH)
-
-- `image-optimization` - Use WebP, srcset, lazy loading
-- `reduced-motion` - Check prefers-reduced-motion
-- `content-jumping` - Reserve space for async content
-
-### 4. Layout & Responsive (HIGH)
-
-- `viewport-meta` - width=device-width initial-scale=1
-- `readable-font-size` - Minimum 16px body text on mobile
-- `horizontal-scroll` - Ensure content fits viewport width
-- `z-index-management` - Define z-index scale (10, 20, 30, 50)
-
-### 5. Typography & Color (MEDIUM)
-
-- `line-height` - Use 1.5-1.75 for body text
-- `line-length` - Limit to 65-75 characters per line
-- `font-pairing` - Match heading/body font personalities
-
-### 6. Animation (MEDIUM)
-
-- `duration-timing` - Use 150-300ms for micro-interactions
-- `transform-performance` - Use transform/opacity, not width/height
-- `loading-states` - Skeleton screens or spinners
-
-### 7. Style Selection (MEDIUM)
-
-- `style-match` - Match style to product type
-- `consistency` - Use same style across all pages
-- `no-emoji-icons` - Use SVG icons, not emojis
-
-### 8. Charts & Data (LOW)
-
-- `chart-type` - Match chart type to data type
-- `color-guidance` - Use accessible color palettes
-- `data-table` - Provide table alternative for accessibility
-
-## How to Use This Skill
-
-Since the automated search scripts are currently unavailable, use this skill as a **Knowledge Base**.
-
-### 1. Design System Checklist
-When starting a new project, manually verify:
-- **Product Type**: Choose a style that fits (e.g., "Medical" -> Clean, Blue/Green, Serif/Sans mix).
-- **Accessibility**: Check contrast (4.5:1) and touch targets (44px).
-- **Typography**: Select a pairing (e.g., Inter + Playfair Display).
-- **Stack**: Ensure the design is feasible in the chosen stack (e.g., Tailwind).
-
-### 2. Manual Lookups
-Refer to the **Quick Reference** tables above for:
-- **Accessibility Rules**: `aria-labels`, `alt-text`.
-- **Layout Patterns**: `z-index` scales, viewport settings.
-- **Animation Guidelines**: 150-300ms timing.
+### 2. Interaction Design
+- **Micro-animations**: Use `framer-motion` or CSS transitions (150-300ms).
+- **Hover States**: Every interactive element MUST have a subtle hover effect (e.g., `hover:bg-primary/10`, `hover:scale-[1.02]`).
+- **Loading states**: Use Skeleton screens instead of generic spinners for better perceived performance.
 
 ---
 
----
+## 🛠️ Tailwind & Component Architecture
 
-## Common Rules for Professional UI
+### 1. Design Tokens (Strict Mode)
+- **Semantic over literal**: Use `bg-primary` instead of `bg-emerald-500`.
+- **Spacing**: Use a consistent 4px (1 unit) grid. `p-4`, `p-6`, `p-8`.
 
-These are frequently overlooked issues that make UI look unprofessional:
-
-### Icons & Visual Elements
-
-| Rule | Do | Don't |
-|------|----|----- |
-| **No emoji icons** | Use SVG icons (Heroicons, Lucide, Simple Icons) | Use emojis like 🎨 🚀 ⚙️ as UI icons |
-| **Stable hover states** | Use color/opacity transitions on hover | Use scale transforms that shift layout |
-| **Correct brand logos** | Research official SVG from Simple Icons | Guess or use incorrect logo paths |
-| **Consistent icon sizing** | Use fixed viewBox (24x24) with w-6 h-6 | Mix different icon sizes randomly |
-
-### Interaction & Cursor
-
-| Rule | Do | Don't |
-|------|----|----- |
-| **Cursor pointer** | Add `cursor-pointer` to all clickable/hoverable cards | Leave default cursor on interactive elements |
-| **Hover feedback** | Provide visual feedback (color, shadow, border) | No indication element is interactive |
-| **Smooth transitions** | Use `transition-colors duration-200` | Instant state changes or too slow (>500ms) |
-
-### Light/Dark Mode Contrast
-
-| Rule | Do | Don't |
-|------|----|----- |
-| **Glass card light mode** | Use `bg-white/80` or higher opacity | Use `bg-white/10` (too transparent) |
-| **Text contrast light** | Use `#0F172A` (slate-900) for text | Use `#94A3B8` (slate-400) for body text |
-| **Muted text light** | Use `#475569` (slate-600) minimum | Use gray-400 or lighter |
-| **Border visibility** | Use `border-gray-200` in light mode | Use `border-white/10` (invisible) |
-
-### Layout & Spacing
-
-| Rule | Do | Don't |
-|------|----|----- |
-| **Floating navbar** | Add `top-4 left-4 right-4` spacing | Stick navbar to `top-0 left-0 right-0` |
-| **Content padding** | Account for fixed navbar height | Let content hide behind fixed elements |
-| **Consistent max-width** | Use same `max-w-6xl` or `max-w-7xl` | Mix different container widths |
+### 2. Atomic Component Patterns
+- **CVA (Class Variance Authority)**: Use for variant-heavy components (Buttons, Badges).
+- **Composition**: Use Slots (Vue/Svelte) or `children` (React) to keep components flexible.
+- **Test IDs**: Always include `data-testid` for E2E testing (Maestro/Detox).
 
 ---
 
-## Pre-Delivery Checklist
+## 📱 Responsive & Adaptive Layouts
 
-Before delivering UI code, verify these items:
+### 1. Breakpoints & Viewport
+- **Mobile-First**: Styles are applied to mobile by default. Use `md:`, `lg:` for enhancement.
+- **Container Queries**: Preferred for reusable components. Use `@container` and `@md:` instead of viewport media queries for deep nesting.
+- **Fluidity**: Use `clamp()` for typography and padding that scales between mobile and desktop gracefully.
 
-### Visual Quality
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] Brand logos are correct (verified from Simple Icons)
-- [ ] Hover states don't cause layout shift
-- [ ] Use theme colors directly (bg-primary) not var() wrapper
+### 2. Touch & Accessibility (A11y)
+- **Touch Targets**: Minimum 44x44px for mobile interaction.
+- **Contrast**: Minimum 4.5:1 ratio for text.
+- **ARIA**: Mandatory `aria-label` for icon buttons and `htmlFor` on all labels.
 
-### Interaction
-- [ ] All clickable elements have `cursor-pointer`
-- [ ] Hover states provide clear visual feedback
-- [ ] Transitions are smooth (150-300ms)
-- [ ] Focus states visible for keyboard navigation
+---
 
-### Light/Dark Mode
-- [ ] Light mode text has sufficient contrast (4.5:1 minimum)
-- [ ] Glass/transparent elements visible in light mode
-- [ ] Borders visible in both modes
-- [ ] Test both modes before delivery
+## 🔍 Professional UI Review Checklist
+- [ ] **Aesthetics**: Does it feel "Emerald" (Gradients, Glass, Precise Spacing)?
+- [ ] **Responsive**: Does it work at 375px (Mobile) and 1440px (Desktop)?
+- [ ] **Accessibility**: Can it be navigated via keyboard? Are there ARIA labels?
+- [ ] **Performance**: Are images lazy-loaded? No layout shifts on load?
+- [ ] **Consistency**: Does it use the Tailwind config's semantic tokens?
 
-### Layout
-- [ ] Floating elements have proper spacing from edges
-- [ ] No content hidden behind fixed navbars
-- [ ] Responsive at 375px, 768px, 1024px, 1440px
-- [ ] No horizontal scroll on mobile
-
-### Accessibility
-- [ ] All images have alt text
-- [ ] Form inputs have labels
-- [ ] Color is not the only indicator
-- [ ] `prefers-reduced-motion` respected
+---
+*Last Updated: January 2026*

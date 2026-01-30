@@ -50,17 +50,16 @@ The PayU platform is powered by specialized skill clusters:
 | **Core** | `backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
 | **API** | `api-design` | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
 | **DB** | `database-engineer` | **Advanced**: Performance (Idx/Locking), Design Rules, Flyway. |
-| **Events** | `event-driven-architecture` | Kafka messaging and Saga/Distributed Transactions. |
-| **Streams** | `kafka-stream-specialist` | **Advanced**: Topologies, Windowing/Joins, State Stores, and CDC. |
-| **Python** | `fastapi-templates` | Async Python APIs for ML/Analytics services. |
+| **Events** | `event-driven-architecture` | **Master Skill**: Sagas, Event Sourcing, & Kafka (CDC). |
+| **Logic** | `typescript-backend-engineer` | Node.js BFFs, Prisma, and Zod validation patterns. |
+| **AI** | `ml-engineer` | **Master Skill**: Intelligent Systems, FastAPI, & TimescaleDB. |
 
 #### 📱 Frontend & Mobile
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
 | **Web** | `frontend-engineer` | **Master Skill**: Next.js 15+, React, & Web Perf. |
 | **Mobile** | `mobile-engineer` | **Master Skill**: React Native, Expo, & Mobile Security. |
-| **Design** | `ui-ux-designer` | Design tokens, typography, and palette intelligence. |
-| **Style** | `tailwind-design-system` | Scalable atomic CSS architecture (Emerald Green). |
+| **Design** | `ui-ux-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
 
 #### 🛡️ Security & Observability
 | Spec | Skill | Description |

@@ -59,15 +59,17 @@ Arsitektur harus mendukung segmentasi jaringan, tokenisasi, dan audit trail otom
 | **Backend** | `@backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal, & Resilience. |
 | **API**     | `@api-design`      | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
 | **Data**    | `@database-engineer` | **Advanced**: Postgres Performance, Flyway, Sharding. |
-| **Events**  | `@event-driven-architecture` | Kafka Topologies, Sagas, Idempotency. |
+| **Events**  | `@event-driven-architecture` | **Master Skill**: Sagas, Event Sourcing, & Kafka. |
+| **AI**      | `@ml-engineer`       | **Master Skill**: Intelligent Systems, FastAPI, & GenAI. |
 | **Security** | `@security-engineer` | **Master Skill**: Zero Trust, Auth, & Compliance. |
 | **QA**      | `@qa-engineer`       | **Master Skill**: TDD, E2E, & Financial Recon. |
+| **Design**  | `@ui-ux-designer`    | **Master Skill**: Premium Aesthetics, Atomic Design. |
 | **Frontend** | `@frontend-engineer` | **Master Skill**: Next.js 15+, React, & Web Perf. |
 | **Mobile**   | `@mobile-engineer`   | **Master Skill**: React Native, Expo, & Security. |
 | **DevOps**   | `@devops-engineer`   | **Master Skill**: Tekton/ArgoCD, OpenShift, UBI9. |
+| **Ops**      | `@observability-engineer` | **Advanced**: SLOs, Golden Signals, Jaeger. |
 | **Language** | `@typescript-advanced-types` | **Master Skill**: Advanced TS & Modern JS. |
 | **Docs/C4** | `@docs-engineer` | **Master Skill**: Documentation & C4 Visualization. |
-| **Ops**      | `@observability-engineer` | SLOs, Golden Signals, Jaeger Tracing. |
 
 ---
 

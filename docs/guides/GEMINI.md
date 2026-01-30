@@ -258,21 +258,17 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | :--- | :--- |
 | `backend-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, and advanced Resilience. |
 | `api-design` | **Master Skill**: REST API standards, OpenAPI, and 3rd-party Integrations. |
-| `event-driven-architecture` | Kafka messaging, Saga patterns, and event sourcing. |
-| `kafka-stream-specialist` | **Advanced**: Topologies, Windowing/Joins, State Stores, and CDC (Debezium). |
+| `event-driven-architecture` | **Master Skill**: Sagas, Event Sourcing, & Kafka/AMQ Streams (CDC). |
 | `database-engineer` | **Advanced**: Postgres Performance (Indexing/Locking), Design Rules, and Flyway. |
 | `typescript-backend-engineer` | Node.js/Express/TypeScript services (BFFs, microservices) with Prisma and Zod. |
-| `fastapi-templates` | Production-ready Python APIs with Pydantic v2 and async patterns. |
-| `ml-engineer` | Fraud scoring, Python data analytics, and model implementation. |
+| `ml-engineer` | **Master Skill**: Intelligent Systems, FastAPI, TimescaleDB, & GenAI. |
 
 ### 📱 Frontend & Mobile
 | Skill | Description |
 | :--- | :--- |
+| `ui-ux-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
 | `frontend-engineer` | **Master Skill**: Next.js 15+, React, and modern web application architecture. |
 | `mobile-engineer` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), and Mobile Security. |
-| `web-component-design` | Atomic design, CSS-in-JS, and reusable component architecture. |
-| `tailwind-design-system` | Scalable design tokens and atomic CSS architecture. |
-| `responsive-design` | Breakpoints, fluid layouts, and container queries. |
 | `web-artifacts-builder` | Scaffolding and bundling single-file HTML/React artifacts for documentation. |
 
 ### 🛡️ Security & Quality
