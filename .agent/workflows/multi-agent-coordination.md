@@ -80,9 +80,9 @@ Setelah semua agen selesai bekerja, lakukan sintesis laporan dengan format:
 
 | Agent               | Findings / Actions                                |
 | :------------------ | :------------------------------------------------ |
-| @sdet-solutions-engineer | Menemukan null pointer di AccountService line 45  |
+| @quality-engineer        | Menemukan null pointer di AccountService line 45  |
 | @core-banking-engineer   | Mengimplementasikan null-check dan fallback logic |
-| @sdet-solutions-engineer        | Menambahkan unit test untuk skenario null         |
+| @quality-engineer        | Menambahkan unit test untuk skenario null         |
 
 ### Consitencies & Action Items
 

@@ -60,22 +60,21 @@ The PayU platform is powered by specialized skill clusters:
 | **Mobile** | `mobile-architect` | **Master Skill**: React Native, Expo, & Mobile Security. |
 | **Design** | `product-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
 
-#### 🛡️ Security & Observability
+#### 🛡️ Security & Compliance
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
 | **Audit** | `cybersecurity-architect` | **Master Skill**: Zero Trust, Auth Patterns, & Compliance. |
-| **Metrics** | `sre-engineer` | **Master Skill**: SRE, Golden Signals, Logs, & Tracing. |
-| **QA** | `sdet-solutions-engineer` | **Master Skill**: TDD, E2E, RCA, & Financial Recon. |
-| **FinOps** | `financial-ops-architect` | **Master Skill**: Reconciliation, Settlement, & GL Integration. |
-| **CloudOps**| `cloud-finops-architect` | **Master Skill**: Cloud Cost Management & Optimization. |
+| **Data** | `data-governance-architect` | **Master Skill**: Data Lineage, PII, Retention, & UU PDP. |
 
-#### ⚙️ DevOps & Automation
+#### ⚙️ DevOps, Reliability & Quality (CONSOLIDATED)
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
 | **Infra** | `platform-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container Hardening. |
-| **Logic** | `typescript-specialist` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
-| **Git** | `developer-experience-specialist` | **Master Skill**: Git Strategy, Conventional Commits, and PR Mastery. |
-| **Tools** | `slidev` | **Master Skill**: Technical Presentation Specialist (Markdown-based). |
+| **Release** | `release-engineer` | **Master Skill**: Feature Flags, Blue-Green/Canary, & Argo Rollouts. |
+| **Reliability** | `reliability-engineer` | **UNIFIED**: SRE + Chaos + DR. Observability, Game Days, RTO/RPO, BCP. |
+| **Quality** | `quality-engineer` | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact. |
+| **FinOps** | `finops-engineer` | **UNIFIED**: Financial Ops + Cloud FinOps. Recon, GL, Cost Management. |
+| **DX** | `developer-experience` | **UNIFIED**: Git + TypeScript + Slidev. Workflows, Patterns, Presentations. |
 
 ---
 

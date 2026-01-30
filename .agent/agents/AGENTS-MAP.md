@@ -7,27 +7,34 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | Triggering Skill     | Orchestrated Agent    | Rationale                                      |
 | :------------------- | :-------------------- | :--------------------------------------------- |
 | `@principal-architect` | `@scaffolder`         | Mengotomatisasi pembuatan service baru.        |
-| `@core-banking-engineer` | `@logic-builder`    | Implementasi Domain logic dan DDD entities.    |
-| `@sdet-solutions-engineer` | `@tester`           | Penulisan test code dan eksekusi.              |
-| `@cybersecurity-architect` | `@auditor`          | Audit keamanan dan kepatuhan (PCI-DSS/OJK).    |
-| `@data-architect`    | `@migrator`           | Pengelolaan skema database dan migrasi Flyway. |
-| `@platform-engineer` | `@builder`            | Build, packaging, dan containerization.        |
-| `@frontend-architect`| `@styler`             | Estetika "Premium Emerald" dan A11y.           |
-| `@platform-engineer` | `@orchestrator`       | Alur CI/CD dan sinkronisasi git.               |
 | `@principal-architect` | `@lifecycle-manager`  | Pengelola SDLC penuh (End-to-End).             |
 | `@principal-architect` | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
-| `@cybersecurity-architect` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
-| `@web-artifacts-builder` | `@builder`           | Scaffolding dan bundling single-file artifacts. |
-| `@slidev`            | `@styler`             | Desain layout dan animasi presentasi premium. |
+| `@core-banking-engineer` | `@logic-builder`    | Implementasi Domain logic dan DDD entities.    |
+| `@api-architect`     | `@logic-builder`      | Standarisasi API Schemas & DTO logic.          |
+| `@event-systems-architect` | `@logic-builder` | Implementasi Kafka messaging & Saga patterns.  |
+| `@data-architect`    | `@migrator`           | Pengelolaan skema database dan migrasi Flyway. |
+| `@data-governance-architect` | `@compliance-auditor` | Data lineage, PII audit, retention policies. |
+| `@frontend-architect`| `@styler`             | Estetika "Premium Emerald" dan A11y.           |
 | `@mobile-architect`  | `@styler`             | Styling React Native (NativeWind/Reanimated).  |
 | `@mobile-architect`  | `@logic-builder`      | Logic React Native, Offline sync, State mgmt.  |
 | `@product-designer`  | `@styler`             | Design Tokens, Palettes, Typography systems.   |
-| `@api-architect`     | `@logic-builder`      | Standarisasi API Schemas & DTO logic.          |
-| `@event-systems-architect` | `@logic-builder` | Implementasi Kafka messaging & Saga patterns.  |
+| `@web-artifacts-builder` | `@builder`           | Scaffolding dan bundling single-file artifacts. |
+| `@cybersecurity-architect` | `@auditor`          | Audit keamanan dan kepatuhan (PCI-DSS/OJK).    |
+| `@cybersecurity-architect` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
+| `@platform-engineer` | `@builder`            | Build, packaging, dan containerization.        |
+| `@platform-engineer` | `@orchestrator`       | Alur CI/CD dan sinkronisasi git.               |
 | `@ai-engineer`       | `@logic-builder`      | Implementasi Async Service, Repository, & ETL. |
-| `@sre-engineer`      | `@auditor`            | Evaluasi tracing, log levels, dan metrics.     |
-| `@financial-ops-architect`  | `@logic-builder`      | Implementasi Recon & GL Integration logic.     |
-| `@cloud-finops-architect`   | `@auditor`            | Audit alokasi biaya dan optimasi cloud spend. |
+| `@nodejs-bff-architect` | `@logic-builder`   | BFF pattern, API aggregation, Express/Fastify. |
+| `@information-architect` | `@lifecycle-manager` | ADR, RFC, Technical Documentation.            |
+| **CONSOLIDATED SKILLS** | | |
+| `@quality-engineer`  | `@tester`             | Full-stack testing, Contract testing, Perf.   |
+| `@reliability-engineer` | `@auditor`          | SRE, Chaos, DR/BCP, Observability (LGTM).      |
+| `@reliability-engineer` | `@tester`           | Chaos experiments, Game Days, fault injection. |
+| `@finops-engineer`   | `@auditor`            | Cloud cost, Recon, GL, Regulatory (OJK/BI).    |
+| `@finops-engineer`   | `@logic-builder`      | Reconciliation engine, Settlement logic.       |
+| `@developer-experience` | `@orchestrator`     | Git workflow, PR standards, CI/CD integration. |
+| `@developer-experience` | `@styler`           | Slidev presentations, Documentation styling.   |
+| `@release-engineer`  | `@orchestrator`       | Feature flags, blue-green, canary rollouts.    |
 
 ## 🔄 Execution Workflow
 
@@ -59,8 +66,8 @@ Untuk mencapai kecepatan ekstrim, asisten AI harus menjalankan agen secara paral
 1. **Parallel Dispatching**: Jika tugas melibatkan Frontend (`@frontend-architect`) dan Backend (`@core-banking-engineer`), aktifkan `@styler` and `@logic-builder` secara bersamaan (Swarm Mode).
 2. **Skill-to-Agent Handshake**:
    - Jika `@frontend-architect` butuh visualisasi data, delegasikan ke `@web-artifacts-builder` -> `@builder`.
-   - Jika pengembangan fitur butuh presentasi, delegasikan ke `@slidev` -> `@styler`.
-3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama (misal: penulisan dokumen teknis di `@information-architect` didelegasikan ke `@slidev` jika butuh deck).
+   - Jika pengembangan fitur butuh presentasi, delegasikan ke `@developer-experience` -> `@styler`.
+3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama (misal: penulisan dokumen teknis di `@information-architect` didelegasikan ke `@developer-experience` jika butuh deck).
 
 ---
 *Last Updated: January 2026*

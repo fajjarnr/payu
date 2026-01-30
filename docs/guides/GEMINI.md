@@ -93,7 +93,7 @@ Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Paral
 ### Swarm Principles:
 1. **Parallel Dispatching**: Tugas Full-stack didelegasikan ke `@styler` (Frontend) dan `@logic-builder` (Backend) secara bersamaan untuk reduksi waktu eksekusi hingga 80%.
 2. **Specialized Handshake**: Setiap Skill (misal: `@core-banking-engineer`) memiliki instruksi eksplisit untuk memanggil spesialis lain (misal: `@tester` atau `@migrator`) jika tugas menyentuh domain mereka.
-3. **Implicit Interconnectivity**: Asisten wajib secara proaktif mendispatch agen pendukung (seperti `@auditor` untuk security atau `@styler` untuk slidev) berdasarkan jenis perubahan kode tanpa menunggu perintah manual.
+3. **Implicit Interconnectivity**: Asisten wajib secara proaktif mendispatch agen pendukung (seperti `@auditor` untuk security atau `@developer-experience` untuk presentasi) berdasarkan jenis perubahan kode tanpa menunggu perintah manual.
 
 ---
 
@@ -259,6 +259,7 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | `api-architect` | **Master Skill**: REST API standards, OpenAPI, & 3rd-party Integrations. |
 | `event-systems-architect` | **Master Skill**: Sagas, Event Sourcing, & Kafka/AMQ Streams (CDC). |
 | `data-architect` | **Master Skill**: PostgreSQL Design, Performance, and Flyway. |
+| `data-governance-architect` | **Master Skill**: Data Lineage, PII Classification, Retention Policies, & UU PDP Compliance. |
 | `nodejs-bff-architect` | **Master Skill**: Node.js/Express, Prisma, and Zod (BFF). |
 | `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, TimescaleDB, & GenAI. |
 
@@ -270,22 +271,20 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | `mobile-architect` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), and Mobile Security. |
 | `web-artifacts-builder` | **Master Skill**: Scaffolding and bundling single-file HTML/React artifacts for documentation. |
 
-### 🛡️ Security & Quality
+### 🛡️ Security & Compliance
 | Skill | Description |
 | :--- | :--- |
 | `cybersecurity-architect` | **Master Skill**: Zero Trust K8s, Vault, Auth Patterns, & Compliance (PCI-DSS/OJK). |
-| `sdet-solutions-engineer` | **Master Skill**: TDD, E2E Testing, RCA, & Financial Reconciliation. |
-| `financial-ops-architect` | **Master Skill**: Reconciliation, Settlement, GL Integration, and Regulatory Reporting. |
-| `cloud-finops-architect` | **Master Skill**: Cloud Cost Management, Right-sizing, and AWS/OpenShift Optimization. |
 
-### ⚙️ DevOps & Automation
+### ⚙️ DevOps, Reliability & Quality (CONSOLIDATED)
 | Skill | Description |
 | :--- | :--- |
 | `platform-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container (UBI9) Engineering. |
-| `sre-engineer` | **Master Skill**: SRE, Golden Signals, and Distributed Tracing. |
-| `developer-experience-specialist` | **Master Skill**: Git Strategy, Conventional Commits, and PR Review. |
-| `typescript-specialist` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
-| `slidev` | **Master Skill**: Technical Presentation Specialist (Markdown-based). |
+| `release-engineer` | **Master Skill**: Feature Flags, Blue-Green/Canary Deployments, & Argo Rollouts. |
+| `reliability-engineer` | **UNIFIED**: SRE + Chaos Engineering + Disaster Recovery. Observability, Game Days, RTO/RPO, BCP. |
+| `quality-engineer` | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact, CDC. |
+| `finops-engineer` | **UNIFIED**: Financial Ops + Cloud FinOps + Cost Optimization. Recon, GL, Cloud Cost, Regulatory (OJK/BI). |
+| `developer-experience` | **UNIFIED**: Git + TypeScript + Slidev. Workflows, Type patterns, Presentations. |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 
