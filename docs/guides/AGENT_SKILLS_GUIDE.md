@@ -65,11 +65,9 @@ The PayU platform is powered by specialized skill clusters:
 #### 🛡️ Security & Observability
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Audit** | `security-engineer` | **Advanced**: Zero Trust K8s, External Secrets, PCI-DSS. |
-| **Auth** | `auth-implementation-patterns` | JWT, OAuth2, and Risk-based MFA implementation. |
+| **Audit** | `security-engineer` | **Master Skill**: Zero Trust, Auth Patterns, & Compliance. |
 | **Metrics** | `observability-engineer` | **Advanced**: SLO/Burn Rate Alerts, Runbooks, Golden Signals. |
-| **QA** | `qa-engineer` | TDD, REST Assured, and Maestro for Mobile E2E. |
-| **Debug** | `debugging-engineer` | **Advanced**: "Iron Law" Process, Root Cause Tracing. |
+| **QA** | `qa-engineer` | **Master Skill**: TDD, E2E, RCA, & Financial Recon. |
 | **FinOps** | `finops-engineer` | **New**: Recon, Settlement, GL Integration, and Regulatory Reporting. |
 
 #### ⚙️ DevOps & Automation

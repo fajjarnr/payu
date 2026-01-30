@@ -278,11 +278,8 @@ Skills are categorized by domain to help you choose the right tool for the task.
 ### 🛡️ Security & Quality
 | Skill | Description |
 | :--- | :--- |
-| `security-engineer` | **Master Skill**: Zero Trust K8s, External Secrets (Vault), PCI-DSS, and OJK Compliance. |
-| `auth-implementation-patterns` | JWT, OAuth2, RBAC, and session management patterns. |
-| `qa-engineer` | **Master Skill**: TDD, REST Assured, Maestro (Mobile E2E), and Performance testing. |
-| `code-review` | Automated code quality checks and PR review checklists. |
-| `debugging-engineer` | **Advanced**: Systematic "Iron Law" Process, Root Cause Tracing, and Awaitility. |
+| `security-engineer` | **Master Skill**: Zero Trust K8s, Vault, Auth Patterns, & Compliance (PCI/OJK). |
+| `qa-engineer` | **Master Skill**: TDD, E2E Testing, RCA, & Financial Reconciliation. |
 | `finops-engineer` | **New**: Reconciliation, Settlement, GL Integration, and Regulatory Reporting. |
 
 ### ⚙️ DevOps & Automation

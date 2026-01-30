@@ -60,7 +60,8 @@ Arsitektur harus mendukung segmentasi jaringan, tokenisasi, dan audit trail otom
 | **API**     | `@api-design`      | **Master Skill**: REST, OpenAPI, & 3rd-party Integrations. |
 | **Data**    | `@database-engineer` | **Advanced**: Postgres Performance, Flyway, Sharding. |
 | **Events**  | `@event-driven-architecture` | Kafka Topologies, Sagas, Idempotency. |
-| **Security** | `@security-engineer` | Zero Trust K8s, Vault, PCI-DSS. |
+| **Security** | `@security-engineer` | **Master Skill**: Zero Trust, Auth, & Compliance. |
+| **QA**      | `@qa-engineer`       | **Master Skill**: TDD, E2E, & Financial Recon. |
 | **Frontend** | `@frontend-engineer` | **Master Skill**: Next.js 15+, React, & Web Perf. |
 | **Mobile**   | `@mobile-engineer`   | **Master Skill**: React Native, Expo, & Security. |
 | **DevOps**   | `@devops-engineer`   | **Master Skill**: Tekton/ArgoCD, OpenShift, UBI9. |
