@@ -39,11 +39,21 @@ Monitor these for every service:
 
 ---
 
-## 📬 Logging & Error Tracking
+---
 
-- **Correlation**: Every log MUST contain `trace_id` for instant jumping from trace to log.
-- **Structured Logs**: Use JSON format for logs to enable fast filtering/aggregation in Grafana Loki.
-- **Error Context**: Log the full exception stack trace AND the `request_payload` (masked) for troubleshooting.
+## 🐒 Chaos Engineering & Game Days
+
+Proactive reliability testing to uncover weaknesses before they cause outages.
+
+### 1. The Experiments
+- **Pod Death**: Randomly kill 1-2 pods of `account-service` and verify zero downtime (HPA/ReplicaSet recovery).
+- **Latency Injection**: Introduce 2s latency between `gateway` and `auth-service` to test Circuit Breaker configuration.
+- **Packet Loss**: Simulate 5% packet loss on Kafka broker to verify `acks=all` durability.
+
+### 2. Game Day Protocol
+- **Frequency**: Every Friday 14:00 (Low Traffic).
+- **Rule**: Stop experiment immediately if Error Budget burn rate exceeds 5x.
+- **Goal**: Confirm fallback pages work (e.g., "Use QRIS" when "BI-FAST" is down).
 
 ---
 

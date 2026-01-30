@@ -46,4 +46,4 @@ Explain *why* this option was chosen over others. Map it back to decision driver
 Steps or configuration details needed to adopt the decision.
 
 ---
-*Created via @docs-engineer ADR Template*
+*Created via @information-architect ADR Template*
