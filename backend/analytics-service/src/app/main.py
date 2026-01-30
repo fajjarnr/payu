@@ -10,10 +10,15 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+import uuid
 
 from app.config import get_settings
 from app.api.v1 import analytics_router
 from app.api.v1.websocket import websocket_router
+from app.api.responses import ApiResponse
 from app.database import init_db, close_db
 from app.messaging.kafka_consumer import KafkaConsumerService
 
@@ -26,12 +31,16 @@ kafka_consumer: KafkaConsumerService | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global kafka_consumer
-    startup_logger = logger.bind(service=settings.application_name, version=settings.version)
+    startup_logger = logger.bind(
+        service=settings.application_name, version=settings.version
+    )
     startup_logger.info("Starting Analytics Service")
 
     if settings.enable_tracing:
         provider = TracerProvider()
-        processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=settings.otlp_endpoint))
+        processor = BatchSpanProcessor(
+            OTLPSpanExporter(endpoint=settings.otlp_endpoint)
+        )
         provider.add_span_processor(processor)
         trace.set_tracer_provider(provider)
         startup_logger.info("OpenTelemetry tracing enabled")
@@ -61,17 +70,37 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
-        lifespan=lifespan
+        lifespan=lifespan,
     )
 
+    # Initialize rate limiter
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+
+    # CORS configuration with specific origins
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=[
+            "https://payu.id",
+            "https://app.payu.id",
+            "https://api.payu.id",
+            "https://backoffice.payu.id",
+            "http://localhost:3000",  # Development
+            "http://localhost:8080",  # Development
+        ],
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=[
+            "*",
+            "Idempotency-Key",
+            "X-Request-ID",
+            "Authorization",
+            "Content-Type",
+        ],
+        expose_headers=["X-Request-ID"],
     )
 
+    # Include routers with rate limiting
     app.include_router(analytics_router, prefix="/api/v1")
     app.include_router(websocket_router)
 
@@ -82,20 +111,71 @@ def create_app() -> FastAPI:
     FastAPIInstrumentor.instrument_app(app, tracer_provider=trace.get_tracer_provider())
     HTTPXClientInstrumentor().instrument()
 
+    @app.middleware("http")
+    async def add_request_id(request: Request, call_next):
+        """Add request ID for tracing and correlation."""
+        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
     @app.get("/health")
-    async def health_check():
-        return {"status": "healthy", "service": settings.application_name, "version": settings.version}
+    @limiter.limit("60/minute")
+    async def health_check(request: Request):
+        return ApiResponse.success(
+            data={
+                "status": "healthy",
+                "service": settings.application_name,
+                "version": settings.version,
+            },
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
 
     @app.get("/ready")
-    async def readiness_check():
-        return {"status": "ready", "service": settings.application_name}
+    @limiter.limit("60/minute")
+    async def readiness_check(request: Request):
+        return ApiResponse.success(
+            data={"status": "ready", "service": settings.application_name},
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+        """Handle rate limit exceeded errors."""
+        request_id = getattr(request.state, "request_id", None)
+        logger.warning(
+            "Rate limit exceeded",
+            path=request.url.path,
+            client=get_remote_address(request),
+            request_id=request_id,
+        )
+        return JSONResponse(
+            status_code=429,
+            content=ApiResponse.error(
+                code="ANA_RAT_001",
+                message="Rate limit exceeded. Please try again later.",
+                request_id=request_id,
+            ).model_dump(),
+        )
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
-        logger.error("Unhandled exception", exc_info=exc, path=request.url.path)
+        """Handle unhandled exceptions with standardized response."""
+        request_id = getattr(request.state, "request_id", None)
+        logger.error(
+            "Unhandled exception",
+            exc_info=exc,
+            path=request.url.path,
+            request_id=request_id,
+        )
         return JSONResponse(
             status_code=500,
-            content={"detail": "Internal server error", "error_code": "ANA_SYS_001"}
+            content=ApiResponse.error(
+                code="ANA_SYS_001",
+                message="An unexpected error occurred. Please try again later.",
+                request_id=request_id,
+            ).model_dump(),
         )
 
     return app

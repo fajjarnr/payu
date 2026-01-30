@@ -1,0 +1,837 @@
+extends: ["spectral:oas", "spectral:asyncapi"]
+documentationUrl: https://docs.payu.co.id/api-guidelines
+rules:
+  # Response Envelope Rules
+  response-envelope-required:
+    description: "All 200/201 responses must use ApiResponse envelope with success, data, error, meta fields"
+    given: "$..responses[200,201].content['application/json'].schema"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["success"]
+          properties:
+            success:
+              type: boolean
+            data:
+              type: object
+            error:
+              type: object
+            meta:
+              type: object
+              properties:
+                timestamp:
+                  type: string
+                  format: date-time
+                requestId:
+                  type: string
+                pagination:
+                  type: object
+  response-envelope-error-structure:
+    description: "Error responses must follow PayU error structure with code, message, details"
+    given: "$..responses[400,401,403,404,422,429,500,503].content['application/json'].schema"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["success", "error"]
+          properties:
+            success:
+              type: boolean
+              enum: [false]
+            error:
+              type: object
+              required: ["code", "message"]
+              properties:
+                code:
+                  type: string
+                  pattern: "^[A-Z]{3}_[0-9]{3}$"
+                message:
+                  type: string
+                  minLength: 1
+                details:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      message:
+                        type: string
+  # Idempotency Rules
+  idempotency-header-required:
+    description: "POST/PUT/PATCH operations must support Idempotency-Key header"
+    given: "$.paths.*[post,put,patch].parameters"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          contains:
+            type: object
+            properties:
+              name:
+                const: "Idempotency-Key"
+              in:
+                const: "header"
+              required:
+                const: true
+  idempotency-header-description:
+    description: "Idempotency-Key header must have proper description"
+    given: "$.paths.*[post,put,patch].parameters[?(@.name=='Idempotency-Key')]"
+    then:
+      function: truthy
+      field: description
+  idempotency-header-format:
+    description: "Idempotency-Key should be UUID format"
+    given: "$.paths.*[post,put,patch].parameters[?(@.name=='Idempotency-Key')]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            schema:
+              type: object
+              properties:
+                type:
+                  const: "string"
+                format:
+                  const: "uuid"
+                pattern:
+                  const: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+  # URL Path Rules
+  path-kebab-case:
+    description: "Path segments must use kebab-case (lowercase with hyphens)"
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/[a-z0-9]+(-[a-z0-9]+)*)+$|^/$"
+        notMatch: "[A-Z]|_[a-z]"
+  path-no-trailing-slash:
+    description: "Paths must not have trailing slashes"
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "/$"
+  path-version-prefix:
+    description: "API paths should include version prefix (e.g., /v1/, /v2/)"
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^/v[0-9]+/"
+  # Documentation Rules
+  operation-summary-required:
+    description: "All operations must have a summary"
+    given: "$.paths.*[get,post,put,patch,delete]"
+    then:
+      function: truthy
+      field: summary
+  operation-summary-length:
+    description: "Operation summary should be between 10 and 120 characters"
+    given: "$.paths.*[get,post,put,patch,delete]"
+    then:
+      function: length
+      field: summary
+      functionOptions:
+        min: 10
+        max: 120
+  operation-description-required:
+    description: "All operations should have a description"
+    given: "$.paths.*[get,post,put,patch,delete]"
+    then:
+      function: truthy
+      field: description
+  operation-operationId-required:
+    description: "All operations must have operationId in camelCase"
+    given: "$.paths.*[get,post,put,patch,delete]"
+    then:
+      function: truthy
+      field: operationId
+  operation-operationId-camelCase:
+    description: "operationId must be in camelCase"
+    given: "$.paths.*[get,post,put,patch,delete].operationId"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+  operation-tags-required:
+    description: "All operations must have at least one tag"
+    given: "$.paths.*[get,post,put,patch,delete]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["tags"]
+          properties:
+            tags:
+              type: array
+              minItems: 1
+  # Request/Response Rules
+  request-content-type:
+    description: "POST/PUT/PATCH requests must have content-type application/json"
+    given: "$.paths.*[post,put,patch].requestBody.content"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["application/json"]
+  response-content-type:
+    description: "All responses must have content-type application/json"
+    given: "$.paths.*[get,post,put,patch,delete].responses[*].content"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["application/json"]
+  # Security Rules
+  security-scheme-required:
+    description: "API must define security schemes"
+    given: "$"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["components"]
+          properties:
+            components:
+              type: object
+              required: ["securitySchemes"]
+  operation-security-required:
+    description: "All operations except /health and /auth/login must have security"
+    given: "$.paths[?(@property !== '/health' && @property !== '/auth/login' && @property !== '/auth/register')].*[get,post,put,patch,delete]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["security"]
+  # Pagination Rules
+  pagination-params-for-list:
+    description: "List endpoints must support pagination parameters (page, size)"
+    given: "$.paths[?(@property.match(/s$/))].get.parameters"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          contains:
+            anyOf:
+              - type: object
+                properties:
+                  name:
+                    enum: ["page", "offset"]
+              - type: object
+                properties:
+                  name:
+                    enum: ["size", "limit"]
+  # Rate Limiting Headers
+  rate-limit-headers:
+    description: "Responses should include rate limiting headers in documentation"
+    given: "$.paths.*[get,post,put,patch,delete].responses[*].headers"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            X-RateLimit-Limit:
+              type: object
+            X-RateLimit-Remaining:
+              type: object
+            X-RateLimit-Reset:
+              type: object
+  # OpenAPI Specification Rules
+  info-contact-required:
+    description: "API info must include contact information"
+    given: "$.info"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["contact"]
+          properties:
+            contact:
+              type: object
+              required: ["name", "email"]
+  info-license-required:
+    description: "API info should include license information"
+    given: "$.info"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["license"]
+  info-version-semver:
+    description: "API version should follow semantic versioning"
+    given: "$.info.version"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+  # Schema Rules
+  schema-properties-snake-case:
+    description: "Schema properties should use snake_case"
+    given: "$.components.schemas.*.properties[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-z0-9_]*$"
+  schema-descriptions:
+    description: "All schema properties should have descriptions"
+    given: "$.components.schemas.*.properties.*"
+    then:
+      function: truthy
+      field: description
+  # HTTP Method Rules
+  http-method-allowed:
+    description: "Only standard HTTP methods should be used"
+    given: "$.paths.*"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          additionalProperties: false
+          properties:
+            get: {}
+            post: {}
+            put: {}
+            patch: {}
+            delete: {}
+            head: {}
+            options: {}
+            parameters: {}
+  # Error Response Coverage
+  error-response-coverage:
+    description: "Operations should document common error responses (400, 401, 403, 404, 500)"
+    given: "$.paths.*[post,put,patch,delete]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            responses:
+              type: object
+              required: ["400", "401", "500"]
+  # Correlation ID Header
+  correlation-id-header:
+    description: "All operations should accept X-Request-ID header for tracing"
+    given: "$.paths.*[get,post,put,patch,delete].parameters"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          contains:
+            type: object
+            properties:
+              name:
+                const: "X-Request-ID"
+              in:
+                const: "header"
+  # Date Format Rules
+  date-format-iso8601:
+    description: "Date fields should use ISO 8601 format (date-time)"
+    given: "$.components.schemas.*.properties[?(@.type=='string' && (@.format=='date' || @.format=='date-time'))]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            format:
+              enum: ["date-time", "date"]
+  # Enum Documentation
+  enum-descriptions:
+    description: "Enums should have descriptions explaining each value"
+    given: "$.components.schemas.*.properties[?(@.enum)]"
+    then:
+      function: truthy
+      field: description
+  # API Version in Header
+  api-version-header:
+    description: "API should support X-API-Version header for content negotiation"
+    given: "$.paths.*[get,post,put,patch,delete].parameters"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          contains:
+            type: object
+            properties:
+              name:
+                const: "X-API-Version"
+              in:
+                const: "header"
+  # Response Time Header
+  response-time-header:
+    description: "Responses should document X-Response-Time header"
+    given: "$.paths.*[get,post,put,patch,delete].responses[*].headers"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            X-Response-Time:
+              type: object
+              properties:
+                description:
+                  type: string
+                schema:
+                  type: object
+                  properties:
+                    type:
+                      const: "string"
+  # Deprecated Operation Warning
+  deprecated-operations-warning:
+    description: "Deprecated operations should have deprecation notice and sunset date"
+    given: "$.paths.*[get,post,put,patch,delete][?(@.deprecated==true)]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["description"]
+          properties:
+            description:
+              type: string
+              pattern: "(?i)(deprecated|sunset|removal)"
+  # Request Body Size Limit
+  request-body-size-limit:
+    description: "Large request bodies should document size limits"
+    given: "$.paths.*[post,put,patch].requestBody"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            description:
+              type: string
+  # Query Parameter Validation
+  query-param-validation:
+    description: "Query parameters should have validation constraints"
+    given: "$.paths.*.get.parameters[?(@.in=='query')]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          anyOf:
+            - required: ["schema"]
+            - required: ["type"]
+  # Cache Control Headers
+  cache-control-headers:
+    description: "GET operations should document Cache-Control behavior"
+    given: "$.paths.*.get.responses[*].headers"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            Cache-Control:
+              type: object
+  # Content Negotiation
+  content-negotiation:
+    description: "API should support Accept header for content negotiation"
+    given: "$.paths.*[get].parameters"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          contains:
+            type: object
+            properties:
+              name:
+                const: "Accept"
+              in:
+                const: "header"
+  # Webhook Documentation
+  webhook-callback-documentation:
+    description: "Operations triggering webhooks should document callback schema"
+    given: "$.paths.*[post,put,patch]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            callbacks:
+              type: object
+  # Example Values
+  example-values-required:
+    description: "Schema properties should include example values"
+    given: "$.components.schemas.*.properties.*"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          anyOf:
+            - required: ["example"]
+            - required: ["examples"]
+            - required: ["default"]
+  # Response Schema Naming
+  response-schema-naming:
+    description: "Response schemas should follow naming convention: {Resource}Response"
+    given: "$.components.schemas[?(@.type=='object')]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "(Request|Response|Dto|DTO)$|^[A-Z][a-zA-Z0-9]*$"
+  # Path Parameter Validation
+  path-param-validation:
+    description: "Path parameters must have validation constraints"
+    given: "$.paths.*.*.parameters[?(@.in=='path')]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["required", "schema"]
+          properties:
+            required:
+              const: true
+  # Array Pagination
+  array-response-pagination:
+    description: "Array responses must include pagination metadata"
+    given: "$.paths.*.get.responses[200].content['application/json'].schema.properties.data"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            type:
+              const: "array"
+          required: ["items"]
+  # Timeout Documentation
+  timeout-documentation:
+    description: "Operations should document expected timeout behavior"
+    given: "$.paths.*[get,post,put,patch,delete]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            x-timeout:
+              type: number
+            x-timeout-description:
+              type: string
+  # Retry Policy Documentation
+  retry-policy-documentation:
+    description: "Operations should document retry policy"
+    given: "$.paths.*[get,post,put,patch,delete]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            x-retryable:
+              type: boolean
+            x-retry-strategy:
+              type: string
+  # Field Masking Support
+  field-masking-support:
+    description: "GET operations should support field masking via 'fields' query parameter"
+    given: "$.paths.*.get.parameters"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          contains:
+            type: object
+            properties:
+              name:
+                const: "fields"
+              in:
+                const: "query"
+  # Bulk Operation Support
+  bulk-operation-validation:
+    description: "Bulk operations must have proper validation and limits"
+    given: "$.paths[?(@property.match(/bulk/i))].post.requestBody.content['application/json'].schema"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            type:
+              const: "array"
+            maxItems:
+              type: number
+              maximum: 1000
+  # Webhook Security
+  webhook-security:
+    description: "Webhook callbacks must document security scheme"
+    given: "$.paths.*.callbacks.*.*.post.security"
+    then:
+      function: truthy
+  # ETag Support
+  etag-support:
+    description: "Resource endpoints should support ETag for optimistic locking"
+    given: "$.paths[?(@property.match(/{[a-z]+}$/))].put.responses[*].headers"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            ETag:
+              type: object
+  # Conditional Requests
+  conditional-requests:
+    description: "PUT/DELETE operations should support If-Match header"
+    given: "$.paths.*[put,delete].parameters"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          contains:
+            type: object
+            properties:
+              name:
+                const: "If-Match"
+              in:
+                const: "header"
+  # Health Check Endpoint
+  health-check-required:
+    description: "API must expose a health check endpoint at /health"
+    given: "$"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            paths:
+              type: object
+              required: ["/health"]
+  # OpenAPI Version
+  openapi-version-3:
+    description: "OpenAPI specification must use version 3.0.x or 3.1.x"
+    given: "$"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["openapi"]
+          properties:
+            openapi:
+              type: string
+              pattern: "^3\\.[01]\\.[0-9]+$"
+  # Server URLs
+  server-urls-required:
+    description: "API must define server URLs"
+    given: "$"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["servers"]
+          properties:
+            servers:
+              type: array
+              minItems: 1
+  # External Documentation
+  external-docs-recommended:
+    description: "API should reference external documentation"
+    given: "$"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            externalDocs:
+              type: object
+              required: ["url", "description"]
+  # Tag Descriptions
+  tag-descriptions-required:
+    description: "All tags must have descriptions"
+    given: "$.tags[*]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["name", "description"]
+  # Operation ID Uniqueness (enforced by Spectral built-in)
+  operation-operationId-unique:
+    description: "operationId must be unique across the API"
+    given: "$.paths.*[get,post,put,patch,delete].operationId"
+    then:
+      function: uniqueness
+  # Request ID in Response
+  request-id-in-response:
+    description: "All responses must include X-Request-ID header"
+    given: "$.paths.*[get,post,put,patch,delete].responses[*].headers"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            X-Request-ID:
+              type: object
+              properties:
+                description:
+                  type: string
+                schema:
+                  type: object
+                  properties:
+                    type:
+                      const: "string"
+  # Sensitive Data Masking
+  sensitive-data-in-url:
+    description: "Sensitive data (PII, tokens) should not be in URL parameters"
+    given: "$.paths.*.*.parameters[?(@.in=='query')].name"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "(?i)(password|token|secret|api[_-]?key|credit[_-]?card|ssn|pin)"
+  # Response Compression
+  response-compression:
+    description: "API should support Accept-Encoding for response compression"
+    given: "$.paths.*[get].parameters"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          contains:
+            type: object
+            properties:
+              name:
+                const: "Accept-Encoding"
+              in:
+                const: "header"
+  # JSON Content Type Only
+  json-content-type-only:
+    description: "API should only use application/json content type"
+    given: "$.paths.*.*.requestBody.content[*]~"
+    then:
+      function: enumeration
+      functionOptions:
+        values:
+          - "application/json"
+          - "multipart/form-data"
+  # Date Range Parameters
+  date-range-parameters:
+    description: "Date range queries should use start_date and end_date parameters"
+    given: "$.paths.*.get.parameters[?(@.name=='from' || @.name=='to' || @.name=='start' || @.name=='end')]"
+    then:
+      function: falsy
+  # Soft Delete Documentation
+  soft-delete-documentation:
+    description: "DELETE operations should document if soft delete is used"
+    given: "$.paths.*.delete"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            description:
+              type: string
+              pattern: "(?i)(soft.?delete|hard.?delete|mark.*deleted)"
+  # API Deprecation Header
+  api-deprecation-header:
+    description: "Deprecated endpoints should include Sunset header documentation"
+    given: "$.paths.*[get,post,put,patch,delete][?(@.deprecated==true)].responses[*].headers"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            Sunset:
+              type: object
+  # HATEOAS Links
+  hateoas-links:
+    description: "Responses should include _links for HATEOAS support"
+    given: "$.components.schemas.*.properties"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            _links:
+              type: object
+              description: "HATEOAS links"
+  # Request Validation Error Format
+  validation-error-format:
+    description: "Validation errors must follow RFC 7807 (Problem Details) format"
+    given: "$.paths.*.*.responses[422].content['application/json'].schema"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            type:
+              type: string
+              format: uri
+            title:
+              type: string
+            status:
+              type: integer
+            detail:
+              type: string
+            instance:
+              type: string
+  # API Changelog
+  api-changelog:
+    description: "API should reference changelog in external docs"
+    given: "$.externalDocs"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            description:
+              type: string
+              pattern: "(?i)(changelog|version.?history|api.?changes)"
+  # GraphQL Compatibility (for future)
+  graphql-compatibility-note:
+    description: "Consider GraphQL for complex nested queries"
+    given: "$.paths[?(@property.match(/nested|complex|batch/i))]"
+    then:
+      function: undefined
+overrides:
+  - files:
+      - "**/health*.yaml"
+      - "**/health*.yml"
+      - "**/health*.json"
+    rules:
+      operation-security-required: "off"
+      response-envelope-required: "off"
+      idempotency-header-required: "off"
+  - files:
+      - "**/webhook*.yaml"
+      - "**/callback*.yaml"
+    rules:
+      operation-security-required: "off"
+  - files:
+      - "**/public*.yaml"
+      - "**/auth*.yaml"
+    rules:
+      operation-security-required: "warn"

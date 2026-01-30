@@ -1,5 +1,6 @@
 package id.payu.lending.adapter.web;
 
+import id.payu.api.common.response.ApiResponse;
 import id.payu.lending.application.service.LendingApplicationService;
 import id.payu.lending.application.service.LoanManagementService;
 import id.payu.lending.application.service.PayLaterTransactionService;
@@ -8,15 +9,25 @@ import id.payu.lending.domain.model.PayLater;
 import id.payu.lending.domain.model.PayLaterTransaction;
 import id.payu.lending.domain.model.RepaymentSchedule;
 import id.payu.lending.dto.LoanApplicationRequest;
+import id.payu.lending.dto.LoanPreApprovalResponse;
 import id.payu.lending.dto.PayLaterLimitRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,7 +37,9 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/api/v1/lending")
 @RequiredArgsConstructor
 @Slf4j
-public class LendingController {
+@Tag(name = "Lending", description = "Personal Loan, PayLater, and Credit Scoring APIs")
+@SecurityRequirement(name = "bearerAuth")
+public class LendingController extends BaseController {
 
     private final LendingApplicationService lendingApplicationService;
     private final LoanManagementService loanManagementService;
@@ -34,126 +47,262 @@ public class LendingController {
     private final id.payu.lending.application.service.LoanPreApprovalService preApprovalService;
 
     @PostMapping("/loans")
-    public CompletableFuture<ResponseEntity<Loan>> applyLoan(@Valid @RequestBody LoanApplicationRequest request) {
+    @Operation(summary = "Apply for a loan", description = "Submit a new loan application")
+    @ApiResponse(responseCode = "201", description = "Loan application submitted successfully",
+            content = @Content(schema = @Schema(implementation = Loan.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public CompletableFuture<ResponseEntity<ApiResponse<Loan>>> applyLoan(@Valid @RequestBody LoanApplicationRequest request) {
         log.info("Received loan application request for user: {}", request.userId());
         return lendingApplicationService.applyLoan(request)
-                .thenApply(ResponseEntity::ok)
+                .thenApply(loan -> {
+                    URI location = ServletUriComponentsBuilder
+                            .fromCurrentRequest()
+                            .path("/{loanId}")
+                            .buildAndExpand(loan.getId())
+                            .toUri();
+                    return created(loan, location.toString());
+                })
                 .exceptionally(ex -> {
                     log.error("Error processing loan application", ex);
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(ApiResponse.error("LENDING_001", "Error processing loan application"));
                 });
     }
 
     @GetMapping("/loans/{loanId}")
-    public ResponseEntity<Loan> getLoan(@PathVariable UUID loanId) {
+    @Operation(summary = "Get loan by ID", description = "Retrieve loan details by loan ID")
+    @ApiResponse(responseCode = "200", description = "Loan found",
+            content = @Content(schema = @Schema(implementation = Loan.class)))
+    @ApiResponse(responseCode = "404", description = "Loan not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<Loan>> getLoan(
+            @Parameter(description = "Loan ID", required = true) @PathVariable UUID loanId) {
         log.info("Fetching loan details for loan: {}", loanId);
         return lendingApplicationService.getLoanById(loanId)
-                .map(ResponseEntity::ok)
+                .map(this::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/loans/{loanId}/repayment-schedule")
-    public ResponseEntity<List<RepaymentSchedule>> createRepaymentSchedule(@PathVariable UUID loanId) {
+    @Operation(summary = "Create repayment schedule", description = "Generate repayment schedule for a loan")
+    @ApiResponse(responseCode = "201", description = "Repayment schedule created successfully",
+            content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
+    @ApiResponse(responseCode = "404", description = "Loan not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<List<RepaymentSchedule>>> createRepaymentSchedule(
+            @Parameter(description = "Loan ID", required = true) @PathVariable UUID loanId) {
         log.info("Creating repayment schedule for loan: {}", loanId);
-        return ResponseEntity.ok(loanManagementService.createRepaymentSchedule(loanId));
+        List<RepaymentSchedule> schedules = loanManagementService.createRepaymentSchedule(loanId);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/lending/loans/{loanId}/repayment-schedule")
+                .buildAndExpand(loanId)
+                .toUri();
+        return created(schedules, location.toString());
     }
 
     @GetMapping("/loans/{loanId}/repayment-schedule")
-    public ResponseEntity<List<RepaymentSchedule>> getRepaymentScheduleByLoanId(@PathVariable UUID loanId) {
+    @Operation(summary = "Get repayment schedule by loan", description = "Retrieve repayment schedule for a specific loan")
+    @ApiResponse(responseCode = "200", description = "Repayment schedule retrieved successfully",
+            content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<List<RepaymentSchedule>>> getRepaymentScheduleByLoanId(
+            @Parameter(description = "Loan ID", required = true) @PathVariable UUID loanId) {
         log.info("Fetching repayment schedule for loan: {}", loanId);
-        return ResponseEntity.ok(loanManagementService.getRepaymentScheduleByLoanId(loanId));
+        return ok(loanManagementService.getRepaymentScheduleByLoanId(loanId));
     }
 
     @GetMapping("/repayment-schedules/{scheduleId}")
-    public ResponseEntity<RepaymentSchedule> getRepaymentSchedule(@PathVariable UUID scheduleId) {
+    @Operation(summary = "Get repayment schedule by ID", description = "Retrieve a specific repayment schedule")
+    @ApiResponse(responseCode = "200", description = "Repayment schedule found",
+            content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
+    @ApiResponse(responseCode = "404", description = "Repayment schedule not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<RepaymentSchedule>> getRepaymentSchedule(
+            @Parameter(description = "Schedule ID", required = true) @PathVariable UUID scheduleId) {
         log.info("Fetching repayment schedule: {}", scheduleId);
         return loanManagementService.getRepaymentSchedule(scheduleId)
-                .map(ResponseEntity::ok)
+                .map(this::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/repayment-schedules/{scheduleId}/pay")
-    public ResponseEntity<RepaymentSchedule> processRepayment(
-            @PathVariable UUID scheduleId,
-            @RequestParam BigDecimal amount) {
+    @Operation(summary = "Process repayment", description = "Make a repayment for a specific schedule")
+    @ApiResponse(responseCode = "200", description = "Repayment processed successfully",
+            content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid amount")
+    @ApiResponse(responseCode = "404", description = "Schedule not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<RepaymentSchedule>> processRepayment(
+            @Parameter(description = "Schedule ID", required = true) @PathVariable UUID scheduleId,
+            @Parameter(description = "Repayment amount", required = true) @RequestParam BigDecimal amount) {
         log.info("Processing repayment for schedule: {} with amount: {}", scheduleId, amount);
-        return ResponseEntity.ok(loanManagementService.processRepayment(scheduleId, amount));
+        return ok(loanManagementService.processRepayment(scheduleId, amount));
     }
 
     @PostMapping("/paylater/activate")
-    public ResponseEntity<PayLater> activatePayLater(
-            @RequestParam UUID userId,
+    @Operation(summary = "Activate PayLater", description = "Activate PayLater service for a user")
+    @ApiResponse(responseCode = "201", description = "PayLater activated successfully",
+            content = @Content(schema = @Schema(implementation = PayLater.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<PayLater>> activatePayLater(
+            @Parameter(description = "User ID", required = true) @RequestParam UUID userId,
             @Valid @RequestBody PayLaterLimitRequest request) {
         log.info("Activating PayLater for user: {}", userId);
-        return ResponseEntity.ok(lendingApplicationService.activatePayLater(userId, request));
+        PayLater payLater = lendingApplicationService.activatePayLater(userId, request);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/lending/paylater/{userId}")
+                .buildAndExpand(userId)
+                .toUri();
+
+        return created(payLater, location.toString());
     }
 
     @GetMapping("/paylater/{userId}")
-    public ResponseEntity<PayLater> getPayLater(@PathVariable UUID userId) {
+    @Operation(summary = "Get PayLater details", description = "Retrieve PayLater account details for a user")
+    @ApiResponse(responseCode = "200", description = "PayLater details found",
+            content = @Content(schema = @Schema(implementation = PayLater.class)))
+    @ApiResponse(responseCode = "404", description = "PayLater not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<PayLater>> getPayLater(
+            @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching PayLater details for user: {}", userId);
         return lendingApplicationService.getPayLaterByUserId(userId)
-                .map(ResponseEntity::ok)
+                .map(this::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/paylater/{userId}/purchase")
-    public ResponseEntity<PayLaterTransaction> recordPurchase(
-            @PathVariable UUID userId,
-            @RequestParam String merchantName,
-            @RequestParam BigDecimal amount,
-            @RequestParam(required = false) String description) {
+    @Operation(summary = "Record PayLater purchase", description = "Record a purchase transaction using PayLater")
+    @ApiResponse(responseCode = "201", description = "Purchase recorded successfully",
+            content = @Content(schema = @Schema(implementation = PayLaterTransaction.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request or insufficient limit")
+    @ApiResponse(responseCode = "404", description = "PayLater not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<PayLaterTransaction>> recordPurchase(
+            @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
+            @Parameter(description = "Merchant name", required = true) @RequestParam String merchantName,
+            @Parameter(description = "Purchase amount", required = true) @RequestParam BigDecimal amount,
+            @Parameter(description = "Transaction description") @RequestParam(required = false) String description) {
         log.info("Recording PayLater purchase for user: {} at merchant: {}", userId, merchantName);
-        return ResponseEntity.ok(payLaterTransactionService.recordPurchase(userId, merchantName, amount, description));
+        PayLaterTransaction transaction = payLaterTransactionService.recordPurchase(userId, merchantName, amount, description);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/lending/paylater/{userId}/transactions/{transactionId}")
+                .buildAndExpand(userId, transaction.getId())
+                .toUri();
+
+        return created(transaction, location.toString());
     }
 
     @PostMapping("/paylater/{userId}/payment")
-    public ResponseEntity<PayLaterTransaction> recordPayment(
-            @PathVariable UUID userId,
-            @RequestParam BigDecimal amount) {
+    @Operation(summary = "Record PayLater payment", description = "Record a payment transaction for PayLater")
+    @ApiResponse(responseCode = "201", description = "Payment recorded successfully",
+            content = @Content(schema = @Schema(implementation = PayLaterTransaction.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid amount")
+    @ApiResponse(responseCode = "404", description = "PayLater not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<PayLaterTransaction>> recordPayment(
+            @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
+            @Parameter(description = "Payment amount", required = true) @RequestParam BigDecimal amount) {
         log.info("Recording PayLater payment for user: {} with amount: {}", userId, amount);
-        return ResponseEntity.ok(payLaterTransactionService.recordPayment(userId, amount));
+        PayLaterTransaction transaction = payLaterTransactionService.recordPayment(userId, amount);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/lending/paylater/{userId}/transactions/{transactionId}")
+                .buildAndExpand(userId, transaction.getId())
+                .toUri();
+
+        return created(transaction, location.toString());
     }
 
     @GetMapping("/paylater/{userId}/transactions")
-    public ResponseEntity<List<PayLaterTransaction>> getTransactionHistory(@PathVariable UUID userId) {
+    @Operation(summary = "Get transaction history", description = "Retrieve PayLater transaction history for a user")
+    @ApiResponse(responseCode = "200", description = "Transaction history retrieved successfully",
+            content = @Content(schema = @Schema(implementation = PayLaterTransaction.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<List<PayLaterTransaction>>> getTransactionHistory(
+            @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching transaction history for user: {}", userId);
-        return ResponseEntity.ok(payLaterTransactionService.getTransactionHistory(userId));
+        return ok(payLaterTransactionService.getTransactionHistory(userId));
     }
 
     @PostMapping("/credit-score/calculate")
-    public ResponseEntity<id.payu.lending.domain.model.CreditScore> calculateCreditScore(@RequestParam UUID userId) {
+    @Operation(summary = "Calculate credit score", description = "Calculate credit score for a user")
+    @ApiResponse(responseCode = "200", description = "Credit score calculated successfully",
+            content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.CreditScore.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<id.payu.lending.domain.model.CreditScore>> calculateCreditScore(
+            @Parameter(description = "User ID", required = true) @RequestParam UUID userId) {
         log.info("Calculating credit score for user: {}", userId);
-        return ResponseEntity.ok(lendingApplicationService.calculateCreditScore(userId));
+        return ok(lendingApplicationService.calculateCreditScore(userId));
     }
 
     @GetMapping("/credit-score/{userId}")
-    public ResponseEntity<id.payu.lending.domain.model.CreditScore> getCreditScore(@PathVariable UUID userId) {
+    @Operation(summary = "Get credit score", description = "Retrieve credit score for a user")
+    @ApiResponse(responseCode = "200", description = "Credit score found",
+            content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.CreditScore.class)))
+    @ApiResponse(responseCode = "404", description = "Credit score not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<id.payu.lending.domain.model.CreditScore>> getCreditScore(
+            @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching credit score for user: {}", userId);
         return lendingApplicationService.getCreditScoreByUserId(userId)
-                .map(ResponseEntity::ok)
+                .map(this::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/pre-approval/check")
-    public ResponseEntity<id.payu.lending.dto.LoanPreApprovalResponse> checkPreApproval(
+    @Operation(summary = "Check loan pre-approval", description = "Check if user is pre-approved for a loan")
+    @ApiResponse(responseCode = "201", description = "Pre-approval check completed",
+            content = @Content(schema = @Schema(implementation = LoanPreApprovalResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<LoanPreApprovalResponse>> checkPreApproval(
             @Valid @RequestBody id.payu.lending.dto.LoanPreApprovalRequest request) {
         log.info("Checking loan pre-approval for user: {}", request.userId());
-        return ResponseEntity.ok(preApprovalService.checkPreApproval(request));
+        LoanPreApprovalResponse response = preApprovalService.checkPreApproval(request);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/lending/pre-approval/{preApprovalId}")
+                .buildAndExpand(response.preApprovalId())
+                .toUri();
+
+        return created(response, location.toString());
     }
 
     @GetMapping("/pre-approval/{preApprovalId}")
-    public ResponseEntity<id.payu.lending.domain.model.LoanPreApproval> getPreApproval(@PathVariable UUID preApprovalId) {
+    @Operation(summary = "Get pre-approval by ID", description = "Retrieve pre-approval details by ID")
+    @ApiResponse(responseCode = "200", description = "Pre-approval found",
+            content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.LoanPreApproval.class)))
+    @ApiResponse(responseCode = "404", description = "Pre-approval not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<id.payu.lending.domain.model.LoanPreApproval>> getPreApproval(
+            @Parameter(description = "Pre-approval ID", required = true) @PathVariable UUID preApprovalId) {
         log.info("Fetching pre-approval by ID: {}", preApprovalId);
         return preApprovalService.getPreApprovalById(preApprovalId)
-                .map(ResponseEntity::ok)
+                .map(this::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/pre-approval/user/{userId}/active")
-    public ResponseEntity<id.payu.lending.domain.model.LoanPreApproval> getActivePreApproval(@PathVariable UUID userId) {
+    @Operation(summary = "Get active pre-approval", description = "Retrieve active pre-approval for a user")
+    @ApiResponse(responseCode = "200", description = "Active pre-approval found",
+            content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.LoanPreApproval.class)))
+    @ApiResponse(responseCode = "404", description = "No active pre-approval found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<id.payu.lending.domain.model.LoanPreApproval>> getActivePreApproval(
+            @Parameter(description = "User ID", required = true) @PathVariable UUID userId) {
         log.info("Fetching active pre-approval for user: {}", userId);
         return preApprovalService.getActivePreApprovalByUserId(userId)
-                .map(ResponseEntity::ok)
+                .map(this::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 }

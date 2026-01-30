@@ -440,9 +440,22 @@ public interface GatewayConfig {
         @WithDefault("true")
         boolean enabled();
 
+        /**
+         * Primary idempotency key header name.
+         * Default is "Idempotency-Key" following RFC 7239 and industry standards.
+         */
         @WithName("header-name")
-        @WithDefault("X-Idempotency-Key")
+        @WithDefault("Idempotency-Key")
         String headerName();
+
+        /**
+         * Legacy header name for backward compatibility.
+         * If primary header is not present, this header will be checked.
+         * Default is "X-Idempotency-Key" for backward compatibility.
+         */
+        @WithName("legacy-header-name")
+        @WithDefault("X-Idempotency-Key")
+        String legacyHeaderName();
 
         @WithDefault("24h")
         Duration ttl();

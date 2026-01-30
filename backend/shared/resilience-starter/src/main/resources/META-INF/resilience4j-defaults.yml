@@ -30,7 +30,6 @@ resilience4j.circuitbreaker:
         - org.springframework.web.client.ResourceAccessException
         - org.springframework.web.client.HttpServerErrorException
         - io.github.resilience4j.circuitbreaker.CallNotPermittedException
-
     # Configuration for critical financial operations (stricter thresholds)
     critical:
       slidingWindowSize: 50
@@ -45,7 +44,6 @@ resilience4j.circuitbreaker:
       ignoreExceptions:
         - id.payu.api.common.exception.BusinessException
         - id.payu.api.common.exception.ValidationException
-
     # Configuration for external payment gateways (more lenient)
     external-gateway:
       slidingWindowSize: 200
@@ -59,12 +57,10 @@ resilience4j.circuitbreaker:
       slowCallDurationThreshold: 5s
       ignoreExceptions:
         - id.payu.api.common.exception.BusinessException
-
   instances:
     # Default instance uses the default config
     default:
       baseConfig: default
-
 # =============================================================================
 # BULKHEAD CONFIGURATION (Thread Pool & Semaphore)
 # =============================================================================
@@ -74,21 +70,17 @@ resilience4j.bulkhead:
     default:
       maxConcurrentCalls: 20
       maxWaitDuration: 500ms
-
     # Configuration for high-throughput operations
     high-throughput:
       maxConcurrentCalls: 50
       maxWaitDuration: 1s
-
     # Configuration for resource-intensive operations
     resource-intensive:
       maxConcurrentCalls: 10
       maxWaitDuration: 2s
-
   instances:
     default:
       baseConfig: default
-
   # Thread pool bulkhead for async operations
   thread-pool-bulkhead:
     configs:
@@ -97,17 +89,14 @@ resilience4j.bulkhead:
         coreThreadPoolSize: 10
         queueCapacity: 50
         keepAliveDuration: 20s
-
       high-throughput:
         maxThreadPoolSize: 50
         coreThreadPoolSize: 20
         queueCapacity: 100
         keepAliveDuration: 30s
-
     instances:
       default:
         baseConfig: default
-
 # =============================================================================
 # RETRY CONFIGURATION
 # =============================================================================
@@ -131,7 +120,6 @@ resilience4j.retry:
         - id.payu.api.common.exception.ValidationException
         - id.payu.api.common.exception.ResourceNotFoundException
         - id.payu.api.common.exception.ConflictException
-
     # Configuration for idempotent operations (can retry more aggressively)
     idempotent:
       maxAttempts: 5
@@ -145,7 +133,6 @@ resilience4j.retry:
         - org.springframework.web.client.ResourceAccessException
         - org.springframework.web.client.HttpServerErrorException
         - java.util.concurrent.TimeoutException
-
     # Configuration for non-idempotent operations (minimal retry)
     non-idempotent:
       maxAttempts: 1
@@ -154,11 +141,9 @@ resilience4j.retry:
       retryExceptions:
         - java.net.SocketTimeoutException
         - java.util.concurrent.TimeoutException
-
   instances:
     default:
       baseConfig: default
-
 # =============================================================================
 # RATE LIMITER CONFIGURATION
 # =============================================================================
@@ -170,32 +155,27 @@ resilience4j.ratelimiter:
       limitRefreshPeriod: 1s
       timeoutDuration: 500ms
       subscribeForEvents: true
-
     # Configuration for public APIs (stricter limits)
     public-api:
       limitForPeriod: 50
       limitRefreshPeriod: 1s
       timeoutDuration: 100ms
       subscribeForEvents: true
-
     # Configuration for internal services (higher limits)
     internal:
       limitForPeriod: 1000
       limitRefreshPeriod: 1s
       timeoutDuration: 1s
       subscribeForEvents: true
-
     # Configuration for webhook endpoints
     webhook:
       limitForPeriod: 200
       limitRefreshPeriod: 1s
       timeoutDuration: 500ms
       subscribeForEvents: true
-
   instances:
     default:
       baseConfig: default
-
 # =============================================================================
 # TIME LIMITER CONFIGURATION
 # =============================================================================
@@ -205,22 +185,18 @@ resilience4j.timelimiter:
     default:
       timeoutDuration: 5s
       cancelRunningFuture: true
-
     # Configuration for fast operations
     fast:
       timeoutDuration: 1s
       cancelRunningFuture: true
-
     # Configuration for slow external calls
     external:
       timeoutDuration: 10s
       cancelRunningFuture: true
-
     # Configuration for long-running operations
     long-running:
       timeoutDuration: 30s
       cancelRunningFuture: false
-
   instances:
     default:
       baseConfig: default

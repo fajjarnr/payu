@@ -3,6 +3,7 @@ package id.payu.billing.resource;
 import id.payu.billing.domain.BillPayment;
 import id.payu.billing.dto.CreatePaymentRequest;
 import id.payu.billing.dto.PaymentResponse;
+import id.payu.billing.idempotency.Idempotent;
 import id.payu.billing.service.PaymentService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -27,8 +28,9 @@ public class PaymentResource {
     PaymentService paymentService;
 
     @POST
+    @Idempotent(required = true)
     public Response createPayment(@Valid CreatePaymentRequest request) {
-        LOG.infof("Received payment request: biller=%s, customerId=%s", 
+        LOG.infof("Received payment request: biller=%s, customerId=%s",
             request.billerCode(), request.customerId());
 
         try {

@@ -3,11 +3,9 @@ quarkus:
   application:
     name: gateway-service
     version: 1.0.0
-
   # HTTP Server
   http:
     port: 8080
-
   # OIDC Configuration (Red Hat SSO / Keycloak)
   oidc:
     enabled: ${OIDC_ENABLED:false}
@@ -16,21 +14,18 @@ quarkus:
     credentials:
       secret: ${OIDC_CLIENT_SECRET:secret}
     tls:
-      verification: none
+      verification: none  # pragma: allowlist secret
     token:
       issuer: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
-
   # Redis Configuration (for rate limiting & caching)
   redis:
     hosts: ${REDIS_URL:redis://localhost:6379}
     password: ${REDIS_PASSWORD:}
     timeout: 5s
-
   # Health & Metrics
   smallrye-health:
     ui:
       enable: true
-
   micrometer:
     export:
       prometheus:
@@ -39,7 +34,6 @@ quarkus:
       http-server:
         enabled: true
       jvm: true
-
   # OpenTelemetry
   otel:
     service:
@@ -51,7 +45,6 @@ quarkus:
       attributes:
         - service.name=gateway-service
         - service.version=1.0.0
-
   # OpenAPI
   smallrye-openapi:
     info-title: PayU API Gateway
@@ -60,7 +53,6 @@ quarkus:
     info-contact-name: PayU Engineering Team
     info-contact-email: engineering@payu.id
     path: /q/openapi
-
   # Logging
   log:
     level: INFO
@@ -72,7 +64,6 @@ quarkus:
     console:
       format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlationId}] [%c{3.}] (%t) %s%e%n"
       json: false
-
 # Gateway Configuration
 gateway:
   # Backend Services
@@ -122,7 +113,6 @@ gateway:
     support-service:
       url: ${SUPPORT_SERVICE_URL:http://localhost:8095}
       timeout: 30s
-
   # Simulators
   simulators:
     bi-fast:
@@ -134,7 +124,6 @@ gateway:
     qris:
       url: ${QRIS_SIMULATOR_URL:http://localhost:9092}
       timeout: 15s
-
   # CORS Configuration (strict mode)
   cors:
     enabled: true
@@ -144,7 +133,6 @@ gateway:
     exposed-headers: X-Request-Id,X-Correlation-Id
     allow-credentials: true
     max-age: 3600
-
   # Rate Limiting
   rate-limit:
     enabled: true
@@ -218,27 +206,23 @@ gateway:
       referrals:
         requests-per-minute: 20
         burst: 30
-
   # Circuit Breaker
   circuit-breaker:
     enabled: true
     failure-ratio: 0.5
     delay: 30s
     success-threshold: 3
-
   # Request/Response Logging
   logging:
     enabled: true
     log-body: false
     max-body-size: 1024
-
   # Tenant Configuration (Multitenancy)
   tenant:
     enabled: true
     default-tenant-id: "default"
     strict-mode: false
     header-name: "X-Tenant-Id"
-
   # API Versioning
   versioning:
     enabled: true
@@ -247,22 +231,20 @@ gateway:
       - "v1"
       - "v2"
     header-name: "X-API-Version"
-
   # Request Validation
   validation:
     enabled: true
     schema-validation: true
-    max-request-size: 10485760  # 10MB
+    max-request-size: 10485760 # 10MB
     strict-mode: false
-
   # Response Compression
   compression:
     enabled: true
-    min-size: 1024  # Only compress responses larger than 1KB
+    min-size: 1024 # Only compress responses larger than 1KB
     algorithms:
       - "gzip"
-      - "br"  # Brotli (if available)
-    level: 6  # Compression level (1-9)
+      - "br" # Brotli (if available)
+    level: 6 # Compression level (1-9)
     mime-types:
       - "application/json"
       - "application/xml"
@@ -271,13 +253,12 @@ gateway:
       - "text/css"
       - "text/javascript"
       - "application/javascript"
-
   # API Analytics
   analytics:
     enabled: true
     retention-days: 90
     batch-size: 100
-    flush-interval: 60s  # Flush metrics every minute
+    flush-interval: 60s # Flush metrics every minute
     track:
       - "request-count"
       - "response-time"
@@ -285,11 +266,10 @@ gateway:
       - "status-codes"
       - "user-agents"
       - "endpoints"
-
   # Enhanced Rate Limiting with bucket4j
   rate-limit-v2:
     enabled: true
-    algorithm: "token-bucket"  # token-bucket, leaky-bucket, fixed-window
+    algorithm: "token-bucket" # token-bucket, leaky-bucket, fixed-window
     default:
       capacity: 100
       refill-tokens: 60
@@ -315,7 +295,6 @@ gateway:
         capacity: 20
         refill-tokens: 10
         refill-duration: "60s"
-
   # API Key Management
   api-keys:
     enabled: true
@@ -329,14 +308,13 @@ gateway:
       - "/health"
       - "/q/"
       - "/api/v1/auth/login"
-
   # Request Signing (HMAC-SHA256)
   request-signing:
     enabled: true
     algorithm: "HmacSHA256"
     header-name: "X-Signature"
     timestamp-header: "X-Timestamp"
-    tolerance-seconds: 300  # 5 minutes
+    tolerance-seconds: 300 # 5 minutes
     required-paths:
       - "/v1/partner/*"
       - "/api/v1/partners/*"
@@ -344,11 +322,10 @@ gateway:
       # Partner ID: Secret Key (base64 encoded)
       # In production, these should be stored securely (e.g., Vault)
       partner-1: "c2VjcmV0LWtleS0x"
-
   # IP Whitelisting
   ip-whitelist:
     enabled: true
-    mode: "allow"  # allow or deny
+    mode: "allow" # allow or deny
     paths:
       - pattern: "/v1/partner/*"
         ips:
@@ -361,7 +338,6 @@ gateway:
           - "172.16.0.0/12"
     bypass-headers:
       - "X-Bypass-IP-Check"
-
   # Retry Policies
   retry:
     enabled: true
@@ -379,9 +355,8 @@ gateway:
         max-retries: 5
         initial-interval: "1s"
       notification-service:
-        max-retries: 2  # Fewer retries for notifications
+        max-retries: 2 # Fewer retries for notifications
         initial-interval: "2s"
-
   # Timeout Policies
   timeout:
     enabled: true
@@ -395,12 +370,14 @@ gateway:
       notification-service: "10s"
       kyc-service: "60s"
       analytics-service: "30s"
-
   # Idempotency
   idempotency:
     enabled: true
-    header-name: "X-Idempotency-Key"
-    ttl: "24h"  # Keep idempotency records for 24 hours
+    # Primary header name following RFC 7239 and industry standards
+    header-name: "Idempotency-Key"
+    # Legacy header name for backward compatibility
+    legacy-header-name: "X-Idempotency-Key"
+    ttl: "24h" # Keep idempotency records for 24 hours
     applicable-methods:
       - "POST"
       - "PUT"

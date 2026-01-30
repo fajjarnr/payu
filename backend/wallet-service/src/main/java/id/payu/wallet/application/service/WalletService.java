@@ -96,7 +96,7 @@ public class WalletService implements WalletUseCase {
 
         walletPersistencePort.save(wallet);
         walletEventPublisher.publishWalletCreated(accountId, wallet.getId().toString());
-        
+
         log.info("Wallet created successfully: {}", wallet.getId());
         return wallet;
     }
@@ -173,7 +173,7 @@ public class WalletService implements WalletUseCase {
         walletPersistencePort.saveLedgerEntry(debitEntry);
 
         walletEventPublisher.publishBalanceReserved(accountId, reservationId, amount);
-        
+
         log.info("Reserved {} for account {}, reservation ID: {}, amount: {}", accountId, reservationId, amount);
         return reservationId;
     }
@@ -218,7 +218,7 @@ public class WalletService implements WalletUseCase {
 
         walletEventPublisher.publishReservationCommitted(accountId.toString(), reservationId, reservedAmount);
         walletEventPublisher.publishBalanceChanged(accountId.toString(), wallet.getBalance(), wallet.getAvailableBalance());
-        
+
         log.info("Committed reservation {} for account {}, amount: {}", reservationId, reservedAmount);
     }
 
@@ -262,18 +262,18 @@ public class WalletService implements WalletUseCase {
 
         walletEventPublisher.publishReservationReleased(accountId.toString(), reservationId, reservedAmount);
         walletEventPublisher.publishBalanceChanged(accountId.toString(), wallet.getBalance(), wallet.getAvailableBalance());
-        
+
         log.info("Released reservation {} for account {}, amount: {}", reservationId, reservedAmount);
     }
 
     @Override
     @Transactional
-    public void credit(String accountId, BigDecimal amount, String referenceId, String description) {
+    public String credit(String accountId, BigDecimal amount, String referenceId, String description) {
         log.info("Crediting {} to account {} with reference {}", amount, accountId, referenceId);
 
         Wallet wallet = getWalletByAccountId(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
-        
+
         // Update wallet balance
         BigDecimal oldBalance = wallet.getBalance();
         wallet.credit(amount);
@@ -284,10 +284,13 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("balance:available:account:" + accountId);
         cacheService.invalidate("wallet:account:" + accountId);
 
+        // Generate transaction ID
+        UUID transactionId = UUID.randomUUID();
+
         // Create Ledger Entry
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
-                .transactionId(UUID.fromString(UUID.randomUUID().toString())) // simplified
+                .transactionId(transactionId)
                 .accountId(UUID.fromString(accountId))
                 .entryType(LedgerEntry.EntryType.CREDIT)
                 .amount(amount)
@@ -297,24 +300,26 @@ public class WalletService implements WalletUseCase {
                 .referenceId(referenceId)
                 .createdAt(LocalDateTime.now())
                 .build();
+
         walletPersistencePort.saveLedgerEntry(creditEntry);
-        
+
         // Create Wallet Transaction
         WalletTransaction walletTransaction = WalletTransaction.builder()
-                .id(UUID.randomUUID())
+                .id(transactionId)
                 .walletId(wallet.getId())
                 .referenceId(referenceId)
                 .type(WalletTransaction.TransactionType.CREDIT)
                 .amount(amount)
-                .balanceAfter(wallet.getBalance()) // Use balance, not available balance? Depends on logic
+                .balanceAfter(wallet.getBalance())
                 .description(description)
                 .createdAt(LocalDateTime.now())
                 .build();
         walletPersistencePort.saveTransaction(walletTransaction);
 
         walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
-        
-        log.info("Credited {} to account {}, amount: {}", accountId, amount);
+
+        log.info("Credited {} to account {}, transactionId: {}", amount, accountId, transactionId);
+        return transactionId.toString();
     }
 
     @Override

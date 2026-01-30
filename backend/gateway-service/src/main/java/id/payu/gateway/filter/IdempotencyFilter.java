@@ -19,6 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Filter to handle idempotency for write operations.
  * Ensures that duplicate requests with the same idempotency key return the same response.
+ *
+ * Supports both standard "Idempotency-Key" header and legacy "X-Idempotency-Key" header
+ * for backward compatibility.
  */
 @Provider
 @ApplicationScoped
@@ -26,6 +29,11 @@ public class IdempotencyFilter implements ContainerRequestFilter {
 
     private static final Set<String> IDEMPOTENT_METHODS = Set.of("POST", "PUT", "PATCH", "DELETE");
     private static final String IDEMPOTENCY_PREFIX = "idempotency:";
+
+    // Standard header name as per RFC 7239 and industry best practices
+    private static final String STANDARD_IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+    // Legacy header name for backward compatibility
+    private static final String LEGACY_IDEMPOTENCY_KEY_HEADER = "X-Idempotency-Key";
 
     @Inject
     GatewayConfig config;
@@ -60,8 +68,24 @@ public class IdempotencyFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Get idempotency key
-        String idempotencyKey = requestContext.getHeaderString(config.idempotency().headerName());
+        // Get idempotency key - check standard header first, then legacy header for backward compatibility
+        String idempotencyKey = requestContext.getHeaderString(STANDARD_IDEMPOTENCY_KEY_HEADER);
+        String headerUsed = STANDARD_IDEMPOTENCY_KEY_HEADER;
+
+        // Fallback to legacy header for backward compatibility
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            idempotencyKey = requestContext.getHeaderString(LEGACY_IDEMPOTENCY_KEY_HEADER);
+            headerUsed = LEGACY_IDEMPOTENCY_KEY_HEADER;
+        }
+
+        // Also check configured header name if different from standard/legacy
+        String configuredHeader = config.idempotency().headerName();
+        if ((idempotencyKey == null || idempotencyKey.isBlank())
+                && !configuredHeader.equals(STANDARD_IDEMPOTENCY_KEY_HEADER)
+                && !configuredHeader.equals(LEGACY_IDEMPOTENCY_KEY_HEADER)) {
+            idempotencyKey = requestContext.getHeaderString(configuredHeader);
+            headerUsed = configuredHeader;
+        }
 
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             // For write operations, idempotency key should be required
@@ -78,12 +102,13 @@ public class IdempotencyFilter implements ContainerRequestFilter {
             .with(cachedResponse -> {
                 if (cachedResponse != null) {
                     // Idempotency key was already used, return cached response
-                    Log.infof("Returning cached response for idempotency key: %s", idempotencyKey);
+                    Log.infof("Returning cached response for idempotency key: %s (header: %s)", idempotencyKey, headerUsed);
                     CachedResponse response = parseCachedResponse(cachedResponse);
                     requestContext.abortWith(
                         Response.status(response.status)
                             .entity(response.body)
-                            .header("X-Idempotency-Replayed", "true")
+                            .header("Idempotency-Replayed", "true")
+                            .header("X-Idempotency-Replayed", "true") // Legacy header for backward compatibility
                             .build()
                     );
                 } else {

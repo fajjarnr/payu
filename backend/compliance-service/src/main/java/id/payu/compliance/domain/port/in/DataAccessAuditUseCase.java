@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface DataAccessAuditUseCase {
 
-    void logDataAccess(
+    DataAccessAudit logDataAccess(
             String userId,
             String accessedBy,
             String serviceName,
@@ -21,7 +21,7 @@ public interface DataAccessAuditUseCase {
             String purpose
     );
 
-    void logDataAccess(
+    DataAccessAudit logDataAccess(
             String userId,
             String accessedBy,
             String serviceName,

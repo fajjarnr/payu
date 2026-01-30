@@ -14,42 +14,42 @@ import java.util.UUID;
  * This is the primary interface for the application layer.
  */
 public interface WalletUseCase {
-    
+
     /**
      * Get wallet by account ID.
      * @param accountId   account ID
      * @return            wallet
      */
     Optional<Wallet> getWalletByAccountId(String accountId);
-    
+
     /**
      * Get wallet by wallet ID.
      * @param walletId    wallet ID
      * @return            wallet
      */
     Wallet getWallet(UUID walletId);
-    
+
     /**
      * Create a new wallet for an account.
      * @param accountId   account ID
      * @return            created wallet
      */
     Wallet createWallet(String accountId);
-    
+
     /**
      * Get current balance for an account.
      * @param accountId   account ID
      * @return            balance
      */
     BigDecimal getBalance(String accountId);
-    
+
     /**
      * Get available balance (total - reserved) for an account.
      * @param accountId   account ID
      * @return            available balance
      */
     BigDecimal getAvailableBalance(String accountId);
-    
+
     /**
      * Reserve balance for a pending transaction.
      * @param accountId   account ID
@@ -58,28 +58,29 @@ public interface WalletUseCase {
      * @return            reservation ID for later commit/release
      */
     String reserveBalance(String accountId, BigDecimal amount, String referenceId);
-    
+
     /**
      * Commit a previously reserved amount (deduct from balance).
      * @param reservationId reservation ID from reserveBalance
      */
     void commitReservation(String reservationId);
-    
+
     /**
      * Release a previously reserved amount back to available.
      * @param reservationId reservation ID from reserveBalance
      */
     void releaseReservation(String reservationId);
-    
+
     /**
      * Credit amount to wallet (incoming transfer).
      * @param accountId   account to credit
      * @param amount      amount to credit
      * @param referenceId external reference
      * @param description transaction description
+     * @return            transaction ID
      */
-    void credit(String accountId, BigDecimal amount, String referenceId, String description);
-    
+    String credit(String accountId, BigDecimal amount, String referenceId, String description);
+
     /**
      * Get transaction history for a wallet.
      * @param accountId   account ID
@@ -88,8 +89,8 @@ public interface WalletUseCase {
      * @return            transaction history
      */
     List<WalletTransaction> getTransactionHistory(String accountId, int page, int size);
-    
+
     List<LedgerEntry> getLedgerEntriesByAccountId(UUID accountId);
-    
+
     List<LedgerEntry> getLedgerEntriesByTransactionId(UUID transactionId);
 }

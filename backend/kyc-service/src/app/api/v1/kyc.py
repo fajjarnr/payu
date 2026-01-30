@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from structlog import get_logger
-from typing import List
+from typing import Optional
+from slowapi.util import get_remote_address
 
 from app.database import get_db_session
 from app.models.schemas import (
@@ -9,131 +10,281 @@ from app.models.schemas import (
     UploadKtpRequest,
     UploadSelfieRequest,
     GetKycStatusResponse,
-    ErrorResponse
 )
 from app.services.kyc_service import KycService
+from app.api.responses import ApiResponse
+from app.api.idempotency import get_cached_result, cache_result
 
 logger = get_logger(__name__)
 kyc_router = APIRouter(prefix="/kyc", tags=["KYC Verification"])
 
 
-@kyc_router.post("/verify/start", response_model=dict)
+@kyc_router.post("/verify/start")
 async def start_kyc_verification(
-    request: StartKycVerificationRequest,
-    db: AsyncSession = Depends(get_db_session)
+    request: Request,
+    request_data: StartKycVerificationRequest,
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    db: AsyncSession = Depends(get_db_session),
 ):
-    log = logger.bind(user_id=request.user_id)
+    """
+    Start a new KYC verification process.
+    Supports idempotency for safe retries.
+    Rate limit: 10 requests per minute per IP.
+    """
+    log = logger.bind(
+        user_id=request_data.user_id,
+        request_id=getattr(request.state, "request_id", None),
+        idempotency_key=idempotency_key,
+    )
     log.info("Starting KYC verification")
+
+    # Apply rate limiting
+    limiter = request.app.state.limiter
+    try:
+        await limiter.check(request, get_remote_address(request), "10/minute")
+    except Exception:
+        return ApiResponse.error(
+            code="KYC_RAT_001",
+            message="Rate limit exceeded. Please try again later.",
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
+
+    # Check idempotency cache
+    if idempotency_key:
+        cached = await get_cached_result(
+            idempotency_key=idempotency_key,
+            request_path=str(request.url.path),
+            request_body=await request.body() if hasattr(request, "body") else None,
+        )
+        if cached:
+            log.info("Returning cached KYC start result")
+            return ApiResponse.success(
+                data=cached, request_id=getattr(request.state, "request_id", None)
+            ).model_dump()
 
     try:
         service = KycService(db)
         verification = await service.create_verification(
-            user_id=request.user_id,
-            verification_type=request.verification_type
+            user_id=request_data.user_id,
+            verification_type=request_data.verification_type,
         )
 
         log.info(
             "KYC verification started",
             verification_id=verification.verification_id,
-            status=verification.status
+            status=verification.status,
         )
 
-        return {
+        response_data = {
             "verification_id": verification.verification_id,
             "status": verification.status,
-            "message": "Please upload KTP image"
+            "message": "Please upload KTP image",
         }
+
+        # Store result for idempotency
+        if idempotency_key:
+            await cache_result(
+                idempotency_key=idempotency_key,
+                request_path=str(request.url.path),
+                result=response_data,
+            )
+
+        return ApiResponse.success(
+            data=response_data, request_id=getattr(request.state, "request_id", None)
+        ).model_dump()
     except Exception as e:
         log.error("Failed to start KYC verification", exc_info=e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error_code": "KYC_SYS_001", "detail": str(e)}
-        )
+        return ApiResponse.error(
+            code="KYC_SYS_001",
+            message="Failed to start KYC verification",
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
 
 
-@kyc_router.post("/verify/ktp", response_model=dict)
+@kyc_router.post("/verify/ktp")
 async def upload_ktp(
-    request: UploadKtpRequest,
-    db: AsyncSession = Depends(get_db_session)
+    request: Request,
+    request_data: UploadKtpRequest,
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    db: AsyncSession = Depends(get_db_session),
 ):
-    log = logger.bind(verification_id=request.verification_id)
+    """
+    Upload and process KTP image for OCR.
+    Supports idempotency for safe retries.
+    Rate limit: 5 requests per minute per IP.
+    """
+    log = logger.bind(
+        verification_id=request_data.verification_id,
+        request_id=getattr(request.state, "request_id", None),
+        idempotency_key=idempotency_key,
+    )
     log.info("Processing KTP image upload")
+
+    # Apply rate limiting
+    limiter = request.app.state.limiter
+    try:
+        await limiter.check(request, get_remote_address(request), "5/minute")
+    except Exception:
+        return ApiResponse.error(
+            code="KYC_RAT_001",
+            message="Rate limit exceeded. Please try again later.",
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
+
+    # Check idempotency cache
+    if idempotency_key:
+        cached = await get_cached_result(
+            idempotency_key=idempotency_key,
+            request_path=str(request.url.path),
+            request_body=await request.body() if hasattr(request, "body") else None,
+        )
+        if cached:
+            log.info("Returning cached KTP upload result")
+            return ApiResponse.success(
+                data=cached, request_id=getattr(request.state, "request_id", None)
+            ).model_dump()
 
     try:
         service = KycService(db)
 
         result = await service.process_ktp_upload(
-            verification_id=request.verification_id,
-            ktp_image_base64=request.ktp_image
+            verification_id=request_data.verification_id,
+            ktp_image_base64=request_data.ktp_image,
         )
 
         log.info("KTP OCR completed", result=result)
 
-        return {
-            "verification_id": request.verification_id,
+        response_data = {
+            "verification_id": request_data.verification_id,
             "status": result.get("status"),
             "ocr_result": result.get("ocr_result"),
-            "next_step": "Please upload selfie image"
+            "next_step": "Please upload selfie image",
         }
+
+        # Store result for idempotency
+        if idempotency_key:
+            await cache_result(
+                idempotency_key=idempotency_key,
+                request_path=str(request.url.path),
+                result=response_data,
+            )
+
+        return ApiResponse.success(
+            data=response_data, request_id=getattr(request.state, "request_id", None)
+        ).model_dump()
     except ValueError as e:
         log.warning("KTP validation failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error_code": "KYC_VAL_001", "detail": str(e)}
-        )
+        return ApiResponse.error(
+            code="KYC_VAL_001",
+            message=str(e),
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
     except Exception as e:
         log.error("Failed to process KTP upload", exc_info=e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error_code": "KYC_SYS_002", "detail": str(e)}
-        )
+        return ApiResponse.error(
+            code="KYC_SYS_002",
+            message="Failed to process KTP upload",
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
 
 
-@kyc_router.post("/verify/selfie", response_model=dict)
+@kyc_router.post("/verify/selfie")
 async def upload_selfie(
-    request: UploadSelfieRequest,
-    db: AsyncSession = Depends(get_db_session)
+    request: Request,
+    request_data: UploadSelfieRequest,
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    db: AsyncSession = Depends(get_db_session),
 ):
-    log = logger.bind(verification_id=request.verification_id)
+    """
+    Upload and process selfie image for liveness and face matching.
+    Supports idempotency for safe retries.
+    Rate limit: 5 requests per minute per IP.
+    """
+    log = logger.bind(
+        verification_id=request_data.verification_id,
+        request_id=getattr(request.state, "request_id", None),
+        idempotency_key=idempotency_key,
+    )
     log.info("Processing selfie image upload")
+
+    # Apply rate limiting
+    limiter = request.app.state.limiter
+    try:
+        await limiter.check(request, get_remote_address(request), "5/minute")
+    except Exception:
+        return ApiResponse.error(
+            code="KYC_RAT_001",
+            message="Rate limit exceeded. Please try again later.",
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
+
+    # Check idempotency cache
+    if idempotency_key:
+        cached = await get_cached_result(
+            idempotency_key=idempotency_key,
+            request_path=str(request.url.path),
+            request_body=await request.body() if hasattr(request, "body") else None,
+        )
+        if cached:
+            log.info("Returning cached selfie upload result")
+            return ApiResponse.success(
+                data=cached, request_id=getattr(request.state, "request_id", None)
+            ).model_dump()
 
     try:
         service = KycService(db)
 
         result = await service.process_selfie_upload(
-            verification_id=request.verification_id,
-            selfie_image_base64=request.selfie_image
+            verification_id=request_data.verification_id,
+            selfie_image_base64=request_data.selfie_image,
         )
 
         log.info("KYC verification completed", result=result)
 
-        return {
-            "verification_id": request.verification_id,
+        response_data = {
+            "verification_id": request_data.verification_id,
             "status": result.get("status"),
             "liveness_result": result.get("liveness_result"),
             "face_match_result": result.get("face_match_result"),
-            "dukcapil_result": result.get("dukcapil_result")
+            "dukcapil_result": result.get("dukcapil_result"),
         }
+
+        # Store result for idempotency
+        if idempotency_key:
+            await cache_result(
+                idempotency_key=idempotency_key,
+                request_path=str(request.url.path),
+                result=response_data,
+            )
+
+        return ApiResponse.success(
+            data=response_data, request_id=getattr(request.state, "request_id", None)
+        ).model_dump()
     except ValueError as e:
         log.warning("Selfie validation failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error_code": "KYC_VAL_002", "detail": str(e)}
-        )
+        return ApiResponse.error(
+            code="KYC_VAL_002",
+            message=str(e),
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
     except Exception as e:
         log.error("Failed to process selfie upload", exc_info=e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error_code": "KYC_SYS_003", "detail": str(e)}
-        )
+        return ApiResponse.error(
+            code="KYC_SYS_003",
+            message="Failed to process selfie upload",
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
 
 
-@kyc_router.get("/verify/{verification_id}", response_model=GetKycStatusResponse)
+@kyc_router.get("/verify/{verification_id}")
 async def get_kyc_status(
-    verification_id: str,
-    db: AsyncSession = Depends(get_db_session)
+    request: Request, verification_id: str, db: AsyncSession = Depends(get_db_session)
 ):
-    log = logger.bind(verification_id=verification_id)
+    """Get KYC verification status by ID."""
+    log = logger.bind(
+        verification_id=verification_id,
+        request_id=getattr(request.state, "request_id", None),
+    )
     log.info("Fetching KYC verification status")
 
     try:
@@ -142,12 +293,13 @@ async def get_kyc_status(
 
         if not verification:
             log.warning("Verification not found")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error_code": "KYC_VAL_003", "detail": "Verification not found"}
-            )
+            return ApiResponse.error(
+                code="KYC_VAL_003",
+                message="Verification not found",
+                request_id=getattr(request.state, "request_id", None),
+            ).model_dump()
 
-        return GetKycStatusResponse(
+        response_data = GetKycStatusResponse(
             verification_id=verification.verification_id,
             user_id=verification.user_id,
             status=verification.status,
@@ -157,31 +309,37 @@ async def get_kyc_status(
             dukcapil_result=verification.dukcapil_result,
             rejection_reason=verification.rejection_reason,
             created_at=verification.created_at,
-            completed_at=verification.completed_at
+            completed_at=verification.completed_at,
         )
-    except HTTPException:
-        raise
+
+        return ApiResponse.success(
+            data=response_data.model_dump(),
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
     except Exception as e:
         log.error("Failed to fetch verification status", exc_info=e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error_code": "KYC_SYS_004", "detail": str(e)}
-        )
+        return ApiResponse.error(
+            code="KYC_SYS_004",
+            message="Failed to fetch verification status",
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()
 
 
-@kyc_router.get("/user/{user_id}", response_model=List[GetKycStatusResponse])
+@kyc_router.get("/user/{user_id}")
 async def get_user_kyc_history(
-    user_id: str,
-    db: AsyncSession = Depends(get_db_session)
+    request: Request, user_id: str, db: AsyncSession = Depends(get_db_session)
 ):
-    log = logger.bind(user_id=user_id)
+    """Get KYC verification history for a user."""
+    log = logger.bind(
+        user_id=user_id, request_id=getattr(request.state, "request_id", None)
+    )
     log.info("Fetching user KYC history")
 
     try:
         service = KycService(db)
         verifications = await service.get_user_verifications(user_id)
 
-        return [
+        response_data = [
             GetKycStatusResponse(
                 verification_id=v.verification_id,
                 user_id=v.user_id,
@@ -192,13 +350,18 @@ async def get_user_kyc_history(
                 dukcapil_result=v.dukcapil_result,
                 rejection_reason=v.rejection_reason,
                 created_at=v.created_at,
-                completed_at=v.completed_at
-            )
+                completed_at=v.completed_at,
+            ).model_dump()
             for v in verifications
         ]
+
+        return ApiResponse.success(
+            data=response_data, request_id=getattr(request.state, "request_id", None)
+        ).model_dump()
     except Exception as e:
         log.error("Failed to fetch user KYC history", exc_info=e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error_code": "KYC_SYS_005", "detail": str(e)}
-        )
+        return ApiResponse.error(
+            code="KYC_SYS_005",
+            message="Failed to fetch user KYC history",
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump()

@@ -10,55 +10,42 @@ description: |
   - Successful authentication
   - Fallback to PIN on failure
   - Settings toggle
-
 tags:
   - smoke
   - biometric
   - auth
   - security
-
 onFlowStart:
   - runFlow: login.yaml
-
 ---
-
 # Navigate to settings/profile
 - tapOn:
     id: "profile-tab"
     label: "Tap profile tab"
-
 - waitForAnimationToEnd
-
 # Assert profile screen
 - assertVisible:
     id: "profile-screen"
     label: "Profile screen is displayed"
-
 # Navigate to security settings
 - tapOn:
     text: "Security"
     label: "Tap Security settings"
-
 - waitForAnimationToEnd
-
 # Assert security settings screen
 - assertVisible:
     id: "security-settings-screen"
     label: "Security settings screen is displayed"
-
 - assertVisible:
     text: "Biometric Authentication"
     label: "Biometric authentication option is visible"
-
 # Toggle biometric authentication
 - tapOn:
     id: "biometric-toggle"
     label: "Tap biometric toggle"
-
 # Wait for biometric prompt (platform-specific)
 - waitForAnimationToEnd:
     timeout: 3000
-
 # Handle biometric prompt - Success case
 # Note: On simulators/emulators, this may need to be mocked
 - runScript:
@@ -66,121 +53,93 @@ onFlowStart:
     env:
       BIOMETRIC_RESULT: success
     label: "Mock biometric success"
-
 # Assert biometric is enabled
 - assertVisible:
     id: "biometric-toggle"
     label: "Biometric toggle is enabled"
-
 # Test biometric login flow
 # Logout first
 - tapOn:
     id: "logout-button"
     label: "Tap logout button"
-
 - waitForAnimationToEnd
-
 # Assert login screen with biometric option
 - assertVisible:
     id: "login-screen"
     label: "Login screen is displayed"
-
 - assertVisible:
     id: "biometric-login-button"
     label: "Biometric login button is visible"
-
 # Tap biometric login
 - tapOn:
     id: "biometric-login-button"
     label: "Tap biometric login button"
-
 # Wait for biometric prompt
 - waitForAnimationToEnd:
     timeout: 3000
-
 # Mock successful biometric authentication
 - runScript:
     file: ../scripts/mock-biometric.js
     env:
       BIOMETRIC_RESULT: success
     label: "Mock biometric authentication"
-
 # Wait for home screen
 - waitForAnimationToEnd:
     timeout: 10000
-
 # Assert successful login
 - assertVisible:
     id: "home-screen"
     label: "Successfully logged in with biometric"
-
 # Test biometric failure fallback
 # Logout again
 - tapOn:
     id: "profile-tab"
     label: "Tap profile tab"
-
 - waitForAnimationToEnd
-
 - tapOn:
     text: "Security"
     label: "Tap Security settings"
-
 - waitForAnimationToEnd
-
 # Disable and re-enable to test flow
 - tapOn:
     id: "biometric-toggle"
     label: "Disable biometric"
-
 - waitForAnimationToEnd
-
 - tapOn:
     id: "biometric-toggle"
     label: "Re-enable biometric"
-
 - waitForAnimationToEnd
-
 # Mock failed biometric authentication
 - runScript:
     file: ../scripts/mock-biometric.js
     env:
       BIOMETRIC_RESULT: failure
     label: "Mock biometric failure"
-
 # Assert fallback to PIN is shown
 - assertVisible:
     text: "Use Passcode"
     label: "Fallback to PIN option is available"
-
 # Tap fallback option
 - tapOn:
     text: "Use Passcode"
     label: "Tap use passcode option"
-
 - waitForAnimationToEnd
-
 # Enter PIN as fallback
 - tapOn:
     id: "pin-input"
     label: "Tap PIN input"
-
 - inputText:
     id: "pin-input"
     text: ${TEST_PIN}
     label: "Enter PIN as fallback"
-
 - tapOn:
     id: "login-button"
     label: "Tap login button"
-
 - waitForAnimationToEnd:
     timeout: 10000
-
 # Assert successful fallback login
 - assertVisible:
     id: "home-screen"
     label: "Successfully logged in with PIN fallback"
-
 # Take success screenshot
 - takeScreenshot: biometric-auth-success

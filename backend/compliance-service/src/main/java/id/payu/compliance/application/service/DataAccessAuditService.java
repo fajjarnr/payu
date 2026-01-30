@@ -22,7 +22,7 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
     private final DataAccessAuditPersistencePort persistencePort;
 
     @Override
-    public void logDataAccess(
+    public DataAccessAudit logDataAccess(
             String userId,
             String accessedBy,
             String serviceName,
@@ -31,11 +31,11 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
             DataOperationType operationType,
             String purpose
     ) {
-        logDataAccess(userId, accessedBy, serviceName, resourceType, resourceId, operationType, purpose, null, null, true, null);
+        return logDataAccess(userId, accessedBy, serviceName, resourceType, resourceId, operationType, purpose, null, null, true, null);
     }
 
     @Override
-    public void logDataAccess(
+    public DataAccessAudit logDataAccess(
             String userId,
             String accessedBy,
             String serviceName,
@@ -67,8 +67,9 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
                 .accessedAt(LocalDateTime.now())
                 .build();
 
-        persistencePort.save(audit);
-        log.debug("Data access audit logged successfully: {}", audit.getId());
+        DataAccessAudit savedAudit = persistencePort.save(audit);
+        log.debug("Data access audit logged successfully: {}", savedAudit.getId());
+        return savedAudit;
     }
 
     @Override

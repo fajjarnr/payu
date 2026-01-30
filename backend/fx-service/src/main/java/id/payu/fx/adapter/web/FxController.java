@@ -1,7 +1,7 @@
 package id.payu.fx.adapter.web;
 
+import id.payu.api.common.response.ApiResponse;
 import id.payu.fx.application.service.FxConversionService;
-import id.payu.fx.application.service.FxConversionNotFoundException;
 import id.payu.fx.application.service.FxRateService;
 import id.payu.fx.domain.model.FxConversion;
 import id.payu.fx.domain.model.FxRate;
@@ -11,21 +11,32 @@ import id.payu.fx.dto.FxRateResponse;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/fx-api/v1")
-public class FxController {
+@Tag(name = "Foreign Exchange", description = "FX rate queries and currency conversion APIs")
+@SecurityRequirement(name = "bearerAuth")
+public class FxController extends BaseController {
 
     private final FxRateService fxRateService;
     private final FxConversionService fxConversionService;
@@ -33,7 +44,7 @@ public class FxController {
     private final Counter conversionCounter;
     private final Timer conversionTimer;
 
-    public FxController(FxRateService fxRateService, 
+    public FxController(FxRateService fxRateService,
                        FxConversionService fxConversionService,
                        MeterRegistry meterRegistry) {
         this.fxRateService = fxRateService;
@@ -50,28 +61,43 @@ public class FxController {
     }
 
     @GetMapping("/rates/{fromCurrency}/{toCurrency}")
-    public ResponseEntity<FxRateResponse> getCurrentRate(
-            @PathVariable String fromCurrency,
-            @PathVariable String toCurrency) {
-        
+    @Operation(summary = "Get current FX rate", description = "Retrieve the current exchange rate between two currencies")
+    @ApiResponse(responseCode = "200", description = "FX rate retrieved successfully",
+            content = @Content(schema = @Schema(implementation = FxRateResponse.class)))
+    @ApiResponse(responseCode = "404", description = "FX rate not found for currency pair")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<FxRateResponse>> getCurrentRate(
+            @Parameter(description = "Source currency code (e.g., USD)", required = true) @PathVariable String fromCurrency,
+            @Parameter(description = "Target currency code (e.g., IDR)", required = true) @PathVariable String toCurrency) {
+
         rateQueryCounter.increment();
         FxRate rate = fxRateService.getCurrentRate(fromCurrency, toCurrency);
-        return ResponseEntity.ok(toResponse(rate));
+        return ok(toResponse(rate));
     }
 
     @GetMapping("/rates")
-    public ResponseEntity<List<FxRateResponse>> getAllRates() {
+    @Operation(summary = "Get all FX rates", description = "Retrieve all available exchange rates")
+    @ApiResponse(responseCode = "200", description = "FX rates retrieved successfully",
+            content = @Content(schema = @Schema(implementation = FxRateResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<List<FxRateResponse>>> getAllRates() {
         List<FxRate> rates = fxRateService.getAllRates();
         List<FxRateResponse> responses = rates.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        return ok(responses);
     }
 
     @PostMapping("/conversions/estimate")
-    public ResponseEntity<FxConversionResponse> estimateConversion(
+    @Operation(summary = "Estimate conversion", description = "Get a conversion estimate without executing the transaction")
+    @ApiResponse(responseCode = "200", description = "Conversion estimate retrieved successfully",
+            content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "404", description = "FX rate not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<FxConversionResponse>> estimateConversion(
             @Valid @RequestBody ConvertCurrencyRequest request) {
-        
+
         rateQueryCounter.increment();
         FxConversion conversion = fxConversionService.createConversion(
                 FxConversion.builder()
@@ -81,20 +107,26 @@ public class FxController {
                         .toCurrency(request.getToCurrency())
                         .fromAmount(request.getAmount())
                         .build());
-        
-        return ResponseEntity.ok(toResponse(conversion));
+
+        return ok(toResponse(conversion));
     }
 
     @PostMapping("/conversions")
-    public ResponseEntity<FxConversionResponse> createConversion(
+    @Operation(summary = "Create conversion", description = "Execute a currency conversion transaction")
+    @ApiResponse(responseCode = "201", description = "Conversion executed successfully",
+            content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request - insufficient balance or validation error")
+    @ApiResponse(responseCode = "404", description = "FX rate not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<FxConversionResponse>> createConversion(
             @Valid @RequestBody ConvertCurrencyRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         conversionCounter.increment();
-        
+
         return conversionTimer.record(() -> {
             String accountId = jwt.getClaim("account_id");
-            
+
             FxConversion conversion = fxConversionService.createConversion(
                     FxConversion.builder()
                             .id(UUID.randomUUID())
@@ -103,49 +135,72 @@ public class FxController {
                             .toCurrency(request.getToCurrency())
                             .fromAmount(request.getAmount())
                             .build());
-            
+
             conversion.markCompleted();
-            
-            return ResponseEntity.ok(toResponse(conversion));
+
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{conversionId}")
+                    .buildAndExpand(conversion.getId())
+                    .toUri();
+
+            return created(toResponse(conversion), location.toString());
         });
     }
 
     @GetMapping("/conversions/{conversionId}")
-    public ResponseEntity<FxConversionResponse> getConversion(
-            @PathVariable UUID conversionId) {
-        
+    @Operation(summary = "Get conversion by ID", description = "Retrieve conversion transaction details")
+    @ApiResponse(responseCode = "200", description = "Conversion found",
+            content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Conversion not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<FxConversionResponse>> getConversion(
+            @Parameter(description = "Conversion ID", required = true) @PathVariable UUID conversionId) {
+
         FxConversion conversion = fxConversionService.getConversion(conversionId);
-        return ResponseEntity.ok(toResponse(conversion));
+        return ok(toResponse(conversion));
     }
 
     @GetMapping("/conversions")
-    public ResponseEntity<List<FxConversionResponse>> getConversions(
+    @Operation(summary = "Get user conversions", description = "Retrieve all conversion transactions for the authenticated user")
+    @ApiResponse(responseCode = "200", description = "Conversions retrieved successfully",
+            content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<List<FxConversionResponse>>> getConversions(
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         String accountId = jwt.getClaim("account_id");
         List<FxConversion> conversions = fxConversionService.getConversionsByAccount(accountId);
-        
+
         List<FxConversionResponse> responses = conversions.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(responses);
+
+        return ok(responses);
     }
 
     @PostMapping("/conversions/{conversionId}/reverse")
-    public ResponseEntity<Void> reverseConversion(
-            @PathVariable UUID conversionId,
+    @Operation(summary = "Reverse conversion", description = "Reverse a previously executed currency conversion")
+    @ApiResponse(responseCode = "200", description = "Conversion reversed successfully",
+            content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
+    @ApiResponse(responseCode = "403", description = "Forbidden - cannot reverse another user's conversion")
+    @ApiResponse(responseCode = "404", description = "Conversion not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<FxConversionResponse>> reverseConversion(
+            @Parameter(description = "Conversion ID", required = true) @PathVariable UUID conversionId,
             @AuthenticationPrincipal Jwt jwt) {
-        
+
         String accountId = jwt.getClaim("account_id");
         FxConversion conversion = fxConversionService.getConversion(conversionId);
-        
+
         if (!conversion.getAccountId().equals(accountId)) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("FX_403", "Cannot reverse another user's conversion"));
         }
-        
+
         fxConversionService.reverseConversion(conversionId);
-        return ResponseEntity.ok().build();
+        FxConversion updatedConversion = fxConversionService.getConversion(conversionId);
+        return ok(toResponse(updatedConversion));
     }
 
     private FxRateResponse toResponse(FxRate rate) {

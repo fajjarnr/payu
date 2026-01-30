@@ -1,11 +1,16 @@
 package id.payu.abtesting.interfaces.rest;
 
+import id.payu.api.common.response.ApiResponse;
 import id.payu.abtesting.domain.entity.Experiment.ExperimentStatus;
 import id.payu.abtesting.domain.service.ExperimentService;
 import id.payu.abtesting.interfaces.dto.*;
 import id.payu.abtesting.domain.entity.Experiment;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +37,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Experiments", description = "A/B Testing Experiment API")
-public class ExperimentController {
+@SecurityRequirement(name = "bearerAuth")
+public class ExperimentController extends BaseController {
 
     private final ExperimentService experimentService;
 
@@ -41,8 +47,11 @@ public class ExperimentController {
      */
     @GetMapping
     @Operation(summary = "List all experiments", description = "Get paginated list of all experiments")
+    @ApiResponse(responseCode = "200", description = "Experiments retrieved successfully",
+            content = @Content(schema = @Schema(implementation = ExperimentResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:read')")
-    public ResponseEntity<Page<ExperimentResponse>> getAllExperiments(
+    public ResponseEntity<ApiResponse<Page<ExperimentResponse>>> getAllExperiments(
             @Parameter(description = "Page number (0-based)")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size")
@@ -58,7 +67,7 @@ public class ExperimentController {
         Page<Experiment> experiments = experimentService.getAllExperiments(pageable);
         Page<ExperimentResponse> response = experiments.map(ExperimentResponse::fromEntity);
 
-        return ResponseEntity.ok(response);
+        return ok(response, experiments);
     }
 
     /**
@@ -66,13 +75,17 @@ public class ExperimentController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "Get experiment by ID", description = "Retrieve detailed information about an experiment")
+    @ApiResponse(responseCode = "200", description = "Experiment found",
+            content = @Content(schema = @Schema(implementation = ExperimentResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Experiment not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:read')")
-    public ResponseEntity<ExperimentResponse> getExperimentById(
-            @Parameter(description = "Experiment ID")
+    public ResponseEntity<ApiResponse<ExperimentResponse>> getExperimentById(
+            @Parameter(description = "Experiment ID", required = true)
             @PathVariable UUID id) {
 
         Experiment experiment = experimentService.getExperimentById(id);
-        return ResponseEntity.ok(ExperimentResponse.fromEntity(experiment));
+        return ok(ExperimentResponse.fromEntity(experiment));
     }
 
     /**
@@ -80,13 +93,17 @@ public class ExperimentController {
      */
     @GetMapping("/key/{key}")
     @Operation(summary = "Get experiment by key", description = "Retrieve experiment by its unique key")
+    @ApiResponse(responseCode = "200", description = "Experiment found",
+            content = @Content(schema = @Schema(implementation = ExperimentResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Experiment not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:read')")
-    public ResponseEntity<ExperimentResponse> getExperimentByKey(
-            @Parameter(description = "Experiment key")
+    public ResponseEntity<ApiResponse<ExperimentResponse>> getExperimentByKey(
+            @Parameter(description = "Experiment key", required = true)
             @PathVariable String key) {
 
         Experiment experiment = experimentService.getExperimentByKey(key);
-        return ResponseEntity.ok(ExperimentResponse.fromEntity(experiment));
+        return ok(ExperimentResponse.fromEntity(experiment));
     }
 
     /**
@@ -94,13 +111,16 @@ public class ExperimentController {
      */
     @GetMapping("/active")
     @Operation(summary = "Get active experiments", description = "Retrieve all currently running experiments")
+    @ApiResponse(responseCode = "200", description = "Active experiments retrieved successfully",
+            content = @Content(schema = @Schema(implementation = ExperimentResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:read')")
-    public ResponseEntity<java.util.List<ExperimentResponse>> getActiveExperiments() {
+    public ResponseEntity<ApiResponse<java.util.List<ExperimentResponse>>> getActiveExperiments() {
         java.util.List<Experiment> experiments = experimentService.getActiveExperiments();
         java.util.List<ExperimentResponse> response = experiments.stream()
                 .map(ExperimentResponse::fromEntity)
                 .toList();
-        return ResponseEntity.ok(response);
+        return ok(response);
     }
 
     /**
@@ -108,8 +128,12 @@ public class ExperimentController {
      */
     @PostMapping
     @Operation(summary = "Create experiment", description = "Create a new A/B testing experiment")
+    @ApiResponse(responseCode = "201", description = "Experiment created successfully",
+            content = @Content(schema = @Schema(implementation = ExperimentResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:write')")
-    public ResponseEntity<ExperimentResponse> createExperiment(
+    public ResponseEntity<ApiResponse<ExperimentResponse>> createExperiment(
             @Valid @RequestBody ExperimentRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
@@ -129,7 +153,8 @@ public class ExperimentController {
                 .build();
 
         Experiment saved = experimentService.createExperiment(experiment, createdBy);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ExperimentResponse.fromEntity(saved));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(ExperimentResponse.fromEntity(saved)));
     }
 
     /**
@@ -137,9 +162,14 @@ public class ExperimentController {
      */
     @PutMapping("/{id}")
     @Operation(summary = "Update experiment", description = "Update an existing experiment")
+    @ApiResponse(responseCode = "200", description = "Experiment updated successfully",
+            content = @Content(schema = @Schema(implementation = ExperimentResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "404", description = "Experiment not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:write')")
-    public ResponseEntity<ExperimentResponse> updateExperiment(
-            @Parameter(description = "Experiment ID")
+    public ResponseEntity<ApiResponse<ExperimentResponse>> updateExperiment(
+            @Parameter(description = "Experiment ID", required = true)
             @PathVariable UUID id,
             @Valid @RequestBody ExperimentRequest request) {
 
@@ -157,7 +187,7 @@ public class ExperimentController {
                 .build();
 
         Experiment updated = experimentService.updateExperiment(id, updates);
-        return ResponseEntity.ok(ExperimentResponse.fromEntity(updated));
+        return ok(ExperimentResponse.fromEntity(updated));
     }
 
     /**
@@ -165,13 +195,16 @@ public class ExperimentController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete experiment", description = "Delete an experiment (only if not running)")
+    @ApiResponse(responseCode = "204", description = "Experiment deleted successfully")
+    @ApiResponse(responseCode = "404", description = "Experiment not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:delete')")
     public ResponseEntity<Void> deleteExperiment(
-            @Parameter(description = "Experiment ID")
+            @Parameter(description = "Experiment ID", required = true)
             @PathVariable UUID id) {
 
         experimentService.deleteExperiment(id);
-        return ResponseEntity.noContent().build();
+        return noContent();
     }
 
     /**
@@ -179,15 +212,19 @@ public class ExperimentController {
      */
     @PatchMapping("/{id}/status")
     @Operation(summary = "Change experiment status", description = "Change the status of an experiment")
+    @ApiResponse(responseCode = "200", description = "Experiment status updated successfully",
+            content = @Content(schema = @Schema(implementation = ExperimentResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Experiment not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:write')")
-    public ResponseEntity<ExperimentResponse> changeStatus(
-            @Parameter(description = "Experiment ID")
+    public ResponseEntity<ApiResponse<ExperimentResponse>> changeStatus(
+            @Parameter(description = "Experiment ID", required = true)
             @PathVariable UUID id,
-            @Parameter(description = "New status")
+            @Parameter(description = "New status", required = true)
             @RequestParam ExperimentStatus status) {
 
         Experiment updated = experimentService.changeStatus(id, status);
-        return ResponseEntity.ok(ExperimentResponse.fromEntity(updated));
+        return ok(ExperimentResponse.fromEntity(updated));
     }
 
     /**
@@ -195,16 +232,20 @@ public class ExperimentController {
      */
     @PostMapping("/{key}/assign")
     @Operation(summary = "Assign variant to user", description = "Get variant assignment for a user (consistent hashing)")
+    @ApiResponse(responseCode = "200", description = "Variant assigned successfully",
+            content = @Content(schema = @Schema(implementation = VariantAssignmentResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Experiment not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:assign')")
-    public ResponseEntity<VariantAssignmentResponse> assignVariant(
-            @Parameter(description = "Experiment key")
+    public ResponseEntity<ApiResponse<VariantAssignmentResponse>> assignVariant(
+            @Parameter(description = "Experiment key", required = true)
             @PathVariable String key,
             @Valid @RequestBody VariantAssignmentRequest request) {
 
         ExperimentService.VariantAssignment assignment =
                 experimentService.assignVariant(key, request.getUserId());
 
-        return ResponseEntity.ok(VariantAssignmentResponse.fromDomain(assignment));
+        return ok(VariantAssignmentResponse.fromDomain(assignment));
     }
 
     /**
@@ -212,13 +253,16 @@ public class ExperimentController {
      */
     @PostMapping("/{id}/track")
     @Operation(summary = "Track conversion", description = "Track a conversion or participation event")
+    @ApiResponse(responseCode = "202", description = "Conversion tracked successfully")
+    @ApiResponse(responseCode = "404", description = "Experiment not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasAuthority('ab-testing:experiments:track')")
-    public ResponseEntity<Void> trackConversion(
-            @Parameter(description = "Experiment ID")
+    public ResponseEntity<ApiResponse<Void>> trackConversion(
+            @Parameter(description = "Experiment ID", required = true)
             @PathVariable UUID id,
             @Valid @RequestBody ConversionTrackingRequest request) {
 
         experimentService.trackConversion(id, request.getUserId(), request.getVariant(), request.getEventType());
-        return ResponseEntity.accepted().build();
+        return ResponseEntity.accepted().body(ApiResponse.success(null));
     }
 }

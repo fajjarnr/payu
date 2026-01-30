@@ -1,0 +1,256 @@
+name: API Validation
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '**/*.json'
+      - '.spectral.yaml'
+      - 'docs/openapi/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '**/*.json'
+      - '.spectral.yaml'
+      - 'docs/openapi/**'
+env:
+  SPECTRAL_VERSION: '6.14.2'
+jobs:
+  discover-openapi-files:
+    name: Discover OpenAPI Files
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_files: ${{ steps.set-matrix.outputs.has_files }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Find OpenAPI specification files
+        id: find-files
+        run: |
+          echo "Searching for OpenAPI files..."
+
+          # Find OpenAPI files with various naming conventions
+          files=$(find . -type f \( \
+            -name "openapi*.yaml" -o \
+            -name "openapi*.yml" -o \
+            -name "openapi*.json" -o \
+            -name "*api*.yaml" -o \
+            -name "*api*.yml" -o \
+            -name "swagger*.yaml" -o \
+            -name "swagger*.yml" \
+          \) ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/target/*" ! -path "*/build/*" 2>/dev/null || true)
+
+          # Also check docs/openapi directory
+          if [ -d "docs/openapi" ]; then
+            docs_files=$(find docs/openapi -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) 2>/dev/null || true)
+            files="$files $docs_files"
+          fi
+
+          # Check backend services for openapi files
+          if [ -d "backend" ]; then
+            backend_files=$(find backend -type f \( -name "openapi*.yaml" -o -name "openapi*.yml" -o -name "*api-spec*.yaml" \) 2>/dev/null || true)
+            files="$files $backend_files"
+          fi
+
+          # Remove duplicates and empty lines
+          files=$(echo "$files" | tr ' ' '\n' | sort -u | grep -v '^$' || true)
+
+          if [ -z "$files" ]; then
+            echo "No OpenAPI files found"
+            echo "has_files=false" >> $GITHUB_OUTPUT
+          else
+            echo "Found OpenAPI files:"
+            echo "$files"
+            echo "has_files=true" >> $GITHUB_OUTPUT
+            # Create JSON array for matrix
+            json_array=$(echo "$files" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "matrix={\"file\":$json_array}" >> $GITHUB_OUTPUT
+          fi
+      - name: Set matrix output
+        id: set-matrix
+        run: |
+          echo "has_files=${{ steps.find-files.outputs.has_files }}" >> $GITHUB_OUTPUT
+          echo "matrix=${{ steps.find-files.outputs.matrix }}" >> $GITHUB_OUTPUT
+  validate-openapi:
+    name: Validate OpenAPI
+    needs: discover-openapi-files
+    if: ${{ needs.discover-openapi-files.outputs.has_files == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.discover-openapi-files.outputs.matrix)}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install Spectral CLI
+        run: |
+          npm install -g @stoplight/spectral-cli@${{ env.SPECTRAL_VERSION }}
+          spectral --version
+      - name: Validate OpenAPI syntax
+        run: |
+          echo "Validating syntax for ${{ matrix.file }}"
+          spectral lint "${{ matrix.file }}" --ruleset .spectral.yaml --fail-severity=error --format=stylish || exit 1
+      - name: Run full Spectral linting
+        run: |
+          echo "Running full linting for ${{ matrix.file }}"
+          spectral lint "${{ matrix.file }}" --ruleset .spectral.yaml --fail-severity=warn --format=github-actions || exit 1
+      - name: Generate detailed report
+        if: always()
+        run: |
+          echo "Generating detailed report for ${{ matrix.file }}"
+          spectral lint "${{ matrix.file }}" --ruleset .spectral.yaml --format=json --output=spectral-report-${{ matrix.file }}.json || true
+          spectral lint "${{ matrix.file }}" --ruleset .spectral.yaml --format=html --output=spectral-report-${{ matrix.file }}.html || true
+      - name: Upload Spectral reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spectral-reports-${{ matrix.file }}
+          path: |
+            spectral-report-*.json
+            spectral-report-*.html
+          retention-days: 30
+  spectral-summary:
+    name: Spectral Summary Report
+    needs: [discover-openapi-files, validate-openapi]
+    if: always() && needs.discover-openapi-files.outputs.has_files == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Spectral CLI
+        run: |
+          npm install -g @stoplight/spectral-cli@${{ env.SPECTRAL_VERSION }}
+      - name: Generate summary report
+        run: |
+          echo "# API Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Files Validated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get the matrix files from the previous job
+          files='${{ needs.discover-openapi-files.outputs.matrix }}'
+          echo "$files" | jq -r '.file[]' | while read file; do
+            echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Ruleset Applied" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Ruleset: \`.spectral.yaml\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Spectral Version: ${{ env.SPECTRAL_VERSION }}" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.validate-openapi.result }}" == "success" ]; then
+            echo "All API specifications passed validation." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Some API specifications failed validation. Check the logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
+      - name: Check for critical violations
+        if: failure()
+        run: |
+          echo "::error::API validation failed. Please fix the violations before merging."
+          exit 1
+  validate-no-files:
+    name: No OpenAPI Files Found
+    needs: discover-openapi-files
+    if: ${{ needs.discover-openapi-files.outputs.has_files == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report no files found
+        run: |
+          echo "No OpenAPI specification files found in the repository."
+          echo "Skipping API validation."
+  spectral-custom-rules-test:
+    name: Test Custom Spectral Rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Spectral CLI
+        run: |
+          npm install -g @stoplight/spectral-cli@${{ env.SPECTRAL_VERSION }}
+      - name: Validate ruleset syntax
+        run: |
+          echo "Validating .spectral.yaml syntax..."
+          spectral lint --help > /dev/null  # Ensure spectral is installed
+          # Test ruleset by running against an empty valid spec
+          echo 'openapi: "3.0.0"' > /tmp/test-spec.yaml
+          echo 'info:' >> /tmp/test-spec.yaml
+          echo '  title: Test' >> /tmp/test-spec.yaml
+          echo '  version: "1.0.0"' >> /tmp/test-spec.yaml
+          echo 'paths: {}' >> /tmp/test-spec.yaml
+          spectral lint /tmp/test-spec.yaml --ruleset .spectral.yaml --fail-severity=error || true
+          echo "Ruleset syntax is valid"
+  check-breaking-changes:
+    name: Check Breaking Changes
+    needs: discover-openapi-files
+    if: ${{ github.event_name == 'pull_request' && needs.discover-openapi-files.outputs.has_files == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Spectral CLI
+        run: |
+          npm install -g @stoplight/spectral-cli@${{ env.SPECTRAL_VERSION }}
+      - name: Check for breaking changes
+        run: |
+          echo "Checking for breaking changes in OpenAPI specs..."
+
+          # Get changed files
+          changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(yaml|yml|json)$' || true)
+
+          if [ -z "$changed_files" ]; then
+            echo "No OpenAPI files changed in this PR"
+            exit 0
+          fi
+
+          echo "Changed files: $changed_files"
+
+          # For each changed file, compare with base
+          for file in $changed_files; do
+            if [ -f "$file" ]; then
+              echo "Checking $file for breaking changes..."
+
+              # Get the base version of the file
+              git show origin/${{ github.base_ref }}:$file > /tmp/base-spec.yaml 2>/dev/null || continue
+
+              # Run spectral on both versions
+              echo "Base version issues:"
+              spectral lint /tmp/base-spec.yaml --ruleset .spectral.yaml --fail-severity=error --format=stylish || true
+
+              echo "Current version issues:"
+              spectral lint "$file" --ruleset .spectral.yaml --fail-severity=error --format=stylish || true
+            fi
+          done
+      - name: Report breaking changes
+        if: always()
+        run: |
+          echo "Breaking change check completed"

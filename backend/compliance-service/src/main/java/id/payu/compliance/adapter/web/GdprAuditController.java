@@ -1,5 +1,6 @@
 package id.payu.compliance.adapter.web;
 
+import id.payu.api.common.response.ApiResponse;
 import id.payu.compliance.domain.model.DataAccessAudit;
 import id.payu.compliance.domain.port.in.DataAccessAuditUseCase;
 import id.payu.compliance.dto.DataAccessAuditRequest;
@@ -7,6 +8,10 @@ import id.payu.compliance.dto.DataAccessAuditResponse;
 import id.payu.compliance.dto.DataAccessAuditSearchRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +23,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -28,15 +35,21 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/gdpr-audit")
 @RequiredArgsConstructor
 @Tag(name = "GDPR Data Access Audit", description = "API for auditing user data access patterns for GDPR compliance")
-public class GdprAuditController {
+@SecurityRequirement(name = "bearerAuth")
+public class GdprAuditController extends BaseController {
 
     private final DataAccessAuditUseCase dataAccessAuditUseCase;
 
     @PostMapping
     @Operation(summary = "Log data access", description = "Record when user data is accessed for GDPR compliance tracking")
+    @ApiResponse(responseCode = "201", description = "Data access logged successfully",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<DataAccessAuditResponse> logDataAccess(@Valid @RequestBody DataAccessAuditRequest request) {
-        dataAccessAuditUseCase.logDataAccess(
+    public ResponseEntity<ApiResponse<DataAccessAuditResponse>> logDataAccess(@Valid @RequestBody DataAccessAuditRequest request) {
+        DataAccessAudit audit = dataAccessAuditUseCase.logDataAccess(
                 request.getUserId(),
                 request.getAccessedBy(),
                 request.getServiceName(),
@@ -50,59 +63,87 @@ public class GdprAuditController {
                 request.getErrorMessage()
         );
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{auditId}")
+                .buildAndExpand(audit.getId())
+                .toUri();
+
+        return created(toResponse(audit), location.toString());
     }
 
     @GetMapping("/{auditId}")
     @Operation(summary = "Get data access audit by ID", description = "Retrieve a specific data access audit record")
+    @ApiResponse(responseCode = "200", description = "Data access audit found",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Data access audit not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<DataAccessAuditResponse> getDataAccessAudit(@PathVariable UUID auditId) {
+    public ResponseEntity<ApiResponse<DataAccessAuditResponse>> getDataAccessAudit(
+            @Parameter(description = "Audit ID", required = true) @PathVariable UUID auditId) {
         DataAccessAudit audit = dataAccessAuditUseCase.getDataAccessAudit(auditId);
-        return ResponseEntity.ok(toResponse(audit));
+        return ok(toResponse(audit));
     }
 
     @GetMapping("/users/{userId}")
     @Operation(summary = "Get user data access history", description = "Retrieve all data access records for a specific user")
+    @ApiResponse(responseCode = "200", description = "Data access history retrieved successfully",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or #userId == authentication.principal.userId")
-    public ResponseEntity<Page<DataAccessAuditResponse>> getUserDataAccessHistory(
-            @PathVariable String userId,
+    public ResponseEntity<ApiResponse<Page<DataAccessAuditResponse>>> getUserDataAccessHistory(
+            @Parameter(description = "User ID", required = true) @PathVariable String userId,
             @Parameter(description = "Page number (default: 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default: 20)") @RequestParam(defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("accessedAt").descending());
         Page<DataAccessAudit> audits = dataAccessAuditUseCase.getUserDataAccessHistory(userId, pageable);
-        return ResponseEntity.ok(audits.map(this::toResponse));
+        return ok(audits.map(this::toResponse), audits);
     }
 
     @GetMapping("/users/{userId}/date-range")
     @Operation(summary = "Get user data access by date range", description = "Retrieve data access records for a user within a date range")
+    @ApiResponse(responseCode = "200", description = "Data access records retrieved successfully",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or #userId == authentication.principal.userId")
-    public ResponseEntity<List<DataAccessAuditResponse>> getUserDataAccessByDateRange(
-            @PathVariable String userId,
+    public ResponseEntity<ApiResponse<List<DataAccessAuditResponse>>> getUserDataAccessByDateRange(
+            @Parameter(description = "User ID", required = true) @PathVariable String userId,
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
     ) {
         List<DataAccessAudit> audits = dataAccessAuditUseCase.getUserDataAccessHistoryByDateRange(userId, startDate, endDate);
-        return ResponseEntity.ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
+        return ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/accessed-by/{accessedBy}")
     @Operation(summary = "Get access by user history", description = "Retrieve records showing what data a specific user has accessed")
+    @ApiResponse(responseCode = "200", description = "Access history retrieved successfully",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<List<DataAccessAuditResponse>> getAccessedByUserHistory(
-            @PathVariable String accessedBy,
+    public ResponseEntity<ApiResponse<List<DataAccessAuditResponse>>> getAccessedByUserHistory(
+            @Parameter(description = "Accessed by user ID", required = true) @PathVariable String accessedBy,
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
     ) {
         List<DataAccessAudit> audits = dataAccessAuditUseCase.getAccessedByUserHistory(accessedBy, startDate, endDate);
-        return ResponseEntity.ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
+        return ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/operations/{operationType}")
     @Operation(summary = "Get data access by operation type", description = "Retrieve all data access records of a specific operation type")
+    @ApiResponse(responseCode = "200", description = "Data access records retrieved successfully",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<Page<DataAccessAuditResponse>> getDataAccessByOperationType(
-            @PathVariable String operationType,
+    public ResponseEntity<ApiResponse<Page<DataAccessAuditResponse>>> getDataAccessByOperationType(
+            @Parameter(description = "Operation type", required = true) @PathVariable String operationType,
             @Parameter(description = "Page number (default: 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default: 20)") @RequestParam(defaultValue = "20") int size
     ) {
@@ -111,46 +152,61 @@ public class GdprAuditController {
                 DataAccessAudit.DataOperationType.valueOf(operationType.toUpperCase()),
                 pageable
         );
-        return ResponseEntity.ok(audits.map(this::toResponse));
+        return ok(audits.map(this::toResponse), audits);
     }
 
     @GetMapping("/services/{serviceName}")
     @Operation(summary = "Get service data access history", description = "Retrieve data access records for a specific service")
+    @ApiResponse(responseCode = "200", description = "Service data access history retrieved successfully",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<List<DataAccessAuditResponse>> getServiceDataAccessHistory(
-            @PathVariable String serviceName,
+    public ResponseEntity<ApiResponse<List<DataAccessAuditResponse>>> getServiceDataAccessHistory(
+            @Parameter(description = "Service name", required = true) @PathVariable String serviceName,
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
     ) {
         List<DataAccessAudit> audits = dataAccessAuditUseCase.getServiceDataAccessHistory(serviceName, startDate, endDate);
-        return ResponseEntity.ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
+        return ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/users/{userId}/count")
     @Operation(summary = "Count user data access", description = "Count total data access records for a user since a specific date")
+    @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or #userId == authentication.principal.userId")
-    public ResponseEntity<Long> getUserDataAccessCount(
-            @PathVariable String userId,
+    public ResponseEntity<ApiResponse<Long>> getUserDataAccessCount(
+            @Parameter(description = "User ID", required = true) @PathVariable String userId,
             @Parameter(description = "Since date") @RequestParam LocalDateTime since
     ) {
         long count = dataAccessAuditUseCase.getUserDataAccessCount(userId, since);
-        return ResponseEntity.ok(count);
+        return ok(count);
     }
 
     @GetMapping("/failed-access")
     @Operation(summary = "Get failed access attempts", description = "Retrieve all failed data access attempts since a specific date")
+    @ApiResponse(responseCode = "200", description = "Failed access attempts retrieved successfully",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<List<DataAccessAuditResponse>> getFailedAccessAttempts(
+    public ResponseEntity<ApiResponse<List<DataAccessAuditResponse>>> getFailedAccessAttempts(
             @Parameter(description = "Since date") @RequestParam LocalDateTime since
     ) {
         List<DataAccessAudit> audits = dataAccessAuditUseCase.getFailedAccessAttempts(since);
-        return ResponseEntity.ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
+        return ok(audits.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
     @PostMapping("/search")
     @Operation(summary = "Search data access audits", description = "Search data access audit records with multiple filters")
+    @ApiResponse(responseCode = "200", description = "Search results retrieved successfully",
+            content = @Content(schema = @Schema(implementation = DataAccessAuditResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<Page<DataAccessAuditResponse>> searchDataAccessAudit(@RequestBody DataAccessAuditSearchRequest request) {
+    public ResponseEntity<ApiResponse<Page<DataAccessAuditResponse>>> searchDataAccessAudit(@RequestBody DataAccessAuditSearchRequest request) {
         Pageable pageable = PageRequest.of(
                 request.getPage() != null ? request.getPage() : 0,
                 request.getSize() != null ? request.getSize() : 20,
@@ -167,15 +223,20 @@ public class GdprAuditController {
                 pageable
         );
 
-        return ResponseEntity.ok(audits.map(this::toResponse));
+        return ok(audits.map(this::toResponse), audits);
     }
 
     @DeleteMapping("/{auditId}")
     @Operation(summary = "Delete data access audit", description = "Delete a specific data access audit record")
+    @ApiResponse(responseCode = "204", description = "Data access audit deleted successfully")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden")
+    @ApiResponse(responseCode = "404", description = "Data access audit not found")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteDataAccessAudit(@PathVariable UUID auditId) {
+    public ResponseEntity<Void> deleteDataAccessAudit(
+            @Parameter(description = "Audit ID", required = true) @PathVariable UUID auditId) {
         dataAccessAuditUseCase.deleteDataAccessAudit(auditId);
-        return ResponseEntity.noContent().build();
+        return noContent();
     }
 
     private DataAccessAuditResponse toResponse(DataAccessAudit audit) {

@@ -3,6 +3,7 @@ package id.payu.billing.resource;
 import id.payu.billing.domain.BillPayment;
 import id.payu.billing.dto.TopUpRequest;
 import id.payu.billing.dto.TopUpResponse;
+import id.payu.billing.idempotency.Idempotent;
 import id.payu.billing.service.PaymentService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -24,6 +25,7 @@ public class TopUpResource {
     PaymentService paymentService;
 
     @POST
+    @Idempotent(required = true)
     public Response createTopUp(@Valid TopUpRequest request) {
         LOG.infof("Received top-up request: provider=%s, walletNumber=%s, amount=%s",
             request.provider(), request.walletNumber(), request.amount());

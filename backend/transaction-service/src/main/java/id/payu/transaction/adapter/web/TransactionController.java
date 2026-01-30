@@ -10,6 +10,7 @@ import id.payu.api.common.openapi.OpenApiConstants;
 import id.payu.api.common.openapi.PaginationParameter;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.api.common.response.PaginationInfo;
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.domain.model.Transaction;
@@ -111,6 +112,7 @@ public class TransactionController extends BaseController {
             )
     })
     @RateLimit(requests = 100, windowSeconds = 60, keyPrefix = "transfer")
+    @Idempotent(required = true)
     @PreAuthorize("hasAuthority('write:transaction')")
     public ResponseEntity<ApiResponse<InitiateTransferResponse>> initiateTransfer(
             @Valid @RequestBody InitiateTransferRequest request
@@ -287,6 +289,7 @@ public class TransactionController extends BaseController {
             )
     })
     @RateLimit(requests = 100, windowSeconds = 60, keyPrefix = "qris")
+    @Idempotent(required = true)
     @PreAuthorize("hasAuthority('write:payment')")
     public ResponseEntity<ApiResponse<Void>> processQrisPayment(
             @Valid @RequestBody ProcessQrisPaymentRequest request

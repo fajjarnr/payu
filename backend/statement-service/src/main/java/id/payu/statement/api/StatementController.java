@@ -1,8 +1,16 @@
 package id.payu.statement.api;
 
+import id.payu.api.common.response.ApiResponse;
 import id.payu.statement.service.StatementService;
 import id.payu.statement.service.dto.StatementGenerationRequest;
 import id.payu.statement.service.dto.StatementResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,17 +35,20 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/statements")
 @RequiredArgsConstructor
-public class StatementController {
+@Tag(name = "Statement", description = "E-Statement generation and management APIs")
+@SecurityRequirement(name = "bearerAuth")
+public class StatementController extends BaseController {
 
     private final StatementService statementService;
 
-    /**
-     * Generate statement for a specific month
-     * POST /api/v1/statements/generate
-     */
     @PostMapping("/generate")
+    @Operation(summary = "Generate statement", description = "Generate e-statement for a specific month and year")
+    @ApiResponse(responseCode = "202", description = "Statement generation request accepted",
+            content = @Content(schema = @Schema(implementation = StatementResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Void> generateStatement(
+    public ResponseEntity<ApiResponse<StatementResponse>> generateStatement(
             @Valid @RequestBody StatementGenerationRequest request,
             Authentication authentication) {
 
@@ -46,67 +57,72 @@ public class StatementController {
         UUID userId = UUID.fromString(jwt.getSubject());
         request.setUserId(userId);
 
-        statementService.generateStatement(request);
-        return ResponseEntity.accepted().build();
+        StatementResponse response = statementService.generateStatement(request);
+        return ResponseEntity.accepted().body(ApiResponse.success(response));
     }
 
-    /**
-     * Get statement by ID
-     * GET /api/v1/statements/{id}
-     */
     @GetMapping("/{id}")
+    @Operation(summary = "Get statement by ID", description = "Retrieve statement details by statement ID")
+    @ApiResponse(responseCode = "200", description = "Statement found",
+            content = @Content(schema = @Schema(implementation = StatementResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Statement not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden - cannot access other user's statement")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<StatementResponse> getStatement(
-            @PathVariable UUID id,
+    public ResponseEntity<ApiResponse<StatementResponse>> getStatement(
+            @Parameter(description = "Statement ID", required = true) @PathVariable UUID id,
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
         UUID userId = UUID.fromString(jwt.getSubject());
 
         StatementResponse response = statementService.getStatement(id, userId);
-        return ResponseEntity.ok(response);
+        return ok(response);
     }
 
-    /**
-     * List all statements for current user
-     * GET /api/v1/statements
-     */
     @GetMapping
+    @Operation(summary = "List statements", description = "List all e-statements for the current user with pagination")
+    @ApiResponse(responseCode = "200", description = "Statements retrieved successfully",
+            content = @Content(schema = @Schema(implementation = StatementResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Page<StatementResponse>> listStatements(
-            @PageableDefault(size = 12, sort = "statementPeriod", direction = Sort.Direction.DESC) Pageable pageable,
+    public ResponseEntity<ApiResponse<Page<StatementResponse>>> listStatements(
+            @Parameter(description = "Pagination parameters") @PageableDefault(size = 12, sort = "statementPeriod", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
         UUID userId = UUID.fromString(jwt.getSubject());
 
         Page<StatementResponse> statements = statementService.listStatements(userId, pageable);
-        return ResponseEntity.ok(statements);
+        return ok(statements, statements);
     }
 
-    /**
-     * Get latest statement for current user
-     * GET /api/v1/statements/latest
-     */
     @GetMapping("/latest")
+    @Operation(summary = "Get latest statement", description = "Retrieve the most recent e-statement for the current user")
+    @ApiResponse(responseCode = "200", description = "Latest statement found",
+            content = @Content(schema = @Schema(implementation = StatementResponse.class)))
+    @ApiResponse(responseCode = "404", description = "No statements found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<StatementResponse> getLatestStatement(Authentication authentication) {
+    public ResponseEntity<ApiResponse<StatementResponse>> getLatestStatement(Authentication authentication) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         UUID userId = UUID.fromString(jwt.getSubject());
 
         return statementService.getLatestStatement(userId)
-            .map(ResponseEntity::ok)
+            .map(this::ok)
             .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Download statement PDF
-     * GET /api/v1/statements/{id}/download
-     */
     @GetMapping("/{id}/download")
+    @Operation(summary = "Download statement PDF", description = "Download e-statement as PDF file")
+    @ApiResponse(responseCode = "200", description = "PDF downloaded successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE))
+    @ApiResponse(responseCode = "404", description = "Statement not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden - cannot access other user's statement")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<byte[]> downloadStatement(
-            @PathVariable UUID id,
+            @Parameter(description = "Statement ID", required = true) @PathVariable UUID id,
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
@@ -123,14 +139,17 @@ public class StatementController {
             .body(pdfBytes);
     }
 
-    /**
-     * Regenerate statement (admin only)
-     * POST /api/v1/statements/{id}/regenerate
-     */
     @PostMapping("/{id}/regenerate")
+    @Operation(summary = "Regenerate statement", description = "Regenerate an existing e-statement (admin only)")
+    @ApiResponse(responseCode = "202", description = "Statement regeneration request accepted",
+            content = @Content(schema = @Schema(implementation = StatementResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Statement not found")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @ApiResponse(responseCode = "403", description = "Forbidden - admin access required")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> regenerateStatement(@PathVariable UUID id) {
-        statementService.regenerateStatement(id);
-        return ResponseEntity.accepted().build();
+    public ResponseEntity<ApiResponse<StatementResponse>> regenerateStatement(
+            @Parameter(description = "Statement ID", required = true) @PathVariable UUID id) {
+        StatementResponse response = statementService.regenerateStatement(id);
+        return ResponseEntity.accepted().body(ApiResponse.success(response));
     }
 }
