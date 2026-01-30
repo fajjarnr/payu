@@ -1,10 +1,10 @@
 'use client';
 
 import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar, Zap, Truck } from "lucide-react";
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { transferSchema, TransferRequest, TransferType, TransferScheduleType } from '@/types';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useInitiateTransfer } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { useUIStore } from '@/stores';
@@ -83,7 +83,7 @@ export default function TransferPage() {
     { name: 'Dodi', initial: 'D', color: 'bg-amber-500/10 text-amber-600', accountId: 'acc-dod012' },
   ];
 
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<TransferRequest>({
+  const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<TransferRequest>({
     resolver: zodResolver(transferSchema),
     defaultValues: {
       amount: 0,
@@ -92,9 +92,16 @@ export default function TransferPage() {
     }
   });
 
-  const amount = watch('amount');
-  const transferType = watch('transferType');
-  const scheduleType = watch('scheduleType');
+  // Use useWatch for individual fields to prevent React Compiler warnings
+  // useWatch returns stable values that work with React Compiler memoization
+  const amount = useWatch({ control, name: 'amount' });
+  const transferType = useWatch({ control, name: 'transferType' });
+  const scheduleType = useWatch({ control, name: 'scheduleType' });
+  const toAccountId = useWatch({ control, name: 'toAccountId' });
+  const description = useWatch({ control, name: 'description' });
+  const scheduledAt = useWatch({ control, name: 'scheduledAt' });
+  const recurringDay = useWatch({ control, name: 'recurringDay' });
+  const recurringMonth = useWatch({ control, name: 'recurringMonth' });
 
   const handleContactSelect = (contact: { name: string; accountId: string }) => {
     setSelectedContact(contact.accountId);
@@ -127,8 +134,8 @@ export default function TransferPage() {
       },
       {
         onSuccess: () => {
-          const message = data.scheduleType === 'NOW' 
-            ? 'Transfer berhasil!' 
+          const message = data.scheduleType === 'NOW'
+            ? 'Transfer berhasil!'
             : data.scheduleType === 'SCHEDULED'
             ? 'Transfer terjadwal berhasil diset!'
             : 'Transfer berulang berhasil diset!';
@@ -145,25 +152,36 @@ export default function TransferPage() {
     );
   };
 
-  const handleReview = () => {
-    const data = { ...watch(), fromAccountId: accountId || '' };
-    if (!data.toAccountId || data.amount <= 0) {
+  // Memoize form values for review to prevent React Compiler warnings
+  const formValues = useMemo(() => ({
+    amount,
+    toAccountId,
+    description,
+    scheduleType,
+    scheduledAt,
+    recurringDay,
+    recurringMonth,
+    fromAccountId: accountId || ''
+  }), [amount, toAccountId, description, scheduleType, scheduledAt, recurringDay, recurringMonth, accountId]);
+
+  const handleReview = useCallback(() => {
+    if (!formValues.toAccountId || formValues.amount <= 0) {
       addToast('Silakan pilih penerima dan masukkan jumlah transfer', 'warning');
       return;
     }
 
-    if (data.scheduleType === 'SCHEDULED' && !data.scheduledAt) {
+    if (formValues.scheduleType === 'SCHEDULED' && !formValues.scheduledAt) {
       addToast('Silakan tentukan tanggal transfer', 'warning');
       return;
     }
 
-    if (data.scheduleType === 'RECURRING' && (!data.recurringDay || !data.recurringMonth)) {
+    if (formValues.scheduleType === 'RECURRING' && (!formValues.recurringDay || !formValues.recurringMonth)) {
       addToast('Silakan tentukan tanggal dan bulan transfer', 'warning');
       return;
     }
 
     setShowReview(true);
-  };
+  }, [formValues, addToast]);
 
   const selectedTransferType = TRANSFER_TYPES.find(t => t.type === transferType);
 
@@ -230,11 +248,11 @@ export default function TransferPage() {
                         <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Jadwal</p>
                       </div>
                       <p className="font-black text-foreground text-sm">{selectedScheduleType?.label}</p>
-                      {scheduleType === 'SCHEDULED' && watch('scheduledAt') && (
-                        <p className="text-[10px] text-muted-foreground mt-1">{new Date(watch('scheduledAt') || '').toLocaleDateString('id-ID')}</p>
+                      {scheduleType === 'SCHEDULED' && scheduledAt && (
+                        <p className="text-[10px] text-muted-foreground mt-1">{new Date(scheduledAt).toLocaleDateString('id-ID')}</p>
                       )}
                       {scheduleType === 'RECURRING' && (
-                        <p className="text-[10px] text-muted-foreground mt-1">Tanggal {watch('recurringDay') || '-'}-{watch('recurringMonth') || 'setiap bulan'}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Tanggal {recurringDay || '-'}-{recurringMonth || 'setiap bulan'}</p>
                       )}
                     </div>
                   </div>
@@ -245,10 +263,10 @@ export default function TransferPage() {
                       <p className="font-black text-foreground text-lg">Kantong Utama Cair</p>
                       <p className="text-[10px] font-bold text-primary tracking-widest uppercase mt-2">Saldo: Rp 86.353.000</p>
                     </div>
-                    {watch('description') && (
+                    {description && (
                       <div className="bg-muted p-8 rounded-xl border border-border">
                         <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-2">Pesan Konfirmasi</p>
-                        <p className="font-bold text-foreground text-lg italic">&quot;{watch('description')}&quot;</p>
+                        <p className="font-bold text-foreground text-lg italic">&quot;{description}&quot;</p>
                       </div>
                     )}
                   </div>

@@ -19,7 +19,6 @@ export default function QRISscreen() {
 
   const [amount, setAmount] = useState('');
   const [processing, setProcessing] = useState(false);
-  const [qrData, setQrData] = useState<any>(null);
   const [showManualInput, setShowManualInput] = useState(false);
 
   const handlePayment = async () => {

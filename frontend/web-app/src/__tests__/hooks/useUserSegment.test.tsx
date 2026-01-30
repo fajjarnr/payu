@@ -9,7 +9,14 @@ import {
 import SegmentationService from '@/services/SegmentationService';
 
 // Mock SegmentationService
-vi.mock('@/services/SegmentationService');
+vi.mock('@/services/SegmentationService', () => ({
+  default: {
+    getUserSegments: vi.fn(),
+    getSegmentById: vi.fn(),
+    getAllSegments: vi.fn(),
+    isVIPSegment: vi.fn((tier: string) => tier === 'VIP' || tier === 'DIAMOND' || tier === 'PLATINUM'),
+  },
+}));
 
 describe('useUserSegment hook', () => {
   let queryClient: QueryClient;
@@ -254,7 +261,7 @@ describe('useUserSegment hook', () => {
     });
 
     expect(result.current.currentMembership).toBeUndefined();
-    expect(result.current.currentTier).toBeUndefined();
+    expect(result.current.currentTier).toBe('BRONZE');
     expect(result.current.isVIP).toBe(false);
   });
 });

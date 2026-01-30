@@ -78,10 +78,10 @@ describe('transactionService', () => {
       mockGet.mockResolvedValueOnce({ data: apiResponse });
 
       const params = { page: 2, pageSize: 20 };
-      const result = await transactionService.getTransactions(params);
+      const response = await transactionService.getTransactions(params);
 
       expect(mockGet).toHaveBeenCalledWith('/transactions', { params });
-      expect(result.items).toHaveLength(2);
+      expect(response.items).toHaveLength(2);
     });
 
     it('should get transactions with filters', async () => {
@@ -298,13 +298,13 @@ describe('transactionService', () => {
     it('should handle different payment methods', async () => {
       const apiResponse: ApiResponse<Transaction> = {
         success: true,
-        data: { ...mockTransaction, paymentMethod: 'debit_card' },
+        data: mockTransaction,
         message: 'Top up initiated',
       };
 
       mockPost.mockResolvedValueOnce({ data: apiResponse });
 
-      const result = await transactionService.topUp(100000, 'debit_card');
+      await transactionService.topUp(100000, 'debit_card');
 
       expect(mockPost).toHaveBeenCalledWith('/transactions/topup', {
         amount: 100000,
@@ -424,7 +424,7 @@ describe('transactionService', () => {
 
       mockGet.mockResolvedValueOnce({ data: apiResponse });
 
-      const result = await transactionService.getTransactionSummary({ period: 'month' });
+      await transactionService.getTransactionSummary({ period: 'month' });
 
       expect(mockGet).toHaveBeenCalledWith('/transactions/summary', { params: { period: 'month' } });
     });
@@ -438,7 +438,7 @@ describe('transactionService', () => {
 
       mockGet.mockResolvedValueOnce({ data: apiResponse });
 
-      const result = await transactionService.getTransactionSummary({ period: 'year' });
+      await transactionService.getTransactionSummary({ period: 'year' });
 
       expect(mockGet).toHaveBeenCalledWith('/transactions/summary', { params: { period: 'year' } });
     });

@@ -336,7 +336,7 @@ describe('notificationService', () => {
 
   describe('setBadgeCount', () => {
     it('should set badge count successfully', async () => {
-      mockSetBadgeCountAsync.mockResolvedValueOnce(undefined);
+      mockSetBadgeCountAsync.mockResolvedValueOnce(true);
 
       await notificationService.setBadgeCount(5);
 
@@ -345,7 +345,7 @@ describe('notificationService', () => {
     });
 
     it('should set badge count to 0', async () => {
-      mockSetBadgeCountAsync.mockResolvedValueOnce(undefined);
+      mockSetBadgeCountAsync.mockResolvedValueOnce(true);
 
       await notificationService.setBadgeCount(0);
 

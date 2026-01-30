@@ -1,4 +1,4 @@
-import { renderHook, waitFor, act } from '@testing-library/react-native';
+import { renderHook, act } from '@testing-library/react-native';
 import { useWallet } from '../useWallet';
 import { useWalletStore } from '@/store/walletStore';
 
@@ -47,7 +47,7 @@ describe('useWallet', () => {
   });
 
   it('should return wallet state from store', () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: mockPrimaryWallet,
       pockets: mockPockets,
       balance: 1000000,
@@ -70,7 +70,7 @@ describe('useWallet', () => {
   });
 
   it('should return loading state', () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: null,
       pockets: [],
       balance: 0,
@@ -91,7 +91,7 @@ describe('useWallet', () => {
 
   it('should return error state', () => {
     const errorMessage = 'Failed to load wallet';
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: null,
       pockets: [],
       balance: 0,
@@ -110,7 +110,7 @@ describe('useWallet', () => {
   });
 
   it('should call loadWallet on mount', () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: null,
       pockets: [],
       balance: 0,
@@ -129,7 +129,7 @@ describe('useWallet', () => {
   });
 
   it('should call loadPockets on mount', () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: null,
       pockets: [],
       balance: 0,
@@ -148,7 +148,7 @@ describe('useWallet', () => {
   });
 
   it('should call loadWallet action', async () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: mockPrimaryWallet,
       pockets: mockPockets,
       balance: 1000000,
@@ -171,7 +171,7 @@ describe('useWallet', () => {
   });
 
   it('should call loadPockets action', async () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: mockPrimaryWallet,
       pockets: mockPockets,
       balance: 1000000,
@@ -200,7 +200,7 @@ describe('useWallet', () => {
       initialBalance: 100000,
     };
 
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: mockPrimaryWallet,
       pockets: mockPockets,
       balance: 1000000,
@@ -223,7 +223,7 @@ describe('useWallet', () => {
   });
 
   it('should call transferToPocket action', async () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: mockPrimaryWallet,
       pockets: mockPockets,
       balance: 1000000,
@@ -246,7 +246,7 @@ describe('useWallet', () => {
   });
 
   it('should call clearError action', () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: mockPrimaryWallet,
       pockets: mockPockets,
       balance: 1000000,
@@ -269,7 +269,7 @@ describe('useWallet', () => {
   });
 
   it('should handle empty pockets array', () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: mockPrimaryWallet,
       pockets: [],
       balance: 1000000,
@@ -289,7 +289,7 @@ describe('useWallet', () => {
   });
 
   it('should handle zero balance', () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: { ...mockPrimaryWallet, balance: 0 },
       pockets: mockPockets,
       balance: 0,
@@ -309,7 +309,7 @@ describe('useWallet', () => {
   });
 
   it('should handle null primary wallet', () => {
-    (useWalletStore as jest.Mock).mockReturnValue({
+    (useWalletStore as unknown as jest.Mock).mockReturnValue({
       primaryWallet: null,
       pockets: mockPockets,
       balance: 0,

@@ -4,10 +4,20 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Wallet, Repeat, Receipt } from 'lucide-react';
 import clsx from 'clsx';
+import { useAuthStore } from '@/stores';
 
-
+/**
+ * SECURITY NOTICE: Authentication Check
+ * ================================
+ * This component uses the auth store to check authentication status.
+ * It does NOT access tokens from localStorage (security vulnerability).
+ *
+ * Tokens are managed exclusively via httpOnly cookies from the backend.
+ * The auth store only tracks authentication state, not actual tokens.
+ */
 export default function MobileNav() {
  const pathname = usePathname();
+ const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
  const navItems = [
   { href: '/', icon: Home, label: 'Beranda' },
@@ -20,8 +30,8 @@ export default function MobileNav() {
  if (pathname === '/login' || pathname === '/onboarding') return null;
 
  // Don't show if not authenticated
- const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
- if (!token) return null;
+ // SECURITY: Uses auth store state, NOT localStorage tokens
+ if (!isAuthenticated) return null;
 
  return (
   <div className={clsx(

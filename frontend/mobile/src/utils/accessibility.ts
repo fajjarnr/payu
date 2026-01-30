@@ -443,7 +443,7 @@ export function createAnnouncement(
  * @returns Validation results
  */
 export function validateA11yLabels(
-  elements: Array<{ label?: string; testID?: string; role?: string }>
+  elements: { label?: string; testID?: string; role?: string }[]
 ): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 

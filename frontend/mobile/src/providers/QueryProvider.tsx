@@ -38,7 +38,7 @@ const persistConfig = {
   maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   persister: asyncStoragePersister,
   dehydrateOptions: {
-    shouldDehydrateQuery: (query) => {
+    shouldDehydrateQuery: (query: any) => {
       // Only persist specific query types
       const persistableQueries = [
         'wallet',

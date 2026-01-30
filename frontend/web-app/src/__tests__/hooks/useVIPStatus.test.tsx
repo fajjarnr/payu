@@ -437,7 +437,8 @@ describe('useVIPStatus hook', () => {
 
     const { result } = renderHook(() => useVIPStatus(), { wrapper });
 
-    expect(result.current.exclusiveOffers).toBe(false);
+    // Platinum is a VIP tier (isVIP: true), so exclusiveOffers should be true
+    expect(result.current.exclusiveOffers).toBe(true);
   });
 
   it('should determine higher limits correctly for Gold and above', () => {

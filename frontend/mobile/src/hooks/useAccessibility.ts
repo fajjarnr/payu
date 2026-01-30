@@ -14,12 +14,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   AccessibilityInfo,
-  NativeModules,
   Platform,
   findNodeHandle,
   View,
   AccessibilityChangeEvent,
-  AccessibilityAnnounceFinishedEvent,
+  AccessibilityAnnouncementFinishedEvent,
 } from 'react-native';
 
 // ============================================================================
@@ -43,7 +42,7 @@ export interface AnnouncementOptions {
   /** Announcement priority */
   priority?: 'polite' | 'assertive';
   /** Callback when announcement finishes */
-  onFinish?: (event: AccessibilityAnnounceFinishedEvent) => void;
+  onFinish?: (event: AccessibilityAnnouncementFinishedEvent) => void;
 }
 
 /**
@@ -181,12 +180,12 @@ export function useScreenReader(): ScreenReaderState & {
  */
 export function useAccessibilityAnnounce() {
   const [lastAnnouncement, setLastAnnouncement] = useState<string>('');
-  const finishCallbacks = useRef<Map<string, (event: AccessibilityAnnounceFinishedEvent) => void>>(new Map());
+  const finishCallbacks = useRef<Map<string, (event: AccessibilityAnnouncementFinishedEvent) => void>>(new Map());
 
   useEffect(() => {
     const subscription = AccessibilityInfo.addEventListener(
       'announcementFinished',
-      (event: AccessibilityAnnounceFinishedEvent) => {
+      (event: AccessibilityAnnouncementFinishedEvent) => {
         const callback = finishCallbacks.current.get(event.announcement);
         if (callback) {
           callback(event);
@@ -227,14 +226,14 @@ export function useAccessibilityAnnounce() {
   );
 
   const announcePolite = useCallback(
-    (message: string, onFinish?: (event: AccessibilityAnnounceFinishedEvent) => void) => {
+    (message: string, onFinish?: (event: AccessibilityAnnouncementFinishedEvent) => void) => {
       announce(message, { priority: 'polite', onFinish });
     },
     [announce]
   );
 
   const announceAssertive = useCallback(
-    (message: string, onFinish?: (event: AccessibilityAnnounceFinishedEvent) => void) => {
+    (message: string, onFinish?: (event: AccessibilityAnnouncementFinishedEvent) => void) => {
       announce(message, { priority: 'assertive', onFinish });
     },
     [announce]

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ViewStyle } from 'react-native';
+import { View, Text, Image, ViewStyle } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 
 interface AvatarProps {

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
@@ -19,7 +18,6 @@ export default function HistoryScreen() {
   const { colors } = useTheme();
   const {
     transactions,
-    isLoading,
     loadTransactions,
     loadMoreTransactions,
     isLoadingMore,

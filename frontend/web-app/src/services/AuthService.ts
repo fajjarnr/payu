@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import type { User } from '@/types';
 
 export interface LoginRequest {
   username: string;
@@ -10,6 +11,11 @@ export interface LoginResponse {
   refresh_token: string;
   expires_in: number;
   token_type: string;
+}
+
+interface UserSession {
+  user: User;
+  accountId: string;
 }
 
 /**
@@ -41,7 +47,7 @@ export class AuthService {
   private static instance: AuthService;
   // Session state only - no sensitive tokens stored here
   private authenticated: boolean = false;
-  private userSession: { user: any; accountId: string } | null = null;
+  private userSession: UserSession | null = null;
 
   private constructor() { }
 
@@ -61,7 +67,6 @@ export class AuthService {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>('/auth/login', credentials);
-    const { access_token, refresh_token, expires_in, token_type } = response.data;
 
     // Mark as authenticated - actual tokens are in httpOnly cookies
     this.authenticated = true;
@@ -86,7 +91,7 @@ export class AuthService {
    * @param user User profile data
    * @param accountId Account identifier
    */
-  setUserSession(user: any, accountId: string): void {
+  setUserSession(user: User, accountId: string): void {
     this.userSession = { user, accountId };
   }
 

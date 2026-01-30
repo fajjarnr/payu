@@ -34,7 +34,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { user, logout } = useAuth();
-  const { lockEnabled, toggleAppLock, sessionTimeout, setSessionTimeout, checkJailbreak } = useAppLock();
+  const { lockEnabled, toggleAppLock, setSessionTimeout, checkJailbreak } = useAppLock();
   const { checkAvailability: checkBiometric } = useBiometrics();
   const { showFeedback } = useFeedback();
   const { permissionGranted: notificationPermission } = useNotifications();
@@ -42,7 +42,6 @@ export default function ProfileScreen() {
   const [language, setLanguage] = useState<Language>('en');
   const [notificationsEnabled, setNotificationsEnabled] = useState(notificationPermission);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
-  const [faceIdEnabled, setFaceIdEnabled] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(

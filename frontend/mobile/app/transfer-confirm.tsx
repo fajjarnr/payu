@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
   TouchableOpacity,
   Share,
 } from 'react-native';
@@ -15,7 +14,6 @@ import { useBiometrics } from '@/hooks/useBiometrics';
 import { useWallet } from '@/hooks/useWallet';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import { formatCurrency } from '@/utils/currency';
 import { transactionService } from '@/services/transaction.service';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -35,7 +33,6 @@ export default function TransferConfirmScreen() {
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [transactionResult, setTransactionResult] = useState<any>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const transferTypes = [
     { id: 'bifast', name: 'BI-FAST', fee: 0, minAmount: 10000, maxAmount: 25000000 },
@@ -82,7 +79,6 @@ export default function TransferConfirmScreen() {
 
   const processTransfer = async () => {
     setStep('processing');
-    setIsProcessing(true);
 
     try {
       const result = await transactionService.transfer({
@@ -104,8 +100,6 @@ export default function TransferConfirmScreen() {
       setStep('failed');
 
       trackTransaction(selectedTransferType.id, transferData.amount, 'failed');
-    } finally {
-      setIsProcessing(false);
     }
   };
 

@@ -15,12 +15,11 @@ import { BalanceCard } from '@/components/shared/BalanceCard';
 import { QuickActions } from '@/components/shared/QuickActions';
 import { TransactionItem } from '@/components/shared/TransactionItem';
 import { Card } from '@/components/ui/Card';
-import { formatCurrency } from '@/utils/currency';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { balance, loadWallet, isLoading: walletLoading } = useWallet();
+  const { balance, loadWallet } = useWallet();
   const {
     transactions,
     loadTransactions,

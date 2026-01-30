@@ -27,7 +27,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
     }
   };
 
-  const [gradientStart, gradientEnd] = getCardColor();
+  const [, ] = getCardColor();
 
   return (
     <Card

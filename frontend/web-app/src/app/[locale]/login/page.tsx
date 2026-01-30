@@ -7,9 +7,26 @@ import { loginSchema, LoginRequest } from '@/types';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuthStore } from '@/stores';
 
+/**
+ * SECURITY NOTICE: Token Storage
+ * ================================
+ * This component does NOT store JWT tokens in localStorage/sessionStorage.
+ * Tokens are managed exclusively via httpOnly cookies from the backend.
+ *
+ * Why httpOnly cookies?
+ * - Prevents XSS attacks from stealing tokens
+ * - Browser automatically includes cookies with requests
+ * - HttpOnly flag prevents JavaScript access
+ * - Secure flag ensures HTTPS-only transmission
+ * - SameSite flag prevents CSRF attacks
+ *
+ * Only non-sensitive user profile data is stored in the auth store.
+ */
 export default function LoginPage() {
  const router = useRouter();
+ const setAuth = useAuthStore((state) => state.setAuth);
 
  const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
   resolver: zodResolver(loginSchema)
@@ -20,10 +37,12 @@ export default function LoginPage() {
    return api.post('/auth/login', data);
   },
   onSuccess: (response) => {
-   const { token, user } = response.data;
-   localStorage.setItem('token', token);
-   localStorage.setItem('user', JSON.stringify(user));
-   localStorage.setItem('accountId', user.id);
+   // SECURITY: Tokens are set by backend as httpOnly cookies
+   // We only store non-sensitive user profile data in the auth store
+   const { user } = response.data;
+   if (user) {
+    setAuth(user, user.id);
+   }
    router.push('/');
   },
   onError: (error) => {

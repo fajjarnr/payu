@@ -19,6 +19,7 @@ export const useWallet = () => {
     // Load wallet on mount
     loadWallet();
     loadPockets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

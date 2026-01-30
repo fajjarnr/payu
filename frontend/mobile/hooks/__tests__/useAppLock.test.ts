@@ -1,5 +1,5 @@
-import { renderHook, waitFor, act } from '@testing-library/react-native';
-import { useAppLock, useScreenshotPrevention, useSessionTimeout } from '../useAppLock';
+import { renderHook, act } from '@testing-library/react-native';
+import { useAppLock } from '../useAppLock';
 import * as SecureStore from 'expo-secure-store';
 import { AppState } from 'react-native';
 import { useBiometrics } from '../useBiometrics';

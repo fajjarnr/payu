@@ -13,7 +13,7 @@
 
 import React from 'react';
 import { render, renderHook } from '@testing-library/react-native';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 
 // Components to test
 import { AccessibleButton } from '@/src/components/ui/AccessibleButton';
@@ -32,15 +32,12 @@ import {
   validateA11yLabels,
   MIN_TOUCH_TARGET_SIZE,
   CONTRAST_RATIOS,
-  A11Y_ROLES,
 } from '@/src/utils/accessibility';
 
 // Hooks to test
 import {
   useScreenReader,
   useAccessibilityAnnounce,
-  useAccessibilityFocus,
-  useAccessibilityPreferences,
   useAccessibleForm,
 } from '@/src/hooks/useAccessibility';
 
@@ -52,24 +49,24 @@ import {
 const mockAddEventListener = jest.fn(() => ({ remove: jest.fn() }));
 const mockIsScreenReaderEnabled = jest.fn();
 
-jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native');
-  return {
-    ...RN,
-    AccessibilityInfo: {
-      isScreenReaderEnabled: mockIsScreenReaderEnabled,
-      addEventListener: mockAddEventListener,
-      announceForAccessibility: jest.fn(),
-      setAccessibilityFocus: jest.fn(),
-      isBoldTextEnabled: jest.fn(),
-      isGrayscaleEnabled: jest.fn(),
-      isInvertColorsEnabled: jest.fn(),
-      isReduceMotionEnabled: jest.fn(),
-      isReduceTransparencyEnabled: jest.fn(),
-    },
-    findNodeHandle: jest.fn(() => 1),
-  };
-});
+jest.mock('react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo', () => ({
+  isScreenReaderEnabled: mockIsScreenReaderEnabled,
+  addEventListener: mockAddEventListener,
+  announceForAccessibility: jest.fn(),
+  setAccessibilityFocus: jest.fn(),
+  isBoldTextEnabled: jest.fn(),
+  isGrayscaleEnabled: jest.fn(),
+  isInvertColorsEnabled: jest.fn(),
+  isReduceMotionEnabled: jest.fn(),
+  isReduceTransparencyEnabled: jest.fn(),
+}));
+
+jest.mock('react-native/Libraries/Utilities/Platform', () => ({
+  OS: 'ios',
+  select: jest.fn((obj: any) => obj?.ios || obj?.default),
+}));
+
+jest.mock('react-native/Libraries/Utilities/findNodeHandle', () => jest.fn(() => 1));
 
 // ============================================================================
 // Utility Function Tests
@@ -366,7 +363,7 @@ describe('Accessible Components', () => {
     });
 
     it('should support different variants', () => {
-      const variants: Array<'primary' | 'secondary' | 'tertiary' | 'danger' | 'ghost'> = [
+      const variants: ('primary' | 'secondary' | 'tertiary' | 'danger' | 'ghost')[] = [
         'primary',
         'secondary',
         'tertiary',
@@ -470,7 +467,7 @@ describe('Accessibility Hooks', () => {
     it('should detect screen reader status', async () => {
       mockIsScreenReaderEnabled.mockResolvedValue(true);
 
-      const { result } = renderHook(() => useScreenReader());
+      renderHook(() => useScreenReader());
 
       // Wait for effect to run
       await new Promise((resolve) => setTimeout(resolve, 0));

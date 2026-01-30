@@ -9,21 +9,25 @@ import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { SkeletonBalance, SkeletonTransaction } from '@/components/ui/Skeleton';
+import { useAuthStore } from '@/stores';
 
 interface SharedPocket extends Pocket {
   sharedMembers?: SharedMember[];
   isShared?: boolean;
 }
 
+/**
+ * SECURITY NOTICE: Account ID Access
+ * ================================
+ * This component retrieves accountId from the auth store (Zustand),
+ * NOT from localStorage (security vulnerability).
+ *
+ * The auth store persists only non-sensitive data (user profile, account ID).
+ * Tokens are managed exclusively via httpOnly cookies from the backend.
+ */
 export default function PocketsPage() {
-    const [accountId] = useState(() => {
-        if (typeof window === 'undefined') return '';
-        try {
-            return localStorage.getItem('accountId') || '';
-        } catch {
-            return '';
-        }
-    });
+    // SECURITY: Get accountId from auth store, NOT localStorage
+    const accountId = useAuthStore((state) => state.accountId) || '';
     const [selectedPocket, setSelectedPocket] = useState<string | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_showMemberModal, setShowMemberModal] = useState(false);

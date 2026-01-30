@@ -11,7 +11,6 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
 import { feedbackService } from '@/services/feedback.service';
 import { FEEDBACK_CATEGORIES } from '@/constants/config';
 import { FeedbackData } from '@/types';

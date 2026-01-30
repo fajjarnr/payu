@@ -21,7 +21,7 @@ export const useNotificationContext = () => useContext(NotificationContext);
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [notifications, setNotifications] = React.useState<PushNotification[]>([]);
+  const [notifications] = React.useState<PushNotification[]>([]);
   const [permissionGranted, setPermissionGranted] = React.useState(false);
 
   useEffect(() => {

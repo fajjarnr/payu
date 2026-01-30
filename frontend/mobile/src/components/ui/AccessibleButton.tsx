@@ -21,9 +21,8 @@ import {
   TextStyle,
   View,
   Text,
-  PressableStateCallbackType,
-  AccessibilityRole,
 } from 'react-native';
+import type { AccessibilityRole } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { generateA11yProps, PayUAccessibilityProps, validateTouchTarget } from '@/src/utils/accessibility';
 
@@ -171,7 +170,7 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
     return generateA11yProps({
       label: currentLabel,
       hint: currentHint,
-      role: accessibilityRole,
+      role: accessibilityRole as any,
       disabled: disabled || loading,
       busy: loading,
       testID: a11yProps?.testID || `${generateTestID(label)}-button`,

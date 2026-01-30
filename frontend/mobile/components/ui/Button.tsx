@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
-  View,
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 

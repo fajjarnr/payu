@@ -6,15 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Modal } from '@/components/ui/Modal';
 import { formatCurrency } from '@/utils/currency';
 
 interface Biller {
@@ -88,13 +84,11 @@ const BILLER_CATEGORIES: BillerCategory[] = [
 ];
 
 export default function BillsScreen() {
-  const router = useRouter();
   const { colors } = useTheme();
 
   const [selectedCategory, setSelectedCategory] = useState<BillerCategory | null>(null);
   const [selectedBiller, setSelectedBiller] = useState<Biller | null>(null);
   const [customerId, setCustomerId] = useState('');
-  const [amount, setAmount] = useState('');
   const [showInquiry, setShowInquiry] = useState(false);
   const [inquiryResult, setInquiryResult] = useState<any>(null);
 
@@ -141,7 +135,6 @@ export default function BillsScreen() {
             setShowInquiry(false);
             setSelectedBiller(null);
             setCustomerId('');
-            setAmount('');
             setInquiryResult(null);
           },
         },

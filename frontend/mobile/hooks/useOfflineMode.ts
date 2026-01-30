@@ -42,6 +42,7 @@ export const useOfflineMode = () => {
     return () => {
       unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadOfflineQueue = async () => {

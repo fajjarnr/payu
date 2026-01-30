@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useBiometrics } from './useBiometrics';
-import { AUTH_CONFIG } from '@/constants/config';
 
 const APP_LOCK_KEY = '@payu:app_lock_enabled';
 const LAST_ACTIVE_KEY = '@payu:last_active';
@@ -15,62 +14,11 @@ export const useAppLock = () => {
   const [sessionTimeout, setSessionTimeout] = useState(5); // minutes
   const { authenticate, checkAvailability } = useBiometrics();
 
-  useEffect(() => {
-    loadSettings();
-    checkSecurityRequirements();
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      const enabled = await SecureStore.getItemAsync(APP_LOCK_KEY);
-      const timeout = await SecureStore.getItemAsync(SESSION_TIMEOUT_KEY);
-
-      setLockEnabled(enabled !== 'false');
-      setSessionTimeout(timeout ? parseInt(timeout) : 5);
-    } catch (error) {
-      console.error('Failed to load app lock settings:', error);
-    }
-  };
-
-  const checkSecurityRequirements = async () => {
-    // Check if device is jailbroken/rooted
-    const isJailbroken = await checkJailbreak();
-
-    if (isJailbroken) {
-      // Could trigger security alerts or disable certain features
-      console.warn('Device appears to be jailbroken/rooted');
-    }
-  };
-
   const checkJailbreak = async (): Promise<boolean> => {
     // Basic jailbreak/root detection
-    try {
-      // This is a simplified check
-      // In production, use a library like react-native-jail-detect
-      return false;
-    } catch (error) {
-      return false;
-    }
-  };
-
-  const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-    const previousState = appState.current;
-
-    if (previousState.match(/inactive|background/) && nextAppState === 'active') {
-      // App coming to foreground
-      await checkAndLock();
-    } else if (nextAppState.match(/inactive|background/)) {
-      // App going to background
-      await SecureStore.setItemAsync(LAST_ACTIVE_KEY, Date.now().toString());
-    }
-
-    appState.current = nextAppState;
+    // This is a simplified check
+    // In production, use a library like react-native-jail-detect
+    return false;
   };
 
   const checkAndLock = async () => {
@@ -90,6 +38,54 @@ export const useAppLock = () => {
       console.error('Error checking app lock:', error);
     }
   };
+
+  const loadSettings = async () => {
+    try {
+      const enabled = await SecureStore.getItemAsync(APP_LOCK_KEY);
+      const timeout = await SecureStore.getItemAsync(SESSION_TIMEOUT_KEY);
+
+      setLockEnabled(enabled !== 'false');
+      setSessionTimeout(timeout ? parseInt(timeout) : 5);
+    } catch (error) {
+      console.error('Failed to load app lock settings:', error);
+    }
+  };
+
+  // Memoize the handlers to avoid dependency issues
+  const checkSecurityRequirements = useCallback(async () => {
+    // Check if device is jailbroken/rooted
+    const isJailbroken = await checkJailbreak();
+
+    if (isJailbroken) {
+      // Could trigger security alerts or disable certain features
+      console.warn('Device appears to be jailbroken/rooted');
+    }
+  }, []);
+
+  const handleAppStateChange = useCallback(async (nextAppState: AppStateStatus) => {
+    const previousState = appState.current;
+
+    if (previousState.match(/inactive|background/) && nextAppState === 'active') {
+      // App coming to foreground
+      await checkAndLock();
+    } else if (nextAppState.match(/inactive|background/)) {
+      // App going to background
+      await SecureStore.setItemAsync(LAST_ACTIVE_KEY, Date.now().toString());
+    }
+
+    appState.current = nextAppState;
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+    checkSecurityRequirements();
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [checkSecurityRequirements, handleAppStateChange]);
 
   const unlock = async () => {
     const biometricAvailable = await checkAvailability();

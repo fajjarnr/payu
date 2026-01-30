@@ -36,8 +36,8 @@ export const storage = {
       // Note: SecureStore doesn't have a clear method
       // You would need to track keys separately
       return true;
-    } catch (error) {
-      console.error('Error clearing secure store:', error);
+    } catch {
+      console.error('Error clearing secure store');
       return false;
     }
   },

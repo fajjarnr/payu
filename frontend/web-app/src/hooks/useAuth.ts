@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AuthService from '@/services/AuthService';
 import { useAuthStore } from '@/stores';
-import type { LoginRequest, LoginResponse } from '@/types';
+import type { LoginRequest, User } from '@/types';
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
@@ -9,13 +9,21 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
-    onSuccess: async (data: LoginResponse) => {
-      setAuth(
-        data.access_token,
-        data.refresh_token,
-        { id: '', externalId: '', username: '', email: '', fullName: '', nik: '', kycStatus: 'PENDING', createdAt: '', updatedAt: '' },
-        ''
-      );
+    onSuccess: async () => {
+      // Tokens are managed via httpOnly cookies by the backend
+      // We only store user profile and account ID in the store
+      const mockUser: User = {
+        id: '',
+        externalId: '',
+        username: '',
+        email: '',
+        fullName: '',
+        nik: '',
+        kycStatus: 'PENDING',
+        createdAt: '',
+        updatedAt: ''
+      };
+      setAuth(mockUser, '');
       await queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
     onError: (error) => {
@@ -43,12 +51,14 @@ export const useLogout = () => {
 };
 
 export const useRefreshToken = () => {
-  const setToken = useAuthStore((state) => state.setToken);
+  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
 
   return useMutation({
     mutationFn: () => AuthService.refreshToken(),
-    onSuccess: (token) => {
-      setToken(token);
+    onSuccess: () => {
+      // Tokens are managed via httpOnly cookies by the backend
+      // We just update the authenticated state
+      setAuthenticated(true);
     }
   });
 };

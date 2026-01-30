@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
-import { useTheme } from '@react-navigation/native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { formatCurrency } from '@/utils/currency';
 import { Card } from '@/components/ui/Card';
@@ -21,7 +20,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   onToggleBalance,
   style,
 }) => {
-  const { colors } = useTheme();
+  // useTheme is imported but not needed in this component
 
   return (
     <Card

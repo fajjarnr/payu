@@ -1,4 +1,4 @@
-import { renderHook, waitFor, act } from '@testing-library/react-native';
+import { renderHook, act } from '@testing-library/react-native';
 import { useAuth } from '../useAuth';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'expo-router';
@@ -47,13 +47,13 @@ describe('useAuth', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    (useRouter as jest.Mock).mockReturnValue({
+    (useRouter as jest.Mock as any).mockReturnValue({
       replace: mockReplace,
     });
   });
 
   it('should return auth state from store', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: mockUser,
       tokens: mockTokens,
       isAuthenticated: true,
@@ -77,7 +77,7 @@ describe('useAuth', () => {
   });
 
   it('should return loading state', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: null,
       tokens: null,
       isAuthenticated: false,
@@ -99,7 +99,7 @@ describe('useAuth', () => {
 
   it('should return error state', () => {
     const errorMessage = 'Invalid credentials';
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: null,
       tokens: null,
       isAuthenticated: false,
@@ -119,7 +119,7 @@ describe('useAuth', () => {
   });
 
   it('should call login from store', async () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: null,
       tokens: null,
       isAuthenticated: false,
@@ -151,7 +151,7 @@ describe('useAuth', () => {
       confirmPassword: 'password123',
     };
 
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: null,
       tokens: null,
       isAuthenticated: false,
@@ -175,7 +175,7 @@ describe('useAuth', () => {
   });
 
   it('should call logout and redirect to login', async () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: mockUser,
       tokens: mockTokens,
       isAuthenticated: true,
@@ -200,7 +200,7 @@ describe('useAuth', () => {
   });
 
   it('should call clearError from store', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: null,
       tokens: null,
       isAuthenticated: false,
@@ -224,7 +224,7 @@ describe('useAuth', () => {
   });
 
   it('should call updateUser from store', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: mockUser,
       tokens: mockTokens,
       isAuthenticated: true,
@@ -249,7 +249,7 @@ describe('useAuth', () => {
   });
 
   it('should call refreshToken from store', async () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: mockUser,
       tokens: mockTokens,
       isAuthenticated: true,
@@ -273,7 +273,7 @@ describe('useAuth', () => {
   });
 
   it('should not refresh token when not authenticated', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: null,
       tokens: null,
       isAuthenticated: false,
@@ -299,7 +299,7 @@ describe('useAuth', () => {
       expiresIn: Date.now() + 3600000, // 1 hour from now
     };
 
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: mockUser,
       tokens: freshTokens,
       isAuthenticated: true,

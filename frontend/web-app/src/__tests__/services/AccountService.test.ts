@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   AccountService,
   type RegisterUserRequest,
@@ -17,16 +17,20 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+/**
+ * SECURITY NOTICE: Test Updates
+ * ================================
+ * These tests have been updated to reflect the security fix:
+ * - User data is NO LONGER stored in localStorage
+ * - User data should be stored via auth store (Zustand)
+ * - Tokens are managed via httpOnly cookies by the backend
+ */
 describe('AccountService', () => {
   let service: AccountService;
 
   beforeEach(() => {
     vi.clearAllMocks();
     service = AccountService.getInstance();
-  });
-
-  afterEach(() => {
-    localStorage.clear();
   });
 
   it('should be a singleton', () => {
@@ -36,7 +40,7 @@ describe('AccountService', () => {
   });
 
   describe('registerUser', () => {
-    it('should register user successfully and store in localStorage', async () => {
+    it('should register user successfully without storing in localStorage', async () => {
       const mockRequest: RegisterUserRequest = {
         externalId: 'ext_123',
         username: 'johndoe',
@@ -65,8 +69,8 @@ describe('AccountService', () => {
 
       expect(api.post).toHaveBeenCalledWith('/accounts/register', mockRequest);
       expect(result).toEqual(mockUser);
-      expect(localStorage.getItem('user')).toBe(JSON.stringify(mockUser));
-      expect(localStorage.getItem('accountId')).toBe('user_123');
+      // SECURITY: User data is NOT stored in localStorage
+      // It should be stored via auth store by the calling component
     });
 
     it('should register user without optional phoneNumber', async () => {
@@ -96,7 +100,7 @@ describe('AccountService', () => {
 
       expect(api.post).toHaveBeenCalledWith('/accounts/register', mockRequest);
       expect(result).toEqual(mockUser);
-      expect(localStorage.getItem('accountId')).toBe('user_456');
+      // SECURITY: User data is NOT stored in localStorage
     });
 
     it('should handle API errors during registration', async () => {
@@ -112,11 +116,9 @@ describe('AccountService', () => {
       vi.mocked(api.post).mockRejectedValue(mockError);
 
       await expect(service.registerUser(mockRequest)).rejects.toThrow('Registration failed: Email already exists');
-      expect(localStorage.getItem('user')).toBeNull();
-      expect(localStorage.getItem('accountId')).toBeNull();
     });
 
-    it('should not store user in localStorage if response lacks id', async () => {
+    it('should return user even if response lacks id', async () => {
       const mockRequest: RegisterUserRequest = {
         externalId: 'ext_invalid',
         username: 'invalid',
@@ -132,8 +134,7 @@ describe('AccountService', () => {
       const result = await service.registerUser(mockRequest);
 
       expect(result).toEqual(invalidUser);
-      expect(localStorage.getItem('user')).toBeNull();
-      expect(localStorage.getItem('accountId')).toBeNull();
+      // SECURITY: Service does not store data in localStorage
     });
   });
 
@@ -197,72 +198,32 @@ describe('AccountService', () => {
   });
 
   describe('getUserFromStorage', () => {
-    it('should retrieve user from localStorage', () => {
-      const mockUser: User = {
-        id: 'user_123',
-        externalId: 'ext_123',
-        username: 'testuser',
-        email: 'test@example.com',
-        fullName: 'Test User',
-        nik: '1234567890123456',
-        kycStatus: 'VERIFIED',
-        createdAt: '2024-01-01T10:00:00Z',
-        updatedAt: '2024-01-01T10:00:00Z',
-      };
-
-      localStorage.setItem('user', JSON.stringify(mockUser));
-
-      const result = service.getUserFromStorage();
-
-      expect(result).toEqual(mockUser);
-    });
-
-    it('should return null when no user in localStorage', () => {
-      const result = service.getUserFromStorage();
-
-      expect(result).toBeNull();
-    });
-
-    it('should throw error for invalid JSON in localStorage', () => {
-      localStorage.setItem('user', 'invalid json');
-
-      expect(() => service.getUserFromStorage()).toThrow();
-    });
-
-    it('should return null for empty string in localStorage', () => {
-      localStorage.setItem('user', '');
+    it('should return null and warn about deprecation', () => {
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const result = service.getUserFromStorage();
 
       expect(result).toBeNull();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'getUserFromStorage() is deprecated. Use useAuthStore hook instead.'
+      );
+
+      consoleWarnSpy.mockRestore();
     });
   });
 
   describe('getCurrentUser', () => {
-    it('should return current user from storage', () => {
-      const mockUser: User = {
-        id: 'user_456',
-        externalId: 'ext_456',
-        username: 'currentuser',
-        email: 'current@example.com',
-        fullName: 'Current User',
-        nik: '9876543210987654',
-        kycStatus: 'PENDING',
-        createdAt: '2024-01-01T12:00:00Z',
-        updatedAt: '2024-01-01T12:00:00Z',
-      };
+    it('should return null and warn about deprecation', () => {
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      localStorage.setItem('user', JSON.stringify(mockUser));
-
-      const result = service.getCurrentUser();
-
-      expect(result).toEqual(mockUser);
-    });
-
-    it('should return null when user not logged in', () => {
       const result = service.getCurrentUser();
 
       expect(result).toBeNull();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'getCurrentUser() is deprecated. Use useAuthStore hook instead.'
+      );
+
+      consoleWarnSpy.mockRestore();
     });
   });
 

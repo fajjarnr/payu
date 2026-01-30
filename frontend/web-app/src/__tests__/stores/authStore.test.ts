@@ -9,8 +9,7 @@ describe('useAuthStore', () => {
   test('should initialize with empty auth state', () => {
     const { result } = renderHook(() => useAuthStore());
 
-    expect(result.current.token).toBeNull();
-    expect(result.current.refreshToken).toBeNull();
+    // Tokens are managed via httpOnly cookies - not stored in state
     expect(result.current.user).toBeNull();
     expect(result.current.accountId).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
@@ -31,11 +30,11 @@ describe('useAuthStore', () => {
     };
 
     act(() => {
-      result.current.setAuth('token123', 'refresh123', mockUser, 'acc123');
+      // setAuth now only takes (user, accountId) - tokens are in httpOnly cookies
+      result.current.setAuth(mockUser, 'acc123');
     });
 
-    expect(result.current.token).toBe('token123');
-    expect(result.current.refreshToken).toBe('refresh123');
+    // Tokens are managed via httpOnly cookies - not stored in state
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.accountId).toBe('acc123');
     expect(result.current.isAuthenticated).toBe(true);
@@ -62,15 +61,20 @@ describe('useAuthStore', () => {
     expect(result.current.user).toEqual(mockUser);
   });
 
-  test('should set token correctly', () => {
+  test('should set authenticated state correctly', () => {
     const { result } = renderHook(() => useAuthStore());
 
     act(() => {
-      result.current.setToken('new-token');
+      result.current.setAuthenticated(true);
     });
 
-    expect(result.current.token).toBe('new-token');
     expect(result.current.isAuthenticated).toBe(true);
+
+    act(() => {
+      result.current.setAuthenticated(false);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
   });
 
   test('should logout correctly', () => {
@@ -88,7 +92,8 @@ describe('useAuthStore', () => {
     };
 
     act(() => {
-      result.current.setAuth('token123', 'refresh123', mockUser, 'acc123');
+      // setAuth now only takes (user, accountId) - tokens are in httpOnly cookies
+      result.current.setAuth(mockUser, 'acc123');
     });
 
     expect(result.current.isAuthenticated).toBe(true);
@@ -97,8 +102,7 @@ describe('useAuthStore', () => {
       result.current.logout();
     });
 
-    expect(result.current.token).toBeNull();
-    expect(result.current.refreshToken).toBeNull();
+    // Tokens are managed via httpOnly cookies - not stored in state
     expect(result.current.user).toBeNull();
     expect(result.current.accountId).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
@@ -119,7 +123,8 @@ describe('useAuthStore', () => {
     };
 
     act(() => {
-      result.current.setAuth('token123', 'refresh123', mockUser, 'acc123');
+      // setAuth now only takes (user, accountId) - tokens are in httpOnly cookies
+      result.current.setAuth(mockUser, 'acc123');
     });
 
     act(() => {

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import * as Device from 'expo-device';
-import * as Constants from 'expo-constants';
 import { feedbackService } from '@/services/feedback.service';
 import { useAnalytics } from './useAnalytics';
 import type { FeedbackData as AppFeedbackData } from '@/types';

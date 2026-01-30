@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import * as Notifications from 'expo-notifications';
 import { notificationService } from '@/services/notification.service';
 import { PushNotification } from '@/types';
 

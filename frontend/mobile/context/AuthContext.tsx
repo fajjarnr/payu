@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } else if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login');
     }
-  }, [isAuthenticated, segments, isLoading]);
+  }, [isAuthenticated, segments, isLoading, router]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, isLoading, user }}>

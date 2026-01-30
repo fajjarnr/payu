@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { CameraView, CameraType, Camera } from 'expo-camera';
+import { CameraType, Camera } from 'expo-camera';
 
 export const useCamera = () => {
   const [type, setType] = useState<CameraType>('back');

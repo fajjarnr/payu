@@ -15,7 +15,7 @@ export default function AuthLayout() {
     } else if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login');
     }
-  }, [isAuthenticated, segments]);
+  }, [isAuthenticated, segments, router]);
 
   return null;
 }

@@ -1,8 +1,7 @@
-import { renderHook, waitFor, act } from '@testing-library/react-native';
+import { renderHook, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { useFeedback, useFeedbackWidget, useFeedbackSurvey } from '../useFeedback';
 import { feedbackService } from '@/services/feedback.service';
-import * as Device from 'expo-device';
 
 // Mock dependencies
 jest.mock('@/services/feedback.service', () => ({

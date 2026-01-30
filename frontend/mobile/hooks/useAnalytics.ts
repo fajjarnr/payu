@@ -3,9 +3,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Platform } from 'react-native';
 
 // expo-screen-orientation is optional, only import if available
-let ScreenOrientation: any;
 try {
-  ScreenOrientation = require('expo-screen-orientation');
+  // Module not available, will use fallback
 } catch {
   // Module not available, will use fallback
 }

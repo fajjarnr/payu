@@ -140,9 +140,9 @@ export function useCreateTransfer() {
       await queryClient.cancelQueries({ queryKey: ['wallet'] });
 
       // Snapshot previous values
-      const previousTransactions = queryClient.getQueryData<
-        PaginatedResponse<Transaction>
-      >(transactionKeys.lists({}));
+      const previousTransactions = queryClient.getQueryData(
+        transactionKeys.list({})
+      ) as PaginatedResponse<Transaction> | undefined;
 
       // Create optimistic transaction
       const optimisticTransaction: Transaction = {
@@ -160,8 +160,8 @@ export function useCreateTransfer() {
 
       // Optimistically add to list
       if (previousTransactions) {
-        queryClient.setQueryData<PaginatedResponse<Transaction>>(
-          transactionKeys.lists({}),
+        queryClient.setQueryData(
+          transactionKeys.list({}),
           {
             ...previousTransactions,
             items: [optimisticTransaction, ...previousTransactions.items],
@@ -176,7 +176,7 @@ export function useCreateTransfer() {
       // Rollback on error
       if (context?.previousTransactions) {
         queryClient.setQueryData(
-          transactionKeys.lists({}),
+          transactionKeys.list({}),
           context.previousTransactions
         );
       }
@@ -203,9 +203,9 @@ export function useTopUp() {
       await queryClient.cancelQueries({ queryKey: transactionKeys.lists() });
       await queryClient.cancelQueries({ queryKey: ['wallet'] });
 
-      const previousTransactions = queryClient.getQueryData<
-        PaginatedResponse<Transaction>
-      >(transactionKeys.lists({}));
+      const previousTransactions = queryClient.getQueryData(
+        transactionKeys.list({})
+      ) as PaginatedResponse<Transaction> | undefined;
 
       const optimisticTransaction: Transaction = {
         id: `temp-${Date.now()}`,
@@ -218,8 +218,8 @@ export function useTopUp() {
       };
 
       if (previousTransactions) {
-        queryClient.setQueryData<PaginatedResponse<Transaction>>(
-          transactionKeys.lists({}),
+        queryClient.setQueryData(
+          transactionKeys.list({}),
           {
             ...previousTransactions,
             items: [optimisticTransaction, ...previousTransactions.items],
@@ -233,7 +233,7 @@ export function useTopUp() {
     onError: (_err, _variables, context) => {
       if (context?.previousTransactions) {
         queryClient.setQueryData(
-          transactionKeys.lists({}),
+          transactionKeys.list({}),
           context.previousTransactions
         );
       }
@@ -258,9 +258,9 @@ export function usePayQRIS() {
       await queryClient.cancelQueries({ queryKey: transactionKeys.lists() });
       await queryClient.cancelQueries({ queryKey: ['wallet'] });
 
-      const previousTransactions = queryClient.getQueryData<
-        PaginatedResponse<Transaction>
-      >(transactionKeys.lists({}));
+      const previousTransactions = queryClient.getQueryData(
+        transactionKeys.list({})
+      ) as PaginatedResponse<Transaction> | undefined;
 
       const optimisticTransaction: Transaction = {
         id: `temp-${Date.now()}`,
@@ -274,8 +274,8 @@ export function usePayQRIS() {
       };
 
       if (previousTransactions) {
-        queryClient.setQueryData<PaginatedResponse<Transaction>>(
-          transactionKeys.lists({}),
+        queryClient.setQueryData(
+          transactionKeys.list({}),
           {
             ...previousTransactions,
             items: [optimisticTransaction, ...previousTransactions.items],
@@ -289,7 +289,7 @@ export function usePayQRIS() {
     onError: (_err, _variables, context) => {
       if (context?.previousTransactions) {
         queryClient.setQueryData(
-          transactionKeys.lists({}),
+          transactionKeys.list({}),
           context.previousTransactions
         );
       }
@@ -310,16 +310,14 @@ export function usePrefetchTransaction() {
   return {
     prefetchTransactions: () => {
       queryClient.prefetchQuery({
-        queryKey: transactionKeys.lists({}),
+        queryKey: transactionKeys.list({}),
         queryFn: () => transactionService.getTransactions(),
-        staleTime: 1000 * 60 * 5,
       });
     },
     prefetchTransaction: (transactionId: string) => {
       queryClient.prefetchQuery({
         queryKey: transactionKeys.detail(transactionId),
         queryFn: () => transactionService.getTransaction(transactionId),
-        staleTime: 1000 * 60 * 5,
       });
     },
   };

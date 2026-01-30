@@ -268,7 +268,11 @@ describe('useInitiateTransfer hook', () => {
     });
 
     expect(TransactionService.initiateTransfer).toHaveBeenCalledWith(mockTransferRequest);
-    expect(result.current.isSuccess).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
     expect(result.current.data).toEqual(mockTransferResponse);
   });
 
@@ -337,7 +341,9 @@ describe('useInitiateTransfer hook', () => {
       result.current.mutate(mockTransferRequest);
     });
 
-    expect(result.current.isPending).toBe(true);
+    await waitFor(() => {
+      expect(result.current.isPending).toBe(true);
+    });
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -382,7 +388,10 @@ describe('useProcessQrisPayment hook', () => {
     });
 
     expect(TransactionService.processQrisPayment).toHaveBeenCalledWith(mockQrisRequest);
-    expect(result.current.isSuccess).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
   });
 
   it('should invalidate wallet-balance query on success', async () => {
@@ -450,7 +459,9 @@ describe('useProcessQrisPayment hook', () => {
       result.current.mutate(mockQrisRequest);
     });
 
-    expect(result.current.isPending).toBe(true);
+    await waitFor(() => {
+      expect(result.current.isPending).toBe(true);
+    });
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);

@@ -5,7 +5,7 @@ import {
   UseQueryOptions,
 } from '@tanstack/react-query';
 import { walletService } from '@/services/wallet.service';
-import { Wallet, Pocket } from '@/types';
+import { Wallet } from '@/types';
 
 // Query keys
 export const walletKeys = {

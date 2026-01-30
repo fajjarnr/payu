@@ -1,3 +1,4 @@
+import React from 'react';
 import { renderHook, act } from '@testing-library/react-native';
 import { useCamera } from '../useCamera';
 import { Camera } from 'expo-camera';
@@ -151,7 +152,7 @@ describe('useCamera', () => {
       (result.current.cameraRef as any).current = mockCamera;
     });
 
-    rerender();
+    rerender(null);
 
     expect(result.current.cameraRef.current).toBe(mockCamera);
   });

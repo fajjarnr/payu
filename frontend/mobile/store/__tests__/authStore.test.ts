@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { useAuthStore } from '../authStore';
 import { authService } from '@/services/auth.service';
 import { storage } from '@/utils/storage';

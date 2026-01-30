@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
-import { storage } from '@/utils/storage';
 import { AUTH_CONFIG } from '@/constants/config';
 
 export const useAuth = () => {
@@ -41,6 +40,7 @@ export const useAuth = () => {
     if (isAuthenticated) {
       checkTokenExpiry();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokens, isAuthenticated]);
 
   const performLogout = async () => {

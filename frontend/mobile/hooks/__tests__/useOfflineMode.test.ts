@@ -1,4 +1,4 @@
-import { renderHook, waitFor, act } from '@testing-library/react-native';
+import { renderHook, act } from '@testing-library/react-native';
 import { useOfflineMode } from '../useOfflineMode';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -120,7 +120,7 @@ describe('useOfflineMode', () => {
 
     const { result } = renderHook(() => useOfflineMode());
 
-    let cached: { data: any; isStale: boolean } | null = null;
+    let cached: any = null;
     await act(async () => {
       cached = await result.current.getCachedData('transactions');
     });
@@ -159,7 +159,7 @@ describe('useOfflineMode', () => {
 
     const { result } = renderHook(() => useOfflineMode());
 
-    let cached: { data: any; isStale: boolean } | null = null;
+    let cached: any = null;
     await act(async () => {
       cached = await result.current.getCachedData('transactions');
     });

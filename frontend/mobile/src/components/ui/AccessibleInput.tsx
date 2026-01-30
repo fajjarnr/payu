@@ -26,7 +26,7 @@ import {
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Eye, EyeOff, X } from 'lucide-react-native';
-import { generateA11yProps, createInputA11yProps, PayUAccessibilityProps } from '@/src/utils/accessibility';
+import { createInputA11yProps, PayUAccessibilityProps } from '@/src/utils/accessibility';
 
 // ============================================================================
 // Types & Interfaces

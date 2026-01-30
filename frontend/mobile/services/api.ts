@@ -59,7 +59,7 @@ class ApiClient {
 
               return this.client(originalRequest);
             }
-          } catch (refreshError) {
+          } catch {
             // Refresh failed, logout user
             await storage.remove(AUTH_CONFIG.TOKEN_KEY);
             await storage.remove(AUTH_CONFIG.USER_KEY);

@@ -14,7 +14,7 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   const { onMessage, onError, onClose, onOpen, enabled = true } = options;
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const token = useAuthStore((state) => state.token);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -27,10 +27,11 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   }, []);
 
   const connect = useCallback(() => {
-    if (!enabled || !token) return;
+    if (!enabled || !isAuthenticated) return;
 
-    const wsUrl = `${url}?token=${token}`;
-    const ws = new WebSocket(wsUrl);
+    // WebSocket connection uses httpOnly cookie for authentication
+    // The browser automatically includes cookies with the WebSocket request
+    const ws = new WebSocket(url);
     wsRef.current = ws;
 
     ws.onopen = (event) => {
@@ -58,8 +59,8 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
 
       if (event.code !== 1000 && enabled) {
         reconnectTimeoutRef.current = setTimeout(() => {
-          if (enabled && token) {
-            const newWs = new WebSocket(`${url}?token=${token}`);
+          if (enabled && isAuthenticated) {
+            const newWs = new WebSocket(url);
             newWs.onopen = ws.onopen;
             newWs.onmessage = ws.onmessage;
             newWs.onerror = ws.onerror;
@@ -69,7 +70,7 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
         }, 3000);
       }
     };
-  }, [url, token, enabled, onMessage, onError, onClose, onOpen]);
+  }, [url, isAuthenticated, enabled, onMessage, onError, onClose, onOpen]);
 
   useEffect(() => {
     connect();

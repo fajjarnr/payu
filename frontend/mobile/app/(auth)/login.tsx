@@ -39,6 +39,7 @@ export default function LoginScreen() {
   // Check biometric availability on mount
   React.useEffect(() => {
     checkBiometricAvailability();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // OTP countdown timer

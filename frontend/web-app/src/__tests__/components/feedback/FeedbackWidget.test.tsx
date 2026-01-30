@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi, type Mock } from 'vitest';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
@@ -55,9 +55,11 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
-    expect(screen.getByText('Kirim Feedback')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Kirim Feedback' })).toBeInTheDocument();
     expect(screen.getByLabelText('Tutup formulir feedback')).toBeInTheDocument();
   });
 
@@ -66,14 +68,18 @@ describe('FeedbackWidget', () => {
 
     // Open modal
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     // Close modal
     const closeButton = screen.getByLabelText('Tutup formulir feedback');
-    fireEvent.click(closeButton);
+    await act(async () => {
+      fireEvent.click(closeButton);
+    });
 
     await waitFor(() => {
-      expect(screen.queryByText('Kirim Feedback')).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Kirim Feedback' })).not.toBeInTheDocument();
     });
   });
 
@@ -82,39 +88,49 @@ describe('FeedbackWidget', () => {
 
     // Open modal
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     // Click backdrop
     const backdrop = container.querySelector('.bg-black\\/50');
     if (backdrop) {
-      fireEvent.click(backdrop);
+      await act(async () => {
+        fireEvent.click(backdrop);
+      });
 
       await waitFor(() => {
-        expect(screen.queryByText('Kirim Feedback')).not.toBeInTheDocument();
+        expect(screen.queryByRole('heading', { name: 'Kirim Feedback' })).not.toBeInTheDocument();
       });
     }
   });
 
-  it('should render all category options', () => {
+  it('should render all category options', async () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     expect(screen.getByText('Laporan Bug')).toBeInTheDocument();
     expect(screen.getByText('Saran Fitur')).toBeInTheDocument();
     expect(screen.getByText('Lainnya')).toBeInTheDocument();
   });
 
-  it('should select category when clicked', () => {
+  it('should select category when clicked', async () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const bugCategory = screen.getByText('Laporan Bug').closest('button');
     if (bugCategory) {
-      fireEvent.click(bugCategory);
+      await act(async () => {
+        fireEvent.click(bugCategory);
+      });
       expect(bugCategory).toHaveClass('border-bank-green');
     }
   });
@@ -123,9 +139,11 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
     expect(submitButton).toBeDisabled();
   });
 
@@ -133,15 +151,21 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const subjectInput = screen.getByLabelText('Subjek');
     const messageInput = screen.getByLabelText('Pesan');
 
-    await userEvent.type(subjectInput, 'Test bug report');
-    await userEvent.type(messageInput, 'This is a detailed description of the bug');
+    await act(async () => {
+      await userEvent.type(subjectInput, 'Test bug report');
+    });
+    await act(async () => {
+      await userEvent.type(messageInput, 'This is a detailed description of the bug');
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
     expect(submitButton).not.toBeDisabled();
   });
 
@@ -149,16 +173,24 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const subjectInput = screen.getByLabelText('Subjek');
     const messageInput = screen.getByLabelText('Pesan');
 
-    await userEvent.type(subjectInput, 'Test bug report');
-    await userEvent.type(messageInput, 'This is a detailed description of the bug');
+    await act(async () => {
+      await userEvent.type(subjectInput, 'Test bug report');
+    });
+    await act(async () => {
+      await userEvent.type(messageInput, 'This is a detailed description of the bug');
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
-    fireEvent.click(submitButton);
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
+    await act(async () => {
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -178,16 +210,24 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const subjectInput = screen.getByLabelText('Subjek');
     const messageInput = screen.getByLabelText('Pesan');
 
-    await userEvent.type(subjectInput, 'Test bug report');
-    await userEvent.type(messageInput, 'This is a detailed description of the bug');
+    await act(async () => {
+      await userEvent.type(subjectInput, 'Test bug report');
+    });
+    await act(async () => {
+      await userEvent.type(messageInput, 'This is a detailed description of the bug');
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
-    fireEvent.click(submitButton);
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
+    await act(async () => {
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Terima Kasih!')).toBeInTheDocument();
@@ -195,30 +235,40 @@ describe('FeedbackWidget', () => {
   });
 
   it('should close modal after success and delay', async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
 
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const subjectInput = screen.getByLabelText('Subjek');
     const messageInput = screen.getByLabelText('Pesan');
 
-    await userEvent.type(subjectInput, 'Test bug report');
-    await userEvent.type(messageInput, 'This is a detailed description of the bug');
+    await act(async () => {
+      await userEvent.type(subjectInput, 'Test bug report');
+    });
+    await act(async () => {
+      await userEvent.type(messageInput, 'This is a detailed description of the bug');
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
-    fireEvent.click(submitButton);
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
+    await act(async () => {
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Terima Kasih!')).toBeInTheDocument();
     });
 
-    vi.advanceTimersByTime(3000);
+    await act(async () => {
+      vi.advanceTimersByTime(3000);
+    });
 
     await waitFor(() => {
-      expect(screen.queryByText('Kirim Feedback')).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Kirim Feedback' })).not.toBeInTheDocument();
     });
 
     vi.useRealTimers();
@@ -228,10 +278,14 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const messageInput = screen.getByLabelText('Pesan');
-    await userEvent.type(messageInput, 'Test');
+    await act(async () => {
+      await userEvent.type(messageInput, 'Test');
+    });
 
     expect(screen.getByText('4 / 1000')).toBeInTheDocument();
   });
@@ -240,7 +294,9 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const subjectInput = screen.getByLabelText('Subjek') as HTMLInputElement;
     expect(subjectInput).toHaveAttribute('maxLength', '100');
@@ -250,17 +306,21 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const messageInput = screen.getByLabelText('Pesan') as HTMLTextAreaElement;
     expect(messageInput).toHaveAttribute('maxLength', '1000');
   });
 
-  it('should have screenshot checkbox', () => {
+  it('should have screenshot checkbox', async () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const screenshotCheckbox = screen.getByLabelText('Sertakan tangkapan layar (screenshot)');
     expect(screenshotCheckbox).toBeInTheDocument();
@@ -277,11 +337,17 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const screenshotCheckbox = screen.getByLabelText('Sertakan tangkapan layar (screenshot)');
-    fireEvent.click(screenshotCheckbox);
-    fireEvent.click(screenshotCheckbox); // Re-enable
+    await act(async () => {
+      fireEvent.click(screenshotCheckbox);
+    });
+    await act(async () => {
+      fireEvent.click(screenshotCheckbox);
+    });
 
     await waitFor(() => {
       expect(navigator.mediaDevices.getDisplayMedia).toHaveBeenCalled();
@@ -296,11 +362,17 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const screenshotCheckbox = screen.getByLabelText('Sertakan tangkapan layar (screenshot)');
-    fireEvent.click(screenshotCheckbox);
-    fireEvent.click(screenshotCheckbox);
+    await act(async () => {
+      fireEvent.click(screenshotCheckbox);
+    });
+    await act(async () => {
+      fireEvent.click(screenshotCheckbox);
+    });
 
     expect(() => {
       fireEvent.click(screenshotCheckbox);
@@ -314,11 +386,13 @@ describe('FeedbackWidget', () => {
     expect(floatingButton).toHaveAttribute('aria-label');
   });
 
-  it('should have dialog role when open', () => {
+  it('should have dialog role when open', async () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const dialog = screen.getByRole('dialog');
     expect(dialog).toBeInTheDocument();
@@ -336,16 +410,24 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget apiEndpoint="/custom/feedback" />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const subjectInput = screen.getByLabelText('Subjek');
     const messageInput = screen.getByLabelText('Pesan');
 
-    await userEvent.type(subjectInput, 'Test');
-    await userEvent.type(messageInput, 'Test message');
+    await act(async () => {
+      await userEvent.type(subjectInput, 'Test');
+    });
+    await act(async () => {
+      await userEvent.type(messageInput, 'Test message');
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
-    fireEvent.click(submitButton);
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
+    await act(async () => {
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -355,7 +437,7 @@ describe('FeedbackWidget', () => {
     });
   });
 
-  it('should use custom categories when provided', () => {
+  it('should use custom categories when provided', async () => {
     const customCategories = [
       { value: 'bug', label: 'Report Bug', icon: <div>Bug Icon</div> },
       { value: 'feature', label: 'Request Feature', icon: <div>Feature Icon</div> },
@@ -364,7 +446,9 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget categories={customCategories} />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     expect(screen.getByText('Report Bug')).toBeInTheDocument();
     expect(screen.getByText('Request Feature')).toBeInTheDocument();
@@ -377,16 +461,24 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const subjectInput = screen.getByLabelText('Subjek');
     const messageInput = screen.getByLabelText('Pesan');
 
-    await userEvent.type(subjectInput, 'Test');
-    await userEvent.type(messageInput, 'Test message');
+    await act(async () => {
+      await userEvent.type(subjectInput, 'Test');
+    });
+    await act(async () => {
+      await userEvent.type(messageInput, 'Test message');
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
-    fireEvent.click(submitButton);
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
+    await act(async () => {
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(submitButton).toBeDisabled();
@@ -398,16 +490,24 @@ describe('FeedbackWidget', () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     const subjectInput = screen.getByLabelText('Subjek');
     const messageInput = screen.getByLabelText('Pesan');
 
-    await userEvent.type(subjectInput, 'Test');
-    await userEvent.type(messageInput, 'Test message');
+    await act(async () => {
+      await userEvent.type(subjectInput, 'Test');
+    });
+    await act(async () => {
+      await userEvent.type(messageInput, 'Test message');
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
-    fireEvent.click(submitButton);
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
+    await act(async () => {
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -419,47 +519,79 @@ describe('FeedbackWidget', () => {
     });
   });
 
-  it('should display data collection notice', () => {
+  it('should display data collection notice', async () => {
     renderWithIntl(<FeedbackWidget />);
 
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
-    fireEvent.click(floatingButton);
+    await act(async () => {
+      fireEvent.click(floatingButton);
+    });
 
     expect(screen.getByText(/Informasi perangkat dan log error/)).toBeInTheDocument();
   });
 
   it('should reset form after submission', async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    renderWithIntl(<FeedbackWidget />);
+    const { rerender } = renderWithIntl(<FeedbackWidget />);
 
+    // Open modal
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
     fireEvent.click(floatingButton);
 
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    // Fill in the form
     const subjectInput = screen.getByLabelText('Subjek') as HTMLInputElement;
-    const messageInput = screen.getByLabelText('Pesan') as HTMLInputElement;
+    const messageInput = screen.getByLabelText('Pesan') as HTMLTextAreaElement;
 
-    await userEvent.type(subjectInput, 'Test subject');
-    await userEvent.type(messageInput, 'Test message');
+    await act(async () => {
+      await userEvent.type(subjectInput, 'Test subject');
+    });
+    await act(async () => {
+      await userEvent.type(messageInput, 'Test message');
+    });
 
-    const submitButton = screen.getByText('Kirim Feedback');
-    fireEvent.click(submitButton);
+    // Submit the form
+    const submitButton = screen.getByRole('button', { name: 'Kirim Feedback' });
+    await act(async () => {
+      fireEvent.click(submitButton);
+    });
 
+    // Verify success message is shown
     await waitFor(() => {
       expect(screen.getByText('Terima Kasih!')).toBeInTheDocument();
     });
 
-    vi.advanceTimersByTime(3000);
-
-    await waitFor(() => {
-      expect(screen.queryByText('Kirim Feedback')).not.toBeInTheDocument();
+    // Advance timers to trigger modal close
+    act(() => {
+      vi.advanceTimersByTime(3000);
     });
 
-    // Reopen modal
-    fireEvent.click(floatingButton);
+    // Verify modal is closed
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
 
-    expect(subjectInput.value).toBe('');
-    expect(messageInput.value).toBe('');
+    // Reopen modal - get fresh reference to button
+    const newFloatingButton = screen.getByLabelText('Buka formulir feedback');
+    await act(async () => {
+      fireEvent.click(newFloatingButton);
+    });
+
+    // Verify modal is open and form is reset
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    // Get fresh input references and verify they are empty
+    const newSubjectInput = screen.getByLabelText('Subjek') as HTMLInputElement;
+    const newMessageInput = screen.getByLabelText('Pesan') as HTMLTextAreaElement;
+
+    expect(newSubjectInput.value).toBe('');
+    expect(newMessageInput.value).toBe('');
 
     vi.useRealTimers();
   });

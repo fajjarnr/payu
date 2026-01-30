@@ -21,7 +21,7 @@ import { TransferData } from '@/types';
 export default function TransfersScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { pockets, primaryWallet } = useWallet();
+  const { primaryWallet } = useWallet();
   const { transfer, isLoading } = useTransfer();
 
   const [formData, setFormData] = useState({
@@ -70,7 +70,7 @@ export default function TransfersScreen() {
     };
 
     try {
-      const transaction = await transfer(transferData);
+      await transfer(transferData);
       // @ts-ignore
       router.push({
         pathname: '/transfer-confirm',
