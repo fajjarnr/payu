@@ -175,7 +175,7 @@ You are responsible for maintaining the **AI's own instruction manuals** (`.agen
 
 ### 1. When to Update a Skill?
 - **Pattern Recognition**: If you see the same mistake repeated 3x, add a "Common Pitfalls" section to the relevant skill.
-- **New Tech**: If the stack changes (e.g., migration to Next.js 15), update `@frontend-engineer`.
+- **New Tech**: If the stack changes (e.g., migration to Next.js 15), update `@frontend-architect`.
 - **Ambiguity**: If an instruction is consistently misunderstood, clarify it with a "Do vs Don't" example.
 
 ### 2. Update Protocol
