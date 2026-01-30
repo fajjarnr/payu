@@ -134,7 +134,8 @@ test.describe('Settings Flow', () => {
 
   test('should have decorative background elements', async ({ page }) => {
     const decorElements = page.locator('.bg-primary\\/5.rounded-full.blur-3xl');
-    await expect(decorElements).toHaveCount.toBeGreaterThanOrEqual(1);
+    const decorCount = await decorElements.count();
+    expect(decorCount).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -487,14 +488,14 @@ test.describe('Settings Flow - Interactive Elements', () => {
     const menuItem = page.locator('button').filter({ hasText: 'Tagihan & Paket' });
 
     // Check for hover class
-    await expect(menuItem).toHaveClass(/hover:bg-muted\\/50/);
+    await expect(menuItem).toHaveClass(/hover:bg-muted\/50/u);
   });
 
   test('should have hover effects on toggles', async ({ page }) => {
     const toggleContainer = page.locator('.p-2.hover\\:bg-muted\\/20').first();
 
     // Check for hover class
-    await expect(toggleContainer).toHaveClass(/hover:bg-muted\\/20/);
+    await expect(toggleContainer).toHaveClass(/hover:bg-muted\/20/);
   });
 
   test('should have smooth transitions on inputs', async ({ page }) => {

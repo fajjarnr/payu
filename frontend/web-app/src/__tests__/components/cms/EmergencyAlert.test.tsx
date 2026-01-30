@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import EmergencyAlert from '@/components/cms/EmergencyAlert';
@@ -8,9 +8,9 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock useRouter
@@ -58,7 +58,7 @@ vi.mock('@/hooks', () => ({
 
 // Mock localStorage
 const mockLocalStorage = {
-  getItem: vi.fn(() => null),
+  getItem: vi.fn((): string | null => null),
   setItem: vi.fn(),
 };
 Object.defineProperty(window, 'localStorage', {

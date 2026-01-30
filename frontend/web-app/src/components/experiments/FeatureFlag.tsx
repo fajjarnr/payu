@@ -66,6 +66,7 @@ export function FeatureFlag({
       const enabled = variantKey === enabledVariant;
       onAccess(enabled, variantKey);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variantKey, isLoading, onAccess]);
 
   if (isLoading) {

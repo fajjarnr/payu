@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import { ArrowRightLeft, QrCode } from 'lucide-react';

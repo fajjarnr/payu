@@ -44,7 +44,8 @@ describe('Customer Segmentation Hooks', () => {
     });
 
     it('should return VIP status correctly', () => {
-      const mockData = {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _mockData = {
         memberships: [
           {
             id: '1',

@@ -30,7 +30,8 @@ describe('useLogin hook', () => {
   );
 
   const mockSetAuth = vi.fn();
-  const mockUser = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _mockUser = {
     id: 'user-123',
     externalId: 'ext-123',
     username: 'testuser',

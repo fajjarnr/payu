@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { BalanceResponse, WalletTransaction, Pocket, SharedMember } from '@/types';
@@ -16,7 +16,7 @@ interface SharedPocket extends Pocket {
 }
 
 export default function PocketsPage() {
-    const [accountId, setAccountId] = useState(() => {
+    const [accountId] = useState(() => {
         if (typeof window === 'undefined') return '';
         try {
             return localStorage.getItem('accountId') || '';
@@ -25,7 +25,8 @@ export default function PocketsPage() {
         }
     });
     const [selectedPocket, setSelectedPocket] = useState<string | null>(null);
-    const [showMemberModal, setShowMemberModal] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_showMemberModal, setShowMemberModal] = useState(false);
 
     const { data: balance, isLoading: balanceLoading } = useQuery({
         queryKey: ['wallet-balance', accountId],
@@ -100,7 +101,8 @@ export default function PocketsPage() {
         }
     ];
 
-    const activePocket = selectedPocket
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _activePocket = selectedPocket
         ? sharedPockets.find(p => p.id === selectedPocket)
         : null;
 

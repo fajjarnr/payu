@@ -64,7 +64,9 @@ test.describe('QRIS Payment Flow', () => {
   });
 
   test('should have proper security badges', async ({ page }) => {
-    await expect(page.locator('.text-bank-green').filter({ hasText: /ShieldCheck|Info/i })).toHaveCount.toBeGreaterThanOrEqual(1);
+    const securityBadges = page.locator('.text-bank-green').filter({ hasText: /ShieldCheck|Info/i });
+    const securityBadgeCount = await securityBadges.count();
+    expect(securityBadgeCount).toBeGreaterThanOrEqual(1);
   });
 
   test('should display security description text', async ({ page }) => {
@@ -129,7 +131,7 @@ test.describe('QRIS Flow - Scanner Interaction', () => {
     await cameraIcon.hover();
 
     // Check for transform effect
-    await expect(cameraIcon).toHaveClass(/group-hover\\/scale-110/);
+    await expect(cameraIcon).toHaveClass(/group-hover\/scale-110/u);
   });
 
   test('should show pulse animation in scanner', async ({ page }) => {
@@ -178,7 +180,7 @@ test.describe('QRIS Flow - My QR Code', () => {
     const showCodeButton = page.locator('button:has-text("Tampilkan Kode Saya")');
 
     // Check for hover effect
-    await expect(showCodeButton).toHaveClass(/hover:bg-white\\/20/);
+    await expect(showCodeButton).toHaveClass(/hover:bg-white\/20/);
 
     // Click button
     await showCodeButton.click();
@@ -218,7 +220,9 @@ test.describe('QRIS Flow - Security Information', () => {
 
   test('should have security icons', async ({ page }) => {
     // Check for ShieldCheck and Info icons
-    await expect(page.locator('.text-bank-green')).toHaveCount.toBeGreaterThanOrEqual(2);
+    const securityIcons = page.locator('.text-bank-green');
+    const securityIconCount = await securityIcons.count();
+    expect(securityIconCount).toBeGreaterThanOrEqual(2);
   });
 
   test('should display security info in cards', async ({ page }) => {

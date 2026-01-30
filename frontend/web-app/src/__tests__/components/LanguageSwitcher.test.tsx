@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 vi.mock('next/navigation', () => ({
@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next-intl', () => ({
   useLocale: vi.fn(),
-  useTranslations: vi.fn((key) => (key: string) => key),
+  useTranslations: vi.fn(() => (key: string) => key),
 }));
 
 describe('LanguageSwitcher', () => {

@@ -4,23 +4,39 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
 import { useLogout, useBalance } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   BalanceCard,
-  StatsCharts,
-  TransferActivity,
-  FinancialHealthScore,
-  SpendingInsights,
-  BudgetTracking,
   QuickActions,
 } from '@/components/dashboard';
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { BannerCarousel, PromoPopup } from '@/components/cms';
-import { SegmentedOffers } from '@/components/personalization';
 import { SkipLink } from '@/lib/a11y';
+
+// Lazy load below-the-fold components
+const StatsCharts = dynamic(() => import('@/components/dashboard').then(mod => mod.StatsCharts), {
+  loading: () => <Skeleton className="h-[300px] w-full rounded-xl" />,
+  ssr: false
+});
+const TransferActivity = dynamic(() => import('@/components/dashboard').then(mod => mod.TransferActivity), {
+  loading: () => <Skeleton className="h-[200px] w-full rounded-xl" />
+});
+const FinancialHealthScore = dynamic(() => import('@/components/dashboard').then(mod => mod.FinancialHealthScore), {
+  loading: () => <Skeleton className="h-[150px] w-full rounded-xl" />
+});
+const SpendingInsights = dynamic(() => import('@/components/dashboard').then(mod => mod.SpendingInsights), {
+  loading: () => <Skeleton className="h-[200px] w-full rounded-xl" />
+});
+const BudgetTracking = dynamic(() => import('@/components/dashboard').then(mod => mod.BudgetTracking), {
+  loading: () => <Skeleton className="h-[150px] w-full rounded-xl" />
+});
+const SegmentedOffers = dynamic(() => import('@/components/personalization').then(mod => mod.SegmentedOffers), {
+  loading: () => <Skeleton className="h-[200px] w-full rounded-xl" />
+});
 
 export default function Home() {
  const logout = useLogout();

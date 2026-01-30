@@ -239,7 +239,7 @@ describe('useUserSegment hook', () => {
   it('should handle user with no memberships', async () => {
     const emptyResponse = {
       memberships: [],
-      currentTier: undefined,
+      currentTier: 'BRONZE' as const,
       nextTier: undefined,
       progressToNext: undefined,
       totalScore: 0

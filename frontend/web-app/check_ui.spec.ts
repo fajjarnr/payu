@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('capture landing page and dashboard', async ({ page }) => {
     // 1. Check Landing Page
@@ -20,7 +20,6 @@ test('capture landing page and dashboard', async ({ page }) => {
     console.log('Dashboard screenshot saved.');
 
     // Check for Sidebar/Dashboard elements
-    const sidebar = page.locator('aside');
     const welcomeText = page.getByText('Welcome, TestUser!');
 
     if (await welcomeText.isVisible()) {

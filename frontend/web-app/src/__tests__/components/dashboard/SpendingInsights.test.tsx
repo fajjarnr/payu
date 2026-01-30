@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { Utensils, ShoppingCart } from 'lucide-react';
 import SpendingInsights from '@/components/dashboard/SpendingInsights';

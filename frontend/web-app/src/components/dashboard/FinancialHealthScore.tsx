@@ -24,7 +24,8 @@ interface HealthLevel {
 export default function FinancialHealthScore({
   score,
   previousScore,
-  currency = 'Rp',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  currency: _currency = 'Rp',
   className = '',
 }: FinancialHealthScoreProps) {
   const t = useTranslations('dashboard');

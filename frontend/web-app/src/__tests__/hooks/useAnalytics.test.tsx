@@ -70,10 +70,11 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should set isConnected to true when WebSocket opens', () => {
-    let onOpenCallback: ((event: Event) => void) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedOptions: any = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
-      onOpenCallback = options?.onOpen || null;
+      capturedOptions = options;
       return {};
     });
 
@@ -84,18 +85,17 @@ describe('useAnalyticsWebSocket hook', () => {
     expect(result.current.isConnected).toBe(false);
 
     // Simulate WebSocket open event
-    if (onOpenCallback) {
-      onOpenCallback(new Event('open'));
-    }
+    capturedOptions?.onOpen?.(new Event('open'));
 
     expect(result.current.isConnected).toBe(true);
   });
 
   it('should set isConnected to false when WebSocket closes', () => {
-    let onCloseCallback: ((event: CloseEvent) => void) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedOptions: any = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
-      onCloseCallback = options?.onClose || null;
+      capturedOptions = options;
       // Start as connected
       if (options?.onOpen) {
         setTimeout(() => options.onOpen!(new Event('open')), 0);
@@ -113,18 +113,17 @@ describe('useAnalyticsWebSocket hook', () => {
     });
 
     // Simulate WebSocket close event
-    if (onCloseCallback) {
-      onCloseCallback(new CloseEvent('close'));
-    }
+    capturedOptions?.onClose?.(new CloseEvent('close'));
 
     expect(result.current.isConnected).toBe(false);
   });
 
   it('should update analytics data when BALANCE_UPDATE message is received', () => {
-    let onMessageCallback: ((data: { type: string; data: unknown }) => void) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedOptions: any = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
-      onMessageCallback = options?.onMessage || null;
+      capturedOptions = options;
       return {};
     });
 
@@ -148,21 +147,20 @@ describe('useAnalyticsWebSocket hook', () => {
     };
 
     // Simulate receiving BALANCE_UPDATE message
-    if (onMessageCallback) {
-      onMessageCallback({
-        type: 'BALANCE_UPDATE',
-        data: mockAnalyticsData
-      });
-    }
+    capturedOptions?.onMessage?.({
+      type: 'BALANCE_UPDATE',
+      data: mockAnalyticsData
+    });
 
     expect(result.current.analytics).toEqual(mockAnalyticsData);
   });
 
   it('should not update analytics for non-BALANCE_UPDATE messages', () => {
-    let onMessageCallback: ((data: { type: string; data: unknown }) => void) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedOptions: any = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
-      onMessageCallback = options?.onMessage || null;
+      capturedOptions = options;
       return {};
     });
 
@@ -183,21 +181,20 @@ describe('useAnalyticsWebSocket hook', () => {
     };
 
     // Simulate receiving a different message type
-    if (onMessageCallback) {
-      onMessageCallback({
-        type: 'OTHER_UPDATE',
-        data: mockAnalyticsData
-      });
-    }
+    capturedOptions?.onMessage?.({
+      type: 'OTHER_UPDATE',
+      data: mockAnalyticsData
+    });
 
     expect(result.current.analytics).toBeNull();
   });
 
   it('should handle multiple message updates', () => {
-    let onMessageCallback: ((data: { type: string; data: unknown }) => void) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedOptions: any = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
-      onMessageCallback = options?.onMessage || null;
+      capturedOptions = options;
       return {};
     });
 
@@ -230,22 +227,18 @@ describe('useAnalyticsWebSocket hook', () => {
     };
 
     // First update
-    if (onMessageCallback) {
-      onMessageCallback({
-        type: 'BALANCE_UPDATE',
-        data: firstUpdate
-      });
-    }
+    capturedOptions?.onMessage?.({
+      type: 'BALANCE_UPDATE',
+      data: firstUpdate
+    });
 
     expect(result.current.analytics).toEqual(firstUpdate);
 
     // Second update
-    if (onMessageCallback) {
-      onMessageCallback({
-        type: 'BALANCE_UPDATE',
-        data: secondUpdate
-      });
-    }
+    capturedOptions?.onMessage?.({
+      type: 'BALANCE_UPDATE',
+      data: secondUpdate
+    });
 
     expect(result.current.analytics).toEqual(secondUpdate);
   });
@@ -285,10 +278,11 @@ describe('useAnalyticsWebSocket hook', () => {
   });
 
   it('should handle connection errors gracefully', () => {
-    let onErrorCallback: ((event: Event) => void) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedOptions: any = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
-      onErrorCallback = options?.onError || null;
+      capturedOptions = options;
       return {};
     });
 
@@ -297,25 +291,18 @@ describe('useAnalyticsWebSocket hook', () => {
     });
 
     // Simulate error event
-    if (onErrorCallback) {
-      onErrorCallback(new Event('error'));
-    }
+    capturedOptions?.onError?.(new Event('error'));
 
     // Hook should still be functional after error
     expect(result.current).toBeDefined();
   });
 
   it('should update connection state correctly through lifecycle', () => {
-    let callbacks: {
-      onOpen?: ((event: Event) => void) | null;
-      onClose?: ((event: CloseEvent) => void) | null;
-    } = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedOptions: any = null;
 
     mockUseWebSocket.mockImplementation((_url, options) => {
-      callbacks = {
-        onOpen: options?.onOpen || null,
-        onClose: options?.onClose || null
-      };
+      capturedOptions = options;
       return {};
     });
 
@@ -327,15 +314,11 @@ describe('useAnalyticsWebSocket hook', () => {
     expect(result.current.isConnected).toBe(false);
 
     // Open connection
-    if (callbacks.onOpen) {
-      callbacks.onOpen(new Event('open'));
-    }
+    capturedOptions?.onOpen?.(new Event('open'));
     expect(result.current.isConnected).toBe(true);
 
     // Close connection
-    if (callbacks.onClose) {
-      callbacks.onClose(new CloseEvent('close'));
-    }
+    capturedOptions?.onClose?.(new CloseEvent('close'));
     expect(result.current.isConnected).toBe(false);
   });
 });

@@ -1,10 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
+
+// Import user-event with compatible version
+import userEvent from '@testing-library/user-event';
 
 // Mock a11yUtils
 vi.mock('@/lib/a11y', () => ({
@@ -76,14 +78,14 @@ describe('FeedbackWidget', () => {
   });
 
   it('should close modal when backdrop is clicked', async () => {
-    renderWithIntl(<FeedbackWidget />);
+    const { container } = renderWithIntl(<FeedbackWidget />);
 
     // Open modal
     const floatingButton = screen.getByLabelText('Buka formulir feedback');
     fireEvent.click(floatingButton);
 
     // Click backdrop
-    const backdrop = screen.container.querySelector('.bg-black\\/50');
+    const backdrop = container.querySelector('.bg-black\\/50');
     if (backdrop) {
       fireEvent.click(backdrop);
 
@@ -270,7 +272,7 @@ describe('FeedbackWidget', () => {
       getTracks: vi.fn(() => [{ stop: vi.fn() }]),
     };
 
-    (navigator.mediaDevices.getDisplayMedia as vi.Mock).mockResolvedValue(mockStream);
+    (navigator.mediaDevices.getDisplayMedia as Mock).mockResolvedValue(mockStream);
 
     renderWithIntl(<FeedbackWidget />);
 
@@ -287,7 +289,7 @@ describe('FeedbackWidget', () => {
   });
 
   it('should handle screenshot capture failure gracefully', async () => {
-    (navigator.mediaDevices.getDisplayMedia as vi.Mock).mockRejectedValue(
+    (navigator.mediaDevices.getDisplayMedia as Mock).mockRejectedValue(
       new Error('Capture failed')
     );
 
@@ -370,7 +372,7 @@ describe('FeedbackWidget', () => {
   });
 
   it('should disable submit while submitting', async () => {
-    global.fetch = vi.fn(() => new Promise(() => {})); // Never resolves
+    global.fetch = vi.fn(() => new Promise<Response>(() => {})); // Never resolves
 
     renderWithIntl(<FeedbackWidget />);
 

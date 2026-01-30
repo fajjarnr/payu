@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import { FeatureFlag } from '@/components/experiments/FeatureFlag';
@@ -9,7 +9,7 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 const mockUseExperiment = vi.fn();
 
 vi.mock('@/hooks/useExperiment', () => ({
-  useExperiment: (experimentKey: string, options?: any) => mockUseExperiment(experimentKey, options),
+  useExperiment: (experimentKey: string, options?: Record<string, unknown>) => mockUseExperiment(experimentKey, options),
 }));
 
 expect.extend(toHaveNoViolations);
@@ -206,7 +206,7 @@ describe('FeatureFlag', () => {
       isLoading: false,
     });
 
-    const { container } = renderWithIntl(
+    renderWithIntl(
       <FeatureFlag
         experimentKey="test"
         enabledVariant="variant_b"
@@ -267,7 +267,7 @@ describe('FeatureFlag', () => {
       isLoading: false,
     });
 
-    const { container } = renderWithIntl(
+    renderWithIntl(
       <FeatureFlag
         experimentKey="test"
         enabledVariant="enabled"
@@ -286,7 +286,7 @@ describe('FeatureFlag', () => {
       isLoading: false,
     });
 
-    const { container } = renderWithIntl(
+    renderWithIntl(
       <FeatureFlag
         experimentKey="test"
         enabledVariant="enabled"

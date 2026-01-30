@@ -8,6 +8,7 @@ import {
   useProcessQrisPayment
 } from '@/hooks/useTransactions';
 import TransactionService from '@/services/TransactionService';
+import type { Transaction, TransactionType } from '@/types';
 
 // Mock TransactionService
 vi.mock('@/services/TransactionService');
@@ -19,17 +20,17 @@ describe('useTransactions hook', () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const mockTransactions = [
+  const mockTransactions: Transaction[] = [
     {
       id: 'txn-1',
       referenceNumber: 'REF-001',
       senderAccountId: 'account-1',
       recipientAccountId: 'account-2',
-      type: 'TRANSFER' as const,
+      type: 'INTERNAL_TRANSFER' as TransactionType,
       amount: 100000,
       currency: 'IDR',
       description: 'Test transfer',
-      status: 'COMPLETED' as const,
+      status: 'COMPLETED',
       createdAt: '2024-01-01T10:00:00Z',
       updatedAt: '2024-01-01T10:00:00Z',
       completedAt: '2024-01-01T10:01:00Z'
@@ -39,11 +40,11 @@ describe('useTransactions hook', () => {
       referenceNumber: 'REF-002',
       senderAccountId: 'account-1',
       recipientAccountId: 'account-3',
-      type: 'PAYMENT' as const,
+      type: 'BILL_PAYMENT' as TransactionType,
       amount: 50000,
       currency: 'IDR',
       description: 'Bill payment',
-      status: 'PENDING' as const,
+      status: 'PENDING',
       createdAt: '2024-01-02T10:00:00Z',
       updatedAt: '2024-01-02T10:00:00Z'
     }
@@ -154,16 +155,16 @@ describe('useTransaction hook', () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const mockTransaction = {
+  const mockTransaction: Transaction = {
     id: 'txn-1',
     referenceNumber: 'REF-001',
     senderAccountId: 'account-1',
     recipientAccountId: 'account-2',
-    type: 'TRANSFER' as const,
+    type: 'INTERNAL_TRANSFER' as TransactionType,
     amount: 100000,
     currency: 'IDR',
     description: 'Test transfer',
-    status: 'COMPLETED' as const,
+    status: 'COMPLETED',
     createdAt: '2024-01-01T10:00:00Z',
     updatedAt: '2024-01-01T10:00:00Z',
     completedAt: '2024-01-01T10:01:00Z'
@@ -231,7 +232,7 @@ describe('useInitiateTransfer hook', () => {
     recipientAccountNumber: '1234567890',
     amount: 100000,
     description: 'Test transfer',
-    type: 'TRANSFER' as const,
+    type: 'INTERNAL_TRANSFER' as TransactionType,
     transactionPin: '123456'
   };
 
@@ -464,17 +465,17 @@ describe('Transaction hooks integration', () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const mockTransactions = [
+  const mockTransactions: Transaction[] = [
     {
       id: 'txn-1',
       referenceNumber: 'REF-001',
       senderAccountId: 'account-1',
       recipientAccountId: 'account-2',
-      type: 'TRANSFER' as const,
+      type: 'INTERNAL_TRANSFER' as TransactionType,
       amount: 100000,
       currency: 'IDR',
       description: 'Test transfer',
-      status: 'COMPLETED' as const,
+      status: 'COMPLETED',
       createdAt: '2024-01-01T10:00:00Z',
       updatedAt: '2024-01-01T10:00:00Z'
     }
@@ -522,7 +523,8 @@ describe('Transaction hooks integration', () => {
         recipientAccountNumber: '1234567890',
         amount: 50000,
         description: 'Test',
-        type: 'TRANSFER'
+        type: 'INTERNAL_TRANSFER' as TransactionType,
+        transactionPin: '123456'
       });
     });
 
@@ -535,16 +537,16 @@ describe('Transaction hooks integration', () => {
   });
 
   it('should handle complete transaction workflow', async () => {
-    const mockTransaction = {
+    const mockTransaction: Transaction = {
       id: 'txn-1',
       referenceNumber: 'REF-001',
       senderAccountId: 'account-1',
       recipientAccountId: 'account-2',
-      type: 'TRANSFER' as const,
+      type: 'INTERNAL_TRANSFER' as TransactionType,
       amount: 100000,
       currency: 'IDR',
       description: 'Test transfer',
-      status: 'COMPLETED' as const,
+      status: 'COMPLETED',
       createdAt: '2024-01-01T10:00:00Z',
       updatedAt: '2024-01-01T10:00:00Z'
     };

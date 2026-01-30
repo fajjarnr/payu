@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import BannerCarousel from '@/components/cms/BannerCarousel';
@@ -8,9 +8,9 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock useBanners hook
@@ -86,7 +86,7 @@ describe('BannerCarousel', () => {
       }),
     }));
 
-    const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
+    renderWithIntl(<BannerCarousel {...defaultProps} />);
 
     expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
   });
@@ -264,7 +264,7 @@ describe('BannerCarousel', () => {
       }),
     }));
 
-    const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
+    renderWithIntl(<BannerCarousel {...defaultProps} />);
 
     expect(screen.queryByLabelText('Previous banner')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Next banner')).not.toBeInTheDocument();

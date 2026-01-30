@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -121,10 +122,15 @@ export default function BannerCarousel({
             onClick={() => handleBannerClick(currentBanner)}
           >
             {/* Background Image */}
-            <div
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-              style={{ backgroundImage: `url(${currentBanner.imageUrl})` }}
-            >
+            <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
+              <Image
+                src={currentBanner.imageUrl}
+                alt={currentBanner.title}
+                fill
+                className="object-cover object-center"
+                priority={currentIndex === 0}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+              />
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
             </div>

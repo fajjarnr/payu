@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, AlertTriangle, CheckCircle2, TrendingUp, Edit, Trash2 } from 'lucide-react';
+import { Plus, AlertTriangle, CheckCircle2, Edit, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 

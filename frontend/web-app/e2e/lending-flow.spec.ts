@@ -315,7 +315,8 @@ test.describe('Lending Flow - Credit Score', () => {
 
   test('should have credit score factors with icons', async ({ page }) => {
     const checkIcons = page.locator('.text-success-light');
-    await expect(checkIcons).toHaveCount.toBeGreaterThanOrEqual(3);
+    const checkCount = await checkIcons.count();
+    expect(checkCount).toBeGreaterThanOrEqual(3);
   });
 
   test('should display credit score in gradient card', async ({ page }) => {

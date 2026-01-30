@@ -2,8 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   PromotionService,
   type Promotion,
-  type CreatePromotionRequest,
-  type UpdatePromotionRequest,
   type ClaimPromotionRequest,
   type Reward,
   type LoyaltyPoints,
@@ -400,7 +398,7 @@ describe('PromotionService', () => {
               amount: 1000,
               type: 'FIXED',
               referenceId: 'txn_ref',
-              status: status as any,
+              status: status as Cashback['status'],
               createdAt: '2024-01-01T10:00:00Z',
             },
           ];

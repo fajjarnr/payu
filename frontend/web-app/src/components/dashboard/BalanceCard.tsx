@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import clsx from 'clsx';
 import { VIPBadge } from '@/components/personalization';
 

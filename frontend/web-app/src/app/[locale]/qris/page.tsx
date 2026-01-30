@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { QrCode, Camera, History, Image as ImageIcon, ShieldCheck, Info } from 'lucide-react';
-import clsx from 'clsx';
 
 export default function QRISPage() {
-  const [isScanning, setIsScanning] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isScanning, _setIsScanning] = useState(false);
 
   return (
     <DashboardLayout>

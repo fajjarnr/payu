@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { Skeleton, SkeletonCard, SkeletonText, SkeletonTransaction, SkeletonChart, SkeletonStatsGrid } from '@/components/ui/Skeleton';
 
 describe('Skeleton Components', () => {

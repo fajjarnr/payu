@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import MobileNav from '@/components/MobileNav';
@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock localStorage
 const mockLocalStorage = {
-  getItem: vi.fn(() => 'test-token'),
+  getItem: vi.fn((): string | null => 'test-token'),
   setItem: vi.fn(),
   removeItem: vi.fn(),
   clear: vi.fn(),
@@ -81,7 +81,7 @@ describe('MobileNav', () => {
       usePathname: () => '/transfer',
     }));
 
-    const { container } = renderWithIntl(<MobileNav />);
+    renderWithIntl(<MobileNav />);
 
     const activeLink = screen.getByText('Transfer').closest('a');
     expect(activeLink).toHaveClass('text-primary');

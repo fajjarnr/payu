@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -55,25 +56,28 @@ export default function PromoPopup({
   });
 
   // Filter eligible popups
-  const eligiblePopups = popups?.filter((popup) => {
-    // Check if popup was permanently dismissed
-    const dismissedKey = `${storageKey}-dismissed-${popup.id}`;
-    const dismissed = localStorage.getItem(dismissedKey);
-    if (dismissed === 'true') return false;
+  const eligiblePopups = useMemo(() =>
+    popups?.filter((popup) => {
+      // Check if popup was permanently dismissed
+      const dismissedKey = `${storageKey}-dismissed-${popup.id}`;
+      const dismissed = localStorage.getItem(dismissedKey);
+      if (dismissed === 'true') return false;
 
-    // Check if popup was shown this session
-    const sessionShownKey = `${sessionKey}-shown-${popup.id}`;
-    const sessionShown = sessionStorage.getItem(sessionShownKey);
-    if (sessionShown === 'true') return false;
+      // Check if popup was shown this session
+      const sessionShownKey = `${sessionKey}-shown-${popup.id}`;
+      const sessionShown = sessionStorage.getItem(sessionShownKey);
+      if (sessionShown === 'true') return false;
 
-    // Check date range
-    const now = new Date();
-    const startDate = new Date(popup.startDate);
-    const endDate = new Date(popup.endDate);
-    if (now < startDate || now > endDate) return false;
+      // Check date range
+      const now = new Date();
+      const startDate = new Date(popup.startDate);
+      const endDate = new Date(popup.endDate);
+      if (now < startDate || now > endDate) return false;
 
-    return true;
-  }) ?? [];
+      return true;
+    }) ?? [],
+    [popups, storageKey, sessionKey]
+  );
 
   // Auto-show popup after delay
   useEffect(() => {
@@ -144,7 +148,8 @@ export default function PromoPopup({
   if (!currentPopup) return null;
 
   // Get background style from metadata
-  const backgroundStyle = currentPopup.metadata?.backgroundImage
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _backgroundStyle = currentPopup.metadata?.backgroundImage
     ? {
         backgroundImage: `url(${currentPopup.metadata.backgroundImage as string})`,
         backgroundSize: 'cover',
@@ -192,10 +197,12 @@ export default function PromoPopup({
               {/* Image Banner */}
               {currentPopup.imageUrl && (
                 <div className="relative h-48 sm:h-64">
-                  <img
+                  <Image
                     src={currentPopup.imageUrl}
                     alt={currentPopup.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, 512px"
                   />
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

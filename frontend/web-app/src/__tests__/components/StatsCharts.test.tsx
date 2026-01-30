@@ -6,7 +6,7 @@ import StatsCharts from '@/components/dashboard/StatsCharts';
 describe('StatsCharts', () => {
  it('renders investment performance section', () => {
   render(<StatsCharts />);
-  
+
   expect(screen.getByText('Performa Investasi')).toBeInTheDocument();
   expect(screen.getByText('+12.5%')).toBeInTheDocument();
  });
@@ -24,13 +24,13 @@ describe('StatsCharts', () => {
 
  it('renders spending overview section', () => {
   render(<StatsCharts />);
-  
+
   expect(screen.getByText('Ikhtisar Pengeluaran')).toBeInTheDocument();
  });
 
  it('displays monthly spending bars', () => {
-  const { container } = render(<StatsCharts />);
-  
+  render(<StatsCharts />);
+
   expect(screen.getByText('Jan')).toBeInTheDocument();
   expect(screen.getByText('Feb')).toBeInTheDocument();
   expect(screen.getByText('Mar')).toBeInTheDocument();
@@ -42,20 +42,20 @@ describe('StatsCharts', () => {
 
  it('applies responsive grid layout', () => {
   render(<StatsCharts />);
-  
+
   expect(screen.getByText('Performa Investasi')).toBeInTheDocument();
  });
 
  it('shows total investment value', () => {
   render(<StatsCharts />);
-  
+
   expect(screen.getByText('Total Nilai')).toBeInTheDocument();
   expect(screen.getByText('Rp 8.750.000')).toBeInTheDocument();
  });
 
  it('renders donut chart SVG', () => {
   const { container } = render(<StatsCharts />);
-  
+
   const svgs = container.querySelectorAll('svg');
   const chartSvg = Array.from(svgs).find(svg => svg.classList.contains('-rotate-90'));
   expect(chartSvg).toBeInTheDocument();

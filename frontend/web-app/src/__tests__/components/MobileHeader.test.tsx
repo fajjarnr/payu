@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import MobileHeader from '@/components/MobileHeader';
@@ -83,14 +83,14 @@ describe('MobileHeader', () => {
   });
 
   it('should have no accessibility violations', async () => {
-    const { container } = renderWithIntl(<MobileHeader {...defaultProps} />);
-    const results = await axe(container);
+    const { container: _container } = renderWithIntl(<MobileHeader {...defaultProps} />);
+    const results = await axe(_container);
 
     expect(results).toHaveNoViolations();
   });
 
   it('should render title with correct typography', () => {
-    const { container } = renderWithIntl(<MobileHeader {...defaultProps} />);
+    renderWithIntl(<MobileHeader {...defaultProps} />);
 
     const title = screen.getByText('Test Page');
     expect(title).toHaveClass('text-lg', 'font-black', 'text-foreground');

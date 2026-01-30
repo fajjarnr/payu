@@ -226,7 +226,8 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
 
     // Should show multiple validation errors
     const errors = page.locator('.text-red-500');
-    await expect(errors).toHaveCount.toBeGreaterThanOrEqual(1);
+    const errorCount = await errors.count();
+    expect(errorCount).toBeGreaterThanOrEqual(1);
   });
 
   test('should show loading state during submission', async ({ page }) => {
@@ -402,7 +403,8 @@ test.describe('Onboarding Flow - Error Handling', () => {
 
     // Should show inline errors
     const errorElements = page.locator('.text-red-500');
-    await expect(errorElements).toHaveCount.toBeGreaterThanOrEqual(1);
+    const errorElementsCount = await errorElements.count();
+    expect(errorElementsCount).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -422,7 +424,7 @@ test.describe('Onboarding Flow - Accessibility', () => {
 
     // Tab through page
     await page.keyboard.press('Tab');
-    let focused = await page.locator(':focus').getAttribute('href');
+    const focused = await page.locator(':focus').getAttribute('href');
     expect(focused).toBe('/login');
 
     await page.keyboard.press('Tab');
@@ -535,7 +537,7 @@ test.describe('Onboarding Flow - Interactive Elements', () => {
     const cameraContainer = page.locator('.aspect-video.border-2.border-dashed').locator('div');
     await cameraContainer.hover();
 
-    await expect(cameraContainer).toHaveClass(/group-hover\\/upload:scale-110/);
+    await expect(cameraContainer).toHaveClass(/group-hover\/upload:scale-110/u);
   });
 
   test('should have button press effect', async ({ page }) => {

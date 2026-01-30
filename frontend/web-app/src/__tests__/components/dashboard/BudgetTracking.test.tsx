@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import BudgetTracking from '@/components/dashboard/BudgetTracking';
 
@@ -63,7 +63,7 @@ describe('BudgetTracking', () => {
   });
 
   it('should display correct status colors', () => {
-    const { container } = renderWithIntl(<BudgetTracking budgets={mockBudgets} />);
+    renderWithIntl(<BudgetTracking budgets={mockBudgets} />);
 
     // The exceeded budget should have the ring class on its container
     const exceededBudget = screen.getByText('Hiburan').closest('button');

@@ -22,7 +22,8 @@ test.describe('Registration Flow', () => {
 
   test('should display security badge', async ({ page }) => {
     await expect(page.getByText('ENKRIPSI AMAN SESUAI STANDAR OJK & BI')).toBeVisible();
-    await expect(page.locator('.text-bank-green')).toHaveCount.toBeGreaterThanOrEqual(1);
+    const bankGreenCount = await page.locator('.text-bank-green').count();
+    expect(bankGreenCount).toBeGreaterThanOrEqual(1);
   });
 
   test('should display progress tracker with 3 steps', async ({ page }) => {
@@ -83,7 +84,9 @@ test.describe('Registration Flow', () => {
     await page.click('button:has-text("Konfirmasi Pembuatan Akun")');
 
     // Should show validation errors
-    await expect(page.locator('.text-red-500')).toHaveCount.toBeGreaterThanOrEqual(1);
+    const redErrors = page.locator('.text-red-500');
+    const redErrorCount = await redErrors.count();
+    expect(redErrorCount).toBeGreaterThanOrEqual(1);
   });
 
   test('should show loading state during registration', async ({ page }) => {
@@ -288,7 +291,7 @@ test.describe('Registration Flow - Accessibility', () => {
 
     // Tab through form
     await page.keyboard.press('Tab');
-    let focused = await page.locator(':focus').getAttribute('href');
+    const focused = await page.locator(':focus').getAttribute('href');
     expect(focused).toBe('/login');
 
     await page.keyboard.press('Tab');

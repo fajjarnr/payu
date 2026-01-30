@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { CreditCard, TrendingUp, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText } from 'lucide-react';
+import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText, TrendingUp } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 

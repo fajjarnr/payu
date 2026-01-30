@@ -125,7 +125,7 @@ describe('AccountService', () => {
         nik: '2222222222222222',
       };
 
-      const invalidUser = { ...mockRequest } as any;
+      const invalidUser = { ...mockRequest } as unknown as User;
 
       vi.mocked(api.post).mockResolvedValue({ data: invalidUser });
 

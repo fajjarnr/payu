@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import PromoPopup from '@/components/cms/PromoPopup';
@@ -8,9 +8,9 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock useRouter
@@ -48,13 +48,13 @@ vi.mock('@/hooks', () => ({
 
 // Mock localStorage and sessionStorage
 const mockLocalStorage = {
-  getItem: vi.fn(() => null),
+  getItem: vi.fn((..._args: unknown[]): string | null => null),
   setItem: vi.fn(),
   removeItem: vi.fn(),
 };
 
 const mockSessionStorage = {
-  getItem: vi.fn(() => null),
+  getItem: vi.fn((..._args: unknown[]): string | null => null),
   setItem: vi.fn(),
   removeItem: vi.fn(),
 };
@@ -101,7 +101,7 @@ describe('PromoPopup', () => {
 
   it('should not render when loading', () => {
     mockIsLoading = true;
-    mockPopupsData = null;
+    mockPopupsData = [];
 
     renderWithIntl(<PromoPopup delay={0} />);
 
@@ -121,8 +121,8 @@ describe('PromoPopup', () => {
   });
 
   it('should filter out permanently dismissed popups', () => {
-    mockLocalStorage.getItem.mockImplementation((key) => {
-      if (key === 'promo-popup-state-dismissed-popup-1') return 'true';
+    mockLocalStorage.getItem.mockImplementation((_key: unknown) => {
+      if (_key === 'promo-popup-state-dismissed-popup-1') return 'true';
       return null;
     });
 
@@ -134,8 +134,8 @@ describe('PromoPopup', () => {
   });
 
   it('should filter out popups shown this session', () => {
-    mockSessionStorage.getItem.mockImplementation((key) => {
-      if (key === 'promo-popup-session-shown-popup-1') return 'true';
+    mockSessionStorage.getItem.mockImplementation((_key: unknown) => {
+      if (_key === 'promo-popup-session-shown-popup-1') return 'true';
       return null;
     });
 

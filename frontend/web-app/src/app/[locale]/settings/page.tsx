@@ -2,9 +2,9 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { User, Mail, Smartphone, MapPin, Globe, Bell, Moon, Sun, Trash2, Shield, CreditCard, LogOut, ChevronRight } from 'lucide-react';
+import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
 export default function SettingsPage() {
   const menuItems = [

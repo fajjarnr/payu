@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import { ExperimentVariant } from '@/components/experiments/ExperimentVariant';
@@ -9,7 +9,7 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 const mockUseExperiment = vi.fn();
 
 vi.mock('@/hooks/useExperiment', () => ({
-  useExperiment: (experimentKey: string, options?: any) => mockUseExperiment(experimentKey, options),
+  useExperiment: (experimentKey: string, options?: Record<string, unknown>) => mockUseExperiment(experimentKey, options),
 }));
 
 expect.extend(toHaveNoViolations);
@@ -367,7 +367,7 @@ describe('ExperimentVariant', () => {
       isError: false,
     });
 
-    const { container } = renderWithIntl(
+    renderWithIntl(
       <ExperimentVariant
         experimentKey="test"
         fallback={<div>Fallback</div>}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,10 +8,26 @@ const inter = Inter({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+};
 
 export const metadata: Metadata = {
   title: {
@@ -78,7 +94,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body
-        className={`${inter.variable} ${geistMono.variable} antialiased bg-background overflow-x-hidden`}
+        className={`${inter.variable} ${geistMono.variable} ${outfit.variable} antialiased bg-background overflow-x-hidden`}
       >
         {children}
       </body>

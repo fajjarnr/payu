@@ -2,7 +2,7 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { BarChart3, TrendingUp, TrendingDown, Calendar, ArrowUpRight, ArrowDownRight, PieChart, Activity, Wifi, WifiOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, ArrowUpRight, Activity, Wifi, WifiOff } from 'lucide-react';
 import clsx from 'clsx';
 import { useAnalyticsWebSocket } from '@/hooks';
 import { useAuthStore } from '@/stores';

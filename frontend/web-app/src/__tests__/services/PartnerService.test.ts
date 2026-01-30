@@ -300,7 +300,7 @@ describe('PartnerService', () => {
           id: Math.floor(Math.random() * 1000),
           name: `${config.type} Partner`,
           email: config.email,
-          type: config.expectedType as any,
+          type: config.expectedType,
           phone: '+628123456789',
           active: true,
         };
@@ -395,7 +395,7 @@ describe('PartnerService', () => {
         id: 1,
         ...mockRequest,
         active: true,
-      } as any;
+      };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockPartner });
 

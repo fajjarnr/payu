@@ -2,12 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   SegmentationService,
   type CustomerSegment,
-  type SegmentMembership,
-  type SegmentedOffer,
   type UserSegmentsResponse,
   type SegmentedOffersResponse,
   type SegmentTier,
   type SegmentStatus,
+  type SegmentedOffer,
 } from '@/services/SegmentationService';
 import api from '@/lib/api';
 
@@ -284,7 +283,7 @@ describe('SegmentationService', () => {
       });
 
       it('should handle all offer types', async () => {
-        const offerTypes = ['CASHBACK', 'DISCOUNT', 'REWARD_POINTS', 'FREE_TRANSFER', 'BONUS_INTEREST'];
+        const offerTypes: SegmentedOffer['offerType'][] = ['CASHBACK', 'DISCOUNT', 'REWARD_POINTS', 'FREE_TRANSFER', 'BONUS_INTEREST'];
 
         for (const type of offerTypes) {
           const mockResponse: SegmentedOffersResponse = {
@@ -295,7 +294,7 @@ describe('SegmentationService', () => {
                 description: `Test ${type} offer`,
                 segmentId: 'segment_test',
                 segmentTier: 'SILVER',
-                offerType: type as any,
+                offerType: type,
                 value: 100,
                 validFrom: '2024-01-01T00:00:00Z',
                 validUntil: '2024-12-31T23:59:59Z',

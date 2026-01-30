@@ -67,7 +67,7 @@ test.describe('Login Flow', () => {
   });
 
   test('should mask password input', async ({ page }) => {
-    const passwordInput = page.getByPlaceholder('••••••••••••') as any;
+    const passwordInput = page.getByPlaceholder('••••••••••••');
     await passwordInput.fill('mypassword');
     await expect(passwordInput).toHaveValue('mypassword');
 

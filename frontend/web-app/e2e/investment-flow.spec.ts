@@ -173,7 +173,8 @@ test.describe('Investment Flow - Product Catalog', () => {
   test('should have product icons', async ({ page }) => {
     // Check for product icons (Landmark, TrendingUp, Coins)
     const icons = page.locator('svg');
-    await expect(icons).toHaveCount.toBeGreaterThanOrEqual(3);
+    const iconsCount = await icons.count();
+    expect(iconsCount).toBeGreaterThanOrEqual(3);
   });
 
   test('should filter products by type', async ({ page }) => {
@@ -191,9 +192,12 @@ test.describe('Investment Flow - Product Catalog', () => {
     const greenIcon = page.locator('.text-primary');
     const amberIcon = page.locator('.text-amber-500');
 
-    await expect(blueIcon).toHaveCount.toBeGreaterThanOrEqual(1);
-    await expect(greenIcon).toHaveCount.toBeGreaterThanOrEqual(1);
-    await expect(amberIcon).toHaveCount.toBeGreaterThanOrEqual(1);
+    const blueCount = await blueIcon.count();
+    const greenCount = await greenIcon.count();
+    const amberCount = await amberIcon.count();
+    expect(blueCount).toBeGreaterThanOrEqual(1);
+    expect(greenCount).toBeGreaterThanOrEqual(1);
+    expect(amberCount).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -271,7 +275,8 @@ test.describe('Investment Flow - Risk Profile', () => {
 
   test('should display risk factors', async ({ page }) => {
     // Check for risk factor icons and text
-    await expect(page.locator('.text-success-light\\/20')).toHaveCount.toBeGreaterThanOrEqual(1);
+    const riskCount = await page.locator('.text-success-light\\/20').count();
+    expect(riskCount).toBeGreaterThanOrEqual(1);
   });
 });
 

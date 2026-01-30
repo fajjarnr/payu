@@ -9,7 +9,6 @@ import {
   ArrowRightLeft,
   Wallet,
   CreditCard,
-  Gift,
   ShieldCheck,
   Settings,
   LifeBuoy,
@@ -21,8 +20,7 @@ import {
   LogOut,
   QrCode,
   Receipt,
-  TrendingUp,
-  Briefcase
+  TrendingUp
 } from 'lucide-react';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
@@ -86,7 +84,10 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
   return (
     <div className="h-screen bg-background flex overflow-hidden font-sans">
       {/* Desktop Sidebar - Width 56 as per layout structure */}
-      <aside className="hidden lg:flex flex-col w-56 border-r border-border bg-card p-6 h-full overflow-y-auto">
+      <aside
+        className="hidden lg:flex flex-col w-56 border-r border-border bg-card p-6 h-full overflow-y-auto"
+        aria-label="Sidebar Navigasi Desktop"
+      >
         <div className="flex items-center gap-2 mb-10 px-2 group">
           <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-black text-xl shadow-lg shadow-primary/20 rotate-3 transition-transform group-hover:rotate-0">
             U
@@ -129,7 +130,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
       <aside className={clsx(
         "fixed inset-y-0 left-0 w-72 bg-card z-50 transform transition-transform duration-300 lg:hidden p-6 shadow-2xl",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      )} aria-label="Sidebar Navigasi Mobile">
         <div className="flex justify-between items-center mb-10 px-2">
           <div className="flex items-center gap-2">
             <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-black text-xl">

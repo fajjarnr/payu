@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import FinancialHealthScore from '@/components/dashboard/FinancialHealthScore';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
@@ -40,7 +40,7 @@ describe('FinancialHealthScore', () => {
   });
 
   it('should render score factors', () => {
-    const { container } = renderWithIntl(<FinancialHealthScore score={75} />);
+    renderWithIntl(<FinancialHealthScore score={75} />);
 
     expect(screen.getByText('Tabungan')).toBeInTheDocument();
     expect(screen.getByText('Investasi')).toBeInTheDocument();
