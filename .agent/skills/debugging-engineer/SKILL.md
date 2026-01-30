@@ -9,20 +9,23 @@ You are an expert in **Systematic Debugging** and **Root Cause Analysis** for th
 
 ## 🔬 The Systematic Debugging Process
 
-### Phase 1: Reproduce (Minimal Case)
+## 🔬 The Systematic Debugging Process
+
+> **The Iron Law**: NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
+
+### Phase 1: Reproduce & Trace
 1.  **Can you reproduce it?** (Always, Randomly, Specific conditions).
-2.  **Minimal Reproduction**: Simplify to the smallest code example that still exhibits the bug.
-3.  **Document Steps**: Exact steps, environment, and error messages.
+2.  **Trace Data Flow**: Use `root-cause-tracing.md` to find the original trigger.
+3.  **Minimal Reproduction**: Simplify to the smallest code example.
 
-### Phase 2: Gather Information
-1.  **Error Evidence**: Full stack traces, error codes (e.g., `ACC_001`), and log output.
-2.  **Environment Audit**: Language versions (Java 21, Python 3.12, Node 20), dependency versions, and env variables.
-3.  **History**: Check `git blame` and recent deployment timelines.
+### Phase 2: Hypothesis & Test
+1.  **Form Hypothesis**: "I think X is the root cause because Y".
+2.  **Test Minimally**: Make the SMALLEST possible change to verify.
 
-### Phase 3: Form & Test Hypothesis
-1.  **Binary Search**: Narrow down the problematic code section by systematically disabling parts of the system.
-2.  **Differential Analysis**: Compare "Working" vs "Broken" environments/users/data.
-3.  **Trace Debugging**: Use logging or decorators/wrappers to track execution flow and state changes.
+**References:**
+- **`references/systematic-process.md`**: The complete 4-Phase Debugging Workflow.
+- **`references/root-cause-tracing.md`**: Technique to trace bugs deep in the call stack.
+- **`references/condition-based-waiting.md`**: Eliminating flaky tests using Awaitility.
 
 ## 🛠️ Specialized Techniques
 

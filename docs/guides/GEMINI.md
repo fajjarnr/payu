@@ -262,8 +262,9 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | `api-design` | **Master Skill**: REST API standards, OpenAPI 3.0, Error Codes, and Zod synchronization. |
 | `api-integration-specialist` | Expert in integrating 3rd party APIs (OAuth2, retry logic, rate limiting). |
 | `event-driven-architecture` | Kafka messaging, Saga patterns, and event sourcing. |
+| `kafka-stream-specialist` | **Advanced**: Topologies, Windowing/Joins, State Stores, and CDC (Debezium). |
 | `error-handling-engineer` | Design robust error patterns, circuit breakers, and graceful degradation. |
-| `database-engineer` | PostgreSQL design, JSONB patterns, and Flyway migrations. |
+| `database-engineer` | **Advanced**: Postgres Performance (Indexing/Locking), Design Rules, and Flyway. |
 | `typescript-backend-engineer` | Node.js/Express/TypeScript services (BFFs, microservices) with Prisma and Zod. |
 | `fastapi-templates` | Production-ready Python APIs with Pydantic v2 and async patterns. |
 | `ml-engineer` | Fraud scoring, Python data analytics, and model implementation. |
@@ -286,18 +287,19 @@ Skills are categorized by domain to help you choose the right tool for the task.
 ### 🛡️ Security & Quality
 | Skill | Description |
 | :--- | :--- |
-| `security-engineer` | **Master Skill**: PCI-DSS, OJK Compliance, Encription, and Incident Response. |
+| `security-engineer` | **Master Skill**: Zero Trust K8s, External Secrets (Vault), PCI-DSS, and OJK Compliance. |
 | `auth-implementation-patterns` | JWT, OAuth2, RBAC, and session management patterns. |
 | `qa-engineer` | **Master Skill**: TDD, REST Assured, Maestro (Mobile E2E), and Performance testing. |
 | `code-review` | Automated code quality checks and PR review checklists. |
-| `debugging-engineer` | Systematic root cause analysis and performance debugging. |
+| `debugging-engineer` | **Advanced**: Systematic "Iron Law" Process, Root Cause Tracing, and Awaitility. |
+| `finops-engineer` | **New**: Reconciliation, Settlement, GL Integration, and Regulatory Reporting. |
 
 ### ⚙️ DevOps & Automation
 | Skill | Description |
 | :--- | :--- |
-| `devops-engineer` | **Master Skill**: CI/CD Pipelines, Tekton, ArgoCD, and automation scripts. |
+| `devops-engineer` | **Master Skill**: Istio Traffic Mgmt, ArgoCD GitOps, Tekton Pipelines. |
 | `container-engineer` | UBI-9 images, multi-stage builds, and OpenShift container optimization. |
-| `observability-engineer` | Expert in Distributed Tracing (Jaeger), Logs (Loki), and Metrics (Prometheus). |
+| `observability-engineer` | **Advanced**: SLO/Burn Rate Alerts, Runbooks, Golden Signals (Jaeger/Loki/Prom). |
 | `git-workflow` | Branching strategies, conventional commits, and PR standards. |
 | `typescript-advanced-types` | Advanced Type safety for complex application logic. |
 | `modern-javascript-patterns` | Modern ES6+ syntax and functional programming patterns. |

@@ -7,6 +7,7 @@ import id.payu.partner.dto.snap.TokenRequest;
 import id.payu.partner.service.SnapBiPaymentService;
 import id.payu.partner.service.SnapBiSignatureService;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Disabled;
@@ -19,6 +20,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
+@TestProfile(PartnerTestProfile.class)
 @Disabled("Integration tests require Kafka/Docker - disabled when Docker not available")
 public class TokoBapakIntegrationTest {
 

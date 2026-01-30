@@ -253,10 +253,20 @@ class TestAnalyticsAPIEndpoints:
     @pytest.mark.asyncio
     async def test_get_recommendations_success(self, mock_db_session):
         """Test successful recommendations retrieval."""
+        from app.models.schemas import RecommendationType
+
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_recommendations.return_value = [
-                {"type": "savings", "message": "Save more!", "priority": "high"}
+                {
+                    "recommendation_id": "rec_123",
+                    "recommendation_type": RecommendationType.SAVINGS_GOAL,
+                    "title": "Save more!",
+                    "description": "Start saving for your future",
+                    "action_url": "/savings",
+                    "priority": 1,
+                    "metadata": {},
+                }
             ]
             mock_service_class.return_value = mock_service
 

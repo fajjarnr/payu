@@ -128,6 +128,10 @@ const apiKey = process.env.API_KEY;
 const secret = await secretsManager.getSecret("payu/prod/api-key");
 ```
 
+**Implementation Pattern:**
+Use **External Secrets Operator** to sync Vault secrets to OpenShift.
+See **`references/external-secrets.md`** for configuration templates.
+
 **Verification Steps:**
 
 - [ ] No hardcoded keys/secrets in source code.
@@ -227,16 +231,12 @@ const TransactionSchema = z.object({
 
 #### 2. Network Security (NetworkPolicy)
 
-```yaml
-# ✅ CORRECT: Restrict pod access
-kind: NetworkPolicy
-spec:
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: gateway-service
-```
+Implement "Zero Trust" using strict ingress/egress rules.
+See **`references/k8s-hardening.md`** for complete templates (Default Deny, DNS Allow, Service-to-Service).
+
+#### 3. RBAC Best Practices
+Avoid `cluster-admin` for ServiceAccounts. Use granular RoleBindings restricted by `resourceNames`.
+See **`references/k8s-hardening.md`** for secure RBAC patterns.
 
 #### 3. Misconfiguration Protection
 

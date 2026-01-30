@@ -33,6 +33,8 @@ python scripts/deployment_manager.py [namespace]
 - **`references/cicd_pipeline_guide.md`**: Detailed Tekton and ArgoCD patterns.
 - **`references/infrastructure_as_code.md`**: Best practices for Terraform and Helm on OpenShift.
 - **`references/deployment_strategies.md`**: Technical guide for Blue-Green and Canary rollouts.
+- **`references/istio-traffic-management.md`**: OpenShift Service Mesh templates (Circuit Breaker, Canary, Gateway).
+- **`references/argocd-gitops.md`**: OpenShift GitOps (ArgoCD) App-of-Apps and Sync Policy patterns.
 
 ## 🚀 Pipeline Architecture
 

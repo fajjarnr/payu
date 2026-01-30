@@ -41,9 +41,11 @@ The PayU platform is powered by specialized skill clusters:
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
 | **Core** | `backend-engineer` | Java Spring Boot 3.4 & Quarkus Native standards. |
+| **DB** | `database-engineer` | **Advanced**: Performance (Idx/Locking), Design Rules, Flyway. |
 | **Logic** | `backend-patterns` | Repository, Service, and Multi-layer caching patterns. |
 | **API** | `api-design` | REST, OpenAPI 3.0, and Zod synchronization. |
 | **Events** | `event-driven-architecture` | Kafka messaging and Saga/Distributed Transactions. |
+| **Streams** | `kafka-stream-specialist` | **Advanced**: Topologies, Windowing/Joins, State Stores, and CDC. |
 | **Python** | `fastapi-templates` | Async Python APIs for ML/Analytics services. |
 
 #### 📱 Frontend & Mobile
@@ -58,10 +60,12 @@ The PayU platform is powered by specialized skill clusters:
 #### 🛡️ Security & Observability
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Audit** | `security-engineer` | PCI-DSS, OJK Compliance, and Incident Response. |
+| **Audit** | `security-engineer` | **Advanced**: Zero Trust K8s, External Secrets, PCI-DSS. |
 | **Auth** | `auth-implementation-patterns` | JWT, OAuth2, and Risk-based MFA implementation. |
-| **Metrics** | `observability-engineer` | OpenTelemetry, Jaeger Tracing, and LokiStack logs. |
+| **Metrics** | `observability-engineer` | **Advanced**: SLO/Burn Rate Alerts, Runbooks, Golden Signals. |
 | **QA** | `qa-engineer` | TDD, REST Assured, and Maestro for Mobile E2E. |
+| **Debug** | `debugging-engineer` | **Advanced**: "Iron Law" Process, Root Cause Tracing. |
+| **FinOps** | `finops-engineer` | **New**: Recon, Settlement, GL Integration, and Regulatory Reporting. |
 
 ---
 
