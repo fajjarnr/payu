@@ -175,7 +175,7 @@ C4Container
     ContainerQueue(kafka_streams, "AMQ Streams (Kafka)", "Apache Kafka 3.7", "Event streaming, CDC")
     ContainerQueue(amq_broker, "AMQ Broker (Artemis)", "AMQP 1.0", "Point-to-point messaging")
 
-    Container(cache, "Data Grid", "Redis RESP (Red Hat Data Grid)", "Multi-layer caching, rate limiting")
+    ContainerDb(cache, "Data Grid", "Redis RESP (Red Hat Data Grid)", "Multi-layer caching, rate limiting")
 
     Container(sso, "Red Hat SSO (Keycloak)", "Keycloak 24", "Identity & access management")
   }
@@ -762,7 +762,7 @@ C4Container
   }
 
   System_Boundary(caching_layer, "Caching Layer") {
-    Container(data_grid, "Data Grid", "Red Hat Data Grid (Redis RESP)", "Multi-layer caching")
+    ContainerDb(data_grid, "Data Grid", "Red Hat Data Grid (Redis RESP)", "Multi-layer caching")
   }
 
   System_Boundary(event_streaming, "Event Streaming") {
@@ -1044,7 +1044,7 @@ C4Component
   Component(circuit_breaker, "Circuit Breaker", "Resilience4j", "Failure handling")
   Component(load_balancer, "Load Balancer", "Spring Cloud LoadBalancer", "Service discovery")
 
-  ComponentCache(redis, "Data Grid", "Redis", "Rate limit counters, token cache")
+  ComponentDb(redis, "Data Grid", "Redis", "Rate limit counters, token cache")
 
   Rel(gateway, rate_limiter, "Checks")
   Rel(rate_limiter, redis, "Reads/Writes")
@@ -1120,7 +1120,7 @@ C4Deployment
 
     Deployment_Node(infra_namespace, "Namespace: payu-infrastructure", "OpenShift") {
       ContainerQueue(kafka_cluster, "AMQ Streams", "Kafka 3.7 Cluster")
-      ContainerCache(redis_cluster, "Data Grid", "Redis Cluster")
+      ContainerDb(redis_cluster, "Data Grid", "Redis Cluster")
       Container(sso_cluster, "Red Hat SSO", "Keycloak 24")
       Container(monitoring, "Monitoring Stack", "Prometheus + Grafana")
       Container(tracing, "Distributed Tracing", "Jaeger")
