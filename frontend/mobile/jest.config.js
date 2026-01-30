@@ -1,16 +1,22 @@
+const jestExpoPreset = require('jest-expo/jest-preset');
+
 module.exports = {
-  preset: 'jest-expo',
+  ...jestExpoPreset,
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
-  ],
   collectCoverageFrom: [
-    'app/**/*.{js,jsx,ts,tsx}',
-    'components/**/*.{js,jsx,ts,tsx}',
-    'hooks/**/*.{js,jsx,ts,tsx}',
-    'store/**/*.{js,jsx,ts,tsx}',
+    'hooks/**/*.{ts,tsx}',
+    'store/**/*.{ts,tsx}',
+    'services/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    ...jestExpoPreset.moduleNameMapper,
   },
+  globals: {
+    __DEV__: true,
+  },
+  testPathIgnorePatterns: [
+    '/node_modules/',
+  ],
 };

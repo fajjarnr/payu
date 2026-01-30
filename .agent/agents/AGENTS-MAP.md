@@ -59,6 +59,14 @@ Berdasarkan `antigravity-lifecycle`, berikut adalah bagaimana kolaborasi terjadi
 
 ---
 
+## 🔗 Dependency Chaining (v2.0.0)
+
+Skills now support **Implicit Context Loading** via the `requires: [...]` directive in their frontmatter.
+*   **Example**: Calling `@finops-engineer` implicitly loads `@data-architect` context.
+*   **Impact**: Orchestrator (Anda) tidak perlu lagi menebak skill pendukung. Ikuti saja graf dependensi yang terdefinisi di `REGISTRY.yaml`.
+
+---
+
 ## ⚡ Parallel Execution & Skill Interconnectivity
 
 Untuk mencapai kecepatan ekstrim, asisten AI harus menjalankan agen secara paralel ketika menangani tugas yang melibatkan banyak skill:

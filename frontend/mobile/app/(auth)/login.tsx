@@ -186,7 +186,7 @@ export default function LoginScreen() {
         />
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
+          <Text style={styles.footerText}>Don&apos;t have an account? </Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
             <Text style={styles.link}>Sign Up</Text>
           </TouchableOpacity>
@@ -217,7 +217,7 @@ export default function LoginScreen() {
       <Card padding="lg">
         <Text style={styles.title}>Enter OTP</Text>
         <Text style={styles.subtitle}>
-          We've sent a 6-digit code to {phoneNumber}
+          We&apos;ve sent a 6-digit code to {phoneNumber}
         </Text>
 
         <Input
@@ -245,7 +245,7 @@ export default function LoginScreen() {
           ]}>
             {countdown > 0
               ? `Resend in ${countdown}s`
-              : "Didn't receive? Resend OTP"}
+              : "Didn&apos;t receive? Resend OTP"}
           </Text>
         </TouchableOpacity>
 

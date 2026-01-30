@@ -33,9 +33,9 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
         {onToggleBalance && (
           <TouchableOpacity onPress={onToggleBalance} style={styles.eyeButton}>
             {showBalance ? (
-              <Eye size={20} color="#ffffff" />
+              <Eye size={20} stroke="#ffffff" />
             ) : (
-              <EyeOff size={20} color="#ffffff" />
+              <EyeOff size={20} stroke="#ffffff" />
             )}
           </TouchableOpacity>
         )}

@@ -1,8 +1,8 @@
 # PayU Digital Banking - Makefile for Testing
 # Provides convenient targets for running tests
 
-.PHONY: help test test-unit test-integration test-e2e test-coverage \
-        test-local test-docker test-backend test-frontend \
+.PHONY: help test test-all test-unit test-integration test-e2e test-coverage \
+        test-local test-docker test-backend test-frontend test-mobile \
         test-account test-auth test-transaction test-wallet \
         clean clean-test build-test-deps \
         seed-test-data cleanup-test-db \
@@ -19,10 +19,16 @@ help: ## Show this help message
 	@echo ""
 	@echo "Test Execution:"
 	@echo "  make test              - Run all tests (unit, integration, E2E)"
+	@echo "  make test-all          - Run all tests (alias for 'make test')"
 	@echo "  make test-unit         - Run unit tests only"
 	@echo "  make test-integration  - Run integration tests only"
 	@echo "  make test-e2e          - Run E2E tests only"
 	@echo "  make test-coverage     - Generate coverage reports only"
+	@echo ""
+	@echo "Component-Specific Tests:"
+	@echo "  make test-backend      - Run all backend tests only"
+	@echo "  make test-frontend     - Run frontend tests only"
+	@echo "  make test-mobile       - Run mobile tests only"
 	@echo ""
 	@echo "Test Environments:"
 	@echo "  make test-local        - Run tests in local environment"
@@ -38,7 +44,6 @@ help: ## Show this help message
 	@echo "  make test-gateway      - Test gateway-service"
 	@echo "  make test-kyc          - Test kyc-service"
 	@echo "  make test-analytics    - Test analytics-service"
-	@echo "  make test-frontend     - Test web-app"
 	@echo ""
 	@echo "Test Infrastructure:"
 	@echo "  make test-health-check      - Check test environment health"
@@ -60,14 +65,17 @@ help: ## Show this help message
 test: ## Run all tests
 	@./scripts/run-all-tests.sh
 
+test-all: ## Run all tests (alias)
+	@./scripts/run-all-tests.sh
+
 test-unit: ## Run unit tests only
 	@./scripts/run-all-tests.sh --skip-integration --skip-e2e
 
 test-integration: ## Run integration tests only
-	@./scripts/run-all-tests.sh --skip-unit --skip-e2e
+	@./scripts/run-all-tests.sh --skip-unit --skip-e2e --skip-frontend --skip-mobile
 
 test-e2e: ## Run E2E tests only
-	@./scripts/run-all-tests.sh --skip-unit --skip-integration
+	@./scripts/run-all-tests.sh --skip-unit --skip-integration --skip-backend
 
 test-coverage: ## Generate coverage reports
 	@./scripts/run-all-tests.sh --coverage
@@ -80,6 +88,15 @@ test-docker: ## Run tests in Docker test environment
 	@sleep 10
 	@./scripts/run-all-tests.sh
 	@$(MAKE) docker-test-down
+
+test-backend: ## Run all backend tests only
+	@./scripts/run-all-tests.sh --skip-frontend --skip-mobile
+
+test-frontend: ## Run frontend tests only
+	@./scripts/run-all-tests.sh --skip-backend --skip-mobile --skip-integration --skip-e2e
+
+test-mobile: ## Run mobile tests only
+	@./scripts/run-all-tests.sh --skip-backend --skip-frontend --skip-integration --skip-e2e
 
 # ============================================
 # Backend Service Tests
@@ -111,25 +128,6 @@ test-kyc: ## Test kyc-service
 
 test-analytics: ## Test analytics-service
 	@./scripts/test-single-service.sh analytics-service
-
-test-backend: ## Test all backend services
-	@echo "Testing all backend services..."
-	@./scripts/test-single-service.sh account-service
-	@./scripts/test-single-service.sh auth-service
-	@./scripts/test-single-service.sh transaction-service
-	@./scripts/test-single-service.sh wallet-service
-	@./scripts/test-single-service.sh billing-service
-	@./scripts/test-single-service.sh notification-service
-	@./scripts/test-single-service.sh gateway-service
-	@./scripts/test-single-service.sh kyc-service
-	@./scripts/test-single-service.sh analytics-service
-
-# ============================================
-# Frontend Tests
-# ============================================
-
-test-frontend: ## Test web-app
-	@./scripts/test-single-service.sh web-app
 
 # ============================================
 # Test Infrastructure

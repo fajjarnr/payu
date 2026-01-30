@@ -37,14 +37,6 @@ export default function TransferConfirmScreen() {
   const [transactionResult, setTransactionResult] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Parse transfer data from params
-  const transferData = params.data ? JSON.parse(params.data as string) : null;
-
-  if (!transferData) {
-    router.back();
-    return null;
-  }
-
   const transferTypes = [
     { id: 'bifast', name: 'BI-FAST', fee: 0, minAmount: 10000, maxAmount: 25000000 },
     { id: 'skn', name: 'SKN', fee: 5000, minAmount: 10000, maxAmount: 100000000 },
@@ -52,6 +44,14 @@ export default function TransferConfirmScreen() {
   ];
 
   const [selectedTransferType, setSelectedTransferType] = useState(transferTypes[0]);
+
+  // Parse transfer data from params
+  const transferData = params.data ? JSON.parse(params.data as string) : null;
+
+  if (!transferData) {
+    router.back();
+    return null;
+  }
 
   const handleContinue = () => {
     setStep('pin');

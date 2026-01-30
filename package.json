@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "react-native-svg": "^15.15.1"
+  }
+}
