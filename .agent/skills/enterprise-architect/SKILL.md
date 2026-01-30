@@ -61,8 +61,8 @@ Arsitektur harus mendukung segmentasi jaringan, tokenisasi, dan audit trail otom
 | **Data**    | `@database-engineer` | **Advanced**: Postgres Performance, Flyway, Sharding. |
 | **Events**  | `@event-driven-architecture` | Kafka Topologies, Sagas, Idempotency. |
 | **Security** | `@security-engineer` | Zero Trust K8s, Vault, PCI-DSS. |
-| **Frontend** | `@frontend-engineer` | Next.js 15+, Emerald Design, Web Perf. |
-| **Mobile** | `@mobile-engineer` | React Native, Expo, Mobile Security. |
+| **Frontend** | `@frontend-engineer` | **Master Skill**: Next.js 15+, React, & Web Perf. |
+| **Mobile**   | `@mobile-engineer`   | **Master Skill**: React Native, Expo, & Security. |
 | **Docs/C4** | `@docs-engineer` | **Master Skill**: Documentation & C4 Visualization. |
 | **Ops** | `@observability-engineer` | SLOs, Golden Signals, Jaeger Tracing. |
 

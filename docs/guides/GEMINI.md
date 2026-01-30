@@ -270,11 +270,6 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | :--- | :--- |
 | `frontend-engineer` | **Master Skill**: Next.js 15+, React, and modern web application architecture. |
 | `mobile-engineer` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), and Mobile Security. |
-| `react-patterns` | **Consolidated**: State mgmt (Zustand/Query), Performance, and Hooks migration. |
-| `react-native-architecture` | Production React Native architecture spanning navigation and offline sync. |
-| `react-native-design` | Polished mobile UIs with Reanimated, Expo Router, and NativeWind. |
-| `nextjs-app-router-patterns` | Master Next.js App Router, Server Components, and Streaming. |
-| `frontend-patterns` | Reusable React/Next.js component and performance patterns. |
 | `web-component-design` | Atomic design, CSS-in-JS, and reusable component architecture. |
 | `tailwind-design-system` | Scalable design tokens and atomic CSS architecture. |
 | `responsive-design` | Breakpoints, fluid layouts, and container queries. |

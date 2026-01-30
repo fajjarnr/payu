@@ -57,9 +57,8 @@ The PayU platform is powered by specialized skill clusters:
 #### 📱 Frontend & Mobile
 | Spec | Skill | Description |
 | :--- | :--- | :--- |
-| **Logic/Perf** | `react-patterns` | State management (Zustand) and Performance (waterfalls). |
-| **Mobile** | `mobile-engineer` | Native UI (SF Symbols) and Secure Storage patterns. |
-| **Next.js** | `nextjs-app-router-patterns` | Server Components and Streaming architecture. |
+| **Web** | `frontend-engineer` | **Master Skill**: Next.js 15+, React, & Web Perf. |
+| **Mobile** | `mobile-engineer` | **Master Skill**: React Native, Expo, & Mobile Security. |
 | **Design** | `ui-ux-designer` | Design tokens, typography, and palette intelligence. |
 | **Style** | `tailwind-design-system` | Scalable atomic CSS architecture (Emerald Green). |
 
