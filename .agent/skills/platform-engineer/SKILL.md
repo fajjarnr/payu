@@ -1,13 +1,13 @@
 ---
 name: platform-engineer
-version: 2.0.0
+version: 3.0.0
 maturity: stable
 updated: 2026-01-30
 author: payu-platform-team
 requires: []
-tags: [devops, k8s, openshift, infrastructure, gitops, argocd, tekton, helm]
-related: [sre, cybersecurity-architect, integration-architect]
-description: **Master Skill**: Platform & DevOps Architect for PayU. Expert in OpenShift 4.20+, Tekton Pipelines, ArgoCD (GitOps), Helm Charts, Container Hardening (UBI9), Istio Service Mesh, and Multi-Region DR.
+tags: [devops, k8s, openshift, infrastructure, gitops, argocd, tekton, helm, sre, reliability, releases, feature-flags]
+related: [cybersecurity-architect, integration-architect, finops-engineer]
+description: **Master Skill**: Unified Platform, SRE & Release Engineering. Covers OpenShift 4.20+, GitOps (ArgoCD/Tekton), Container Hardening, Service Mesh, Feature Flags, Progressive Rollouts, Observability (LGTM Stack), Chaos Engineering, and Disaster Recovery.
 ---
 
 # PayU Platform Architect Master Skill
@@ -779,6 +779,16 @@ metadata:
 
 ## 📚 References
 
+### Merged Skill References (Consolidated)
+
+| Category | Topic | File |
+|----------|-------|------|
+| **Releases** | Feature Flags, Progressive Rollouts, Blue-Green/Canary | [release-engineering.md](./references/releases/release-engineering.md) |
+| **SRE** | Observability, SLO/SLI, Chaos Engineering, DR | [sre-practices.md](./references/sre/sre-practices.md) |
+| **K8s** | Kubernetes manifest generator patterns | [k8s-manifest-generator.md](./references/k8s-manifest-generator.md) |
+
+### External Documentation
+
 - [OpenShift Documentation](https://docs.openshift.com/)
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
 - [Tekton Documentation](https://tekton.dev/docs/)
@@ -789,6 +799,8 @@ metadata:
 - [Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/)
 - [CNCF Landscape](https://landscape.cncf.io/)
 - [FinOps Foundation](https://www.finops.org/)
+- [Google SRE Book](https://sre.google/sre-book/table-of-contents/)
+- [LaunchDarkly Feature Flags](https://docs.launchdarkly.com/)
 
 ---
 *Last Updated: January 2026*

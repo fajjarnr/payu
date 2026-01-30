@@ -930,4 +930,30 @@ const [items, setItems] = useState(() => calculateInitialItems())
 - [ ] Performance budgets enforced
 
 ---
+
+## 📚 References
+
+### Local Reference Files
+
+| Category | Topic | File |
+|----------|-------|------|
+| **Performance** | 45+ React/Next.js optimization rules from Vercel | [react-performance-guidelines.md](./references/react-performance-guidelines.md) |
+| **Composition** | React composition patterns (compound, slot, HOC) | [react-composition-patterns.md](./references/react-composition-patterns.md) |
+| **Senior** | Senior frontend engineering practices | [senior-practices.md](./references/senior-practices.md) |
+
+### Key Performance Rules (Quick Reference)
+
+1. **Eliminating Waterfalls (CRITICAL)**: Use `Promise.all()` for independent fetches
+2. **Bundle Size (CRITICAL)**: Direct imports, avoid barrel files, dynamic imports
+3. **Server Components (HIGH)**: Minimize data at RSC boundaries
+4. **Re-render Optimization (MEDIUM)**: Memoize expensive components, narrow effect deps
+
+### External Documentation
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev)
+- [Vercel Bundle Optimization](https://vercel.com/blog/how-we-optimized-package-imports-in-next-js)
+- [SWR Documentation](https://swr.vercel.app)
+
+---
 *Last Updated: January 2026*

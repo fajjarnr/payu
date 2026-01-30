@@ -1,38 +1,44 @@
-version: 1.0.0
+version: 2.0.0
 last_updated: 2026-01-30
+consolidation_notes: |
+  Reduced from 21 to 17 skills.
+  - information-architect merged into principal-architect
+  - release-engineer merged into platform-engineer
+  - sre merged into platform-engineer
+  - bff-architect removed (PayU is pure Java backend)
 skills:
   - name: ai-engineer
     version: 2.0.0
     maturity: stable
-    tags: [ai, ml, python, fastapi]
+    tags: [ai, ml, python, fastapi, llm, prompt-engineering]
   - name: api-architect
     version: 2.0.0
     maturity: stable
-    tags: [api, rest, openapi, governance]
-  - name: bff-architect
-    version: 2.0.0
-    maturity: stable
-    tags: [backend, nodejs, bff, graphql]
+    tags: [api, rest, openapi, governance, graphql]
   - name: core-banking-engineer
     version: 2.0.0
     maturity: stable
-    tags: [backend, java, spring, hexagonal]
+    tags: [backend, java, spring, hexagonal, transactions]
   - name: cybersecurity-architect
     version: 2.0.0
     maturity: stable
-    tags: [security, compliance, zero-trust, vault]
+    tags: [security, compliance, zero-trust, vault, pci-dss]
   - name: data-architect
     version: 2.0.0
     maturity: stable
-    tags: [database, postgres, sql, performance]
+    tags: [database, postgres, sql, performance, cqrs]
   - name: data-governance-architect
     version: 2.0.0
     maturity: stable
-    tags: [data, compliance, pii, lineage]
+    tags: [data, compliance, pii, lineage, pdp]
+  - name: debugging-methodology
+    version: 1.0.0
+    maturity: stable
+    tags: [debugging, root-cause, tdd, quality]
   - name: dx-engineer
     version: 2.0.0
     maturity: stable
-    tags: [dev-experience, git, typescript, tooling]
+    tags: [dev-experience, git, typescript, tooling, slidev]
   - name: finops-engineer
     version: 2.0.0
     maturity: stable
@@ -40,44 +46,34 @@ skills:
   - name: frontend-architect
     version: 2.0.0
     maturity: stable
-    tags: [frontend, react, nextjs, performance]
-  - name: information-architect
-    version: 2.0.0
-    maturity: stable
-    tags: [docs, architecture, c4, adr]
+    tags: [frontend, react, nextjs, performance, accessibility]
   - name: integration-architect
     version: 2.0.0
     maturity: stable
-    tags: [events, kafka, integration, cdc]
+    tags: [events, kafka, integration, cdc, saga, temporal]
   - name: mobile-architect
     version: 2.0.0
     maturity: stable
-    tags: [mobile, react-native, expo, security]
+    tags: [mobile, react-native, expo, security, native-ui]
   - name: platform-engineer
-    version: 2.0.0
+    version: 3.0.0
     maturity: stable
-    tags: [devops, k8s, openshift, infrastructure]
+    tags: [devops, k8s, openshift, sre, releases, feature-flags, observability]
+    notes: Merged release-engineer and sre skills
   - name: principal-architect
-    version: 2.0.0
+    version: 3.0.0
     maturity: stable
-    tags: [architecture, strategy, leadership, dora]
+    tags: [architecture, strategy, leadership, dora, c4, documentation]
+    notes: Merged information-architect skill
   - name: product-designer
     version: 2.0.0
     maturity: stable
-    tags: [design, ui, ux, a11y]
+    tags: [design, ui, ux, a11y, tailwind]
   - name: quality-engineer
     version: 2.0.0
     maturity: stable
-    tags: [qa, testing, automation, contract-testing]
-  - name: release-engineer
-    version: 2.0.0
-    maturity: stable
-    tags: [release, cicd, feature-flags, rollouts]
-  - name: sre
-    version: 2.0.0
-    maturity: stable
-    tags: [reliability, observability, chaos, dr]
+    tags: [qa, testing, automation, contract-testing, browser]
   - name: web-artifacts-builder
     version: 2.0.0
     maturity: stable
-    tags: [tools, bundling, scaffolding]
+    tags: [tools, bundling, scaffolding, vite]

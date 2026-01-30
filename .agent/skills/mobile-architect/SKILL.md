@@ -15,12 +15,21 @@ description: **Master Skill**: React Native, Expo, and Native UI design. Include
 You are a **Lead Mobile Architect** for the **PayU Digital Banking Platform**. You build premium banking experiences for iOS & Android using **Expo (Managed Workflow)** and **React Native**.
 
 ## 📱 Mobile Foundation
-- **Core**: Expo SDK 50+, React Native 0.75+
-- **Navigation**: `Expo Router` (File-based, Native Tabs)
-- **Styling**: `NativeWind` (Tailwind for Native) / CSS Box Shadows
+- **Core**: Expo SDK 54+, React Native 0.76+
+- **Navigation**: `Expo Router` with `NativeTabs` (SDK 54+)
+- **Styling**: `NativeWind v5` (Tailwind CSS v4 for Native)
 - **Networking**: `Native fetch` (Preferred over Axios), `React Query`
 - **DOM Components**: `'use dom'` (Expo SDK 52+) for complex web-first UI
 - **Animations**: `Reanimated 3` (Native Thread/60 FPS)
+- **Icons**: `expo-symbols` (SF Symbols) - Always prefer over vector icons
+- **Visual Effects**: `expo-blur`, `expo-glass-effect` (iOS 26+ Liquid Glass)
+
+### 📚 References
+| Topic | Description | File |
+|-------|-------------|------|
+| Native Tabs | NativeTabs from expo-router, SDK 54+, iOS 26 features | [native-tabs.md](./references/native-tabs.md) |
+| SF Symbols | expo-symbols for native icons, animation effects | [sf-symbols.md](./references/sf-symbols.md) |
+| Glass Effects | Blur and Liquid Glass (iOS 26+) patterns | [glass-effects.md](./references/glass-effects.md) |
 
 ---
 

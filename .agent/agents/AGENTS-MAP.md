@@ -2,6 +2,8 @@
 
 Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestrasi **Agents** (Dedicated execution units) untuk mencapai efisiensi maksimal dalam siklus pengembangan PayU.
 
+> **Note**: Setelah konsolidasi Januari 2026, PayU memiliki **17 Skills** yang terintegrasi.
+
 ## 🏗️ Core Mapping Strategy
 
 | Triggering Skill     | Orchestrated Agent    | Rationale                                      |
@@ -23,18 +25,14 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@cybersecurity-architect` | `@compliance-auditor` | Audit kepatuhan standar OJK/PCI-DSS mendalam.  |
 | `@platform-engineer` | `@builder`            | Build, packaging, dan containerization.        |
 | `@platform-engineer` | `@orchestrator`       | Alur CI/CD dan sinkronisasi git.               |
+| `@platform-engineer` | `@tester`             | Chaos experiments, Game Days, fault injection. |
 | `@ai-engineer`       | `@logic-builder`      | Implementasi Async Service, Repository, & ETL. |
-| `@bff-architect` | `@logic-builder`   | BFF pattern, API aggregation, Express/Fastify. |
-| `@information-architect` | `@lifecycle-manager` | ADR, RFC, Technical Documentation.            |
-| **CONSOLIDATED SKILLS** | | |
 | `@quality-engineer`  | `@tester`             | Full-stack testing, Contract testing, Perf.   |
-| `@sre` | `@auditor`          | SRE, Chaos, DR/BCP, Observability (LGTM).      |
-| `@sre` | `@tester`           | Chaos experiments, Game Days, fault injection. |
 | `@finops-engineer`   | `@auditor`            | Cloud cost, Recon, GL, Regulatory (OJK/BI).    |
 | `@finops-engineer`   | `@logic-builder`      | Reconciliation engine, Settlement logic.       |
 | `@dx-engineer` | `@orchestrator`     | Git workflow, PR standards, CI/CD integration. |
 | `@dx-engineer` | `@styler`           | Slidev presentations, Documentation styling.   |
-| `@release-engineer`  | `@orchestrator`       | Feature flags, blue-green, canary rollouts.    |
+| `@debugging-methodology` | `@tester`         | Root cause analysis, systematic debugging.     |
 
 ## 🔄 Execution Workflow
 
@@ -59,11 +57,20 @@ Berdasarkan `antigravity-lifecycle`, berikut adalah bagaimana kolaborasi terjadi
 
 ---
 
-## 🔗 Dependency Chaining (v2.0.0)
+## 🔗 Dependency Chaining (v3.0.0)
 
 Skills now support **Implicit Context Loading** via the `requires: [...]` directive in their frontmatter.
 *   **Example**: Calling `@finops-engineer` implicitly loads `@data-architect` context.
 *   **Impact**: Orchestrator (Anda) tidak perlu lagi menebak skill pendukung. Ikuti saja graf dependensi yang terdefinisi di `REGISTRY.yaml`.
+
+### Consolidated Skills (January 2026)
+
+| Old Skill | Merged Into | Notes |
+|:----------|:------------|:------|
+| `@information-architect` | `@principal-architect` | C4, ADR, Documentation |
+| `@release-engineer` | `@platform-engineer` | Feature flags, rollouts |
+| `@sre` | `@platform-engineer` | Observability, chaos, DR |
+| `@bff-architect` | *Removed* | PayU is pure Java backend |
 
 ---
 
@@ -75,7 +82,7 @@ Untuk mencapai kecepatan ekstrim, asisten AI harus menjalankan agen secara paral
 2. **Skill-to-Agent Handshake**:
    - Jika `@frontend-architect` butuh visualisasi data, delegasikan ke `@web-artifacts-builder` -> `@builder`.
    - Jika pengembangan fitur butuh presentasi, delegasikan ke `@dx-engineer` -> `@styler`.
-3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama (misal: penulisan dokumen teknis di `@information-architect` didelegasikan ke `@developer-experience` jika butuh deck).
+3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama.
 
 ---
-*Last Updated: January 2026*
+*Last Updated: January 2026 (v3.0.0 - 17 Skills)*

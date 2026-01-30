@@ -555,18 +555,29 @@ Data yang wajib tersedia saat audit OJK:
 
 ---
 
-## 🔍 Security Audit Checklist
+## 📚 References
 
-- [ ] **Auth**: Is every endpoint protected by JWT/Session check?
-- [ ] **RBAC**: Are roles enforced at API Gateway AND Service level?
-- [ ] **PII**: Are sensitive fields encrypted in DB and masked in logs?
-- [ ] **Input**: Are all user-provided strings sanitized and validated?
-- [ ] **Transport**: Is TLS 1.3 enforced for all communication?
-- [ ] **Secrets**: Are credentials managed via Vault/Secrets?
-- [ ] **Rate Limiting**: Are auth and financial endpoints rate-limited?
-- [ ] **Headers**: Are security headers (CSP, HSTS, X-Frame) set?
-- [ ] **MFA**: Is MFA enforced for high-risk operations?
-- [ ] **Logging**: Are security events logged and monitored?
+### Local Reference Files
+
+| Category | Topic | File |
+|----------|-------|------|
+| **Compliance** | SOC2, ISO27001, GDPR, HIPAA, PCI-DSS frameworks | [compliance-frameworks.md](./references/compliance-frameworks.md) |
+| **Architecture** | Zero Trust, Defense-in-Depth, IAM design | [security-architecture.md](./references/security-architecture.md) |
+| **Operations** | SOC, incident response, threat hunting | [security-operations.md](./references/security-operations.md) |
+| **Threat Modeling** | STRIDE, PASTA, risk assessment | [threat-modeling-risk.md](./references/threat-modeling-risk.md) |
+| **AppSec** | OWASP Top 10, secure coding, SAST/DAST | [application-security.md](./references/application-security.md) |
+| **K8s Hardening** | OpenShift/Kubernetes security baselines | [k8s-hardening.md](./references/k8s-hardening.md) |
+| **Secrets** | External Secrets Operator, Vault integration | [external-secrets.md](./references/external-secrets.md) |
+
+### External Documentation
+
+- [OWASP Top 10](https://owasp.org/Top10/)
+- [OWASP Application Security Verification Standard](https://owasp.org/www-project-application-security-verification-standard/)
+- [PCI-DSS Requirements](https://www.pcisecuritystandards.org/document_library)
+- [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
+- [CIS Benchmarks](https://www.cisecurity.org/cis-benchmarks)
+- [HashiCorp Vault](https://www.vaultproject.io/docs)
+- [Red Hat SSO (Keycloak)](https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/)
 
 ---
 *Last Updated: January 2026*

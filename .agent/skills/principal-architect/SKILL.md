@@ -1,13 +1,13 @@
 ---
 name: principal-architect
-version: 2.0.0
+version: 3.0.0
 maturity: stable
 updated: 2026-01-30
 author: payu-platform-team
 requires: []
-tags: [architecture, strategy, leadership, dora, adr, tech-radar, governance]
-related: [cybersecurity-architect, platform-engineer, sre]
-description: **Master Skill**: High-level Architecture & Strategic Leadership. Covers Decentralized Orchestration, Technology Radar, DORA metrics, ADR governance, C4 modeling, and Technical Debt management.
+tags: [architecture, strategy, leadership, dora, adr, tech-radar, governance, docs, c4, documentation]
+related: [cybersecurity-architect, platform-engineer]
+description: **Master Skill**: Strategic Architecture & Documentation Leadership. Covers Decentralized Orchestration, Technology Radar, DORA metrics, ADR governance, C4 modeling, Technical Debt management, and Documentation Systems (Merged from information-architect).
 ---
 
 # PayU Strategy & Architecture Master Skill

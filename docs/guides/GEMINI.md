@@ -242,49 +242,51 @@ AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
 
 ---
 
-## 🤖 Available AI Skills
+## 🤖 Available AI Skills (17 Skills - v3.0.0)
 
-Skills are categorized by domain to help you choose the right tool for the task. All skills are located in `.agent/skills/` and indexed in `REGISTRY.yaml` (v2.0.0).
+Skills are categorized by domain to help you choose the right tool for the task. All skills are located in `.agent/skills/` and indexed in `REGISTRY.yaml`.
+
+> **Consolidation Notes (January 2026)**:
+> - `information-architect` merged into `principal-architect`
+> - `release-engineer` + `sre` merged into `platform-engineer`
+> - `bff-architect` removed (PayU is pure Java backend)
 
 ### 🏗️ Core & Architecture
 | Skill | Description |
 | :--- | :--- |
-| `principal-architect` | **Master Skill**: High-level Architecture, DORA metrics, and Strategy. |
-| `information-architect` | **Master Skill**: Documentation, C4 Architecture, ADRs, and Task Planning. |
+| `principal-architect` | **Master Skill**: High-level Architecture, DORA metrics, Strategy, C4, ADRs, Documentation. |
 
 ### ☕ Backend & Logic
 | Skill | Description |
 | :--- | :--- |
 | `core-banking-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
-| `api-architect` | **Master Skill**: REST API standards, OpenAPI, & 3rd-party Integrations. |
-| `integration-architect` | **Master Skill**: Sagas, Event Sourcing, & Kafka/AMQ Streams (CDC). |
-| `data-architect` | **Master Skill**: PostgreSQL Design, Performance, and Flyway. |
+| `api-architect` | **Master Skill**: REST API standards, OpenAPI, Versioning, & 3rd-party Integrations. |
+| `integration-architect` | **Master Skill**: Sagas, Event Sourcing, Kafka, Message Queues (CDC). |
+| `data-architect` | **Master Skill**: PostgreSQL Design, Performance, Query Optimization, & Flyway. |
 | `data-governance-architect` | **Master Skill**: Data Lineage, PII Classification, Retention Policies, & UU PDP Compliance. |
-| `bff-architect` | **Master Skill**: Node.js/Express, Prisma, and Zod (BFF). |
-| `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, TimescaleDB, & GenAI. |
+| `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, Prompt Engineering, & GenAI. |
 
 ### 📱 Frontend & Mobile
 | Skill | Description |
 | :--- | :--- |
 | `product-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
-| `frontend-architect` | **Master Skill**: Next.js 15+, React, and modern web application architecture. |
-| `mobile-architect` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), and Mobile Security. |
-| `web-artifacts-builder` | **Master Skill**: Scaffolding and bundling single-file HTML/React artifacts for documentation. |
+| `frontend-architect` | **Master Skill**: Next.js 15+, React, Performance, Component Refactoring. |
+| `mobile-architect` | **Master Skill**: React Native, Expo, Native UI (SF Symbols), Mobile Security. |
+| `web-artifacts-builder` | **Master Skill**: Scaffolding single-file HTML/React artifacts for docs/demos. |
 
 ### 🛡️ Security & Compliance
 | Skill | Description |
 | :--- | :--- |
-| `cybersecurity-architect` | **Master Skill**: Zero Trust K8s, Vault, Auth Patterns, & Compliance (PCI-DSS/OJK). |
+| `cybersecurity-architect` | **Master Skill**: Zero Trust, Vault, mTLS, Auth Patterns, & Compliance (PCI-DSS/OJK). |
 
 ### ⚙️ DevOps, Reliability & Quality (CONSOLIDATED)
 | Skill | Description |
 | :--- | :--- |
-| `platform-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container (UBI9) Engineering. |
-| `release-engineer` | **Master Skill**: Feature Flags, Blue-Green/Canary Deployments, & Argo Rollouts. |
-| `sre` | **UNIFIED**: SRE + Chaos Engineering + Disaster Recovery. Observability, Game Days, RTO/RPO, BCP. |
-| `quality-engineer` | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact, CDC. |
-| `finops-engineer` | **UNIFIED**: Financial Ops + Cloud FinOps + Cost Optimization. Recon, GL, Cloud Cost, Regulatory (OJK/BI). |
-| `dx-engineer` | **UNIFIED**: Git + TypeScript + Slidev. Workflows, Type patterns, Presentations. |
+| `platform-engineer` | **UNIFIED (v3.0)**: DevOps + SRE + Release Engineering. Tekton/ArgoCD, OpenShift, Feature Flags, Observability, Chaos, DR. |
+| `quality-engineer` | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact, Browser Testing. |
+| `debugging-methodology` | **NEW**: Systematic debugging, Root Cause Analysis, Pattern Recognition. |
+| `finops-engineer` | **UNIFIED**: Financial Ops + Cloud FinOps. Recon, GL, Cost Management, Tagging Strategy. |
+| `dx-engineer` | **UNIFIED**: Git Workflows + Developer Onboarding + Slidev + Release Notes. |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).
 

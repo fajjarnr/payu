@@ -601,6 +601,31 @@ rate(kafka_consumer_fetch_manager_records_consumed_total[5m])
 
 ## 📚 References
 
+### Local Reference Files
+
+| Category | Topic | File |
+|----------|-------|------|
+| **Broker Selection** | Kafka vs Pulsar vs Redpanda comparison | [broker-selection.md](./references/broker-selection.md) |
+| **Stream Processing** | Flink vs Spark vs Kafka Streams | [processor-selection.md](./references/processor-selection.md) |
+| **Delivery** | At-least-once, exactly-once patterns | [delivery-guarantees.md](./references/delivery-guarantees.md) |
+| **Exactly-Once** | Transactional processing | [exactly-once.md](./references/exactly-once.md) |
+| **Event Sourcing** | Event store patterns | [event-sourcing.md](./references/event-sourcing.md) |
+| **CDC** | Debezium integration | [cdc-patterns.md](./references/cdc-patterns.md) |
+| **Error Handling** | DLQ, retries, backpressure | [error-handling.md](./references/error-handling.md) |
+| **Sagas** | Choreography vs Orchestration patterns | [saga_patterns.md](./references/saga_patterns.md) |
+| **Task Queues** | BullMQ for TypeScript background jobs | [bullmq.md](./references/bullmq.md) |
+| **Task Queues** | Celery for Python background jobs | [celery.md](./references/celery.md) |
+| **Workflows** | Temporal for durable execution & sagas | [temporal-workflows.md](./references/temporal-workflows.md) |
+| **Messaging** | NATS for cloud-native request-reply | [nats.md](./references/nats.md) |
+| **Messaging** | RabbitMQ for complex routing | [rabbitmq.md](./references/rabbitmq.md) |
+| **Messaging** | Redis Streams for simple job queues | [redis-streams.md](./references/redis-streams.md) |
+| **Java** | Kafka Java client patterns | [java-patterns.md](./references/java-patterns.md) |
+| **TypeScript** | KafkaJS patterns | [typescript-patterns.md](./references/typescript-patterns.md) |
+| **Python** | confluent-kafka-python patterns | [python-patterns.md](./references/python-patterns.md) |
+| **Go** | kafka-go patterns | [go-patterns.md](./references/go-patterns.md) |
+
+### External Documentation
+
 - [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
 - [Strimzi Kafka Operator](https://strimzi.io/documentation/)
 - [Debezium Documentation](https://debezium.io/documentation/)
@@ -610,6 +635,7 @@ rate(kafka_consumer_fetch_manager_records_consumed_total[5m])
 - [Transactional Outbox (Microservices.io)](https://microservices.io/patterns/data/transactional-outbox.html)
 - [Event Sourcing (Martin Fowler)](https://martinfowler.com/eaaDev/EventSourcing.html)
 - [Kafka Exactly-Once Semantics](https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/)
+- [Temporal Documentation](https://docs.temporal.io/)
 
 ---
 *Last Updated: January 2026*
