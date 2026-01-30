@@ -288,12 +288,10 @@ Skills are categorized by domain to help you choose the right tool for the task.
 ### ⚙️ DevOps & Automation
 | Skill | Description |
 | :--- | :--- |
-| `devops-engineer` | **Master Skill**: Istio Traffic Mgmt, ArgoCD GitOps, Tekton Pipelines. |
-| `container-engineer` | UBI-9 images, multi-stage builds, and OpenShift container optimization. |
+| `devops-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container (UBI9) Engineering. |
 | `observability-engineer` | **Advanced**: SLO/Burn Rate Alerts, Runbooks, Golden Signals (Jaeger/Loki/Prom). |
 | `git-workflow` | Branching strategies, conventional commits, and PR standards. |
-| `typescript-advanced-types` | Advanced Type safety for complex application logic. |
-| `modern-javascript-patterns` | Modern ES6+ syntax and functional programming patterns. |
+| `typescript-advanced-types` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
 | `slidev` | Presentation slides for developers (Markdown-based). |
 
 > **Documentation**: For detailed usage flow, see [AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md).

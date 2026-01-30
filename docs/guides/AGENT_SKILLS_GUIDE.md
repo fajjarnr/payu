@@ -72,6 +72,15 @@ The PayU platform is powered by specialized skill clusters:
 | **Debug** | `debugging-engineer` | **Advanced**: "Iron Law" Process, Root Cause Tracing. |
 | **FinOps** | `finops-engineer` | **New**: Recon, Settlement, GL Integration, and Regulatory Reporting. |
 
+#### ⚙️ DevOps & Automation
+| Spec | Skill | Description |
+| :--- | :--- | :--- |
+| **Infra** | `devops-engineer` | **Master Skill**: Tekton/ArgoCD, OpenShift, & Container Hardening. |
+| **Obs** | `observability-engineer` | **Advanced**: SLOs, Golden Signals, Jaeger, and LokiStack. |
+| **Logic** | `typescript-advanced-types` | **Master Skill**: TypeScript & Modern JS Functional patterns. |
+| **Git** | `git-workflow` | Branching strategies, conventional commits, and PR standards. |
+| **Tools** | `slidev` | Presentation slides for developers (Markdown-based). |
+
 ---
 
 ## 🤖 Specialized AI Agents (The Workers)

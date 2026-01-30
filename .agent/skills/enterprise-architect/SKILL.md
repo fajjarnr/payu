@@ -63,8 +63,10 @@ Arsitektur harus mendukung segmentasi jaringan, tokenisasi, dan audit trail otom
 | **Security** | `@security-engineer` | Zero Trust K8s, Vault, PCI-DSS. |
 | **Frontend** | `@frontend-engineer` | **Master Skill**: Next.js 15+, React, & Web Perf. |
 | **Mobile**   | `@mobile-engineer`   | **Master Skill**: React Native, Expo, & Security. |
+| **DevOps**   | `@devops-engineer`   | **Master Skill**: Tekton/ArgoCD, OpenShift, UBI9. |
+| **Language** | `@typescript-advanced-types` | **Master Skill**: Advanced TS & Modern JS. |
 | **Docs/C4** | `@docs-engineer` | **Master Skill**: Documentation & C4 Visualization. |
-| **Ops** | `@observability-engineer` | SLOs, Golden Signals, Jaeger Tracing. |
+| **Ops**      | `@observability-engineer` | SLOs, Golden Signals, Jaeger Tracing. |
 
 ---
 
