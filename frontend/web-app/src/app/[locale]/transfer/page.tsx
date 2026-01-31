@@ -402,19 +402,22 @@ export default function TransferPage() {
                               <Button
                                 variant={"outline"}
                                 className={clsx(
-                                  "w-full justify-start text-left font-bold py-7 rounded-xl border-border bg-card hover:bg-muted/50 transition-all",
+                                  "w-full justify-start text-left font-bold py-8 rounded-2xl border-border bg-card hover:bg-muted/50 transition-all shadow-sm",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
-                                <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
+                                <CalendarIcon className="mr-4 h-6 w-6 text-primary" />
                                 {field.value ? (
-                                  format(new Date(field.value), "PPP", { locale: id })
+                                  <span className="text-base text-foreground font-bold">{format(new Date(field.value), "PPP", { locale: id })}</span>
                                 ) : (
-                                  <span className="text-muted-foreground/40 font-bold uppercase tracking-widest text-xs">Pilih Tanggal Transfer</span>
+                                  <span className="text-muted-foreground/30 font-bold uppercase tracking-[0.2em] text-xs">Pilih Tanggal Transfer</span>
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-border bg-card" align="start">
+                            <PopoverContent className="w-auto p-0 border-border bg-card shadow-2xl" align="start">
+                              <div className="px-6 py-4 border-b border-border">
+                                <p className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase">Pilih Tanggal Transfer</p>
+                              </div>
                               <Calendar
                                 mode="single"
                                 selected={field.value ? new Date(field.value) : undefined}
