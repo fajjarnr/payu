@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Restored default Tailwind line-height logic by removing custom overrides in `globals.css`.
 
 ### Added
+- **Rupiah Formatting Protocol**:
+  - Implemented automatic thousand separator (.) for Rupiah inputs in the transfer flow.
+  - Standardized monetary displays to use `toLocaleString('id-ID')` for consistent Indonesian formatting.
+- **Premium Emerald Button System**:
+  - Upgraded primary action buttons to use a multi-stop emerald gradient (`from-emerald-600 to-emerald-500`).
+  - Added subtle glass-borders and enhanced shadows for a more tactile, "bank-grade" feel.
 - **UI Component Standardization (Shadcn UI)**:
   - Conducted comprehensive audit and refactoring of `src/components` to replace custom UI with Shadcn primitives.
   - **Analytics Page**: Migrated manual SVG charts to Shadcn `Chart` (Recharts) with premium emerald styling.
