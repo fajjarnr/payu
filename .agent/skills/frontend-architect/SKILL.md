@@ -382,19 +382,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   </div>
 </div>
 
-// Dashboard layout (Three-column)
+// Dashboard layout (Fluid Full-Width)
 <div className="flex h-screen w-full overflow-hidden bg-background">
   <aside className="w-64 border-r border-border/40 overflow-y-auto hidden lg:flex flex-col">
     <SidebarContent />
   </aside>
   <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-    <div className="flex-1 overflow-y-auto p-8">
+    {/* Full-width container: NO max-w centering */}
+    <div className="flex-1 overflow-y-auto p-6 lg:p-10">
       <MainContent />
     </div>
   </main>
-  <aside className="w-80 border-l border-border/40 overflow-y-auto hidden xl:block bg-muted/30">
-    <ActivityPanel />
-  </aside>
 </div>
 ```
 
@@ -410,14 +408,15 @@ const CardContext = createContext<{ variant?: string }>({});
 
 export const Card = ({ className, variant, children, ...props }) => (
   <CardContext.Provider value={{ variant }}>
-    <div className={cn('rounded-lg border bg-card shadow-sm', className)} {...props}>
+    {/* Use rounded-2xl as the platform standard */}
+    <div className={cn('rounded-2xl border bg-card shadow-sm', className)} {...props}>
       {children}
     </div>
   </CardContext.Provider>
 );
 
 export const CardHeader = ({ className, ...props }) => (
-  <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+  <div className={cn('flex flex-col space-y-1.5 p-6 md:p-8', className)} {...props} />
 );
 
 export const CardTitle = ({ className, ...props }) => (

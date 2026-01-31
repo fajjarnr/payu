@@ -108,7 +108,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
     <div className="h-screen bg-background flex overflow-hidden font-inter text-foreground">
       {/* Desktop Sidebar - Increased spacing and font weight */}
       <aside
-        className="hidden lg:flex flex-col w-80 border-r border-border bg-background p-10 h-full overflow-y-auto"
+        className="hidden lg:flex flex-col w-[320px] 2xl:w-[380px] border-r border-border bg-background p-10 2xl:p-12 h-screen overflow-y-auto shrink-0 sticky top-0"
         aria-label="Sidebar Navigasi Desktop"
       >
         <div className="flex items-center gap-5 mb-16 px-2 group cursor-pointer">
@@ -116,11 +116,11 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
             <div className="h-14 w-14 bg-emerald-500 rounded-[1.25rem] flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-emerald-500/20 rotate-3 transition-transform group-hover:rotate-0">
               U
             </div>
-            <span className="text-4xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
+            <span className="text-4xl 2xl:text-5xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
           </Link>
         </div>
 
-        <div className="space-y-5 mb-14">
+        <div className="space-y-6 2xl:space-y-8 mb-14">
           <p className="text-xs sm:text-sm font-bold text-emerald-500/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('main')}</p>
           {mainMenu.map((item) => (
             <SidebarItem
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
           ))}
         </div>
 
-        <div className="space-y-5 mt-auto">
+        <div className="space-y-6 2xl:space-y-8 mt-auto">
           <p className="text-xs sm:text-sm font-bold text-emerald-500/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('others')}</p>
           {otherMenu.map((item) => (
             <SidebarItem
@@ -260,7 +260,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
         </header>
 
         <main className="flex-1 overflow-y-auto scrollbar-hide bg-background">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 pb-32 transition-all duration-500">
+          <div className="w-full px-6 sm:px-8 lg:px-10 py-8 lg:py-10 pb-32 transition-all duration-500">
             {children}
           </div>
         </main>

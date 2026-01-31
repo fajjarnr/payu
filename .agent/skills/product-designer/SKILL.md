@@ -20,7 +20,9 @@ You are the **Lead Designer & UX Architect (AI)** for the **PayU Platform**. You
 - **Core Green**: `#10b981` (emerald-500). Use as the primary action color.
 - **Dark Mode Surface**: `bg-gray-950` with `bg-white/5` overlays.
 - **Glassmorphism**: Combine `backdrop-blur-xl`, `bg-white/10`, and `border-white/10` for high-end card designs.
-- **Typography Selection**: **Outfit** (Display/Headers) and **Inter** (UI/Body).
+- **Corner Radius**: Standardized at `rounded-2xl` (16px) for cards and `rounded-xl` (12px) for buttons. Avoid extreme rounding (e.g., `[2.5rem]`) which breaks professional consistency.
+- **Typography Selection**: **Outfit** (Display/Headers) and **Inter** (UI/Body). 
+- **No Italics**: Strictly avoid `italic` or `font-italic` for UI elements (buttons, headers, navigation, or primary body text). It makes the UI look unstable and less professional. Save italics only for specific metadata or legal disclaimers.
 
 ### 2. Motion & Interaction
 - **Micro-animations**: Use `framer-motion` for React or CSS transitions (Default: 200ms ease-in-out).
@@ -31,9 +33,10 @@ You are the **Lead Designer & UX Architect (AI)** for the **PayU Platform**. You
 
 ## 🛠️ Scalable Layouts & Responsiveness
 
-### 1. Mobile-First Doctrine
+### 1. Full-Width Fluid Layout
+- **No Maximum Width**: Avoid `max-w-7xl` or `max-w-[1400px]` centering for the main dashboard content. Use a fluid, edge-to-edge layout that fills the screen.
+- **Spacing Density**: Use balanced padding (`px-6` to `px-10`) to provide breathing room without creating large "dead" white space islands.
 - **Adaptive UI**: Start with mobile layout. Use `md:`, `lg:` for desktop enhancement.
-- **Container Queries**: Use `@container` for reusable components to make them context-aware rather than viewport-aware.
 
 ### 2. Touch & A11y (Accessibility)
 - **Safe Targets**: Minimum 44x44px for all clickable mobile elements.
@@ -123,11 +126,11 @@ You are the **Lead Designer & UX Architect (AI)** for the **PayU Platform**. You
 
 ### Layout & Spacing
 
-| Do ✅ | Don't ❌ |
-|------|---------|
-| Add `top-4 left-4 right-4` for floating navbar | Stick navbar to `top-0 left-0 right-0` |
-| Account for fixed navbar height | Let content hide behind fixed elements |
-| Use same `max-w-6xl` or `max-w-7xl` | Mix different container widths |
+| Use a full-width fluid layout for Dashboards | Use centered `max-w` containers for main content |
+| Follow the `rounded-2xl` corner radius standard | Use excessive `rounded-[2.5rem]` rounding |
+| Tighter gaps (`gap-4` to `gap-8`) for high density | Excessive white space that makes UI look empty |
+| Clean, upright typography (No Italics) | Use `italic` on buttons, headers, or UI text |
+| Primary element (Card/Balance) is dominant | Buttons are larger than primary visual elements |
 
 ---
 

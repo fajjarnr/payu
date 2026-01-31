@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI Contrast & Visibility**:
   - Enhanced visibility for dashboard header elements (Search bar, Notification button, and User menu) to prevent blending with backgrounds.
   - Implemented `bg-card` and `shadow-md` for all interactive header components.
-- **Typography Standardization**:
+- **Typography & UI Consistency**:
   - Aligned all application font sizes with standard Tailwind CSS utility scales (`text-xs` through `text-7xl`).
   - Purged all arbitrary pixel-based font sizes (`text-[8px]`, `text-[10px]`, etc.) to ensure cross-page consistency.
+  - **Cards Page Transformation**: Redesigned the Cards page to mirror the premium modular layout of the Investments page, enhancing visual hierarchy and professional aesthetic.
+  - **Italic Elimination & Legibility**: Conducted a global audit to remove all `italic` styles and enforce a minimum `text-xs` (12px) font size across Cards, Pockets, QRIS, Transfer, and Landing pages.
   - Standardized font weights to `font-bold` (700) for improved readability, replacing overly heavy `font-black` (900).
   - Restored default Tailwind line-height logic by removing custom overrides in `globals.css`.
 

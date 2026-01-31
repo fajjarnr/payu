@@ -281,7 +281,7 @@ export default function TransferPage() {
                     {description && (
                       <div className="bg-muted p-8 rounded-xl border border-border">
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Pesan Konfirmasi</p>
-                        <p className="font-bold text-foreground text-lg italic">&quot;{description}&quot;</p>
+                        <p className="font-bold text-foreground text-lg">&quot;{description}&quot;</p>
                       </div>
                     )}
                   </div>
@@ -417,7 +417,7 @@ export default function TransferPage() {
                             <PopoverContent className="w-full sm:w-[600px] p-0 border-border bg-card shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] rounded-[2.5rem] overflow-hidden border-2" align="start" sideOffset={16}>
                               <div className="px-10 py-8 border-b border-border bg-muted/30 flex items-center justify-between">
                                 <div className="space-y-1">
-                                  <p className="text-[10px] font-bold text-muted-foreground tracking-[0.3em] uppercase">Konfigurasi Jadwal</p>
+                                  <p className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase">Konfigurasi Jadwal</p>
                                   <p className="text-sm font-bold text-foreground">Pilih Tanggal Transfer</p>
                                 </div>
                                 <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
@@ -441,7 +441,7 @@ export default function TransferPage() {
                   {scheduleType === 'RECURRING' && (
                     <div className="mt-8 space-y-10 animate-fade-in">
                       <div className="space-y-4">
-                        <label className="text-[10px] font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2">Pilih Tanggal Tagihan / Transfer</label>
+                        <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2">Pilih Tanggal Tagihan / Transfer</label>
                         <Controller
                           control={control}
                           name="recurringDay"
@@ -469,11 +469,11 @@ export default function TransferPage() {
 
                       <div className="space-y-4">
                         <div className="flex items-center justify-between ml-2">
-                          <label className="text-[10px] font-bold text-muted-foreground tracking-[0.3em] uppercase">Pilih Bulan (Opsional)</label>
+                          <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase">Pilih Bulan (Opsional)</label>
                           <button 
                             type="button" 
                             onClick={() => setValue('recurringMonth', undefined)}
-                            className="text-[10px] font-bold text-emerald-600 tracking-widest uppercase hover:underline"
+                            className="text-xs font-bold text-emerald-600 tracking-widest uppercase hover:underline"
                           >
                             Reset ke Setiap Bulan
                           </button>

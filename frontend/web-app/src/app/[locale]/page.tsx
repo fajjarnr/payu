@@ -209,7 +209,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-bold italic">U</div>
+              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-bold">U</div>
               <span className="text-xl font-bold">PayU</span>
             </div>
             <div className="flex gap-8 text-sm text-slate-500 font-medium">

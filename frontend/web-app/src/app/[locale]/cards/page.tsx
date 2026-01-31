@@ -29,121 +29,195 @@ export default function CardsPage() {
                             </div>
                         </StaggerItem>
 
-                        {/* Main Content */}
-                        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
-                            {/* Main Card View */}
-                            <StaggerItem className="md:col-span-6 lg:col-span-12">
-                                <div className="bg-card rounded-xl p-8 sm:p-12 border border-border shadow-card relative overflow-hidden flex flex-col items-center group">
-                                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-0" />
+                        {/* Top Hero Section: Card Visualization & Limits (8/4 Split) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                            {/* Left: Digital Card & Primary Actions (8 units) */}
+                            <div className="lg:col-span-8">
+                                <StaggerItem>
+                                    <div className="bg-card rounded-2xl border border-border shadow-sm p-12 h-full relative overflow-hidden group">
+                                        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] -z-0" />
+                                        
+                                        <div className="relative z-10 flex flex-col items-center justify-center gap-12 h-full">
+                                            {/* Digital Card Visualization */}
+                                            <div className="w-full max-w-[440px] aspect-[1.586/1] rounded-2xl relative overflow-hidden shadow-2xl group-hover:scale-[1.01] transition-all duration-700 border border-white/10">
+                                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-400" />
+                                                <div className="absolute inset-0 bg-white/5 backdrop-blur-md" />
+                                                <div className="absolute -top-10 -right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
 
-                                    <div className="w-full max-w-lg aspect-[1.6/1] rounded-xl relative overflow-hidden shadow-glass group-hover:scale-[1.02] transition-transform duration-500">
-                                        <div className="absolute inset-0 card-gradient" />
-                                        <div className="absolute inset-0 bg-white/5 backdrop-blur-md" />
-                                        <div className="absolute -top-10 -right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+                                                <div className="relative z-10 h-full p-8 flex flex-col justify-between text-white">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-10 w-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-bold text-xl border border-white/20">U</div>
+                                                            <span className="text-xl font-bold tracking-tighter">PayU</span>
+                                                        </div>
+                                                        <div className="h-2 w-2 bg-white rounded-full animate-pulse shadow-[0_0_15px_rgba(255,255,255,1)]" />
+                                                    </div>
 
-                                        <div className="relative z-10 h-full p-8 sm:p-10 flex flex-col justify-between text-white">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-bold text-2xl border border-white/20 shadow-lg">U</div>
-                                                    <span className="text-3xl font-bold">PayU</span>
+                                                    <div className="space-y-4">
+                                                        <div className="text-2xl sm:text-[1.75rem] font-bold tracking-[0.25em] font-mono leading-none drop-shadow-xl tabular-nums">
+                                                            {showFullDetails ? "4829 5678 9032 4410" : "•••• •••• •••• 4410"}
+                                                        </div>
+                                                        <div className="flex justify-between items-end">
+                                                            <div className="space-y-1">
+                                                                <p className="text-xs text-white/50 font-bold tracking-widest uppercase">Owner</p>
+                                                                <p className="text-xs font-bold uppercase tracking-widest truncate max-w-[150px]">PENGGUNA PAYU</p>
+                                                            </div>
+                                                            <div className="text-right space-y-0.5">
+                                                                <p className="text-xs text-white/50 font-bold tracking-widest uppercase">Exp</p>
+                                                                <p className="font-mono font-bold text-xs">08 / 29</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="h-4 w-4 bg-white rounded-full animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
                                             </div>
 
-                                            <div className="space-y-8">
-                                                <div className="text-2xl sm:text-4xl font-bold tracking-[0.2em] font-mono">
-                                                    {showFullDetails ? "4829 5678 9032 4410" : "•••• •••• •••• 4410"}
+                                            {/* Centered Actions */}
+                                            <div className="w-full max-w-[440px] flex gap-4">
+                                                <button
+                                                    onClick={() => setShowFullDetails(!showFullDetails)}
+                                                    className="flex-1 bg-gray-950 text-white px-6 py-4 rounded-xl font-bold text-xs tracking-[0.15em] uppercase hover:bg-emerald-600 transition-all shadow-lg flex items-center justify-center gap-3"
+                                                >
+                                                    {showFullDetails ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    Detail Kartu
+                                                </button>
+                                                <button className="flex-1 bg-muted/30 border border-border px-6 py-4 rounded-xl font-bold text-xs tracking-[0.15em] uppercase hover:bg-destructive hover:text-white hover:border-destructive transition-all flex items-center justify-center gap-3 text-muted-foreground/60">
+                                                    <Lock className="h-4 w-4" /> Bekukan
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </StaggerItem>
+                            </div>
+
+                            {/* Right: Daily Limit (4 units) Styled after Profil Risiko */}
+                            <div className="lg:col-span-4">
+                                <StaggerItem>
+                                    <div className="bg-slate-900 rounded-2xl p-10 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[400px]">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[60px]" />
+                                        
+                                        <div className="relative z-10">
+                                            <div className="flex justify-between items-center mb-8">
+                                                <h3 className="text-lg font-bold">Limit Harian</h3>
+                                                <button className="h-8 w-8 bg-white/5 rounded-lg flex items-center justify-center border border-white/10 hover:bg-white/10 transition-all">
+                                                    <Sliders className="h-4 w-4 text-emerald-400" />
+                                                </button>
+                                            </div>
+                                            
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <p className="text-xs text-white/40 font-bold tracking-widest uppercase mb-2">Terpakai Hari Ini</p>
+                                                    <p className="text-3xl font-bold tabular-nums">Rp 10.500.000</p>
                                                 </div>
-                                                <div className="flex justify-between items-end">
-                                                    <div className="space-y-1">
-                                                        <p className="text-xs text-white/60 font-bold tracking-widest uppercase">Pemegang Kartu</p>
-                                                        <p className="text-base font-bold uppercase">PENGGUNA PAYU</p>
+                                                
+                                                <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-center gap-3">
+                                                    <div className="h-8 w-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                                        <ShieldCheck className="h-4 w-4 text-emerald-400" />
                                                     </div>
-                                                    <div className="flex gap-8">
-                                                        <div className="text-right space-y-1">
-                                                            <p className="text-xs text-white/60 font-bold tracking-widest uppercase">Berlaku</p>
-                                                            <p className="font-mono font-bold">08 / 29</p>
-                                                        </div>
-                                                        <div className="text-right space-y-1">
-                                                            <p className="text-xs text-white/60 font-bold tracking-widest uppercase">CVV</p>
-                                                            <p className="font-mono font-bold">{showFullDetails ? "892" : "•••"}</p>
-                                                        </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-emerald-400">Status Aktif</p>
+                                                        <p className="text-xs text-white/40 font-medium tracking-tight">Terlindungi Protokol Keamanan</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div className="flex flex-col sm:flex-row gap-4 mt-12 w-full max-w-sm relative z-10">
-                                        <button
-                                            onClick={() => setShowFullDetails(!showFullDetails)}
-                                            className="flex-1 bg-foreground text-background px-6 py-4 rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-primary hover:text-white transition-all shadow-xl flex items-center justify-center gap-2"
-                                        >
-                                            {showFullDetails ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                            {showFullDetails ? "Sembunyikan" : "Tampilkan Detail"}
-                                        </button>
-                                        <button className="flex-1 bg-muted/50 border border-border px-6 py-4 rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-destructive hover:text-white hover:border-destructive transition-all flex items-center justify-center gap-2 text-muted-foreground">
-                                            <Lock className="h-4 w-4" /> Bekukan Kartu
-                                        </button>
+                                        <div className="relative z-10 space-y-4">
+                                            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                                <div className="h-full bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.5)]" style={{ width: '42%' }} />
+                                            </div>
+                                            <div className="flex justify-between items-end">
+                                                <p className="text-xs font-bold text-emerald-400">42% Terpakai</p>
+                                                <p className="text-xs font-bold text-white/40 tabular-nums">Limit: Rp 25.0jt</p>
+                                            </div>
+                                            <button className="w-full py-4 bg-white/10 rounded-xl font-bold text-xs tracking-widest hover:bg-white/20 transition-all border border-white/10 mt-4 uppercase">
+                                                Ubah Batas Transaksi
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            </StaggerItem>
+                                </StaggerItem>
+                            </div>
+                        </div>
 
-                            {/* Controls Section */}
-                            <StaggerItem className="md:col-span-6 lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card flex flex-col">
-                                    <h3 className="text-xl font-bold text-foreground mb-10">Kontrol Operasional</h3>
-                                    <div className="space-y-8">
-                                        {[
-                                            { label: 'Transaksi Online', desc: 'Izinkan pembayaran di situs web retail', icon: Zap, status: true },
-                                            { label: 'Batas Internasional', desc: 'Izinkan transaksi lintas negara', icon: ShieldCheck, status: false },
-                                            { label: 'Langganan Merchant', desc: 'Izinkan tagihan bulanan berulang', icon: RefreshCw, status: true },
-                                            { label: 'Batas Penarikan', desc: 'Izin ATM dan penarikan tunai', icon: Sliders, status: false },
-                                        ].map((control, i) => (
-                                            <div key={i} className="flex items-center justify-between group">
-                                                <div className="flex gap-4">
-                                                    <div className="h-12 w-12 bg-muted/50 rounded-xl flex items-center justify-center border border-border group-hover:border-primary/20 transition-all">
-                                                        <control.icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-foreground text-sm">{control.label}</p>
-                                                        <p className="text-xs text-muted-foreground font-medium mt-0.5">{control.desc}</p>
-                                                    </div>
-                                                </div>
+                        {/* Mid Section: Catalog Style Operations (4 Columns Grid) */}
+                        <div className="space-y-6">
+                            <h3 className="text-lg font-bold text-foreground">Kontrol Operasional</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {[
+                                    { label: 'Transaksi Online', desc: 'Situs web & retail', icon: Zap, status: true, tag: 'REKOMENDASI' },
+                                    { label: 'Internasional', desc: 'Transaksi lintas negara', icon: ShieldCheck, status: false, tag: 'AMAN' },
+                                    { label: 'Langganan', desc: 'Merchant & auto-debit', icon: RefreshCw, status: true, tag: 'AKTIF' },
+                                    { label: 'Penarikan ATM', desc: 'Izin tarik tunai fisik', icon: Sliders, status: false, tag: 'BLOKIR' },
+                                ].map((item, i) => (
+                                    <StaggerItem key={i}>
+                                        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+                                            <div className="flex justify-between items-start mb-6">
                                                 <div className={clsx(
-                                                    "w-12 h-6 rounded-full relative p-1 transition-all cursor-pointer",
-                                                    control.status ? "bg-primary" : "bg-muted"
+                                                    "h-10 w-10 rounded-xl flex items-center justify-center border transition-all",
+                                                    item.status ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600" : "bg-muted/50 border-border text-muted-foreground"
+                                                )}>
+                                                    <item.icon className="h-5 w-5" />
+                                                </div>
+                                                <span className={clsx(
+                                                    "text-xs font-bold px-2 py-0.5 rounded-full tracking-widest",
+                                                    item.status ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground/60"
+                                                )}>{item.tag}</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase mb-1">{item.status ? 'Aktif' : 'Non-aktif'}</p>
+                                                <h4 className="text-sm font-bold text-foreground mb-1">{item.label}</h4>
+                                                <p className="text-xs text-muted-foreground font-medium opacity-60 leading-tight">{item.desc}</p>
+                                            </div>
+                                            <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
+                                                <span className="text-xs font-bold text-emerald-600 tracking-widest uppercase">Atur Izin</span>
+                                                <div className={clsx(
+                                                    "w-10 h-5 rounded-full relative p-1 transition-all cursor-pointer",
+                                                    item.status ? "bg-emerald-500" : "bg-muted"
                                                 )}>
                                                     <div className={clsx(
-                                                        "w-4 h-4 bg-white rounded-full transition-all shadow-sm",
-                                                        control.status ? "translate-x-6" : "translate-x-0"
+                                                        "w-3 h-3 bg-white rounded-full transition-all shadow-sm",
+                                                        item.status ? "translate-x-5" : "translate-x-0"
                                                     )} />
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-10 text-white h-full flex flex-col justify-between relative overflow-hidden shadow-2xl group">
-                                    <div className="relative z-10">
-                                        <h3 className="text-3xl font-bold mb-4">Upgrade ke Premium.</h3>
-                                        <p className="text-sm text-gray-400 font-medium mb-10 leading-relaxed max-w-sm">
-                                            Dapatkan kartu virtual tak terbatas, limit transaksi lebih tinggi, dan cashback 2% untuk semua pembelian online.
-                                        </p>
-                                        <button className="px-8 py-4 bg-primary text-primary-foreground rounded-xl font-bold text-xs tracking-widest uppercase shadow-xl shadow-primary/40 hover:bg-bank-emerald transition-all">
-                                            Buka Akses Premium
-                                        </button>
-                                    </div>
-                                    <CreditCard className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
-                                    <div className="mt-12 relative z-10 border-t border-white/5 pt-6 text-center">
-                                        <p className="text-xs font-bold text-gray-500 tracking-widest uppercase">Proteksi Real-time oleh Protokol PayU</p>
-                                    </div>
-                                </div>
-                            </StaggerItem>
+                                        </div>
+                                    </StaggerItem>
+                                ))}
+                            </div>
                         </div>
+
+                        {/* Bottom Banner Area (Full Width) Styled after Target Portofolio Banner */}
+                        <StaggerItem>
+                            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px]" />
+                                <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
+                                    <div className="h-14 w-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
+                                        <SecurityIcon className="h-7 w-7 text-emerald-500" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h4 className="text-lg font-bold text-foreground">Protokol Keamanan Aktif.</h4>
+                                        <p className="text-sm text-muted-foreground font-medium opacity-80 max-w-2xl">
+                                            Sistem AI kami mendeteksi aktivitas mencurigakan secara real-time. Upgrade ke Premium untuk perlindungan asuransi saldo hingga Rp 50.000.000.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button className="bg-bank-emerald text-white px-8 py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/10 whitespace-nowrap uppercase relative z-10">
+                                    Upgrade Sekarang
+                                </button>
+                            </div>
+                        </StaggerItem>
                     </StaggerContainer>
                 </div>
             </PageTransition>
         </DashboardLayout>
+    );
+}
+
+// Simple Security Icon for the banner
+function SecurityIcon({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+            <path d="m9 12 2 2 4-4" />
+        </svg>
     );
 }

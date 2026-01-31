@@ -8,16 +8,12 @@
 
 ## 📋 Recently Completed (January 31, 2026 - UI Visibility & Typography Standardization)
 
-### UI Visibility & Contrast ✅ COMPLETE
-- **Header Refinement**: Enhanced contrast for Search bar, Notification button, and User menu using `bg-card` and `shadow-md`.
-- **Theme Support**: Improved button visibility in Light mode to prevent blending with the background.
-- **Premium Buttons**: Upgraded transfer buttons with Emerald gradients and tactile shadows.
-
-### Typography & Formatting ✅ COMPLETE
-- **Standard Scale**: Restored standard Tailwind CSS font-size scale across the entire application.
-- **Micro-Font Cleanup**: Removed all illegal font sizes (`text-[10px]`, `text-[8px]`, etc.) and replaced with `text-xs`.
-- **Rupiah Formatting**: Implemented localized thousand separators (.) for all currency inputs.
-- **Readability**: Replaced `font-black` (900) with `font-bold` (700) and restored default line-heights.
+### UI Consistency & Design Transformation ✅ COMPLETE
+- **Cards Page Transformation**: Completely redesigned the Cards page to mirror the premium modular layout of the Investments page.
+- **Global Typography Audit**: Removed all `italic` styles and upgraded font sizes below 12px to `text-xs` across Pockets, QRIS, Transfer, and Landing pages.
+- **Standard Scale Restoration**: Restored standard Tailwind CSS font-size scale throughout the web application.
+- **Micro-Font Cleanup**: Removed all illegal font sizes (`text-[10px]`, `text-[8px]`, etc.) for better accessibility.
+- **Indonesian Formatting**: Implemented localized Rupiah (id-ID) formatting with point separators across all monetary views.
 
 ---
 
@@ -69,7 +65,7 @@
 | **P13**  | Security Audit & Remediation (JWT, RBAC, PII, CORS)          | 95%      | 80%    | 🟢 Exceeds Target                                              |
 | **P14**  | Infrastructure Production Hardening                          | 100%     | 100%   | ✅ **COMPLETE** - Migrations verified                          |
 | **P15**  | Documentation (ADR, OpenAPI Catalog)                         | 100%     | 100%   | 🟢 **Complete**                                                |
-| **P16**  | Web App UX & Routing Standardization                         | 30%      | 100%   | 🟡 In Progress - Moved Dashboard, locale prefix hidden         |
+| P16  | Web App UX & Routing Standardization | 60% | 100% | 🟡 In Progress - Cards redesign, Typography Standardization complete |
 
 ---
 

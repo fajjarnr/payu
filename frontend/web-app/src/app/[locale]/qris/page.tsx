@@ -18,82 +18,132 @@ export default function QRISPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-10">
-          {/* QR Scanner Area */}
-          <div className="md:col-span-6 lg:col-span-8">
-            <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm flex flex-col items-center justify-center p-12 min-h-[500px] relative group">
-              {/* Decorative Background */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10">
+          {/* Main Scanner Column (8 units) */}
+          <div className="lg:col-span-8 space-y-8 xl:space-y-10">
+            <div className="bg-card rounded-2xl border border-border shadow-2xl relative overflow-hidden group min-h-[480px] xl:min-h-[550px] flex flex-col items-center justify-center p-10 sm:p-14 xl:p-16">
+              {/* Premium Background Effects */}
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -z-0" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] -z-0" />
+              
+              <div className="relative z-10 w-full max-w-md text-center space-y-10">
+                <div className="relative aspect-square max-w-[350px] xl:max-w-[400px] mx-auto">
+                    {/* Scanner Frame */}
+                    <div className="absolute inset-0 bg-muted/20 rounded-2xl border-2 border-dashed border-border group-hover:border-emerald-500/40 transition-all duration-700" />
+                    <div className="absolute inset-8 xl:inset-10 border-2 border-emerald-500/20 rounded-xl animate-pulse" />
+                    
+                    {/* Floating Scanner Icon */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <div className="w-22 h-22 xl:w-24 xl:h-24 bg-background rounded-2xl flex items-center justify-center mb-5 shadow-2xl border border-border group-hover:scale-110 transition-transform duration-500">
+                            <Camera className="h-9 w-9 xl:h-10 xl:w-10 text-emerald-500" />
+                        </div>
+                        <p className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase opacity-40">Scanning for QRIS Codes...</p>
+                    </div>
 
-              <div className="relative z-10 w-full max-w-sm space-y-12 text-center">
-                <div className="aspect-square bg-gray-50 dark:bg-gray-900/50 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center relative hover:border-bank-green transition-all duration-500">
-                  <div className="absolute inset-8 border-2 border-bank-green/20 rounded-xl animate-pulse" />
-
-                  <div className="w-24 h-24 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center mb-6 shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                    <Camera className="h-10 w-10 text-bank-green" />
-                  </div>
-                  <p className="text-xs font-bold text-gray-400 tracking-[0.2em]">Posisikan kode QR di dalam bingkai</p>
+                    {/* Corner Borders */}
+                    <div className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-emerald-500 rounded-tl-2xl" />
+                    <div className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-emerald-500 rounded-tr-2xl" />
+                    <div className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-emerald-500 rounded-bl-2xl" />
+                    <div className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-emerald-500 rounded-br-2xl" />
                 </div>
 
-                <div className="flex gap-6">
-                  <button className="flex-1 bg-foreground text-background py-6 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-green hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl">
+                <div className="flex flex-col sm:flex-row gap-5 max-w-sm mx-auto">
+                  <button className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-5 rounded-xl font-bold text-xs tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase">
                     <Camera className="h-4 w-4" /> Buka Kamera
                   </button>
-                  <button className="flex-1 bg-gray-50 dark:bg-gray-900 text-foreground py-6 rounded-xl font-bold text-xs tracking-[0.2em] border border-border hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-3">
-                    <ImageIcon className="h-4 w-4" /> Unggah Foto
+                  <button className="flex-1 bg-muted/40 text-foreground py-5 rounded-xl font-bold text-xs tracking-[0.2em] border border-border hover:bg-muted/60 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase">
+                    <ImageIcon className="h-4 w-4 text-emerald-500" /> Unggah Foto
                   </button>
                 </div>
               </div>
             </div>
+
+            {/* Recent Payments Section */}
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-8 sm:p-10 xl:p-12">
+              <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-3">
+                    <History className="h-5 w-5 text-emerald-500" />
+                    <h3 className="text-lg xl:text-xl font-bold text-foreground">Aktivitas Terakhir</h3>
+                </div>
+                <button className="text-xs font-bold text-emerald-600 tracking-[0.2em] hover:text-emerald-500 transition-colors uppercase border-b border-emerald-500/20">Lihat Semua</button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="py-20 text-center bg-muted/10 rounded-2xl border border-dashed border-border/50">
+                   <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4 opacity-30">
+                      <History className="h-8 w-8 text-foreground" />
+                   </div>
+                   <p className="text-xs font-bold text-muted-foreground/40 tracking-[0.1em] uppercase">Belum ada riwayat transaksi QRIS</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Quick Info & History */}
-          <div className="md:col-span-6 lg:col-span-4 space-y-8">
-            <div className="bg-card rounded-xl p-10 shadow-sm border border-border">
-              <h3 className="text-sm font-bold text-foreground mb-8 tracking-wide">Keamanan Pembayaran</h3>
+          {/* Right Sidebar Column (4 units) */}
+          <div className="lg:col-span-4 space-y-8 xl:space-y-10">
+            {/* Security Status Card */}
+            <div className="bg-card rounded-2xl p-8 xl:p-10 border border-border shadow-sm">
+              <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] mb-8 uppercase opacity-60">Protokol Keamanan</h3>
               <div className="space-y-8">
-                <div className="flex gap-5">
-                  <div className="h-12 w-12 bg-bank-green/10 rounded-xl flex items-center justify-center shrink-0 border border-bank-green/10">
-                    <ShieldCheck className="h-6 w-6 text-bank-green" />
+                <div className="flex gap-4">
+                  <div className="h-10 w-10 bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/10">
+                    <ShieldCheck className="h-5 w-5 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-foreground">Bayar Terenkripsi</p>
-                    <p className="text-xs text-gray-400 font-bold leading-relaxed tracking-widest mt-1">Setiap transaksi ditandatangani dengan token perangkat unik.</p>
+                    <p className="text-xs font-bold text-foreground">Enkripsi RESP-V3</p>
+                    <p className="text-xs text-muted-foreground font-medium tracking-tight mt-1 leading-relaxed opacity-70">Token dinamik di-hash per transaksi untuk keamanan maksimal.</p>
                   </div>
                 </div>
-                <div className="flex gap-5">
-                  <div className="h-12 w-12 bg-bank-green/10 rounded-xl flex items-center justify-center shrink-0 border border-bank-green/10">
-                    <Info className="h-6 w-6 text-bank-green" />
+                <div className="flex gap-4">
+                  <div className="h-10 w-10 bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/10">
+                    <Info className="h-5 w-5 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-foreground">Standar OJK & BI</p>
-                    <p className="text-xs text-gray-400 font-bold leading-relaxed tracking-widest mt-1">Patuh sepenuhnya pada protokol QRIS Bank Indonesia & ASPI.</p>
+                    <p className="text-xs font-bold text-foreground">Lisensi ASPI/BI</p>
+                    <p className="text-xs text-muted-foreground font-medium tracking-tight mt-1 leading-relaxed opacity-70">Sistem pembayaran tunduk pada regulasi QRIS Nasional.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-10 text-white relative overflow-hidden shadow-2xl group">
+            {/* My QR Card */}
+            <div className="bg-gray-900 rounded-2xl p-8 xl:p-10 text-white relative overflow-hidden shadow-2xl group border border-white/5">
               <div className="relative z-10">
-                <h4 className="font-bold text-xl mb-3 ">Kode QRIS Saya</h4>
-                <p className="text-xs text-gray-400 font-bold tracking-widest mb-10 leading-relaxed">Terima dana instan dari aplikasi bank manapun menggunakan kode unik Anda.</p>
-                <button className="w-full py-5 bg-white/10 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-white/20 transition-all border border-white/10">Tampilkan Kode Saya</button>
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <h4 className="font-bold text-xl tracking-tight">QRIS Personal</h4>
+                        <p className="text-xs text-emerald-400 font-bold tracking-widest uppercase">E-Wallet Access</p>
+                    </div>
+                    <QrCode className="h-7 w-7 text-emerald-500/40" />
+                </div>
+                
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 mb-8 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
+                   <QrCode className="h-32 w-32 text-white/5" />
+                   <div className="absolute inset-0 flex items-center justify-center">
+                       <p className="text-xs font-bold text-white/10 tracking-[0.2em] uppercase origin-center -rotate-12">Authorized Only</p>
+                   </div>
+                </div>
+                
+                <button className="w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 rounded-xl font-bold text-xs tracking-[0.2em] transition-all border border-emerald-600/30 uppercase">
+                    Tampilkan Kode Saya
+                </button>
               </div>
-              <QrCode className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
+              <div className="absolute top-[-30px] left-[-30px] w-40 h-40 bg-emerald-500/10 rounded-full blur-[80px]" />
             </div>
-          </div>
-        </div>
 
-        {/* Recent Transactions Footer */}
-        <div className="bg-card rounded-xl p-12 border border-border shadow-sm">
-          <div className="flex justify-between items-center mb-10">
-            <h3 className="text-xl font-bold text-foreground ">Pembayaran QR Terakhir</h3>
-            <button className="text-xs font-bold text-bank-green tracking-[0.2em] border-b-2 border-bank-green/20 hover:border-bank-green transition-all pb-1">Lihat Semua Riwayat</button>
-          </div>
-
-          <div className="text-center py-16">
-            <History className="h-16 w-16 text-gray-100 dark:text-gray-900 mx-auto mb-6" />
-            <p className="text-xs font-bold text-gray-400 tracking-[0.2em] leading-relaxed max-w-xs mx-auto">Tidak ada transaksi QRIS yang tercatat dalam 30 hari terakhir.</p>
+            {/* Daily Limit Card */}
+            <div className="bg-muted/30 rounded-2xl p-8 xl:p-10 border border-border flex flex-col justify-between min-h-[180px] xl:min-h-[200px]">
+               <div className="space-y-1">
+                  <p className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase opacity-60">Limit Harian QRIS</p>
+                  <p className="text-2xl xl:text-3xl font-bold text-foreground tabular-nums">Rp 10.000.000</p>
+               </div>
+               <div className="space-y-4">
+                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500/40 rounded-full" style={{ width: '0%' }} />
+                 </div>
+                 <p className="text-xs font-bold text-emerald-600 tracking-widest uppercase">0% Terpakai</p>
+               </div>
+            </div>
           </div>
         </div>
       </div>
