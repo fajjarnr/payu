@@ -1,7 +1,8 @@
 package id.payu.backoffice.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,49 +12,54 @@ import java.util.UUID;
         @Index(name = "idx_kyc_status", columnList = "status"),
         @Index(name = "idx_kyc_reviewed_by", columnList = "reviewedBy")
 })
-public class KycReview extends PanacheEntityBase {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class KycReview {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    private UUID id;
 
     @Column(nullable = false)
-    public String userId;
+    private String userId;
 
     @Column(nullable = false)
-    public String accountNumber;
+    private String accountNumber;
 
     @Column(length = 100)
-    public String documentType;
+    private String documentType;
 
     @Column(length = 200)
-    public String documentNumber;
+    private String documentNumber;
 
     @Column(columnDefinition = "TEXT")
-    public String documentUrl;
+    private String documentUrl;
 
     @Column(length = 100)
-    public String fullName;
+    private String fullName;
 
     @Column(columnDefinition = "TEXT")
-    public String address;
+    private String address;
 
     @Column(length = 50)
-    public String phoneNumber;
+    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public KycStatus status;
+    private KycStatus status;
 
     @Column(columnDefinition = "TEXT")
-    public String notes;
+    private String notes;
 
-    public String reviewedBy;
+    private String reviewedBy;
 
-    public LocalDateTime reviewedAt;
+    private LocalDateTime reviewedAt;
 
     @Column(updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
     void onCreate() {

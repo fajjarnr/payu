@@ -22,20 +22,20 @@ public record CustomerCaseResponse(
 ) {
     public static CustomerCaseResponse from(CustomerCase customerCase) {
         return new CustomerCaseResponse(
-                customerCase.id,
-                customerCase.userId,
-                customerCase.accountNumber,
-                customerCase.caseNumber,
-                customerCase.caseType,
-                customerCase.priority,
-                customerCase.subject,
-                customerCase.description,
-                customerCase.status,
-                customerCase.notes,
-                customerCase.assignedTo,
-                customerCase.resolvedBy,
-                customerCase.resolvedAt,
-                customerCase.createdAt
+                customerCase.getId(),
+                customerCase.getUserId(),
+                customerCase.getAccountNumber(),
+                customerCase.getCaseNumber(),
+                customerCase.getCaseType(),
+                customerCase.getPriority(),
+                customerCase.getSubject(),
+                customerCase.getDescription(),
+                customerCase.getStatus(),
+                customerCase.getNotes(),
+                customerCase.getAssignedTo(),
+                customerCase.getResolvedBy(),
+                customerCase.getResolvedAt(),
+                customerCase.getCreatedAt()
         );
     }
 }

@@ -1,12 +1,13 @@
 package id.payu.backoffice.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "fraud_cases", indexes = {
@@ -15,55 +16,60 @@ import org.hibernate.type.SqlTypes;
         @Index(name = "idx_fraud_risk", columnList = "riskLevel"),
         @Index(name = "idx_fraud_transaction", columnList = "transactionId")
 })
-public class FraudCase extends PanacheEntityBase {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class FraudCase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    private UUID id;
 
     @Column(nullable = false)
-    public String userId;
+    private String userId;
 
     @Column(length = 100)
-    public String accountNumber;
+    private String accountNumber;
 
-    public UUID transactionId;
+    private UUID transactionId;
 
     @Column(length = 50)
-    public String transactionType;
+    private String transactionType;
 
     @Column(precision = 19, scale = 2)
-    public BigDecimal amount;
+    private BigDecimal amount;
 
     @Column(length = 100)
-    public String fraudType;
+    private String fraudType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public RiskLevel riskLevel;
+    private RiskLevel riskLevel;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public CaseStatus status;
+    private CaseStatus status;
 
     @Column(columnDefinition = "TEXT")
-    public String description;
+    private String description;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "JSONB")
-    public String evidence;
+    private String evidence;
 
     @Column(columnDefinition = "TEXT")
-    public String notes;
+    private String notes;
 
-    public String assignedTo;
+    private String assignedTo;
 
-    public String resolvedBy;
+    private String resolvedBy;
 
-    public LocalDateTime resolvedAt;
+    private LocalDateTime resolvedAt;
 
     @Column(updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
     void onCreate() {

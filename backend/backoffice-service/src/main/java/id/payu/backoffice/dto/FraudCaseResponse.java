@@ -25,22 +25,22 @@ public record FraudCaseResponse(
 ) {
     public static FraudCaseResponse from(FraudCase fraudCase) {
         return new FraudCaseResponse(
-                fraudCase.id,
-                fraudCase.userId,
-                fraudCase.accountNumber,
-                fraudCase.transactionId,
-                fraudCase.transactionType,
-                fraudCase.amount,
-                fraudCase.fraudType,
-                fraudCase.riskLevel,
-                fraudCase.status,
-                fraudCase.description,
-                fraudCase.evidence,
-                fraudCase.notes,
-                fraudCase.assignedTo,
-                fraudCase.resolvedBy,
-                fraudCase.resolvedAt,
-                fraudCase.createdAt
+                fraudCase.getId(),
+                fraudCase.getUserId(),
+                fraudCase.getAccountNumber(),
+                fraudCase.getTransactionId(),
+                fraudCase.getTransactionType(),
+                fraudCase.getAmount(),
+                fraudCase.getFraudType(),
+                fraudCase.getRiskLevel(),
+                fraudCase.getStatus(),
+                fraudCase.getDescription(),
+                fraudCase.getEvidence(),
+                fraudCase.getNotes(),
+                fraudCase.getAssignedTo(),
+                fraudCase.getResolvedBy(),
+                fraudCase.getResolvedAt(),
+                fraudCase.getCreatedAt()
         );
     }
 }

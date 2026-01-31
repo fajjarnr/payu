@@ -1,28 +1,25 @@
-# P2: Mobile Data Architecture Improvements
+# Phase 2: Backend Standardization (Security Focus)
 
 ## 🎯 Objective
-Fix architecture issues identified in the audit:
-- Duplicate State Management (Zustand + React Query)
-- Security (Token storage)
-- Performance (List rendering)
-- Offline-First capability
+Standardize security implementation across remaining services:
+- **backoffice-service** (Spring Boot 3.4)
+- **partner-service** (Spring Boot 3.4)
+- Verification of OpenAPI docs (just to be safe)
 
-## 🔄 Execution Status
+## 🔄 Execution Plan
 
-### P2-C1: Migrate to React Query (State Management)
-- [ ] Refactor `cardStore.ts` to use React Query (`hooks/useCardQuery.ts`)
-- [ ] Remove manual data fetching logic from `cardStore.ts`
-- [ ] Update `(tabs)/cards.tsx` to use new hooks
+### 1. Security Implementation (High Priority)
+- `@cybersecurity-architect`: Add `spring-boot-starter-security` and `oauth2-resource-server` dependencies.
+- `@cybersecurity-architect`: Create `SecurityConfig.java` enforcing:
+    - JWT Authentication (Stateless)
+    - RBAC (Role-Based Access Control)
+    - CSRF disabled (API mode)
+    - CORS configuration
+- `@tester`: Add security tests (verifying 401/403 on secured endpoints).
 
-### P2-C2/C3: Security
-- [x] Verify `storage.ts` uses `SecureStore` (Confirmed)
-- [x] Verify `authStore.ts` uses `noOpStorage` for persistence (Confirmed)
-- [ ] Ensure no other sensitive data is persisted in plain text
+### 2. Dependency Standardization
+- Ensure these services inherit from `payu-backend-parent`.
+- Remove manual version declarations for security libs.
 
-### P2-C5/C6: Performance
-- [ ] Review `(tabs)/cards.tsx` and replace `ScrollView` with `FlashList` or `FlatList`
-- [ ] Review `(tabs)/transfers.tsx` (Confirmed it's a form, `ScrollView` is acceptable)
-
-### P2-C4: Offline-First
-- [ ] Configure `PersistQueryClientProvider` in `app/_layout.tsx` or similar
-- [ ] Ensure `AsyncStorage` is used for non-sensitive cache persistence
+### 3. OpenAPI Verification
+- Confirm Swagger UI endpoints are accessible/configured.

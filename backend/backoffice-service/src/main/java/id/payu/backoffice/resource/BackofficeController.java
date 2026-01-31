@@ -95,7 +95,7 @@ public class BackofficeController extends BaseController {
             KycReviewRequest request) {
         LOG.info("Creating KYC review for user: {}", request.userId());
         var review = kycReviewService.create(request);
-        return created(KycReviewResponse.from(review), "/api/v1/backoffice/kyc-reviews/" + review.id);
+        return created(KycReviewResponse.from(review), "/api/v1/backoffice/kyc-reviews/" + review.getId());
     }
 
     @GetMapping("/kyc-reviews/{id}")
@@ -300,7 +300,7 @@ public class BackofficeController extends BaseController {
         var txId = transactionId != null ? UUID.fromString(transactionId) : null;
         var fraudCase = fraudCaseService.create(userId, accountNumber, txId, transactionType,
                 amount, fraudType, risk, description, evidence);
-        return created(FraudCaseResponse.from(fraudCase), "/api/v1/backoffice/fraud-cases/" + fraudCase.id);
+        return created(FraudCaseResponse.from(fraudCase), "/api/v1/backoffice/fraud-cases/" + fraudCase.getId());
     }
 
     @GetMapping("/fraud-cases/{id}")
@@ -390,7 +390,7 @@ public class BackofficeController extends BaseController {
     public ResponseEntity<id.payu.backoffice.dto.ApiResponse<CustomerCaseResponse>> createCustomerCase(
             @Valid @RequestBody CustomerCaseRequest request) {
         var customerCase = customerCaseService.create(request);
-        return created(CustomerCaseResponse.from(customerCase), "/api/v1/backoffice/customer-cases/" + customerCase.id);
+        return created(CustomerCaseResponse.from(customerCase), "/api/v1/backoffice/customer-cases/" + customerCase.getId());
     }
 
     @GetMapping("/customer-cases/{id}")

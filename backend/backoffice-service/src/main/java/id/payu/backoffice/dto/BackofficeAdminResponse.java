@@ -19,17 +19,17 @@ public record BackofficeAdminResponse(
 ) {
     public static BackofficeAdminResponse from(BackofficeAdmin admin) {
         return new BackofficeAdminResponse(
-                admin.id,
-                admin.username,
-                admin.email,
-                admin.firstName,
-                admin.lastName,
-                admin.phoneNumber,
-                admin.status,
-                admin.department,
-                admin.permissions,
-                admin.createdAt,
-                admin.lastLoginAt
+                admin.getId(),
+                admin.getUsername(),
+                admin.getEmail(),
+                admin.getFirstName(),
+                admin.getLastName(),
+                admin.getPhoneNumber(),
+                admin.getStatus(),
+                admin.getDepartment(),
+                admin.getPermissions(),
+                admin.getCreatedAt(),
+                admin.getLastLoginAt()
         );
     }
 }

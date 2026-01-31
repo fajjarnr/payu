@@ -1,7 +1,8 @@
 package id.payu.backoffice.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -12,50 +13,55 @@ import java.util.UUID;
         @Index(name = "idx_case_type", columnList = "caseType"),
         @Index(name = "idx_case_priority", columnList = "priority")
 })
-public class CustomerCase extends PanacheEntityBase {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CustomerCase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    private UUID id;
 
     @Column(nullable = false)
-    public String userId;
+    private String userId;
 
     @Column(length = 100)
-    public String accountNumber;
+    private String accountNumber;
 
     @Column(length = 50)
-    public String caseNumber;
+    private String caseNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public CaseType caseType;
+    private CaseType caseType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public Priority priority;
+    private Priority priority;
 
     @Column(nullable = false, length = 200)
-    public String subject;
+    private String subject;
 
     @Column(columnDefinition = "TEXT")
-    public String description;
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public CaseStatus status;
+    private CaseStatus status;
 
     @Column(columnDefinition = "TEXT")
-    public String notes;
+    private String notes;
 
-    public String assignedTo;
+    private String assignedTo;
 
-    public String resolvedBy;
+    private String resolvedBy;
 
-    public LocalDateTime resolvedAt;
+    private LocalDateTime resolvedAt;
 
     @Column(updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
     void onCreate() {

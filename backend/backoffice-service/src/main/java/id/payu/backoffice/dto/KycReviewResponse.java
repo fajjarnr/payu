@@ -22,20 +22,20 @@ public record KycReviewResponse(
 ) {
     public static KycReviewResponse from(KycReview review) {
         return new KycReviewResponse(
-                review.id,
-                review.userId,
-                review.accountNumber,
-                review.documentType,
-                review.documentNumber,
-                review.documentUrl,
-                review.fullName,
-                review.address,
-                review.phoneNumber,
-                review.status,
-                review.notes,
-                review.reviewedBy,
-                review.reviewedAt,
-                review.createdAt
+                review.getId(),
+                review.getUserId(),
+                review.getAccountNumber(),
+                review.getDocumentType(),
+                review.getDocumentNumber(),
+                review.getDocumentUrl(),
+                review.getFullName(),
+                review.getAddress(),
+                review.getPhoneNumber(),
+                review.getStatus(),
+                review.getNotes(),
+                review.getReviewedBy(),
+                review.getReviewedAt(),
+                review.getCreatedAt()
         );
     }
 }

@@ -24,6 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **P1 Complete**: Mobile App Production Ready (Jest, Types, Lint)
 
 ### Changed
+- **Backend Standardization (Phase 2)**:
+  - **Backoffice Service Migration**:
+    - Migrated from Quarkus/Panache to Spring Boot 3.4/JPA
+    - Implemented Stateless JWT Authentication & RBAC
+    - Standardized API Response format and Error Handling
+    - Fixed DTO encapsulation with proper Getter usage
+  - **Partner Service Hardening**:
+    - Applied standard Security Protocol (JWT + RBAC)
+    - Verified Spring Boot 3.4 compliance
+  - **Debugging Methodology**:
+    - Added "Systematic Debugging" protocol to AI Guidelines
+    - Enforced "Root Cause First" policy for all agents
+
 - **Governance**:
   - Enforced strict parent usage for Spring Boot services
   - Added CI check requirement for annotation processor paths

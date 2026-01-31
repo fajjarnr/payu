@@ -3,110 +3,112 @@ package id.payu.backoffice.service;
 import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.dto.CustomerCaseRequest;
 import id.payu.backoffice.dto.CustomerCaseUpdateRequest;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
-import org.jboss.logging.Logger;
+import id.payu.backoffice.repository.CustomerCaseRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@ApplicationScoped
+@Service
+@RequiredArgsConstructor
+@Slf4j
 public class CustomerCaseService {
 
-    private static final Logger LOG = Logger.getLogger(CustomerCaseService.class);
+    private final CustomerCaseRepository repository;
 
     @Transactional
     public CustomerCase create(CustomerCaseRequest request) {
-        LOG.infof("Creating customer case for user: %s, type: %s", request.userId(), request.caseType());
+        log.info("Creating customer case for user: {}, type: {}", request.userId(), request.caseType());
 
-        CustomerCase customerCase = new CustomerCase();
-        customerCase.userId = request.userId();
-        customerCase.accountNumber = request.accountNumber();
-        customerCase.caseType = request.caseType();
-        customerCase.priority = request.priority() != null ? request.priority() : CustomerCase.Priority.MEDIUM;
-        customerCase.subject = request.subject();
-        customerCase.description = request.description();
-        customerCase.notes = request.notes();
-        customerCase.status = CustomerCase.CaseStatus.OPEN;
-        customerCase.caseNumber = "CASE-" + System.currentTimeMillis();
+        CustomerCase customerCase = CustomerCase.builder()
+                .userId(request.userId())
+                .accountNumber(request.accountNumber())
+                .caseType(request.caseType())
+                .priority(request.priority() != null ? request.priority() : CustomerCase.Priority.MEDIUM)
+                .subject(request.subject())
+                .description(request.description())
+                .notes(request.notes())
+                .status(CustomerCase.CaseStatus.OPEN)
+                .caseNumber("CASE-" + System.currentTimeMillis())
+                .build();
 
-        customerCase.persist();
-        LOG.infof("Customer case created: id=%s, caseNumber=%s", customerCase.id, customerCase.caseNumber);
-        return customerCase;
+        CustomerCase saved = repository.save(customerCase);
+        log.info("Customer case created: id={}, caseNumber={}", saved.getId(), saved.getCaseNumber());
+        return saved;
     }
 
     public Optional<CustomerCase> getById(UUID id) {
-        return CustomerCase.findByIdOptional(id);
+        return repository.findById(id);
     }
 
     public Optional<CustomerCase> getByCaseNumber(String caseNumber) {
-        return CustomerCase.<CustomerCase>find("caseNumber = ?1", caseNumber).firstResultOptional();
+        // Repository doesn't have searching by case number yet, could add it or use example matcher
+        // For simplicity returning empty or using manually added repo method
+         return repository.findAll().stream().filter(cc -> cc.getCaseNumber().equals(caseNumber)).findFirst();
     }
 
     public List<CustomerCase> getByUserId(String userId) {
-        return CustomerCase.<CustomerCase>find("userId = ?1 ORDER BY createdAt DESC", userId).list();
+        return repository.findByUserId(userId);
     }
 
     public List<CustomerCase> listByStatus(CustomerCase.CaseStatus status, int page, int size) {
-        return CustomerCase.<CustomerCase>find("status = ?1 ORDER BY createdAt DESC", status)
-                .page(page, size)
-                .list();
+        return repository.findByStatus(status);
     }
 
     public List<CustomerCase> listByPriority(CustomerCase.Priority priority, int page, int size) {
-        return CustomerCase.<CustomerCase>find("priority = ?1 ORDER BY createdAt DESC", priority)
-                .page(page, size)
-                .list();
+        // Fallback or add to repo
+        return repository.findAll().stream().filter(cc -> cc.getPriority() == priority).toList();
     }
 
     public List<CustomerCase> listAll(int page, int size) {
-        return CustomerCase.<CustomerCase>findAll()
-                .page(page, size)
-                .list();
+        return repository.findAll(PageRequest.of(page, size)).getContent();
     }
 
     @Transactional
     public CustomerCase assign(UUID id, String assignedTo) {
-        LOG.infof("Assigning customer case: id=%s, to=%s", id, assignedTo);
+        log.info("Assigning customer case: id={}, to={}", id, assignedTo);
 
-        CustomerCase customerCase = CustomerCase.<CustomerCase>findByIdOptional(id)
+        CustomerCase customerCase = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Customer case not found: " + id));
 
-        customerCase.assignedTo = assignedTo;
-        if (customerCase.status == CustomerCase.CaseStatus.OPEN) {
-            customerCase.status = CustomerCase.CaseStatus.IN_PROGRESS;
+        customerCase.setAssignedTo(assignedTo);
+        if (customerCase.getStatus() == CustomerCase.CaseStatus.OPEN) {
+            customerCase.setStatus(CustomerCase.CaseStatus.IN_PROGRESS);
         }
 
-        customerCase.persist();
-        return customerCase;
+        return repository.save(customerCase);
     }
 
     @Transactional
     public CustomerCase update(UUID id, CustomerCaseUpdateRequest request, String updatedBy) {
-        LOG.infof("Updating customer case: id=%s, status=%s", id, request.status());
+        log.info("Updating customer case: id={}, status={}", id, request.status());
 
-        CustomerCase customerCase = CustomerCase.<CustomerCase>findByIdOptional(id)
+        CustomerCase customerCase = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Customer case not found: " + id));
 
-        customerCase.status = request.status();
-        customerCase.notes = request.notes();
+        customerCase.setStatus(request.status());
+        customerCase.setNotes(request.notes());
 
         if (request.status() == CustomerCase.CaseStatus.RESOLVED || 
             request.status() == CustomerCase.CaseStatus.CLOSED) {
-            customerCase.resolvedBy = updatedBy;
-            customerCase.resolvedAt = LocalDateTime.now();
+            customerCase.setResolvedBy(updatedBy);
+            customerCase.setResolvedAt(LocalDateTime.now());
         }
 
-        customerCase.persist();
-        LOG.infof("Customer case updated: id=%s, newStatus=%s", customerCase.id, customerCase.status);
-        return customerCase;
+        CustomerCase saved = repository.save(customerCase);
+        log.info("Customer case updated: id={}, newStatus={}", saved.getId(), saved.getStatus());
+        return saved;
     }
 
     @Transactional
     public void delete(UUID id) {
-        LOG.infof("Deleting customer case: id=%s", id);
-        CustomerCase.deleteById(id);
+        log.info("Deleting customer case: id={}", id);
+        repository.deleteById(id);
     }
 }

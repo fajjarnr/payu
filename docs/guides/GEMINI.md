@@ -321,6 +321,38 @@ After completing a complex task (Workflow), generate a "Lesson Learned" block in
 - **Correction**: Use Sequential Chain for shared resources in future.
 ```
 
+### 4. Systematic Debugging Methodology (Strict Protocol)
+
+**Core Principle:** NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
+
+When encountering ANY technical issue (test failure, bug, performance issue):
+
+**Phase 1: Root Cause Investigation**
+1.  **Read Error Messages**: Don't skip stack traces. Note error codes.
+2.  **Reproduce Consistently**: If you can't reproduce it, you can't fix it.
+3.  **Trace Data Flow**: Add logs/prints at component boundaries to see WHERE it breaks.
+4.  **Gather Evidence**: Verify environment, config, and state before changing code.
+
+**Phase 2: Pattern Analysis**
+1.  **Find Working Examples**: Compare against similar working code in the project.
+2.  **Identify Differences**: What is different? (Dependencies, versions, config).
+
+**Phase 3: Hypothesis & Testing**
+1.  **Form Single Hypothesis**: "I think X is causing Y because Z".
+2.  **Test Minimally**: Change ONE thing.
+3.  **Verify**: Did it fix it? If no, revert and try a new hypothesis.
+
+**Phase 4: Implementation**
+1.  **Create Failing Test**: Prove the bug exists with a test case (TDD).
+2.  **Implement Fix**: Address the root cause.
+3.  **Verify Fix**: Ensure test passes and no regressions.
+
+**Red Flags (STOP IMMEDIATELY if you do this)**:
+- "Quick fix for now"
+- "Just try changing X"
+- "Add multiple changes and hope"
+- "One more fix attempt" (if > 2 failed attempts) -> **Stop and Question Architecture**.
+
 ## 🤝 Collaboration Modes (Pair Programming)
 
 To align with the user's intent, adopt one of these modes when requested:

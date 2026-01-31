@@ -1,19 +1,16 @@
 package id.payu.backoffice;
 
-import io.quarkus.runtime.Quarkus;
-import io.quarkus.runtime.QuarkusApplication;
-import io.quarkus.runtime.annotations.QuarkusMain;
-import org.jboss.logging.Logger;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.scheduling.annotation.EnableAsync;
 
-@QuarkusMain
-public class BackofficeServiceApplication implements QuarkusApplication {
+@SpringBootApplication(scanBasePackages = "id.payu")
+@EnableAsync
+@ConfigurationPropertiesScan
+public class BackofficeServiceApplication {
 
-    private static final Logger LOG = Logger.getLogger(BackofficeServiceApplication.class);
-
-    @Override
-    public int run(String... args) {
-        LOG.info("Starting PayU Backoffice Service...");
-        Quarkus.waitForExit();
-        return 0;
+    public static void main(String[] args) {
+        SpringApplication.run(BackofficeServiceApplication.class, args);
     }
 }

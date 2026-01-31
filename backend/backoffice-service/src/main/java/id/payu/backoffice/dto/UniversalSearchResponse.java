@@ -1,6 +1,6 @@
 package id.payu.backoffice.dto;
 
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.List;

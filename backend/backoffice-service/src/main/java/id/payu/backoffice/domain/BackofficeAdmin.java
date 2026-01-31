@@ -1,7 +1,8 @@
 package id.payu.backoffice.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,47 +12,52 @@ import java.util.UUID;
         @Index(name = "idx_admin_username", columnList = "username", unique = true),
         @Index(name = "idx_admin_status", columnList = "status")
 })
-public class BackofficeAdmin extends PanacheEntityBase {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class BackofficeAdmin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    private UUID id;
 
     @Column(nullable = false, unique = true, length = 50)
-    public String username;
+    private String username;
 
     @Column(nullable = false, unique = true)
-    public String email;
+    private String email;
 
     @Column(length = 255)
-    public String passwordHash;
+    private String passwordHash;
 
     @Column(length = 100)
-    public String firstName;
+    private String firstName;
 
     @Column(length = 100)
-    public String lastName;
+    private String lastName;
 
     @Column(length = 20)
-    public String phoneNumber;
+    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public AdminStatus status;
+    private AdminStatus status;
 
     @Column(length = 50)
-    public String department;
+    private String department;
 
     @Column(columnDefinition = "JSONB")
-    public String permissions;
+    private String permissions;
 
     @Column(nullable = false)
-    public String createdBy;
+    private String createdBy;
 
     @Column(updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
-    public LocalDateTime lastLoginAt;
+    private LocalDateTime lastLoginAt;
 
     @PrePersist
     void onCreate() {

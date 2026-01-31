@@ -1,56 +1,38 @@
-quarkus:
+server:
+  port: 8099
+
+spring:
   application:
     name: backoffice-service
-  http:
-    port: 8099
-    test-port: 0
-  otel:
-    service:
-      name: backoffice-service
-    exporter:
-      otlp:
-        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
-    resource:
-      attributes:
-        - service.name=backoffice-service
-        - service.version=1.0.0
   datasource:
-    db-kind: postgresql
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payu_backoffice}
     username: ${DB_USER:payu}
     password: ${DB_PASSWORD:payu123}
-    jdbc:
-      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payu_backoffice}
-  hibernate-orm:
-    packages: id.payu.backoffice.domain
-    database:
-      generation: none
-    physical-naming-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
-    sql-load-script: no-file
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        physical_naming_strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
   flyway:
-    migrate-at-start: true
-    validate-on-migrate: true
+    enabled: true
     baseline-on-migrate: true
-  log:
-    category:
-      "id.payu.backoffice":
-        level: INFO
-  test:
-    disabled-profiles:
-      - docker
 
-"%test":
-  quarkus:
-    datasource:
-      db-kind: postgresql
-      jdbc:
-        url: jdbc:postgresql://localhost:5432/backoffice_test
-      username: test
-      password: test
-    hibernate-orm:
-      packages: id.payu.backoffice.domain
-      database:
-        generation: none
-      sql-load-script: no-file
-    flyway:
-      migrate-at-start: true
-      baseline-on-migrate: true
+logging:
+  level:
+    id.payu.backoffice: INFO
+    org.springframework.web: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
