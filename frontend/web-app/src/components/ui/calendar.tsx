@@ -22,53 +22,50 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "bg-card p-4",
-        // CSS variables for sizing - ULTRA PREMIUM SCALE
-        "[--cell-size:3.5rem] [--font-size-day:1rem] [--font-size-caption:1.125rem]",
+        "bg-card p-4 sm:p-8",
+        // JUMBO SCALE: 4.5rem cells for extreme clarity
+        "[--cell-size:4.5rem] [--font-size-day:1.125rem] [--font-size-caption:1.25rem]",
         className
       )}
       classNames={{
-        root: cn("w-fit", defaultClassNames.root),
-        months: cn("relative flex flex-col gap-6 sm:flex-row", defaultClassNames.months),
-        month: cn("flex flex-col gap-8", defaultClassNames.month),
-        month_caption: cn("relative flex h-12 items-center justify-center", defaultClassNames.month_caption),
-        caption_label: cn("text-base font-bold tracking-widest uppercase text-foreground", defaultClassNames.caption_label),
+        root: cn("w-full max-w-full", defaultClassNames.root),
+        months: cn("flex flex-col gap-10", defaultClassNames.months),
+        month: cn("flex flex-col gap-10", defaultClassNames.month),
+        month_caption: cn("relative flex h-14 items-center justify-center mb-4", defaultClassNames.month_caption),
+        caption_label: cn("text-lg font-bold tracking-[0.2em] uppercase text-foreground bg-muted/50 px-8 py-3 rounded-2xl", defaultClassNames.caption_label),
         nav: cn("absolute inset-x-0 top-0 flex items-center justify-between", defaultClassNames.nav),
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
-          "h-12 w-12 p-0 border-border hover:bg-muted font-bold transition-all active:scale-95 shadow-sm",
+          "h-14 w-14 p-0 border-border hover:bg-muted font-bold transition-all active:scale-95 shadow-lg rounded-2xl z-20 bg-card",
           defaultClassNames.button_previous
         ),
         button_next: cn(
           buttonVariants({ variant: "outline" }),
-          "h-12 w-12 p-0 border-border hover:bg-muted font-bold transition-all active:scale-95 shadow-sm",
+          "h-14 w-14 p-0 border-border hover:bg-muted font-bold transition-all active:scale-95 shadow-lg rounded-2xl z-20 bg-card",
           defaultClassNames.button_next
         ),
         month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
-        weekdays: cn("flex mb-4", defaultClassNames.weekdays),
+        weekdays: cn("flex w-full justify-between mb-6", defaultClassNames.weekdays),
         weekday: cn(
-          "text-muted-foreground w-[--cell-size] font-bold text-xs tracking-[0.2em] uppercase text-center",
+          "text-muted-foreground w-[--cell-size] font-bold text-sm tracking-[0.2em] uppercase text-center opacity-30",
           defaultClassNames.weekday
         ),
-        week: cn("flex w-full mt-2", defaultClassNames.week),
+        week: cn("flex w-full justify-between mt-3", defaultClassNames.week),
         day: cn(
-          "w-[--cell-size] h-[--cell-size] text-center text-sm p-0 m-0",
+          "w-[--cell-size] h-[--cell-size] text-center p-0 m-0 relative flex items-center justify-center",
           defaultClassNames.day
         ),
-        today: cn("text-emerald-500 font-extrabold scale-110", defaultClassNames.today),
-        outside: cn("text-muted-foreground/20 opacity-30", defaultClassNames.outside),
-        disabled: cn("text-muted-foreground/10 opacity-20", defaultClassNames.disabled),
-        range_start: "bg-emerald-500 text-white rounded-l-2xl",
-        range_end: "bg-emerald-500 text-white rounded-r-2xl",
-        range_middle: "bg-emerald-500/10 text-emerald-600",
+        today: cn("relative", defaultClassNames.today),
+        outside: cn("text-muted-foreground/10 opacity-10 pointer-events-none", defaultClassNames.outside),
+        disabled: cn("text-muted-foreground/10 opacity-10", defaultClassNames.disabled),
         ...classNames,
       }}
       components={{
         Chevron: ({ orientation }) => {
           if (orientation === "left") {
-            return <ChevronLeftIcon className="h-6 w-6" />
+            return <ChevronLeftIcon className="h-7 w-7" />
           }
-          return <ChevronRightIcon className="h-6 w-6" />
+          return <ChevronRightIcon className="h-7 w-7" />
         },
         DayButton: CalendarDayButton,
       }}
@@ -90,9 +87,12 @@ function CalendarDayButton({
       ref={ref}
       variant="ghost"
       className={cn(
-        "h-[--cell-size] w-[--cell-size] p-0 font-bold text-base transition-all hover:bg-emerald-500/10 hover:text-emerald-600 active:scale-90 rounded-2xl",
-        modifiers.selected && "bg-emerald-500 text-white hover:bg-emerald-600 hover:text-white shadow-xl shadow-emerald-500/30 ring-4 ring-emerald-500/10",
-        modifiers.today && !modifiers.selected && "border-2 border-emerald-500/30 text-emerald-600 bg-emerald-500/5",
+        "h-[--cell-size] w-[--cell-size] p-0 font-bold text-xl transition-all active:scale-90 rounded-[1.5rem] relative",
+        "text-foreground/90 hover:bg-emerald-500/10 hover:text-emerald-600",
+        // Today
+        modifiers.today && !modifiers.selected && "border-2 border-emerald-500/40 text-emerald-600 bg-emerald-500/5",
+        // Selected
+        modifiers.selected && "bg-emerald-500 text-white hover:bg-emerald-600 hover:text-white shadow-[0_20px_40px_-10px_rgba(16,185,129,0.5)] ring-8 ring-emerald-500/10 scale-110 z-10 border-emerald-400",
         className
       )}
       {...props}

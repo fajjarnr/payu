@@ -402,7 +402,7 @@ export default function TransferPage() {
                               <Button
                                 variant={"outline"}
                                 className={clsx(
-                                  "w-full justify-start text-left font-bold py-8 rounded-2xl border-border bg-card hover:bg-muted/50 transition-all shadow-sm",
+                                  "w-full justify-start text-left font-bold py-10 rounded-[2rem] border-2 border-border bg-card hover:bg-muted/50 transition-all shadow-sm",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
@@ -414,9 +414,13 @@ export default function TransferPage() {
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-border bg-card shadow-2xl" align="start">
-                              <div className="px-6 py-4 border-b border-border">
-                                <p className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase">Pilih Tanggal Transfer</p>
+                            <PopoverContent className="w-full sm:w-[600px] p-0 border-border bg-card shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] rounded-[2.5rem] overflow-hidden border-2" align="start" sideOffset={16}>
+                              <div className="px-10 py-8 border-b border-border bg-muted/30 flex items-center justify-between">
+                                <div className="space-y-1">
+                                  <p className="text-[10px] font-bold text-muted-foreground tracking-[0.3em] uppercase">Konfigurasi Jadwal</p>
+                                  <p className="text-sm font-bold text-foreground">Pilih Tanggal Transfer</p>
+                                </div>
+                                <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                               </div>
                               <Calendar
                                 mode="single"
