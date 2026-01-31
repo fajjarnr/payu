@@ -439,27 +439,70 @@ export default function TransferPage() {
                   )}
 
                   {scheduleType === 'RECURRING' && (
-                    <div className="mt-6 grid grid-cols-2 gap-4">
-                      <div className="bg-muted/50 p-6 rounded-xl border border-border">
-                        <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2 block">Tanggal Bulanan</label>
-                        <input
-                          {...register('recurringDay', { valueAsNumber: true })}
-                          type="number"
-                          min="1"
-                          max="31"
-                          placeholder="1-31"
-                          className="w-full px-4 py-3 rounded-lg border border-border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold"
+                    <div className="mt-8 space-y-10 animate-fade-in">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2">Pilih Tanggal Tagihan / Transfer</label>
+                        <Controller
+                          control={control}
+                          name="recurringDay"
+                          render={({ field }) => (
+                            <div className="grid grid-cols-7 gap-2 bg-muted/30 p-4 rounded-[2rem] border border-border">
+                              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                                <button
+                                  key={d}
+                                  type="button"
+                                  onClick={() => field.onChange(d)}
+                                  className={clsx(
+                                    "aspect-square rounded-xl flex items-center justify-center font-bold text-sm transition-all active:scale-90",
+                                    field.value === d
+                                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105"
+                                      : "bg-card text-foreground/60 hover:bg-emerald-500/10 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20"
+                                  )}
+                                >
+                                  {d}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         />
                       </div>
-                      <div className="bg-muted/50 p-6 rounded-xl border border-border">
-                        <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2 block">Bulan (Opsional)</label>
-                        <input
-                          {...register('recurringMonth', { valueAsNumber: true })}
-                          type="number"
-                          min="1"
-                          max="12"
-                          placeholder="1-12"
-                          className="w-full px-4 py-3 rounded-lg border border-border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold"
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between ml-2">
+                          <label className="text-[10px] font-bold text-muted-foreground tracking-[0.3em] uppercase">Pilih Bulan (Opsional)</label>
+                          <button 
+                            type="button" 
+                            onClick={() => setValue('recurringMonth', undefined)}
+                            className="text-[10px] font-bold text-emerald-600 tracking-widest uppercase hover:underline"
+                          >
+                            Reset ke Setiap Bulan
+                          </button>
+                        </div>
+                        <Controller
+                          control={control}
+                          name="recurringMonth"
+                          render={({ field }) => (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 bg-muted/30 p-4 rounded-[2.5rem] border border-border">
+                              {['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'].map((m, idx) => {
+                                const val = idx + 1;
+                                return (
+                                  <button
+                                    key={m}
+                                    type="button"
+                                    onClick={() => field.onChange(val)}
+                                    className={clsx(
+                                      "py-4 rounded-xl flex items-center justify-center font-bold text-xs tracking-widest transition-all active:scale-95",
+                                      field.value === val
+                                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                                        : "bg-card text-foreground/60 hover:bg-emerald-500/10 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20"
+                                    )}
+                                  >
+                                    {m}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         />
                       </div>
                     </div>
