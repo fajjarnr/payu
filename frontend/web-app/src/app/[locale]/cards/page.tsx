@@ -30,9 +30,9 @@ export default function CardsPage() {
                         </StaggerItem>
 
                         {/* Top Hero Section: Card Visualization & Limits (8/4 Split) */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8 items-stretch">
                             {/* Left: Digital Card & Primary Actions (8 units) */}
-                            <div className="lg:col-span-8">
+                            <div className="md:col-span-12 lg:col-span-8">
                                 <StaggerItem>
                                     <div className="bg-card rounded-2xl border border-border shadow-sm p-12 h-full relative overflow-hidden group">
                                         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] -z-0" />
@@ -90,7 +90,7 @@ export default function CardsPage() {
                             </div>
 
                             {/* Right: Daily Limit (4 units) Styled after Profil Risiko */}
-                            <div className="lg:col-span-4">
+                            <div className="md:col-span-12 lg:col-span-4">
                                 <StaggerItem>
                                     <div className="bg-slate-900 rounded-2xl p-10 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[400px]">
                                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[60px]" />

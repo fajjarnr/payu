@@ -18,9 +18,9 @@ export default function QRISPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8 xl:gap-10">
           {/* Main Scanner Column (8 units) */}
-          <div className="lg:col-span-8 space-y-8 xl:space-y-10">
+          <div className="md:col-span-12 lg:col-span-8 space-y-8 xl:space-y-10">
             <div className="bg-card rounded-2xl border border-border shadow-2xl relative overflow-hidden group min-h-[480px] xl:min-h-[550px] flex flex-col items-center justify-center p-10 sm:p-14 xl:p-16">
               {/* Premium Background Effects */}
               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -z-0" />
@@ -80,7 +80,7 @@ export default function QRISPage() {
           </div>
 
           {/* Right Sidebar Column (4 units) */}
-          <div className="lg:col-span-4 space-y-8 xl:space-y-10">
+          <div className="md:col-span-12 lg:col-span-4 space-y-8 xl:space-y-10">
             {/* Security Status Card */}
             <div className="bg-card rounded-2xl p-8 xl:p-10 border border-border shadow-sm">
               <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] mb-8 uppercase opacity-60">Protokol Keamanan</h3>

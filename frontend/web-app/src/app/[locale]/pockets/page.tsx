@@ -140,7 +140,7 @@ export default function PocketsPage() {
                         </StaggerItem>
 
                         <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
-                            <StaggerItem className="md:col-span-6 lg:col-span-8">
+                            <StaggerItem className="md:col-span-12 lg:col-span-8">
                                 <div className="bg-card rounded-2xl p-8 sm:p-10 border border-border shadow-card flex flex-col justify-between min-h-[400px] relative overflow-hidden group shadow-2xl">
                                     <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -z-0" />
 
@@ -178,7 +178,7 @@ export default function PocketsPage() {
                                 </div>
                             </StaggerItem>
 
-                            <StaggerItem className="md:col-span-6 lg:col-span-4 grid grid-cols-1 gap-8">
+                            <StaggerItem className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-8">
                                 <div className="bg-card p-8 rounded-2xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group min-h-[180px]">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl" />
                                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1 opacity-60">Protokol Cadangan</p>
@@ -206,14 +206,14 @@ export default function PocketsPage() {
                             </StaggerItem>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8 mt-12">
-                            <div className="md:col-span-6 lg:col-span-7 space-y-8">
+                            <div className="md:col-span-12 lg:col-span-12 gap-8 mt-12 grid grid-cols-1 lg:grid-cols-12">
+                                <div className="lg:col-span-7 space-y-8">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold text-foreground">Tujuan Khusus</h3>
                                     <button className="text-xs font-bold text-primary hover:underline">Kelola Portofolio</button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6">
                                     {savingGoals.map((goal) => {
                                         const percentage = Math.round((goal.current / goal.target) * 100);
                                         const Icon = goal.icon;
@@ -260,7 +260,7 @@ export default function PocketsPage() {
                                 </div>
                             </div>
 
-                            <div className="md:col-span-6 lg:col-span-5 space-y-8">
+                                <div className="lg:col-span-5 space-y-8">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold text-foreground">Buku Besar Terakhir</h3>
                                     <div className="h-10 w-10 bg-muted/50 rounded-xl flex items-center justify-center border border-border">

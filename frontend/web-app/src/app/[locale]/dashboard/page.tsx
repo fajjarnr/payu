@@ -89,7 +89,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
 
       {/* High Priority Actions & Health - 8/4 Split */}
       <StaggerItem className="md:col-span-12 lg:col-span-8">
-       <QuickActions maxActions={6} className="h-full" />
+       <QuickActions maxActions={8} className="h-full" />
       </StaggerItem>
 
       <StaggerItem className="md:col-span-12 lg:col-span-4">
