@@ -408,7 +408,6 @@ debts:
 | Domain | Master Skill | Description |
 |:-------|:-------------|:------------|
 | **Backend (Java)** | `@core-banking-engineer` | Spring Boot 3.4, Hexagonal, Resilience |
-| **Backend (Node)** | `@bff-architect` | Node.js BFFs, Prisma, Zod |
 | **Events** | `@integration-architect` | Sagas, Event Sourcing, Kafka |
 | **AI** | `@ai-engineer` | Intelligent Systems, FastAPI, GenAI |
 | **Security** | `@cybersecurity-architect` | Zero Trust, Auth, Compliance |
@@ -417,10 +416,9 @@ debts:
 | **Design** | `@product-designer` | Premium UI, Atomic Design |
 | **Frontend** | `@frontend-architect` | Next.js 15+, React, Web Perf |
 | **Mobile** | `@mobile-architect` | React Native, Expo, Security |
-| **Platform** | `@platform-engineer` | Tekton/ArgoCD, OpenShift |
-| **SRE** | `@sre` | SLOs, Golden Signals, Observability |
+| **Platform & SRE** | `@platform-engineer` | DevOps, SRE, Observability, OpenShift |
 | **DX** | `@dx-engineer` | Git, Conventional Commits, Tooling |
-| **Docs** | `@information-architect` | Documentation, C4, ADRs |
+| **Arch & Docs** | `@principal-architect` | Strategy, ADRs, C4, Documentation |
 
 ---
 

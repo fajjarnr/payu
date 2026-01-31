@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated Integration Architect: Temporal (Durable Execution), KRaft Kafka
   - Updated Platform Engineer: IDP (Backstage), eBPF Observability, GreenOps
   - Updated Security Architect: Post-Quantum Cryptography, Passkeys (FIDO2)
+  - Updated Principal Architect: Decentralized Orchestration, DORA Metrics
 - **Roadmap Completion**:
   - **P0 Complete**: Web App Production Ready (Tests, Security, Types)
   - **P1 Complete**: Mobile App Production Ready (Jest, Types, Lint)

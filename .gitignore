@@ -1,10 +1,55 @@
-# --- Java & Maven ---
+# --- Global System Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Logs & Temp ---
+*.log
+logs/
+tmp/
+temp/
+crash-reports/
+
+# --- Secrets & Environment ---
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.p12
+*.jks
+*.jceks
+.secrets.baseline
+
+# --- IDEs & Editors ---
+.idea/
+.settings/
+.classpath
+.project
+.factorypath
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*~
+*.bak
+
+# --- Java / Maven / Gradle ---
 target/
-*.jar
-*.war
-*.ear
-*.nar
-*.class
+build/
+.gradle/
+bin/
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+!mvnw
+!mvnw.cmd
 
 # --- Python ---
 __pycache__/
@@ -12,13 +57,12 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-/lib/
+lib/
 lib64/
 parts/
 sdist/
@@ -29,83 +73,46 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-# Python Caches
 .ruff_cache/
 .mypy_cache/
-
-# Virtual Environments
-venv/
-.venv/
-env/
-.env
-
-# Testing & Coverage
-.coverage
-.tox/
-nosetests.xml
-coverage.xml
-*.cover
-*.known_hosts
-.hypothesis/
 .pytest_cache/
+.coverage
 htmlcov/
+.tox/
 
-# --- IDEs & Editors ---
-# IntelliJ
-.idea/
-*.iml
-*.iws
-*.ipr
-# Only ignore top-level out/ directory (IntelliJ build output)
-# Don't ignore domain/port/out/ which contains hexagonal architecture ports
-/out/
-
-# Eclipse
-.settings/
-.classpath
-.project
-.factorypath
-bin/
-
-# NetBeans
-nbproject/private/
-nbbuild/
-nbdist/
-.nb-gradle/
-
-# VS Code
-.vscode/
-
-# Other Editors
-*.swp
-*.swo
-*~
-*.bak
-
-# --- OS Specific ---
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# --- Logs ---
-*.log
-logs/
+# --- Node / JavaScript / Frontend ---
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# --- Temporary Files ---
-tmp/
-temp/
-
-# --- Frontend E2E Reports ---
+.pnpm-debug.log*
+.npm/
+.next/
+out/
+.turbo/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
 playwright-report/
 test-results/
+blob-report/
+
+# --- Mobile (React Native / Expo) ---
+.expo/
+web-build/
+android/app/build/
+android/.gradle
+ios/Pods/
+ios/build/
+*.xcworkspace
+*.xcodeproj
+
+# --- Infrastructure ---
+.terraform/
+*.tfstate
+*.tfstate.backup
+.kube/
 
 # --- Agentic Tools ---
 .opencode/
@@ -115,6 +122,4 @@ test-results/
 !.claude/skills
 !.claude/agents
 !.claude/workflows
-# Note: .agent/ is NOT ignored as it contains project-specific AI instructions
-# Note: .ralphy/ is NOT ignored as it contains project rules
-node_modules/
+!.agent/
