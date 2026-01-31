@@ -6,177 +6,220 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { registerUserSchema, RegisterUserRequest } from '@/types';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { Camera, ChevronRight, CheckCircle2, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { 
+  Camera, 
+  ChevronRight, 
+  CheckCircle2, 
+  ShieldCheck, 
+  ArrowLeft,
+  Loader2,
+  ScanFace,
+  Fingerprint
+} from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterUserRequest>({
-   resolver: zodResolver(registerUserSchema)
+    resolver: zodResolver(registerUserSchema)
   });
 
   const mutation = useMutation({
-   mutationFn: (data: RegisterUserRequest) => {
-     return api.post('/accounts/register', data);
-   },
-   onSuccess: () => {
-     setStep(3); // Success step
-     setTimeout(() => router.push('/login'), 2000);
-   },
-   onError: (error) => {
-     console.error('Registration failed:', error);
-     alert('Pendaftaran gagal. Silakan coba lagi.');
-   }
+    mutationFn: (data: RegisterUserRequest) => api.post('/accounts/register', data),
+    onSuccess: () => {
+      setStep(3);
+      setTimeout(() => router.push('/login'), 2500);
+    },
+    onError: (error) => {
+      console.error('Registration failed:', error);
+      alert('Pendaftaran gagal. Silakan coba lagi.');
+    }
   });
 
-  const onSubmit = (data: RegisterUserRequest) => {
-   mutation.mutate(data);
-  };
-
   return (
-   <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
-     {/* Background Decor */}
-     <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-bank-green/5 rounded-full blur-[120px]" />
-     <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-bank-emerald/5 rounded-full blur-[120px]" />
+    <div className="min-h-screen w-full flex bg-background font-inter">
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex flex-col justify-between w-[45%] bg-zinc-900 border-r border-border/10 p-12 relative overflow-hidden text-white">
+        {/* Background Effects */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
+        <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
-     <div className="max-w-xl w-full relative z-10">
-      {/* Header */}
-      <div className="mb-12 flex justify-between items-center">
-        <Link href="/login" className="p-3 bg-card/80 backdrop-blur-md hover:bg-gray-100 dark:hover:bg-gray-800 rounded-2xl border border-border transition-all active:scale-95 shadow-sm">
-         <ArrowLeft className="h-6 w-6" />
-        </Link>
-        <div className="flex items-center gap-3 bg-bank-green/10 px-4 py-2 rounded-full border border-bank-green/20">
-         <div className="h-2 w-2 bg-bank-green rounded-full animate-pulse" />
-         <span className="text-xs font-bold tracking-[0.2em] text-bank-green">Protokol Identitas</span>
+        <div className="relative z-10">
+          <Link href="/" className="flex items-center gap-3 w-fit hover:opacity-80 transition-opacity">
+            <ArrowLeft className="w-5 h-5 text-white/70" />
+            <span className="font-medium text-white/90">Kembali</span>
+          </Link>
         </div>
-        <div className="w-12" />
+
+        <div className="relative z-10 max-w-lg space-y-8">
+            <div className="space-y-4">
+                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+                    <ScanFace className="w-8 h-8 text-emerald-400" />
+                </div>
+                <h1 className="text-4xl font-bold leading-tight tracking-tight">
+                    Verifikasi Identitas Digital.
+                </h1>
+                <p className="text-zinc-400 leading-relaxed text-lg">
+                    Bergabung dengan 2 Juta+ pengguna yang telah mempercayakan masa depan finansial mereka pada ekosistem PayU.
+                </p>
+            </div>
+
+            <div className="space-y-6 pt-4">
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                    <Fingerprint className="w-6 h-6 text-emerald-400 shrink-0 mt-1" />
+                    <div>
+                        <h3 className="font-bold text-white mb-1">e-KYC Instant Liveness</h3>
+                        <p className="text-sm text-zinc-400">Verifikasi wajah biometrik otomatis tanpa antri video call agent.</p>
+                    </div>
+                </div>
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                    <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0 mt-1" />
+                    <div>
+                        <h3 className="font-bold text-white mb-1">Data Sovereignty</h3>
+                        <p className="text-sm text-zinc-400">Data pribadi Anda dienkripsi penuh dan tidak pernah dibagikan ke pihak ketiga.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div className="relative z-10 flex items-center gap-2 text-zinc-500 text-xs font-mono">
+           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+           System Operational • v2.4.0
+        </div>
       </div>
 
-      {/* Progress Tracker */}
-      <div className="flex justify-between items-center mb-16 relative px-4">
-        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-gray-100 dark:bg-gray-900 -z-0" />
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-bank-green transition-all duration-700 -z-0" style={{ width: `${((step - 1) / 2) * 100}%` }} />
+      {/* Right Panel - Form Flow */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background relative">
+        <div className="w-full max-w-[520px]">
+            {/* Progress Steps */}
+            <div className="mb-10">
+                <div className="flex items-center justify-between relative">
+                    <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-muted -z-10" />
+                    {[1, 2, 3].map((s) => (
+                        <div key={s} className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-4 transition-all duration-500 ${step >= s ? 'bg-emerald-600 border-emerald-100 text-white' : 'bg-background border-muted text-muted-foreground'}`}>
+                            {step > s ? <CheckCircle2 className="w-5 h-5" /> : s}
+                        </div>
+                    ))}
+                </div>
+                <div className="flex justify-between mt-2 text-xs font-medium text-muted-foreground px-1">
+                    <span>Identitas</span>
+                    <span>Profil</span>
+                    <span>Selesai</span>
+                </div>
+            </div>
+            
+            <AnimatePresence mode="wait">
+                {step === 1 && (
+                    <motion.div 
+                        key="step1"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-8"
+                    >
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-bold">Unggah e-KTP</h2>
+                            <p className="text-muted-foreground">Foto KTP asli Anda untuk validasi data otomatis</p>
+                        </div>
 
-        {[1, 2, 3].map((s) => (
-         <div key={s} className="relative z-10 flex flex-col items-center">
-           <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl transition-all duration-700 shadow-2xl ${step >= s ? 'bg-bank-green text-white scale-110 shadow-bank-green/30' : 'bg-card text-gray-300 border border-border'}`}>
-            {s}
-           </div>
-         </div>
-        ))}
+                        <div className="border-2 border-dashed border-muted-foreground/25 hover:border-emerald-500/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-2xl p-12 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4">
+                            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Camera className="w-8 h-8 text-emerald-600" />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="font-bold text-foreground">Klik untuk ambil foto</p>
+                                <p className="text-xs text-muted-foreground">JPG, PNG maks 5MB</p>
+                            </div>
+                        </div>
+
+                        <Button onClick={() => setStep(2)} className="w-full h-12 text-base font-bold bg-emerald-600 hover:bg-emerald-500">
+                            Lanjut ke Profil Data <ChevronRight className="ml-2 w-4 h-4" />
+                        </Button>
+                    </motion.div>
+                )}
+
+                {step === 2 && (
+                    <motion.div
+                        key="step2"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                         <div className="text-center space-y-2 mb-8">
+                            <h2 className="text-2xl font-bold">Lengkapi Profil</h2>
+                            <p className="text-muted-foreground">Isi data diri sesuai identitas resmi</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-5">
+                            <div className="grid grid-cols-2 gap-5">
+                                <div className="space-y-2 col-span-2">
+                                    <Label>Nomor Induk Kependudukan (NIK)</Label>
+                                    <Input {...register('nik')} placeholder="16 digit angka..." className="h-12" />
+                                    {errors.nik && <p className="text-red-500 text-xs">{errors.nik.message}</p>}
+                                </div>
+                                <div className="space-y-2 col-span-2">
+                                    <Label>Nama Lengkap</Label>
+                                    <Input {...register('fullName')} placeholder="Sesuai KTP" className="h-12" />
+                                    {errors.fullName && <p className="text-red-500 text-xs">{errors.fullName.message}</p>}
+                                </div>
+                                <div className="space-y-2 col-span-2 md:col-span-1">
+                                    <Label>Email</Label>
+                                    <Input {...register('email')} type="email" placeholder="nama@email.com" className="h-12" />
+                                    {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
+                                </div>
+                                <div className="space-y-2 col-span-2 md:col-span-1">
+                                    <Label>Username</Label>
+                                    <Input {...register('username')} placeholder="unik & mudah diingat" className="h-12" />
+                                    {errors.username && <p className="text-red-500 text-xs">{errors.username.message}</p>}
+                                </div>
+                            </div>
+                            
+                            <input type="hidden" {...register('externalId')} defaultValue="KTP-PREMIUM-V2" />
+
+                            <div className="pt-4 flex gap-4">
+                                <Button type="button" variant="outline" onClick={() => setStep(1)} className="h-12 px-6">
+                                    Kembali
+                                </Button>
+                                <Button type="submit" className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 font-bold" disabled={mutation.isPending}>
+                                    {mutation.isPending ? <Loader2 className="animate-spin" /> : 'Konfirmasi Pendaftaran'}
+                                </Button>
+                            </div>
+                        </form>
+                    </motion.div>
+                )}
+
+                {step === 3 && (
+                    <motion.div
+                        key="step3"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-10 space-y-6"
+                    >
+                        <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <CheckCircle2 className="w-12 h-12 text-emerald-600" />
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-3xl font-bold text-foreground">Akun Siap Digunakan!</h2>
+                            <p className="text-muted-foreground max-w-xs mx-auto">
+                                Redirecting you to the secure login gateway in a few seconds...
+                            </p>
+                        </div>
+                        <div className="pt-4">
+                            <Loader2 className="w-6 h-6 text-emerald-500 animate-spin mx-auto" />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
       </div>
-
-      {/* Form Sections */}
-      <div className="bg-card/80 backdrop-blur-xl rounded-xl p-10 border border-border shadow-2xl min-h-[450px] flex flex-col justify-center relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-bank-green/5 rounded-full blur-3xl" />
-
-        {step === 1 && (
-         <div className="space-y-12 animate-in slide-in-from-right duration-700">
-           <div className="text-center">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Verifikasi eKYC.</h2>
-            <p className="text-xs font-semibold text-muted-foreground leading-relaxed max-w-sm mx-auto">Unggah identitas resmi pemerintah (KTP) Anda untuk memulai pemetaan identitas biologis.</p>
-           </div>
-
-           <div className="aspect-video bg-gray-50 dark:bg-gray-900/50 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-border cursor-pointer hover:border-bank-green hover:bg-bank-green/5 transition-all duration-500 group/upload">
-            <div className="w-24 h-24 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center mb-6 shadow-2xl group-hover/upload:scale-110 transition-transform duration-500">
-              <Camera className="h-10 w-10 text-bank-green" />
-            </div>
-            <span className="text-xs font-bold text-gray-400 group-hover/upload:text-bank-green tracking-[0.2em]">Ambil Gambar Identitas</span>
-           </div>
-
-           <button
-            onClick={() => setStep(2)}
-            className="w-full bg-bank-green text-white py-6 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-[0.98] shadow-2xl shadow-bank-green/20 flex items-center justify-center gap-3"
-           >
-            Mulai Proses Verifikasi <ChevronRight className="h-5 w-5" />
-           </button>
-           <div className="flex items-center justify-center gap-3 text-xs font-bold text-gray-400 tracking-widest bg-gray-50 dark:bg-gray-900/50 py-3 rounded-xl border border-border">
-            <ShieldCheck className="h-4 w-4 text-bank-green" /> ENKRIPSI AMAN SESUAI STANDAR OJK & BI
-           </div>
-         </div>
-        )}
-
-        {step === 2 && (
-         <form onSubmit={handleSubmit(onSubmit)} className="space-y-12 animate-in slide-in-from-right duration-700">
-           <div className="text-center mb-4">
-            <h2 className="text-4xl font-bold text-foreground mb-3">Profil Akun.</h2>
-            <p className="text-xs font-semibold text-muted-foreground">Petakan identitas unik Anda ke dalam Buku Besar (Ledger) finansial kami.</p>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="group">
-              <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">Nomor NIK (16 Digit)</label>
-              <input
-               {...register('nik')}
-               type="text"
-               className="w-full rounded-xl border-border bg-gray-50 dark:bg-gray-900/50 p-5 text-foreground font-bold placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none"
-               placeholder="3200..."
-              />
-              {errors.nik && <p className="text-red-500 text-xs mt-3 pl-3 font-bold tracking-widest">{errors.nik.message}</p>}
-            </div>
-
-            <div className="group">
-              <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">Nama Lengkap Sesuai KTP</label>
-              <input
-               {...register('fullName')}
-               type="text"
-               className="w-full rounded-xl border-border bg-gray-50 dark:bg-gray-900/50 p-5 text-foreground font-bold placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none"
-               placeholder="NAMA LENGKAP ANDA"
-              />
-              {errors.fullName && <p className="text-red-500 text-xs mt-3 pl-3 font-bold tracking-widest">{errors.fullName.message}</p>}
-            </div>
-
-            <div className="group">
-              <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">Alamat Email Digital</label>
-              <input
-               {...register('email')}
-               type="email"
-               className="w-full rounded-xl border-border bg-gray-50 dark:bg-gray-900/50 p-5 text-foreground font-bold placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none"
-               placeholder="nama@domain.com"
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-3 pl-3 font-bold tracking-widest">{errors.email.message}</p>}
-            </div>
-
-            <div className="group">
-              <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">Nama Pengguna (Username)</label>
-              <input
-               {...register('username')}
-               type="text"
-               className="w-full rounded-xl border-border bg-gray-50 dark:bg-gray-900/50 p-5 text-foreground font-bold placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none"
-               placeholder="NAMA_PENGGUNA_UNIK"
-              />
-              {errors.username && <p className="text-red-500 text-xs mt-3 pl-3 font-bold tracking-widest">{errors.username.message}</p>}
-            </div>
-           </div>
-
-           <input type="hidden" {...register('externalId')} defaultValue="KTP-PREMIUM" />
-
-           <div className="pt-6">
-            <button
-              type="submit"
-              disabled={mutation.isPending}
-              className="w-full bg-bank-green text-white py-6 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-[0.98] shadow-2xl shadow-bank-green/20"
-            >
-              {mutation.isPending ? 'Menyebarkan Identitas...' : 'Konfirmasi Pembuatan Akun'}
-            </button>
-           </div>
-         </form>
-        )}
-
-        {step === 3 && (
-         <div className="flex flex-col items-center justify-center py-16 animate-in zoom-in duration-700 text-center relative z-10">
-           <div className="w-28 h-28 bg-bank-green/10 rounded-xl flex items-center justify-center mb-10 shadow-[0_0_50px_rgba(16,185,129,0.2)] border border-bank-green/20">
-            <CheckCircle2 className="h-14 w-14 text-bank-green" />
-           </div>
-           <h2 className="text-5xl font-bold text-foreground mb-4">Pendaftaran Berhasil.</h2>
-           <p className="text-xs font-semibold text-muted-foreground max-w-sm leading-relaxed mx-auto">Pemetaan identitas selesai. Menginisialisasi kantong utama dan dompet sekunder. Mengalihkan ke terminal akses...</p>
-         </div>
-        )}
-      </div>
-     </div>
-   </div>
+    </div>
   );
 }

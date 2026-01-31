@@ -8,122 +8,156 @@ import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CheckCircle2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-/**
- * SECURITY NOTICE: Token Storage
- * ================================
- * This component does NOT store JWT tokens in localStorage/sessionStorage.
- * Tokens are managed exclusively via httpOnly cookies from the backend.
- *
- * Why httpOnly cookies?
- * - Prevents XSS attacks from stealing tokens
- * - Browser automatically includes cookies with requests
- * - HttpOnly flag prevents JavaScript access
- * - Secure flag ensures HTTPS-only transmission
- * - SameSite flag prevents CSRF attacks
- *
- * Only non-sensitive user profile data is stored in the auth store.
- */
 export default function LoginPage() {
- const router = useRouter();
- const setAuth = useAuthStore((state) => state.setAuth);
+  const router = useRouter();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
- const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
-  resolver: zodResolver(loginSchema)
- });
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
+    resolver: zodResolver(loginSchema)
+  });
 
- const mutation = useMutation({
-  mutationFn: (data: LoginRequest) => {
-   return api.post('/auth/login', data);
-  },
-  onSuccess: (response) => {
-   // SECURITY: Tokens are set by backend as httpOnly cookies
-   // We only store non-sensitive user profile data in the auth store
-   const { user } = response.data;
-   if (user) {
-    setAuth(user, user.id);
-   }
-   router.push('/');
-  },
-  onError: (error) => {
-   console.error('Login failed:', error);
-   alert('Login gagal. Silakan periksa kembali kredensial Anda.');
-  }
- });
+  const mutation = useMutation({
+    mutationFn: (data: LoginRequest) => api.post('/auth/login', data),
+    onSuccess: (response) => {
+      const { user } = response.data;
+      if (user) setAuth(user, user.id);
+      router.push('/');
+    },
+    onError: (error) => {
+      console.error('Login failed:', error);
+      alert('Login gagal. Silakan periksa kembali kredensial Anda.');
+    }
+  });
 
- const onSubmit = (data: LoginRequest) => {
-  mutation.mutate(data);
- };
+  return (
+    <div className="min-h-screen w-full flex bg-background font-inter">
+      {/* Left Panel - Branding (Hidden on mobile) */}
+      <div className="hidden lg:flex flex-col justify-between w-1/2 bg-zinc-900 border-r border-border/10 p-12 relative overflow-hidden text-white">
+        {/* Background Effects */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-bank-green/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
+        
+        {/* Pattern Overlay */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
- return (
-  <div className="min-h-screen bg-background flex flex-col p-6 items-center justify-center relative overflow-hidden">
-   {/* Background Decor */}
-   <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-bank-green/5 rounded-full blur-[120px]" />
-   <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-bank-emerald/5 rounded-full blur-[120px]" />
+        <div className="relative z-10">
+            <Link href="/" className="flex items-center gap-3 w-fit">
+                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <span className="text-white font-bold text-xl">U</span>
+                </div>
+                <span className="text-2xl font-bold tracking-tight text-white">PayU</span>
+            </Link>
+        </div>
 
-   <div className="max-w-md w-full space-y-12 relative z-10">
-    <div className="text-center">
-     <div className="relative h-24 w-24 mx-auto mb-10 bg-bank-green rounded-xl flex items-center justify-center text-white text-4xl font-bold shadow-2xl shadow-bank-green/30 transition-transform hover:rotate-12 duration-500">
-      <span>U</span>
-      <div className="absolute top-4 right-4 h-2.5 w-2.5 bg-white rounded-full animate-pulse shadow-[0_0_10px_white]"></div>
-     </div>
-     <h1 className="text-5xl font-bold text-foreground mb-3">Selamat Datang.</h1>
-     <p className="text-gray-400 font-bold tracking-[0.2em] text-xs">Portal Perbankan Digital Aman</p>
+        <div className="relative z-10 max-w-lg space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/30 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-widest uppercase mb-4">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Enterprise Grade Security</span>
+            </div>
+            <h1 className="text-5xl font-bold leading-tight tracking-tight">
+                Platform Perbankan Digital <span className="text-emerald-500">Masa Depan.</span>
+            </h1>
+            <p className="text-lg text-zinc-400 leading-relaxed">
+                Kelola aset, investasi, dan transaksi harian Anda dalam satu ekosistem yang aman, terenkripsi, dan terintegrasi penuh.
+            </p>
+
+            <div className="pt-8 space-y-4">
+                {[
+                    "Enkripsi End-to-End Standar Militer",
+                    "Monitoring Transaksi Real-time AI",
+                    "Integrasi Pembayaran QRIS & BI-FAST"
+                ].map((feature, i) => (
+                    <div key={i} className="flex items-center gap-3 text-zinc-300">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        <span className="font-medium">{feature}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+
+        <div className="relative z-10 text-zinc-500 text-xs font-mono">
+            © 2026 PayU Financial Infrastructure. Secure Environment.
+        </div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-background relative">
+        <div className="w-full max-w-[420px] space-y-8">
+            <div className="text-center lg:text-left space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Selamat Datang Kembali</h2>
+                <p className="text-muted-foreground">Masuk ke dashboard finansial Anda</p>
+            </div>
+
+            <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="username">Username</Label>
+                        <Input
+                            id="username"
+                            placeholder="username123"
+                            {...register('username')}
+                            className="h-12 bg-muted/30"
+                            disabled={mutation.isPending}
+                        />
+                         {errors.username && <p className="text-red-500 text-xs font-medium">{errors.username.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="password">Password</Label>
+                            <Link href="#" className="text-xs font-medium text-emerald-600 hover:text-emerald-500 hover:underline">
+                                Lupa password?
+                            </Link>
+                        </div>
+                        <Input
+                            id="password"
+                            type="password"
+                            placeholder="••••••••"
+                            {...register('password')}
+                            className="h-12 bg-muted/30"
+                            disabled={mutation.isPending}
+                        />
+                        {errors.password && <p className="text-red-500 text-xs font-medium">{errors.password.message}</p>}
+                    </div>
+                </div>
+
+                <Button 
+                    type="submit" 
+                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                    disabled={mutation.isPending}
+                >
+                    {mutation.isPending ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Masuk...
+                        </>
+                    ) : (
+                        "Masuk ke Akun"
+                    )}
+                </Button>
+            </form>
+
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-4 text-muted-foreground font-medium">Atau</span>
+                </div>
+            </div>
+
+            <div className="text-center text-sm">
+                Belum memiliki akun?{" "}
+                <Link href="/onboarding" className="font-bold text-emerald-600 hover:text-emerald-500 hover:underline inline-flex items-center">
+                    Daftar Sekarang <ArrowRight className="ml-1 w-3 h-3" />
+                </Link>
+            </div>
+        </div>
+      </div>
     </div>
-
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-     <div className="space-y-8">
-      <div className="group">
-       <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">Pengenal Kredensial (Username)</label>
-       <input
-        {...register('username')}
-        type="text"
-        className="w-full rounded-xl border-border bg-card/50 backdrop-blur-sm p-6 text-foreground placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all font-bold text-lg outline-none"
-        placeholder="Username atau ID Akun"
-       />
-       {errors.username && <p className="text-red-500 text-xs mt-3 pl-3 font-bold tracking-widest">{errors.username.message}</p>}
-      </div>
-
-      <div className="group">
-       <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">Kunci Kata Sandi (Password)</label>
-       <input
-        {...register('password')}
-        type="password"
-        className="w-full rounded-xl border-border bg-card/50 backdrop-blur-sm p-6 text-foreground placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all font-bold text-lg outline-none"
-        placeholder="••••••••••••"
-       />
-       {errors.password && <p className="text-red-500 text-xs mt-3 pl-3 font-bold tracking-widest">{errors.password.message}</p>}
-      </div>
-
-      <div className="flex justify-end pr-2">
-       <a href="#" className="text-xs font-bold text-bank-green tracking-[0.2em] hover:underline">Lupa / Riset Akses ?</a>
-      </div>
-     </div>
-
-     <div className="space-y-6 pt-4">
-      <button
-       type="submit"
-       disabled={mutation.isPending}
-       className="w-full bg-bank-green text-white py-6 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald active:scale-[0.98] transition-all shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50"
-      >
-       {mutation.isPending ? 'Memvalidasi Akun...' : 'Inisialisasi Akses'}
-      </button>
-      <div className="h-0.5 w-full bg-gray-100 dark:bg-gray-900 rounded-full" />
-      <p className="text-center text-gray-400 font-bold tracking-[0.2em] text-xs">
-       Protokol Autentikasi v1.4.2-IND
-      </p>
-     </div>
-    </form>
-
-    <div className="text-center pt-6">
-     <p className="text-gray-400 font-bold tracking-widest text-xs">
-      Baru di platform ini?{' '}
-      <Link href="/onboarding" className="text-bank-green hover:underline">
-       Buat Akun Baru
-      </Link>
-     </p>
-    </div>
-   </div>
-  </div>
- );
+  );
 }
