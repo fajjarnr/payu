@@ -1,7 +1,7 @@
 'use client';
 
-import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar, Zap, Truck } from "lucide-react";
-import { useForm, useWatch } from 'react-hook-form';
+import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar as CalendarIcon, Zap, Truck } from "lucide-react";
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { transferSchema, TransferRequest, TransferType, TransferScheduleType } from '@/types';
 import { useState, useCallback, useMemo } from 'react';
@@ -11,6 +11,11 @@ import { useUIStore } from '@/stores';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 const TRANSFER_TYPES: { type: TransferType; label: string; description: string; icon: React.ComponentType<{ className?: string }>; fee: string; maxLimit: string; processingTime: string }[] = [
   {
@@ -257,7 +262,9 @@ export default function TransferPage() {
                       </div>
                       <p className="font-bold text-foreground text-sm">{selectedScheduleType?.label}</p>
                       {scheduleType === 'SCHEDULED' && scheduledAt && (
-                        <p className="text-xs text-muted-foreground mt-1">{new Date(scheduledAt).toLocaleDateString('id-ID')}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(scheduledAt), 'PPP', { locale: id })}
+                        </p>
                       )}
                       {scheduleType === 'RECURRING' && (
                         <p className="text-xs text-muted-foreground mt-1">Tanggal {recurringDay || '-'}-{recurringMonth || 'setiap bulan'}</p>
@@ -385,14 +392,42 @@ export default function TransferPage() {
 
                   {scheduleType === 'SCHEDULED' && (
                     <div className="mt-6 bg-muted/50 p-6 rounded-xl border border-border">
-                      <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2 block">Tanggal Transfer</label>
-                      <input
-                        {...register('scheduledAt')}
-                        type="datetime-local"
-                        className="w-full px-4 py-3 rounded-lg border border-border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-bold"
-                        min={new Date().toISOString().slice(0, 16)}
+                      <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">Tanggal Transfer</label>
+                      <Controller
+                        control={control}
+                        name="scheduledAt"
+                        render={({ field }) => (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={clsx(
+                                  "w-full justify-start text-left font-bold py-7 rounded-xl border-border bg-card hover:bg-muted/50 transition-all",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
+                                {field.value ? (
+                                  format(new Date(field.value), "PPP", { locale: id })
+                                ) : (
+                                  <span className="text-muted-foreground/40 font-bold uppercase tracking-widest text-xs">Pilih Tanggal Transfer</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 border-border bg-card" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value ? new Date(field.value) : undefined}
+                                onSelect={(date) => field.onChange(date?.toISOString())}
+                                initialFocus
+                                locale={id}
+                                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
                       />
-                      {errors.scheduledAt && <p className="text-destructive text-xs mt-2 font-bold tracking-widest uppercase">{errors.scheduledAt.message}</p>}
+                      {errors.scheduledAt && <p className="text-destructive text-xs mt-3 font-bold tracking-widest uppercase">{errors.scheduledAt.message}</p>}
                     </div>
                   )}
 
