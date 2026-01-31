@@ -8,12 +8,12 @@ interface SkeletonProps {
 }
 
 export const Skeleton = ({ className }: SkeletonProps) => (
- <div
-  className={clsx(
-   'animate-pulse bg-gray-100 dark:bg-gray-800 rounded',
-   className
-  )}
- />
+  <div
+    className={clsx(
+      'animate-pulse bg-muted/60 rounded',
+      className
+    )}
+  />
 );
 
 export const SkeletonCard = () => (
@@ -64,13 +64,13 @@ export const SkeletonChart = () => (
 );
 
 export const SkeletonBalance = () => (
- <div className="space-y-4">
-  <div className="flex items-center gap-2 mb-2">
-   <div className="h-2 w-2 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse" />
-   <Skeleton className="h-3 w-24 rounded" />
+  <div className="space-y-4">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="h-2 w-2 bg-muted-foreground/40 rounded-full animate-pulse" />
+      <Skeleton className="h-3 w-24 rounded" />
+    </div>
+    <Skeleton className="h-16 w-64 rounded" />
   </div>
-  <Skeleton className="h-16 w-64 rounded" />
- </div>
 );
 
 export const SkeletonStatsGrid = ({ count = 4 }: { count?: number }) => (

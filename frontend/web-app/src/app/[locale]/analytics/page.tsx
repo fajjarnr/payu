@@ -75,8 +75,8 @@ export default function AnalyticsPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8">
+          <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
+            <div className="md:col-span-6 lg:col-span-8">
               <div className="bg-card rounded-xl p-10 border border-border shadow-sm h-full relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl" />
                 <div className="flex justify-between items-center mb-10 relative z-10">
@@ -118,7 +118,7 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-4">
+            <div className="md:col-span-6 lg:col-span-4">
               <div className="bg-card rounded-xl p-10 border border-border shadow-sm h-full flex flex-col group">
                 <h3 className="text-xl font-black text-foreground mb-10">Rincian Pengeluaran</h3>
 

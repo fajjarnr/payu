@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { Home, Wallet, Repeat, Receipt } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/stores';
@@ -11,58 +12,63 @@ import { useAuthStore } from '@/stores';
  * ================================
  * This component uses the auth store to check authentication status.
  * It does NOT access tokens from localStorage (security vulnerability).
- *
- * Tokens are managed exclusively via httpOnly cookies from the backend.
- * The auth store only tracks authentication state, not actual tokens.
  */
 export default function MobileNav() {
- const pathname = usePathname();
- const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const t = useTranslations('nav');
+  const locale = useLocale();
+  const pathname = usePathname();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
- const navItems = [
-  { href: '/', icon: Home, label: 'Beranda' },
-  { href: '/transfer', icon: Repeat, label: 'Transfer' },
-  { href: '/pockets', icon: Wallet, label: 'Kantong' },
-  { href: '/bills', icon: Receipt, label: 'Tagihan' },
- ];
+  // Helper to localize paths
+  const l = (path: string) => locale === 'id' ? path : `/${locale}${path}`;
 
- // Don't show nav on login or onboarding
- if (pathname === '/login' || pathname === '/onboarding') return null;
+  const navItems = [
+    { href: l('/dashboard'), icon: Home, label: t('dashboard') },
+    { href: l('/transfer'), icon: Repeat, label: t('transfers') },
+    { href: l('/pockets'), icon: Wallet, label: t('accounts') },
+    { href: l('/bills'), icon: Receipt, label: t('bills') },
+  ];
 
- // Don't show if not authenticated
- // SECURITY: Uses auth store state, NOT localStorage tokens
- if (!isAuthenticated) return null;
+  // Don't show nav on login or onboarding
+  if (pathname.includes('/login') || pathname.includes('/onboarding')) return null;
 
- return (
-  <div className={clsx(
-   "fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-xl border-t border-border pb-safe pt-2 px-6 z-50",
-   "lg:hidden" // Hide on desktop
-  )}>
-   <div className="flex justify-between items-center max-w-md mx-auto h-16">
-    {navItems.map((item) => {
-     const isActive = pathname === item.href;
-     return (
-      <Link
-       key={item.href}
-       href={item.href}
-       className={clsx(
-        "flex flex-col items-center gap-1 p-2 transition-all relative group",
-        isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-       )}
-      >
-       <div className={clsx(
-        "p-2 rounded-xl transition-all",
-        isActive ? "bg-accent shadow-sm" : "group-hover:bg-muted"
-       )}>
-        <item.icon className={clsx("h-5 w-5 transition-transform", isActive ? "stroke-[2.5px] scale-110" : "scale-100")} />
-       </div>
-       <span className={clsx("text-[9px] font-bold tracking-wider transition-all", isActive ? "opacity-100" : "opacity-0 h-0 overflow-hidden")}>
-        {item.label}
-       </span>
-      </Link>
-     );
-    })}
-   </div>
-  </div>
- );
+  // Don't show if not authenticated
+  if (!isAuthenticated) return null;
+
+  return (
+    <div className={clsx(
+      "fixed bottom-0 left-0 right-0 bg-card/70 backdrop-blur-2xl border-t border-border pb-[env(safe-area-inset-bottom,1.5rem)] pt-3 px-8 z-50",
+      "lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl"
+    )} role="navigation" aria-label="Navigasi Mobile">
+      <div className="flex justify-between items-center max-w-lg mx-auto h-16">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={clsx(
+                "flex flex-col items-center gap-1.5 transition-all relative group",
+                isActive ? "text-emerald-500 scale-105" : "text-foreground/40 hover:text-foreground"
+              )}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <div className={clsx(
+                "p-3 rounded-2xl transition-all duration-300",
+                isActive ? "bg-emerald-500/10 shadow-[inset_0_0_15px_rgba(16,185,129,0.1)] border border-emerald-500/20" : "group-hover:bg-foreground/5 "
+              )}>
+                <item.icon className={clsx("h-6 w-6 transition-all", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} aria-hidden="true" />
+              </div>
+              <span className={clsx(
+                "text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-300 transform",
+                isActive ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 h-0 overflow-hidden"
+              )}>
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

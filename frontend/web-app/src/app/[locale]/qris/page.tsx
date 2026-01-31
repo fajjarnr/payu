@@ -18,9 +18,9 @@ export default function QRISPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-10">
           {/* QR Scanner Area */}
-          <div className="lg:col-span-8">
+          <div className="md:col-span-6 lg:col-span-8">
             <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm flex flex-col items-center justify-center p-12 min-h-[500px] relative group">
               {/* Decorative Background */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
@@ -48,7 +48,7 @@ export default function QRISPage() {
           </div>
 
           {/* Quick Info & History */}
-          <div className="lg:col-span-4 space-y-8">
+          <div className="md:col-span-6 lg:col-span-4 space-y-8">
             <div className="bg-card rounded-xl p-10 shadow-sm border border-border">
               <h3 className="text-sm font-bold text-foreground mb-8 tracking-wide">Keamanan Pembayaran</h3>
               <div className="space-y-8">

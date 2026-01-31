@@ -30,9 +30,9 @@ export default function CardsPage() {
                         </StaggerItem>
 
                         {/* Main Content */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
                             {/* Main Card View */}
-                            <StaggerItem className="lg:col-span-12">
+                            <StaggerItem className="md:col-span-6 lg:col-span-12">
                                 <div className="bg-card rounded-xl p-8 sm:p-12 border border-border shadow-card relative overflow-hidden flex flex-col items-center group">
                                     <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-0" />
 
@@ -90,7 +90,7 @@ export default function CardsPage() {
                             </StaggerItem>
 
                             {/* Controls Section */}
-                            <StaggerItem className="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <StaggerItem className="md:col-span-6 lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card flex flex-col">
                                     <h3 className="text-xl font-black text-foreground mb-10">Kontrol Operasional</h3>
                                     <div className="space-y-8">

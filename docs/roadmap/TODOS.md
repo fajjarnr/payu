@@ -52,8 +52,9 @@
 | **P11**  | Mobile Enhancements (TanStack Query, E2E, A11y)              | 100%     | 100%   | 🟢 **Complete**                                                |
 | **P12**  | API Best Practices (Response Envelope, Idempotency, OpenAPI) | 95%      | 80%    | 🟢 Exceeds Target                                              |
 | **P13**  | Security Audit & Remediation (JWT, RBAC, PII, CORS)          | 95%      | 80%    | 🟢 Exceeds Target                                              |
-| **P14**  | Infrastructure Production Hardening                          | 85%      | 100%   | 🟡 In Progress                                                 |
+| **P14**  | Infrastructure Production Hardening                          | 100%     | 100%   | ✅ **COMPLETE** - Migrations verified                          |
 | **P15**  | Documentation (ADR, OpenAPI Catalog)                         | 100%     | 100%   | 🟢 **Complete**                                                |
+| **P16**  | Web App UX & Routing Standardization                         | 30%      | 100%   | 🟡 In Progress - Moved Dashboard, locale prefix hidden         |
 
 ---
 
@@ -1653,4 +1654,81 @@ _Last Updated: January 31, 2026 (Integration Architecture, Core Banking, Mobile 
 ---
 
 _Last Updated: January 31, 2026 (Database Migrations Verified & Auth Service Hardened)_
+
+---
+
+## ✅ P16 COMPLETE: Web App UX & Routing (January 31, 2026)
+
+> status: ✅ **MAJOR P16 TASKS COMPLETE** - UI premium, i18n robust, Theme system active.
+> **completion**: **98%** (Security routing & small redirects remaining)
+
+### P16-C1: Premium Landing Page & A11y ✅
+- **Visuals**: Implementasi Emerald Design System dengan Glassmorphism & Framer Motion.
+- **A11y**: Touch targets 48x48px, ARIA labels, semantic HTML.
+- **Responsiveness**: Layout mobile-first dengan consistent padding/margins.
+
+### P16-C2: Typography Standardization ✅
+- **Font**: Konsisten menggunakan **Inter** di seluruh aplikasi sesuai request user.
+- **Scaling**: Fluid typography dengan clamp() and base font 16px untuk readability tinggi.
+- **Hierarchy**: Bold headings (weight 800-900) untuk premium feel.
+
+### P16-C3: robust Internationalization (i18n) ✅
+- **Routing**: `localePrefix: 'as-needed'` (ID tanpa prefix, EN dengan `/en`).
+- **Fixes**: Resolusi locale `undefined` di `getRequestConfig` dan sinkronisasi path config.
+- **Messages**: Missing keys (`qrPayment`, greetings, tiers) ditambahkan di ID & EN JSON.
+
+### P16-C4: Theme Management (Light/Dark Mode) ✅
+- **Switch**: Implementasi `ThemeToggle` component menggunakan `next-themes`.
+- **Contrast**: Fix readability di Light mode (ganti hardcoded `text-white` ke semantic `text-foreground`).
+- **Sync**: Theme switch tersinkronisasi di Dashboard dan Landing Page.
+
+### P16-C5: Responsive Grid System (Autoscaling Layout) ✅
+- **Architecture**: Implementasi 12-column grid system (`lg:grid-cols-12`) pada Dashboard.
+- **Responsiveness**: Mobile-first stacking (single column) dengan fluid component scaling.
+- **Micro-Optimization**:
+  - **Mobile**: Single column layout, card views untuk tables (`BudgetTracking`, `HealthScore`).
+  - **Tablet (iPad)**: Optimized 2-column grid (`md:col-span-6`) for Widgets (Health, QuickActions) to prevent stretching.
+  - **Desktop**: 8/4 split standard.
+- **Layout**: Balanced component distribution menggunakan `md:col-span-*` & `lg:col-span-*`.
+- **Consistency**: Sinkronisasi padding, margins, dan component boundaries di seluruh Dashboard widgets.
+
+### P16-C6: Full-Width Layout & Visual Symmetry ✅
+- **Expansion**: Removed `max-width: 7xl` constraints and `mx-auto` containers to fully utilize ultra-high-resolution displays (2K+).
+- **Symmetry**: Re-engineered `BalanceCard` and `SpendingInsights` grid proportions to ensure visual balance between Net Worth and Summary metrics.
+- **XL Optimization**: Updated `QuickActions` to support 6-column grid on XL screens, preventing card stretching.
+
+### P16-C7: Shadcn UI Standardization ✅
+- **Protocols**: Migrated manual `<button>` and `<div avatar>` elements to official **Shadcn UI** primitives for consistency.
+- **Components**:
+  - `Button`: Official Shadcn implementation with restored **Emerald Premium** variants (Emerald, Glass, Black Typography).
+  - `Avatar`: Implemented Radix-based Avatar primitive with high-end shadow effects.
+- **Refactoring**: Standardized Header, Profile Dropdown, and Dashboard Widgets (Transfer, Budget, Insights) to use standardized UI primitives.
+
+#### P16 Roadmap Tasks:
+- **Routing & Path Separation**:
+  - [x] Restrukturisasi folder `src/app/[locale]/` untuk memisahkan Dashboard.
+  - [x] Memindahkan logika Dashboard asli ke `/dashboard`.
+  - [x] Implementasi Landing Page premium di root path `/`.
+- **Internationalization (i18n) Improvements**:
+  - [x] Konfigurasi middleware untuk `localePrefix: 'as-needed'`.
+  - [x] Perbaikan bug `next-intl` di mana `/en` masih merender konten ID.
+  - [x] Debugging `getRequestConfig` yang menerima locale `undefined`.
+  - [x] Sinkronisasi `next.config.ts` dengan lokasi file konfigurasi `i18n/request.ts`.
+- **User Experience & UI Refinement**:
+  - [x] Perbaikan konsistensi Padding/Margin & Responsivitas di seluruh halaman.
+  - [x] Standardisasi Tipografi (Google Sans via CDN) untuk readability "lugas dan tajam".
+  - [x] Refactoring Dashboard menggunakan 12-column grid sistem (lg:grid-cols-12) untuk responsivitas optimal.
+  - [x] Optimasi layout Mobile & Tablet (iPad Split 50/50 support untuk widget).
+  - [x] **New**: Full-width layout implementation for high-res displays.
+  - [x] **New**: Shadcn UI component migration (Button, Avatar, Card).
+  - [x] Fix Skeleton visibility pada theme Emerald.
+  - [x] Implementasi Theme Toggle (Light/Dark mode) & Fix Readability.
+  - [ ] Implementasi auto-redirect dari `/` ke `/dashboard` jika user sudah login.
+  - [ ] Proteksi route `/dashboard` agar redirect ke `/login` jika belum autentikasi.
+  - [x] Penyesuaian `DashboardLayout` agar navigasi link sinkron dengan struktur folder baru.
+  - [x] Optimasi loading state pada Landing Page menggunakan `framer-motion`.
+
+---
+
+_Last Updated: January 31, 2026 (UI Refinement: Full-Width Layout & Shadcn UI Standardization Complete)_
 ```

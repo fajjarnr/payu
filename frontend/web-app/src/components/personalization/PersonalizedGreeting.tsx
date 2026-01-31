@@ -6,6 +6,7 @@ import { Sun, Moon, Sparkles, Crown } from 'lucide-react';
 import { useUserSegment } from '@/hooks/useUserSegment';
 import { useAuthStore } from '@/stores';
 import clsx from 'clsx';
+import { useTranslations } from 'next-intl';
 
 interface PersonalizedGreetingProps {
   showTimeBased?: boolean;
@@ -18,15 +19,16 @@ export default function PersonalizedGreeting({
   showSegment = true,
   className,
 }: PersonalizedGreetingProps) {
+  const t = useTranslations('dashboard');
   const user = useAuthStore((state) => state.user);
   const { currentTier, isVIP } = useUserSegment(user?.id);
 
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return { text: 'Selamat Pagi', icon: Sun };
-    if (hour < 15) return { text: 'Selamat Siang', icon: Sun };
-    if (hour < 18) return { text: 'Selamat Sore', icon: Sun };
-    return { text: 'Selamat Malam', icon: Moon };
+    if (hour < 12) return { text: t('welcome_morning'), icon: Sun };
+    if (hour < 15) return { text: t('welcome_afternoon'), icon: Sun };
+    if (hour < 18) return { text: t('welcome_evening'), icon: Sun };
+    return { text: t('welcome_night'), icon: Moon };
   };
 
   const timeGreeting = getTimeBasedGreeting();
@@ -35,20 +37,13 @@ export default function PersonalizedGreeting({
   const getSegmentGreeting = () => {
     if (!currentTier) return '';
     switch (currentTier) {
-      case 'VIP':
-        return 'Member VIP Kami';
-      case 'DIAMOND':
-        return 'Member Diamond';
-      case 'PLATINUM':
-        return 'Member Platinum';
-      case 'GOLD':
-        return 'Member Gold';
-      case 'SILVER':
-        return 'Member Silver';
-      case 'BRONZE':
-        return 'Member Bronze';
-      default:
-        return '';
+      case 'VIP': return t('tier_vip');
+      case 'DIAMOND': return t('tier_diamond');
+      case 'PLATINUM': return t('tier_platinum');
+      case 'GOLD': return t('tier_gold');
+      case 'SILVER': return t('tier_silver');
+      case 'BRONZE': return t('tier_bronze');
+      default: return '';
     }
   };
 
@@ -63,9 +58,9 @@ export default function PersonalizedGreeting({
       >
         {showTimeBased && (
           <>
-            <TimeIcon className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">
-              {timeGreeting.text},
+            <TimeIcon className="h-4 w-4 text-emerald-500" />
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+              {timeGreeting.text}
             </span>
           </>
         )}
@@ -75,10 +70,10 @@ export default function PersonalizedGreeting({
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex items-center gap-2 flex-wrap"
+        className="flex items-center gap-3 flex-wrap"
       >
-        <span className="text-xl font-black text-foreground">
-          {user?.fullName || 'Pengguna'}!
+        <span className="text-2xl font-black text-foreground uppercase tracking-tighter">
+          {user?.fullName?.split(' ')[0] || 'User'}!
         </span>
 
         {showSegment && isVIP && (
@@ -89,7 +84,7 @@ export default function PersonalizedGreeting({
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20"
           >
             <Crown className="h-3.5 w-3.5 text-white" />
-            <span className="text-[10px] font-bold tracking-wider text-white">
+            <span className="text-[10px] font-bold tracking-[0.15em] text-white uppercase">
               {segmentGreeting}
             </span>
           </motion.span>

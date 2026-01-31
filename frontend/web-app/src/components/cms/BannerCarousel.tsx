@@ -73,7 +73,7 @@ export default function BannerCarousel({
   if (isLoading) {
     return (
       <div className={clsx('w-full', className)}>
-        <Skeleton className="h-48 sm:h-64 md:h-80 rounded-2xl" />
+        <Skeleton className="w-full h-full rounded-2xl aspect-[2/1] sm:aspect-[2.5/1] md:aspect-[3/1]" />
       </div>
     );
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRightLeft,
   QrCode,
@@ -114,6 +114,10 @@ const defaultActions: QuickAction[] = [
   },
 ];
 
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+
 export default function QuickActions({
   actions = defaultActions,
   maxActions = 6,
@@ -151,98 +155,83 @@ export default function QuickActions({
   };
 
   return (
-    <div
-      className={clsx(
-        'bg-card p-6 sm:p-8 rounded-xl border border-border shadow-card relative overflow-hidden',
-        className
-      )}
-      role="region"
-      aria-labelledby="quick-actions-title"
-    >
+    <Card className={cn("relative overflow-hidden group", className)}>
       {/* Decorative background */}
-      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
         <div>
-          <h2
-            id="quick-actions-title"
-            className="text-xs font-semibold text-muted-foreground tracking-widest mb-1"
-          >
+          <CardTitle className="text-sm font-black text-foreground tracking-widest uppercase">
             {t('quickActionsTitle')}
-          </h2>
-          <p className="text-[10px] text-muted-foreground">
-            Akses cepat ke fitur favorit Anda
-          </p>
+          </CardTitle>
+          <CardDescription className="uppercase tracking-widest text-[10px] font-bold">
+            {t('quickActionsSubtitle')}
+          </CardDescription>
         </div>
 
-        {/* Edit Toggle */}
-        <button
+        <Button
+          variant={isEditMode ? "default" : "outline"}
+          size="sm"
           onClick={() => setIsEditMode(!isEditMode)}
-          className={clsx(
-            'px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all',
-            isEditMode
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-          )}
-          aria-pressed={isEditMode}
-          aria-label={isEditMode ? 'Selesai mengedit' : 'Edit urutan aksi cepat'}
+          className="text-[10px]"
         >
           {isEditMode ? 'Selesai' : 'Edit'}
-        </button>
-      </div>
+        </Button>
+      </CardHeader>
 
-      {/* Drag hint in edit mode */}
-      <AnimatePresence>
-        {isEditMode && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-lg"
-            role="status"
-            aria-live="polite"
-          >
-            <p className="text-[10px] text-muted-foreground flex items-center gap-2">
-              <GripVertical className="h-4 w-4" aria-hidden="true" />
-              {t('quickActionsDragHint')} - Gunakan Tab untuk navigasi, Spasi/Enter untuk drag
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <CardContent>
+        {/* Drag hint in edit mode */}
+        <AnimatePresence>
+          {isEditMode && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-xl"
+              role="status"
+              aria-live="polite"
+            >
+              <p className="text-[10px] text-muted-foreground flex items-center gap-2">
+                <GripVertical className="h-4 w-4" aria-hidden="true" />
+                {t('quickActionsDragHint')} - Gunakan Tab untuk navigasi, Spasi/Enter untuk drag
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Actions Grid */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {items.map((action, index) => (
-              <SortableQuickAction
-                key={action.id}
-                action={action}
-                isEditMode={isEditMode}
-                index={index}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-
-      {/* More Actions Link */}
-      <div className="mt-6 pt-4 border-t border-border">
-        <button
-          className="w-full flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset rounded-lg py-2"
-          aria-label="Lihat semua fitur"
+        {/* Actions Grid */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-          Lihat Semua Fitur
-          <ChevronRight className="h-4 w-4" aria-hidden="true" />
-        </button>
-      </div>
-    </div>
+          <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              {items.map((action, index) => (
+                <SortableQuickAction
+                  key={action.id}
+                  action={action}
+                  isEditMode={isEditMode}
+                  index={index}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+
+        {/* More Actions Link */}
+        <div className="mt-6 pt-4 border-t border-border">
+          <Button
+            variant="ghost"
+            className="w-full text-xs font-black text-muted-foreground hover:text-foreground justify-center gap-2 h-10"
+          >
+            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+            Lihat Semua Fitur
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -274,7 +263,7 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
           isDragging && 'opacity-50',
           isEditMode
             ? 'cursor-grab active:cursor-grabbing border-dashed border-primary/30 bg-muted/30'
-            : 'border-border bg-card hover:border-primary/30 hover:shadow-md'
+            : 'border-border bg-card hover:border-primary/30 hover:shadow-md hover:bg-primary/5'
         )}
         aria-label={action.ariaLabel}
         draggable={isEditMode}
@@ -282,6 +271,7 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2, delay: index * 0.05 }}
+        whileHover={!isEditMode ? { scale: 1.02 } : undefined}
         tabIndex={isEditMode ? 0 : undefined}
       >
         {/* Drag Handle Indicator */}
@@ -307,20 +297,8 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
         {action.description && (
           <p className="text-[10px] text-muted-foreground line-clamp-1">{action.description}</p>
         )}
-
-        {/* Hover Effect */}
-        {!isEditMode && (
-          <motion.div
-            className="absolute inset-0 rounded-xl bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"
-            initial={false}
-            whileHover={{ scale: 1.02 }}
-          />
-        )}
       </motion.a>
     </div>
   );
 }
 
-function AnimatePresence({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}

@@ -19,8 +19,32 @@ export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
 
   const switchLocale = (newLocale: string) => {
-    const currentPath = pathname.replace(`/${locale}`, '');
-    router.push(`/${newLocale}${currentPath}`);
+    const localeCodes = locales.map(l => l.code);
+    const localePattern = new RegExp(`^/(${localeCodes.join('|')})(/|$)`);
+    
+    let newPath = pathname;
+    if (localePattern.test(pathname)) {
+      if (newLocale === 'id') {
+        // Switch to default locale, remove prefix
+        newPath = pathname.replace(localePattern, '/');
+      } else {
+        // Switch to other locale, replace prefix
+        newPath = pathname.replace(localePattern, `/${newLocale}$2`);
+      }
+    } else {
+      if (newLocale !== 'id') {
+        // Add prefix if not default locale
+        newPath = `/${newLocale}${pathname === '/' ? '' : pathname}`;
+      }
+    }
+    
+    // Clean up double slashes
+    newPath = newPath.replace(/\/+/g, '/');
+    if (newPath !== '/' && newPath.endsWith('/')) {
+      newPath = newPath.slice(0, -1);
+    }
+
+    router.push(newPath || '/');
     setIsOpen(false);
   };
 

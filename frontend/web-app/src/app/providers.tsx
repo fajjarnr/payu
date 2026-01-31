@@ -34,14 +34,18 @@ const getQueryClient = () => {
  return browserQueryClient;
 };
 
-export default function Providers({ children }: { children: ReactNode }) {
- const [queryClient] = useState(() => getQueryClient());
+import { ThemeProvider } from 'next-themes';
 
- return (
-  <QueryClientProvider client={queryClient}>
-   <ExperimentProvider>
-    {children}
-   </ExperimentProvider>
-  </QueryClientProvider>
- );
+export default function Providers({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => getQueryClient());
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <QueryClientProvider client={queryClient}>
+        <ExperimentProvider>
+          {children}
+        </ExperimentProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
 }

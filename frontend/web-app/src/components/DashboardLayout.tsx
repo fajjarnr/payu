@@ -25,6 +25,10 @@ import {
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
 import LanguageSwitcher from './LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
+import { useTranslations, useLocale } from 'next-intl';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { Button } from './ui/button';
 import { PersonalizedGreeting } from './personalization';
 
 interface SidebarItemProps {
@@ -38,19 +42,19 @@ const SidebarItem = ({ href, icon: Icon, label, active }: SidebarItemProps) => (
   <Link
     href={href}
     className={clsx(
-      "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-sm font-medium",
+      "flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group text-base font-bold cursor-pointer",
       active
-        ? "bg-accent text-accent-foreground shadow-sm"
-        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+        ? "bg-emerald-500/10 text-emerald-500 shadow-[inset_0_0_20px_rgba(16,185,129,0.05)] border border-emerald-500/20"
+        : "text-foreground/40 hover:bg-foreground/5 hover:text-foreground"
     )}
     aria-label={label}
     aria-current={active ? 'page' : undefined}
   >
     <Icon className={clsx(
-      "h-5 w-5 transition-colors",
-      active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+      "h-6 w-6 transition-colors",
+      active ? "text-emerald-500" : "text-foreground/30 group-hover:text-foreground"
     )} aria-hidden="true" />
-    <span className="tracking-tight">{label}</span>
+    <span className="tracking-tight uppercase text-xs sm:text-sm tracking-[0.12em]">{label}</span>
   </Link>
 );
 
@@ -61,58 +65,65 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, username = 'Pengguna', onLogout }: DashboardLayoutProps) {
+  const t = useTranslations('nav');
+  const locale = useLocale();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Helper to localize paths
+  const l = (path: string) => locale === 'id' ? path : `/${locale}${path}`;
+
   const mainMenu = [
-    { href: '/', icon: LayoutDashboard, label: 'Beranda' },
-    { href: '/pockets', icon: Wallet, label: 'Kantong' },
-    { href: '/transfer', icon: ArrowRightLeft, label: 'Transfer' },
-    { href: '/qris', icon: QrCode, label: 'Pembayaran QRIS' },
-    { href: '/bills', icon: Receipt, label: 'Tagihan & Top-up' },
-    { href: '/cards', icon: CreditCard, label: 'Kartu Virtual' },
-    { href: '/investments', icon: TrendingUp, label: 'Investasi' },
-    { href: '/analytics', icon: BarChart3, label: 'Analitik Keuangan' },
+    { href: l('/dashboard'), icon: LayoutDashboard, label: t('dashboard') },
+    { href: l('/pockets'), icon: Wallet, label: t('accounts') },
+    { href: l('/transfer'), icon: ArrowRightLeft, label: t('transfers') },
+    { href: l('/qris'), icon: QrCode, label: t('qrPayment') },
+    { href: l('/bills'), icon: Receipt, label: t('bills') },
+    { href: l('/cards'), icon: CreditCard, label: t('cards') },
+    { href: l('/investments'), icon: TrendingUp, label: t('investments') },
+    { href: l('/analytics'), icon: BarChart3, label: t('analytics') },
   ];
 
   const otherMenu = [
-    { href: '/security', icon: ShieldCheck, label: 'Keamanan & MFA' },
-    { href: '/settings', icon: Settings, label: 'Pengaturan Akun' },
-    { href: '/support', icon: LifeBuoy, label: 'Bantuan & Support' },
+    { href: l('/security'), icon: ShieldCheck, label: t('security') },
+    { href: l('/settings'), icon: Settings, label: t('settings') },
+    { href: l('/support'), icon: LifeBuoy, label: t('support') },
   ];
 
   return (
-    <div className="h-screen bg-background flex overflow-hidden font-sans">
-      {/* Desktop Sidebar - Width 56 as per layout structure */}
+    <div className="h-screen bg-background flex overflow-hidden font-inter text-foreground">
+      {/* Desktop Sidebar - Increased spacing and font weight */}
       <aside
-        className="hidden lg:flex flex-col w-56 border-r border-border bg-card p-6 h-full overflow-y-auto"
+        className="hidden lg:flex flex-col w-72 border-r border-border bg-background p-8 h-full overflow-y-auto"
         aria-label="Sidebar Navigasi Desktop"
       >
-        <div className="flex items-center gap-2 mb-10 px-2 group">
-          <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-black text-xl shadow-lg shadow-primary/20 rotate-3 transition-transform group-hover:rotate-0">
-            U
-          </div>
-          <span className="text-2xl font-black text-primary">PayU</span>
+        <div className="flex items-center gap-4 mb-14 px-2 group cursor-pointer">
+          <Link href={l('/')} className="flex items-center gap-4">
+            <div className="h-12 w-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-emerald-500/20 rotate-3 transition-transform group-hover:rotate-0">
+              U
+            </div>
+            <span className="text-3xl font-black text-foreground uppercase tracking-tighter">PayU</span>
+          </Link>
         </div>
 
-        <div className="space-y-1.5 mb-8">
-          <p className="text-[10px] font-semibold text-muted-foreground tracking-widest px-4 mb-2">Menu Utama</p>
+        <div className="space-y-4 mb-12">
+          <p className="text-xs sm:text-sm font-black text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('main')}</p>
           {mainMenu.map((item) => (
             <SidebarItem
               key={item.href}
               {...item}
-              active={pathname === item.href}
+              active={pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'))}
             />
           ))}
         </div>
 
-        <div className="space-y-1.5 mt-auto">
-          <p className="text-[10px] font-semibold text-muted-foreground tracking-widest px-4 mb-2">Lainnya</p>
+        <div className="space-y-4 mt-auto">
+          <p className="text-xs sm:text-sm font-black text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('others')}</p>
           {otherMenu.map((item) => (
             <SidebarItem
               key={item.href}
               {...item}
-              active={pathname === item.href}
+              active={pathname.includes(item.href)}
             />
           ))}
         </div>
@@ -121,46 +132,52 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-foreground/20 z-50 lg:hidden backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 bg-background/70 z-50 lg:hidden backdrop-blur-xl animate-in fade-in duration-500"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Mobile Sidebar */}
       <aside className={clsx(
-        "fixed inset-y-0 left-0 w-72 bg-card z-50 transform transition-transform duration-300 lg:hidden p-6 shadow-2xl",
+        "fixed inset-y-0 left-0 w-80 bg-background z-50 transform transition-transform duration-500 lg:hidden p-8 border-r border-border shadow-[20px_0_50px_rgba(0,0,0,0.2)]",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )} aria-label="Sidebar Navigasi Mobile">
-        <div className="flex justify-between items-center mb-10 px-2">
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-black text-xl">
+        <div className="flex justify-between items-center mb-14 px-2">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-emerald-500/20">
               U
             </div>
-            <span className="text-2xl font-black text-primary">PayU</span>
+            <span className="text-3xl font-black text-foreground uppercase tracking-tighter">PayU</span>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors" aria-label="Tutup menu navigasi">
-            <X className="h-6 w-6" aria-hidden="true" />
-          </button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setIsSidebarOpen(false)} 
+            className="w-12 h-12 text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-2xl" 
+            aria-label="Tutup menu navigasi"
+          >
+            <X className="h-8 w-8" aria-hidden="true" />
+          </Button>
         </div>
 
-        <nav className="space-y-1.5 overflow-y-auto max-h-[calc(100vh-140px)]">
-          <p className="text-[10px] font-semibold text-muted-foreground tracking-widest px-4 mb-2">Menu Utama</p>
+        <nav className="space-y-3 overflow-y-auto max-h-[calc(100vh-180px)] scrollbar-hide">
+          <p className="text-xs sm:text-sm font-black text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('main')}</p>
           {mainMenu.map((item) => (
             <SidebarItem
               key={item.href}
               {...item}
-              active={pathname === item.href}
+              active={pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'))}
             />
           ))}
 
-          <div className="h-8" />
+          <div className="h-12" />
 
-          <p className="text-[10px] font-semibold text-muted-foreground tracking-widest px-4 mb-2">Lainnya</p>
+          <p className="text-xs sm:text-sm font-black text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('others')}</p>
           {otherMenu.map((item) => (
             <SidebarItem
               key={item.href}
               {...item}
-              active={pathname === item.href}
+              active={pathname.includes(item.href)}
             />
           ))}
         </nav>
@@ -168,64 +185,87 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-20 border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-30 shrink-0">
-          <div className="max-w-[1600px] mx-auto px-6 sm:px-10 md:px-12 h-full flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
+        <header className="h-24 border-b border-border bg-background/80 backdrop-blur-2xl sticky top-0 z-30 shrink-0">
+          <div className="w-full px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsSidebarOpen(true)}
-                className="lg:hidden p-2 -ml-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
+                className="lg:hidden w-12 h-12 -ml-2 text-foreground/60 hover:text-foreground hover:bg-foreground/5 rounded-2xl"
                 aria-label="Buka menu navigasi"
                 aria-expanded={isSidebarOpen}
               >
-                <Menu className="h-6 w-6" aria-hidden="true" />
-              </button>
-              <div className="hidden sm:block">
-                <PersonalizedGreeting showTimeBased={true} showSegment={true} />
-                <p className="text-[10px] text-muted-foreground font-bold tracking-widest">Kelola finansial Anda dengan wawasan real-time</p>
+                <Menu className="h-7 w-7" aria-hidden="true" />
+              </Button>
+              <div className="hidden sm:flex flex-col justify-center">
+                <PersonalizedGreeting showTimeBased={true} showSegment={true} className="leading-tight" />
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1.5 ml-0.5">
+                  AI Financial Forecaster Active
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-6">
+               <ThemeToggle />
                <LanguageSwitcher />
 
-               <div className="hidden md:flex items-center bg-muted/50 rounded-xl px-4 py-2.5 w-64 gap-3 border border-transparent focus-within:border-primary/30 focus-within:bg-card focus-within:shadow-sm transition-all">
-                 <Search className="h-4 w-4 text-muted-foreground" />
+               <div className="hidden xl:flex items-center bg-foreground/[0.03] rounded-2xl px-6 py-3 w-80 gap-4 border border-border focus-within:border-emerald-500/40 focus-within:bg-foreground/[0.06] transition-all shadow-inner">
+                 <Search className="h-5 w-5 text-foreground/30" />
                  <input
                    type="text"
-                   placeholder="Cari apapun..."
-                   className="bg-transparent border-none focus:ring-0 text-xs font-semibold w-full placeholder:text-muted-foreground/60 text-foreground tracking-widest"
+                   placeholder="Universal search..."
+                   className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full placeholder:text-foreground/20 text-foreground tracking-wide"
                  />
                </div>
 
-               <button className="p-3 text-muted-foreground hover:bg-muted rounded-full relative transition-colors" aria-label="Notifikasi">
-                 <div className="absolute top-3.5 right-3.5 h-2 w-2 bg-destructive rounded-full border-2 border-card" aria-label="Notifikasi baru" />
-                 <Bell className="h-5 w-5" aria-hidden="true" />
-               </button>
+               <Button 
+                 variant="ghost"
+                 size="icon"
+                 className="w-12 h-12 text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-full relative shadow-sm border border-border" 
+                 aria-label="Notifikasi"
+               >
+                 <div className="absolute top-4 right-4 h-2.5 w-2.5 bg-emerald-500 rounded-full border-2 border-background" aria-label="Notifikasi baru" />
+                 <Bell className="h-6 w-6" aria-hidden="true" />
+               </Button>
 
               <div className="relative group">
-                <button className="h-10 w-10 bg-accent rounded-full flex items-center justify-center border-2 border-card shadow-sm overflow-hidden group-hover:ring-2 ring-primary transition-all" aria-label="Menu profil pengguna" aria-haspopup="true" aria-expanded="false">
-                  <User className="h-5 w-5 text-primary" aria-hidden="true" />
-                </button>
+                <Button 
+                  asChild
+                  variant="ghost"
+                  className="p-0 h-auto rounded-full dropdown-trigger" 
+                  aria-label="Menu profil pengguna" 
+                  aria-haspopup="true" 
+                  aria-expanded="false"
+                >
+                  <Avatar className="h-12 w-12 border border-border shadow-[0_4px_20px_rgba(0,0,0,0.1)] group-hover:ring-2 ring-emerald-500 transition-all">
+                    <AvatarFallback className="bg-foreground/[0.05]">
+                      <User className="h-6 w-6 text-emerald-500" aria-hidden="true" />
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
 
-                <div className="absolute right-0 mt-3 w-52 bg-card rounded-xl shadow-xl py-2 border border-border hidden group-hover:block z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-2 border-b border-border mb-1">
-                    <p className="text-[10px] font-semibold text-muted-foreground tracking-widest">Akun</p>
-                    <p className="text-sm font-bold truncate text-foreground">{username}</p>
+                <div className="absolute right-0 mt-5 w-72 bg-card border border-border rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.2)] py-4 hidden group-hover:block z-50 glass animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="px-6 py-4 border-b border-border/10 mb-3">
+                    <p className="text-xs font-black text-emerald-500/50 uppercase tracking-[0.25em] mb-2">Authenticated SVR</p>
+                    <p className="text-lg font-black truncate text-foreground uppercase tracking-tight">{username}</p>
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={onLogout}
-                    className="w-full text-left px-4 py-3 text-[10px] text-destructive hover:bg-destructive/10 font-black tracking-widest flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-6 py-4 text-xs text-red-400 hover:bg-red-500/10 font-black uppercase tracking-[0.25em] flex items-center justify-between transition-colors h-auto"
                   >
-                    <LogOut className="h-4 w-4" /> Keluar Sesi
-                  </button>
+                    <span>{t('logout')}</span>
+                    <LogOut className="h-5 w-5 opacity-70" />
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto animate-fade-in scrollbar-hide">
-          <div className="max-w-[1600px] mx-auto px-6 sm:px-10 md:px-12 py-8 sm:py-10 md:py-12 pb-40 lg:pb-16 transition-all duration-300">
+        <main className="flex-1 overflow-y-auto scrollbar-hide bg-background">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 pb-32 transition-all duration-500">
             {children}
           </div>
         </main>

@@ -1,23 +1,11 @@
 import { notFound } from 'next/navigation';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { NextIntlClientProvider, useMessages } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { locales } from '@/i18n/config';
-import { Inter, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import Providers from "../providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { EmergencyAlert } from "@/components/cms";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const dynamicParams = false;
 
@@ -38,17 +26,23 @@ export default async function RootLayout({
     notFound();
   }
 
-  const messages = await getMessages();
+  // Enable static rendering
+  setRequestLocale(locale);
+
+  const messages = await getMessages({ locale });
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet" />
       </head>
       <body
-        className={`${inter.variable} ${geistMono.variable} antialiased bg-background overflow-x-hidden`}
+        className="antialiased bg-background overflow-x-hidden"
       >
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider messages={messages} locale={locale}>
           <ErrorBoundary>
             <Providers>
               {/* Emergency Alert Banner */}

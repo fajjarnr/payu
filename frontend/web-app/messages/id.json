@@ -33,12 +33,25 @@
     "investments": "Investasi",
     "rewards": "Hadiah",
     "analytics": "Analitik",
+    "qrPayment": "Bayar QRIS",
     "security": "Keamanan",
     "settings": "Pengaturan",
     "support": "Bantuan",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "main": "Utama",
+    "others": "Lainnya"
   },
   "dashboard": {
+    "welcome_morning": "Selamat Pagi",
+    "welcome_afternoon": "Selamat Siang",
+    "welcome_evening": "Selamat Sore",
+    "welcome_night": "Selamat Malam",
+    "tier_vip": "Member VIP Kami",
+    "tier_diamond": "Member Diamond",
+    "tier_platinum": "Member Platinum",
+    "tier_gold": "Member Gold",
+    "tier_silver": "Member Silver",
+    "tier_bronze": "Member Bronze",
     "welcome": "Selamat datang, {name}!",
     "balance": "Saldo Akun",
     "totalBalance": "Total Saldo",
@@ -66,6 +79,7 @@
     "budgetUsed": "Terpakai",
     "budgetOver": "Melebihi",
     "quickActionsTitle": "Aksi Cepat",
+    "quickActionsSubtitle": "Akses cepat ke fitur favorit Anda",
     "quickActionsDragHint": "Seret untuk mengatur ulang",
     "viewAllAnalytics": "Lihat Semua Analitik",
     "manageBudgets": "Kelola Anggaran"
@@ -318,5 +332,28 @@
     "about": "Tentang",
     "logout": "Keluar",
     "changeLanguage": "Ganti Bahasa"
+  },
+  "landing": {
+    "heroTitle": "Masa Depan Perbankan Digital Ada di Sini.",
+    "heroSubtitle": "Kelola uang Anda dengan mudah, aman, dan cerdas. Bergabunglah dengan revolusi perbankan digital.",
+    "getStarted": "Mulai Sekarang",
+    "login": "Masuk",
+    "features": {
+      "instantTransfer": {
+        "title": "Transfer Instan",
+        "desc": "Kirim uang ke bank mana pun dalam hitungan detik tanpa biaya tersembunyi."
+      },
+      "secure": {
+        "title": "Keamanan Kelas Dunia",
+        "desc": "Data dan aset Anda dilindungi dengan enkripsi tingkat lanjut dan autentikasi biometrik."
+      },
+      "smartInvesting": {
+        "title": "Investasi Cerdas",
+        "desc": "Tumbuhkan kekayaan Anda dengan produk investasi yang dikurasi khusus untuk Anda."
+      }
+    },
+    "footer": {
+      "legal": "2026 PayU. Hak Cipta Dilindungi Undang-Undang."
+    }
   }
 }

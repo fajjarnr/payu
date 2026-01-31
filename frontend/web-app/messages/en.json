@@ -33,12 +33,25 @@
     "investments": "Investments",
     "rewards": "Rewards",
     "analytics": "Analytics",
+    "qrPayment": "QRIS Pay",
     "security": "Security",
     "settings": "Settings",
     "support": "Support",
-    "logout": "Logout"
+    "logout": "Logout",
+    "main": "Main",
+    "others": "Others"
   },
   "dashboard": {
+    "welcome_morning": "Good Morning",
+    "welcome_afternoon": "Good Afternoon",
+    "welcome_evening": "Good Evening",
+    "welcome_night": "Good Night",
+    "tier_vip": "VIP Member",
+    "tier_diamond": "Diamond Member",
+    "tier_platinum": "Platinum Member",
+    "tier_gold": "Gold Member",
+    "tier_silver": "Silver Member",
+    "tier_bronze": "Bronze Member",
     "welcome": "Welcome, {name}!",
     "balance": "Account Balance",
     "totalBalance": "Total Balance",
@@ -66,6 +79,7 @@
     "budgetUsed": "Used",
     "budgetOver": "Over Budget",
     "quickActionsTitle": "Quick Actions",
+    "quickActionsSubtitle": "Quick access to your favorite features",
     "quickActionsDragHint": "Drag to reorder",
     "viewAllAnalytics": "View All Analytics",
     "manageBudgets": "Manage Budgets"
@@ -318,5 +332,28 @@
     "about": "About",
     "logout": "Logout",
     "changeLanguage": "Change Language"
+  },
+  "landing": {
+    "heroTitle": "The Future of Digital Banking is Here.",
+    "heroSubtitle": "Manage your money with ease, security, and intelligence. Join the digital banking revolution.",
+    "getStarted": "Get Started",
+    "login": "Login",
+    "features": {
+      "instantTransfer": {
+        "title": "Instant Transfers",
+        "desc": "Send money to any bank in seconds without hidden fees."
+      },
+      "secure": {
+        "title": "World-Class Security",
+        "desc": "Your data and assets are protected with advanced encryption and biometric authentication."
+      },
+      "smartInvesting": {
+        "title": "Smart Investing",
+        "desc": "Grow your wealth with investment products curated specifically for you."
+      }
+    },
+    "footer": {
+      "legal": "2026 PayU. All Rights Reserved."
+    }
   }
 }

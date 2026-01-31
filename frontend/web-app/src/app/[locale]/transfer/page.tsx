@@ -303,8 +303,8 @@ export default function TransferPage() {
               </div>
             </StaggerItem>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              <StaggerItem className="lg:col-span-8 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-10">
+              <StaggerItem className="md:col-span-6 lg:col-span-8 space-y-8">
                 <div className="bg-card rounded-2xl p-8 border border-border shadow-card">
                   <h3 className="text-sm font-black text-foreground mb-6 tracking-widest uppercase">Pilih Metode Transfer</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -472,7 +472,7 @@ export default function TransferPage() {
                 </ButtonMotion>
               </StaggerItem>
 
-              <StaggerItem className="lg:col-span-4 space-y-8">
+              <StaggerItem className="md:col-span-6 lg:col-span-4 space-y-8">
                 <div className="bg-card rounded-2xl p-10 border border-border shadow-card h-full flex flex-col">
                   <div className="flex justify-between items-center mb-10">
                     <h3 className="text-[10px] font-bold text-foreground tracking-widest uppercase">Penerima Favorit</h3>

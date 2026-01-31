@@ -35,9 +35,9 @@ export default function SettingsPage() {
               </div>
             </StaggerItem>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
               {/* Sidebar Profiles */}
-              <StaggerItem className="lg:col-span-4 space-y-6">
+              <StaggerItem className="md:col-span-6 lg:col-span-4 space-y-6">
                 <div className="bg-card rounded-xl p-10 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
@@ -85,7 +85,7 @@ export default function SettingsPage() {
               </StaggerItem>
 
               {/* Main Settings Form */}
-              <StaggerItem className="lg:col-span-8">
+              <StaggerItem className="md:col-span-6 lg:col-span-8">
                 <div className="bg-card rounded-xl p-8 sm:p-12 border border-border shadow-card space-y-12 relative overflow-hidden h-full">
                   <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
 
