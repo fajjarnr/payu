@@ -1706,7 +1706,8 @@ _Last Updated: January 31, 2026 (Database Migrations Verified & Auth Service Har
   - `Chart`: Implemented Recharts-based `Radial` and `Bar` charts in `StatsCharts` & `InvestmentPerformance`.
   - `Progress`: Standardized all linear progress indicators (Budget, Health, ROI).
   - `Calendar` & `Popover`: Added to the UI kit for future Date Picker implementations.
-  - `Carousel`: Refactored `BannerCarousel` using official Shadcn primitive and `Autoplay` plugin.
+  - `Carousel`: Refactored `BannerCarousel` using official Shadcn primitive.
+  - `Table`: Implemented Shadcn Table with `@tanstack/react-table` in `TransferActivity` for data-intensive views.
 - **Refactoring**: Standardized Header, Profile Dropdown, and Dashboard Widgets to use standardized UI primitives.
 
 #### P16 Roadmap Tasks:

@@ -5,6 +5,14 @@ import { Search, ChevronDown, MoreHorizontal, RotateCcw, ArrowRight, User } from
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface TransferItem {
   id: string;
@@ -43,47 +51,53 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
 
         <CardContent>
           {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left border-b border-border">
-                  <th className="pb-4 text-[10px] font-semibold text-muted-foreground tracking-wider uppercase">Tanggal</th>
-                  <th className="pb-4 text-[10px] font-semibold text-muted-foreground tracking-wider uppercase">Penerima</th>
-                  <th className="pb-4 text-[10px] font-semibold text-muted-foreground tracking-wider uppercase text-center">Rekening</th>
-                  <th className="pb-4 text-[10px] font-semibold text-muted-foreground tracking-wider uppercase text-right">Jumlah</th>
-                  <th className="pb-4"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border hover:bg-transparent">
+                  <TableHead className="h-12 text-[10px] font-black text-muted-foreground tracking-[0.2em] uppercase">Tanggal</TableHead>
+                  <TableHead className="h-12 text-[10px] font-black text-muted-foreground tracking-[0.2em] uppercase">Penerima</TableHead>
+                  <TableHead className="h-12 text-[10px] font-black text-muted-foreground tracking-[0.2em] uppercase text-center">Rekening</TableHead>
+                  <TableHead className="h-12 text-[10px] font-black text-muted-foreground tracking-[0.2em] uppercase text-right">Jumlah</TableHead>
+                  <TableHead className="h-12 w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {transfers.map((item) => (
-                  <tr key={item.id} className="group hover:bg-muted/30 transition-colors">
-                    <td className="py-4 whitespace-nowrap text-xs text-muted-foreground font-medium">{item.date}</td>
-                    <td className="py-4">
+                  <TableRow key={item.id} className="group border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <TableCell className="py-6 whitespace-nowrap text-[10px] text-muted-foreground font-black tabular-nums uppercase tracking-tighter">
+                      {item.date}
+                    </TableCell>
+                    <TableCell className="py-6">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:scale-105 transition-transform">
                           <User className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider leading-none mb-1 uppercase">{item.category}</p>
-                          <p className="text-xs font-black text-foreground">{item.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-black tracking-widest leading-none mb-1.5 uppercase opacity-70">{item.category}</p>
+                          <p className="text-xs font-black text-foreground uppercase tracking-tight">{item.name}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="py-4 text-center">
-                      <p className="text-[10px] font-black text-foreground tracking-wider bg-muted/50 px-2 py-1 rounded-md inline-block uppercase">{item.account}</p>
-                    </td>
-                    <td className="py-4 text-right">
-                      <p className="text-sm font-black text-foreground tabular-nums">Rp {Math.abs(item.amount).toLocaleString('id-ID')}</p>
-                    </td>
-                    <td className="py-4 text-right pl-4">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted">
+                    </TableCell>
+                    <TableCell className="py-6 text-center">
+                      <span className="text-[10px] font-black text-foreground tracking-widest bg-muted/50 px-3 py-1.5 rounded-lg inline-block uppercase border border-border/20 group-hover:border-primary/20 transition-colors">
+                        {item.account}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-6 text-right">
+                      <p className="text-xs font-black text-foreground tabular-nums">
+                        Rp {Math.abs(item.amount).toLocaleString('id-ID')}
+                      </p>
+                    </TableCell>
+                    <TableCell className="py-6 text-right">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* Mobile Card Layout */}
