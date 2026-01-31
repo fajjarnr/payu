@@ -134,9 +134,9 @@ export default function LandingPage() {
                 
                 <div className="relative z-10 select-none">
                   <img 
-                    src="/hero-mockup.png" 
+                    src="/hero-mockup.svg" 
                     alt="PayU App Interface Mockup" 
-                    className="w-full max-w-[600px] mx-auto drop-shadow-[0_40px_80px_rgba(0,0,0,0.12)]"
+                    className="w-full max-w-[600px] mx-auto drop-shadow-[0_40px_80px_rgba(0,0,0,0.12)] hover:scale-[1.02] transition-transform duration-500"
                   />
                 </div>
                 
