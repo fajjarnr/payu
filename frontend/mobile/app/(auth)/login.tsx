@@ -90,9 +90,9 @@ export default function LoginScreen() {
     const newErrors: typeof errors = {};
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Password is required'; // pragma: allowlist secret
     } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = 'Password must be at least 8 characters'; // pragma: allowlist secret
     }
 
     setErrors(newErrors);

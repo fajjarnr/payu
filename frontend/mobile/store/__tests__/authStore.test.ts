@@ -88,7 +88,7 @@ describe('authStore', () => {
 
       expect(authService.login).toHaveBeenCalledWith({
         identifier: 'test@example.com',
-        password: 'password123',
+        password: 'password123', // pragma: allowlist secret
       });
       expect(mockStorage.set).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY, mockTokens);
       expect(mockStorage.set).toHaveBeenCalledWith(AUTH_CONFIG.USER_KEY, mockUser);
@@ -200,7 +200,7 @@ describe('authStore', () => {
 
       const dataWithConfirm = {
         ...registerData,
-        confirmPassword: 'confirm123',
+        confirmPassword: 'confirm123', // pragma: allowlist secret
       };
 
       await act(async () => {

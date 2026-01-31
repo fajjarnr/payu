@@ -116,13 +116,13 @@ export default function RegisterScreen() {
 
     const passwordValidation = validatePassword(formData.password);
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Password is required'; // pragma: allowlist secret
     } else if (!passwordValidation.isValid) {
       newErrors.password = passwordValidation.errors[0];
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Passwords do not match'; // pragma: allowlist secret
     }
 
     setErrors(newErrors);
