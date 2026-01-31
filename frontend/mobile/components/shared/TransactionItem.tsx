@@ -10,12 +10,14 @@ interface TransactionItemProps {
   transaction: Transaction;
   onPress?: () => void;
   style?: ViewStyle;
+  testID?: string;
 }
 
-export const TransactionItem: React.FC<TransactionItemProps> = ({
+export const TransactionItemComponent: React.FC<TransactionItemProps> = ({
   transaction,
   onPress,
   style,
+  testID,
 }) => {
   const { colors } = useTheme();
 
@@ -75,6 +77,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
       accessibilityLabel={getA11yLabel()}
       accessibilityHint={getA11yHint()}
       accessibilityRole="button"
+      testID={testID}
     >
       <Card variant="flat" padding="md" style={style as any}>
         <View style={styles.leftContainer}>
@@ -123,6 +126,17 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
     </TouchableOpacity>
   );
 };
+
+export const TransactionItem = React.memo(TransactionItemComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.transaction.id === nextProps.transaction.id &&
+    prevProps.transaction.status === nextProps.transaction.status &&
+    prevProps.transaction.amount === nextProps.transaction.amount &&
+    prevProps.onPress === nextProps.onPress
+  );
+});
+
+TransactionItem.displayName = 'TransactionItem';
 
 const styles = StyleSheet.create({
   container: {

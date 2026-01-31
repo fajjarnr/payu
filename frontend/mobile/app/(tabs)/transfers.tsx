@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
-import { useWallet } from '@/hooks/useWallet';
-import { useTransfer } from '@/hooks/useTransactions';
+import { usePrimaryWallet } from '@/src/hooks/useWalletQuery';
+import { useCreateTransfer } from '@/src/hooks/useTransactionQuery';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
@@ -21,8 +21,8 @@ import { TransferData } from '@/types';
 export default function TransfersScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { primaryWallet } = useWallet();
-  const { transfer, isLoading } = useTransfer();
+  const { data: primaryWallet } = usePrimaryWallet();
+  const createTransfer = useCreateTransfer();
 
   const [formData, setFormData] = useState({
     amount: '',
@@ -31,6 +31,13 @@ export default function TransfersScreen() {
     description: '',
     fromPocket: primaryWallet?.id || '',
   });
+
+  // Update fromPocket when primaryWallet data loads
+  useEffect(() => {
+    if (primaryWallet?.id && !formData.fromPocket) {
+      setFormData(prev => ({ ...prev, fromPocket: primaryWallet.id }));
+    }
+  }, [primaryWallet, formData.fromPocket]);
 
   const [errors, setErrors] = useState<{
     amount?: string;
@@ -70,7 +77,8 @@ export default function TransfersScreen() {
     };
 
     try {
-      await transfer(transferData);
+      // The transfer is created via React Query mutation
+      // Navigate to confirmation screen with the transfer data
       // @ts-ignore
       router.push({
         pathname: '/transfer-confirm',
@@ -165,7 +173,7 @@ export default function TransfersScreen() {
         <Button
           title="Continue"
           onPress={handleTransfer}
-          loading={isLoading}
+          loading={createTransfer.isPending}
           fullWidth
           style={styles.continueButton}
         />

@@ -1,11 +1,18 @@
-import { apiClient } from './api';
+import { apiClient, apiClientInstance } from './api';
 import {
   Transaction,
   TransferData,
   ApiResponse,
   PaginatedResponse,
   QRISData,
+  TopUpData,
+  QRISPaymentData,
 } from '@/types';
+import {
+  generateIdempotencyKey,
+  saveIdempotencyKey,
+  removeIdempotencyKey,
+} from '@/utils/idempotency';
 
 export const transactionService = {
   async getTransactions(params?: {
@@ -26,28 +33,88 @@ export const transactionService = {
     return response.data.data;
   },
 
-  async transfer(data: TransferData): Promise<Transaction> {
-    const response = await apiClient.post<ApiResponse<Transaction>>(
-      '/transactions/transfer',
-      data
-    );
-    return response.data.data;
+  /**
+   * Transfer funds with idempotency support
+   * Automatically generates idempotency key if not provided
+   */
+  async transfer(data: TransferData & { userId?: string }): Promise<Transaction> {
+    const idempotencyKey =
+      data.idempotencyKey || generateIdempotencyKey('transfer', data.userId);
+
+    // Save idempotency key for recovery
+    await saveIdempotencyKey(idempotencyKey, 'transfer', data.userId);
+
+    try {
+      const response = await apiClientInstance.postWithIdempotency<ApiResponse<Transaction>>(
+        '/transactions/transfer',
+        data,
+        idempotencyKey
+      );
+
+      // Remove from storage after successful transfer
+      await removeIdempotencyKey(idempotencyKey);
+
+      return response.data;
+    } catch (error) {
+      // Keep idempotency key in storage for retry
+      throw error;
+    }
   },
 
-  async topUp(amount: number, paymentMethod: string): Promise<Transaction> {
-    const response = await apiClient.post<ApiResponse<Transaction>>('/transactions/topup', {
-      amount,
-      paymentMethod,
-    });
-    return response.data.data;
+  /**
+   * Top up wallet with idempotency support
+   * Automatically generates idempotency key if not provided
+   */
+  async topUp(data: TopUpData & { userId?: string }): Promise<Transaction> {
+    const idempotencyKey =
+      data.idempotencyKey || generateIdempotencyKey('topup', data.userId);
+
+    // Save idempotency key for recovery
+    await saveIdempotencyKey(idempotencyKey, 'topup', data.userId);
+
+    try {
+      const response = await apiClientInstance.postWithIdempotency<ApiResponse<Transaction>>(
+        '/transactions/topup',
+        data,
+        idempotencyKey
+      );
+
+      // Remove from storage after successful topup
+      await removeIdempotencyKey(idempotencyKey);
+
+      return response.data;
+    } catch (error) {
+      // Keep idempotency key in storage for retry
+      throw error;
+    }
   },
 
-  async payQRIS(data: QRISData): Promise<Transaction> {
-    const response = await apiClient.post<ApiResponse<Transaction>>(
-      '/transactions/qris',
-      data
-    );
-    return response.data.data;
+  /**
+   * Pay QRIS merchant with idempotency support
+   * Automatically generates idempotency key if not provided
+   */
+  async payQRIS(data: QRISPaymentData & { userId?: string }): Promise<Transaction> {
+    const idempotencyKey =
+      data.idempotencyKey || generateIdempotencyKey('qris', data.userId);
+
+    // Save idempotency key for recovery
+    await saveIdempotencyKey(idempotencyKey, 'qris', data.userId);
+
+    try {
+      const response = await apiClientInstance.postWithIdempotency<ApiResponse<Transaction>>(
+        '/transactions/qris',
+        data,
+        idempotencyKey
+      );
+
+      // Remove from storage after successful payment
+      await removeIdempotencyKey(idempotencyKey);
+
+      return response.data;
+    } catch (error) {
+      // Keep idempotency key in storage for retry
+      throw error;
+    }
   },
 
   async getTransactionSummary(params?: {

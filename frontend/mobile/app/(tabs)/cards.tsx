@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { useCards } from '@/hooks/useCards';
@@ -13,6 +14,7 @@ import { CardPreview } from '@/components/shared/CardPreview';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Alert } from 'react-native';
+import { VirtualCard } from '@/types';
 
 export default function CardsScreen() {
   const router = useRouter();
@@ -47,6 +49,22 @@ export default function CardsScreen() {
     }
   };
 
+  // Render card item for FlashList
+  const renderCardItem = useCallback(({ item }: { item: VirtualCard }) => (
+    <TouchableOpacity
+      onPress={() => selectCard(item.id)}
+      activeOpacity={0.9}
+    >
+      <CardPreview
+        card={item}
+        style={{
+          width: 320,
+          marginRight: 16,
+        }}
+      />
+    </TouchableOpacity>
+  ), [selectCard]);
+
   return (
     <ScrollView
       style={styles.container}
@@ -75,29 +93,16 @@ export default function CardsScreen() {
       ) : (
         <>
           {/* Card Carousel */}
-          <ScrollView
+          <FlashList
+            data={cards}
+            renderItem={renderCardItem}
+            keyExtractor={useCallback((item: VirtualCard) => `card-${item.id}`, [])}
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.cardCarousel}
             contentContainerStyle={styles.cardCarouselContent}
             pagingEnabled
-          >
-            {cards.map((card) => (
-              <TouchableOpacity
-                key={card.id}
-                onPress={() => selectCard(card.id)}
-                activeOpacity={0.9}
-              >
-                <CardPreview
-                  card={card}
-                  style={{
-                    width: 320,
-                    marginRight: 16,
-                  }}
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          />
 
           {/* Card Actions */}
           {selectedCard && (

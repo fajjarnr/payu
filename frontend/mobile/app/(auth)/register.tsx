@@ -43,13 +43,15 @@ export default function RegisterScreen() {
 
   // OTP countdown timer
   React.useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | null = null;
     if (countdown > 0) {
       interval = setInterval(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [countdown]);
 
   const updateFormData = (field: string, value: string) => {

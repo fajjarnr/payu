@@ -1,5 +1,10 @@
-import { apiClient } from './api';
+import { apiClient, apiClientInstance } from './api';
 import { Wallet, ApiResponse } from '@/types';
+import {
+  generateIdempotencyKey,
+  saveIdempotencyKey,
+  removeIdempotencyKey,
+} from '@/utils/idempotency';
 
 export const walletService = {
   async getWallets(): Promise<Wallet[]> {
@@ -26,17 +31,39 @@ export const walletService = {
     return response.data.data;
   },
 
+  /**
+   * Transfer between pockets with idempotency support
+   * Automatically generates idempotency key
+   */
   async transferToPocket(
     fromPocketId: string,
     toPocketId: string,
     amount: number,
-    description?: string
+    description?: string,
+    userId?: string
   ): Promise<void> {
-    await apiClient.post('/wallets/internal-transfer', {
-      fromPocketId,
-      toPocketId,
-      amount,
-      description,
-    });
+    const idempotencyKey = generateIdempotencyKey('pocket-transfer', userId);
+
+    // Save idempotency key for recovery
+    await saveIdempotencyKey(idempotencyKey, 'pocket-transfer', userId);
+
+    try {
+      await apiClientInstance.postWithIdempotency<ApiResponse<void>>(
+        '/wallets/internal-transfer',
+        {
+          fromPocketId,
+          toPocketId,
+          amount,
+          description,
+        },
+        idempotencyKey
+      );
+
+      // Remove from storage after successful transfer
+      await removeIdempotencyKey(idempotencyKey);
+    } catch (error) {
+      // Keep idempotency key in storage for retry
+      throw error;
+    }
   },
 };

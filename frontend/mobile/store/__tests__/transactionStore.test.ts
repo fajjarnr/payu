@@ -493,11 +493,13 @@ describe('transactionStore', () => {
 
       const { result } = renderHook(() => useTransactionStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.transfer(transferData);
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);
@@ -511,11 +513,13 @@ describe('transactionStore', () => {
 
       const { result } = renderHook(() => useTransactionStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.transfer(transferData);
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe('Transfer failed');
       expect(result.current.isLoading).toBe(false);

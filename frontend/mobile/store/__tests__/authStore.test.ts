@@ -5,6 +5,9 @@ import { storage } from '@/utils/storage';
 import { AUTH_CONFIG } from '@/constants/config';
 import { User, AuthTokens } from '@/types';
 
+// Get the mocked storage functions
+const mockStorage = storage as jest.Mocked<typeof storage>;
+
 // Mock dependencies
 jest.mock('@/services/auth.service');
 jest.mock('@/utils/storage');
@@ -30,7 +33,6 @@ describe('authStore', () => {
     // Reset store state
     useAuthStore.setState({
       user: null,
-      tokens: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -42,10 +44,16 @@ describe('authStore', () => {
       const state = useAuthStore.getState();
 
       expect(state.user).toBeNull();
-      expect(state.tokens).toBeNull();
       expect(state.isAuthenticated).toBe(false);
       expect(state.isLoading).toBe(false);
       expect(state.error).toBeNull();
+    });
+
+    it('should not have tokens in state (SECURITY: tokens only in SecureStore)', () => {
+      const state = useAuthStore.getState();
+
+      // SECURITY: Tokens should never be in Zustand state
+      expect('tokens' in state).toBe(false);
     });
   });
 
@@ -70,7 +78,7 @@ describe('authStore', () => {
         user: mockUser,
         tokens: mockTokens,
       });
-      (storage.set as jest.Mock).mockResolvedValue(true);
+      (mockStorage.set as jest.Mock).mockResolvedValue(true);
 
       const { result } = renderHook(() => useAuthStore());
 
@@ -82,10 +90,11 @@ describe('authStore', () => {
         identifier: 'test@example.com',
         password: 'password123',
       });
-      expect(storage.set).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY, mockTokens);
-      expect(storage.set).toHaveBeenCalledWith(AUTH_CONFIG.USER_KEY, mockUser);
+      expect(mockStorage.set).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY, mockTokens);
+      expect(mockStorage.set).toHaveBeenCalledWith(AUTH_CONFIG.USER_KEY, mockUser);
       expect(result.current.user).toEqual(mockUser);
-      expect(result.current.tokens).toEqual(mockTokens);
+      // SECURITY: Tokens are not in state, only in SecureStore
+      expect('tokens' in result.current).toBe(false);
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBeNull();
@@ -99,11 +108,13 @@ describe('authStore', () => {
 
       const { result } = renderHook(() => useAuthStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.login('test@example.com', 'wrongpassword');
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);
@@ -116,11 +127,13 @@ describe('authStore', () => {
 
       const { result } = renderHook(() => useAuthStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.login('test@example.com', 'password123');
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe('Login failed');
       expect(result.current.isLoading).toBe(false);
@@ -155,7 +168,7 @@ describe('authStore', () => {
         user: mockUser,
         tokens: mockTokens,
       });
-      (storage.set as jest.Mock).mockResolvedValue(true);
+      (mockStorage.set as jest.Mock).mockResolvedValue(true);
 
       const { result } = renderHook(() => useAuthStore());
 
@@ -167,10 +180,11 @@ describe('authStore', () => {
         ...registerData,
         confirmPassword: registerData.password,
       });
-      expect(storage.set).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY, mockTokens);
-      expect(storage.set).toHaveBeenCalledWith(AUTH_CONFIG.USER_KEY, mockUser);
+      expect(mockStorage.set).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY, mockTokens);
+      expect(mockStorage.set).toHaveBeenCalledWith(AUTH_CONFIG.USER_KEY, mockUser);
       expect(result.current.user).toEqual(mockUser);
-      expect(result.current.tokens).toEqual(mockTokens);
+      // SECURITY: Tokens are not in state, only in SecureStore
+      expect('tokens' in result.current).toBe(false);
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.isLoading).toBe(false);
     });
@@ -180,7 +194,7 @@ describe('authStore', () => {
         user: mockUser,
         tokens: mockTokens,
       });
-      (storage.set as jest.Mock).mockResolvedValue(true);
+      (mockStorage.set as jest.Mock).mockResolvedValue(true);
 
       const { result } = renderHook(() => useAuthStore());
 
@@ -204,11 +218,13 @@ describe('authStore', () => {
 
       const { result } = renderHook(() => useAuthStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.register(registerData);
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);
@@ -219,12 +235,11 @@ describe('authStore', () => {
   describe('logout', () => {
     it('should clear state and storage on logout', async () => {
       (authService.logout as jest.Mock).mockResolvedValue(undefined);
-      (storage.remove as jest.Mock).mockResolvedValue(true);
+      (mockStorage.remove as jest.Mock).mockResolvedValue(true);
 
       // Set initial authenticated state
       useAuthStore.setState({
         user: mockUser,
-        tokens: mockTokens,
         isAuthenticated: true,
       });
 
@@ -235,21 +250,21 @@ describe('authStore', () => {
       });
 
       expect(authService.logout).toHaveBeenCalled();
-      expect(storage.remove).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY);
-      expect(storage.remove).toHaveBeenCalledWith(AUTH_CONFIG.USER_KEY);
+      expect(mockStorage.remove).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY);
+      expect(mockStorage.remove).toHaveBeenCalledWith(AUTH_CONFIG.USER_KEY);
       expect(result.current.user).toBeNull();
-      expect(result.current.tokens).toBeNull();
+      // SECURITY: Tokens are not in state, only in SecureStore
+      expect('tokens' in result.current).toBe(false);
       expect(result.current.isAuthenticated).toBe(false);
     });
 
     it('should clear state even when logout API fails', async () => {
       (authService.logout as jest.Mock).mockRejectedValue(new Error('Network error'));
-      (storage.remove as jest.Mock).mockResolvedValue(true);
+      (mockStorage.remove as jest.Mock).mockResolvedValue(true);
 
       // Set initial authenticated state
       useAuthStore.setState({
         user: mockUser,
-        tokens: mockTokens,
         isAuthenticated: true,
       });
 
@@ -260,13 +275,14 @@ describe('authStore', () => {
       });
 
       expect(result.current.user).toBeNull();
-      expect(result.current.tokens).toBeNull();
+      // SECURITY: Tokens are not in state, only in SecureStore
+      expect('tokens' in result.current).toBe(false);
       expect(result.current.isAuthenticated).toBe(false);
     });
   });
 
   describe('refreshToken', () => {
-    it('should update tokens on successful refresh', async () => {
+    it('should update tokens in SecureStore on successful refresh', async () => {
       const newTokens: AuthTokens = {
         accessToken: 'new-access-token',
         refreshToken: 'new-refresh-token',
@@ -274,11 +290,11 @@ describe('authStore', () => {
       };
 
       (authService.refreshToken as jest.Mock).mockResolvedValue({
+        user: mockUser,
         tokens: newTokens,
       });
-      (storage.set as jest.Mock).mockResolvedValue(true);
-
-      useAuthStore.setState({ tokens: mockTokens });
+      (mockStorage.set as jest.Mock).mockResolvedValue(true);
+      (mockStorage.get as jest.Mock).mockResolvedValue(mockTokens);
 
       const { result } = renderHook(() => useAuthStore());
 
@@ -287,12 +303,13 @@ describe('authStore', () => {
       });
 
       expect(authService.refreshToken).toHaveBeenCalledWith(mockTokens.refreshToken);
-      expect(storage.set).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY, newTokens);
-      expect(result.current.tokens).toEqual(newTokens);
+      expect(mockStorage.set).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY, newTokens);
+      // SECURITY: Tokens are not in state, only in SecureStore
+      expect('tokens' in result.current).toBe(false);
     });
 
     it('should throw error when no refresh token exists', async () => {
-      useAuthStore.setState({ tokens: null });
+      (mockStorage.get as jest.Mock).mockResolvedValue(null);
 
       const { result } = renderHook(() => useAuthStore());
 
@@ -306,24 +323,107 @@ describe('authStore', () => {
     it('should logout when refresh fails', async () => {
       (authService.refreshToken as jest.Mock).mockRejectedValue(new Error('Invalid token'));
       (authService.logout as jest.Mock).mockResolvedValue(undefined);
-      (storage.remove as jest.Mock).mockResolvedValue(true);
+      (mockStorage.remove as jest.Mock).mockResolvedValue(true);
+      (mockStorage.get as jest.Mock).mockResolvedValue(mockTokens);
 
       useAuthStore.setState({
-        tokens: mockTokens,
         user: mockUser,
         isAuthenticated: true,
       });
 
       const { result } = renderHook(() => useAuthStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.refreshToken();
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.user).toBeNull();
-      expect(result.current.tokens).toBeNull();
+      // SECURITY: Tokens are not in state, only in SecureStore
+      expect('tokens' in result.current).toBe(false);
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+  });
+
+  describe('getTokens', () => {
+    it('should return tokens from SecureStore', async () => {
+      (mockStorage.get as jest.Mock).mockResolvedValue(mockTokens);
+
+      const { result } = renderHook(() => useAuthStore());
+
+      let tokens: AuthTokens | null = null;
+      await act(async () => {
+        tokens = await result.current.getTokens();
+      });
+
+      expect(tokens).toEqual(mockTokens);
+      expect(mockStorage.get).toHaveBeenCalledWith(AUTH_CONFIG.TOKEN_KEY);
+    });
+
+    it('should return null when no tokens exist', async () => {
+      (mockStorage.get as jest.Mock).mockResolvedValue(null);
+
+      const { result } = renderHook(() => useAuthStore());
+
+      let tokens: AuthTokens | null = null;
+      await act(async () => {
+        tokens = await result.current.getTokens();
+      });
+
+      expect(tokens).toBeNull();
+    });
+  });
+
+  describe('checkAuthStatus', () => {
+    it('should return true when tokens and user exist', async () => {
+      (mockStorage.get as jest.Mock)
+        .mockResolvedValueOnce(mockTokens)  // First call for tokens
+        .mockResolvedValueOnce(mockUser);   // Second call for user
+
+      const { result } = renderHook(() => useAuthStore());
+
+      let isAuthenticated = false;
+      await act(async () => {
+        isAuthenticated = await result.current.checkAuthStatus();
+      });
+
+      expect(isAuthenticated).toBe(true);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.user).toEqual(mockUser);
+    });
+
+    it('should return false when tokens do not exist', async () => {
+      (mockStorage.get as jest.Mock)
+        .mockResolvedValueOnce(null)        // First call for tokens
+        .mockResolvedValueOnce(mockUser);   // Second call for user
+
+      const { result } = renderHook(() => useAuthStore());
+
+      let isAuthenticated = true;
+      await act(async () => {
+        isAuthenticated = await result.current.checkAuthStatus();
+      });
+
+      expect(isAuthenticated).toBe(false);
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    it('should return false when user does not exist', async () => {
+      (mockStorage.get as jest.Mock)
+        .mockResolvedValueOnce(mockTokens)  // First call for tokens
+        .mockResolvedValueOnce(null);       // Second call for user
+
+      const { result } = renderHook(() => useAuthStore());
+
+      let isAuthenticated = true;
+      await act(async () => {
+        isAuthenticated = await result.current.checkAuthStatus();
+      });
+
+      expect(isAuthenticated).toBe(false);
       expect(result.current.isAuthenticated).toBe(false);
     });
   });

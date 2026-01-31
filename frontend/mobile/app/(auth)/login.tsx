@@ -42,15 +42,17 @@ export default function LoginScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // OTP countdown timer
+  // OTP countdown timer with cleanup
   React.useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | null = null;
     if (countdown > 0) {
       interval = setInterval(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [countdown]);
 
   const checkBiometricAvailability = async () => {

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Transaction, TransferData } from '@/types';
+import { Transaction, TransferData, TopUpData, QRISPaymentData } from '@/types';
 import { transactionService } from '@/services/transaction.service';
 
 interface TransactionState {
@@ -9,11 +9,15 @@ interface TransactionState {
   hasMore: boolean;
   page: number;
   error: string | null;
+  userId?: string;
 
   // Actions
   loadTransactions: (refresh?: boolean) => Promise<void>;
   loadMoreTransactions: () => Promise<void>;
   transfer: (data: TransferData) => Promise<Transaction>;
+  topUp: (data: TopUpData) => Promise<Transaction>;
+  payQRIS: (data: QRISPaymentData) => Promise<Transaction>;
+  setUserId: (userId: string) => void;
   clearError: () => void;
 }
 
@@ -24,6 +28,8 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   hasMore: true,
   page: 1,
   error: null,
+
+  setUserId: (userId: string) => set({ userId }),
 
   loadTransactions: async (refresh = false) => {
     set({
@@ -82,7 +88,8 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const transaction = await transactionService.transfer(data);
+      const { userId } = get();
+      const transaction = await transactionService.transfer({ ...data, userId });
 
       set((state) => ({
         transactions: [transaction, ...state.transactions],
@@ -93,6 +100,50 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     } catch (error: any) {
       set({
         error: error.response?.data?.message || 'Transfer failed',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  topUp: async (data: TopUpData) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const { userId } = get();
+      const transaction = await transactionService.topUp({ ...data, userId });
+
+      set((state) => ({
+        transactions: [transaction, ...state.transactions],
+        isLoading: false,
+      }));
+
+      return transaction;
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || 'Top up failed',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  payQRIS: async (data: QRISPaymentData) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const { userId } = get();
+      const transaction = await transactionService.payQRIS({ ...data, userId });
+
+      set((state) => ({
+        transactions: [transaction, ...state.transactions],
+        isLoading: false,
+      }));
+
+      return transaction;
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || 'QRIS payment failed',
         isLoading: false,
       });
       throw error;

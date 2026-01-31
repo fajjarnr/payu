@@ -153,10 +153,10 @@ export const useSessionTimeout = (timeoutMinutes: number = 30) => {
   const [isSessionExpired, setIsSessionExpired] = useState(false);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const resetTimer = () => {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       setIsSessionExpired(false);
 
       timeoutId = setTimeout(() => {
@@ -175,7 +175,7 @@ export const useSessionTimeout = (timeoutMinutes: number = 30) => {
     resetTimer();
 
     return () => {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       events.forEach((event) => {
         // @ts-ignore
         window?.removeEventListener(event, resetTimer);

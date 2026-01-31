@@ -4,18 +4,30 @@ import {
   Text,
   StyleSheet,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
-import { FlashList, ListRenderItem } from '@shopify/flash-list';
+import { FlashList } from '@shopify/flash-list';
 import { useInfiniteTransactions, useRefreshTransactions } from '@/src/hooks/useTransactionQuery';
-import { TransactionItem } from '@/components/shared/TransactionItem';
+import { TransactionItem } from './TransactionItem';
 import { Card } from '@/components/ui/Card';
 import { isToday, isYesterday, formatDate } from '@/utils/date';
 
-export default function HistoryScreen() {
-  const router = useRouter();
+interface TransactionListProps {
+  limit?: number;
+  showDateHeaders?: boolean;
+  onTransactionPress?: (transactionId: string) => void;
+}
+
+export const TransactionList: React.FC<TransactionListProps> = ({
+  limit,
+  showDateHeaders = true,
+  onTransactionPress,
+}) => {
   const { colors } = useTheme();
+  const router = useRouter();
+
   const {
     data: transactionsData,
     isLoading: isLoadingTransactions,
@@ -24,7 +36,7 @@ export default function HistoryScreen() {
     fetchNextPage,
     isFetchingNextPage,
     refetch,
-  } = useInfiniteTransactions();
+  } = useInfiniteTransactions({ limit });
   const { refresh } = useRefreshTransactions();
 
   const [refreshing, setRefreshing] = React.useState(false);
@@ -41,8 +53,11 @@ export default function HistoryScreen() {
 
   // Transform data into grouped format with date headers
   const listData = useMemo(() => {
-    const groups: Array<{ type: 'header'; date: string } | { type: 'item'; transaction: any }> = [];
+    if (!showDateHeaders) {
+      return transactions.map(t => ({ type: 'item' as const, transaction: t }));
+    }
 
+    const groups: Array<{ type: 'header'; date: string } | { type: 'item'; transaction: any }> = [];
     const groupedByDate: { [key: string]: any[] } = {};
 
     transactions.forEach((transaction) => {
@@ -72,9 +87,17 @@ export default function HistoryScreen() {
     });
 
     return groups;
-  }, [transactions]);
+  }, [transactions, showDateHeaders]);
 
-  const renderItem: ListRenderItem<typeof listData[0]> = useCallback(({ item, index }) => {
+  const handleTransactionPress = useCallback((transactionId: string) => {
+    if (onTransactionPress) {
+      onTransactionPress(transactionId);
+    } else {
+      router.push(`/transaction/${transactionId}`);
+    }
+  }, [onTransactionPress, router]);
+
+  const renderItem = useCallback(({ item, index }: { item: typeof listData[0]; index: number }) => {
     if (item.type === 'header') {
       return (
         <View style={styles.dateHeader}>
@@ -91,7 +114,7 @@ export default function HistoryScreen() {
     return (
       <TransactionItem
         transaction={transaction}
-        onPress={() => router.push(`/transaction/${transaction.id}`)}
+        onPress={() => handleTransactionPress(transaction.id)}
         style={{
           borderBottomWidth: isLastItem ? 0 : 1,
           borderBottomColor: '#e5e7eb',
@@ -99,24 +122,21 @@ export default function HistoryScreen() {
         testID={`transaction-item-${transaction.id}`}
       />
     );
-  }, [colors.textSecondary, router, listData.length]);
+  }, [colors.textSecondary, handleTransactionPress, listData.length]);
 
   const getItemType = useCallback((item: typeof listData[0]) => {
     return item.type === 'header' ? 'dateHeader' : 'transactionItem';
   }, []);
 
   const ListHeaderComponent = useCallback(() => (
-    <View style={styles.header}>
-      <Text style={[styles.title, { color: colors.text }]}>
-        Transaction History
-      </Text>
-    </View>
-  ), [colors.text]);
+    null
+  ), []);
 
   const ListFooterComponent = useCallback(() => (
     <>
       {isFetchingNextPage && (
         <View style={styles.loadingMore}>
+          <ActivityIndicator size="small" color={colors.textSecondary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
             Loading more...
           </Text>
@@ -138,39 +158,20 @@ export default function HistoryScreen() {
   ), [colors.text, colors.textSecondary]);
 
   const LoadingComponent = useCallback(() => (
-    <Card padding="lg" style={styles.emptyState}>
-      <Text style={styles.emptyIcon}>⏳</Text>
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>
-        Loading Transactions
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color="#10b981" />
+      <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+        Loading transactions...
       </Text>
-      <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-        Please wait while we fetch your transactions
-      </Text>
-    </Card>
-  ), [colors.text, colors.textSecondary]);
+    </View>
+  ), [colors.textSecondary]);
 
-  // Show loading state separately
   if (isLoadingTransactions) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.content}>
-          {ListHeaderComponent()}
-          {LoadingComponent()}
-        </View>
-      </View>
-    );
+    return LoadingComponent();
   }
 
-  // Show empty state when there's no data
   if (transactions.length === 0) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.content}>
-          {ListHeaderComponent()}
-          {EmptyComponent()}
-        </View>
-      </View>
-    );
+    return EmptyComponent();
   }
 
   return (
@@ -188,39 +189,40 @@ export default function HistoryScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
       onEndReached={() => {
-        if (hasMore && !isFetchingNextPage) {
+        if (hasMore && !isFetchingNextPage && !limit) {
           fetchNextPage();
         }
       }}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={ListHeaderComponent}
       ListFooterComponent={ListFooterComponent}
-      contentContainerStyle={styles.listContent}
       showsVerticalScrollIndicator={false}
     />
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  dateHeader: {
+    paddingTop: 8,
+    paddingBottom: 8,
     backgroundColor: '#f9fafb',
   },
-  content: {
-    padding: 20,
+  dateLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginLeft: 4,
   },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+  loadingMore: {
+    paddingVertical: 24,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
   },
-  header: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: -1,
+  loadingText: {
+    fontSize: 14,
   },
   emptyState: {
     alignItems: 'center',
@@ -239,23 +241,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-  dateHeader: {
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: '#f9fafb',
-  },
-  dateLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginLeft: 4,
-  },
-  loadingMore: {
-    paddingVertical: 24,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 14,
+    paddingVertical: 48,
   },
 });

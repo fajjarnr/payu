@@ -5,6 +5,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@shopify/flash-list": "^2.2.1",
     "react-native-svg": "^15.15.1"
   }
 }

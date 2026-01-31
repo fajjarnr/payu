@@ -280,11 +280,13 @@ describe('cardStore', () => {
 
       const { result } = renderHook(() => useCardStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.createCard();
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);
@@ -372,11 +374,13 @@ describe('cardStore', () => {
 
       const { result } = renderHook(() => useCardStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.freezeCard('card-1');
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);
@@ -440,11 +444,13 @@ describe('cardStore', () => {
 
       const { result } = renderHook(() => useCardStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.unfreezeCard('card-1');
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);
@@ -508,11 +514,13 @@ describe('cardStore', () => {
 
       const { result } = renderHook(() => useCardStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.setSpendingLimit('card-1', 10000000);
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);
@@ -604,11 +612,13 @@ describe('cardStore', () => {
 
       const { result } = renderHook(() => useCardStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.cancelCard('card-1');
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);

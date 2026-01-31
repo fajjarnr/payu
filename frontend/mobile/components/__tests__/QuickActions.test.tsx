@@ -33,8 +33,8 @@ describe('QuickActions', () => {
     it('should render all action buttons', () => {
       render(<QuickActions {...defaultProps} />);
 
-      // Find all accessible touchable elements
-      const buttons = screen.getAllByA11yState({});
+      // Find all accessible touchable elements with menuitem role
+      const buttons = screen.getAllByRole('menuitem');
       expect(buttons.length).toBe(4);
     });
 
@@ -71,7 +71,7 @@ describe('QuickActions', () => {
     it('should call custom onActionPress when provided', () => {
       render(<QuickActions {...defaultProps} />);
 
-      const buttons = screen.getAllByA11yState({});
+      const buttons = screen.getAllByRole('menuitem');
       fireEvent.press(buttons[0]);
 
       expect(defaultProps.onActionPress).toHaveBeenCalledWith(
@@ -90,7 +90,7 @@ describe('QuickActions', () => {
     it('should handle Transfer action press', () => {
       render(<QuickActions {...defaultProps} />);
 
-      const buttons = screen.getAllByA11yState({});
+      const buttons = screen.getAllByRole('menuitem');
       fireEvent.press(buttons[0]);
 
       expect(defaultProps.onActionPress).toHaveBeenCalledTimes(1);
@@ -99,7 +99,7 @@ describe('QuickActions', () => {
     it('should handle QRIS action press', () => {
       render(<QuickActions {...defaultProps} />);
 
-      const buttons = screen.getAllByA11yState({});
+      const buttons = screen.getAllByRole('menuitem');
       fireEvent.press(buttons[1]);
 
       expect(defaultProps.onActionPress).toHaveBeenCalledWith(
@@ -116,7 +116,7 @@ describe('QuickActions', () => {
     it('should handle Top Up action press', () => {
       render(<QuickActions {...defaultProps} />);
 
-      const buttons = screen.getAllByA11yState({});
+      const buttons = screen.getAllByRole('menuitem');
       fireEvent.press(buttons[2]);
 
       expect(defaultProps.onActionPress).toHaveBeenCalledWith(
@@ -133,7 +133,7 @@ describe('QuickActions', () => {
     it('should handle Pay action press', () => {
       render(<QuickActions {...defaultProps} />);
 
-      const buttons = screen.getAllByA11yState({});
+      const buttons = screen.getAllByRole('menuitem');
       fireEvent.press(buttons[3]);
 
       expect(defaultProps.onActionPress).toHaveBeenCalledWith(
@@ -150,7 +150,7 @@ describe('QuickActions', () => {
     it('should handle rapid multiple presses', () => {
       render(<QuickActions {...defaultProps} />);
 
-      const buttons = screen.getAllByA11yState({});
+      const buttons = screen.getAllByRole('menuitem');
       fireEvent.press(buttons[0]);
       fireEvent.press(buttons[0]);
       fireEvent.press(buttons[0]);
@@ -161,7 +161,7 @@ describe('QuickActions', () => {
     it('should handle all actions pressed in sequence', () => {
       render(<QuickActions {...defaultProps} />);
 
-      const buttons = screen.getAllByA11yState({});
+      const buttons = screen.getAllByRole('menuitem');
       fireEvent.press(buttons[0]);
       fireEvent.press(buttons[1]);
       fireEvent.press(buttons[2]);
@@ -209,7 +209,7 @@ describe('QuickActions', () => {
     it('should distribute items evenly', () => {
       render(<QuickActions {...defaultProps} />);
 
-      const buttons = screen.getAllByA11yState({});
+      const buttons = screen.getAllByRole('menuitem');
       // All buttons should have flex: 1
       expect(buttons).toHaveLength(4);
     });

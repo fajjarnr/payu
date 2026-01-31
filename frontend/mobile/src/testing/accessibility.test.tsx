@@ -45,28 +45,23 @@ import {
 // Mock Setup
 // ============================================================================
 
-// Mock AccessibilityInfo
-const mockAddEventListener = jest.fn(() => ({ remove: jest.fn() }));
-const mockIsScreenReaderEnabled = jest.fn();
-
-jest.mock('react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo', () => ({
-  isScreenReaderEnabled: mockIsScreenReaderEnabled,
-  addEventListener: mockAddEventListener,
-  announceForAccessibility: jest.fn(),
-  setAccessibilityFocus: jest.fn(),
-  isBoldTextEnabled: jest.fn(),
-  isGrayscaleEnabled: jest.fn(),
-  isInvertColorsEnabled: jest.fn(),
-  isReduceMotionEnabled: jest.fn(),
-  isReduceTransparencyEnabled: jest.fn(),
-}));
+// Use global mocks from jest.setup.js
+const mockIsScreenReaderEnabled = global.mockAccessibility?.mockIsScreenReaderEnabled || jest.fn();
+const mockAnnounceForAccessibility = global.mockAccessibility?.mockAnnounceForAccessibility || jest.fn();
 
 jest.mock('react-native/Libraries/Utilities/Platform', () => ({
   OS: 'ios',
   select: jest.fn((obj: any) => obj?.ios || obj?.default),
 }));
 
-jest.mock('react-native/Libraries/Utilities/findNodeHandle', () => jest.fn(() => 1));
+// Mock react-native findNodeHandle
+jest.mock('react-native', () => {
+  const RN = jest.requireActual('react-native');
+  return {
+    ...RN,
+    findNodeHandle: jest.fn(() => 1),
+  };
+});
 
 // ============================================================================
 // Utility Function Tests
@@ -461,16 +456,23 @@ describe('Accessibility Hooks', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsScreenReaderEnabled.mockResolvedValue(false);
+    // Reset the global mock as well
+    if (global.mockAccessibility?.mockIsScreenReaderEnabled) {
+      global.mockAccessibility.mockIsScreenReaderEnabled.mockResolvedValue(false);
+    }
   });
 
   describe('useScreenReader', () => {
     it('should detect screen reader status', async () => {
       mockIsScreenReaderEnabled.mockResolvedValue(true);
+      if (global.mockAccessibility?.mockIsScreenReaderEnabled) {
+        global.mockAccessibility.mockIsScreenReaderEnabled.mockResolvedValue(true);
+      }
 
       renderHook(() => useScreenReader());
 
       // Wait for effect to run
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockIsScreenReaderEnabled).toHaveBeenCalled();
     });
@@ -493,9 +495,7 @@ describe('Accessibility Hooks', () => {
       result.current.announce('Test message');
 
       // AccessibilityInfo.announceForAccessibility is called
-      expect(require('react-native').AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
-        'Test message'
-      );
+      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith('Test message');
     });
 
     it('should announce polite messages', () => {
@@ -503,9 +503,7 @@ describe('Accessibility Hooks', () => {
 
       result.current.announcePolite('Polite message');
 
-      expect(require('react-native').AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
-        'Polite message'
-      );
+      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith('Polite message');
     });
 
     it('should announce assertive messages', () => {
@@ -513,9 +511,7 @@ describe('Accessibility Hooks', () => {
 
       result.current.announceAssertive('Assertive message');
 
-      expect(require('react-native').AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
-        'Assertive message'
-      );
+      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith('Assertive message');
     });
 
     it('should announce currency amounts', () => {
@@ -523,7 +519,7 @@ describe('Accessibility Hooks', () => {
 
       result.current.announceCurrency(1500000);
 
-      expect(require('react-native').AccessibilityInfo.announceForAccessibility).toHaveBeenCalled();
+      expect(mockAnnounceForAccessibility).toHaveBeenCalled();
     });
   });
 
@@ -533,7 +529,7 @@ describe('Accessibility Hooks', () => {
 
       result.current.announceFieldError('Email', 'Invalid email format');
 
-      expect(require('react-native').AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
+      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
         'Email error: Invalid email format'
       );
     });
@@ -543,7 +539,7 @@ describe('Accessibility Hooks', () => {
 
       result.current.announceFormSubmit('Transfer Form', true);
 
-      expect(require('react-native').AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
+      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
         'Transfer Form submitted successfully'
       );
     });
@@ -553,7 +549,7 @@ describe('Accessibility Hooks', () => {
 
       result.current.announceFormSubmit('Transfer Form', false);
 
-      expect(require('react-native').AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
+      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
         'Transfer Form submission failed. Please check the errors.'
       );
     });
@@ -563,7 +559,7 @@ describe('Accessibility Hooks', () => {
 
       result.current.announceValidationSummary(3);
 
-      expect(require('react-native').AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
+      expect(mockAnnounceForAccessibility).toHaveBeenCalledWith(
         'There are 3 errors to fix'
       );
     });

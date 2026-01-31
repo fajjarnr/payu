@@ -1,57 +1,115 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
-import { useWallet } from '@/hooks/useWallet';
-import { useTransactions } from '@/hooks/useTransactions';
+import { FlashList, ListRenderItem } from '@shopify/flash-list';
+import { usePrimaryWallet, useRefreshWallets } from '@/src/hooks/useWalletQuery';
+import { useInfiniteTransactions, useRefreshTransactions } from '@/src/hooks/useTransactionQuery';
 import { BalanceCard } from '@/components/shared/BalanceCard';
 import { QuickActions } from '@/components/shared/QuickActions';
 import { TransactionItem } from '@/components/shared/TransactionItem';
 import { Card } from '@/components/ui/Card';
+import { Transaction } from '@/types';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { balance, loadWallet } = useWallet();
-  const {
-    transactions,
-    loadTransactions,
-    isLoadingMore,
-    hasMore,
-  } = useTransactions();
+  const isMountedRef = useRef(true);
+  const { data: wallet, isLoading: isLoadingWallet, error: walletError } = usePrimaryWallet();
+  const { data: transactionsData, isLoading: isLoadingTransactions, error: transactionsError, hasNextPage, fetchNextPage, isFetchingNextPage, refetch } = useInfiniteTransactions();
+  const { refreshPrimary } = useRefreshWallets();
+  const { refresh } = useRefreshTransactions();
 
   const [showBalance, setShowBalance] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Memoize balance calculation
+  const balance = useMemo(() => wallet?.balance ?? 0, [wallet?.balance]);
+
+  // Flatten infinite query pages into a single array (memoized)
+  const transactions = useMemo(
+    () => transactionsData?.pages.flatMap(page => page.items) ?? [],
+    [transactionsData]
+  );
+
+  // Display transactions (limited to 5, memoized)
+  const displayTransactions = useMemo(
+    () => transactions.slice(0, 5),
+    [transactions]
+  );
+
+  // Memoize transaction press callback factory - MUST be defined before renderTransactionItem
+  const handleTransactionPress = useCallback((transactionId: string) => {
+    return () => router.push(`/transaction/${transactionId}`);
+  }, [router]);
+
+  // Render item for FlashList
+  const renderTransactionItem: ListRenderItem<Transaction> = useCallback(({ item }) => (
+    <TransactionItem
+      transaction={item}
+      onPress={handleTransactionPress(item.id)}
+      style={{ marginBottom: 12 }}
+    />
+  ), [handleTransactionPress]);
+
+  // Memoize onRefresh with proper cleanup
   const onRefresh = useCallback(async () => {
+    if (!isMountedRef.current) return;
+
     setRefreshing(true);
-    await loadWallet();
-    await loadTransactions(true);
-    setRefreshing(false);
-  }, [loadWallet, loadTransactions]);
-
-  const loadMore = useCallback(() => {
-    if (!isLoadingMore && hasMore) {
-      loadTransactions();
-    }
-  }, [isLoadingMore, hasMore, loadTransactions]);
-
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+    try {
+      await Promise.all([refetch(), refreshPrimary()]);
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      if (isMountedRef.current) {
+        setRefreshing(false);
       }
-    >
+    }
+  }, [refetch, refreshPrimary]);
+
+  // Memoize load more function
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage && isMountedRef.current) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Memoize toggle balance callback
+  const handleToggleBalance = useCallback(() => {
+    setShowBalance(prev => !prev);
+  }, []);
+
+  // Memoize notification press callback
+  const handleNotificationPress = useCallback(() => {
+    router.push('/notifications');
+  }, [router]);
+
+  // Memoize action press callback
+  const handleActionPress = useCallback((action: any) => {
+    router.push(action.route);
+  }, [router]);
+
+  // Memoize see all press callback
+  const handleSeeAllPress = useCallback(() => {
+    router.push('/(tabs)/history');
+  }, [router]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const ListHeaderComponent = useCallback(() => (
+    <>
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -64,7 +122,7 @@ export default function HomeScreen() {
         </View>
         <TouchableOpacity
           style={styles.notificationButton}
-          onPress={() => router.push('/notifications')}
+          onPress={handleNotificationPress}
         >
           <Text style={styles.notificationIcon}>🔔</Text>
         </TouchableOpacity>
@@ -75,7 +133,7 @@ export default function HomeScreen() {
         balance={balance}
         accountNumber="•••• 1234"
         showBalance={showBalance}
-        onToggleBalance={() => setShowBalance(!showBalance)}
+        onToggleBalance={handleToggleBalance}
         style={styles.balanceCard}
       />
 
@@ -85,60 +143,82 @@ export default function HomeScreen() {
           Quick Actions
         </Text>
         <QuickActions
-          onActionPress={(action) => {
-            // @ts-ignore
-            router.push(action.route);
-          }}
+          onActionPress={handleActionPress}
         />
       </View>
 
-      {/* Recent Transactions */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Recent Transactions
-          </Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/history')}>
-            <Text style={styles.seeAll}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-        {transactions.length === 0 ? (
-          <Card padding="lg">
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No transactions yet
-            </Text>
-          </Card>
-        ) : (
-          transactions.slice(0, 5).map((transaction) => (
-            <TransactionItem
-              key={transaction.id}
-              transaction={transaction}
-              onPress={() => router.push(`/transaction/${transaction.id}`)}
-              style={{ marginBottom: 12 }}
-            />
-          ))
-        )}
-
-        {hasMore && (
-          <TouchableOpacity
-            style={styles.loadMoreButton}
-            onPress={loadMore}
-          >
-            <Text style={styles.loadMoreText}>Load More</Text>
-          </TouchableOpacity>
-        )}
+      {/* Recent Transactions Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Recent Transactions
+        </Text>
+        <TouchableOpacity onPress={handleSeeAllPress}>
+          <Text style={styles.seeAll}>See All</Text>
+        </TouchableOpacity>
       </View>
-    </ScrollView>
+
+      {isLoadingTransactions ? (
+        <Card padding="lg">
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            Loading transactions...
+          </Text>
+        </Card>
+      ) : transactions.length === 0 ? (
+        <Card padding="lg">
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            No transactions yet
+          </Text>
+        </Card>
+      ) : null}
+    </>
+  ), [colors.text, colors.textSecondary, balance, showBalance, handleToggleBalance, handleNotificationPress, handleActionPress, handleSeeAllPress, isLoadingTransactions, transactions.length]);
+
+  const ListFooterComponent = useCallback(() => (
+    hasNextPage ? (
+      <TouchableOpacity
+        style={styles.loadMoreButton}
+        onPress={loadMore}
+      >
+        <Text style={styles.loadMoreText}>Load More</Text>
+      </TouchableOpacity>
+    ) : null
+  ), [hasNextPage, loadMore]);
+
+  // Show loading or empty state in a ScrollView
+  if (isLoadingTransactions || transactions.length === 0) {
+    return (
+      <FlashList
+        data={[]}
+        renderItem={() => null}
+        keyExtractor={() => 'empty'}
+        ListHeaderComponent={ListHeaderComponent}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
+    );
+  }
+
+  return (
+    <FlashList
+      data={displayTransactions}
+      renderItem={renderTransactionItem}
+      keyExtractor={useCallback((item: Transaction) => `transaction-${item.id}`, [])}
+      ListHeaderComponent={ListHeaderComponent}
+      ListFooterComponent={ListFooterComponent}
+      contentContainerStyle={styles.listContent}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  content: {
+  listContent: {
     padding: 20,
   },
   header: {

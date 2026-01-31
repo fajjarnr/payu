@@ -1,3 +1,50 @@
+/**
+ * QueryProvider - React Query Configuration for PayU Mobile App
+ *
+ * SECURITY POLICY: Cache Persistence Strategy
+ * ================================================
+ *
+ * This provider configures React Query with selective persistence to AsyncStorage.
+ * Sensitive data (financial, PII, auth) is EXCLUDED from AsyncStorage persistence
+ * because AsyncStorage is NOT encrypted. Only non-sensitive reference data is persisted.
+ *
+ * Storage Security Levels:
+ * ------------------------
+ * 1. SecureStore (encrypted):
+ *    - Auth tokens (payu_auth_tokens)
+ *    - User data (payu_user)
+ *    - Sensitive credentials (PIN, biometrics)
+ *
+ * 2. Memory-only (no persistence):
+ *    - Wallet balances (SENSITIVE - financial data)
+ *    - Transaction history (SENSITIVE - financial data)
+ *    - User profile (SENSITIVE - PII)
+ *    - Card details (SENSITIVE - financial data)
+ *    - Auth session data (SENSITIVE - credentials)
+ *
+ * 3. AsyncStorage (unencrypted, limited persistence):
+ *    - Bank lists (non-sensitive reference data)
+ *    - Feature flags (non-sensitive)
+ *    - UI preferences (non-sensitive)
+ *    - Currency lists (non-sensitive reference data)
+ *
+ * Why This Approach?
+ * ------------------
+ * - AsyncStorage stores data in plaintext on device file system
+ * - On rooted/jailbroken devices, AsyncStorage can be easily accessed
+ * - Financial data in local storage violates PCI-DSS and OJK compliance
+ * - Memory-only cache is cleared on app close (security best practice)
+ *
+ * Compliance References:
+ * ----------------------
+ * - PCI-DSS Requirement 3: Protect stored cardholder data
+ * - OJK Regulation: Financial data encryption at rest
+ * - PayU Security Policy P2-C2: Secure token storage
+ *
+ * @module QueryProvider
+ * @version 2.0.0 - Security-hardened persistence
+ */
+
 import React, { ReactNode, useEffect, useState } from 'react';
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -32,25 +79,77 @@ const asyncStoragePersister = createAsyncStoragePersister({
   deserialize: (data) => JSON.parse(data),
 });
 
-// Persist config for specific queries
+// Sensitive query keys that must NOT be persisted to AsyncStorage (unencrypted storage)
+// These contain financial/PII/auth data that should only exist in memory or SecureStore
+const SENSITIVE_QUERY_KEYS = [
+  // AUTHENTICATION - Never persist auth data (tokens in SecureStore only)
+  'auth',        // Auth tokens and session data (MUST be in SecureStore only)
+  'login',       // Login-related queries
+  'register',    // Registration-related queries
+  'token',       // Token-related queries
+  'session',     // Session data
+  'logout',      // Logout operations
+
+  // FINANCIAL DATA - Never persist financial data
+  'wallet',      // Wallet balances, pocket balances (financial data)
+  'wallets',     // List of wallets with balances (financial data)
+  'transactions', // Transaction history with amounts and recipients (financial data)
+  'transaction', // Individual transaction details (financial data)
+  'cards',       // Card numbers and details (financial data)
+  'transfer',    // Transfer-related queries (financial data)
+  'topup',       // Top-up related queries (financial data)
+  'qris',        // QRIS payment data (financial data)
+  'payment',     // Payment-related queries
+  'balance',     // Balance queries
+
+  // PII DATA - Never persist personal information
+  'user',        // User PII (personal data)
+  'profile',     // User profile data (personal data)
+  'kyc',         // KYC verification data
+  'identity',    // Identity documents
+  'document',    // Document data
+
+  // SECURITY DATA
+  'pin',         // PIN-related data
+  'password',    // Password-related data
+  'biometric',   // Biometric data
+  'security',    // Security settings
+] as const;
+
+// Non-sensitive query keys that CAN be persisted to AsyncStorage for offline performance
+const NON_SENSITIVE_QUERY_KEYS = [
+  'banks',        // Bank list (static reference data)
+  'promo',        // Promotional content (public data)
+  'features',     // Feature flags (public data)
+  'settings',     // UI settings (non-sensitive preferences)
+  'currencies',   // Currency list (static reference data)
+  'categories',   // Transaction categories (static reference data)
+] as const;
+
+// Persist config - excludes sensitive data from AsyncStorage
 const persistConfig = {
-  buster: 'v1', // Cache version - increment to invalidate all caches
+  buster: 'v2', // Cache version - increment to invalidate all caches
   maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   persister: asyncStoragePersister,
   dehydrateOptions: {
     shouldDehydrateQuery: (query: any) => {
-      // Only persist specific query types
-      const persistableQueries = [
-        'wallet',
-        'wallets',
-        'transactions',
-        'cards',
-        'user',
-        'profile',
-      ];
-      return persistableQueries.some((key) =>
-        query.queryKey[0]?.toString().startsWith(key)
+      const queryKeyString = query.queryKey[0]?.toString().toLowerCase() || '';
+
+      // SECURITY: Exclude sensitive queries from AsyncStorage persistence
+      // Sensitive data (financial, PII, auth) must only exist in memory or SecureStore
+      const isSensitive = SENSITIVE_QUERY_KEYS.some((key) =>
+        queryKeyString.includes(key.toLowerCase())
       );
+      if (isSensitive) {
+        return false; // Do NOT persist to AsyncStorage
+      }
+
+      // Only persist non-sensitive queries for offline performance
+      const isNonSensitive = NON_SENSITIVE_QUERY_KEYS.some((key) =>
+        queryKeyString.includes(key.toLowerCase())
+      );
+
+      return isNonSensitive;
     },
   },
 };
@@ -149,4 +248,127 @@ export function QueryProvider({ children }: QueryProviderProps) {
 export function getQueryClientInstance() {
   // This is a placeholder - in practice, you should use the queryClient from the component
   throw new Error('Use useQueryClient hook inside React components');
+}
+
+/**
+ * Security Verification Utility
+ * ===============================
+ *
+ * Use this function in development/testing to verify that NO sensitive data
+ * is being persisted to AsyncStorage.
+ *
+ * @example
+ * ```ts
+ * import { verifyAsyncStorageSecurity } from '@/providers/QueryProvider';
+ *
+ * // Run in development or after app initialization
+ * if (__DEV__) {
+ *   verifyAsyncStorageSecurity().then(report => {
+ *     console.log('Security Report:', report);
+ *   });
+ * }
+ * ```
+ */
+export async function verifyAsyncStorageSecurity(): Promise<{
+  isSecure: boolean;
+  violations: string[];
+  persistedKeys: string[];
+}> {
+  const violations: string[] = [];
+  const persistedKeys: string[] = [];
+
+  try {
+    // Get all keys from AsyncStorage
+    const keys = await AsyncStorage.getAllKeys();
+
+    // Check React Query cache specifically
+    const queryCacheKey = 'payu-query-cache';
+    if (keys.includes(queryCacheKey)) {
+      const cacheData = await AsyncStorage.getItem(queryCacheKey);
+
+      if (cacheData) {
+        try {
+          const parsedCache = JSON.parse(cacheData);
+          const queries = parsedCache?.clientState?.queries || [];
+
+          queries.forEach((query: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+            const queryKey = query?.queryKey?.[0]?.toString().toLowerCase() || '';
+            persistedKeys.push(queryKey);
+
+            // Check if sensitive data is persisted
+            const isSensitive = SENSITIVE_QUERY_KEYS.some((key) =>
+              queryKey.includes(key.toLowerCase())
+            );
+
+            if (isSensitive) {
+              violations.push(
+                `SECURITY VIOLATION: Sensitive query "${queryKey}" found in AsyncStorage!`
+              );
+            }
+          });
+        } catch (e) {
+          violations.push('Failed to parse query cache for security check');
+        }
+      }
+    }
+
+    // Check for any other suspicious keys
+    const suspiciousKeys = keys.filter((key) =>
+      SENSITIVE_QUERY_KEYS.some((sensitive) =>
+        key.toLowerCase().includes(sensitive.toLowerCase())
+      )
+    );
+
+    suspiciousKeys.forEach((key) => {
+      if (!violations.includes(`Suspicious key: ${key}`)) {
+        violations.push(`Suspicious key in AsyncStorage: ${key}`);
+      }
+    });
+
+    return {
+      isSecure: violations.length === 0,
+      violations,
+      persistedKeys,
+    };
+  } catch (error) {
+    return {
+      isSecure: false,
+      violations: [`Security check failed: ${error}`],
+      persistedKeys: [],
+    };
+  }
+}
+
+/**
+ * Development-only hook to log AsyncStorage contents for security auditing
+ * WARNING: Only use in development - NEVER call in production
+ */
+export async function devLogAsyncStorageContents(): Promise<void> {
+  if (!__DEV__) {
+    console.warn('devLogAsyncStorageContents should only be called in development');
+    return;
+  }
+
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    console.log('=== AsyncStorage Security Audit ===');
+    console.log('Total keys:', keys.length);
+
+    for (const key of keys) {
+      const value = await AsyncStorage.getItem(key);
+      const preview = value?.substring(0, 100);
+      console.log(`Key: ${key} | Preview: ${preview}...`);
+    }
+
+    const securityReport = await verifyAsyncStorageSecurity();
+    console.log('Security Report:', securityReport);
+
+    if (!securityReport.isSecure) {
+      console.error('SECURITY VIOLATIONS DETECTED:', securityReport.violations);
+    } else {
+      console.log('No security violations detected - AsyncStorage is clean');
+    }
+  } catch (error) {
+    console.error('Failed to audit AsyncStorage:', error);
+  }
 }

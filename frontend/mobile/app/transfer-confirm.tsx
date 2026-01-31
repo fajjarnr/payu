@@ -11,7 +11,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useBiometrics } from '@/hooks/useBiometrics';
-import { useWallet } from '@/hooks/useWallet';
+import { useRefreshWallets } from '@/src/hooks/useWalletQuery';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/currency';
@@ -26,7 +26,7 @@ export default function TransferConfirmScreen() {
   const params = useLocalSearchParams();
   const { user } = useAuth();
   const { authenticate } = useBiometrics();
-  const { loadWallet } = useWallet();
+  const { refreshPrimary } = useRefreshWallets();
   const { trackTransaction } = useAnalytics();
 
   const [step, setStep] = useState<TransferStep>('review');
@@ -94,7 +94,7 @@ export default function TransferConfirmScreen() {
       trackTransaction(selectedTransferType.id, transferData.amount, 'success');
 
       // Refresh wallet balance
-      await loadWallet();
+      await refreshPrimary();
     } catch (error: any) {
       setTransactionResult(error);
       setStep('failed');

@@ -33,6 +33,7 @@ interface TransactionFilters {
   status?: string;
   startDate?: string;
   endDate?: string;
+  limit?: number;
 }
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -198,7 +199,7 @@ export function useTopUp() {
   return useMutation({
     mutationKey: ['topUp'],
     mutationFn: (data: TopUpData) =>
-      transactionService.topUp(data.amount, data.paymentMethod),
+      transactionService.topUp(data),
     onMutate: async (topUpData) => {
       await queryClient.cancelQueries({ queryKey: transactionKeys.lists() });
       await queryClient.cancelQueries({ queryKey: ['wallet'] });

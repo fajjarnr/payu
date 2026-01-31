@@ -8,7 +8,13 @@ jest.mock('../api', () => ({
     get: jest.fn(),
     post: jest.fn(),
   },
+  apiClientInstance: {
+    postWithIdempotency: jest.fn(),
+  },
 }));
+
+import { apiClientInstance } from '../api';
+const mockPostWithIdempotency = apiClientInstance.postWithIdempotency as jest.MockedFunction<typeof apiClientInstance.postWithIdempotency>;
 
 describe('walletService', () => {
   const mockGet = apiClient.get as jest.MockedFunction<typeof apiClient.get>;
@@ -260,7 +266,7 @@ describe('walletService', () => {
     };
 
     it('should transfer between pockets successfully', async () => {
-      mockPost.mockResolvedValueOnce({ data: {} });
+      mockPostWithIdempotency.mockResolvedValueOnce({});
 
       await walletService.transferToPocket(
         transferData.fromPocketId,
@@ -269,17 +275,21 @@ describe('walletService', () => {
         transferData.description
       );
 
-      expect(mockPost).toHaveBeenCalledWith('/wallets/internal-transfer', {
-        fromPocketId: transferData.fromPocketId,
-        toPocketId: transferData.toPocketId,
-        amount: transferData.amount,
-        description: transferData.description,
-      });
-      expect(mockPost).toHaveBeenCalledTimes(1);
+      expect(mockPostWithIdempotency).toHaveBeenCalledWith(
+        '/wallets/internal-transfer',
+        {
+          fromPocketId: transferData.fromPocketId,
+          toPocketId: transferData.toPocketId,
+          amount: transferData.amount,
+          description: transferData.description,
+        },
+        expect.any(String)
+      );
+      expect(mockPostWithIdempotency).toHaveBeenCalledTimes(1);
     });
 
     it('should transfer without description', async () => {
-      mockPost.mockResolvedValueOnce({ data: {} });
+      mockPostWithIdempotency.mockResolvedValueOnce({});
 
       await walletService.transferToPocket(
         'wallet-1',
@@ -287,17 +297,21 @@ describe('walletService', () => {
         10000
       );
 
-      expect(mockPost).toHaveBeenCalledWith('/wallets/internal-transfer', {
-        fromPocketId: 'wallet-1',
-        toPocketId: 'wallet-2',
-        amount: 10000,
-        description: undefined,
-      });
+      expect(mockPostWithIdempotency).toHaveBeenCalledWith(
+        '/wallets/internal-transfer',
+        {
+          fromPocketId: 'wallet-1',
+          toPocketId: 'wallet-2',
+          amount: 10000,
+          description: undefined,
+        },
+        expect.any(String)
+      );
     });
 
     it('should handle insufficient balance error', async () => {
       const error = new Error('Insufficient balance');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(walletService.transferToPocket('wallet-1', 'wallet-2', 999999999))
         .rejects.toThrow('Insufficient balance');
@@ -305,7 +319,7 @@ describe('walletService', () => {
 
     it('should handle same pocket transfer error', async () => {
       const error = new Error('Cannot transfer to the same pocket');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(walletService.transferToPocket('wallet-1', 'wallet-1', 10000))
         .rejects.toThrow('Cannot transfer to the same pocket');
@@ -313,7 +327,7 @@ describe('walletService', () => {
 
     it('should handle invalid pocket ID', async () => {
       const error = new Error('Pocket not found');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(walletService.transferToPocket('invalid', 'wallet-2', 10000))
         .rejects.toThrow('Pocket not found');
@@ -321,7 +335,7 @@ describe('walletService', () => {
 
     it('should handle negative amount', async () => {
       const error = new Error('Amount must be positive');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(walletService.transferToPocket('wallet-1', 'wallet-2', -1000))
         .rejects.toThrow('Amount must be positive');

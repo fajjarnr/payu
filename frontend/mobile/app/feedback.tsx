@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { feedbackService } from '@/services/feedback.service';
@@ -101,6 +102,59 @@ export default function FeedbackScreen() {
     setScreenshots(screenshots.filter((_, i) => i !== index));
   };
 
+  const renderCategory = useCallback(({ item, index }: any) => (
+    <TouchableOpacity
+      style={[
+        styles.categoryItem,
+        {
+          backgroundColor:
+            category === item.id ? '#10b981' : colors.card,
+          borderColor: colors.border,
+        },
+      ]}
+      onPress={() => setCategory(item.id)}
+      activeOpacity={0.7}
+    >
+      <Text style={styles.categoryIcon}>{item.icon}</Text>
+      <Text
+        style={[
+          styles.categoryLabel,
+          { color: category === item.id ? '#fff' : colors.text },
+        ]}
+      >
+        {item.label}
+      </Text>
+    </TouchableOpacity>
+  ), [category, colors.card, colors.border, colors.text]);
+
+  const getCategoryType = useCallback((item: any) => {
+    return category === item.id ? 'selected' : 'normal';
+  }, [category]);
+
+  const renderStar = useCallback((value: number) => (
+    <TouchableOpacity
+      key={value}
+      onPress={() => handleRating(value)}
+      style={styles.starButton}
+      activeOpacity={0.7}
+    >
+      <Text style={styles.star}>
+        {value <= rating ? '⭐' : '☆'}
+      </Text>
+    </TouchableOpacity>
+  ), [rating]);
+
+  const renderScreenshot = useCallback(({ item, index }: any) => (
+    <TouchableOpacity
+      key={index}
+      style={styles.screenshotItem}
+      onPress={() => removeScreenshot(index)}
+      activeOpacity={0.7}
+    >
+      <Text style={styles.screenshotRemove}>✕</Text>
+    </TouchableOpacity>
+  ), []);
+
   return (
     <ScrollView
       style={styles.container}
@@ -112,31 +166,16 @@ export default function FeedbackScreen() {
       {/* Category Selection */}
       <View style={styles.section}>
         <Text style={[styles.label, { color: colors.text }]}>Category</Text>
-        <View style={styles.categoryGrid}>
-          {FEEDBACK_CATEGORIES.map((cat) => (
-            <TouchableOpacity
-              key={cat.id}
-              style={[
-                styles.categoryItem,
-                {
-                  backgroundColor:
-                    category === cat.id ? '#10b981' : colors.card,
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={() => setCategory(cat.id)}
-            >
-              <Text style={styles.categoryIcon}>{cat.icon}</Text>
-              <Text
-                style={[
-                  styles.categoryLabel,
-                  { color: category === cat.id ? '#fff' : colors.text },
-                ]}
-              >
-                {cat.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.categoryListContainer}>
+          <FlashList
+            data={FEEDBACK_CATEGORIES}
+            renderItem={renderCategory}
+            keyExtractor={(item) => item.id}
+            getItemType={getCategoryType}
+            numColumns={2}
+            scrollEnabled={false}
+            contentContainerStyle={styles.categoryListContent}
+          />
         </View>
       </View>
 
@@ -146,17 +185,7 @@ export default function FeedbackScreen() {
           How would you rate this?
         </Text>
         <View style={styles.ratingContainer}>
-          {[1, 2, 3, 4, 5].map((value) => (
-            <TouchableOpacity
-              key={value}
-              onPress={() => handleRating(value)}
-              style={styles.starButton}
-            >
-              <Text style={styles.star}>
-                {value <= rating ? '⭐' : '☆'}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {[1, 2, 3, 4, 5].map(renderStar)}
         </View>
       </View>
 
@@ -183,6 +212,7 @@ export default function FeedbackScreen() {
               key={index}
               style={styles.screenshotItem}
               onPress={() => removeScreenshot(index)}
+              activeOpacity={0.7}
             >
               <Text style={styles.screenshotRemove}>✕</Text>
             </TouchableOpacity>
@@ -191,6 +221,7 @@ export default function FeedbackScreen() {
             <TouchableOpacity
               style={[styles.addScreenshot, { borderColor: colors.border }]}
               onPress={handleAddScreenshot}
+              activeOpacity={0.7}
             >
               <Text style={styles.addScreenshotText}>+ Add</Text>
             </TouchableOpacity>
@@ -231,6 +262,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 12,
   },
+  categoryListContainer: {
+    height: 240,
+  },
+  categoryListContent: {
+    paddingHorizontal: 1,
+  },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -238,7 +275,9 @@ const styles = StyleSheet.create({
   },
   categoryItem: {
     flex: 1,
-    minWidth: '45%',
+    minHeight: 100,
+    marginHorizontal: 6,
+    marginVertical: 6,
     paddingVertical: 16,
     paddingHorizontal: 12,
     borderRadius: 12,

@@ -97,8 +97,8 @@ describe('BalanceCard', () => {
     it('should call onToggleBalance when eye button is pressed', () => {
       render(<BalanceCard {...defaultProps} />);
 
-      // TouchableOpacity with accessible=true can be found by testID or by traversing
-      const eyeButton = screen.getAllByA11yState({})[0];
+      // Find the eye button by accessibility label
+      const eyeButton = screen.getByLabelText('Hide balance');
       fireEvent.press(eyeButton);
 
       expect(defaultProps.onToggleBalance).toHaveBeenCalledTimes(1);
@@ -107,9 +107,9 @@ describe('BalanceCard', () => {
     it('should not render eye button when onToggleBalance is not provided', () => {
       render(<BalanceCard balance={defaultProps.balance} />);
 
-      // Should only have the Card wrapper as accessible element
-      const accessibleElements = screen.getAllByA11yState({});
-      expect(accessibleElements.length).toBeLessThan(2);
+      // Query for the hide/show balance button should return null
+      const eyeButton = screen.queryByLabelText('Hide balance');
+      expect(eyeButton).toBeNull();
     });
   });
 
@@ -145,7 +145,7 @@ describe('BalanceCard', () => {
     it('should handle rapid toggle presses', () => {
       render(<BalanceCard {...defaultProps} />);
 
-      const eyeButton = screen.getAllByA11yState({})[0];
+      const eyeButton = screen.getByLabelText('Hide balance');
       fireEvent.press(eyeButton);
       fireEvent.press(eyeButton);
       fireEvent.press(eyeButton);

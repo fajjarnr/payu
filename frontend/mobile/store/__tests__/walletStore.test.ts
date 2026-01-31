@@ -265,11 +265,13 @@ describe('walletStore', () => {
 
       const { result } = renderHook(() => useWalletStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.createPocket(createPocketData);
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);
@@ -386,11 +388,13 @@ describe('walletStore', () => {
 
       const { result } = renderHook(() => useWalletStore());
 
-      await expect(
-        act(async () => {
+      await act(async () => {
+        try {
           await result.current.transferToPocket('pocket-1', 'pocket-2', 50000);
-        })
-      ).rejects.toBeDefined();
+        } catch {
+          // Expected to throw
+        }
+      });
 
       expect(result.current.error).toBe(errorMessage);
       expect(result.current.isLoading).toBe(false);

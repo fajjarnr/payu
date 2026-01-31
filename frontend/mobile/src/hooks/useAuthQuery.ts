@@ -14,18 +14,35 @@ import {
   AuthTokens,
 } from '@/types';
 
+/**
+ * Auth Query Hooks - React Query Integration for Authentication
+ *
+ * SECURITY POLICY: Token Storage (P2-C2)
+ * ========================================
+ *
+ * CRITICAL: Tokens are NEVER stored in React Query cache.
+ * Tokens are stored ONLY in SecureStore (encrypted).
+ *
+ * This file provides hooks for auth operations while ensuring:
+ * - Tokens go directly to SecureStore (never React Query cache)
+ * - User data can be cached (non-sensitive)
+ * - Session state is memory-only (not persisted)
+ *
+ * @module useAuthQuery
+ * @version 2.0.0 - Secure token handling
+ */
+
 // Query keys
 export const authKeys = {
   all: ['auth'] as const,
   user: () => [...authKeys.all, 'user'] as const,
-  tokens: () => [...authKeys.all, 'tokens'] as const,
   session: () => [...authKeys.all, 'session'] as const,
+  // SECURITY: No 'tokens' key - tokens are NEVER in React Query cache
 };
 
 // Types for auth state
 interface AuthState {
   user: User | null;
-  tokens: AuthTokens | null;
   isAuthenticated: boolean;
 }
 
@@ -44,16 +61,15 @@ export function useLogin(
       return response;
     },
     onSuccess: async (data) => {
-      // Store tokens securely
+      // SECURITY: Store tokens ONLY in SecureStore (encrypted)
+      // NEVER store tokens in React Query cache
       await storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens);
       await storage.set(AUTH_CONFIG.USER_KEY, data.user);
 
-      // Update auth state in cache
+      // Update non-sensitive auth state in cache (user only, no tokens)
       queryClient.setQueryData(authKeys.user(), data.user);
-      queryClient.setQueryData(authKeys.tokens(), data.tokens);
       queryClient.setQueryData(authKeys.session(), {
         user: data.user,
-        tokens: data.tokens,
         isAuthenticated: true,
       });
 
@@ -84,16 +100,15 @@ export function useRegister(
       return response;
     },
     onSuccess: async (data) => {
-      // Store tokens securely
+      // SECURITY: Store tokens ONLY in SecureStore (encrypted)
+      // NEVER store tokens in React Query cache
       await storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens);
       await storage.set(AUTH_CONFIG.USER_KEY, data.user);
 
-      // Update auth state in cache
+      // Update non-sensitive auth state in cache (user only, no tokens)
       queryClient.setQueryData(authKeys.user(), data.user);
-      queryClient.setQueryData(authKeys.tokens(), data.tokens);
       queryClient.setQueryData(authKeys.session(), {
         user: data.user,
-        tokens: data.tokens,
         isAuthenticated: true,
       });
     },
@@ -153,11 +168,11 @@ export function useRefreshToken(
       return response;
     },
     onSuccess: async (data) => {
-      // Update stored tokens
+      // SECURITY: Store refreshed tokens ONLY in SecureStore (encrypted)
+      // NEVER store tokens in React Query cache
       await storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens);
 
-      // Update cache
-      queryClient.setQueryData(authKeys.tokens(), data.tokens);
+      // Note: No cache update for tokens - they stay in SecureStore only
     },
     ...options,
   });
@@ -231,25 +246,46 @@ export function useVerifyEmail(
 
 /**
  * Hook to get current auth state from cache
+ *
+ * SECURITY: getTokens() reads directly from SecureStore
+ * Tokens are NEVER stored in React Query cache
  */
 export function useAuthState() {
   const queryClient = useQueryClient();
 
   return {
     getUser: () => queryClient.getQueryData<User>(authKeys.user()),
-    getTokens: () => queryClient.getQueryData<AuthTokens>(authKeys.tokens()),
+    /**
+     * Get tokens from SecureStore (not from React Query cache)
+     * SECURITY: Tokens are never in React Query cache
+     */
+    getTokens: async () => {
+      return await storage.get<AuthTokens>(AUTH_CONFIG.TOKEN_KEY);
+    },
     getSession: () =>
       queryClient.getQueryData<AuthState>(authKeys.session()),
-    setAuth: (data: AuthResponse) => {
+    /**
+     * Set auth state after login/register
+     * SECURITY: Tokens go to SecureStore only, never React Query cache
+     */
+    setAuth: async (data: AuthResponse) => {
+      // Store tokens in SecureStore (encrypted)
+      await storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens);
+      await storage.set(AUTH_CONFIG.USER_KEY, data.user);
+
+      // Store only non-sensitive data in React Query cache
       queryClient.setQueryData(authKeys.user(), data.user);
-      queryClient.setQueryData(authKeys.tokens(), data.tokens);
       queryClient.setQueryData(authKeys.session(), {
         user: data.user,
-        tokens: data.tokens,
         isAuthenticated: true,
       });
     },
-    clearAuth: () => {
+    clearAuth: async () => {
+      // Clear SecureStore
+      await storage.remove(AUTH_CONFIG.TOKEN_KEY);
+      await storage.remove(AUTH_CONFIG.USER_KEY);
+
+      // Clear React Query cache
       queryClient.removeQueries({ queryKey: authKeys.all });
     },
   };
@@ -258,6 +294,9 @@ export function useAuthState() {
 /**
  * Hook to initialize auth state from storage
  * Call this in your app initialization
+ *
+ * SECURITY: Only loads non-sensitive data into React Query cache.
+ * Tokens stay in SecureStore and are never loaded into cache.
  */
 export function useInitializeAuth() {
   const queryClient = useQueryClient();
@@ -265,22 +304,21 @@ export function useInitializeAuth() {
   return {
     initialize: async (): Promise<AuthState | null> => {
       try {
-        const [tokens, user] = await Promise.all([
-          storage.get<AuthTokens>(AUTH_CONFIG.TOKEN_KEY),
-          storage.get<User>(AUTH_CONFIG.USER_KEY),
-        ]);
+        // SECURITY: Only load user data into cache
+        // Tokens remain in SecureStore only
+        const user = await storage.get<User>(AUTH_CONFIG.USER_KEY);
+        const tokens = await storage.get<AuthTokens>(AUTH_CONFIG.TOKEN_KEY);
 
         if (tokens && user) {
           const authState: AuthState = {
             user,
-            tokens,
             isAuthenticated: true,
           };
 
-          // Set in cache
+          // Set only non-sensitive data in cache
           queryClient.setQueryData(authKeys.user(), user);
-          queryClient.setQueryData(authKeys.tokens(), tokens);
           queryClient.setQueryData(authKeys.session(), authState);
+          // SECURITY: No tokens in cache - they stay in SecureStore
 
           return authState;
         }

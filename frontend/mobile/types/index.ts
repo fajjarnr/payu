@@ -67,6 +67,7 @@ export interface Transaction {
   recipientAccount?: string;
   createdAt: string;
   processedAt?: string;
+  idempotencyKey?: string;
 }
 
 export interface TransferData {
@@ -76,6 +77,21 @@ export interface TransferData {
   description: string;
   fromPocket: string;
   scheduleDate?: string;
+  idempotencyKey?: string;
+}
+
+export interface TopUpData {
+  amount: number;
+  paymentMethod: string;
+  idempotencyKey?: string;
+}
+
+export interface QRISPaymentData {
+  merchantName: string;
+  amount: number;
+  merchantId: string;
+  terminalId: string;
+  idempotencyKey?: string;
 }
 
 // Card Types

@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Alert,
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -83,6 +83,16 @@ const BILLER_CATEGORIES: BillerCategory[] = [
   },
 ];
 
+// Flatten biller categories for FlashList
+const FLATTENED_BILLERS = BILLER_CATEGORIES.flatMap(category =>
+  category.billers.map(biller => ({
+    ...biller,
+    categoryName: category.name,
+    categoryId: category.id,
+    categoryIcon: category.icon,
+  }))
+);
+
 export default function BillsScreen() {
   const { colors } = useTheme();
 
@@ -142,204 +152,230 @@ export default function BillsScreen() {
     );
   };
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
+  // Memoized billers for selected category
+  const billersToShow = useMemo(() => {
+    if (!selectedCategory) return [];
+    return selectedCategory.billers.map(biller => ({
+      ...biller,
+      categoryName: selectedCategory.name,
+      categoryId: selectedCategory.id,
+    }));
+  }, [selectedCategory]);
+
+  // Render category item
+  const renderCategoryItem = useCallback(({ item }: { item: BillerCategory }) => (
+    <TouchableOpacity
+      style={[styles.categoryCard, { backgroundColor: colors.card }]}
+      onPress={() => handleCategoryPress(item)}
+      activeOpacity={0.7}
     >
-      <Text style={[styles.title, { color: colors.text }]}>Bill Payments</Text>
+      <Text style={styles.categoryIcon}>{item.icon}</Text>
+      <Text style={[styles.categoryName, { color: colors.text }]}>
+        {item.name}
+      </Text>
+    </TouchableOpacity>
+  ), [colors.card, colors.text]);
 
-      {/* Biller Categories */}
-      {!selectedBiller && (
-        <>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Select Category
-          </Text>
-          <View style={styles.categoryGrid}>
-            {BILLER_CATEGORIES.map((category) => (
-              <TouchableOpacity
-                key={category.id}
-                style={[styles.categoryCard, { backgroundColor: colors.card }]}
-                onPress={() => handleCategoryPress(category)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.categoryIcon}>{category.icon}</Text>
-                <Text style={[styles.categoryName, { color: colors.text }]}>
-                  {category.name}
+  // Render biller item
+  const renderBillerItem = useCallback(({ item }: { item: typeof billersToShow[0] }) => (
+    <TouchableOpacity
+      style={[styles.billerCard, { backgroundColor: colors.card }]}
+      onPress={() => handleBillerPress(item)}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.billerLogo, { backgroundColor: item.color }]}>
+        <Text style={styles.billerLogoText}>{item.logo}</Text>
+      </View>
+      <View style={styles.billerInfo}>
+        <Text style={[styles.billerName, { color: colors.text }]}>
+          {item.name}
+        </Text>
+        <Text style={[styles.billerCategory, { color: colors.textSecondary }]}>
+          {item.categoryName}
+        </Text>
+      </View>
+      <Text style={[styles.billerArrow, { color: colors.textSecondary }]}>
+        ›
+      </Text>
+    </TouchableOpacity>
+  ), [colors.card, colors.text, colors.textSecondary]);
+
+  const ListHeaderComponent = useCallback(() => (
+    <Text style={[styles.title, { color: colors.text }]}>Bill Payments</Text>
+  ), [colors.text]);
+
+  // Show biller selection form
+  if (selectedBiller && !showInquiry) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <ListHeaderComponent />
+          <Card padding="lg">
+            <View style={styles.selectedBillerHeader}>
+              <View style={[styles.selectedBillerLogo, { backgroundColor: selectedBiller.color }]}>
+                <Text style={styles.billerLogoText}>{selectedBiller.logo}</Text>
+              </View>
+              <View style={styles.selectedBillerInfo}>
+                <Text style={[styles.billerName, { color: colors.text }]}>
+                  {selectedBiller.name}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Selected Category Billers */}
-          {selectedCategory && (
-            <>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {selectedCategory.name} Billers
-              </Text>
-              {selectedCategory.billers.map((biller) => (
-                <TouchableOpacity
-                  key={biller.id}
-                  style={[styles.billerCard, { backgroundColor: colors.card }]}
-                  onPress={() => handleBillerPress(biller)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.billerLogo, { backgroundColor: biller.color }]}>
-                    <Text style={styles.billerLogoText}>{biller.logo}</Text>
-                  </View>
-                  <View style={styles.billerInfo}>
-                    <Text style={[styles.billerName, { color: colors.text }]}>
-                      {biller.name}
-                    </Text>
-                    <Text style={[styles.billerCategory, { color: colors.textSecondary }]}>
-                      {selectedCategory.name}
-                    </Text>
-                  </View>
-                  <Text style={[styles.billerArrow, { color: colors.textSecondary }]}>
-                    ›
-                  </Text>
+                <TouchableOpacity onPress={() => setSelectedBiller(null)}>
+                  <Text style={styles.changeText}>Change</Text>
                 </TouchableOpacity>
-              ))}
-            </>
-          )}
-        </>
-      )}
-
-      {/* Bill Payment Form */}
-      {selectedBiller && !showInquiry && (
-        <Card padding="lg">
-          <View style={styles.selectedBillerHeader}>
-            <View style={[styles.selectedBillerLogo, { backgroundColor: selectedBiller.color }]}>
-              <Text style={styles.billerLogoText}>{selectedBiller.logo}</Text>
+              </View>
             </View>
-            <View style={styles.selectedBillerInfo}>
-              <Text style={[styles.billerName, { color: colors.text }]}>
-                {selectedBiller.name}
+
+            <Input
+              label="Customer ID"
+              value={customerId}
+              onChangeText={setCustomerId}
+              placeholder="Enter customer ID"
+              keyboardType="default"
+              autoCapitalize="characters"
+            />
+
+            <Button
+              title="Check Bill"
+              onPress={handleInquiry}
+              fullWidth
+              style={styles.checkButton}
+            />
+          </Card>
+        </View>
+      </View>
+    );
+  }
+
+  // Show inquiry result
+  if (showInquiry && inquiryResult) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <ListHeaderComponent />
+          <Card padding="lg">
+            <View style={styles.inquiryHeader}>
+              <Text style={[styles.inquiryTitle, { color: colors.text }]}>
+                Bill Details
               </Text>
-              <TouchableOpacity onPress={() => setSelectedBiller(null)}>
-                <Text style={styles.changeText}>Change</Text>
+              <TouchableOpacity onPress={() => setShowInquiry(false)}>
+                <Text style={styles.changeText}>Edit</Text>
               </TouchableOpacity>
             </View>
-          </View>
 
-          <Input
-            label="Customer ID"
-            value={customerId}
-            onChangeText={setCustomerId}
-            placeholder="Enter customer ID"
-            keyboardType="default"
-            autoCapitalize="characters"
+            <View style={styles.inquiryDetails}>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Biller
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {inquiryResult.biller}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Customer Name
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {inquiryResult.customerName}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Customer ID
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {inquiryResult.customerId}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Period
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {inquiryResult.period}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Due Date
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {inquiryResult.dueDate}
+                </Text>
+              </View>
+
+              <View style={[styles.divider, { borderBottomColor: colors.border }]} />
+
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Bill Amount
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {formatCurrency(inquiryResult.amount)}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Admin Fee
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {formatCurrency(inquiryResult.adminFee)}
+                </Text>
+              </View>
+
+              <View style={[styles.divider, { borderBottomColor: colors.border }]} />
+
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+                  Total
+                </Text>
+                <Text style={[styles.totalValue, { color: '#10b981' }]}>
+                  {formatCurrency(inquiryResult.amount + inquiryResult.adminFee)}
+                </Text>
+              </View>
+            </View>
+
+            <Button
+              title="Pay Now"
+              onPress={handlePayment}
+              fullWidth
+              style={styles.payButton}
+            />
+          </Card>
+        </View>
+      </View>
+    );
+  }
+
+  // Category selection view with FlashList
+  return (
+    <FlashList
+      data={BILLER_CATEGORIES}
+      renderItem={renderCategoryItem}
+      keyExtractor={useCallback((item: BillerCategory) => `category-${item.id}`, [])}
+      numColumns={3}
+      ListHeaderComponent={ListHeaderComponent}
+      contentContainerStyle={styles.listContent}
+      showsVerticalScrollIndicator={false}
+      ListFooterComponent={selectedCategory ? () => (
+        <View style={styles.billersSection}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {selectedCategory.name} Billers
+          </Text>
+          <FlashList
+            data={billersToShow}
+            renderItem={renderBillerItem}
+            keyExtractor={useCallback((item: typeof billersToShow[0]) => `biller-${item.id}`, [])}
+            scrollEnabled={false}
           />
-
-          <Button
-            title="Check Bill"
-            onPress={handleInquiry}
-            fullWidth
-            style={styles.checkButton}
-          />
-        </Card>
-      )}
-
-      {/* Inquiry Result */}
-      {showInquiry && inquiryResult && (
-        <Card padding="lg">
-          <View style={styles.inquiryHeader}>
-            <Text style={[styles.inquiryTitle, { color: colors.text }]}>
-              Bill Details
-            </Text>
-            <TouchableOpacity onPress={() => setShowInquiry(false)}>
-              <Text style={styles.changeText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.inquiryDetails}>
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                Biller
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {inquiryResult.biller}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                Customer Name
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {inquiryResult.customerName}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                Customer ID
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {inquiryResult.customerId}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                Period
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {inquiryResult.period}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                Due Date
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {inquiryResult.dueDate}
-              </Text>
-            </View>
-
-            <View style={[styles.divider, { borderBottomColor: colors.border }]} />
-
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                Bill Amount
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {formatCurrency(inquiryResult.amount)}
-              </Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                Admin Fee
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {formatCurrency(inquiryResult.adminFee)}
-              </Text>
-            </View>
-
-            <View style={[styles.divider, { borderBottomColor: colors.border }]} />
-
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-                Total
-              </Text>
-              <Text style={[styles.totalValue, { color: '#10b981' }]}>
-                {formatCurrency(inquiryResult.amount + inquiryResult.adminFee)}
-              </Text>
-            </View>
-          </View>
-
-          <Button
-            title="Pay Now"
-            onPress={handlePayment}
-            fullWidth
-            style={styles.payButton}
-          />
-        </Card>
-      )}
-    </ScrollView>
+        </View>
+      ) : null}
+    />
   );
 }
 
@@ -350,6 +386,12 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+  },
+  listContent: {
+    padding: 20,
+  },
+  billersSection: {
+    marginTop: 24,
   },
   title: {
     fontSize: 28,

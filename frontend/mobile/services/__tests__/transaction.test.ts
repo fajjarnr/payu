@@ -8,7 +8,13 @@ jest.mock('../api', () => ({
     get: jest.fn(),
     post: jest.fn(),
   },
+  apiClientInstance: {
+    postWithIdempotency: jest.fn(),
+  },
 }));
+
+import { apiClientInstance } from '../api';
+const mockPostWithIdempotency = apiClientInstance.postWithIdempotency as jest.MockedFunction<typeof apiClientInstance.postWithIdempotency>;
 
 describe('transactionService', () => {
   const mockGet = apiClient.get as jest.MockedFunction<typeof apiClient.get>;
@@ -208,12 +214,16 @@ describe('transactionService', () => {
         message: 'Transfer successful',
       };
 
-      mockPost.mockResolvedValueOnce({ data: apiResponse });
+      mockPostWithIdempotency.mockResolvedValueOnce(apiResponse);
 
       const result = await transactionService.transfer(transferData);
 
-      expect(mockPost).toHaveBeenCalledWith('/transactions/transfer', transferData);
-      expect(mockPost).toHaveBeenCalledTimes(1);
+      expect(mockPostWithIdempotency).toHaveBeenCalledWith(
+        '/transactions/transfer',
+        transferData,
+        expect.any(String)
+      );
+      expect(mockPostWithIdempotency).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockTransaction);
     });
 
@@ -229,24 +239,28 @@ describe('transactionService', () => {
         message: 'Transfer scheduled',
       };
 
-      mockPost.mockResolvedValueOnce({ data: apiResponse });
+      mockPostWithIdempotency.mockResolvedValueOnce(apiResponse);
 
       const result = await transactionService.transfer(scheduledTransferData);
 
-      expect(mockPost).toHaveBeenCalledWith('/transactions/transfer', scheduledTransferData);
+      expect(mockPostWithIdempotency).toHaveBeenCalledWith(
+        '/transactions/transfer',
+        scheduledTransferData,
+        expect.any(String)
+      );
       expect(result.status).toBe('pending');
     });
 
     it('should handle insufficient balance', async () => {
       const error = new Error('Insufficient balance');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(transactionService.transfer(transferData)).rejects.toThrow('Insufficient balance');
     });
 
     it('should handle invalid recipient account', async () => {
       const error = new Error('Invalid recipient account');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(transactionService.transfer({
         ...transferData,
@@ -256,7 +270,7 @@ describe('transactionService', () => {
 
     it('should handle daily limit exceeded', async () => {
       const error = new Error('Daily transfer limit exceeded');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(transactionService.transfer({
         ...transferData,
@@ -286,12 +300,16 @@ describe('transactionService', () => {
         message: 'Top up initiated',
       };
 
-      mockPost.mockResolvedValueOnce({ data: apiResponse });
+      mockPostWithIdempotency.mockResolvedValueOnce(apiResponse);
 
-      const result = await transactionService.topUp(amount, paymentMethod);
+      const result = await transactionService.topUp({ amount, paymentMethod });
 
-      expect(mockPost).toHaveBeenCalledWith('/transactions/topup', { amount, paymentMethod });
-      expect(mockPost).toHaveBeenCalledTimes(1);
+      expect(mockPostWithIdempotency).toHaveBeenCalledWith(
+        '/transactions/topup',
+        { amount, paymentMethod },
+        expect.any(String)
+      );
+      expect(mockPostWithIdempotency).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockTransaction);
     });
 
@@ -302,29 +320,33 @@ describe('transactionService', () => {
         message: 'Top up initiated',
       };
 
-      mockPost.mockResolvedValueOnce({ data: apiResponse });
+      mockPostWithIdempotency.mockResolvedValueOnce(apiResponse);
 
-      await transactionService.topUp(100000, 'debit_card');
+      await transactionService.topUp({ amount: 100000, paymentMethod: 'debit_card' });
 
-      expect(mockPost).toHaveBeenCalledWith('/transactions/topup', {
-        amount: 100000,
-        paymentMethod: 'debit_card',
-      });
+      expect(mockPostWithIdempotency).toHaveBeenCalledWith(
+        '/transactions/topup',
+        {
+          amount: 100000,
+          paymentMethod: 'debit_card',
+        },
+        expect.any(String)
+      );
     });
 
     it('should handle invalid amount', async () => {
       const error = new Error('Minimum top up amount is 10000');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
-      await expect(transactionService.topUp(1000, paymentMethod))
+      await expect(transactionService.topUp({ amount: 1000, paymentMethod }))
         .rejects.toThrow('Minimum top up amount is 10000');
     });
 
     it('should handle unsupported payment method', async () => {
       const error = new Error('Unsupported payment method');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
-      await expect(transactionService.topUp(amount, 'invalid_method'))
+      await expect(transactionService.topUp({ amount, paymentMethod: 'invalid_method' }))
         .rejects.toThrow('Unsupported payment method');
     });
   });
@@ -355,18 +377,22 @@ describe('transactionService', () => {
         message: 'QRIS payment successful',
       };
 
-      mockPost.mockResolvedValueOnce({ data: apiResponse });
+      mockPostWithIdempotency.mockResolvedValueOnce(apiResponse);
 
       const result = await transactionService.payQRIS(qrisData);
 
-      expect(mockPost).toHaveBeenCalledWith('/transactions/qris', qrisData);
-      expect(mockPost).toHaveBeenCalledTimes(1);
+      expect(mockPostWithIdempotency).toHaveBeenCalledWith(
+        '/transactions/qris',
+        qrisData,
+        expect.any(String)
+      );
+      expect(mockPostWithIdempotency).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockTransaction);
     });
 
     it('should handle invalid QRIS code', async () => {
       const error = new Error('Invalid QRIS code');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(transactionService.payQRIS({
         ...qrisData,
@@ -376,14 +402,14 @@ describe('transactionService', () => {
 
     it('should handle expired QRIS code', async () => {
       const error = new Error('QRIS code expired');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(transactionService.payQRIS(qrisData)).rejects.toThrow('QRIS code expired');
     });
 
     it('should handle insufficient balance for QRIS', async () => {
       const error = new Error('Insufficient balance');
-      mockPost.mockRejectedValueOnce(error);
+      mockPostWithIdempotency.mockRejectedValueOnce(error);
 
       await expect(transactionService.payQRIS({
         ...qrisData,

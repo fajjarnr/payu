@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Alert,
   Switch,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,6 +33,7 @@ interface SettingItem {
 export default function ProfileScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const isMountedRef = useRef(true);
   const { user, logout } = useAuth();
   const { lockEnabled, toggleAppLock, setSessionTimeout, checkJailbreak } = useAppLock();
   const { checkAvailability: checkBiometric } = useBiometrics();
@@ -43,7 +44,8 @@ export default function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(notificationPermission);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
 
-  const handleLogout = () => {
+  // Memoize logout handler
+  const handleLogout = useCallback(() => {
     Alert.alert(
       'Logout',
       'Are you sure you want to log out?',
@@ -58,26 +60,39 @@ export default function ProfileScreen() {
         },
       ]
     );
-  };
+  }, [logout]);
 
-  const handleChangePIN = () => {
+  // Memoize navigation handlers
+  const handleChangePIN = useCallback(() => {
     router.push('/profile/change-pin');
-  };
+  }, [router]);
 
-  const handleSecurityCheck = async () => {
-    const isJailbroken = await checkJailbreak();
-    if (isJailbroken) {
-      Alert.alert(
-        'Security Warning',
-        'Your device appears to be jailbroken or rooted. This may compromise the security of your account.',
-        [{ text: 'OK' }]
-      );
-    } else {
-      Alert.alert('Security Check', 'Your device appears to be secure.');
+  // Memoize security check with cleanup
+  const handleSecurityCheck = useCallback(async () => {
+    if (!isMountedRef.current) return;
+
+    try {
+      const isJailbroken = await checkJailbreak();
+      if (!isMountedRef.current) return;
+
+      if (isJailbroken) {
+        Alert.alert(
+          'Security Warning',
+          'Your device appears to be jailbroken or rooted. This may compromise the security of your account.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Security Check', 'Your device appears to be secure.');
+      }
+    } catch (error) {
+      console.error('Security check failed:', error);
     }
-  };
+  }, [checkJailbreak]);
 
-  const toggleNotifications = async (value: boolean) => {
+  // Memoize notification toggle
+  const toggleNotifications = useCallback(async (value: boolean) => {
+    if (!isMountedRef.current) return;
+
     if (value && !notificationPermission) {
       Alert.alert(
         'Enable Notifications',
@@ -85,27 +100,39 @@ export default function ProfileScreen() {
         [{ text: 'OK' }]
       );
     }
-    setNotificationsEnabled(value);
-  };
+    if (isMountedRef.current) {
+      setNotificationsEnabled(value);
+    }
+  }, [notificationPermission]);
 
-  const toggleBiometrics = async (value: boolean) => {
+  // Memoize biometric toggle with cleanup
+  const toggleBiometrics = useCallback(async (value: boolean) => {
+    if (!isMountedRef.current) return;
+
     if (value) {
-      const available = await checkBiometric();
-      if (available) {
-        setBiometricEnabled(true);
-      } else {
-        Alert.alert(
-          'Biometric Not Available',
-          'Biometric authentication is not available on this device.',
-          [{ text: 'OK' }]
-        );
+      try {
+        const available = await checkBiometric();
+        if (!isMountedRef.current) return;
+
+        if (available) {
+          setBiometricEnabled(true);
+        } else {
+          Alert.alert(
+            'Biometric Not Available',
+            'Biometric authentication is not available on this device.',
+            [{ text: 'OK' }]
+          );
+        }
+      } catch (error) {
+        console.error('Biometric check failed:', error);
       }
     } else {
       setBiometricEnabled(false);
     }
-  };
+  }, [checkBiometric]);
 
-  const settingsSections: SettingItem[][] = [
+  // Memoize settings sections to prevent recreation on every render
+  const settingsSections: SettingItem[][] = useMemo(() => [
     // Account Settings
     [
       {
@@ -232,46 +259,70 @@ export default function ProfileScreen() {
         onPress: () => router.push('/profile/about'),
       },
     ],
-  ];
+  ], [router, handleChangePIN, handleSecurityCheck, lockEnabled, biometricEnabled, notificationsEnabled, toggleAppLock, toggleBiometrics, toggleNotifications, setSessionTimeout, showFeedback]);
 
-  const renderSettingItem = (item: SettingItem) => (
-    <TouchableOpacity
-      key={item.id}
-      style={[styles.settingItem, { borderBottomColor: colors.border }]}
-      onPress={item.onPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.settingLeft}>
-        {item.icon && <Text style={styles.settingIcon}>{item.icon}</Text>}
-        <Text style={[styles.settingLabel, { color: colors.text }]}>
-          {item.label}
-        </Text>
-      </View>
+  // Flatten settings sections for FlashList
+  const flattenedSettings = useMemo(() => {
+    const items: Array<{ type: 'header' | 'item'; data?: SettingItem; sectionIndex?: number }> = [];
+    settingsSections.forEach((section, sectionIndex) => {
+      section.forEach((item) => {
+        items.push({ type: 'item', data: item, sectionIndex });
+      });
+    });
+    return items;
+  }, [settingsSections]);
 
-      <View style={styles.settingRight}>
-        {item.type === 'toggle' && (
-          <Switch
-            value={item.value}
-            onValueChange={item.onPress}
-            trackColor={{ false: '#d1d5db', true: '#10b981' }}
-            thumbColor="#ffffff"
-          />
-        )}
-        {item.type === 'navigation' && (
-          <Text style={[styles.settingArrow, { color: colors.textSecondary }]}>
-            ›
+  // Memoize render item for performance
+  const renderSettingItem = useCallback(({ item }: { item: typeof flattenedSettings[0] }) => {
+    if (item.type === 'header' || !item.data) return null;
+    const settingItem = item.data;
+    const isLastInSection = settingsSections[item.sectionIndex!]?.indexOf(settingItem) === settingsSections[item.sectionIndex!]?.length - 1;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.settingItem,
+          { borderBottomColor: colors.border },
+          isLastInSection && { borderBottomWidth: 0 }
+        ]}
+        onPress={settingItem.onPress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.settingLeft}>
+          {settingItem.icon && <Text style={styles.settingIcon}>{settingItem.icon}</Text>}
+          <Text style={[styles.settingLabel, { color: colors.text }]}>
+            {settingItem.label}
           </Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+        </View>
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+        <View style={styles.settingRight}>
+          {settingItem.type === 'toggle' && (
+            <Switch
+              value={settingItem.value}
+              onValueChange={settingItem.onPress}
+              trackColor={{ false: '#d1d5db', true: '#10b981' }}
+              thumbColor="#ffffff"
+            />
+          )}
+          {settingItem.type === 'navigation' && (
+            <Text style={[styles.settingArrow, { color: colors.textSecondary }]}>
+              ›
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  }, [colors.border, colors.text, colors.textSecondary, settingsSections]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const ListHeaderComponent = useCallback(() => (
+    <>
       {/* Profile Header */}
       <Card padding="lg" style={styles.profileCard}>
         <View style={styles.profileHeader}>
@@ -313,14 +364,11 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Card>
+    </>
+  ), [user, colors, language]);
 
-      {/* Settings Sections */}
-      {settingsSections.map((section, sectionIndex) => (
-        <Card key={sectionIndex} padding="none" style={styles.settingsCard}>
-          {section.map((item) => renderSettingItem(item))}
-        </Card>
-      ))}
-
+  const ListFooterComponent = useCallback(() => (
+    <>
       {/* Logout Button */}
       <Button
         title="Log Out"
@@ -334,16 +382,29 @@ export default function ProfileScreen() {
       <Text style={[styles.version, { color: colors.textSecondary }]}>
         PayU Mobile v1.0.0
       </Text>
-    </ScrollView>
+    </>
+  ), [handleLogout, colors.textSecondary]);
+
+  return (
+    <FlashList
+      data={flattenedSettings}
+      renderItem={renderSettingItem}
+      keyExtractor={useCallback((item: typeof flattenedSettings[0]) => {
+        if (item.type === 'item' && item.data) {
+          return `setting-${item.data.id}`;
+        }
+        return `section-${item.sectionIndex}`;
+      }, [])}
+      ListHeaderComponent={ListHeaderComponent}
+      ListFooterComponent={ListFooterComponent}
+      contentContainerStyle={styles.listContent}
+      showsVerticalScrollIndicator={false}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  content: {
+  listContent: {
     padding: 20,
   },
   profileCard: {
