@@ -10,50 +10,50 @@
 
 ### Services Inventory (22 Total)
 
-| Category | Services | Status |
-|----------|----------|--------|
-| **Core Banking** | account, auth, wallet, transaction | ✅ Complete |
-| **Financial** | investment, lending, fx, statement | ✅ Complete |
-| **Operations** | billing, notification, compliance | ✅ Complete |
-| **Platform** | gateway, api-portal, cms, ab-testing | ✅ Complete |
-| **Support** | support, backoffice, partner, promotion | ✅ Complete |
-| **ML/Analytics** | kyc (Python), analytics (Python) | ✅ Complete |
-| **Simulators** | bi-fast, dukcapil, qris | ✅ Complete |
-| **Shared Libs** | security-starter, resilience-starter, cache-starter, api-commons | ✅ Fixed |
-| **Integration** | events-starter, outbox-starter, saga-starter | ✅ **NEW** |
-| **Core Banking** | archunit-starter, Money VO, Idempotency | ✅ **NEW** |
-| **API Standards** | Response Envelope, Idempotency, OpenAPI, HTTP 201 | ✅ **COMPLETE** |
+| Category          | Services                                                         | Status          |
+| ----------------- | ---------------------------------------------------------------- | --------------- |
+| **Core Banking**  | account, auth, wallet, transaction                               | ✅ Complete     |
+| **Financial**     | investment, lending, fx, statement                               | ✅ Complete     |
+| **Operations**    | billing, notification, compliance                                | ✅ Complete     |
+| **Platform**      | gateway, api-portal, cms, ab-testing                             | ✅ Complete     |
+| **Support**       | support, backoffice, partner, promotion                          | ✅ Complete     |
+| **ML/Analytics**  | kyc (Python), analytics (Python)                                 | ✅ Complete     |
+| **Simulators**    | bi-fast, dukcapil, qris                                          | ✅ Complete     |
+| **Shared Libs**   | security-starter, resilience-starter, cache-starter, api-commons | ✅ Fixed        |
+| **Integration**   | events-starter, outbox-starter, saga-starter                     | ✅ **NEW**      |
+| **Core Banking**  | archunit-starter, Money VO, Idempotency                          | ✅ **NEW**      |
+| **API Standards** | Response Envelope, Idempotency, OpenAPI, HTTP 201                | ✅ **COMPLETE** |
 
 ### Frontend Inventory
 
-| Application | Location | Status | Test Framework |
-|-------------|----------|--------|----------------|
-| **Web App** | `frontend/web-app/` | ✅ Complete (Next.js 16.1.4) | Vitest + Playwright |
-| **Mobile App** | `frontend/mobile/` | ✅ Complete (Expo SDK 52) | Jest |
-| **Developer Docs** | `frontend/developer-docs/` | ✅ Complete (Next.js) | Vitest |
+| Application        | Location                   | Status                       | Test Framework      |
+| ------------------ | -------------------------- | ---------------------------- | ------------------- |
+| **Web App**        | `frontend/web-app/`        | ✅ Complete (Next.js 16.1.4) | Vitest + Playwright |
+| **Mobile App**     | `frontend/mobile/`         | ✅ Complete (Expo SDK 52)    | Jest                |
+| **Developer Docs** | `frontend/developer-docs/` | ✅ Complete (Next.js)        | Vitest              |
 
 ---
 
 ## 🎯 Current Progress Overview
 
-| Priority | Category | Progress | Target | Status |
-|----------|----------|----------|--------|--------|
-| **P0** | Web App Production Readiness | 100% | 100% | ✅ **COMPLETE** - Build passes, all tests green |
-| **P1** | Mobile App Production Readiness | 95% | 100% | ✅ **COMPLETE** - Tests passing (538/569), TypeScript 0 errors |
-| **P2** | Mobile Data Architecture Improvements | 65% | 100% | 🔴 **NEXT** - State migration, security hardening |
-| **P3** | Backend API Documentation | 70% | 100% | 🟡 In Progress - 6 Quarkus services need Springdoc |
-| **P4** | Backend Integration Tests | 96% | 80% | 🟢 Exceeds Target |
-| **P5** | Developer Docs Tests | 100% | 50% | 🟢 Exceeds Target |
-| **P6** | Test Infrastructure | 90% | 80% | 🟢 Complete |
-| **P7** | Container Migration (Docker → Podman) | 100% | 100% | 🟢 Complete |
-| **P8** | Frontend Best Practices Review | 100% | 100% | 🟢 Complete |
-| **P9** | Integration Architecture (Events, Outbox, Saga) | 100% | 100% | 🟢 **Complete** |
-| **P10** | Core Banking Architecture (ArchUnit, Money, Idempotency) | 100% | 100% | 🟢 **Complete** |
-| **P11** | Mobile Enhancements (TanStack Query, E2E, A11y) | 100% | 100% | 🟢 **Complete** |
-| **P12** | API Best Practices (Response Envelope, Idempotency, OpenAPI) | 95% | 80% | 🟢 Exceeds Target |
-| **P13** | Security Audit & Remediation (JWT, RBAC, PII, CORS) | 95% | 80% | 🟢 Exceeds Target |
-| **P14** | Infrastructure Production Hardening | 85% | 100% | 🟡 In Progress |
-| **P15** | Documentation (ADR, OpenAPI Catalog) | 100% | 100% | 🟢 **Complete** |
+| Priority | Category                                                     | Progress | Target | Status                                                         |
+| -------- | ------------------------------------------------------------ | -------- | ------ | -------------------------------------------------------------- |
+| **P0**   | Web App Production Readiness                                 | 100%     | 100%   | ✅ **COMPLETE** - Build passes, all tests green                |
+| **P1**   | Mobile App Production Readiness                              | 95%      | 100%   | ✅ **COMPLETE** - Tests passing (538/569), TypeScript 0 errors |
+| **P2**   | Mobile Data Architecture Improvements                        | 65%      | 100%   | 🔴 **NEXT** - State migration, security hardening              |
+| **P3**   | Backend API Documentation                                    | 70%      | 100%   | 🟡 In Progress - 6 Quarkus services need Springdoc             |
+| **P4**   | Backend Integration Tests                                    | 96%      | 80%    | 🟢 Exceeds Target                                              |
+| **P5**   | Developer Docs Tests                                         | 100%     | 50%    | 🟢 Exceeds Target                                              |
+| **P6**   | Test Infrastructure                                          | 90%      | 80%    | 🟢 Complete                                                    |
+| **P7**   | Container Migration (Docker → Podman)                        | 100%     | 100%   | 🟢 Complete                                                    |
+| **P8**   | Frontend Best Practices Review                               | 100%     | 100%   | 🟢 Complete                                                    |
+| **P9**   | Integration Architecture (Events, Outbox, Saga)              | 100%     | 100%   | 🟢 **Complete**                                                |
+| **P10**  | Core Banking Architecture (ArchUnit, Money, Idempotency)     | 100%     | 100%   | 🟢 **Complete**                                                |
+| **P11**  | Mobile Enhancements (TanStack Query, E2E, A11y)              | 100%     | 100%   | 🟢 **Complete**                                                |
+| **P12**  | API Best Practices (Response Envelope, Idempotency, OpenAPI) | 95%      | 80%    | 🟢 Exceeds Target                                              |
+| **P13**  | Security Audit & Remediation (JWT, RBAC, PII, CORS)          | 95%      | 80%    | 🟢 Exceeds Target                                              |
+| **P14**  | Infrastructure Production Hardening                          | 85%      | 100%   | 🟡 In Progress                                                 |
+| **P15**  | Documentation (ADR, OpenAPI Catalog)                         | 100%     | 100%   | 🟢 **Complete**                                                |
 
 ---
 
@@ -62,21 +62,25 @@
 > **Status**: ✅ **ALL P0 TASKS COMPLETE** - Web App is now production ready
 
 ### P0-C1: TypeScript Errors - FIXED ✅
+
 - **Before**: 18 TypeScript errors blocking compilation
 - **After**: 0 errors
 - **Files fixed**: useAuth.ts, useWebSocket.ts, test files, pockets/page.tsx
 
 ### P0-C2: Security Vulnerability - FIXED ✅
+
 - **Before**: JWT tokens stored in localStorage (XSS vulnerable)
 - **After**: httpOnly cookies (secure)
 - **Files fixed**: 7 files (login/page.tsx, MobileNav.tsx, AccountService.ts, etc.)
 
 ### P0-C3: Failing Tests - FIXED ✅
+
 - **Before**: 95 tests failing (9.6% failure rate)
 - **After**: 0 failures, 1,063 tests passing
 - **Tests fixed**: 265 tests across all categories
 
 ### P0-C4: React Compiler Warnings - FIXED ✅
+
 - **Before**: Warnings in transfer flow
 - **After**: Clean build, no warnings
 - **Files fixed**: transfer/page.tsx, AuthService.ts
@@ -88,20 +92,24 @@
 > **Status**: ✅ **P1 TASKS COMPLETE** - Mobile App is now production ready
 
 ### P1-C1: Jest/Babel Configuration - FIXED ✅
+
 - **Before**: `.plugins is not a valid Plugin property` blocking all tests
 - **After**: Tests running (538 passing)
 - **Fix**: Disabled nativewind/babel for test environment in babel.config.js
 
 ### P1-C2: TypeScript Errors - FIXED ✅
+
 - **Before**: 50+ TypeScript errors
 - **After**: 0 errors
 - **Files fixed**: bills.tsx, transfer-confirm.tsx, BalanceCard.tsx, test files, hooks, accessibility
 
 ### P1-C3: ESLint Warnings - FIXED ✅
+
 - **Before**: 13 warnings
 - **After**: 13 warnings (non-blocking, code quality improvements)
 
 ### Test Results
+
 - **Passing**: 538 tests (94.5%)
 - **Failing**: 31 tests (5.5%) - mostly accessibility test assertions that can be fixed later
 - **Test Suites**: 19 passing, 8 failing
@@ -121,14 +129,15 @@
 
 > **Status**: **PRODUCTION READY** - Build passes, all tests green, security hardened
 
-| Issue | Severity | Status | Details |
-|-------|----------|--------|---------|
-| **Build** | **CRITICAL** | ✅ FIXED | 0 TypeScript errors |
-| **Tests** | **HIGH** | ✅ FIXED | 1,063 tests passing |
-| **Security** | **CRITICAL** | ✅ FIXED | localStorage tokens removed |
-| **React Compiler** | **MEDIUM** | ✅ FIXED | No warnings |
+| Issue              | Severity     | Status   | Details                     |
+| ------------------ | ------------ | -------- | --------------------------- |
+| **Build**          | **CRITICAL** | ✅ FIXED | 0 TypeScript errors         |
+| **Tests**          | **HIGH**     | ✅ FIXED | 1,063 tests passing         |
+| **Security**       | **CRITICAL** | ✅ FIXED | localStorage tokens removed |
+| **React Compiler** | **MEDIUM**   | ✅ FIXED | No warnings                 |
 
 **Verification Commands**:
+
 ```bash
 cd frontend/web-app
 npm run type-check  # ✅ 0 errors
@@ -144,13 +153,14 @@ npm run build       # ✅ Success
 
 > **Status**: **PRODUCTION READY** - Tests passing (538/569), TypeScript 0 errors
 
-| Issue | Severity | Status | Details |
-|-------|----------|--------|---------|
-| **Jest Configuration** | **CRITICAL** | ✅ FIXED | Tests now running |
-| **TypeScript Errors** | **HIGH** | ✅ FIXED | 0 errors |
-| **ESLint Warnings** | **MEDIUM** | ✅ FIXED | 13 warnings (non-blocking) |
+| Issue                  | Severity     | Status   | Details                    |
+| ---------------------- | ------------ | -------- | -------------------------- |
+| **Jest Configuration** | **CRITICAL** | ✅ FIXED | Tests now running          |
+| **TypeScript Errors**  | **HIGH**     | ✅ FIXED | 0 errors                   |
+| **ESLint Warnings**    | **MEDIUM**   | ✅ FIXED | 13 warnings (non-blocking) |
 
 **Verification Commands**:
+
 ```bash
 cd frontend/mobile
 npx tsc --noEmit       # ✅ 0 errors
@@ -167,63 +177,70 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 #### Data Architecture Audit Summary
 
-| Category | Score | Issues | Status |
-|----------|-------|--------|--------|
-| **State Management** | 50/100 | Duplicate Zustand + React Query, no single source of truth | 🔴 Critical |
-| **Security** | 60/100 | Tokens in multiple locations, query cache unencrypted | 🔴 Critical |
-| **Performance** | 65/100 | ScrollView instead of FlatList, no memoization | 🟡 Medium |
-| **Offline-First** | 70/100 | Queue exists but not integrated | 🟡 Medium |
-| **API Integration** | 80/100 | Good patterns, missing idempotency | 🟢 Good |
+| Category             | Score  | Issues                                                | Status         |
+| -------------------- | ------ | ----------------------------------------------------- | -------------- |
+| **State Management** | 60/100 | Strategy: Zustand (Local) + React Query (Server)      | 🟡 In Progress |
+| **Security**         | 60/100 | Tokens in multiple locations, query cache unencrypted | 🔴 Critical    |
+| **Performance**      | 65/100 | ScrollView instead of FlatList, no memoization        | 🟡 Medium      |
+| **Offline-First**    | 70/100 | Queue exists but not integrated                       | 🟡 Medium      |
+| **API Integration**  | 80/100 | Good patterns, missing idempotency                    | 🟢 Good        |
 
 #### Critical Issues Found
 
-**1. Duplicate State Management (Critical)**
-- Zustand stores (`/store/walletStore.ts`, `/store/transactionStore.ts`) actively used
-- React Query hooks (`/src/hooks/useWalletQuery.ts`, `/src/hooks/useTransactionQuery.ts`) exist but **NOT used**
-- Components use old Zustand-based hooks
-- No single source of truth
+**1. Duplicate State Management (In Progress)**
+
+- **Strategy Defined**:
+  - **Zustand** → Local/Client state (theme, language, modal management).
+  - **React Query** → Server data (API results, user profile, transactions).
+- **Progress**: `uiStore.ts` created for client-side settings.
+- **Next Step**: Migrate Wallet & Transaction data exclusively to React Query.
 
 **2. Security Issues (Critical)**
+
 - Tokens stored in 3 locations: Zustand state + React Query cache + SecureStore
 - Query cache persisted to AsyncStorage (less secure than SecureStore)
 - Sensitive data potentially logged
 - No request signing for API calls
 
 **3. Performance Issues (Medium)**
+
 - Using `ScrollView` + `map` instead of `FlatList` for transaction history
 - No memoization for expensive computations
 - Synchronous SecureStore operations
 - No request cancellation
 
 **4. Offline-First Gaps (Medium)**
+
 - Offline queue exists but not integrated with services
 - No conflict resolution strategy
 - Limited offline cache duration (1 hour)
 
 #### P2 Tasks
 
-| # | Task | Priority | Est. Time | Impact |
-|---|------|----------|-----------|--------|
-| P2-C1 | Migrate components to use React Query hooks | **CRITICAL** | 3-5 days | Remove Zustand dependency, unify state |
-| P2-C2 | Fix token storage (SecureStore only) | **CRITICAL** | 1-2 days | Security hardening |
-| P2-C3 | Encrypt query cache or exclude sensitive data | **HIGH** | 2-3 days | Data protection |
-| P2-C4 | Implement idempotency for financial operations | **HIGH** | 2-3 days | Prevent duplicate transactions |
-| P2-C5 | Replace ScrollView with FlatList | **MEDIUM** | 1-2 days | Performance optimization |
-| P2-C6 | Add request cancellation & memoization | **MEDIUM** | 1-2 days | Performance, memory leaks |
-| P2-C7 | Complete offline queue implementation | **MEDIUM** | 2-3 days | Offline-first UX |
-| P2-C8 | Sanitize logs & add error handling | **MEDIUM** | 1 day | Security, debugging |
+| #     | Task                                                    | Priority      | Est. Time | Impact                                    |
+| ----- | ------------------------------------------------------- | ------------- | --------- | ----------------------------------------- |
+| P2-C0 | Define state management strategy & Initialize `uiStore` | **COMPLETED** | 1 day     | Strategy alignment ✅                     |
+| P2-C1 | Migrate components to use React Query hooks             | **CRITICAL**  | 3-5 days  | Remove Zustand dependency for server data |
+| P2-C2 | Fix token storage (SecureStore only)                    | **CRITICAL**  | 1-2 days  | Security hardening                        |
+| P2-C3 | Encrypt query cache or exclude sensitive data           | **HIGH**      | 2-3 days  | Data protection                           |
+| P2-C4 | Implement idempotency for financial operations          | **HIGH**      | 2-3 days  | Prevent duplicate transactions            |
+| P2-C5 | Replace ScrollView with FlatList                        | **MEDIUM**    | 1-2 days  | Performance optimization                  |
+| P2-C6 | Add request cancellation & memoization                  | **MEDIUM**    | 1-2 days  | Performance, memory leaks                 |
+| P2-C7 | Complete offline queue implementation                   | **MEDIUM**    | 2-3 days  | Offline-first UX                          |
+| P2-C8 | Sanitize logs & add error handling                      | **MEDIUM**    | 1 day     | Security, debugging                       |
 
 #### Technical Debt Created
 
-| Debt ID | Description | Type | Effort |
-|---------|-------------|------|--------|
-| TD-MOB-001 | Duplicate state management systems | Accidental | 3-5 days to migrate |
-| TD-MOB-002 | Unused React Query hooks in `/src/hooks/` | Accidental | 1 day to remove or integrate |
-| TD-MOB-003 | Parallel async operations should use Promise.all | Deliberate | 1 hour to fix |
+| Debt ID    | Description                                      | Type       | Effort                       |
+| ---------- | ------------------------------------------------ | ---------- | ---------------------------- |
+| TD-MOB-001 | Duplicate state management systems               | Accidental | 3-5 days to migrate          |
+| TD-MOB-002 | Unused React Query hooks in `/src/hooks/`        | Accidental | 1 day to remove or integrate |
+| TD-MOB-003 | Parallel async operations should use Promise.all | Deliberate | 1 hour to fix                |
 
 #### Files Requiring Changes
 
 **State Migration (P2-C1):**
+
 - `app/(tabs)/index.tsx` - Uses `useWallet` from Zustand
 - `app/(tabs)/history.tsx` - Uses `useTransactions` from Zustand
 - `app/(tabs)/transfers.tsx` - Uses `useTransactions` from Zustand
@@ -231,16 +248,19 @@ npm run lint          # ✅ 0 errors, 13 warnings
 - `hooks/useTransactions.ts` - Zustand-based hook
 
 **Security Fixes (P2-C2, P2-C3):**
+
 - `src/providers/QueryProvider.tsx` - AsyncStorage persister
 - `store/authStore.ts` - Token in multiple locations
 - `context/AuthContext.tsx` - Sequential storage operations
 
 **Performance (P2-C5, P2-C6):**
+
 - `app/(tabs)/history.tsx` - ScrollView + map instead of FlatList
 - `components/shared/TransactionList.tsx` - No virtualization
 - All component files - Missing memoization
 
 **Offline (P2-C7):**
+
 - `hooks/useOfflineMode.ts` - Queue not integrated
 - `services/api.ts` - No offline queue usage
 
@@ -252,14 +272,14 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 > **Status**: 6 Quarkus services need Springdoc migration for consistency
 
-| Service | Current State | Required Changes | Est. Time |
-|---------|--------------|-----------------|-----------|
-| **billing-service** | Microprofile OpenAPI | Migrate to Springdoc, add @Tag/@Operation | 2h |
-| **notification-service** | Missing OpenAPI annotations | Add @Tag/@Operation/@ApiResponse | 2h |
-| **support-service** | Microprofile OpenAPI | Migrate to Springdoc | 2h |
-| **backoffice-service** | No OpenAPI, no BaseController | Add OpenAPI + BaseController + @PreAuthorize | 4h |
-| **partner-service** | No OpenAPI, no BaseController | Add OpenAPI + BaseController + @PreAuthorize | 4h |
-| **promotion-service** | Microprofile OpenAPI | Migrate to Springdoc | 2h |
+| Service                  | Current State                 | Required Changes                             | Est. Time |
+| ------------------------ | ----------------------------- | -------------------------------------------- | --------- |
+| **billing-service**      | Microprofile OpenAPI          | Migrate to Springdoc, add @Tag/@Operation    | 2h        |
+| **notification-service** | Missing OpenAPI annotations   | Add @Tag/@Operation/@ApiResponse             | 2h        |
+| **support-service**      | Microprofile OpenAPI          | Migrate to Springdoc                         | 2h        |
+| **backoffice-service**   | No OpenAPI, no BaseController | Add OpenAPI + BaseController + @PreAuthorize | 4h        |
+| **partner-service**      | No OpenAPI, no BaseController | Add OpenAPI + BaseController + @PreAuthorize | 4h        |
+| **promotion-service**    | Microprofile OpenAPI          | Migrate to Springdoc                         | 2h        |
 
 **Estimated Time**: 16 hours total
 
@@ -267,12 +287,12 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 ### 🟡 P1: HIGH - Infrastructure Production Hardening
 
-| Component | Current State | Required Changes | Est. Time |
-|-----------|--------------|-----------------|-----------|
-| **TLS Certificates** | Documentation only | Setup cert-manager, generate actual certs | 4-6h |
-| **Vault (prod mode)** | Dev mode only | Configure HA mode, auto-unseal, production secrets | 4-6h |
-| **Database Migrations** | Only shared migrations | Create per-service migration scripts | 1-2 days |
-| **Service Manifests** | Base files only | Create individual Deployment/StatefulSet manifests | 1-2 days |
+| Component               | Current State          | Required Changes                                   | Est. Time |
+| ----------------------- | ---------------------- | -------------------------------------------------- | --------- |
+| **TLS Certificates**    | Documentation only     | Setup cert-manager, generate actual certs          | 4-6h      |
+| **Vault (prod mode)**   | Dev mode only          | Configure HA mode, auto-unseal, production secrets | 4-6h      |
+| **Database Migrations** | Only shared migrations | Create per-service migration scripts               | 1-2 days  |
+| **Service Manifests**   | Base files only        | Create individual Deployment/StatefulSet manifests | 1-2 days  |
 
 **Estimated Time**: 2-4 days
 
@@ -280,11 +300,11 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 ### 🟢 P2: MEDIUM - Documentation Gaps
 
-| Gap | Status | Impact | Est. Time |
-|-----|--------|--------|----------|
-| **ADR Records** | Only template exists (40% complete) | Architecture governance lost | 1-2 days |
-| **OpenAPI Central Catalog** | Empty directory | Partner integration difficult | 1-2 days |
-| **TDD Training Docs** | Marked optional | Developer onboarding gap | 1 day |
+| Gap                         | Status                              | Impact                        | Est. Time |
+| --------------------------- | ----------------------------------- | ----------------------------- | --------- |
+| **ADR Records**             | Only template exists (40% complete) | Architecture governance lost  | 1-2 days  |
+| **OpenAPI Central Catalog** | Empty directory                     | Partner integration difficult | 1-2 days  |
+| **TDD Training Docs**       | Marked optional                     | Developer onboarding gap      | 1 day     |
 
 **Estimated Time**: 3-5 days
 
@@ -294,14 +314,14 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 ### Phase 1: Unblock Deployment (2-3 days) ✅ COMPLETE
 
-| Priority | Task | Status | Notes |
-|----------|------|--------|-------|
-| P0-C1 | Fix web-app TypeScript errors (18) | ✅ COMPLETE | 0 errors |
-| P0-C2 | Fix web-app localStorage security | ✅ COMPLETE | httpOnly cookies |
-| P0-C3 | Fix web-app failing tests (95) | ✅ COMPLETE | 1,063 passing |
-| P0-C4 | Fix mobile Jest configuration | 🔄 NEXT | P1 priority |
-| P0-C5 | Install mobile dependencies | 🔄 NEXT | @tanstack/react-query |
-| P0-C6 | Fix mobile TypeScript errors (100+) | 🔄 NEXT | After P0-C4/5 |
+| Priority | Task                                | Status      | Notes                 |
+| -------- | ----------------------------------- | ----------- | --------------------- |
+| P0-C1    | Fix web-app TypeScript errors (18)  | ✅ COMPLETE | 0 errors              |
+| P0-C2    | Fix web-app localStorage security   | ✅ COMPLETE | httpOnly cookies      |
+| P0-C3    | Fix web-app failing tests (95)      | ✅ COMPLETE | 1,063 passing         |
+| P0-C4    | Fix mobile Jest configuration       | 🔄 NEXT     | P1 priority           |
+| P0-C5    | Install mobile dependencies         | 🔄 NEXT     | @tanstack/react-query |
+| P0-C6    | Fix mobile TypeScript errors (100+) | 🔄 NEXT     | After P0-C4/5         |
 
 **Outcome**: Web App production ready ✅ | Mobile App next priority 🔄
 
@@ -309,14 +329,14 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 ### Phase 2: Backend Standardization (1-2 days) 🎯 RECOMMENDED
 
-| Priority | Task | Time | Dependencies |
-|----------|------|------|--------------|
-| P1-B1 | Complete OpenAPI for billing-service | 2h | None |
-| P1-B2 | Complete OpenAPI for notification-service | 2h | None |
-| P1-B3 | Complete OpenAPI for support-service | 2h | None |
-| P1-B4 | Add security to backoffice-service | 4h | None |
-| P1-B5 | Add security to partner-service | 4h | None |
-| P1-B6 | Complete OpenAPI for promotion-service | 2h | None |
+| Priority | Task                                      | Time | Dependencies |
+| -------- | ----------------------------------------- | ---- | ------------ |
+| P1-B1    | Complete OpenAPI for billing-service      | 2h   | None         |
+| P1-B2    | Complete OpenAPI for notification-service | 2h   | None         |
+| P1-B3    | Complete OpenAPI for support-service      | 2h   | None         |
+| P1-B4    | Add security to backoffice-service        | 4h   | None         |
+| P1-B5    | Add security to partner-service           | 4h   | None         |
+| P1-B6    | Complete OpenAPI for promotion-service    | 2h   | None         |
 
 **Outcome**: All backend services have consistent OpenAPI documentation ✅
 
@@ -324,9 +344,9 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 ### Phase 3: Documentation (1 day) 📚 NICE TO HAVE
 
-| Task | Time | Dependencies |
-|------|------|--------------|
-| Create 7 ADRs for key decisions | 2-4h | None |
+| Task                               | Time | Dependencies   |
+| ---------------------------------- | ---- | -------------- |
+| Create 7 ADRs for key decisions    | 2-4h | None           |
 | Create centralized OpenAPI catalog | 2-3h | P1-B1 to P1-B6 |
 
 **Outcome**: Complete architectural governance documentation ✅
@@ -335,12 +355,12 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 ### Phase 4: Infrastructure (2-4 days) 🔧 PRODUCTION HARDENING
 
-| Task | Time | Dependencies |
-|------|------|--------------|
-| Setup TLS certificates (cert-manager) | 4-6h | None |
-| Configure Vault for production | 4-6h | TLS certs |
-| Create per-service database migrations | 1-2 days | Vault |
-| Create service deployment manifests | 1-2 days | K8s context |
+| Task                                   | Time     | Dependencies |
+| -------------------------------------- | -------- | ------------ |
+| Setup TLS certificates (cert-manager)  | 4-6h     | None         |
+| Configure Vault for production         | 4-6h     | TLS certs    |
+| Create per-service database migrations | 1-2 days | Vault        |
+| Create service deployment manifests    | 1-2 days | K8s context  |
 
 **Outcome**: Production-ready infrastructure ✅
 
@@ -348,93 +368,96 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 ## 📊 Updated Completion Timeline
 
-| Phase | Tasks | Est. Time | Cumulative |
-|-------|-------|------------|-----------|
-| **Phase 1** | 6 critical frontend tasks | 20-30h | **20-30h** |
-| **Phase 2** | 6 backend API tasks | 16h | **36-46h** |
-| **Phase 3** | Documentation | 4-7h | **40-53h** |
-| **Phase 4** | Infrastructure | 2-4 days | **3-7 days** |
+| Phase       | Tasks                     | Est. Time | Cumulative   |
+| ----------- | ------------------------- | --------- | ------------ |
+| **Phase 1** | 6 critical frontend tasks | 20-30h    | **20-30h**   |
+| **Phase 2** | 6 backend API tasks       | 16h       | **36-46h**   |
+| **Phase 3** | Documentation             | 4-7h      | **40-53h**   |
+| **Phase 4** | Infrastructure            | 2-4 days  | **3-7 days** |
 
 **Total Estimated Effort**: **3-7 days** for 95% production readiness
 
 **Expo Doctor Results:**
+
 - ✅ All 17/17 checks passing
 - ✅ Missing assets created (icon.png, splash.png, adaptive-icon.png)
 - ✅ Peer dependencies installed (expo-constants, react-native-svg)
 - ✅ Package versions updated for Expo SDK 52 compatibility
 
 **Bundle Size Analysis:**
+
 - Android APK: 29-45 MB (target: <50MB) ✅
 - iOS IPA: 33-48 MB (target: <50MB) ✅
 - Hermes bytecode enabled for 30-50% size reduction
 
 #### 2.2 Unit Tests - Services ✅ COMPLETE
 
-| Service | Test File | Status | Coverage |
-|---------|-----------|--------|----------|
-| Auth | `services/__tests__/auth.test.ts` | ✅ **24 tests** | 100% |
-| Wallet | `services/__tests__/wallet.test.ts` | ✅ **21 tests** | 100% |
-| Transaction | `services/__tests__/transaction.test.ts` | ✅ **29 tests** | 100% |
-| Card | `services/__tests__/card.test.ts` | ✅ **27 tests** | 100% |
-| Notification | `services/__tests__/notification.test.ts` | ✅ **33 tests** | 96% |
-| Feedback | `services/__tests__/feedback.test.ts` | ✅ **19 tests** | 100% |
-| **Total** | | **153 tests** | **72.89%** |
+| Service      | Test File                                 | Status          | Coverage   |
+| ------------ | ----------------------------------------- | --------------- | ---------- |
+| Auth         | `services/__tests__/auth.test.ts`         | ✅ **24 tests** | 100%       |
+| Wallet       | `services/__tests__/wallet.test.ts`       | ✅ **21 tests** | 100%       |
+| Transaction  | `services/__tests__/transaction.test.ts`  | ✅ **29 tests** | 100%       |
+| Card         | `services/__tests__/card.test.ts`         | ✅ **27 tests** | 100%       |
+| Notification | `services/__tests__/notification.test.ts` | ✅ **33 tests** | 96%        |
+| Feedback     | `services/__tests__/feedback.test.ts`     | ✅ **19 tests** | 100%       |
+| **Total**    |                                           | **153 tests**   | **72.89%** |
 
 #### 2.3 Unit Tests - Stores ✅ COMPLETE
 
-| Store | Test File | Status | Coverage |
-|-------|-----------|--------|----------|
-| AuthStore | `store/__tests__/authStore.test.ts` | ✅ **Created** | ~60% |
-| WalletStore | `store/__tests__/walletStore.test.ts` | ✅ **Created** | ~60% |
-| CardStore | `store/__tests__/cardStore.test.ts` | ✅ **Created** | ~60% |
-| TransactionStore | `store/__tests__/transactionStore.test.ts` | ✅ **Created** | ~60% |
+| Store            | Test File                                  | Status         | Coverage |
+| ---------------- | ------------------------------------------ | -------------- | -------- |
+| AuthStore        | `store/__tests__/authStore.test.ts`        | ✅ **Created** | ~60%     |
+| WalletStore      | `store/__tests__/walletStore.test.ts`      | ✅ **Created** | ~60%     |
+| CardStore        | `store/__tests__/cardStore.test.ts`        | ✅ **Created** | ~60%     |
+| TransactionStore | `store/__tests__/transactionStore.test.ts` | ✅ **Created** | ~60%     |
 
 #### 2.4 Unit Tests - Hooks ✅ COMPLETE
 
-| Hook | Test File | Status | Coverage |
-|------|-----------|--------|----------|
-| useAuth | `hooks/__tests__/useAuth.test.ts` | ✅ **12 tests** | ~80% |
-| useWallet | `hooks/__tests__/useWallet.test.ts` | ✅ **13 tests** | 100% |
-| useBiometrics | `hooks/__tests__/useBiometrics.test.ts` | ✅ **12 tests** | 100% |
-| useNotifications | `hooks/__tests__/useNotifications.test.ts` | ✅ **15 tests** | ~80% |
-| useOfflineMode | `hooks/__tests__/useOfflineMode.test.ts` | ✅ **13 tests** | ~80% |
-| useAppLock | `hooks/__tests__/useAppLock.test.ts` | ✅ **16 tests** | ~80% |
-| useCamera | `hooks/__tests__/useCamera.test.ts` | ✅ **9 tests** | 100% |
-| useAnalytics | `hooks/__tests__/useAnalytics.test.ts` | ✅ **18 tests** | ~85% |
-| useFeedback | `hooks/__tests__/useFeedback.test.ts` | ✅ **18 tests** | ~85% |
-| **Total** | | **126 tests** | **84.49%** |
+| Hook             | Test File                                  | Status          | Coverage   |
+| ---------------- | ------------------------------------------ | --------------- | ---------- |
+| useAuth          | `hooks/__tests__/useAuth.test.ts`          | ✅ **12 tests** | ~80%       |
+| useWallet        | `hooks/__tests__/useWallet.test.ts`        | ✅ **13 tests** | 100%       |
+| useBiometrics    | `hooks/__tests__/useBiometrics.test.ts`    | ✅ **12 tests** | 100%       |
+| useNotifications | `hooks/__tests__/useNotifications.test.ts` | ✅ **15 tests** | ~80%       |
+| useOfflineMode   | `hooks/__tests__/useOfflineMode.test.ts`   | ✅ **13 tests** | ~80%       |
+| useAppLock       | `hooks/__tests__/useAppLock.test.ts`       | ✅ **16 tests** | ~80%       |
+| useCamera        | `hooks/__tests__/useCamera.test.ts`        | ✅ **9 tests**  | 100%       |
+| useAnalytics     | `hooks/__tests__/useAnalytics.test.ts`     | ✅ **18 tests** | ~85%       |
+| useFeedback      | `hooks/__tests__/useFeedback.test.ts`      | ✅ **18 tests** | ~85%       |
+| **Total**        |                                            | **126 tests**   | **84.49%** |
 
 #### 2.5 Unit Tests - Utils ✅ COMPLETE
 
-| Util | Test File | Status | Coverage |
-|------|-----------|--------|----------|
-| currency | `utils/__tests__/currency.test.ts` | ✅ **25 tests** | 100% |
-| validation | `utils/__tests__/validation.test.ts` | ✅ **47 tests** | 100% |
-| date | `utils/__tests__/date.test.ts` | ✅ **39 tests** | 100% |
-| storage | `utils/__tests__/storage.test.ts` | ✅ **26 tests** | 90% |
-| **Total** | | **137 tests** | **97.82%** |
+| Util       | Test File                            | Status          | Coverage   |
+| ---------- | ------------------------------------ | --------------- | ---------- |
+| currency   | `utils/__tests__/currency.test.ts`   | ✅ **25 tests** | 100%       |
+| validation | `utils/__tests__/validation.test.ts` | ✅ **47 tests** | 100%       |
+| date       | `utils/__tests__/date.test.ts`       | ✅ **39 tests** | 100%       |
+| storage    | `utils/__tests__/storage.test.ts`    | ✅ **26 tests** | 90%        |
+| **Total**  |                                      | **137 tests**   | **97.82%** |
 
 #### 2.6 Unit Tests - Components ✅ COMPLETE
 
-| Component | Test File | Status | Coverage |
-|-----------|-----------|--------|----------|
-| BalanceCard | `components/__tests__/BalanceCard.test.tsx` | ✅ **Created** | 100% |
-| TransactionItem | `components/__tests__/TransactionItem.test.tsx` | ✅ **Created** | 89% |
-| QuickActions | `components/__tests__/QuickActions.test.tsx` | ✅ **Created** | 92% |
-| CardFlip | N/A | ⚠️ Component doesn't exist | - |
-| QRScanner | N/A | ⚠️ Component doesn't exist | - |
-| **Total** | | **51+ tests** | **~90%** |
+| Component       | Test File                                       | Status                     | Coverage |
+| --------------- | ----------------------------------------------- | -------------------------- | -------- |
+| BalanceCard     | `components/__tests__/BalanceCard.test.tsx`     | ✅ **Created**             | 100%     |
+| TransactionItem | `components/__tests__/TransactionItem.test.tsx` | ✅ **Created**             | 89%      |
+| QuickActions    | `components/__tests__/QuickActions.test.tsx`    | ✅ **Created**             | 92%      |
+| CardFlip        | N/A                                             | ⚠️ Component doesn't exist | -        |
+| QRScanner       | N/A                                             | ⚠️ Component doesn't exist | -        |
+| **Total**       |                                                 | **51+ tests**              | **~90%** |
 
 #### 2.7 Mobile Enhancements ✅ COMPLETE (NEW)
 
-| # | Task | Status | Notes |
-|---|------|--------|-------|
-| 2.7.1 | ✅ TanStack Query Integration | **COMPLETED** | Offline-first, optimistic updates, 4 new hooks |
-| 2.7.2 | ✅ E2E Testing with Maestro | **COMPLETED** | 4 test flows (login, transfer, biometric, offline) |
-| 2.7.3 | ✅ Accessibility Testing | **COMPLETED** | WCAG 2.1 compliance, 30+ a11y tests |
-| 2.7.4 | ✅ Pre-commit Hooks (Husky) | **COMPLETED** | lint-staged, conventional commits |
+| #     | Task                          | Status        | Notes                                              |
+| ----- | ----------------------------- | ------------- | -------------------------------------------------- |
+| 2.7.1 | ✅ TanStack Query Integration | **COMPLETED** | Offline-first, optimistic updates, 4 new hooks     |
+| 2.7.2 | ✅ E2E Testing with Maestro   | **COMPLETED** | 4 test flows (login, transfer, biometric, offline) |
+| 2.7.3 | ✅ Accessibility Testing      | **COMPLETED** | WCAG 2.1 compliance, 30+ a11y tests                |
+| 2.7.4 | ✅ Pre-commit Hooks (Husky)   | **COMPLETED** | lint-staged, conventional commits                  |
 
 **Files Created:**
+
 - `src/providers/QueryProvider.tsx` - React Query with persistence
 - `src/hooks/useWalletQuery.ts` - Wallet queries & mutations
 - `src/hooks/useTransactionQuery.ts` - Transaction infinite scroll
@@ -448,6 +471,7 @@ npm run lint          # ✅ 0 errors, 13 warnings
 - `.husky/commit-msg` - Commit message validation
 
 **NPM Scripts Added:**
+
 ```bash
 npm run test:e2e           # Run Maestro E2E tests
 npm run test:e2e:ci        # CI mode
@@ -458,36 +482,36 @@ npm run maestro:studio     # Visual test editor
 
 ### 3. Backend - Integration Tests (75% → 92%) ✅
 
-| Service | Unit Tests | Integration Tests | Architecture Tests | Coverage | Status |
-|---------|------------|-------------------|-------------------|----------|--------|
-| `account-service` | ✅ 44/44 | ✅ 1 Docker | ✅ Has ArchitectureTest | 85% | **Complete** |
-| `auth-service` | ✅ 67/67 | ✅ 1 Docker | ✅ Has ArchitectureTest | 85% | **Complete** |
-| `transaction-service` | ✅ 75/75 | ✅ **3 Docker** | ✅ Has ArchitectureTest | 80% | **✅ Complete** |
-| `wallet-service` | ✅ 85/85 | ✅ **1 Docker** | ✅ Has ArchitectureTest | 80% | **✅ Complete** |
-| `billing-service` | ✅ 51/51 | ✅ 1 Docker | ✅ Has ArchitectureTest | 80% | **Complete** |
-| `notification-service` | ✅ 23/23 | ✅ 62 passing | ✅ Has ArchitectureTest | 80% | **✅ Complete** |
-| `gateway-service` | ✅ 85/85 | ✅ **142 new** | ✅ Has ArchitectureTest | 75% | **✅ Complete** |
-| `support-service` | ✅ 17/17 | ✅ **76 new** | ✅ Has ArchitectureTest | 83% | **✅ Complete** |
-| `compliance-service` | ✅ 55/55 | ✅ 55/55 | ✅ Has ArchitectureTest | 75% | **✅ Complete** |
-| `partner-service` | ✅ 93+/102 | ✅ Testcontainers | ✅ **16 new** | 86% | **✅ Complete** |
-| `backoffice-service` | ✅ 79/79 | ✅ **24 new** | ✅ Has ArchitectureTest | 83% | **✅ Complete** |
-| `promotion-service` | ✅ 102/102 | ✅ **127 new** | ✅ Has ArchitectureTest | 70% | **✅ Complete** |
-| `kyc-service` | ✅ 116/116 | ✅ 0/0 | ✅ Has ArchitectureTest | **86.91%** | **✅ Complete** |
-| `analytics-service` | ✅ 162/162 | ✅ **20 E2E** | ✅ Has ArchitectureTest | 78% | **✅ Complete** |
+| Service                | Unit Tests | Integration Tests | Architecture Tests      | Coverage   | Status          |
+| ---------------------- | ---------- | ----------------- | ----------------------- | ---------- | --------------- |
+| `account-service`      | ✅ 44/44   | ✅ 1 Docker       | ✅ Has ArchitectureTest | 85%        | **Complete**    |
+| `auth-service`         | ✅ 67/67   | ✅ 1 Docker       | ✅ Has ArchitectureTest | 85%        | **Complete**    |
+| `transaction-service`  | ✅ 75/75   | ✅ **3 Docker**   | ✅ Has ArchitectureTest | 80%        | **✅ Complete** |
+| `wallet-service`       | ✅ 85/85   | ✅ **1 Docker**   | ✅ Has ArchitectureTest | 80%        | **✅ Complete** |
+| `billing-service`      | ✅ 51/51   | ✅ 1 Docker       | ✅ Has ArchitectureTest | 80%        | **Complete**    |
+| `notification-service` | ✅ 23/23   | ✅ 62 passing     | ✅ Has ArchitectureTest | 80%        | **✅ Complete** |
+| `gateway-service`      | ✅ 85/85   | ✅ **142 new**    | ✅ Has ArchitectureTest | 75%        | **✅ Complete** |
+| `support-service`      | ✅ 17/17   | ✅ **76 new**     | ✅ Has ArchitectureTest | 83%        | **✅ Complete** |
+| `compliance-service`   | ✅ 55/55   | ✅ 55/55          | ✅ Has ArchitectureTest | 75%        | **✅ Complete** |
+| `partner-service`      | ✅ 93+/102 | ✅ Testcontainers | ✅ **16 new**           | 86%        | **✅ Complete** |
+| `backoffice-service`   | ✅ 79/79   | ✅ **24 new**     | ✅ Has ArchitectureTest | 83%        | **✅ Complete** |
+| `promotion-service`    | ✅ 102/102 | ✅ **127 new**    | ✅ Has ArchitectureTest | 70%        | **✅ Complete** |
+| `kyc-service`          | ✅ 116/116 | ✅ 0/0            | ✅ Has ArchitectureTest | **86.91%** | **✅ Complete** |
+| `analytics-service`    | ✅ 162/162 | ✅ **20 E2E**     | ✅ Has ArchitectureTest | 78%        | **✅ Complete** |
 
 #### 3.1 Critical Backend Tasks ✅ COMPLETED
 
-| # | Task | Service | Status | Priority |
-|---|------|---------|--------|----------|
-| 3.1 | ✅ Add ArchitectureTest | partner-service | **COMPLETED** - 16 tests | **HIGH** |
-| 3.2 | ✅ Fix integration tests | partner-service | **COMPLETED** - PostgreSQL Testcontainers migration done | **HIGH** |
-| 3.3 | ✅ Fix E2E tests | analytics-service | **COMPLETED** - 20 E2E tests (12 WebSocket + 8 Kafka) | **HIGH** |
-| 3.4 | ✅ Add integration tests | gateway-service | **COMPLETED** - 142 tests | **MEDIUM** |
-| 3.5 | ✅ Add integration tests | backoffice-service | **COMPLETED** - 24 tests | **MEDIUM** |
-| 3.6 | ✅ Add integration tests | promotion-service | **COMPLETED** - 127 tests | **MEDIUM** |
-| 3.7 | ✅ Add integration tests | support-service | **COMPLETED** - 76 tests | **LOW** |
-| 3.8 | ✅ Fix Docker tests | transaction-service | **COMPLETED** - 3 integration tests with Testcontainers | **MEDIUM** |
-| 3.9 | ✅ Fix Docker tests | wallet-service | **COMPLETED** - 1 integration test with Testcontainers | **MEDIUM** |
+| #   | Task                     | Service             | Status                                                   | Priority   |
+| --- | ------------------------ | ------------------- | -------------------------------------------------------- | ---------- |
+| 3.1 | ✅ Add ArchitectureTest  | partner-service     | **COMPLETED** - 16 tests                                 | **HIGH**   |
+| 3.2 | ✅ Fix integration tests | partner-service     | **COMPLETED** - PostgreSQL Testcontainers migration done | **HIGH**   |
+| 3.3 | ✅ Fix E2E tests         | analytics-service   | **COMPLETED** - 20 E2E tests (12 WebSocket + 8 Kafka)    | **HIGH**   |
+| 3.4 | ✅ Add integration tests | gateway-service     | **COMPLETED** - 142 tests                                | **MEDIUM** |
+| 3.5 | ✅ Add integration tests | backoffice-service  | **COMPLETED** - 24 tests                                 | **MEDIUM** |
+| 3.6 | ✅ Add integration tests | promotion-service   | **COMPLETED** - 127 tests                                | **MEDIUM** |
+| 3.7 | ✅ Add integration tests | support-service     | **COMPLETED** - 76 tests                                 | **LOW**    |
+| 3.8 | ✅ Fix Docker tests      | transaction-service | **COMPLETED** - 3 integration tests with Testcontainers  | **MEDIUM** |
+| 3.9 | ✅ Fix Docker tests      | wallet-service      | **COMPLETED** - 1 integration test with Testcontainers   | **MEDIUM** |
 
 ---
 
@@ -496,23 +520,25 @@ npm run maestro:studio     # Visual test editor
 > **Location**: `frontend/developer-docs/`
 > **Stack**: Next.js, TypeScript, Vitest
 
-| # | Task | Status | Notes |
-|---|------|--------|-------|
-| 4.1 | ✅ Verify test setup | **COMPLETED** | `npm run test` - 69 tests passing |
-| 4.2 | ✅ Check existing tests | **COMPLETED** | 9 test files created |
-| 4.3 | ✅ API docs rendering tests | **COMPLETED** | `api-docs.test.tsx` - 10 tests |
-| 4.4 | ✅ Code samples tests | **COMPLETED** | `code-blocks.test.tsx` - 9 tests |
-| 4.5 | ⏳ Search functionality tests | **N/A** | No search component exists |
-| 4.6 | ✅ Type checking | **COMPLETED** | `npx tsc --noEmit` - 0 errors |
-| 4.7 | ✅ Linting | **COMPLETED** | `npm run lint` - 0 errors |
-| 4.8 | ✅ Build verification | **COMPLETED** | `npm run build` - 18 pages generated |
-| 4.9 | ✅ Link checking | **COMPLETED** | 2 broken links FIXED |
+| #   | Task                          | Status        | Notes                                |
+| --- | ----------------------------- | ------------- | ------------------------------------ |
+| 4.1 | ✅ Verify test setup          | **COMPLETED** | `npm run test` - 69 tests passing    |
+| 4.2 | ✅ Check existing tests       | **COMPLETED** | 9 test files created                 |
+| 4.3 | ✅ API docs rendering tests   | **COMPLETED** | `api-docs.test.tsx` - 10 tests       |
+| 4.4 | ✅ Code samples tests         | **COMPLETED** | `code-blocks.test.tsx` - 9 tests     |
+| 4.5 | ⏳ Search functionality tests | **N/A**       | No search component exists           |
+| 4.6 | ✅ Type checking              | **COMPLETED** | `npx tsc --noEmit` - 0 errors        |
+| 4.7 | ✅ Linting                    | **COMPLETED** | `npm run lint` - 0 errors            |
+| 4.8 | ✅ Build verification         | **COMPLETED** | `npm run build` - 18 pages generated |
+| 4.9 | ✅ Link checking              | **COMPLETED** | 2 broken links FIXED                 |
 
 **Pages Created:**
+
 - `/getting-started/auth` - OAuth 2.0, client credentials, access tokens
 - `/getting-started/webhooks` - Event types, payload structure, signature validation
 
 **Test Files:**
+
 - `config.test.ts` - 3 tests
 - `utils.test.ts` - 3 tests
 - `i18n.test.ts` - 2 tests
@@ -527,16 +553,17 @@ npm run maestro:studio     # Visual test editor
 
 ### 5. Test Infrastructure (90% → 80%) ✅ EXCEEDS TARGET
 
-| # | Task | Priority | Status |
-|---|------|----------|--------|
-| 5.1 | ✅ Create `scripts/run-all-tests.sh` | **HIGH** | **COMPLETED** - Full test runner with coverage |
-| 5.2 | ✅ Create `Makefile` with test targets | **HIGH** | **COMPLETED** - 20+ make targets |
-| 5.3 | ✅ Distribute pre-commit hook guide | **MEDIUM** | **COMPLETED** - Mobile app hooks configured |
-| 5.4 | ⏳ Add TDD training documentation | **MEDIUM** | Pending |
-| 5.5 | ⏳ Implement mutation testing (PIT) | **LOW** | Pending |
-| 5.6 | ⏳ Setup CI/CD pipeline (GitHub Actions) | **LOW** | Pending |
+| #   | Task                                     | Priority   | Status                                         |
+| --- | ---------------------------------------- | ---------- | ---------------------------------------------- |
+| 5.1 | ✅ Create `scripts/run-all-tests.sh`     | **HIGH**   | **COMPLETED** - Full test runner with coverage |
+| 5.2 | ✅ Create `Makefile` with test targets   | **HIGH**   | **COMPLETED** - 20+ make targets               |
+| 5.3 | ✅ Distribute pre-commit hook guide      | **MEDIUM** | **COMPLETED** - Mobile app hooks configured    |
+| 5.4 | ⏳ Add TDD training documentation        | **MEDIUM** | Pending                                        |
+| 5.5 | ⏳ Implement mutation testing (PIT)      | **LOW**    | Pending                                        |
+| 5.6 | ⏳ Setup CI/CD pipeline (GitHub Actions) | **LOW**    | Pending                                        |
 
 **Makefile Targets Available:**
+
 - `make test` / `make test-all` - Run all tests
 - `make test-unit` - Unit tests only
 - `make test-integration` - Integration tests only
@@ -599,17 +626,17 @@ make test-coverage                            # Coverage reports
 
 ## 🏁 Lab Readiness Score
 
-| Category | Score | Notes |
-|----------|-------|-------|
-| **Feature Completeness** | 100% | All 22 microservices implemented |
-| **Architecture Quality** | 95% | Hexagonal, Events, Saga, ArchUnit, Money VO |
-| **Documentation** | 100% | Comprehensive guides, ADRs & OpenAPI catalog complete |
-| **Backend Test Coverage** | 96% | Integration + Architecture tests passing |
-| **Backend API Readiness** | 70% | 🔴 6 services need OpenAPI completion |
-| **Frontend Readiness** | 97% | ✅ Web App & Mobile App production ready |
-| **Mobile Data Architecture** | 65% | 🔴 Duplicate state, security gaps (P2) |
-| **Infrastructure Readiness** | 85% | TLS, Vault, migrations needed |
-| **Security Compliance** | 95% | PCI-DSS, OWASP, OJK compliant |
+| Category                     | Score | Notes                                                 |
+| ---------------------------- | ----- | ----------------------------------------------------- |
+| **Feature Completeness**     | 100%  | All 22 microservices implemented                      |
+| **Architecture Quality**     | 95%   | Hexagonal, Events, Saga, ArchUnit, Money VO           |
+| **Documentation**            | 100%  | Comprehensive guides, ADRs & OpenAPI catalog complete |
+| **Backend Test Coverage**    | 96%   | Integration + Architecture tests passing              |
+| **Backend API Readiness**    | 70%   | 🔴 6 services need OpenAPI completion                 |
+| **Frontend Readiness**       | 97%   | ✅ Web App & Mobile App production ready              |
+| **Mobile Data Architecture** | 65%   | 🔴 Duplicate state, security gaps (P2)                |
+| **Infrastructure Readiness** | 85%   | TLS, Vault, migrations needed                         |
+| **Security Compliance**      | 95%   | PCI-DSS, OWASP, OJK compliant                         |
 
 **Overall Lab Score: 90%** - P0 & P1 complete, P2 data architecture improvements needed
 
@@ -625,13 +652,13 @@ make test-coverage                            # Coverage reports
 
 **Overall Score: 65/100**
 
-| Category | Score | Status |
-|----------|-------|--------|
-| **State Management** | 50/100 | 🔴 Duplicate Zustand + React Query |
-| **Security** | 60/100 | 🔴 Tokens in multiple locations |
-| **Performance** | 65/100 | 🟡 ScrollView instead of FlatList |
-| **Offline-First** | 70/100 | 🟡 Queue exists but not integrated |
-| **API Integration** | 80/100 | 🟢 Good patterns, missing idempotency |
+| Category             | Score  | Status                                |
+| -------------------- | ------ | ------------------------------------- |
+| **State Management** | 50/100 | 🔴 Duplicate Zustand + React Query    |
+| **Security**         | 60/100 | 🔴 Tokens in multiple locations       |
+| **Performance**      | 65/100 | 🟡 ScrollView instead of FlatList     |
+| **Offline-First**    | 70/100 | 🟡 Queue exists but not integrated    |
+| **API Integration**  | 80/100 | 🟢 Good patterns, missing idempotency |
 
 #### Critical Issues Found
 
@@ -654,12 +681,12 @@ See **P2: Mobile Data Architecture Improvements** section for detailed task brea
 
 #### Summary of Changes
 
-| Category | Before | After | Improvement |
-|----------|--------|-------|-------------|
-| **Jest Configuration** | Blocked | Running | ✅ Fixed |
-| **TypeScript Errors** | 50+ errors | 0 errors | ✅ Fixed |
-| **ESLint Warnings** | 13 warnings | 13 warnings | ✅ Fixed (non-blocking) |
-| **Tests Passing** | 0 tests | 538 tests | ✅ 94.5% passing |
+| Category               | Before      | After       | Improvement             |
+| ---------------------- | ----------- | ----------- | ----------------------- |
+| **Jest Configuration** | Blocked     | Running     | ✅ Fixed                |
+| **TypeScript Errors**  | 50+ errors  | 0 errors    | ✅ Fixed                |
+| **ESLint Warnings**    | 13 warnings | 13 warnings | ✅ Fixed (non-blocking) |
+| **Tests Passing**      | 0 tests     | 538 tests   | ✅ 94.5% passing        |
 
 #### Verification Results
 
@@ -684,8 +711,8 @@ $ npm run lint
 3. **app/bills.tsx** - Removed undefined `setAmount` call
 4. **app/transfer-confirm.tsx** - Removed undefined `setIsProcessing` calls
 5. **components/shared/BalanceCard.tsx** - Fixed useTheme usage
-6. **hooks/__tests__/** - Fixed type assertions for Zustand mocks
-7. **services/__tests__/** - Fixed notification and transaction tests
+6. **hooks/**tests**/** - Fixed type assertions for Zustand mocks
+7. **services/**tests**/** - Fixed notification and transaction tests
 8. **src/hooks/useAccessibility.ts** - Fixed AccessibilityAnnounceFinishedEvent import
 9. **src/hooks/useTransactionQuery.ts** - Updated for @tanstack/react-query v5
 10. **src/providers/QueryProvider.tsx** - Added type annotation
@@ -701,12 +728,12 @@ $ npm run lint
 
 #### Summary of Changes
 
-| Category | Before | After | Improvement |
-|----------|--------|-------|-------------|
-| **TypeScript Errors** | 18 errors | 0 errors | ✅ Fixed |
-| **Test Failures** | 95 failed | 0 failed | ✅ 265 tests fixed |
-| **Security** | localStorage tokens | httpOnly cookies | ✅ XSS protected |
-| **React Compiler** | Warnings | Clean | ✅ Optimized |
+| Category              | Before              | After            | Improvement        |
+| --------------------- | ------------------- | ---------------- | ------------------ |
+| **TypeScript Errors** | 18 errors           | 0 errors         | ✅ Fixed           |
+| **Test Failures**     | 95 failed           | 0 failed         | ✅ 265 tests fixed |
+| **Security**          | localStorage tokens | httpOnly cookies | ✅ XSS protected   |
+| **React Compiler**    | Warnings            | Clean            | ✅ Optimized       |
 
 #### Verification Results
 
@@ -733,13 +760,15 @@ $ npm run build
 > **Status**: Full event-driven architecture implementation
 
 #### Shared Libraries Created
-| Library | Purpose | Files |
-|---------|---------|-------|
-| **events-starter** | CloudEvents standard | `CloudEventEnvelope`, `CloudEventBuilder`, `CloudEventPublisher` |
-| **outbox-starter** | Transactional outbox pattern | `OutboxEvent`, `OutboxPublisher`, `OutboxService` |
-| **saga-starter** | Distributed saga orchestration | `SagaInstance`, `SagaOrchestrator`, `CompensatingAction` |
+
+| Library            | Purpose                        | Files                                                            |
+| ------------------ | ------------------------------ | ---------------------------------------------------------------- |
+| **events-starter** | CloudEvents standard           | `CloudEventEnvelope`, `CloudEventBuilder`, `CloudEventPublisher` |
+| **outbox-starter** | Transactional outbox pattern   | `OutboxEvent`, `OutboxPublisher`, `OutboxService`                |
+| **saga-starter**   | Distributed saga orchestration | `SagaInstance`, `SagaOrchestrator`, `CompensatingAction`         |
 
 #### Infrastructure
+
 - ✅ **Debezium CDC** - Connectors for outbox, saga, wallet tables
 - ✅ **Kafka Topic Standards** - Naming convention documentation
 - ✅ **Flyway Migrations** - Outbox and Saga table schemas
@@ -751,19 +780,21 @@ $ npm run build
 > **Status**: Financial-grade architecture patterns implemented
 
 #### Shared Libraries Created
-| Library | Purpose | Key Features |
-|---------|---------|--------------|
-| **archunit-starter** | Hexagonal enforcement | 8 ArchUnit rules for architecture compliance |
-| **Money VO** | Financial calculations | BigDecimal, HALF_EVEN rounding, ISO 4217 |
-| **Idempotency Service** | Duplicate prevention | Redis-based, 24h TTL, request fingerprinting |
-| **Resilience4j Config** | Circuit breaker | `@FinancialOperation` annotation, fallback handlers |
+
+| Library                 | Purpose                | Key Features                                        |
+| ----------------------- | ---------------------- | --------------------------------------------------- |
+| **archunit-starter**    | Hexagonal enforcement  | 8 ArchUnit rules for architecture compliance        |
+| **Money VO**            | Financial calculations | BigDecimal, HALF_EVEN rounding, ISO 4217            |
+| **Idempotency Service** | Duplicate prevention   | Redis-based, 24h TTL, request fingerprinting        |
+| **Resilience4j Config** | Circuit breaker        | `@FinancialOperation` annotation, fallback handlers |
 
 #### Audit Results
-| Service | Status | Action Taken |
-|---------|--------|--------------|
+
+| Service    | Status       | Action Taken                                 |
+| ---------- | ------------ | -------------------------------------------- |
 | AB-Testing | ✅ Compliant | Kafka config updated (acks=all, idempotence) |
-| CMS | ✅ Compliant | Consumer config added |
-| Lending | ✅ Compliant | Full Kafka config added |
+| CMS        | ✅ Compliant | Consumer config added                        |
+| Lending    | ✅ Compliant | Full Kafka config added                      |
 
 ---
 
@@ -771,20 +802,22 @@ $ npm run build
 
 > **Status**: Production-ready mobile architecture
 
-| Feature | Implementation | Status |
-|---------|----------------|--------|
-| **TanStack Query** | Offline-first, optimistic updates, infinite scroll | ✅ Complete |
-| **Maestro E2E** | 4 test flows (login, transfer, biometric, offline) | ✅ Complete |
-| **Accessibility** | WCAG 2.1 compliance, screen reader support | ✅ Complete |
-| **Pre-commit Hooks** | Husky + lint-staged + conventional commits | ✅ Complete |
+| Feature              | Implementation                                     | Status      |
+| -------------------- | -------------------------------------------------- | ----------- |
+| **TanStack Query**   | Offline-first, optimistic updates, infinite scroll | ✅ Complete |
+| **Maestro E2E**      | 4 test flows (login, transfer, biometric, offline) | ✅ Complete |
+| **Accessibility**    | WCAG 2.1 compliance, screen reader support         | ✅ Complete |
+| **Pre-commit Hooks** | Husky + lint-staged + conventional commits         | ✅ Complete |
 
 **New Hooks:**
+
 - `useWalletQuery()` - Wallet queries with prefetch
 - `useTransactionQuery()` - Infinite scroll transactions
 - `useAuthQuery()` - Auth with token refresh
 - `useAccessibility()` - Screen reader management
 
 **New Components:**
+
 - `AccessibleButton` - 44x44 touch targets
 - `AccessibleInput` - Label association, error announcements
 
@@ -792,26 +825,26 @@ $ npm run build
 
 ### Documentation Updates ✅ COMPLETE
 
-| Document | Location | Content |
-|----------|----------|---------|
-| **KAFKA_TOPIC_STANDARDS.md** | `docs/operations/` | Topic naming, schema registry, consumer groups |
-| **E2E_TESTING.md** | `frontend/mobile/docs/` | Maestro setup and usage |
-| **ACCESSIBILITY.md** | `frontend/mobile/docs/` | WCAG 2.1 guidelines |
-| **GIT_HOOKS.md** | `frontend/mobile/docs/` | Husky configuration |
+| Document                     | Location                | Content                                        |
+| ---------------------------- | ----------------------- | ---------------------------------------------- |
+| **KAFKA_TOPIC_STANDARDS.md** | `docs/operations/`      | Topic naming, schema registry, consumer groups |
+| **E2E_TESTING.md**           | `frontend/mobile/docs/` | Maestro setup and usage                        |
+| **ACCESSIBILITY.md**         | `frontend/mobile/docs/` | WCAG 2.1 guidelines                            |
+| **GIT_HOOKS.md**             | `frontend/mobile/docs/` | Husky configuration                            |
 
 ---
 
 ## 🏁 Lab Readiness Score (Previous)
 
-| Category | Score | Notes |
-|----------|-------|-------|
-| **Feature Completeness** | 95% | All core banking features |
-| **Architecture Quality** | 90% | Hexagonal, Event-driven, DDD |
-| **Documentation** | 95% | ⬆️ +5% (Developer docs complete) |
-| **Backend Test Coverage** | 92% | ⬆️ +5% (369+ new integration tests) |
-| **Frontend Test Coverage** | 100% | ⬆️ +2% (All frontend tests complete) |
-| **Test Infrastructure** | 90% | Scripts and Makefile complete |
-| **Production Readiness** | 90% | ⬆️ +15% (Frontend complete, Expo ready) |
+| Category                   | Score | Notes                                   |
+| -------------------------- | ----- | --------------------------------------- |
+| **Feature Completeness**   | 95%   | All core banking features               |
+| **Architecture Quality**   | 90%   | Hexagonal, Event-driven, DDD            |
+| **Documentation**          | 95%   | ⬆️ +5% (Developer docs complete)        |
+| **Backend Test Coverage**  | 92%   | ⬆️ +5% (369+ new integration tests)     |
+| **Frontend Test Coverage** | 100%  | ⬆️ +2% (All frontend tests complete)    |
+| **Test Infrastructure**    | 90%   | Scripts and Makefile complete           |
+| **Production Readiness**   | 90%   | ⬆️ +15% (Frontend complete, Expo ready) |
 
 **Overall Lab Score: 99.5%** - Feature complete, Architecture enhanced, API Standards implemented, Infrastructure ready
 
@@ -824,6 +857,7 @@ $ npm run build
 > **Status**: All 4 services processed in parallel with specialized agents
 
 #### Analytics Service ✅
+
 - ✅ **12 E2E WebSocket tests** fixed and passing
 - ✅ **8 Kafka integration tests** fixed and passing
 - ✅ Fixed `mock_kafka_consumer` fixture for test isolation
@@ -833,6 +867,7 @@ $ npm run build
 - **Location**: `backend/analytics-service/tests/e2e/` and `tests/integration/`
 
 #### Transaction Service ✅
+
 - ✅ **3 integration tests** configured with Docker/Testcontainers
 - ✅ Created `application-test.yml` with proper test configuration
 - ✅ Fixed `TransactionIntegrationTest` - removed @Disabled, added @Tag("integration")
@@ -842,6 +877,7 @@ $ npm run build
 - **Location**: `backend/transaction-service/src/test/java/id/payu/transaction/integration/`
 
 #### Wallet Service ✅
+
 - ✅ **1 integration test** configured with Docker/Testcontainers
 - ✅ Fixed `WalletKafkaIntegrationTest` with @DynamicPropertySource
 - ✅ Created `TestcontainersConfig.java` reusable configuration class
@@ -851,6 +887,7 @@ $ npm run build
 - **Location**: `backend/wallet-service/src/test/java/id/payu/wallet/integration/`
 
 #### Partner Service ✅ COMPLETE
+
 - ✅ **ArchitectureTest** passes (16 tests) - Layered architecture enforcement
 - ✅ **Testcontainers Migration** completed - Migrated from H2 to PostgreSQL Testcontainers
 - ✅ **Dependencies Added**: Testcontainers (core, junit-jupiter, postgresql), smallrye-in-memory
@@ -868,6 +905,7 @@ $ npm run build
 > **Status**: Full migration from Docker to Podman completed
 
 #### Infrastructure Changes
+
 - ✅ **Folder Renamed**: `infrastructure/docker/` → `infrastructure/containers/`
 - ✅ **Build Scripts Updated**: `build-all-podman.sh`, `build-service-podman.sh`
 - ✅ **Compose Files**: `podman-compose.yml`, `podman-compose.test.yml`
@@ -875,6 +913,7 @@ $ npm run build
 - ✅ **Documentation**: Migration guide, aliases, configuration examples
 
 #### Files Updated
+
 - ✅ All compose files updated to use `infrastructure/containers/`
 - ✅ Build pipeline updated to use `Containerfile`
 - ✅ Test files updated with new paths
@@ -882,6 +921,7 @@ $ npm run build
 - ✅ Pre-commit hooks updated for Containerfile support
 
 #### Deliverables
+
 - `scripts/build-all-podman.sh` - Parallel builds with Podman
 - `scripts/build-service-podman.sh` - Single service builds
 - `scripts/podman-aliases.sh` - Docker-compatible aliases
@@ -894,6 +934,7 @@ $ npm run build
 ### Backend Integration Tests - MASSIVE PROGRESS ✅
 
 #### Gateway Service ✅
+
 - ✅ **142 new integration tests** created
 - ✅ **RateLimitV2IntegrationTest** (22 tests) - Token bucket algorithm, per-IP/user/endpoint limiting
 - ✅ **HealthEndpointsIntegrationTest** (30 tests) - Custom health, status, version endpoints
@@ -904,6 +945,7 @@ $ npm run build
 - **Location**: `backend/gateway-service/src/test/java/id/payu/gateway/integration/`
 
 #### Support Service ✅
+
 - ✅ **76 new integration tests** created
 - ✅ **AgentManagementIntegrationTest** (10 tests) - Agent lifecycle, duplicate constraints
 - ✅ **TrainingModuleIntegrationTest** (11 tests) - Module CRUD, status transitions, mandatory filtering
@@ -914,6 +956,7 @@ $ npm run build
 - **Location**: `backend/support-service/src/test/java/id/payu/support/integration/`
 
 #### Backoffice Service ✅
+
 - ✅ **24 new integration tests** created
 - ✅ **BackofficeIntegrationTest** - KYC reviews, fraud cases, customer cases
 - ✅ KYC workflow tests (8) - Create, approve, reject, request info
@@ -925,6 +968,7 @@ $ npm run build
 - **Location**: `backend/backoffice-service/src/test/java/id/payu/backoffice/integration/`
 
 #### Promotion Service ✅
+
 - ✅ **127 new integration tests** created
 - ✅ **PromotionServiceIntegrationTest** (23 tests) - CRUD operations, voucher redemption
 - ✅ **CashbackServiceIntegrationTest** (21 tests) - Category-based rates, summaries
@@ -936,6 +980,7 @@ $ npm run build
 - **Location**: `backend/promotion-service/src/test/java/id/payu/promotion/integration/`
 
 #### Partner Service ✅
+
 - ✅ **ArchitectureTest** created with 16 architectural rules
 - ✅ Layered architecture enforcement
 - ✅ Domain isolation rules
@@ -950,6 +995,7 @@ $ npm run build
 - **Location**: `backend/partner-service/src/test/java/id/payu/partner/architecture/`
 
 #### Analytics Service ✅
+
 - ✅ **Fixed import errors** and conftest issues
 - ✅ Added `sample_fraud_score_entity` fixture
 - ✅ Created mock helper function fixtures for scalar results
@@ -963,80 +1009,89 @@ $ npm run build
 
 ### Summary of Backend Integration Tests Added
 
-| Service | New Tests | Type | Status |
-|---------|-----------|------|--------|
-| gateway-service | 142 | Integration | ✅ Complete |
-| support-service | 76 | Integration | ✅ Complete |
-| backoffice-service | 24 | Integration | ✅ Complete |
-| promotion-service | 127 | Integration | ✅ Complete |
-| partner-service | 16 | Architecture | ✅ Complete |
-| analytics-service | Fixed | Unit tests | ✅ Complete |
-| **TOTAL** | **385+** | | |
+| Service            | New Tests | Type         | Status      |
+| ------------------ | --------- | ------------ | ----------- |
+| gateway-service    | 142       | Integration  | ✅ Complete |
+| support-service    | 76        | Integration  | ✅ Complete |
+| backoffice-service | 24        | Integration  | ✅ Complete |
+| promotion-service  | 127       | Integration  | ✅ Complete |
+| partner-service    | 16        | Architecture | ✅ Complete |
+| analytics-service  | Fixed     | Unit tests   | ✅ Complete |
+| **TOTAL**          | **385+**  |              |             |
 
 ### API Best Practices Implementation ✅ COMPLETE (UPDATED)
 
 > **Status**: API compliance improved from 49.3% to **90%+**
 
 #### Response Envelope Standardization ✅
-| Service | Before | After | Status |
-|---------|--------|-------|--------|
-| wallet-service | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
-| investment-service | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
-| lending-service | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
-| statement-service | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
-| compliance-service | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
-| fx-service | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
-| ab-testing-service | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
+
+| Service                     | Before   | After            | Status      |
+| --------------------------- | -------- | ---------------- | ----------- |
+| wallet-service              | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
+| investment-service          | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
+| lending-service             | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
+| statement-service           | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
+| compliance-service          | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
+| fx-service                  | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
+| ab-testing-service          | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
 | promotion-service (Quarkus) | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
-| support-service (Quarkus) | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
+| support-service (Quarkus)   | Raw DTOs | `ApiResponse<T>` | ✅ Complete |
 
 **Files Created:**
+
 - `BaseController.java` - Extends api-commons BaseController
 - Helper methods: `ok()`, `created()`, `noContent()`, `okList()`
 
 #### Idempotency Implementation ✅
-| Service | Endpoints Updated | Status |
-|---------|-------------------|--------|
-| transaction-service | 2 (transfer, qris/pay) | ✅ Complete |
-| wallet-service | 4 (reserve, credit, pocket ops) | ✅ Complete |
-| investment-service | 4 (deposits, mutual-funds, gold, sell) | ✅ Complete |
-| lending-service | 2 (loans, repayment) | ✅ Complete |
-| billing-service | 2 (payments, topup) | ✅ Complete |
+
+| Service             | Endpoints Updated                      | Status      |
+| ------------------- | -------------------------------------- | ----------- |
+| transaction-service | 2 (transfer, qris/pay)                 | ✅ Complete |
+| wallet-service      | 4 (reserve, credit, pocket ops)        | ✅ Complete |
+| investment-service  | 4 (deposits, mutual-funds, gold, sell) | ✅ Complete |
+| lending-service     | 2 (loans, repayment)                   | ✅ Complete |
+| billing-service     | 2 (payments, topup)                    | ✅ Complete |
 
 **Features:**
+
 - `@Idempotent(required = true)` annotation
 - Automatic `Idempotency-Key` header handling
 - Request fingerprinting (detect different body with same key)
 - 24-hour response caching with Redis
 
 #### OpenAPI Documentation ✅
-| Service | Endpoints Documented | Status |
-|---------|---------------------|--------|
-| wallet-service | 8 endpoints | ✅ Complete |
-| investment-service | 7 endpoints | ✅ Complete |
-| lending-service | 17 endpoints | ✅ Complete |
-| statement-service | 6 endpoints | ✅ Complete |
-| compliance-service | 3 endpoints | ✅ Complete |
-| fx-service | 7 endpoints | ✅ Complete |
+
+| Service            | Endpoints Documented | Status      |
+| ------------------ | -------------------- | ----------- |
+| wallet-service     | 8 endpoints          | ✅ Complete |
+| investment-service | 7 endpoints          | ✅ Complete |
+| lending-service    | 17 endpoints         | ✅ Complete |
+| statement-service  | 6 endpoints          | ✅ Complete |
+| compliance-service | 3 endpoints          | ✅ Complete |
+| fx-service         | 7 endpoints          | ✅ Complete |
 
 **Annotations Added:**
+
 - `@Tag` - Controller-level documentation
 - `@Operation` - Endpoint summary & description
 - `@ApiResponse` - Response codes (200, 201, 400, 401, 403, 404, 500)
 - `@SecurityRequirement(name = "bearerAuth")` - JWT auth
 
 #### Python Services Enhancement ✅
-| Service | Changes | Status |
-|---------|---------|--------|
+
+| Service           | Changes                                                               | Status      |
+| ----------------- | --------------------------------------------------------------------- | ----------- |
 | analytics-service | Response envelope, Idempotency-Key, Rate limiting (100/min), CORS fix | ✅ Complete |
-| kyc-service | Response envelope, Idempotency-Key, Rate limiting (10/min), CORS fix | ✅ Complete |
+| kyc-service       | Response envelope, Idempotency-Key, Rate limiting (10/min), CORS fix  | ✅ Complete |
 
 **Files Created:**
+
 - `responses.py` - Standard API response envelope
 - `idempotency.py` - Idempotency store with Redis
 - Updated `main.py` - CORS, rate limiter, error handlers
 
 **CORS Fix:**
+
 ```python
 # Before: allow_origins=["*"]
 # After: Specific origins only
@@ -1044,15 +1099,17 @@ allow_origins=["https://payu.id", "https://app.payu.id", ...]
 ```
 
 #### HTTP Status Code Fixes ✅
-| Service | POST 200→201 | Location Header | DELETE 204 |
-|---------|--------------|-----------------|------------|
-| wallet-service | ✅ 6 endpoints | ✅ | - |
-| investment-service | ✅ 5 endpoints | ✅ | - |
-| lending-service | ✅ 6 endpoints | ✅ | - |
-| fx-service | ✅ 1 endpoint | ✅ | - |
-| compliance-service | ✅ 2 endpoints | ✅ | ✅ Already 204 |
+
+| Service            | POST 200→201   | Location Header | DELETE 204     |
+| ------------------ | -------------- | --------------- | -------------- |
+| wallet-service     | ✅ 6 endpoints | ✅              | -              |
+| investment-service | ✅ 5 endpoints | ✅              | -              |
+| lending-service    | ✅ 6 endpoints | ✅              | -              |
+| fx-service         | ✅ 1 endpoint  | ✅              | -              |
+| compliance-service | ✅ 2 endpoints | ✅              | ✅ Already 204 |
 
 **Implementation:**
+
 ```java
 URI location = ServletUriComponentsBuilder
     .fromCurrentRequest()
@@ -1069,22 +1126,25 @@ URI location = ServletUriComponentsBuilder
 > **Status**: Full architectural governance and API discoverability implementation
 
 #### Architectural Decision Records (ADR)
-| ADR ID | Title | Description |
-|--------|-------|-------------|
-| [0008](file:///home/ubuntu/payu/docs/adr/0008-resilience-patterns.md) | **Resilience Patterns** | Circuit Breaker, Retry, Bulkhead standard |
-| [0009](file:///home/ubuntu/payu/docs/adr/0009-caching-strategy.md) | **Caching Strategy** | L1 (Caffeine) + L2 (Redis) caching |
-| [0010](file:///home/ubuntu/payu/docs/adr/0010-security-standards.md) | **Security Standards** | PII Protection, Encryption, Audit Logging |
-| [0011](file:///home/ubuntu/payu/docs/adr/0011-frontend-architecture.md) | **Frontend Architecture** | Next.js (Web) + React Native (Mobile) |
-| [0012](file:///home/ubuntu/payu/docs/adr/0012-container-standardization.md) | **Container Standardization** | Migration to Podman |
-| [0013](file:///home/ubuntu/payu/docs/adr/0013-testing-strategy.md) | **Testing Strategy** | Testing Pyramid standards |
+
+| ADR ID                                                                      | Title                         | Description                               |
+| --------------------------------------------------------------------------- | ----------------------------- | ----------------------------------------- |
+| [0008](file:///home/ubuntu/payu/docs/adr/0008-resilience-patterns.md)       | **Resilience Patterns**       | Circuit Breaker, Retry, Bulkhead standard |
+| [0009](file:///home/ubuntu/payu/docs/adr/0009-caching-strategy.md)          | **Caching Strategy**          | L1 (Caffeine) + L2 (Redis) caching        |
+| [0010](file:///home/ubuntu/payu/docs/adr/0010-security-standards.md)        | **Security Standards**        | PII Protection, Encryption, Audit Logging |
+| [0011](file:///home/ubuntu/payu/docs/adr/0011-frontend-architecture.md)     | **Frontend Architecture**     | Next.js (Web) + React Native (Mobile)     |
+| [0012](file:///home/ubuntu/payu/docs/adr/0012-container-standardization.md) | **Container Standardization** | Migration to Podman                       |
+| [0013](file:///home/ubuntu/payu/docs/adr/0013-testing-strategy.md)          | **Testing Strategy**          | Testing Pyramid standards                 |
 
 #### Centralized OpenAPI Portal
+
 - ✅ **Aggregated Specs**: `api-portal-service` updated to aggregate specs from **all 22 microservices**.
 - ✅ **Correct Ports**: Mapped all service ports (8001-8015, 8080, 8082, 8086, 8099).
 - ✅ **API Path Standards**: Handled Quarkus (`/q/openapi`), Spring (`/v3/api-docs`), and Python (`/openapi.json`) paths.
-    .toUri();
+  .toUri();
 
 return ResponseEntity.created(location).body(ApiResponse.success(response));
+
 ```
 
 #### API Compliance Score Improvement
@@ -1446,3 +1506,4 @@ _Last Updated: January 30, 2026 (API Best Practices Complete - Lab Score 99%)_
 - **Lab Score**: 98% → **99%** (+1%)
 
 _Last Updated: January 30, 2026 (Integration Architecture, Core Banking, Mobile Enhancements Complete - Lab Score 99%)_
+```
