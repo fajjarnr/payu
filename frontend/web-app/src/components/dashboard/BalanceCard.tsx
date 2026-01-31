@@ -14,10 +14,10 @@ interface BalanceCardProps {
 
 export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp' }: BalanceCardProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-      {/* Row 1: Primary Balance & Hero Card */}
-      <div className="md:col-span-4 flex flex-col h-full">
-        <Card className="flex flex-col justify-between h-full relative overflow-hidden group">
+    <div className="grid grid-cols-1 md:grid-cols-12 xl:grid-cols-3 gap-6">
+      {/* Col 1: Primary Balance & Net Worth */}
+      <div className="md:col-span-12 lg:col-span-4 xl:col-span-1 flex flex-col gap-6">
+        <Card className="flex flex-col justify-between flex-1 relative overflow-hidden group min-h-[220px]">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
             <div>
               <CardTitle className="text-xs sm:text-sm font-bold text-emerald-500 tracking-[0.2em] uppercase">
@@ -48,10 +48,37 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
             </div>
           </CardContent>
         </Card>
+
+        <Card className="flex flex-col justify-between flex-1 relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow min-h-[220px]">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
+            <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
+              Kekayaan Bersih
+            </CardTitle>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-emerald-500/10">
+              <ArrowUpRight className="h-6 w-6" />
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className="space-y-4">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight">
+                {currency} {(balance * 1.5).toLocaleString('id-ID')}
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-emerald-500 uppercase tracking-tighter flex items-center gap-1">
+                  <ArrowUpRight className="h-4 w-4" />
+                  +18% 
+                </span>
+                <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Peningkatan Total</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="md:col-span-8">
-        <div className="relative aspect-[1.6/1] md:aspect-auto md:h-full rounded-2xl overflow-hidden shadow-glass group border border-white/10">
+      {/* Col 2: Visual Card Representation (Hero) */}
+      <div className="md:col-span-12 lg:col-span-8 xl:col-span-1">
+        <div className="relative aspect-[1.6/1] md:aspect-auto md:h-full min-h-[300px] xl:min-h-0 rounded-2xl overflow-hidden shadow-glass group border border-white/10">
           {/* Gradient background */}
           <div className="absolute inset-0 card-gradient" />
 
@@ -92,36 +119,8 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
         </div>
       </div>
 
-      {/* Row 2: Supplementary Stats */}
-      <div className="md:col-span-4 flex flex-col h-full">
-        <Card className="flex flex-col justify-between h-full relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
-            <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
-              Kekayaan Bersih
-            </CardTitle>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-emerald-500/10">
-              <ArrowUpRight className="h-6 w-6" />
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <div className="space-y-4">
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight">
-                {currency} {(balance * 1.5).toLocaleString('id-ID')}
-              </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-emerald-500 uppercase tracking-tighter flex items-center gap-1">
-                  <ArrowUpRight className="h-4 w-4" />
-                  +18% 
-                </span>
-                <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Peningkatan Total</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="md:col-span-4 flex flex-col h-full">
+      {/* Col 3: Summary Stats (Pemasukan/Pengeluaran) */}
+      <div className="md:col-span-12 lg:col-span-12 xl:col-span-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-6">
         <SummaryItem
           label="Pemasukan"
           amount={75200000}
@@ -129,9 +128,6 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
           isPositive={true}
           currency={currency}
         />
-      </div>
-
-      <div className="md:col-span-4 flex flex-col h-full">
         <SummaryItem
           label="Pengeluaran"
           amount={42750000}
