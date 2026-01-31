@@ -1740,12 +1740,12 @@ _Last Updated: January 31, 2026 (Database Migrations Verified & Auth Service Har
   - [x] **New**: Shadcn UI component migration (Button, Avatar, Card).
   - [x] Fix Skeleton visibility pada theme Emerald.
   - [x] Implementasi Theme Toggle (Light/Dark mode) & Fix Readability.
-  - [ ] Implementasi auto-redirect dari `/` ke `/dashboard` jika user sudah login.
-  - [ ] Proteksi route `/dashboard` agar redirect ke `/login` jika belum autentikasi.
+  - [x] Implementasi auto-redirect dari `/` ke `/dashboard` jika user sudah login.
+  - [x] Proteksi route `/dashboard` agar redirect ke `/login` jika belum autentikasi.
   - [x] Penyesuaian `DashboardLayout` agar navigasi link sinkron dengan struktur folder baru.
   - [x] Optimasi loading state pada Landing Page menggunakan `framer-motion`.
 
 ---
 
-_Last Updated: January 31, 2026 (UI Refinement: Full-Width Layout & Shadcn UI Standardization Complete)_
+_Last Updated: January 31, 2026 (UI Refinement & Auth Redirection Complete)_
 ```

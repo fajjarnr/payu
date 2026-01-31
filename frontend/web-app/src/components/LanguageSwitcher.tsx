@@ -44,7 +44,8 @@ export default function LanguageSwitcher() {
       newPath = newPath.slice(0, -1);
     }
 
-    router.push(newPath || '/');
+    // Force hard navigation to ensure middleware and server components re-run
+    window.location.href = newPath || '/';
     setIsOpen(false);
   };
 
