@@ -1703,7 +1703,7 @@ _Last Updated: January 31, 2026 (Database Migrations Verified & Auth Service Har
   - `Button`: Official Shadcn implementation with restored **Emerald Premium** variants.
   - `Avatar`: Radix-based Avatar primitive with high-end shadow effects.
   - `Accordion`: Replaced manual Framer Motion logic in `SpendingInsights` & `BudgetTracking`.
-  - `Chart`: Implemented Recharts-based `Radial` and `Bar` charts in `StatsCharts` & `InvestmentPerformance`.
+  - `Chart`: Implemented Recharts-based `Radial` and `Bar` charts in `StatsCharts`, `InvestmentPerformance`, and `AnalyticsPage`.
   - `Progress`: Standardized all linear progress indicators (Budget, Health, ROI).
   - `Calendar` & `Popover`: Added to the UI kit for future Date Picker implementations.
   - `Carousel`: Refactored `BannerCarousel` using official Shadcn primitive.
