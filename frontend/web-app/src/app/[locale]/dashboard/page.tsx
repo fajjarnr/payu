@@ -87,31 +87,31 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
        )}
       </StaggerItem>
 
-      {/* High Priority Actions & Health - 8/4 Split */}
-      <StaggerItem className="md:col-span-12 lg:col-span-8">
-       <QuickActions maxActions={8} className="h-full" />
-      </StaggerItem>
-
+      {/* High Priority Actions & Health - 4/8 Split (Aligned with Balance) */}
       <StaggerItem className="md:col-span-12 lg:col-span-4">
        <FinancialHealthScore score={78} previousScore={72} className="h-full" />
       </StaggerItem>
 
-      {/* Activity & Insights - 8/4 Split */}
       <StaggerItem className="md:col-span-12 lg:col-span-8">
-       <TransferActivity className="h-full" />
+       <QuickActions maxActions={8} className="h-full" />
       </StaggerItem>
 
+      {/* Activity & Insights - 4/8 Split (Consistent Sidebar) */}
       <StaggerItem className="md:col-span-12 lg:col-span-4">
        <SpendingInsights className="h-full" />
       </StaggerItem>
 
-      {/* Charts & Investment - 8/4 Split */}
       <StaggerItem className="md:col-span-12 lg:col-span-8">
-       <StatsCharts className="h-full" />
+       <TransferActivity className="h-full" />
       </StaggerItem>
 
+      {/* Charts & Investment - 4/8 Split (Consistent Sidebar) */}
       <StaggerItem className="md:col-span-12 lg:col-span-4">
        <InvestmentPerformance className="h-full" />
+      </StaggerItem>
+
+      <StaggerItem className="md:col-span-12 lg:col-span-8">
+       <StatsCharts className="h-full" />
       </StaggerItem>
 
       {/* Budget & Offers - 4/8 Split */}
