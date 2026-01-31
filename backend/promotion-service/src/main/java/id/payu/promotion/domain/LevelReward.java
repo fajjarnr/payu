@@ -1,32 +1,47 @@
 package id.payu.promotion.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "level_rewards")
-public class LevelReward extends PanacheEntityBase {
+@EntityListeners(AuditingEntityListener.class)
+public class LevelReward {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
-    public Integer level;
+    private Integer level;
 
     @Column(name = "points_reward", nullable = false)
-    public Integer pointsReward;
+    private Integer pointsReward;
 
     @Column(name = "bonus_description", columnDefinition = "TEXT")
-    public String bonusDescription;
+    private String bonusDescription;
 
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
-    @PrePersist
-    void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public Integer getLevel() { return level; }
+    public void setLevel(Integer level) { this.level = level; }
+
+    public Integer getPointsReward() { return pointsReward; }
+    public void setPointsReward(Integer pointsReward) { this.pointsReward = pointsReward; }
+
+    public String getBonusDescription() { return bonusDescription; }
+    public void setBonusDescription(String bonusDescription) { this.bonusDescription = bonusDescription; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

@@ -41,21 +41,35 @@ You are the **Lead API Architect** for the **PayU Digital Banking Platform**. Yo
 
 ---
 
-## 📦 Request/Response Format (Standard Envelope)
+## 📦 Request/Response Format (Modern Standards)
 
+### 1. Success Envelope
 ```json
 {
     "success": true,
     "data": { ... },
-    "error": {
-        "code": "WAL_001",
-        "message": "Saldo tidak mencukupi",
-        "details": [ { "field": "amount", "message": "Minimal Rp 10.000" } ]
-    },
     "meta": {
         "requestId": "req-123",
-        "timestamp": "2026-01-30T10:30:00Z"
+        "timestamp": "2026-01-31T10:30:00Z"
     }
+}
+```
+
+### 2. Error Response (RFC 9457 - Problem Details)
+PayU uses RFC 9457 for errors to provide a standardized, machine-readable format.
+
+```json
+{
+    "type": "https://api.payu.id/errors/insufficient-funds",
+    "title": "Insufficient Funds",
+    "status": 422,
+    "detail": "Your wallet balance (Rp 5.000) is less than the requested transfer amount (Rp 10.000).",
+    "instance": "/api/v1/transfers/trx-999",
+    "error_code": "WAL_001",
+    "trace_id": "req-123-abc",
+    "errors": [
+        { "field": "amount", "message": "Balance too low" }
+    ]
 }
 ```
 
@@ -368,16 +382,47 @@ async def mixed_task():
 
 ## 🔗 Internal & External Integration Patterns
 
-### 1. Robust API Client (Java/Spring)
+### 1. Robust API Client (Spring Boot 3.4+)
+Use `RestClient` for sync or `WebClient` for async calls. Spring Boot 3.4 recommends `RestClient` for most sync blocking scenarios.
+
 ```java
 @Service
 public class PartnerGatewayClient {
-    @CircuitBreaker(name = "partner-api", fallbackMethod = "fallback")
-    @Retry(name = "partner-api")
-    public ApiResponse<Result> send(Request req) {
-        // Use RestTemplate/WebClient with strict timeouts (Connect: 1s, Read: 2s)
-        return restTemplate.postForObject(url, req, ApiResponse.class);
+    private final RestClient restClient;
+
+    public PartnerGatewayClient(RestClient.Builder builder) {
+        this.restClient = builder.baseUrl("https://api.partner.com").build();
     }
+
+    @CircuitBreaker(name = "partner-api", fallbackMethod = "fallback")
+    public PartnerResponse send(PartnerRequest req) {
+        return restClient.post()
+            .uri("/v1/payments")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(req)
+            .retrieve()
+            .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
+                throw new PartnerClientException(response.getStatusCode());
+            })
+            .body(PartnerResponse.class);
+    }
+}
+```
+
+### 2. Declarative Clients (@HttpExchange)
+```java
+public interface BankInterface {
+    @PostExchange("/inquiry")
+    InquiryResponse inquiry(@RequestBody InquiryRequest request);
+}
+
+// In Config
+@Bean
+BankInterface bankInterface(RestClient.Builder builder) {
+    RestClient restClient = builder.baseUrl("https://api.bank.id").build();
+    HttpServiceProxyFactory factory = HttpServiceProxyFactory
+        .builderFor(RestClientAdapter.create(restClient)).build();
+    return factory.createClient(BankInterface.class);
 }
 ```
 

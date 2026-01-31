@@ -282,10 +282,46 @@ These techniques are part of systematic debugging and available in this director
 - **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger
 - **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
+- **Annotation Processing (Lombok)** - Handling "cannot find symbol" errors for generated code (getters/setters)
 
 **Related skills:**
 - **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
 - **superpowers:verification-before-completion** - Verify fix worked before claiming success
+
+## 🛠️ Specialized Patterns (Environment Specific)
+
+### ☕ Lombok & Annotation Processing (Spring Boot 3.4)
+
+**Symptom:** "cannot find symbol" for `get*`, `set*`, `builder()`, or `log` despite `@Data`, `@Getter`, `@Setter`, or `@Slf4j` being present.
+
+**Phase 1: Root Cause Checklist**
+1.  **Parent POM**: Is the service using `id.payu:payu-backend-parent`? If it uses `spring-boot-starter-parent` directly, it will MISS platform-specific compiler configurations.
+2.  **Plugin Configuration**: Check `maven-compiler-plugin`. If `annotationProcessorPaths` is explicitly defined for ANY processor (like MapStruct), it MUST also explicitly include `lombok`.
+3.  **Lombok Version**: Ensure `${lombok.version}` is defined in the parent properties. For Spring Boot 3.4, use `1.18.36` or later.
+4.  **IDE vs CLI**: If it works in IDE but fails in `mvn`, it's 100% a Maven configuration issue in `pom.xml`.
+
+**Standard Fix Pattern:**
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </path>
+            <!-- Add others if needed (MapStruct, etc.) -->
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
+```
+
+**Phase 2: Verification**
+Run `mvn clean compile -pl <module-name> -am`. If it fails, check if the parent POM is actually being used by running `mvn help:effective-pom`.
+
+---
 
 ## Real-World Impact
 

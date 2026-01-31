@@ -1,44 +1,66 @@
 package id.payu.support.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "training_modules")
-public class TrainingModule extends PanacheEntity {
+@EntityListeners(AuditingEntityListener.class)
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrainingModule {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(unique = true, nullable = false)
-    public String code;
+    private String code;
 
     @Column(nullable = false)
-    public String title;
+    private String title;
 
     @Column
-    public String description;
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public TrainingCategory category;
+    private TrainingCategory category;
 
     @Column(nullable = false)
-    public int durationMinutes;
+    private Integer durationMinutes;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public TrainingStatus status;
+    @Builder.Default
+    private TrainingStatus status = TrainingStatus.DRAFT;
 
     @Column(nullable = false)
-    public boolean mandatory;
+    @Builder.Default
+    private boolean mandatory = false;
 
     @OneToMany(mappedBy = "trainingModule", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<AgentTraining> agentTrainings;
+    @Builder.Default
+    private List<AgentTraining> agentTrainings = new ArrayList<>();
 
-    @Column(nullable = false)
-    public LocalDateTime createdAt;
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    public LocalDateTime updatedAt;
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     public enum TrainingCategory {
         ONBOARDING,
@@ -54,16 +76,5 @@ public class TrainingModule extends PanacheEntity {
         DRAFT,
         ACTIVE,
         ARCHIVED
-    }
-
-    public TrainingModule() {
-        this.createdAt = LocalDateTime.now();
-        this.status = TrainingStatus.DRAFT;
-        this.mandatory = false;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }

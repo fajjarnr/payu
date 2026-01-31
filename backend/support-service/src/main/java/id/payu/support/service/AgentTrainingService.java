@@ -5,140 +5,135 @@ import id.payu.support.domain.SupportAgent;
 import id.payu.support.domain.TrainingModule;
 import id.payu.support.dto.AgentTrainingResponse;
 import id.payu.support.dto.AssignTrainingRequest;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
-import org.jboss.logging.Logger;
+import id.payu.support.repository.AgentTrainingRepository;
+import id.payu.support.repository.SupportAgentRepository;
+import id.payu.support.repository.TrainingModuleRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@ApplicationScoped
+@Service
+@RequiredArgsConstructor
+@Slf4j
 public class AgentTrainingService {
 
-    private static final Logger LOG = Logger.getLogger(AgentTrainingService.class);
+    private final AgentTrainingRepository agentTrainingRepository;
+    private final SupportAgentRepository agentRepository;
+    private final TrainingModuleRepository moduleRepository;
 
     public List<AgentTrainingResponse> getAllAgentTrainings() {
-        return AgentTraining.<AgentTraining>listAll().stream()
+        return agentTrainingRepository.findAll()
+                .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public List<AgentTrainingResponse> getTrainingsByAgent(Long agentId) {
-        return AgentTraining.<AgentTraining>list("agent.id", agentId)
+        return agentTrainingRepository.findByAgentId(agentId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public List<AgentTrainingResponse> getTrainingsByModule(Long moduleId) {
-        return AgentTraining.<AgentTraining>list("trainingModule.id", moduleId)
+        return agentTrainingRepository.findByTrainingModuleId(moduleId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public AgentTrainingResponse getAgentTraining(Long agentId, Long moduleId) {
-        AgentTraining training = AgentTraining.find("agent.id = ?1 AND trainingModule.id = ?2",
-                agentId, moduleId).firstResult();
-        return training != null ? toResponse(training) : null;
+        return agentTrainingRepository.findByAgentIdAndTrainingModuleId(agentId, moduleId)
+                .map(this::toResponse)
+                .orElse(null);
     }
 
     @Transactional
     public AgentTrainingResponse assignTraining(AssignTrainingRequest request) {
-        LOG.infof("Assigning training: agent=%d, module=%d", request.agentId(), request.trainingModuleId());
+        log.info("Assigning training: agent={}, module={}", request.agentId(), request.moduleId());
 
-        SupportAgent agent = SupportAgent.findById(request.agentId());
-        if (agent == null) {
-            throw new IllegalArgumentException("Agent not found");
-        }
+        SupportAgent agent = agentRepository.findById(request.agentId())
+                .orElseThrow(() -> new IllegalArgumentException("Agent not found"));
 
-        TrainingModule module = TrainingModule.findById(request.trainingModuleId());
-        if (module == null) {
-            throw new IllegalArgumentException("Training module not found");
-        }
+        TrainingModule module = moduleRepository.findById(request.moduleId())
+                .orElseThrow(() -> new IllegalArgumentException("Training module not found"));
 
-        AgentTraining existing = AgentTraining.<AgentTraining>find("agent.id = ?1 AND trainingModule.id = ?2",
-                request.agentId(), request.trainingModuleId()).firstResult();
-
-        AgentTraining agentTraining;
-        if (existing != null) {
-            agentTraining = existing;
-        } else {
-            agentTraining = new AgentTraining();
-            agentTraining.agent = agent;
-            agentTraining.trainingModule = module;
-        }
+        AgentTraining agentTraining = agentTrainingRepository
+                .findByAgentAndTrainingModule(agent, module)
+                .orElseGet(() -> AgentTraining.builder()
+                        .agent(agent)
+                        .trainingModule(module)
+                        .build());
 
         if (request.status() != null) {
-            agentTraining.status = request.status();
-            if (request.status() == AgentTraining.CompletionStatus.IN_PROGRESS && agentTraining.startedAt == null) {
-                agentTraining.startedAt = LocalDateTime.now();
+            agentTraining.setStatus(request.status());
+            if (request.status() == AgentTraining.CompletionStatus.IN_PROGRESS && agentTraining.getStartedAt() == null) {
+                agentTraining.setStartedAt(LocalDateTime.now());
             }
-            if (request.status() == AgentTraining.CompletionStatus.PASSED || 
+            if (request.status() == AgentTraining.CompletionStatus.PASSED ||
                 request.status() == AgentTraining.CompletionStatus.FAILED) {
-                agentTraining.completedAt = LocalDateTime.now();
+                agentTraining.setCompletedAt(LocalDateTime.now());
             }
         }
-        agentTraining.score = request.score();
-        agentTraining.notes = request.notes();
+        agentTraining.setScore(request.score());
+        agentTraining.setNotes(request.notes());
 
-        agentTraining.persist();
-        LOG.infof("Training assigned/updated: id=%d", agentTraining.id);
+        AgentTraining saved = agentTrainingRepository.save(agentTraining);
+        log.info("Training assigned/updated: id={}", saved.getId());
 
-        return toResponse(agentTraining);
+        return toResponse(saved);
     }
 
     public boolean isAgentFullyTrained(Long agentId) {
-        long mandatoryModules = TrainingModule.count("mandatory = ?1 AND status = ?2",
-                true, TrainingModule.TrainingStatus.ACTIVE);
-
-        long completedMandatory = AgentTraining.count(
-                "agent.id = ?1 AND trainingModule.mandatory = ?2 AND trainingModule.status = ?3 AND status = ?4",
+        long mandatoryModules = moduleRepository.countByMandatoryTrueAndStatus(TrainingModule.TrainingStatus.ACTIVE);
+        long completedMandatory = agentTrainingRepository.countByAgentIdAndTrainingModuleMandatoryTrueAndTrainingModuleStatusAndStatus(
                 agentId, true, TrainingModule.TrainingStatus.ACTIVE, AgentTraining.CompletionStatus.PASSED);
 
         return completedMandatory >= mandatoryModules;
     }
 
     public long countFullyTrainedAgents() {
-        long totalAgents = SupportAgent.count("active", true);
-        long mandatoryModules = TrainingModule.count("mandatory = ?1 AND status = ?2",
-                true, TrainingModule.TrainingStatus.ACTIVE);
+        long totalAgents = agentRepository.countByActiveTrue();
+        long mandatoryModules = moduleRepository.countByMandatoryTrueAndStatus(TrainingModule.TrainingStatus.ACTIVE);
 
         if (mandatoryModules == 0) {
             return 0;
         }
 
-        String query = "SELECT COUNT(DISTINCT at.agent.id) FROM AgentTraining at " +
-                "WHERE at.agent.active = true " +
-                "AND at.trainingModule.mandatory = true " +
-                "AND at.trainingModule.status = :moduleStatus " +
-                "AND at.status = :completionStatus " +
-                "GROUP BY at.agent.id " +
-                "HAVING COUNT(at.id) >= :requiredCount";
-
-        return (long) AgentTraining.<AgentTraining>getEntityManager()
-                .createQuery(query)
-                .setParameter("moduleStatus", TrainingModule.TrainingStatus.ACTIVE)
-                .setParameter("completionStatus", AgentTraining.CompletionStatus.PASSED)
-                .setParameter("requiredCount", mandatoryModules)
-                .getResultStream()
+        // Count agents who have completed all mandatory modules
+        return agentRepository.findAll().stream()
+                .filter(SupportAgent::isActive)
+                .filter(agent -> {
+                    long completedCount = agentTrainingRepository
+                            .findByAgent(agent)
+                            .stream()
+                            .filter(at -> at.getTrainingModule().isMandatory())
+                            .filter(at -> at.getTrainingModule().getStatus() == TrainingModule.TrainingStatus.ACTIVE)
+                            .filter(at -> at.getStatus() == AgentTraining.CompletionStatus.PASSED)
+                            .count();
+                    return completedCount >= mandatoryModules;
+                })
                 .count();
     }
 
     private AgentTrainingResponse toResponse(AgentTraining training) {
         return new AgentTrainingResponse(
-                training.id,
-                training.agent.id,
-                training.agent.name,
-                training.trainingModule.id,
-                training.trainingModule.title,
-                training.status,
-                training.score,
-                training.startedAt,
-                training.completedAt,
-                training.notes,
-                training.createdAt,
-                training.updatedAt
+                training.getId(),
+                training.getAgent().getId(),
+                training.getAgent().getName(),
+                training.getTrainingModule().getId(),
+                training.getTrainingModule().getTitle(),
+                training.getStatus(),
+                training.getScore(),
+                training.getStartedAt(),
+                training.getCompletedAt(),
+                training.getNotes(),
+                training.getCreatedAt(),
+                training.getUpdatedAt()
         );
     }
 }

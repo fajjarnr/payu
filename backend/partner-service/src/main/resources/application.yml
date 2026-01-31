@@ -49,7 +49,46 @@ quarkus:
   smallrye-openapi:
     info-title: PayU Partner Service API
     info-version: 1.0.0
-    info-description: API for managing external partners
+    info-description: |
+      API for managing external partners and SNAP BI payment integration.
+
+      This service provides:
+      - Partner management (CRUD operations)
+      - Certificate lifecycle management (rotation, validation)
+      - SNAP BI payment integration (OAuth2 token, payments, refunds)
+
+      ## Authentication
+
+      Partner management endpoints require Bearer token authentication.
+      SNAP BI endpoints use signature-based authentication with HMAC SHA-512.
+    info-contact:
+      name: PayU API Team
+      email: api@payu.id
+      url: https://payu.id
+    info-license:
+      name: Proprietary
+      url: https://payu.id/license
+    servers:
+      - url: http://localhost:8089
+        description: Local development server
+      - url: https://api.payu.id/partner-service
+        description: Production server
+    security-schemes:
+      bearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+        description: JWT Bearer token authentication for partner management APIs
+      signatureAuth:
+        type: apiKey
+        description: HMAC signature authentication for SNAP BI APIs
+        in: header
+        name: X-SIGNATURE
+      partnerApiKey:
+        type: apiKey
+        in: header
+        name: X-CLIENT-KEY
+        description: Partner client key for SNAP BI token generation
   log:
     level: INFO
     category:

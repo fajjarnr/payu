@@ -2,86 +2,133 @@ package id.payu.promotion.resource;
 
 import id.payu.promotion.dto.*;
 import id.payu.promotion.service.GamificationService;
-import io.quarkus.security.Authenticated;
-import jakarta.inject.Inject;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Path("/api/v1/gamification")
-@Produces(MediaType.APPLICATION_JSON)
+@RestController
+@RequestMapping("/api/v1/gamification")
 @Tag(name = "Gamification", description = "Daily check-ins, badges, and level progression APIs")
-@Authenticated
+@SecurityRequirement(name = "bearerAuth")
 public class GamificationResource {
 
-    @Inject
-    GamificationService gamificationService;
+    private final GamificationService gamificationService;
 
-    @POST
-    @Path("/checkin")
+    public GamificationResource(GamificationService gamificationService) {
+        this.gamificationService = gamificationService;
+    }
+
+    @PostMapping("/checkin")
     @Operation(summary = "Perform daily check-in")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response performDailyCheckin(@QueryParam("accountId") String accountId) {
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Check-in recorded successfully",
+            content = @io.swagger.v3.oas.annotations.media.Content(schema = @Schema(implementation = DailyCheckinResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<DailyCheckinResponse> performDailyCheckin(@RequestParam String accountId) {
         DailyCheckinResponse response = gamificationService.performDailyCheckin(accountId);
-        return Response.status(Response.Status.CREATED).entity(response).build();
+        return ResponseEntity.status(201).body(response);
     }
 
-    @GET
-    @Path("/checkin/today")
+    @GetMapping("/checkin/today")
     @Operation(summary = "Get today's check-in status")
-    public Response getTodayCheckin(@QueryParam("accountId") String accountId) {
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Check-in status retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<DailyCheckinResponse> getTodayCheckin(@RequestParam String accountId) {
         DailyCheckinResponse response = gamificationService.getTodayCheckin(accountId);
-        return Response.ok(response).build();
+        return ResponseEntity.ok(response);
     }
 
-    @GET
-    @Path("/checkin/streak")
+    @GetMapping("/checkin/streak")
     @Operation(summary = "Get current streak count")
-    public Integer getCurrentStreak(@QueryParam("accountId") String accountId) {
-        return gamificationService.getCurrentStreak(accountId);
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Streak count retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Integer> getCurrentStreak(@RequestParam String accountId) {
+        return ResponseEntity.ok(gamificationService.getCurrentStreak(accountId));
     }
 
-    @POST
-    @Path("/transaction")
+    @PostMapping("/transaction")
     @Operation(summary = "Process transaction for gamification")
-    public GamificationEventResponse processTransaction(@Valid ProcessTransactionRequest request) {
-        return gamificationService.processTransaction(request);
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Transaction processed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<GamificationEventResponse> processTransaction(@Valid @RequestBody ProcessTransactionRequest request) {
+        return ResponseEntity.ok(gamificationService.processTransaction(request));
     }
 
-    @GET
-    @Path("/level")
+    @GetMapping("/level")
     @Operation(summary = "Get user level and XP")
-    public UserLevelResponse getUserLevel(@QueryParam("accountId") String accountId) {
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User level retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "404", description = "User level not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<UserLevelResponse> getUserLevel(@RequestParam String accountId) {
         UserLevelResponse response = gamificationService.getUserLevel(accountId);
         if (response == null) {
-            throw new NotFoundException("User level not found");
+            throw new RuntimeException("User level not found");
         }
-        return response;
+        return ResponseEntity.ok(response);
     }
 
-    @GET
-    @Path("/badges")
+    @GetMapping("/badges")
     @Operation(summary = "Get user earned badges")
-    public List<EarnedBadgeResponse> getUserBadges(@QueryParam("accountId") String accountId) {
-        return gamificationService.getUserBadges(accountId);
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Badges retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<EarnedBadgeResponse>> getUserBadges(@RequestParam String accountId) {
+        return ResponseEntity.ok(gamificationService.getUserBadges(accountId));
     }
 
-    @GET
-    @Path("/badges/progress")
+    @GetMapping("/badges/progress")
     @Operation(summary = "Get badge progress")
-    public List<BadgeProgressResponse> getBadgeProgress(@QueryParam("accountId") String accountId) {
-        return gamificationService.getBadgeProgress(accountId);
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Badge progress retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<BadgeProgressResponse>> getBadgeProgress(@RequestParam String accountId) {
+        return ResponseEntity.ok(gamificationService.getBadgeProgress(accountId));
     }
 
-    @GET
-    @Path("/summary")
+    @GetMapping("/summary")
     @Operation(summary = "Get gamification summary")
-    public GamificationSummaryResponse getSummary(@QueryParam("accountId") String accountId) {
-        return gamificationService.getSummary(accountId);
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Summary retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<GamificationSummaryResponse> getSummary(@RequestParam String accountId) {
+        return ResponseEntity.ok(gamificationService.getSummary(accountId));
     }
 }

@@ -16,6 +16,15 @@ You are the **Lead Events & Messaging Architect (AI)** for the **PayU Platform**
 
 ---
 
+## ⚡ 2026 Integration Trends & Standards
+
+1. **Durable Execution (Temporal)**: Moving beyond pure Kafka Sagas to stateful workflows for high-stakes business logic.
+2. **KRaft Mode**: All Kafka clusters in 2026 are Zookeeper-free.
+3. **CloudEvents 1.0.2**: Strict adherence for cross-cloud and cross-language compatibility.
+4. **Exactly-Once Semantics (EOS)**: Default for all financial ledger operations.
+
+---
+
 ## 📬 AMQ Streams & Kafka Engineering
 
 ### 1. Producer Configuration (Financial Grade)
@@ -479,13 +488,28 @@ public class TransferSagaOrchestrator {
 ```
 
 ### 3. Compensation Table
-
 | Step | Action | Compensation |
 |------|--------|--------------|
 | 1 | Debit Source Wallet | Credit Source Wallet (Reversal) |
 | 2 | Credit Destination Wallet | Debit Destination Wallet (Reversal) |
-| 3 | Update Transaction Status | Revert Status to PENDING |
-| 4 | Send Notification | Send Failure Notification |
+
+### 4. Durable Execution (Temporal)
+For complex, long-running sagas (e.g., Cross-border transfers taking 2 days), PayU uses **Temporal**. It provides automatic retries, state persistence, and "infinite" timeouts.
+
+```java
+// TransferWorkflowImpl.java
+public void executeTransfer(TransferRequest request) {
+    try {
+        walletActivity.debit(request.from(), request.amount());
+        bankActivity.sendWire(request.to(), request.amount());
+        notificationActivity.sendSuccess(request.user());
+    } catch (Exception e) {
+        // Automatic compensation if any activity fails
+        walletActivity.credit(request.from(), request.amount());
+        throw e;
+    }
+}
+```
 
 ---
 

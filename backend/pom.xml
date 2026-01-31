@@ -34,6 +34,7 @@
         <hypersistence.version>3.9.0</hypersistence.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <springdoc.version>2.3.0</springdoc.version>
+        <lombok.version>1.18.36</lombok.version>
     </properties>
 
     <modules>
@@ -182,6 +183,27 @@
     </dependencyManagement>
 
     <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -194,18 +216,6 @@
                                 <artifactId>lombok</artifactId>
                             </exclude>
                         </excludes>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.11.0</version>
-                    <configuration>
-                        <source>21</source>
-                        <target>21</target>
-                        <compilerArgs>
-                            <arg>-parameters</arg>
-                        </compilerArgs>
                     </configuration>
                 </plugin>
                 <plugin>

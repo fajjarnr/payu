@@ -1,58 +1,65 @@
 package id.payu.support.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "agent_training", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"agent_id", "training_module_id"})
 })
-public class AgentTraining extends PanacheEntity {
+@EntityListeners(AuditingEntityListener.class)
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AgentTraining {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agent_id", nullable = false)
-    public SupportAgent agent;
+    private SupportAgent agent;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "training_module_id", nullable = false)
-    public TrainingModule trainingModule;
+    private TrainingModule trainingModule;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public CompletionStatus status;
+    @Builder.Default
+    private CompletionStatus status = CompletionStatus.NOT_STARTED;
 
     @Column
-    public Integer score;
+    private Integer score;
 
-    @Column
-    public LocalDateTime startedAt;
+    private LocalDateTime startedAt;
 
-    @Column
-    public LocalDateTime completedAt;
+    private LocalDateTime completedAt;
 
-    @Column
-    public String notes;
+    @Column(length = 1000)
+    private String notes;
 
-    @Column(nullable = false)
-    public LocalDateTime createdAt;
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    public LocalDateTime updatedAt;
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     public enum CompletionStatus {
         NOT_STARTED,
         IN_PROGRESS,
         PASSED,
         FAILED
-    }
-
-    public AgentTraining() {
-        this.createdAt = LocalDateTime.now();
-        this.status = CompletionStatus.NOT_STARTED;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }

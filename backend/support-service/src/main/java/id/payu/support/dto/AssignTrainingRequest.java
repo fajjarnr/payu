@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record AssignTrainingRequest(
     @NotNull Long agentId,
-    @NotNull Long trainingModuleId,
+    @NotNull Long moduleId,
     CompletionStatus status,
     Integer score,
     String notes

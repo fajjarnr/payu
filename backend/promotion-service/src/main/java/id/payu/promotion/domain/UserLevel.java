@@ -1,7 +1,9 @@
 package id.payu.promotion.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -10,33 +12,36 @@ import java.util.UUID;
     @Index(name = "idx_user_level_account", columnList = "accountId"),
     @Index(name = "idx_user_level_level", columnList = "level")
 })
-public class UserLevel extends PanacheEntityBase {
+@EntityListeners(AuditingEntityListener.class)
+public class UserLevel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "account_id", nullable = false, unique = true)
-    public String accountId;
+    private String accountId;
 
     @Column(nullable = false)
-    public Integer level;
+    private Integer level;
 
     @Column(nullable = false)
-    public Integer xp;
+    private Integer xp;
 
     @Column(name = "level_name", length = 100)
-    public String levelName;
+    private String levelName;
 
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at")
-    public LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     @PrePersist
-    void onCreate() {
-        createdAt = LocalDateTime.now();
+    protected void onCreate() {
         if (level == null) {
             level = 1;
         }
@@ -45,8 +50,25 @@ public class UserLevel extends PanacheEntityBase {
         }
     }
 
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getAccountId() { return accountId; }
+    public void setAccountId(String accountId) { this.accountId = accountId; }
+
+    public Integer getLevel() { return level; }
+    public void setLevel(Integer level) { this.level = level; }
+
+    public Integer getXp() { return xp; }
+    public void setXp(Integer xp) { this.xp = xp; }
+
+    public String getLevelName() { return levelName; }
+    public void setLevelName(String levelName) { this.levelName = levelName; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

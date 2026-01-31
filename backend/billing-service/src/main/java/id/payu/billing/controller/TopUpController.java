@@ -1,0 +1,104 @@
+package id.payu.billing.controller;
+
+import id.payu.api.common.response.ApiResponse;
+import id.payu.billing.domain.BillPayment;
+import id.payu.billing.dto.TopUpRequest;
+import id.payu.billing.dto.TopUpResponse;
+import id.payu.billing.service.PaymentService;
+import id.payu.commons.idempotency.Idempotent;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * REST Controller for e-wallet top-ups.
+ */
+@RestController
+@RequestMapping("/api/v1/topup")
+@RequiredArgsConstructor
+@Tag(name = "E-Wallet Top-Up", description = "E-wallet top-up APIs for GoPay, OVO, DANA, LinkAja")
+@SecurityRequirement(name = "bearerAuth")
+public class TopUpController {
+
+    private final PaymentService paymentService;
+
+    @PostMapping
+    @Idempotent(required = true)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Create e-wallet top-up", description = "Process an e-wallet top-up for supported providers")
+    @SwaggerApiResponse(responseCode = "201", description = "Top-up created successfully",
+            content = @Content(schema = @Schema(implementation = TopUpResponse.class)))
+    @SwaggerApiResponse(responseCode = "400", description = "Invalid request - validation error or invalid provider")
+    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized - valid JWT token required")
+    @SwaggerApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions")
+    @SwaggerApiResponse(responseCode = "500", description = "Internal server error")
+    public ApiResponse<TopUpResponse> createTopUp(
+            @Parameter(description = "Top-up request details", required = true)
+            @Valid @RequestBody TopUpRequest request) {
+        BillPayment payment = paymentService.createTopUp(request);
+        return ApiResponse.success(TopUpResponse.from(payment), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get top-up by ID", description = "Retrieve top-up details using transaction ID")
+    @SwaggerApiResponse(responseCode = "200", description = "Top-up found",
+            content = @Content(schema = @Schema(implementation = TopUpResponse.class)))
+    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized")
+    @SwaggerApiResponse(responseCode = "403", description = "Forbidden")
+    @SwaggerApiResponse(responseCode = "404", description = "Top-up not found")
+    public ApiResponse<TopUpResponse> getTopUp(
+            @Parameter(description = "Top-up ID", required = true)
+            @PathVariable UUID id) {
+        return paymentService.getPayment(id)
+                .map(payment -> ApiResponse.success(TopUpResponse.from(payment)))
+                .orElseThrow(() -> new TopUpNotFoundException("Top-up not found"));
+    }
+
+    @GetMapping("/reference/{referenceNumber}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get top-up by reference number", description = "Retrieve top-up details using the reference number")
+    @SwaggerApiResponse(responseCode = "200", description = "Top-up found",
+            content = @Content(schema = @Schema(implementation = TopUpResponse.class)))
+    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized")
+    @SwaggerApiResponse(responseCode = "403", description = "Forbidden")
+    @SwaggerApiResponse(responseCode = "404", description = "Top-up not found")
+    public ApiResponse<TopUpResponse> getTopUpByReference(
+            @Parameter(description = "Reference number", required = true)
+            @PathVariable String referenceNumber) {
+        return paymentService.getPaymentByReference(referenceNumber)
+                .map(payment -> ApiResponse.success(TopUpResponse.from(payment)))
+                .orElseThrow(() -> new TopUpNotFoundException("Top-up not found"));
+    }
+
+    @GetMapping("/providers")
+    @Operation(summary = "List e-wallet providers", description = "Retrieve list of supported e-wallet providers")
+    @SwaggerApiResponse(responseCode = "200", description = "Providers retrieved successfully")
+    public ApiResponse<List<ProviderInfo>> getProviders() {
+        List<ProviderInfo> providers = List.of(
+                new ProviderInfo("GOPAY", "GoPay"),
+                new ProviderInfo("OVO", "OVO"),
+                new ProviderInfo("DANA", "DANA"),
+                new ProviderInfo("LINKAJA", "LinkAja")
+        );
+        return ApiResponse.success(providers);
+    }
+
+    /**
+     * Provider info record.
+     */
+    public record ProviderInfo(String code, String name) {}
+}

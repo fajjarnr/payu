@@ -25,10 +25,17 @@ public class VariantAssignmentResponse {
      * Convert domain object to DTO
      */
     public static VariantAssignmentResponse fromDomain(VariantAssignment assignment) {
-        return VariantAssignmentResponse.builder()
-                .experimentKey(assignment.getExperimentKey())
-                .variant(assignment.getVariant())
-                .config(assignment.getConfig())
-                .build();
+        VariantAssignmentResponse response = new VariantAssignmentResponse();
+        response.setExperimentKey(assignment.getExperimentKey());
+        response.setVariant(assignment.getVariant());
+        response.setConfig(assignment.getConfig());
+        return response;
     }
+
+    public String getExperimentKey() { return experimentKey; }
+    public void setExperimentKey(String experimentKey) { this.experimentKey = experimentKey; }
+    public String getVariant() { return variant; }
+    public void setVariant(String variant) { this.variant = variant; }
+    public Map<String, Object> getConfig() { return config; }
+    public void setConfig(Map<String, Object> config) { this.config = config; }
 }

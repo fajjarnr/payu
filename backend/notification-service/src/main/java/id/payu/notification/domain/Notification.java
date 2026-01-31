@@ -2,6 +2,7 @@ package id.payu.notification.domain;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 

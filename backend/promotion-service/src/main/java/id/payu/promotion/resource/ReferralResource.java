@@ -3,82 +3,132 @@ package id.payu.promotion.resource;
 import id.payu.promotion.domain.Referral;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.service.ReferralService;
-import jakarta.inject.Inject;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@Path("/api/v1/referrals")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@RestController
+@RequestMapping("/api/v1/referrals")
+@Tag(name = "Referrals", description = "Referral management APIs")
+@SecurityRequirement(name = "bearerAuth")
 public class ReferralResource {
 
-    @Inject
-    ReferralService referralService;
+    private final ReferralService referralService;
 
-    @POST
-    public Response createReferral(@Valid CreateReferralRequest request) {
+    public ReferralResource(ReferralService referralService) {
+        this.referralService = referralService;
+    }
+
+    @PostMapping
+    @Operation(summary = "Create referral", description = "Create a new referral")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Referral created successfully",
+            content = @Content(schema = @Schema(implementation = ReferralResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> createReferral(@Valid @RequestBody CreateReferralRequest request) {
         try {
             Referral referral = referralService.createReferral(request);
-            return Response.status(Response.Status.CREATED)
-                .entity(ReferralResponse.from(referral))
-                .build();
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ReferralResponse.from(referral));
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ErrorResponse(e.getMessage()))
-                .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
         }
     }
 
-    @POST
-    @Path("/complete")
-    public Response completeReferral(@Valid CompleteReferralRequest request) {
+    @PostMapping("/complete")
+    @Operation(summary = "Complete referral", description = "Complete a referral after conditions are met")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Referral completed successfully",
+            content = @Content(schema = @Schema(implementation = ReferralResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> completeReferral(@Valid @RequestBody CompleteReferralRequest request) {
         try {
             Referral referral = referralService.completeReferral(request);
-            return Response.ok(ReferralResponse.from(referral)).build();
+            return ResponseEntity.ok(ReferralResponse.from(referral));
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ErrorResponse(e.getMessage()))
-                .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
         }
     }
 
-    @GET
-    @Path("/{id}")
-    public Response getReferral(@PathParam("id") UUID id) {
+    @GetMapping("/{id}")
+    @Operation(summary = "Get referral by ID", description = "Retrieve referral details by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Referral found",
+            content = @Content(schema = @Schema(implementation = ReferralResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "404", description = "Referral not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> getReferral(@PathVariable UUID id) {
         return referralService.getReferral(id)
-            .map(referral -> Response.ok(ReferralResponse.from(referral)).build())
-            .orElse(Response.status(Response.Status.NOT_FOUND)
-                .entity(new ErrorResponse("Referral not found"))
-                .build());
+            .map(referral -> ResponseEntity.ok(ReferralResponse.from(referral)))
+            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("Referral not found")));
     }
 
-    @GET
-    @Path("/code/{code}")
-    public Response getReferralByCode(@PathParam("code") String code) {
+    @GetMapping("/code/{code}")
+    @Operation(summary = "Get referral by code", description = "Retrieve referral details by referral code")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Referral found",
+            content = @Content(schema = @Schema(implementation = ReferralResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "404", description = "Referral code not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> getReferralByCode(@PathVariable String code) {
         return referralService.getReferralByCode(code)
-            .map(referral -> Response.ok(ReferralResponse.from(referral)).build())
-            .orElse(Response.status(Response.Status.NOT_FOUND)
-                .entity(new ErrorResponse("Referral code not found"))
-                .build());
+            .map(referral -> ResponseEntity.ok(ReferralResponse.from(referral)))
+            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("Referral code not found")));
     }
 
-    @GET
-    @Path("/referrer/{referrerAccountId}")
-    public Response getReferralsByReferrer(@PathParam("referrerAccountId") String referrerAccountId) {
+    @GetMapping("/referrer/{referrerAccountId}")
+    @Operation(summary = "Get referrals by referrer", description = "Retrieve all referrals for a referrer account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Referrals retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<ReferralResponse>> getReferralsByReferrer(@PathVariable String referrerAccountId) {
         List<Referral> referrals = referralService.getReferralsByReferrer(referrerAccountId);
-        return Response.ok(referrals.stream().map(ReferralResponse::from).toList()).build();
+        return ResponseEntity.ok(referrals.stream().map(ReferralResponse::from).toList());
     }
 
-    @GET
-    @Path("/referrer/{referrerAccountId}/summary")
-    public Response getReferralSummary(@PathParam("referrerAccountId") String referrerAccountId) {
+    @GetMapping("/referrer/{referrerAccountId}/summary")
+    @Operation(summary = "Get referral summary", description = "Retrieve referral summary for a referrer account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Referral summary retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<ReferralSummaryResponse> getReferralSummary(@PathVariable String referrerAccountId) {
         ReferralSummaryResponse summary = referralService.getReferralSummary(referrerAccountId);
-        return Response.ok(summary).build();
+        return ResponseEntity.ok(summary);
     }
 
     record ErrorResponse(String message) {}

@@ -1,7 +1,9 @@
 package id.payu.promotion.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,76 +14,124 @@ import java.util.UUID;
     @Index(name = "idx_promotion_status", columnList = "status"),
     @Index(name = "idx_promotion_dates", columnList = "startDate, endDate")
 })
-public class Promotion extends PanacheEntityBase {
+@EntityListeners(AuditingEntityListener.class)
+public class Promotion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "code", nullable = false, unique = true)
-    public String code;
+    private String code;
 
     @Column(name = "name", nullable = false)
-    public String name;
+    private String name;
 
     @Column(name = "description", columnDefinition = "TEXT")
-    public String description;
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "promotion_type", nullable = false)
-    public PromotionType promotionType;
+    private PromotionType promotionType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "reward_type", nullable = false)
-    public RewardType rewardType;
+    private RewardType rewardType;
 
     @Column(name = "reward_value", nullable = false, precision = 19, scale = 4)
-    public BigDecimal rewardValue;
+    private BigDecimal rewardValue;
 
     @Column(name = "max_redemptions")
-    public Integer maxRedemptions;
+    private Integer maxRedemptions;
 
     @Column(name = "redemption_count")
-    public Integer redemptionCount;
+    private Integer redemptionCount;
 
     @Column(name = "min_transaction_amount", precision = 19, scale = 4)
-    public BigDecimal minTransactionAmount;
+    private BigDecimal minTransactionAmount;
 
     @Column(name = "merchant_codes", columnDefinition = "JSONB")
-    public String merchantCodes;
+    private String merchantCodes;
 
     @Column(name = "category_codes", columnDefinition = "JSONB")
-    public String categoryCodes;
+    private String categoryCodes;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    public Status status;
+    private Status status;
 
     @Column(name = "start_date", nullable = false)
-    public LocalDateTime startDate;
+    private LocalDateTime startDate;
 
     @Column(name = "end_date", nullable = false)
-    public LocalDateTime endDate;
+    private LocalDateTime endDate;
 
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at")
-    public LocalDateTime updatedAt;
-
+    private LocalDateTime updatedAt;
     @PrePersist
-    void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+    protected void onCreate() {
         if (redemptionCount == null) {
             redemptionCount = 0;
         }
     }
 
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public PromotionType getPromotionType() { return promotionType; }
+    public void setPromotionType(PromotionType promotionType) { this.promotionType = promotionType; }
+
+    public RewardType getRewardType() { return rewardType; }
+    public void setRewardType(RewardType rewardType) { this.rewardType = rewardType; }
+
+    public BigDecimal getRewardValue() { return rewardValue; }
+    public void setRewardValue(BigDecimal rewardValue) { this.rewardValue = rewardValue; }
+
+    public Integer getMaxRedemptions() { return maxRedemptions; }
+    public void setMaxRedemptions(Integer maxRedemptions) { this.maxRedemptions = maxRedemptions; }
+
+    public Integer getRedemptionCount() { return redemptionCount; }
+    public void setRedemptionCount(Integer redemptionCount) { this.redemptionCount = redemptionCount; }
+
+    public BigDecimal getMinTransactionAmount() { return minTransactionAmount; }
+    public void setMinTransactionAmount(BigDecimal minTransactionAmount) { this.minTransactionAmount = minTransactionAmount; }
+
+    public String getMerchantCodes() { return merchantCodes; }
+    public void setMerchantCodes(String merchantCodes) { this.merchantCodes = merchantCodes; }
+
+    public String getCategoryCodes() { return categoryCodes; }
+    public void setCategoryCodes(String categoryCodes) { this.categoryCodes = categoryCodes; }
+
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
+
+    public LocalDateTime getStartDate() { return startDate; }
+    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
+
+    public LocalDateTime getEndDate() { return endDate; }
+    public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     public enum PromotionType {
         CASHBACK,

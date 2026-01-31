@@ -1,36 +1,58 @@
 package id.payu.billing.client;
 
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 
 /**
- * REST client for wallet-service.
+ * REST client for wallet-service using Spring RestTemplate.
  */
-@Path("/api/v1/wallets")
-@RegisterRestClient(configKey = "wallet-service")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-public interface WalletClient {
+@Component
+public class WalletClient {
 
-    @POST
-    @Path("/{accountId}/reserve")
-    ReserveResponse reserveBalance(
-        @PathParam("accountId") String accountId,
-        ReserveRequest request
-    );
+    private final RestTemplate restTemplate;
+    private final String walletServiceBaseUrl;
 
-    @POST
-    @Path("/reservations/{reservationId}/commit")
-    void commitReservation(@PathParam("reservationId") String reservationId);
+    public WalletClient(
+            RestTemplate restTemplate,
+            @Value("${spring.web.client.wallet-service.base-url}") String walletServiceBaseUrl) {
+        this.restTemplate = restTemplate;
+        this.walletServiceBaseUrl = walletServiceBaseUrl;
+    }
 
-    @POST
-    @Path("/reservations/{reservationId}/release")
-    void releaseReservation(@PathParam("reservationId") String reservationId);
+    /**
+     * Reserve balance from wallet.
+     */
+    public ReserveResponse reserveBalance(String accountId, ReserveRequest request) {
+        String url = walletServiceBaseUrl + "/api/v1/wallets/" + accountId + "/reserve";
+        return restTemplate.postForObject(url, request, ReserveResponse.class);
+    }
 
-    record ReserveRequest(BigDecimal amount, String referenceId) {}
+    /**
+     * Commit a reservation.
+     */
+    public void commitReservation(String reservationId) {
+        String url = walletServiceBaseUrl + "/api/v1/wallets/reservations/" + reservationId + "/commit";
+        restTemplate.postForObject(url, null, Void.class);
+    }
 
-    record ReserveResponse(String reservationId, String accountId, String referenceId, String status) {}
+    /**
+     * Release a reservation.
+     */
+    public void releaseReservation(String reservationId) {
+        String url = walletServiceBaseUrl + "/api/v1/wallets/reservations/" + reservationId + "/release";
+        restTemplate.postForObject(url, null, Void.class);
+    }
+
+    /**
+     * Request DTO for reserving balance.
+     */
+    public record ReserveRequest(BigDecimal amount, String referenceId) {}
+
+    /**
+     * Response DTO for reserve operation.
+     */
+    public record ReserveResponse(String reservationId, String accountId, String referenceId, String status) {}
 }

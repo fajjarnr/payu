@@ -4,84 +4,89 @@ import id.payu.support.domain.AgentTraining;
 import id.payu.support.domain.SupportAgent;
 import id.payu.support.dto.AgentResponse;
 import id.payu.support.dto.CreateAgentRequest;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
-import org.jboss.logging.Logger;
+import id.payu.support.repository.SupportAgentRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@ApplicationScoped
+@Service
+@RequiredArgsConstructor
+@Slf4j
 public class AgentService {
 
-    private static final Logger LOG = Logger.getLogger(AgentService.class);
+    private final SupportAgentRepository agentRepository;
 
     public List<AgentResponse> getAllAgents() {
-        return SupportAgent.<SupportAgent>listAll().stream()
+        return agentRepository.findAll()
+                .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public AgentResponse getAgentById(Long id) {
-        SupportAgent agent = SupportAgent.findById(id);
-        return agent != null ? toResponse(agent) : null;
+        return agentRepository.findById(id)
+                .map(this::toResponse)
+                .orElse(null);
     }
 
     public AgentResponse getAgentByEmployeeId(String employeeId) {
-        SupportAgent agent = SupportAgent.find("employeeId", employeeId).firstResult();
-        return agent != null ? toResponse(agent) : null;
+        return agentRepository.findByEmployeeId(employeeId)
+                .map(this::toResponse)
+                .orElse(null);
     }
 
     @Transactional
     public AgentResponse createAgent(CreateAgentRequest request) {
-        LOG.infof("Creating new agent: %s (%s)", request.name(), request.employeeId());
+        log.info("Creating new agent: {} ({})", request.name(), request.employeeId());
 
-        SupportAgent agent = new SupportAgent();
-        agent.employeeId = request.employeeId();
-        agent.name = request.name();
-        agent.email = request.email();
-        agent.department = request.department();
-        agent.level = request.level() != null ? request.level() : SupportAgent.AgentLevel.JUNIOR;
+        SupportAgent agent = SupportAgent.builder()
+                .employeeId(request.employeeId())
+                .name(request.name())
+                .email(request.email())
+                .department(request.department())
+                .level(request.level() != null ? request.level() : SupportAgent.AgentLevel.JUNIOR)
+                .build();
 
-        agent.persist();
-        LOG.infof("Agent created: id=%d", agent.id);
+        agent = agentRepository.save(agent);
+        log.info("Agent created: id={}", agent.getId());
 
         return toResponse(agent);
     }
 
     @Transactional
     public AgentResponse updateAgentStatus(Long id, boolean active) {
-        SupportAgent agent = SupportAgent.findById(id);
-        if (agent == null) {
-            return null;
-        }
-
-        agent.active = active;
-        agent.persist();
-        LOG.infof("Agent %d status updated: active=%s", id, active);
-
-        return toResponse(agent);
+        return agentRepository.findById(id)
+                .map(agent -> {
+                    agent.setActive(active);
+                    SupportAgent updated = agentRepository.save(agent);
+                    log.info("Agent {} status updated: active={}", id, active);
+                    return toResponse(updated);
+                })
+                .orElse(null);
     }
 
     public long countActiveAgents() {
-        return SupportAgent.count("active", true);
+        return agentRepository.countByActiveTrue();
     }
 
     public long countTrainedAgents() {
-        return SupportAgent.count("active = ?1 AND id IN (SELECT at.agent.id FROM AgentTraining at WHERE at.status = ?2)", 
-                true, AgentTraining.CompletionStatus.PASSED);
+        return agentRepository.countTrainedAgents();
     }
 
     private AgentResponse toResponse(SupportAgent agent) {
         return new AgentResponse(
-                agent.id,
-                agent.employeeId,
-                agent.name,
-                agent.email,
-                agent.department,
-                agent.level,
-                agent.active,
-                agent.createdAt,
-                agent.updatedAt
+                agent.getId(),
+                agent.getEmployeeId(),
+                agent.getName(),
+                agent.getEmail(),
+                agent.getDepartment(),
+                agent.getLevel(),
+                agent.isActive(),
+                agent.getCreatedAt(),
+                agent.getUpdatedAt()
         );
     }
 }

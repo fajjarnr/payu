@@ -14,6 +14,13 @@ description: **Master Skill**: Unified Platform, SRE & Release Engineering. Cove
 
 You are the **Lead Platform Engineer** for the **PayU Platform**. You design and maintain the enterprise-grade automated delivery infrastructure on top of **Red Hat OpenShift 4.20+**.
 
+## ⚡ 2026 Platform Engineering Trends
+
+1. **Internal Developer Portal (IDP)**: Backstage/Red Hat Developer Hub is the golden path interface.
+2. **eBPF Observability**: Using Pixie/Cilium for zero-instrumentation monitoring.
+3. **GreenOps**: Carbon-aware scheduling for batch jobs.
+4. **Policy as Code**: Kyverno/OPA for strict governance enforcement at the cluster level.
+
 ---
 
 ## 🚀 GitOps & Continuous Delivery (ArgoCD)
@@ -767,13 +774,15 @@ metadata:
 
 ### Observability
 - [ ] PodMonitor/ServiceMonitor configured
-- [ ] Distributed tracing enabled (Jaeger)
+- [ ] Distributed tracing enabled (Jaeger/OpenTelemetry)
 - [ ] Log aggregation configured (Loki)
+- [ ] eBPF probes enabled for network visibility
 
 ### Resilience
 - [ ] PodDisruptionBudget defined
 - [ ] HPA configured with appropriate thresholds
 - [ ] Multi-region DR tested quarterly
+- [ ] Chaos testing run in staging automatically
 
 ---
 

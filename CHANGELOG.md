@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Build System Standardization**:
+  - Unified parent POM `id.payu:payu-backend-parent` across 12 services
+  - Centralized Lombok configuration with `maven-compiler-plugin`
+  - Fixed "cannot find symbol" errors in `compliance-service` and others
+- **AI Skills Knowledge Base (2026 Edition)**:
+  - Updated Mobile Architect: React Native 0.77 (Bridgeless), Skia, Expo SDK 54
+  - Updated Frontend Architect: Next.js 15 Async APIs, React 19 Forms
+  - Updated Integration Architect: Temporal (Durable Execution), KRaft Kafka
+  - Updated Platform Engineer: IDP (Backstage), eBPF Observability, GreenOps
+  - Updated Security Architect: Post-Quantum Cryptography, Passkeys (FIDO2)
+- **Roadmap Completion**:
+  - **P0 Complete**: Web App Production Ready (Tests, Security, Types)
+  - **P1 Complete**: Mobile App Production Ready (Jest, Types, Lint)
+
+### Changed
+- **Governance**:
+  - Enforced strict parent usage for Spring Boot services
+  - Added CI check requirement for annotation processor paths
+
+## [1.1.0] - 2026-01-31
+
 ### Fixed
 - **Wallet Service**: Fixed unit tests by mocking `CacheService` and restoring missing imports.
 - **Gateway Service**: Fixed unit tests by disabling infrastructure-dependent tests and configuring comprehensive mock overrides in `application.yaml`.

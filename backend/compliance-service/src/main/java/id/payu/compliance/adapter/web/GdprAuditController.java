@@ -1,6 +1,5 @@
 package id.payu.compliance.adapter.web;
 
-import id.payu.api.common.response.ApiResponse;
 import id.payu.compliance.domain.model.DataAccessAudit;
 import id.payu.compliance.domain.port.in.DataAccessAuditUseCase;
 import id.payu.compliance.dto.DataAccessAuditRequest;
@@ -48,7 +47,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<ApiResponse<DataAccessAuditResponse>> logDataAccess(@Valid @RequestBody DataAccessAuditRequest request) {
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<DataAccessAuditResponse>> logDataAccess(@Valid @RequestBody DataAccessAuditRequest request) {
         DataAccessAudit audit = dataAccessAuditUseCase.logDataAccess(
                 request.getUserId(),
                 request.getAccessedBy(),
@@ -80,7 +79,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<ApiResponse<DataAccessAuditResponse>> getDataAccessAudit(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<DataAccessAuditResponse>> getDataAccessAudit(
             @Parameter(description = "Audit ID", required = true) @PathVariable UUID auditId) {
         DataAccessAudit audit = dataAccessAuditUseCase.getDataAccessAudit(auditId);
         return ok(toResponse(audit));
@@ -93,7 +92,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or #userId == authentication.principal.userId")
-    public ResponseEntity<ApiResponse<Page<DataAccessAuditResponse>>> getUserDataAccessHistory(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<Page<DataAccessAuditResponse>>> getUserDataAccessHistory(
             @Parameter(description = "User ID", required = true) @PathVariable String userId,
             @Parameter(description = "Page number (default: 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default: 20)") @RequestParam(defaultValue = "20") int size
@@ -110,7 +109,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or #userId == authentication.principal.userId")
-    public ResponseEntity<ApiResponse<List<DataAccessAuditResponse>>> getUserDataAccessByDateRange(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<List<DataAccessAuditResponse>>> getUserDataAccessByDateRange(
             @Parameter(description = "User ID", required = true) @PathVariable String userId,
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
@@ -126,7 +125,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<ApiResponse<List<DataAccessAuditResponse>>> getAccessedByUserHistory(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<List<DataAccessAuditResponse>>> getAccessedByUserHistory(
             @Parameter(description = "Accessed by user ID", required = true) @PathVariable String accessedBy,
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
@@ -142,7 +141,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<ApiResponse<Page<DataAccessAuditResponse>>> getDataAccessByOperationType(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<Page<DataAccessAuditResponse>>> getDataAccessByOperationType(
             @Parameter(description = "Operation type", required = true) @PathVariable String operationType,
             @Parameter(description = "Page number (default: 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default: 20)") @RequestParam(defaultValue = "20") int size
@@ -162,7 +161,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<ApiResponse<List<DataAccessAuditResponse>>> getServiceDataAccessHistory(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<List<DataAccessAuditResponse>>> getServiceDataAccessHistory(
             @Parameter(description = "Service name", required = true) @PathVariable String serviceName,
             @Parameter(description = "Start date") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date") @RequestParam LocalDateTime endDate
@@ -177,7 +176,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or #userId == authentication.principal.userId")
-    public ResponseEntity<ApiResponse<Long>> getUserDataAccessCount(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<Long>> getUserDataAccessCount(
             @Parameter(description = "User ID", required = true) @PathVariable String userId,
             @Parameter(description = "Since date") @RequestParam LocalDateTime since
     ) {
@@ -192,7 +191,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<ApiResponse<List<DataAccessAuditResponse>>> getFailedAccessAttempts(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<List<DataAccessAuditResponse>>> getFailedAccessAttempts(
             @Parameter(description = "Since date") @RequestParam LocalDateTime since
     ) {
         List<DataAccessAudit> audits = dataAccessAuditUseCase.getFailedAccessAttempts(since);
@@ -206,7 +205,7 @@ public class GdprAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
-    public ResponseEntity<ApiResponse<Page<DataAccessAuditResponse>>> searchDataAccessAudit(@RequestBody DataAccessAuditSearchRequest request) {
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<Page<DataAccessAuditResponse>>> searchDataAccessAudit(@RequestBody DataAccessAuditSearchRequest request) {
         Pageable pageable = PageRequest.of(
                 request.getPage() != null ? request.getPage() : 0,
                 request.getSize() != null ? request.getSize() : 20,

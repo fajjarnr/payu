@@ -4,173 +4,162 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>id.payu</groupId>
+        <artifactId>payu-backend-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <groupId>id.payu</groupId>
     <artifactId>billing-service</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
-
-    <name>PayU Billing Service</name>
-    <description>Bill payment service for PayU - PLN, PDAM, Pulsa, etc.</description>
+    <name>billing-service</name>
+    <description>Billing Service - Bill payment for PLN, PDAM, Pulsa, etc.</description>
 
     <properties>
         <java.version>21</java.version>
-        <maven.compiler.release>21</maven.compiler.release>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <quarkus.platform.version>3.17.5</quarkus.platform.version>
-        <compiler-plugin.version>3.13.0</compiler-plugin.version>
-        <surefire-plugin.version>3.5.2</surefire-plugin.version>
+        <spring-cloud.version>2024.0.0</spring-cloud.version>
+        <test.excluded.groups>integration</test.excluded.groups>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.quarkus.platform</groupId>
-                <artifactId>quarkus-bom</artifactId>
-                <version>${quarkus.platform.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
-        <!-- REST API -->
+        <!-- Web -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-jackson</artifactId>
-        </dependency>
-
-        <!-- REST Client for calling wallet-service -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client-jackson</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Hibernate with Panache (PostgreSQL) -->
+        <!-- Database -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql</artifactId>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
         </dependency>
-        <!-- H2 Database for Testing -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-h2</artifactId>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
 
         <!-- Flyway -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-flyway</artifactId>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
         <!-- Kafka -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-messaging-kafka</artifactId>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
         </dependency>
 
-        <!-- Fault Tolerance -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
-        </dependency>
-
-        <!-- Health & Metrics -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-health</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
-        </dependency>
-
-        <!-- OpenTelemetry -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-opentelemetry</artifactId>
-        </dependency>
-
-        <!-- Config -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-config-yaml</artifactId>
-        </dependency>
-
-        <!-- OpenAPI -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-openapi</artifactId>
-        </dependency>
-
-        <!-- Arc (CDI) -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc</artifactId>
-        </dependency>
-
-        <!-- Validation -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-validator</artifactId>
-        </dependency>
-
-        <!-- PayU API Commons (for Idempotency support) -->
+        <!-- PayU API Commons -->
         <dependency>
             <groupId>id.payu.shared</groupId>
             <artifactId>api-commons</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- Redis for Idempotency storage -->
+        <!-- PayU Cache Starter -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-redis-client</artifactId>
+            <groupId>id.payu</groupId>
+            <artifactId>cache-starter</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- Testing -->
+        <!-- PayU Resilience Starter -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <groupId>id.payu</groupId>
+            <artifactId>resilience-starter</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- PayU Security Starter -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>security-starter</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Resilience4j for Circuit Breaker and Retry -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- Security -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
+        <!-- Observability -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+
+        <!-- Springdoc OpenAPI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+
+        <!-- Structured JSON Logging (LokiStack compatible) -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>rest-assured</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-mockito</artifactId>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
             <version>1.2.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.reactive</groupId>
-            <artifactId>smallrye-reactive-messaging-in-memory</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jacoco</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -200,54 +189,39 @@
         </dependency>
     </dependencies>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>1.19.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
         <plugins>
             <plugin>
-                <groupId>io.quarkus.platform</groupId>
-                <artifactId>quarkus-maven-plugin</artifactId>
-                <version>${quarkus.platform.version}</version>
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>build</goal>
-                            <goal>generate-code</goal>
-                            <goal>generate-code-tests</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${compiler-plugin.version}</version>
                 <configuration>
-                    <release>${java.version}</release>
+                    <release>21</release>
                     <parameters>true</parameters>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire-plugin.version}</version>
-                <configuration>
-                    <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>native</id>
-            <activation>
-                <property>
-                    <name>native</name>
-                </property>
-            </activation>
-            <properties>
-                <quarkus.native.enabled>true</quarkus.native.enabled>
-            </properties>
-        </profile>
-    </profiles>
 </project>

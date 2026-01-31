@@ -1,109 +1,154 @@
-quarkus:
+spring:
   application:
     name: billing-service
-  http:
+  server:
     port: 8085
-  # Vault Configuration for Secrets
-  vault:
-    url: ${VAULT_URL:http://localhost:8200}
-    authentication:
-      token:
-        token: ${VAULT_TOKEN:dev-only-token}
-    secrets:
-      - path: secret/billing-service
-        key: encryption.key
-  # Fault Tolerance Configuration
-  fault-tolerance:
-    enabled: true
-    # Circuit Breaker
-    circuit-breaker:
-      wallet-service:
-        request-volume-threshold: 20
-        failure-ratio: 0.5
-        delay: 30000
-        success-threshold: 5
-    # Retry
-    retry:
-      wallet-service:
-        max-retries: 3
-        delay: 1000
-        max-duration: 10000
-        jitter: 500
-        retry-on:
-          - java.io.IOException
-          - java.net.ConnectException
-    # Timeout
-    timeout:
-      wallet-service:
-        duration: 5000
-    # Bulkhead
-    bulkhead:
-      wallet-service:
-        value: 20
-        waiting-queue: 10
-  otel:
-    service:
-      name: billing-service
-    exporter:
-      otlp:
-        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
-    resource:
-      attributes:
-        - service.name=billing-service
-        - service.version=1.0.0
+
+  # Database Configuration
   datasource:
-    db-kind: postgresql
+    url: jdbc:postgresql://localhost:5432/billingdb
     username: postgres
-    password: postgres # pragma: allowlist secret
-    jdbc:
-      url: jdbc:postgresql://localhost:5432/billingdb
-  hibernate-orm:
-    database:
-      generation: validate
-    log:
-      sql: false
-    packages: id.payu.billing.domain
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
   flyway:
-    migrate-at-start: true
-    locations: db/migration
-  rest-client:
-    wallet-service:
-      url: http://localhost:8084
-      scope: jakarta.enterprise.context.ApplicationScoped
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Kafka Configuration
   kafka:
     bootstrap-servers: localhost:9092
-  smallrye-openapi:
-    info-title: PayU Billing Service API
-    info-version: 1.0.0
-    info-description: Bill payment API for PLN, PDAM, Pulsa, etc.
-  log:
-    level: INFO
-    category:
-      "id.payu.billing":
-        level: DEBUG
-"%dev":
-  quarkus:
-    hibernate-orm:
-      database:
-        generation: drop-and-create
-    flyway:
-      migrate-at-start: false
-"%test":
-  quarkus:
-    datasource:
-      db-kind: h2
-      jdbc:
-        url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
-      username: sa
-      password:
-    hibernate-orm:
-      database:
-        generation: drop-and-create
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+  # REST Client for Wallet Service
+  web:
+    client:
+      wallet-service:
+        base-url: http://localhost:8084
+
+# OpenAPI Documentation
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  info:
+    title: PayU Billing Service API
+    version: 1.0.0
+    description: Bill payment API for PLN, PDAM, Pulsa, E-wallet top-up, etc.
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      walletService:
+        register-health-indicator: true
+        sliding-window-size: 20
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 5
+  retry:
+    instances:
+      walletService:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.io.IOException
+          - java.net.ConnectException
+  timelimiter:
+    instances:
+      walletService:
+        timeout-duration: 5s
+  bulkhead:
+    instances:
+      walletService:
+        max-concurrent-calls: 20
+        max-wait-duration: 10ms
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    id.payu.billing: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+# Vault Configuration for Secrets (optional)
+vault:
+  url: ${VAULT_URL:http://localhost:8200}
+  token: ${VAULT_TOKEN:dev-only-token}
+  secrets:
+    - path: secret/billing-service
+      key: encryption.key
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    hibernate:
+      ddl-auto: drop-and-create
+    show-sql: true
+  flyway:
+    enabled: false
+
+---
+# Test Profile
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: drop-and-create
+    show-sql: true
+    properties:
+      hibernate:
         dialect: org.hibernate.dialect.H2Dialect
-      packages: id.payu.billing.domain
-    flyway:
-      migrate-at-start: false
-    # Disable Kafka DevServices for tests - use In-Memory connector instead
-    kafka:
-      devservices:
-        enabled: false
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: localhost:9092 # Use testcontainers for tests

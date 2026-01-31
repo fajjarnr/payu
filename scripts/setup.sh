@@ -412,8 +412,8 @@ setup_project() {
     print_section "Setting Up PayU Project"
 
     # Get project root directory
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    cd "$SCRIPT_DIR"
+    PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    cd "$PROJECT_ROOT"
 
     # Copy environment file if not exists
     if [ ! -f .env ] && [ -f .env.example ]; then
@@ -427,10 +427,10 @@ setup_project() {
         make build-test-deps || {
             echo "Fallback: building starters manually..."
             cd backend/shared/api-commons && mvn clean install -DskipTests -q
-            cd ../cache-starter && mvn clean install -DskipTests -q
-            cd ../resilience-starter && mvn clean install -DskipTests -q
-            cd ../security-starter && mvn clean install -DskipTests -q
-            cd "$SCRIPT_DIR"
+            cd "$PROJECT_ROOT/backend/shared/cache-starter" && mvn clean install -DskipTests -q
+            cd "$PROJECT_ROOT/backend/shared/resilience-starter" && mvn clean install -DskipTests -q
+            cd "$PROJECT_ROOT/backend/shared/security-starter" && mvn clean install -DskipTests -q
+            cd "$PROJECT_ROOT"
         }
     fi
 
@@ -440,7 +440,11 @@ setup_project() {
         service_dir=$(dirname "$pom")
         service_name=$(basename "$service_dir")
         echo "Building $service_name..."
-        (cd "$service_dir" && mvn clean package -DskipTests -T 1C -q)
+        if grep -q "quarkus" "$pom"; then
+            (cd "$service_dir" && mvn clean package -DskipTests -Dquarkus.package.type=uber-jar -q) || { print_error "Failed to build $service_name"; exit 1; }
+        else
+            (cd "$service_dir" && mvn clean package -DskipTests -T 1C -q) || { print_error "Failed to build $service_name"; exit 1; }
+        fi
     done
 
     # Build Simulators
@@ -457,7 +461,7 @@ setup_project() {
         echo "Installing web-app dependencies..."
         cd frontend/web-app
         npm install --legacy-peer-deps
-        cd "$SCRIPT_DIR"
+        cd "$PROJECT_ROOT"
         print_success "web-app dependencies installed"
     fi
 
@@ -465,7 +469,7 @@ setup_project() {
         echo "Installing developer-docs dependencies..."
         cd frontend/developer-docs
         npm install --legacy-peer-deps
-        cd "$SCRIPT_DIR"
+        cd "$PROJECT_ROOT"
         print_success "developer-docs dependencies installed"
     fi
 
@@ -473,7 +477,7 @@ setup_project() {
         echo "Installing mobile dependencies..."
         cd frontend/mobile
         npm install --legacy-peer-deps
-        cd "$SCRIPT_DIR"
+        cd "$PROJECT_ROOT"
         print_success "mobile dependencies installed"
     fi
 
@@ -490,7 +494,7 @@ setup_project() {
             fi
             pip install -r requirements.txt || print_warning "Failed to install requirements for $service"
             deactivate
-            cd "$SCRIPT_DIR"
+            cd "$PROJECT_ROOT"
             print_success "$service dependencies installed"
         fi
     done

@@ -15,14 +15,13 @@ description: **Master Skill**: React Native, Expo, and Native UI design. Include
 You are a **Lead Mobile Architect** for the **PayU Digital Banking Platform**. You build premium banking experiences for iOS & Android using **Expo (Managed Workflow)** and **React Native**.
 
 ## 📱 Mobile Foundation
-- **Core**: Expo SDK 54+, React Native 0.76+
-- **Navigation**: `Expo Router` with `NativeTabs` (SDK 54+)
-- **Styling**: `NativeWind v5` (Tailwind CSS v4 for Native)
-- **Networking**: `Native fetch` (Preferred over Axios), `React Query`
-- **DOM Components**: `'use dom'` (Expo SDK 52+) for complex web-first UI
-- **Animations**: `Reanimated 3` (Native Thread/60 FPS)
-- **Icons**: `expo-symbols` (SF Symbols) - Always prefer over vector icons
-- **Visual Effects**: `expo-blur`, `expo-glass-effect` (iOS 26+ Liquid Glass)
+- **Core**: Expo SDK 54+, React Native 0.77+ (Bridgeless Mode Enabled)
+- **Compiler**: React Compiler (No more `useMemo`/`useCallback`)
+- **Navigation**: `Expo Router` v5 with Typed Routes
+- **Styling**: `NativeWind v5` (Tailwind CSS v4) + `react-native-unistyles`
+- **Networking**: `TanStack Query v5` (Offline-first default)
+- **Graphics**: `Shopify Skia` (High-performance 2D Graphics)
+- **Animations**: `Reanimated 4` (Worklets + Shared Values)
 
 ### 📚 References
 | Topic | Description | File |
@@ -766,30 +765,24 @@ const styles = StyleSheet.create({
 });
 ```
 
-### Platform-Specific Styling
+### Skia Graphics (Canvas-based UI)
 
-```typescript
-import { Platform, StyleSheet } from 'react-native';
+```tsx
+import { Canvas, Circle, Group } from "@shopify/react-native-skia";
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  text: {
-    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'Roboto',
-  },
-});
+export const HelloSkia = () => {
+  const size = 256;
+  const r = size * 0.33;
+  return (
+    <Canvas style={{ flex: 1 }}>
+      <Group blendMode="multiply">
+        <Circle cx={r} cy={r} r={r} color="cyan" />
+        <Circle cx={size - r} cy={r} r={r} color="magenta" />
+        <Circle cx={size/2} cy={size - r} r={r} color="yellow" />
+      </Group>
+    </Canvas>
+  );
+};
 ```
 
 ---

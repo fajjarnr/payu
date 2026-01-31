@@ -41,6 +41,12 @@
             <artifactId>spring-boot-autoconfigure</artifactId>
         </dependency>
 
+        <!-- Spring Boot Web for Jackson2ObjectMapperBuilder -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
         <!-- CloudEvents Core -->
         <dependency>
             <groupId>io.cloudevents</groupId>

@@ -24,7 +24,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
  */
 @Slf4j
 @AutoConfiguration
-@EnableConfigurationProperties(EventsProperties.class)
+@EnableConfigurationProperties(EventsAutoConfiguration.EventsProperties.class)
 @ComponentScan(basePackages = "id.payu.events")
 @ConditionalOnProperty(
     prefix = "payu.events",

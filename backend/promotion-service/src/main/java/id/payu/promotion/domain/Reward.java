@@ -1,7 +1,8 @@
 package id.payu.promotion.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,54 +13,99 @@ import java.util.UUID;
     @Index(name = "idx_reward_transaction", columnList = "transactionId"),
     @Index(name = "idx_reward_date", columnList = "createdAt DESC")
 })
-public class Reward extends PanacheEntityBase {
+@EntityListeners(AuditingEntityListener.class)
+public class Reward {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "account_id", nullable = false)
-    public String accountId;
+    private String accountId;
 
     @Column(name = "transaction_id")
-    public String transactionId;
+    private String transactionId;
 
     @Column(name = "promotion_code")
-    public String promotionCode;
+    private String promotionCode;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    public RewardType type;
+    private RewardType type;
 
     @Column(nullable = false, precision = 19, scale = 4)
-    public BigDecimal amount;
+    private BigDecimal amount;
 
     @Column(name = "points_earned")
-    public Integer pointsEarned;
+    private Integer pointsEarned;
 
     @Column(name = "transaction_amount", nullable = false, precision = 19, scale = 4)
-    public BigDecimal transactionAmount;
+    private BigDecimal transactionAmount;
 
     @Column(name = "merchant_code")
-    public String merchantCode;
+    private String merchantCode;
 
     @Column(name = "category_code")
-    public String categoryCode;
+    private String categoryCode;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    public Status status;
+    private Status status;
 
     @Column(name = "expiry_date")
-    public LocalDateTime expiryDate;
+    private LocalDateTime expiryDate;
 
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
-    void onCreate() {
-        createdAt = LocalDateTime.now();
+    protected void onCreate() {
+        if (status == null) {
+            status = Status.PENDING;
+        }
     }
+
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getAccountId() { return accountId; }
+    public void setAccountId(String accountId) { this.accountId = accountId; }
+
+    public String getTransactionId() { return transactionId; }
+    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+
+    public String getPromotionCode() { return promotionCode; }
+    public void setPromotionCode(String promotionCode) { this.promotionCode = promotionCode; }
+
+    public RewardType getType() { return type; }
+    public void setType(RewardType type) { this.type = type; }
+
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+
+    public Integer getPointsEarned() { return pointsEarned; }
+    public void setPointsEarned(Integer pointsEarned) { this.pointsEarned = pointsEarned; }
+
+    public BigDecimal getTransactionAmount() { return transactionAmount; }
+    public void setTransactionAmount(BigDecimal transactionAmount) { this.transactionAmount = transactionAmount; }
+
+    public String getMerchantCode() { return merchantCode; }
+    public void setMerchantCode(String merchantCode) { this.merchantCode = merchantCode; }
+
+    public String getCategoryCode() { return categoryCode; }
+    public void setCategoryCode(String categoryCode) { this.categoryCode = categoryCode; }
+
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
+
+    public LocalDateTime getExpiryDate() { return expiryDate; }
+    public void setExpiryDate(LocalDateTime expiryDate) { this.expiryDate = expiryDate; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public enum RewardType {
         CASHBACK,

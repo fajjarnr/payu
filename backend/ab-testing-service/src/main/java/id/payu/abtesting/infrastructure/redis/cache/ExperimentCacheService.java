@@ -2,7 +2,8 @@ package id.payu.abtesting.infrastructure.redis.cache;
 
 import id.payu.abtesting.domain.service.ExperimentService.VariantAssignment;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +14,10 @@ import java.util.UUID;
  * Redis cache service for variant assignments
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class ExperimentCacheService {
 
+    private static final Logger log = LoggerFactory.getLogger(ExperimentCacheService.class);
     private final RedisTemplate<String, Object> redisTemplate;
 
     private static final String VARIANT_ASSIGNMENT_KEY_PREFIX = "ab:variant:";

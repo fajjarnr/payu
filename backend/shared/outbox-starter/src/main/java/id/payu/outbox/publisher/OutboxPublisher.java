@@ -299,7 +299,7 @@ public class OutboxPublisher {
     @Transactional
     public int retryFailedEvents() {
         Pageable pageable = PageRequest.of(0, batchSize);
-        List<OutboxEvent> failedEvents = outboxRepository.findUnpublishedEventsForRetry(maxRetries, pageable);
+        List<OutboxEvent> failedEvents = outboxRepository.findUnpublishedEventsForRetry(maxRetries, pageable).getContent();
 
         int count = 0;
         for (OutboxEvent event : failedEvents) {

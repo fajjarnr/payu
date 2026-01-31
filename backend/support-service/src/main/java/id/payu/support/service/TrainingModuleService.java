@@ -3,64 +3,68 @@ package id.payu.support.service;
 import id.payu.support.domain.TrainingModule;
 import id.payu.support.dto.CreateTrainingModuleRequest;
 import id.payu.support.dto.TrainingModuleResponse;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
-import org.jboss.logging.Logger;
+import id.payu.support.repository.TrainingModuleRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@ApplicationScoped
+@Service
+@RequiredArgsConstructor
+@Slf4j
 public class TrainingModuleService {
 
-    private static final Logger LOG = Logger.getLogger(TrainingModuleService.class);
+    private final TrainingModuleRepository moduleRepository;
 
     public List<TrainingModuleResponse> getAllTrainingModules() {
-        return TrainingModule.<TrainingModule>listAll().stream()
+        return moduleRepository.findAll()
+                .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public TrainingModuleResponse getModuleById(Long id) {
-        TrainingModule module = TrainingModule.findById(id);
-        return module != null ? toResponse(module) : null;
+        return moduleRepository.findById(id)
+                .map(this::toResponse)
+                .orElse(null);
     }
 
     @Transactional
     public TrainingModuleResponse createModule(CreateTrainingModuleRequest request) {
-        LOG.infof("Creating new training module: %s (%s)", request.title(), request.code());
+        log.info("Creating new training module: {} ({})", request.title(), request.code());
 
-        TrainingModule module = new TrainingModule();
-        module.code = request.code();
-        module.title = request.title();
-        module.description = request.description();
-        module.category = request.category();
-        module.durationMinutes = request.durationMinutes();
-        module.status = request.status() != null ? request.status() : TrainingModule.TrainingStatus.DRAFT;
-        module.mandatory = request.mandatory();
+        TrainingModule module = TrainingModule.builder()
+                .code(request.code())
+                .title(request.title())
+                .description(request.description())
+                .category(request.category())
+                .durationMinutes(request.durationMinutes())
+                .status(request.status() != null ? request.status() : TrainingModule.TrainingStatus.DRAFT)
+                .mandatory(request.mandatory())
+                .build();
 
-        module.persist();
-        LOG.infof("Training module created: id=%d", module.id);
+        module = moduleRepository.save(module);
+        log.info("Training module created: id={}", module.getId());
 
         return toResponse(module);
     }
 
     @Transactional
     public TrainingModuleResponse updateModuleStatus(Long id, TrainingModule.TrainingStatus status) {
-        TrainingModule module = TrainingModule.findById(id);
-        if (module == null) {
-            return null;
-        }
-
-        module.status = status;
-        module.persist();
-        LOG.infof("Training module %d status updated: %s", id, status);
-
-        return toResponse(module);
+        return moduleRepository.findById(id)
+                .map(module -> {
+                    module.setStatus(status);
+                    TrainingModule updated = moduleRepository.save(module);
+                    log.info("Training module {} status updated: {}", id, status);
+                    return toResponse(updated);
+                })
+                .orElse(null);
     }
 
     public List<TrainingModuleResponse> getMandatoryModules() {
-        return TrainingModule.<TrainingModule>list("mandatory = ?1 AND status = ?2",
-                true, TrainingModule.TrainingStatus.ACTIVE)
+        return moduleRepository.findByStatusAndMandatoryTrue(TrainingModule.TrainingStatus.ACTIVE)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -68,16 +72,16 @@ public class TrainingModuleService {
 
     private TrainingModuleResponse toResponse(TrainingModule module) {
         return new TrainingModuleResponse(
-                module.id,
-                module.code,
-                module.title,
-                module.description,
-                module.category,
-                module.durationMinutes,
-                module.status,
-                module.mandatory,
-                module.createdAt,
-                module.updatedAt
+                module.getId(),
+                module.getCode(),
+                module.getTitle(),
+                module.getDescription(),
+                module.getCategory(),
+                module.getDurationMinutes(),
+                module.getStatus(),
+                module.isMandatory(),
+                module.getCreatedAt(),
+                module.getUpdatedAt()
         );
     }
 }

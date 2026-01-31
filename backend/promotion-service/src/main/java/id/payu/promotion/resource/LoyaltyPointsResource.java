@@ -3,72 +3,115 @@ package id.payu.promotion.resource;
 import id.payu.promotion.domain.LoyaltyPoints;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.service.LoyaltyPointsService;
-import jakarta.inject.Inject;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@Path("/api/v1/loyalty-points")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@RestController
+@RequestMapping("/api/v1/loyalty-points")
+@Tag(name = "Loyalty Points", description = "Loyalty points management APIs")
+@SecurityRequirement(name = "bearerAuth")
 public class LoyaltyPointsResource {
 
-    @Inject
-    LoyaltyPointsService loyaltyPointsService;
+    private final LoyaltyPointsService loyaltyPointsService;
 
-    @POST
-    public Response addPoints(@Valid CreateLoyaltyPointsRequest request) {
+    public LoyaltyPointsResource(LoyaltyPointsService loyaltyPointsService) {
+        this.loyaltyPointsService = loyaltyPointsService;
+    }
+
+    @PostMapping
+    @Operation(summary = "Add loyalty points", description = "Add loyalty points to an account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Loyalty points added successfully",
+            content = @Content(schema = @Schema(implementation = LoyaltyPointsResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> addPoints(@Valid @RequestBody CreateLoyaltyPointsRequest request) {
         try {
             LoyaltyPoints loyaltyPoints = loyaltyPointsService.addPoints(request);
-            return Response.status(Response.Status.CREATED)
-                .entity(LoyaltyPointsResponse.from(loyaltyPoints))
-                .build();
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(LoyaltyPointsResponse.from(loyaltyPoints));
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ErrorResponse(e.getMessage()))
-                .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
         }
     }
 
-    @POST
-    @Path("/redeem")
-    public Response redeemPoints(@Valid RedeemLoyaltyPointsRequest request) {
+    @PostMapping("/redeem")
+    @Operation(summary = "Redeem loyalty points", description = "Redeem loyalty points from an account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Loyalty points redeemed successfully",
+            content = @Content(schema = @Schema(implementation = LoyaltyPointsResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> redeemPoints(@Valid @RequestBody RedeemLoyaltyPointsRequest request) {
         try {
             LoyaltyPoints loyaltyPoints = loyaltyPointsService.redeemPoints(request);
-            return Response.ok(LoyaltyPointsResponse.from(loyaltyPoints)).build();
+            return ResponseEntity.ok(LoyaltyPointsResponse.from(loyaltyPoints));
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ErrorResponse(e.getMessage()))
-                .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
         }
     }
 
-    @GET
-    @Path("/{id}")
-    public Response getLoyaltyPoints(@PathParam("id") UUID id) {
+    @GetMapping("/{id}")
+    @Operation(summary = "Get loyalty points record by ID", description = "Retrieve loyalty points record by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Loyalty points record found",
+            content = @Content(schema = @Schema(implementation = LoyaltyPointsResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "404", description = "Loyalty points record not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> getLoyaltyPoints(@PathVariable UUID id) {
         return loyaltyPointsService.getLoyaltyPoints(id)
-            .map(loyaltyPoints -> Response.ok(LoyaltyPointsResponse.from(loyaltyPoints)).build())
-            .orElse(Response.status(Response.Status.NOT_FOUND)
-                .entity(new ErrorResponse("Loyalty points record not found"))
-                .build());
+            .map(loyaltyPoints -> ResponseEntity.ok(LoyaltyPointsResponse.from(loyaltyPoints)))
+            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("Loyalty points record not found")));
     }
 
-    @GET
-    @Path("/account/{accountId}")
-    public Response getLoyaltyPointsByAccount(@PathParam("accountId") String accountId) {
+    @GetMapping("/account/{accountId}")
+    @Operation(summary = "Get loyalty points by account", description = "Retrieve all loyalty points for an account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Loyalty points retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<LoyaltyPointsResponse>> getLoyaltyPointsByAccount(@PathVariable String accountId) {
         List<LoyaltyPoints> loyaltyPoints = loyaltyPointsService.getLoyaltyPointsByAccount(accountId);
-        return Response.ok(loyaltyPoints.stream().map(LoyaltyPointsResponse::from).toList()).build();
+        return ResponseEntity.ok(loyaltyPoints.stream().map(LoyaltyPointsResponse::from).toList());
     }
 
-    @GET
-    @Path("/account/{accountId}/balance")
-    public Response getBalance(@PathParam("accountId") String accountId) {
+    @GetMapping("/account/{accountId}/balance")
+    @Operation(summary = "Get loyalty points balance", description = "Retrieve loyalty points balance for an account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Balance retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<LoyaltyBalanceResponse> getBalance(@PathVariable String accountId) {
         LoyaltyBalanceResponse balance = loyaltyPointsService.getBalance(accountId);
-        return Response.ok(balance).build();
+        return ResponseEntity.ok(balance);
     }
 
     record ErrorResponse(String message) {}

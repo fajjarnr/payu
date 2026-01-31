@@ -147,6 +147,7 @@ payu/
 2. **DTO First**: Definisikan DTO/Request/Response di package `interfaces.dto` sebelum implementasi logic.
 3. **Port-Adapter Interface**: Gunakan Hexagonal Architecture untuk core services. Semua external communication harus lewat Port interface di domain layer.
 4. **Error Handling**: Gunakan `GlobalExceptionHandler` dan custom `BusinessException` dengan error codes yang unik (e.g., `ACC_001`).
+5. **Changelog Sync**: Setiap kali melakukan update signifikan pada `docs/roadmap/TODOS.md`, WAJIB melakukan update pada `CHANGELOG.md` untuk mencatat perubahan versi atau milestone yang tercapai.
 
 ### Testing Guidelines (TDD)
 

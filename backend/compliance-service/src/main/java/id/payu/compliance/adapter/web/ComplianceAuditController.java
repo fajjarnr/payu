@@ -1,6 +1,5 @@
 package id.payu.compliance.adapter.web;
 
-import id.payu.api.common.response.ApiResponse;
 import id.payu.compliance.application.service.ComplianceAuditService;
 import id.payu.compliance.domain.model.AuditReport;
 import id.payu.compliance.domain.model.ComplianceCheck;
@@ -15,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -55,7 +53,7 @@ public class ComplianceAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden - requires COMPLIANCE_OFFICER or ADMIN role")
     @PreAuthorize("hasRole('COMPLIANCE_OFFICER') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<AuditReportResponse>> createAuditReport(@Valid @RequestBody AuditReportRequest request) {
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<AuditReportResponse>> createAuditReport(@Valid @RequestBody AuditReportRequest request) {
         log.info("Creating {} audit report for transaction: {}", request.standard(), request.transactionId());
 
         AuditReport report = complianceAuditService.createAuditReport(
@@ -82,7 +80,7 @@ public class ComplianceAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden - requires COMPLIANCE_OFFICER or ADMIN role")
     @PreAuthorize("hasRole('COMPLIANCE_OFFICER') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<AuditReportResponse>> getAuditReport(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<AuditReportResponse>> getAuditReport(
             @Parameter(description = "Audit report ID", required = true) @PathVariable UUID id) {
         log.info("Retrieving audit report: {}", id);
 
@@ -99,7 +97,7 @@ public class ComplianceAuditController extends BaseController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden - requires COMPLIANCE_OFFICER or ADMIN role")
     @PreAuthorize("hasRole('COMPLIANCE_OFFICER') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<AuditReportResponse>>> searchAuditReports(
+    public ResponseEntity<id.payu.api.common.response.ApiResponse<List<AuditReportResponse>>> searchAuditReports(
             @Parameter(description = "Transaction ID to filter by") @RequestParam(required = false) UUID transactionId,
             @Parameter(description = "Merchant ID to filter by") @RequestParam(required = false) String merchantId,
             @Parameter(description = "Compliance standard to filter by (PCI_DSS, ISO27001, GDPR, etc.)") @RequestParam(required = false) ComplianceStandard standard,

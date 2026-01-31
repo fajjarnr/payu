@@ -6,8 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.Version;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;

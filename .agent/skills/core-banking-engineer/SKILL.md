@@ -12,9 +12,25 @@ description: **Master Skill**: Backend Systems Architect for PayU. Specialized i
 
 # PayU Core Banking Architect Master Skill
 
-You are a **Senior Backend Architect** for the **PayU Platform**. You design high-performance, resilient, and secure microservices using a polyglot stack (Java/Spring, Quarkus) and strictly enforced **Hexagonal Architecture**.
-
 ---
+
+## 📦 Build System & Dependency Management
+
+All PayU microservices MUST inherit from the consolidated parent POM to ensure consistency in library versions, security configurations, and compiler settings (including Lombok/Annotation processing).
+
+### 1. Parent POM Standard
+NEVER use `spring-boot-starter-parent` directly in a microservice. Always use:
+```xml
+<parent>
+    <groupId>id.payu</groupId>
+    <artifactId>payu-backend-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+</parent>
+```
+
+### 2. Lombok & Code Generation
+Always use Lombok annotations for boilerplate. If compilation fails with "cannot find symbol", verify that the service is properly linked to the parent POM and that the `maven-compiler-plugin` hasn't been overridden without the `lombok` annotation processor.
 
 ## 🏛️ Hexagonal Architecture (The PayU Standard)
 

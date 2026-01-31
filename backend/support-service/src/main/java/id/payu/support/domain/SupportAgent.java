@@ -1,52 +1,61 @@
 package id.payu.support.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "support_agents")
-public class SupportAgent extends PanacheEntity {
+@EntityListeners(AuditingEntityListener.class)
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SupportAgent {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(unique = true, nullable = false)
-    public String employeeId;
+    private String employeeId;
 
     @Column(nullable = false)
-    public String name;
+    private String name;
 
     @Column(unique = true, nullable = false)
-    public String email;
+    private String email;
 
     @Column(nullable = false)
-    public String department;
+    private String department;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public AgentLevel level;
+    @Builder.Default
+    private AgentLevel level = AgentLevel.JUNIOR;
 
     @Column(nullable = false)
-    public boolean active;
+    @Builder.Default
+    private boolean active = true;
 
-    @Column(nullable = false)
-    public LocalDateTime createdAt;
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    public LocalDateTime updatedAt;
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     public enum AgentLevel {
         JUNIOR,
         SENIOR,
         TEAM_LEAD,
         MANAGER
-    }
-
-    public SupportAgent() {
-        this.createdAt = LocalDateTime.now();
-        this.active = true;
-        this.level = AgentLevel.JUNIOR;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }

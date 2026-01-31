@@ -26,4 +26,11 @@ public class ConversionTrackingRequest {
 
     @NotBlank(message = "Event type is required")
     private String eventType; // conversion, participation, etc.
+
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
+    public String getVariant() { return variant; }
+    public void setVariant(String variant) { this.variant = variant; }
+    public String getEventType() { return eventType; }
+    public void setEventType(String eventType) { this.eventType = eventType; }
 }

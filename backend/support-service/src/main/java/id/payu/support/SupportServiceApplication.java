@@ -1,19 +1,20 @@
 package id.payu.support;
 
-import io.quarkus.runtime.Quarkus;
-import io.quarkus.runtime.QuarkusApplication;
-import io.quarkus.runtime.annotations.QuarkusMain;
-import org.jboss.logging.Logger;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-@QuarkusMain
-public class SupportServiceApplication implements QuarkusApplication {
+/**
+ * PayU Support Service Application
+ *
+ * Support team training management service for PayU Digital Banking Platform.
+ * This service manages support agents, training modules, and training progress tracking.
+ */
+@SpringBootApplication
+@EnableJpaRepositories(basePackages = "id.payu.support.repository")
+public class SupportServiceApplication {
 
-    private static final Logger LOG = Logger.getLogger(SupportServiceApplication.class);
-
-    @Override
-    public int run(String... args) {
-        LOG.info("Starting PayU Support Service...");
-        Quarkus.waitForExit();
-        return 0;
+    public static void main(String[] args) {
+        SpringApplication.run(SupportServiceApplication.class, args);
     }
 }

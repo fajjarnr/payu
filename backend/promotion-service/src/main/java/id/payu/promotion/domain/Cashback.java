@@ -1,7 +1,8 @@
 package id.payu.promotion.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -13,56 +14,104 @@ import java.util.UUID;
     @Index(name = "idx_cashback_status", columnList = "status"),
     @Index(name = "idx_cashback_date", columnList = "createdAt DESC")
 })
-public class Cashback extends PanacheEntityBase {
+@EntityListeners(AuditingEntityListener.class)
+public class Cashback {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "account_id", nullable = false)
-    public String accountId;
+    private String accountId;
 
     @Column(name = "transaction_id", nullable = false)
-    public String transactionId;
+    private String transactionId;
 
     @Column(name = "cashback_amount", nullable = false, precision = 19, scale = 4)
-    public BigDecimal cashbackAmount;
+    private BigDecimal cashbackAmount;
 
     @Column(name = "transaction_amount", nullable = false, precision = 19, scale = 4)
-    public BigDecimal transactionAmount;
+    private BigDecimal transactionAmount;
 
     @Column(nullable = false, precision = 19, scale = 4)
-    public BigDecimal percentage;
+    private BigDecimal percentage;
 
     @Column(name = "merchant_code")
-    public String merchantCode;
+    private String merchantCode;
 
     @Column(name = "category_code")
-    public String categoryCode;
+    private String categoryCode;
 
     @Column(name = "cashback_code")
-    public String cashbackCode;
+    private String cashbackCode;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    public Status status;
+    private Status status;
 
     @Column(name = "credited_at")
-    public LocalDateTime creditedAt;
+    private LocalDateTime creditedAt;
 
     @Column(name = "expiry_date")
-    public LocalDateTime expiryDate;
+    private LocalDateTime expiryDate;
 
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
-    void onCreate() {
-        createdAt = LocalDateTime.now();
+    protected void onCreate() {
         if (percentage == null) {
             percentage = BigDecimal.ZERO;
         }
     }
+
+    // Static method for Panache-like query support
+    public static <T> T find(String query, Object... params) {
+        // This will be handled by Spring Data JPA repository
+        throw new UnsupportedOperationException("Use Repository instead");
+    }
+
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getAccountId() { return accountId; }
+    public void setAccountId(String accountId) { this.accountId = accountId; }
+
+    public String getTransactionId() { return transactionId; }
+    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+
+    public BigDecimal getCashbackAmount() { return cashbackAmount; }
+    public void setCashbackAmount(BigDecimal cashbackAmount) { this.cashbackAmount = cashbackAmount; }
+
+    public BigDecimal getTransactionAmount() { return transactionAmount; }
+    public void setTransactionAmount(BigDecimal transactionAmount) { this.transactionAmount = transactionAmount; }
+
+    public BigDecimal getPercentage() { return percentage; }
+    public void setPercentage(BigDecimal percentage) { this.percentage = percentage; }
+
+    public String getMerchantCode() { return merchantCode; }
+    public void setMerchantCode(String merchantCode) { this.merchantCode = merchantCode; }
+
+    public String getCategoryCode() { return categoryCode; }
+    public void setCategoryCode(String categoryCode) { this.categoryCode = categoryCode; }
+
+    public String getCashbackCode() { return cashbackCode; }
+    public void setCashbackCode(String cashbackCode) { this.cashbackCode = cashbackCode; }
+
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
+
+    public LocalDateTime getCreditedAt() { return creditedAt; }
+    public void setCreditedAt(LocalDateTime creditedAt) { this.creditedAt = creditedAt; }
+
+    public LocalDateTime getExpiryDate() { return expiryDate; }
+    public void setExpiryDate(LocalDateTime expiryDate) { this.expiryDate = expiryDate; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public enum Status {
         PENDING,

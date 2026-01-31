@@ -3,59 +3,95 @@ package id.payu.promotion.resource;
 import id.payu.promotion.domain.Cashback;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.service.CashbackService;
-import jakarta.inject.Inject;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@Path("/api/v1/cashbacks")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@RestController
+@RequestMapping("/api/v1/cashbacks")
+@Tag(name = "Cashbacks", description = "Cashback management APIs")
+@SecurityRequirement(name = "bearerAuth")
 public class CashbackResource {
 
-    @Inject
-    CashbackService cashbackService;
+    private final CashbackService cashbackService;
 
-    @POST
-    public Response createCashback(@Valid CreateCashbackRequest request) {
+    public CashbackResource(CashbackService cashbackService) {
+        this.cashbackService = cashbackService;
+    }
+
+    @PostMapping
+    @Operation(summary = "Create cashback", description = "Create a new cashback record")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Cashback created successfully",
+            content = @Content(schema = @Schema(implementation = CashbackResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> createCashback(@Valid @RequestBody CreateCashbackRequest request) {
         try {
             Cashback cashback = cashbackService.createCashback(request);
-            return Response.status(Response.Status.CREATED)
-                .entity(CashbackResponse.from(cashback))
-                .build();
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(CashbackResponse.from(cashback));
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ErrorResponse(e.getMessage()))
-                .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
         }
     }
 
-    @GET
-    @Path("/{id}")
-    public Response getCashback(@PathParam("id") UUID id) {
+    @GetMapping("/{id}")
+    @Operation(summary = "Get cashback by ID", description = "Retrieve cashback details by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cashback found",
+            content = @Content(schema = @Schema(implementation = CashbackResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "404", description = "Cashback not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> getCashback(@PathVariable UUID id) {
         return cashbackService.getCashback(id)
-            .map(cashback -> Response.ok(CashbackResponse.from(cashback)).build())
-            .orElse(Response.status(Response.Status.NOT_FOUND)
-                .entity(new ErrorResponse("Cashback not found"))
-                .build());
+            .map(cashback -> ResponseEntity.ok(CashbackResponse.from(cashback)))
+            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("Cashback not found")));
     }
 
-    @GET
-    @Path("/account/{accountId}")
-    public Response getCashbacksByAccount(@PathParam("accountId") String accountId) {
+    @GetMapping("/account/{accountId}")
+    @Operation(summary = "Get cashbacks by account", description = "Retrieve all cashbacks for an account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cashbacks retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<CashbackResponse>> getCashbacksByAccount(@PathVariable String accountId) {
         List<Cashback> cashbacks = cashbackService.getCashbacksByAccount(accountId);
-        return Response.ok(cashbacks.stream().map(CashbackResponse::from).toList()).build();
+        return ResponseEntity.ok(cashbacks.stream().map(CashbackResponse::from).toList());
     }
 
-    @GET
-    @Path("/account/{accountId}/summary")
-    public Response getCashbackSummary(@PathParam("accountId") String accountId) {
+    @GetMapping("/account/{accountId}/summary")
+    @Operation(summary = "Get cashback summary", description = "Retrieve cashback summary for an account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cashback summary retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<CashbackSummaryResponse> getCashbackSummary(@PathVariable String accountId) {
         CashbackSummaryResponse summary = cashbackService.getCashbackSummary(accountId);
-        return Response.ok(summary).build();
+        return ResponseEntity.ok(summary);
     }
 
     record ErrorResponse(String message) {}

@@ -95,58 +95,54 @@ async function ExchangeRates() {
 | `updateTag()` | Immediate invalidation (read-your-own-writes) |
 | `revalidateTag()` | Background revalidation (SWR pattern) |
 
-### 3. Server Actions & Forms
+### 3. Server Actions & Forms (React 19 + Next.js 15)
+
+In Next.js 15, `useActionState` (formerly `useFormState`) is the preferred way to handle form state with Server Actions.
 
 ```tsx
 // app/actions/transfer.ts
 'use server'
 
 import { z } from 'zod';
-import { revalidateTag } from 'next/cache';
 
-const transferSchema = z.object({
-  recipientAccount: z.string().min(10),
-  amount: z.number().positive().max(100000000),
-});
-
-export async function createTransfer(formData: FormData) {
-  const parsed = transferSchema.safeParse({
-    recipientAccount: formData.get('recipient'),
-    amount: Number(formData.get('amount')),
-  });
-
-  if (!parsed.success) {
-    return { error: parsed.error.flatten() };
-  }
-
-  await db.transfers.create(parsed.data);
-  revalidateTag('transactions');
+export async function createTransfer(prevState: any, formData: FormData) {
+  // Logic here
   return { success: true };
+}
+
+// app/components/TransferForm.tsx
+'use client'
+
+import { useActionState } from 'react';
+import { createTransfer } from '@/app/actions/transfer';
+
+export function TransferForm() {
+  const [state, action, isPending] = useActionState(createTransfer, null);
+
+  return (
+    <form action={action}>
+      <input name="amount" type="number" />
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Processing...' : 'Transfer'}
+      </button>
+      {state?.success && <p>Success!</p>}
+    </form>
+  );
 }
 ```
 
-### 4. Optimistic UI Pattern
+### 4. Async APIs (Breaking Change in Next.js 15)
+The following APIs are now asynchronous. Always `await` them:
+- `cookies()`
+- `headers()`
+- `params` and `searchParams` in Page/Layout and `generateMetadata`.
 
 ```tsx
-'use client'
-import { useOptimistic, useTransition } from 'react';
-
-export function TransferButton({ transfer }: { transfer: Transfer }) {
-  const [isPending, startTransition] = useTransition();
-  const [optimisticStatus, setOptimisticStatus] = useOptimistic(transfer.status);
-
-  const handleConfirm = () => {
-    startTransition(async () => {
-      setOptimisticStatus('completed');
-      await confirmTransfer(transfer.id);
-    });
-  };
-
-  return (
-    <button onClick={handleConfirm} disabled={isPending}>
-      {optimisticStatus === 'completed' ? '✓ Done' : 'Confirm'}
-    </button>
-  );
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const theme = cookieStore.get('theme');
+  // ...
 }
 ```
 

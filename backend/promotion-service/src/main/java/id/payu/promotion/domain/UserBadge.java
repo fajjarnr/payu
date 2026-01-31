@@ -1,7 +1,8 @@
 package id.payu.promotion.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,23 +12,40 @@ import java.util.UUID;
 }, uniqueConstraints = {
     @UniqueConstraint(columnNames = {"accountId", "badgeId"})
 })
-public class UserBadge extends PanacheEntityBase {
+@EntityListeners(AuditingEntityListener.class)
+public class UserBadge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "account_id", nullable = false)
-    public String accountId;
+    private String accountId;
 
     @Column(name = "badge_id", nullable = false)
-    public UUID badgeId;
+    private UUID badgeId;
 
     @Column(name = "earned_at", nullable = false)
-    public LocalDateTime earnedAt;
+    private LocalDateTime earnedAt;
 
     @PrePersist
-    void onCreate() {
-        earnedAt = LocalDateTime.now();
+    protected void onCreate() {
+        if (earnedAt == null) {
+            earnedAt = LocalDateTime.now();
+        }
     }
+
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getAccountId() { return accountId; }
+    public void setAccountId(String accountId) { this.accountId = accountId; }
+
+    public UUID getBadgeId() { return badgeId; }
+    public void setBadgeId(UUID badgeId) { this.badgeId = badgeId; }
+
+    public LocalDateTime getEarnedAt() { return earnedAt; }
+    public void setEarnedAt(LocalDateTime earnedAt) { this.earnedAt = earnedAt; }
 }

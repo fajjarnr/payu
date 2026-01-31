@@ -7,6 +7,8 @@ import id.payu.abtesting.infrastructure.kafka.producer.ExperimentEventProducer;
 import id.payu.abtesting.infrastructure.redis.cache.ExperimentCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -23,11 +25,11 @@ import java.util.UUID;
  * Domain service for Experiment business logic
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ExperimentService {
 
+    private static final Logger log = LoggerFactory.getLogger(ExperimentService.class);
     private final ExperimentRepository experimentRepository;
     private final ExperimentCacheService cacheService;
     private final ExperimentEventProducer eventProducer;
@@ -195,12 +197,11 @@ public class ExperimentService {
         // Get variant based on consistent hashing
         String variant = experiment.getVariantForUser(userId);
 
-        // Create assignment
-        VariantAssignment assignment = VariantAssignment.builder()
-                .experimentKey(experiment.getKey())
-                .variant(variant)
-                .config("CONTROL".equals(variant) ? experiment.getVariantAConfig() : experiment.getVariantBConfig())
-                .build();
+        // Create assignment (manual instead of builder)
+        VariantAssignment assignment = new VariantAssignment();
+        assignment.setExperimentKey(experiment.getKey());
+        assignment.setVariant(variant);
+        assignment.setConfig("CONTROL".equals(variant) ? experiment.getVariantAConfig() : experiment.getVariantBConfig());
 
         // Cache the assignment
         cacheService.cacheVariantAssignment(experimentKey, userId, assignment);
@@ -272,5 +273,12 @@ public class ExperimentService {
         private String experimentKey;
         private String variant; // CONTROL or VARIANT_B
         private Map<String, Object> config;
+
+        public String getExperimentKey() { return experimentKey; }
+        public void setExperimentKey(String experimentKey) { this.experimentKey = experimentKey; }
+        public String getVariant() { return variant; }
+        public void setVariant(String variant) { this.variant = variant; }
+        public Map<String, Object> getConfig() { return config; }
+        public void setConfig(Map<String, Object> config) { this.config = config; }
     }
 }

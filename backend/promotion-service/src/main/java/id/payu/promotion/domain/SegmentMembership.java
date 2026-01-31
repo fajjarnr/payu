@@ -1,7 +1,8 @@
 package id.payu.promotion.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -16,41 +17,64 @@ import java.util.UUID;
     @Index(name = "idx_membership_account_segment", columnList = "accountId, segmentId"),
     @Index(name = "idx_membership_evaluated", columnList = "lastEvaluatedAt")
 })
-public class SegmentMembership extends PanacheEntityBase {
+@EntityListeners(AuditingEntityListener.class)
+public class SegmentMembership {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    public UUID id;
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "account_id", nullable = false)
-    public String accountId;
+    private String accountId;
 
     @Column(name = "segment_id", nullable = false)
-    public UUID segmentId;
+    private UUID segmentId;
 
     /**
      * Indicates if the user currently matches the segment criteria.
      * This is updated during segment evaluation.
      */
     @Column(name = "is_active", nullable = false)
-    public Boolean isActive = true;
+    private Boolean isActive = true;
 
     /**
      * Timestamp of when this membership was last evaluated.
      * Used for re-evaluation scheduling.
      */
     @Column(name = "last_evaluated_at", nullable = false)
-    public LocalDateTime lastEvaluatedAt;
+    private LocalDateTime lastEvaluatedAt;
 
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
-    void onCreate() {
-        createdAt = LocalDateTime.now();
-        lastEvaluatedAt = LocalDateTime.now();
+    protected void onCreate() {
+        if (lastEvaluatedAt == null) {
+            lastEvaluatedAt = LocalDateTime.now();
+        }
         if (isActive == null) {
             isActive = true;
         }
     }
+
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getAccountId() { return accountId; }
+    public void setAccountId(String accountId) { this.accountId = accountId; }
+
+    public UUID getSegmentId() { return segmentId; }
+    public void setSegmentId(UUID segmentId) { this.segmentId = segmentId; }
+
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public LocalDateTime getLastEvaluatedAt() { return lastEvaluatedAt; }
+    public void setLastEvaluatedAt(LocalDateTime lastEvaluatedAt) { this.lastEvaluatedAt = lastEvaluatedAt; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
