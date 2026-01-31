@@ -1,21 +1,27 @@
 package id.payu.auth.service;
 
 import id.payu.auth.dto.LoginContext;
+import id.payu.auth.entity.UserRiskProfileEntity;
+import id.payu.auth.entity.UserKnownDeviceEntity;
+import id.payu.auth.entity.UserKnownIpEntity;
+import id.payu.auth.repository.UserRiskProfileRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class RiskEvaluationService {
 
-    private final Map<String, UserRiskProfile> userRiskProfiles = new ConcurrentHashMap<>();
+    private final UserRiskProfileRepository riskProfileRepository;
 
     @Value("${payu.security.risk.mfa-threshold:50}")
     private int mfaThreshold;
@@ -39,7 +45,7 @@ public class RiskEvaluationService {
     private int unusualHoursEnd;
 
     public RiskEvaluationResult evaluateRisk(LoginContext context) {
-        UserRiskProfile profile = getUserRiskProfile(context.username());
+        UserRiskProfileEntity profile = getUserRiskProfile(context.username());
         
         int riskScore = 0;
         List<String> riskFactors = new ArrayList<>();
@@ -77,35 +83,63 @@ public class RiskEvaluationService {
         );
     }
 
+    @Transactional
     public void recordSuccessfulLogin(String username, LoginContext context) {
-        UserRiskProfile profile = getUserRiskProfile(username);
-        profile.recordSuccessfulLogin(context);
-        userRiskProfiles.put(username, profile);
-    }
-
-    public void recordFailedAttempt(String username) {
-        UserRiskProfile profile = getUserRiskProfile(username);
-        profile.recordFailedAttempt();
-        userRiskProfiles.put(username, profile);
-    }
-
-    public void clearFailedAttempts(String username) {
-        UserRiskProfile profile = userRiskProfiles.get(username);
-        if (profile != null) {
-            profile.clearFailedAttempts();
+        UserRiskProfileEntity profile = getUserRiskProfile(username);
+        
+        // Add Device if new
+        if (context.deviceId() != null && isNewDevice(profile, context.deviceId())) {
+            profile.addKnownDevice(context.deviceId());
         }
+        
+        // Add IP if new
+        if (context.ipAddress() != null && isNewIpAddress(profile, context.ipAddress())) {
+            profile.addKnownIp(context.ipAddress());
+        }
+        
+        profile.setFailedAttempts(0);
+        riskProfileRepository.save(profile);
     }
 
-    private UserRiskProfile getUserRiskProfile(String username) {
-        return userRiskProfiles.computeIfAbsent(username, k -> new UserRiskProfile(username));
+    @Transactional
+    public void recordFailedAttempt(String username) {
+        UserRiskProfileEntity profile = getUserRiskProfile(username);
+        profile.setFailedAttempts(profile.getFailedAttempts() + 1);
+        riskProfileRepository.save(profile);
     }
 
-    private boolean isNewDevice(UserRiskProfile profile, String deviceId) {
-        return deviceId != null && !profile.getKnownDevices().contains(deviceId);
+    @Transactional
+    public void clearFailedAttempts(String username) {
+        riskProfileRepository.findById(username).ifPresent(profile -> {
+            profile.setFailedAttempts(0);
+            riskProfileRepository.save(profile);
+        });
     }
 
-    private boolean isNewIpAddress(UserRiskProfile profile, String ipAddress) {
-        return ipAddress != null && !profile.getKnownIpAddresses().contains(ipAddress);
+    private UserRiskProfileEntity getUserRiskProfile(String username) {
+        return riskProfileRepository.findById(username)
+                .orElseGet(() -> {
+                     UserRiskProfileEntity newProfile = new UserRiskProfileEntity();
+                     newProfile.setUsername(username);
+                     newProfile.setFailedAttempts(0);
+                     return newProfile;
+                });
+    }
+
+    private boolean isNewDevice(UserRiskProfileEntity profile, String deviceId) {
+        if (deviceId == null) return false;
+        if (profile.getKnownDevices() == null) return true;
+        
+        return profile.getKnownDevices().stream()
+                .noneMatch(d -> d.getDeviceId().equals(deviceId));
+    }
+
+    private boolean isNewIpAddress(UserRiskProfileEntity profile, String ipAddress) {
+        if (ipAddress == null) return false;
+        if (profile.getKnownIps() == null) return true;
+        
+        return profile.getKnownIps().stream()
+                .noneMatch(ip -> ip.getIpAddress().equals(ipAddress));
     }
 
     private boolean isUnusualLoginTime(Long timestamp) {
@@ -147,50 +181,6 @@ public class RiskEvaluationService {
 
         public String getMessage() {
             return message;
-        }
-    }
-
-    private static class UserRiskProfile {
-        private final String username;
-        private final Set<String> knownDevices;
-        private final Set<String> knownIpAddresses;
-        private int failedAttempts;
-
-        public UserRiskProfile(String username) {
-            this.username = username;
-            this.knownDevices = ConcurrentHashMap.newKeySet();
-            this.knownIpAddresses = ConcurrentHashMap.newKeySet();
-            this.failedAttempts = 0;
-        }
-
-        public void recordSuccessfulLogin(LoginContext context) {
-            if (context.deviceId() != null) {
-                knownDevices.add(context.deviceId());
-            }
-            if (context.ipAddress() != null) {
-                knownIpAddresses.add(context.ipAddress());
-            }
-            clearFailedAttempts();
-        }
-
-        public void recordFailedAttempt() {
-            this.failedAttempts++;
-        }
-
-        public void clearFailedAttempts() {
-            this.failedAttempts = 0;
-        }
-
-        public Set<String> getKnownDevices() {
-            return Collections.unmodifiableSet(knownDevices);
-        }
-
-        public Set<String> getKnownIpAddresses() {
-            return Collections.unmodifiableSet(knownIpAddresses);
-        }
-
-        public int getFailedAttempts() {
-            return failedAttempts;
         }
     }
 }

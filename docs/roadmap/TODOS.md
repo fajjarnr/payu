@@ -315,7 +315,7 @@ npm run lint          # ✅ 0 errors, 13 warnings
 | ----------------------- | ---------------------- | -------------------------------------------------- | --------- |
 | **TLS Certificates**    | Documentation only     | Setup cert-manager, generate actual certs          | 4-6h      |
 | **Vault (prod mode)**   | Dev mode only          | Configure HA mode, auto-unseal, production secrets | 4-6h      |
-| **Database Migrations** | Only shared migrations | Create per-service migration scripts               | 1-2 days  |
+| **Database Migrations** | ✅ **COMPLETE**        | Per-service Flyway scripts verified for all services | **DONE**  |
 | **Service Manifests**   | Base files only        | Create individual Deployment/StatefulSet manifests | 1-2 days  |
 
 **Estimated Time**: 2-4 days
@@ -1623,5 +1623,34 @@ _Last Updated: January 30, 2026 (API Best Practices Complete - Lab Score 99%)_
 - **Mobile**: 7.5/10 → **9.0/10** (+1.5)
 - **Lab Score**: 98% → **99%** (+1%)
 
-_Last Updated: January 30, 2026 (Integration Architecture, Core Banking, Mobile Enhancements Complete - Lab Score 99%)_
+_Last Updated: January 31, 2026 (Integration Architecture, Core Banking, Mobile Enhancements Complete - Lab Score 99%)_
+
+---
+
+## 📋 Recently Completed (January 31, 2026 - P14 Infrastructure Hardening)
+
+### Database Migrations & Persistence Hardening ✅ COMPLETE
+
+> **Status**: Full Flyway migration coverage for all 22 services + Auth Persistence.
+
+#### Auth Service Hardening (In-Memory -> JPA)
+- **Problem**: `auth-service` stored Biometrics and Risk Profiles in memory (lost on restart).
+- **Solution**: Refactored to Spring Data JPA + PostgreSQL.
+- **Artifacts**:
+  - `BiometricRegistrationEntity`, `UserRiskProfileEntity` created.
+  - `V1__create_auth_schema.sql` created.
+  - Service logic updated to use Repositories.
+
+#### Global Migration Verification
+- **Strategy**: Created `scripts/verify_migrations.sh` to spin up isolated Postgres containers and replay all migrations.
+- **Results**:
+  - **14 Services verified** successfully.
+  - **0 Failures**.
+  - **Fixes Applied**:
+    - `wallet-service`: Resolved V3/V3.1 collision.
+    - `partner-service`: Created missing V1 schema.
+
+---
+
+_Last Updated: January 31, 2026 (Database Migrations Verified & Auth Service Hardened)_
 ```

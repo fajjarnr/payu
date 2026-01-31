@@ -1,23 +1,29 @@
 package id.payu.auth.service;
 
 import id.payu.auth.dto.*;
+import id.payu.auth.entity.BiometricRegistrationEntity;
 import id.payu.auth.exception.BiometricException;
+import id.payu.auth.repository.BiometricRegistrationRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class BiometricService {
 
-    private final Map<String, BiometricRegistration> registrations = new ConcurrentHashMap<>();
+    private final BiometricRegistrationRepository biometricRepository;
     private final Map<String, String> challengeStore = new ConcurrentHashMap<>();
 
     @Value("${payu.biometric.challenge-expiry-seconds:300}")
@@ -45,6 +51,7 @@ public class BiometricService {
         );
     }
 
+    @Transactional
     public BiometricRegistrationResponse registerBiometric(BiometricRegistrationRequest request) {
         String challengeKey = buildChallengeKey(request.username(), request.deviceId(), UUID.randomUUID().toString());
 
@@ -53,36 +60,35 @@ public class BiometricService {
         validateDeviceUniqueness(request.username(), request.deviceId());
 
         String registrationId = UUID.randomUUID().toString();
-        BiometricRegistration registration = new BiometricRegistration(
-                registrationId,
-                request.username(),
-                request.deviceId(),
-                request.deviceType(),
-                request.publicKey(),
-                Instant.now(),
-                true
-        );
+        BiometricRegistrationEntity entity = new BiometricRegistrationEntity();
+        entity.setRegistrationId(registrationId);
+        entity.setUsername(request.username());
+        entity.setDeviceId(request.deviceId());
+        entity.setDeviceType(request.deviceType());
+        entity.setPublicKey(request.publicKey());
+        entity.setActive(true);
+        // createdAt is handled by @CreationTimestamp
 
-        // Store the registration
-        registrations.put(registrationId, registration);
+        biometricRepository.save(entity);
 
         log.info("Registered biometric for user {} on device {} with type {}",
                 request.username(), request.deviceId(), request.deviceType());
 
         return new BiometricRegistrationResponse(
                 registrationId,
-                registration.username(),
-                registration.deviceId(),
-                registration.deviceType(),
-                request.publicKey(),
-                registration.createdAt(),
+                entity.getUsername(),
+                entity.getDeviceId(),
+                entity.getDeviceType(),
+                entity.getPublicKey(),
+                Instant.now(), // approximation as entity uses LocalDateTime
                 "Biometric registration successful"
         );
     }
 
+    @Transactional
     public BiometricAuthenticationResponse authenticateWithBiometric(
             BiometricAuthenticationRequest request,
-            BiometricRegistration registration) {
+            BiometricRegistrationDTO registration) { // Changed param type to simple DTO
 
         if (!registration.active()) {
             throw new BiometricException("BIO_003", "Biometric registration is inactive");
@@ -112,8 +118,7 @@ public class BiometricService {
             log.info("Successful biometric authentication for user {} on device {}",
                     request.username(), request.deviceId());
 
-            // Access token expiration: 15 minutes (900 seconds)
-            // This follows PCI-DSS and OWASP recommendations for short-lived access tokens
+            // Access token logic...
             return new BiometricAuthenticationResponse(
                     "mock-jwt-access-token-" + UUID.randomUUID(),
                     "mock-jwt-refresh-token-" + UUID.randomUUID(),
@@ -130,33 +135,40 @@ public class BiometricService {
         }
     }
 
+    // Helper method for controller compatibility
+    public BiometricAuthenticationResponse authenticateWithBiometric(
+            BiometricAuthenticationRequest request,
+            BiometricRegistration registration) {
+       return authenticateWithBiometric(request, new BiometricRegistrationDTO(
+               registration.registrationId(),
+               registration.username(),
+               registration.deviceId(),
+               registration.deviceType(),
+               registration.publicKey(),
+               registration.createdAt(),
+               registration.active()
+       ));
+    }
+
+
     public Optional<BiometricRegistration> findRegistration(String username, String deviceId) {
-        return registrations.values().stream()
-                .filter(r -> r.username().equals(username) && r.deviceId().equals(deviceId) && r.active())
-                .findFirst();
+        return biometricRepository.findByUsernameAndDeviceIdAndActiveTrue(username, deviceId)
+                .map(this::mapToRecord);
     }
 
     public List<BiometricRegistration> getUserRegistrations(String username) {
-        return registrations.values().stream()
-                .filter(r -> r.username().equals(username) && r.active())
+        return biometricRepository.findByUsernameAndActiveTrue(username).stream()
+                .map(this::mapToRecord)
                 .toList();
     }
 
+    @Transactional
     public void revokeRegistration(String registrationId) {
-        BiometricRegistration registration = registrations.get(registrationId);
-        if (registration != null) {
-            BiometricRegistration revoked = new BiometricRegistration(
-                    registration.registrationId(),
-                    registration.username(),
-                    registration.deviceId(),
-                    registration.deviceType(),
-                    registration.publicKey(),
-                    registration.createdAt(),
-                    false
-            );
-            registrations.put(registrationId, revoked);
+        biometricRepository.findById(registrationId).ifPresent(entity -> {
+            entity.setActive(false);
+            biometricRepository.save(entity);
             log.info("Revoked biometric registration {}", registrationId);
-        }
+        });
     }
 
     private void validateChallenge(String challenge, String signature, String publicKey) {
@@ -207,4 +219,33 @@ public class BiometricService {
             throw new BiometricException("BIO_001", "Invalid public key format", e);
         }
     }
+
+    private BiometricRegistration mapToRecord(BiometricRegistrationEntity entity) {
+        // Convert LocalDateTime to Instant for now to match record
+        // Ideally record should use LocalDateTime too, but minimizing changes
+        Instant createdInst = entity.getCreatedAt() != null 
+            ? entity.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant() 
+            : Instant.now();
+            
+        return new BiometricRegistration(
+                entity.getRegistrationId(),
+                entity.getUsername(),
+                entity.getDeviceId(),
+                entity.getDeviceType(),
+                entity.getPublicKey(),
+                createdInst,
+                entity.isActive()
+        );
+    }
+    
+    // Internal DTO to avoid circular dependency or confusion
+    record BiometricRegistrationDTO(
+        String registrationId,
+        String username,
+        String deviceId,
+        String deviceType,
+        String publicKey,
+        Instant createdAt,
+        boolean active
+    ) {}
 }

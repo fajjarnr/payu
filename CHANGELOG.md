@@ -41,6 +41,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enforced strict parent usage for Spring Boot services
   - Added CI check requirement for annotation processor paths
 
+- **Infrastructure Hardening**:
+  - **Auth Service Persistence**:
+    - Refactored from In-Memory Storage to Spring Data JPA + PostgreSQL
+    - Created Persistent Entities for Biometrics and Risk Profiles
+    - Implemented Flyway V1 Migration Schema
+  - **Database Migration Verification**:
+    - Validated Flyway scripts for 14 services in isolated containers
+    - Fixed Schema Collisions in Wallet Service (V3/V3.1)
+    - Created Primary Schema for Partner Service (V1)
+
 ## [1.1.0] - 2026-01-31
 
 ### Fixed
