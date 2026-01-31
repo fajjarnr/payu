@@ -1,13 +1,13 @@
 ---
 name: quality-engineer
-version: 2.0.0
+version: 2.1.0
 maturity: stable
-updated: 2026-01-30
+updated: 2026-01-31
 author: payu-platform-team
 requires: [core-banking-engineer]
-tags: [qa, testing, automation, contract-testing]
-related: []
-description: **Master Skill**: Quality Engineering & Testing Architecture. Unified expertise in Full-Stack Testing, Contract Testing, Performance Engineering, Test Automation, and Financial Integrity Verification.
+tags: [qa, testing, automation, contract-testing, migration]
+related: [debugging-methodology]
+description: **Master Skill**: Quality Engineering & Testing Architecture. Unified expertise in Full-Stack Testing, Contract Testing, Performance Engineering, Test Automation, Financial Integrity Verification, and Legacy Migration Testing.
 ---
 
 # PayU Quality Engineer Master Skill
@@ -24,6 +24,7 @@ You are the **Lead Quality Engineer (AI)** for the **PayU Platform**. You don't 
 | **Financial Integrity** | Accuracy | Ledger invariants, Reconciliation tests |
 | **Mobile Quality** | User Experience | Appium/Maestro flows, Device Farm Strategy |
 | **Visual Regression** | Pixel Perfect | Percy/Chromatic snapshots, Storybook tests |
+| **Migration Testing** | Legacy -> Modern | Quarkus to Spring Boot transformations |
 
 ---
 
@@ -192,6 +193,46 @@ class ArchitectureTest {
         classes()
             .that().haveSimpleNameEndingWith("RepositoryAdapter")
             .should().implement(resideInAPackage("..domain.port.out.."));
+}
+```
+
+### 🦆 Quarkus to Spring Boot Test Migration
+
+When migrating test files, use this mapping cheatsheet to ensure quick and accurate conversion:
+
+| Quarkus / JUnit 4 | Spring Boot / JUnit 5 | Notes |
+|:---|:---|:---|
+| `@QuarkusTest` | `@SpringBootTest` | Start the full application context |
+| `@Test` (org.junit.Test) | `@Test` (org.junit.jupiter.api.Test) | Ensure strictly JUnit 5 imports |
+| `@InjectMock` | `@MockBean` | Mocks a bean in the ApplicationContext |
+| `@Inject` | `@Autowired` | Standard Dependency Injection |
+| `Assert.assertEquals(...)` | `Assertions.assertEquals(...)` | Verify parameter order (expected, actual) |
+| `@Before`/`@After` | `@BeforeEach`/`@AfterEach` | Lifecycle methods |
+| `@BeforeClass`/`@AfterClass` | `@BeforeAll`/`@AfterAll` | Must be static in many cases |
+
+**Example Migration:**
+
+*From (Quarkus):*
+```java
+@QuarkusTest
+public class ServiceTest {
+    @InjectMock
+    ExternalService externalService;
+    
+    @Test
+    public void testThings() { ... }
+}
+```
+
+*To (Spring Boot):*
+```java
+@SpringBootTest
+public class ServiceTest {
+    @MockBean
+    ExternalService externalService;
+    
+    @Test
+    void testThings() { ... }
 }
 ```
 
@@ -655,6 +696,10 @@ void shouldProcessOnlyOneTransactionForSameIdempotencyKey() {
 - [ ] Ledger balance invariants verified
 - [ ] Idempotency stress tests passing
 
+### Migration Readiness (Quarkus -> Spring)
+- [ ] No `@QuarkusTest` remains
+- [ ] All `Uni`/`Mono` replaced with standard return types (if blocked)
+- [ ] Lombok `@Data` verified (public field access removed)
+
 ---
 *Last Updated: January 2026*
-```
