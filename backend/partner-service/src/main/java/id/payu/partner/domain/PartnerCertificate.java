@@ -1,6 +1,5 @@
 package id.payu.partner.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,56 +8,60 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "partner_certificates")
-public class PartnerCertificate extends PanacheEntityBase {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PartnerCertificate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
 
     @ManyToOne
-    public Partner partner;
+    private Partner partner;
 
     @NotBlank
     @Column(columnDefinition = "TEXT")
-    public String certificatePem;
+    private String certificatePem;
 
     @NotBlank
     @Column(columnDefinition = "TEXT")
-    public String privateKeyPem;
+    private String privateKeyPem;
 
-    public String publicKeyFingerprint;
+    private String publicKeyFingerprint;
 
-    public String certificateType;
+    private String certificateType;
 
-    public String keyAlgorithm;
+    private String keyAlgorithm;
 
-    public int keySize;
+    private int keySize;
 
-    public LocalDateTime validFrom;
+    private LocalDateTime validFrom;
 
-    public LocalDateTime validTo;
+    private LocalDateTime validTo;
 
-    public boolean active;
+    private boolean active;
 
-    public String issuer;
+    private String issuer;
 
-    public String subject;
+    private String subject;
 
     @CreationTimestamp
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    public LocalDateTime updatedAt;
-
-    public PartnerCertificate() {
-    }
-
+    private LocalDateTime updatedAt;
+    
     public PartnerCertificate(Partner partner, String certificatePem, String privateKeyPem,
                                String publicKeyFingerprint, String certificateType,
                                String keyAlgorithm, int keySize,

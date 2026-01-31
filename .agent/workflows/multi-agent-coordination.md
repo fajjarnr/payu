@@ -16,14 +16,14 @@ Gunakan pola ini untuk mempercepat siklus SDLC (Discovery -> Analysis -> Impleme
 
 Gunakan jika output satu agen menjadi input bagi agen berikutnya.
 
-> "Gunakan `@information-architect` untuk memetakan struktur kode, lalu berikan hasilnya ke `@core-banking-engineer` untuk mereview API."
+> "Gunakan `@principal-architect` untuk memetakan struktur kode, lalu berikan hasilnya ke `@core-banking-engineer` untuk mereview API."
 
-### 2. Swarm Mode (Parallel Dispatch - up to 12 Agents)
-Gunakan untuk tugas independen yang masif (Scatter-Gather). Platform PayU mendukung hingga **12 agen paralel** secara bersamaan untuk efisiensi ekstrim.
-> "Dispatch `@security-auditor` (Audit), `@migrator` (Schema), `@tester` (Test Case), `@styler` (UI), dan `@logic-builder` (Domain) secara bersamaan di 12 titik berbeda."
+### 2. Swarm Mode (Parallel Dispatch - Adaptive)
+Gunakan untuk tugas independen yang masif (Scatter-Gather). Platform PayU mendukung eksekusi agen paralel secara dinamis sesuai kompleksitas tugas.
+> "Dispatch `@auditor` (Audit), `@migrator` (Schema), `@tester` (Test Case), `@styler` (UI), dan `@logic-builder` (Domain) secara bersamaan di berbagai titik berbeda."
 - **Topology**: Mesh (Peer-to-Peer).
 - **Syarat**: Tugas tidak boleh saling bergantung secara langsung pada *write-access* terhadap file yang sama.
-- **Speed**: Dapat mereduksi waktu eksekusi tugas masif hingga 80%.
+- **Speed**: Dapat mereduksi waktu eksekusi tugas masif secara signifikan.
 
 ### 3. Hierarchical Mode (Queen-Worker)
 
@@ -36,7 +36,7 @@ Gunakan untuk tugas besar yang butuh _central planner_.
 
 ### 4. Pattern: Comprehensive Analysis
 
-Alur: `explorer-agent` → `domain-agents` → `synthesis`
+Alur: `principal-architect` → `domain-agents` → `synthesis`
 
 - Memetakan codebase secara utuh sebelum melakukan perubahan besar.
 - Sangat efektif untuk _onboarding_ pada service baru atau refaktor arsitektur.
@@ -57,10 +57,10 @@ Agar "Swarm" efektif, semua agen harus berbagi _memory state_:
 
 | Skenario           | Urutan Agen (Orchestration)                              |
 | :----------------- | :------------------------------------------------------- |
-| **Feature Review** | `affected-domain-agents` → `qa-engineer`                 |
-| **Security Audit** | `security-engineer` → `debugging-engineer` → `synthesis` |
-| **Refactor DB**    | `database-engineer` → `backend-engineer` → `qa-engineer` |
-| **Bug Fixing**     | `debugging-engineer` → `domain-agent` → `qa-engineer`    |
+| **Feature Review** | `affected-domain-agents` → `@quality-engineer`           |
+| **Security Audit** | `@cybersecurity-architect` → `@debugging-methodology` → `synthesis` |
+| **Refactor DB**    | `@data-architect` → `@core-banking-engineer` → `@quality-engineer` |
+| **Bug Fixing**     | `@debugging-methodology` → `domain-agent` → `@quality-engineer`    |
 
 ---
 
@@ -94,7 +94,7 @@ Setelah semua agen selesai bekerja, lakukan sintesis laporan dengan format:
 
 ## 💡 Best Practices untuk Kecepatan (Speed)
 
-1. **Discovery First**: Selalu mulai dengan `@information-architect` atau tool `grep_search` untuk memastikan konteks benar sebelum agen domain mulai bekerja.
+1. **Discovery First**: Selalu mulai dengan `@principal-architect` atau tool `grep_search` untuk memastikan konteks benar sebelum agen domain mulai bekerja.
 2. **Context Passing**: Pastikan temuan dari satu langkah dikirimkan secara eksplisit ke langkah berikutnya.
 3. **Synthesis Single-Report**: Mintalah satu laporan terpadu (Synthesis) daripada laporan terpisah-pisah untuk efisiensi review.
 4. **Resume Capability**: Jika agen terhenti, gunakan instruksi "Resume agent [id]" untuk melanjutkan pekerjaan tanpa kehilangan konteks.

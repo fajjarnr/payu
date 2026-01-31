@@ -1,154 +1,39 @@
-quarkus:
+server:
+  port: 8085
+
+spring:
   application:
     name: partner-service
-  http:
-    port: 8089
-  otel:
-    service:
-      name: partner-service
-    exporter:
-      otlp:
-        endpoint: ${OTEL_ENDPOINT:http://localhost:4317}
-    resource:
-      attributes:
-        - service.name=partner-service
-        - service.version=1.0.0
   datasource:
-    db-kind: postgresql
-    username: postgres
-    password: postgres # pragma: allowlist secret
-    jdbc:
-      url: jdbc:postgresql://localhost:5432/partnerdb
-    health: true
-    metrics: true
-    # Configure datasource for Kafka checkpointing "database" persistence unit
-    "database":
-      db-kind: postgresql
-      username: postgres
-      password: postgres # pragma: allowlist secret
-      jdbc:
-        url: jdbc:postgresql://localhost:5432/partnerdb_checkpoint
-  hibernate-orm:
-    database:
-      generation: validate
-      # Explicitly map entity packages to avoid persistence unit issues
-      # Only include our entities (exclude Kafka checkpoint entities)
-      packages: "id.payu.partner.domain"
-    # Exclude Kafka checkpoint entities from our persistence unit
-    exclude-packages: "io.quarkus.smallrye.reactivemessaging.kafka"
-    log:
-      sql: false
-  kafka:
-    bootstrap-servers: localhost:9092
-    # Disable Kafka checkpointing store entirely to avoid Hibernate Reactive dependency
-  smallrye:
-    kafka:
-      checkpoint:
-        enabled: false
-        state-store: none
-  smallrye-openapi:
-    info-title: PayU Partner Service API
-    info-version: 1.0.0
-    info-description: |
-      API for managing external partners and SNAP BI payment integration.
+    url: jdbc:postgresql://localhost:5432/payu_partner
+    username: payu
+    password: payu
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
-      This service provides:
-      - Partner management (CRUD operations)
-      - Certificate lifecycle management (rotation, validation)
-      - SNAP BI payment integration (OAuth2 token, payments, refunds)
+springdoc:
+  api-docs:
+    path: /q/openapi
+  swagger-ui:
+    path: /q/swagger-ui
+    operations-sorter: alpha
+    tags-sorter: alpha
 
-      ## Authentication
+# Custom properties
+partner:
+  jwt:
+    secret: "payu-snap-bi-secret-key-for-jwt-token-generation-validation-2024-payu-payu"
+    expiration-ms: 900000 # 15 minutes
 
-      Partner management endpoints require Bearer token authentication.
-      SNAP BI endpoints use signature-based authentication with HMAC SHA-512.
-    info-contact:
-      name: PayU API Team
-      email: api@payu.id
-      url: https://payu.id
-    info-license:
-      name: Proprietary
-      url: https://payu.id/license
-    servers:
-      - url: http://localhost:8089
-        description: Local development server
-      - url: https://api.payu.id/partner-service
-        description: Production server
-    security-schemes:
-      bearerAuth:
-        type: http
-        scheme: bearer
-        bearerFormat: JWT
-        description: JWT Bearer token authentication for partner management APIs
-      signatureAuth:
-        type: apiKey
-        description: HMAC signature authentication for SNAP BI APIs
-        in: header
-        name: X-SIGNATURE
-      partnerApiKey:
-        type: apiKey
-        in: header
-        name: X-CLIENT-KEY
-        description: Partner client key for SNAP BI token generation
-  log:
-    level: INFO
-    category:
-      "id.payu.partner":
-        level: DEBUG
-"%dev":
-  quarkus:
-    datasource:
-      db-kind: h2
-      jdbc:
-        url: jdbc:h2:mem:devdb
-      health: false
-      metrics: false
-    hibernate-orm:
-      database:
-        generation: drop-and-create
-      packages: "id.payu.partner.domain"
-"%test":
-  quarkus:
-    datasource:
-      db-kind: h2
-      jdbc:
-        url: jdbc:h2:mem:testdb
-      username: sa
-      password:
-      health: false
-      metrics: false
-      # Configure datasource for Kafka checkpointing "database" persistence unit
-      "database":
-        db-kind: h2
-        jdbc:
-          url: jdbc:h2:mem:testdb-checkpoint
-        username: sa
-        password:
-    hibernate-orm:
-      database:
-        generation: drop-and-create
-        dialect: org.hibernate.dialect.H2Dialect
-      packages: "id.payu.partner.domain"
-      exclude-packages: "io.quarkus.smallrye.reactivemessaging.kafka"
-      log:
-        sql: false
-    # Disable Kafka for unit tests
-    kafka:
-      enabled: false
-      devservices:
-        enabled: false
-    smallrye:
-      messaging:
-        health:
-          enabled: false
-      kafka:
-        checkpoint:
-          enabled: false
-    # Reactive Messaging: Override outgoing channels with In-Memory connector
-    mp:
-      messaging:
-        outgoing:
-          payment-events:
-            connector: smallrye-in-memory
-    # Disable OpenTelemetry in tests
-    opentelemetry:
-      enabled: false
+logging:
+  level:
+    id.payu.partner: INFO
+    org.springframework.web: INFO

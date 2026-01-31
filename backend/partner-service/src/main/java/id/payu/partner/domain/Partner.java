@@ -1,6 +1,5 @@
 package id.payu.partner.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,48 +7,52 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "partners")
-public class Partner extends PanacheEntityBase {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Partner {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
 
     @NotBlank
-    public String name;
+    private String name;
 
     @NotBlank
-    public String type; // e.g., "MERCHANT", "BANK", "PAYMENT_GATEWAY"
+    private String type;
 
     @NotBlank
     @Email
-    public String email;
+    private String email;
 
-    public String phone;
+    private String phone;
+    
+    private String apiKey;
 
-    public String apiKey;
+    private String clientId;
 
-    public String clientId;
+    private String clientSecret;
 
-    public String clientSecret;
+    private String publicKey;
 
-    public String publicKey;
-
-    public boolean active;
+    private boolean active;
 
     @CreationTimestamp
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    public LocalDateTime updatedAt;
-
-    public Partner() {
-    }
+    private LocalDateTime updatedAt;
 
     public Partner(String name, String type, String email, String phone, String apiKey) {
         this.name = name;

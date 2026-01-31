@@ -1,9 +1,8 @@
 package id.payu.partner.webhook;
 
-import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -22,10 +21,10 @@ import java.time.Instant;
  * @author PayU Platform Engineering
  * @since 1.0.0
  */
-@ApplicationScoped
+@Service
 public class PaymentNotificationService {
 
-    private static final Logger LOG = Logger.getLogger(PaymentNotificationService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PaymentNotificationService.class);
 
     /**
      * Updates the status of a transaction.
@@ -35,7 +34,7 @@ public class PaymentNotificationService {
      * @param timestamp the time of status update
      */
     public void updateTransactionStatus(String transactionId, TransactionStatus status, Instant timestamp) {
-        LOG.infof("Updating transaction status: transactionId=%s, status=%s, timestamp=%s",
+        LOG.info("Updating transaction status: transactionId={}, status={}, timestamp={}",
                 transactionId, status, timestamp);
         // Implementation would update the transaction in the database
         // and potentially publish an event for downstream services
@@ -50,10 +49,10 @@ public class PaymentNotificationService {
      */
     public void creditWallet(String accountNumber, BigDecimal amount, String referenceId) {
         if (accountNumber == null) {
-            LOG.warnf("Cannot credit wallet: accountNumber is null for referenceId=%s", referenceId);
+            LOG.warn("Cannot credit wallet: accountNumber is null for referenceId={}", referenceId);
             return;
         }
-        LOG.infof("Crediting wallet: accountNumber=%s, amount=%s, referenceId=%s",
+        LOG.info("Crediting wallet: accountNumber={}, amount={}, referenceId={}",
                 accountNumber, amount, referenceId);
         // Implementation would call wallet-service API
     }
@@ -67,10 +66,10 @@ public class PaymentNotificationService {
      */
     public void debitWallet(String accountNumber, BigDecimal amount, String referenceId) {
         if (accountNumber == null) {
-            LOG.warnf("Cannot debit wallet: accountNumber is null for referenceId=%s", referenceId);
+            LOG.warn("Cannot debit wallet: accountNumber is null for referenceId={}", referenceId);
             return;
         }
-        LOG.infof("Debiting wallet: accountNumber=%s, amount=%s, referenceId=%s",
+        LOG.info("Debiting wallet: accountNumber={}, amount={}, referenceId={}",
                 accountNumber, amount, referenceId);
         // Implementation would call wallet-service API
     }
@@ -83,10 +82,10 @@ public class PaymentNotificationService {
      */
     public void releaseHold(String accountNumber, String transactionId) {
         if (accountNumber == null) {
-            LOG.warnf("Cannot release hold: accountNumber is null for transactionId=%s", transactionId);
+            LOG.warn("Cannot release hold: accountNumber is null for transactionId={}", transactionId);
             return;
         }
-        LOG.infof("Releasing hold: accountNumber=%s, transactionId=%s", accountNumber, transactionId);
+        LOG.info("Releasing hold: accountNumber={}, transactionId={}", accountNumber, transactionId);
         // Implementation would release the hold via wallet-service API
     }
 
@@ -97,7 +96,7 @@ public class PaymentNotificationService {
      * @param timeoutAt the time when the timeout should occur
      */
     public void schedulePendingTimeout(String transactionId, Instant timeoutAt) {
-        LOG.infof("Scheduling pending timeout: transactionId=%s, timeoutAt=%s", transactionId, timeoutAt);
+        LOG.info("Scheduling pending timeout: transactionId={}, timeoutAt={}", transactionId, timeoutAt);
         // Implementation would schedule a job to handle the timeout
     }
 
@@ -111,7 +110,7 @@ public class PaymentNotificationService {
      */
     public String createRefundTransaction(String originalTransactionId, BigDecimal amount, String reason) {
         String refundId = "REFUND-" + System.currentTimeMillis();
-        LOG.infof("Creating refund transaction: refundId=%s, originalTransactionId=%s, amount=%s, reason=%s",
+        LOG.info("Creating refund transaction: refundId={}, originalTransactionId={}, amount={}, reason={}",
                 refundId, originalTransactionId, amount, reason);
         // Implementation would create the refund record in the database
         return refundId;
@@ -126,10 +125,10 @@ public class PaymentNotificationService {
      */
     public void sendUserNotification(String accountNumber, String title, String message) {
         if (accountNumber == null) {
-            LOG.warnf("Cannot send notification: accountNumber is null for title=%s", title);
+            LOG.warn("Cannot send notification: accountNumber is null for title={}", title);
             return;
         }
-        LOG.infof("Sending user notification: accountNumber=%s, title=%s", accountNumber, title);
+        LOG.info("Sending user notification: accountNumber={}, title={}", accountNumber, title);
         // Implementation would call notification-service API
     }
 
@@ -139,7 +138,7 @@ public class PaymentNotificationService {
      * @param webhookId the webhook identifier
      */
     public void notifySuccess(String webhookId) {
-        LOG.infof("Webhook processed successfully: webhookId=%s", webhookId);
+        LOG.info("Webhook processed successfully: webhookId={}", webhookId);
         // Implementation could update metrics, send alerts, etc.
     }
 
@@ -150,7 +149,7 @@ public class PaymentNotificationService {
      * @param errorMessage the error message
      */
     public void notifyFailure(String webhookId, String errorMessage) {
-        LOG.errorf("Webhook processing failed: webhookId=%s, error=%s", webhookId, errorMessage);
+        LOG.error("Webhook processing failed: webhookId={}, error={}", webhookId, errorMessage);
         // Implementation could send alerts to operations team
     }
 }

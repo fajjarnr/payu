@@ -278,10 +278,18 @@ npm run lint          # ✅ 0 errors, 13 warnings
 | **notification-service** | Missing OpenAPI annotations   | Add @Tag/@Operation/@ApiResponse             | 2h        |
 | **support-service**      | Microprofile OpenAPI          | Migrate to Springdoc                         | 2h        |
 | **backoffice-service**   | No OpenAPI, no BaseController | Add OpenAPI + BaseController + @PreAuthorize | 4h        |
-| **partner-service**      | No OpenAPI, no BaseController | Add OpenAPI + BaseController + @PreAuthorize | 4h        |
+| **partner-service**      | **Spring Boot + OpenAPI**     | ✅ **OpenAPI Implemented**, Tests broken     | 4h        |
 | **promotion-service**    | Microprofile OpenAPI          | Migrate to Springdoc                         | 2h        |
 
 **Estimated Time**: 16 hours total
+
+### 🔴 P4: HIGH - Technical Debt (Test Migration)
+
+> **Status**: Quarkus-to-Spring migration broke tests in migrated services
+
+| Service             | Issue                                    | Required Changes                       | Est. Time |
+| ------------------- | ---------------------------------------- | -------------------------------------- | --------- |
+| **partner-service** | Tests use @QuarkusTest, @InjectMock etc. | Migrate to @SpringBootTest, @MockBean  | 4h        |
 
 ---
 

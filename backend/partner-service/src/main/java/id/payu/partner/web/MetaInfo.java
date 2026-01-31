@@ -2,8 +2,10 @@ package id.payu.partner.web;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -14,6 +16,9 @@ import java.util.UUID;
  */
 @Schema(description = "Response metadata")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class MetaInfo {
 
     @Schema(
@@ -25,19 +30,11 @@ public class MetaInfo {
     @Schema(
         description = "ISO 8601 timestamp of when the response was generated",
         example = "2026-01-28T10:30:00Z",
-        type = SchemaType.STRING,
+        type = "string",
         format = "date-time"
     )
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private Instant timestamp;
-
-    public MetaInfo() {
-    }
-
-    public MetaInfo(String requestId, Instant timestamp) {
-        this.requestId = requestId;
-        this.timestamp = timestamp;
-    }
 
     /**
      * Creates MetaInfo with current timestamp and generated request ID.
@@ -57,22 +54,5 @@ public class MetaInfo {
             requestId,
             Instant.now()
         );
-    }
-
-    // Getters and Setters
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
     }
 }

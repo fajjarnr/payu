@@ -2,22 +2,21 @@ package id.payu.partner.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import org.jboss.logging.Logger;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@ApplicationScoped
+@Service
 public class SnapBiTokenService {
 
-    private static final Logger LOG = Logger.getLogger(SnapBiTokenService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SnapBiTokenService.class);
     
     private static final long EXPIRATION_TIME_MS = 15 * 60 * 1000;
     private static final String TOKEN_SECRET = "payu-snap-bi-secret-key-for-jwt-token-generation-validation-2024-payu-payu";
@@ -26,9 +25,6 @@ public class SnapBiTokenService {
     private static final SecretKey SIGNING_KEY = new SecretKeySpec(SECRET_BYTES, "HmacSHA256");
 
     private final Map<String, TokenInfo> tokenStore = new ConcurrentHashMap<>();
-
-    @Inject
-    SnapBiSignatureService signatureService;
 
     public String generateAccessToken(String clientId, String partnerId, String partnerName) {
         Date now = new Date();
@@ -42,46 +38,46 @@ public class SnapBiTokenService {
         claims.put("tokenId", tokenId);
 
         String token = Jwts.builder()
-                .claims(claims)
-                .subject(clientId)
-                .issuedAt(now)
-                .expiration(expiration)
+                .setClaims(claims)
+                .setSubject(clientId)
+                .setIssuedAt(now)
+                .setExpiration(expiration)
                 .signWith(SIGNING_KEY)
                 .compact();
 
         TokenInfo tokenInfo = new TokenInfo(tokenId, clientId, partnerId, expiration);
         tokenStore.put(tokenId, tokenInfo);
 
-        LOG.infof("Generated access token for partner clientId=%s partnerId=%s tokenId=%s", clientId, partnerId, tokenId);
+        LOG.info("Generated access token for partner clientId={} partnerId={} tokenId={}", clientId, partnerId, tokenId);
 
         return token;
     }
 
     public Claims validateToken(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .verifyWith((SecretKey) SIGNING_KEY)
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(SIGNING_KEY)
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+                    .parseClaimsJws(token)
+                    .getBody();
 
             String tokenId = (String) claims.get("tokenId");
             TokenInfo tokenInfo = tokenStore.get(tokenId);
 
             if (tokenInfo == null) {
-                LOG.warnf("Token not found in store tokenId=%s", tokenId);
+                LOG.warn("Token not found in store tokenId={}", tokenId);
                 return null;
             }
 
             if (tokenInfo.expiration.before(new Date())) {
                 tokenStore.remove(tokenId);
-                LOG.warnf("Token expired tokenId=%s", tokenId);
+                LOG.warn("Token expired tokenId={}", tokenId);
                 return null;
             }
 
             return claims;
         } catch (Exception e) {
-            LOG.warnf("Token validation failed error=%s", e.getMessage());
+            LOG.warn("Token validation failed error={}", e.getMessage());
             return null;
         }
     }
@@ -101,7 +97,7 @@ public class SnapBiTokenService {
         if (claims != null) {
             String tokenId = (String) claims.get("tokenId");
             tokenStore.remove(tokenId);
-            LOG.infof("Token revoked tokenId=%s", tokenId);
+            LOG.info("Token revoked tokenId={}", tokenId);
         }
     }
 

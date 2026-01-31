@@ -321,7 +321,36 @@ These techniques are part of systematic debugging and available in this director
 **Phase 2: Verification**
 Run `mvn clean compile -pl <module-name> -am`. If it fails, check if the parent POM is actually being used by running `mvn help:effective-pom`.
 
----
+### 🦆 Quarkus to Spring Boot Migration (PayU Context)
+
+**Symptom:** Compilation errors when migrating legacy Quarkus services to Spring Boot.
+
+**Common Patterns & Fixes:**
+
+1.  **Panache vs JPA (Public Fields):**
+    *   **Quarkus (Panache):** Uses public fields (`entity.field`).
+    *   **Spring Data JPA:** Uses private fields with Getters/Setters.
+    *   **Fix:** Add Lombok `@Data` to entity, and **refactor all usage** from `entity.name = "X"` to `entity.setName("X")`.
+    *   *Note:* Falsely assuming Lombok handles public field access is a common trap.
+
+2.  **Rest Controller Return Types:**
+    *   **JAX-RS:** Returns `Response`.
+    *   **Spring MVC:** Returns `ResponseEntity<T>`.
+    *   **Mixed Returns:** If controller returns both `DTO` (success) and `ApiResponse` (error), you **CANNOT** use `ResponseEntity<ApiResponse<DTO>>`.
+    *   **Correct Pattern:** Use `ResponseEntity<?>` as a wildcard or unify all responses under `ApiResponse<T>`.
+
+3.  **Reactive Libraries (Mutiny vs Standard):**
+    *   **Symptom:** "package io.smallrye.mutiny does not exist".
+    *   **Fix:** Remove Mutiny. Replace `Uni<T>` with `T` (blocking) or `Mono<T>` (Project Reactor).
+    *   *Preferred:* For core banking, standard blocking I/O (Virtual Threads in Java 21) is preferred over reactive complexity unless required.
+
+4.  **JWT/JJWT Versioning:**
+    *   **Symptom:** `Jwts.parser().parseClaimsJws(...)` deprecated or missing.
+    *   **Fix:** JJWT 0.11+ uses `Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token)`.
+
+5.  **Test Migration (Hidden Debt):**
+    *   **Symptom:** Code compiles but tests fail with "Unknown annotation".
+    *   **Fix:** `@QuarkusTest` -> `@SpringBootTest`, `@InjectMock` -> `@MockBean`, `@Test` (JUnit 4) -> `@Test` (JUnit 5).
 
 ## Real-World Impact
 

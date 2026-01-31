@@ -4,9 +4,10 @@ import id.payu.partner.domain.Partner;
 import id.payu.partner.domain.PartnerCertificate;
 import id.payu.partner.repository.PartnerCertificateRepository;
 import id.payu.partner.repository.PartnerRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -14,29 +15,22 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
-@ApplicationScoped
+@Service
+@RequiredArgsConstructor
 public class CertificateService {
 
-    @Inject
-    PartnerCertificateRepository certificateRepository;
-
-    @Inject
-    PartnerRepository partnerRepository;
-
-    @Inject
-    SnapBiSignatureService signatureService;
+    private final PartnerCertificateRepository certificateRepository;
+    private final PartnerRepository partnerRepository;
 
     @Transactional
     public PartnerCertificate addCertificate(Long partnerId, String certificatePem, String privateKeyPem) {
-        Partner partner = partnerRepository.findById(partnerId);
+        Partner partner = partnerRepository.findById(partnerId).orElse(null);
         if (partner == null) {
             throw new IllegalArgumentException("Partner not found with id: " + partnerId);
         }
@@ -46,20 +40,20 @@ public class CertificateService {
             String publicKeyFingerprint = generatePublicKeyFingerprint(cert);
 
             PartnerCertificate partnerCert = new PartnerCertificate();
-            partnerCert.partner = partner;
-            partnerCert.certificatePem = certificatePem;
-            partnerCert.privateKeyPem = privateKeyPem;
-            partnerCert.publicKeyFingerprint = publicKeyFingerprint;
-            partnerCert.certificateType = cert.getType();
-            partnerCert.keyAlgorithm = cert.getPublicKey().getAlgorithm();
-            partnerCert.keySize = getKeySize(cert.getPublicKey());
-            partnerCert.validFrom = LocalDateTime.ofInstant(cert.getNotBefore().toInstant(), ZoneId.systemDefault());
-            partnerCert.validTo = LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault());
-            partnerCert.issuer = cert.getIssuerX500Principal().getName();
-            partnerCert.subject = cert.getSubjectX500Principal().getName();
-            partnerCert.active = true;
+            partnerCert.setPartner(partner);
+            partnerCert.setCertificatePem(certificatePem);
+            partnerCert.setPrivateKeyPem(privateKeyPem);
+            partnerCert.setPublicKeyFingerprint(publicKeyFingerprint);
+            partnerCert.setCertificateType(cert.getType());
+            partnerCert.setKeyAlgorithm(cert.getPublicKey().getAlgorithm());
+            partnerCert.setKeySize(getKeySize(cert.getPublicKey()));
+            partnerCert.setValidFrom(LocalDateTime.ofInstant(cert.getNotBefore().toInstant(), ZoneId.systemDefault()));
+            partnerCert.setValidTo(LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));
+            partnerCert.setIssuer(cert.getIssuerX500Principal().getName());
+            partnerCert.setSubject(cert.getSubjectX500Principal().getName());
+            partnerCert.setActive(true);
 
-            certificateRepository.persist(partnerCert);
+            certificateRepository.save(partnerCert);
             return partnerCert;
         } catch (Exception e) {
             throw new RuntimeException("Failed to add certificate", e);
@@ -68,7 +62,7 @@ public class CertificateService {
 
     @Transactional
     public PartnerCertificate generateKeyPairAndStore(Long partnerId, int validityDays) throws Exception {
-        Partner partner = partnerRepository.findById(partnerId);
+        Partner partner = partnerRepository.findById(partnerId).orElse(null);
         if (partner == null) {
             throw new IllegalArgumentException("Partner not found with id: " + partnerId);
         }
@@ -82,18 +76,18 @@ public class CertificateService {
         String publicKeyFingerprint = generatePublicKeyFingerprint(keyPair.getPublic());
 
         PartnerCertificate partnerCert = new PartnerCertificate();
-        partnerCert.partner = partner;
-        partnerCert.certificatePem = publicKeyPem;
-        partnerCert.privateKeyPem = privateKeyPem;
-        partnerCert.publicKeyFingerprint = publicKeyFingerprint;
-        partnerCert.certificateType = "RSA";
-        partnerCert.keyAlgorithm = "RSA";
-        partnerCert.keySize = 2048;
-        partnerCert.validFrom = LocalDateTime.now();
-        partnerCert.validTo = LocalDateTime.now().plusDays(validityDays);
-        partnerCert.active = true;
+        partnerCert.setPartner(partner);
+        partnerCert.setCertificatePem(publicKeyPem);
+        partnerCert.setPrivateKeyPem(privateKeyPem);
+        partnerCert.setPublicKeyFingerprint(publicKeyFingerprint);
+        partnerCert.setCertificateType("RSA");
+        partnerCert.setKeyAlgorithm("RSA");
+        partnerCert.setKeySize(2048);
+        partnerCert.setValidFrom(LocalDateTime.now());
+        partnerCert.setValidTo(LocalDateTime.now().plusDays(validityDays));
+        partnerCert.setActive(true);
 
-        certificateRepository.persist(partnerCert);
+        certificateRepository.save(partnerCert);
         return partnerCert;
     }
 
@@ -119,17 +113,22 @@ public class CertificateService {
 
     @Transactional
     public boolean deactivateCertificate(Long certificateId) {
-        PartnerCertificate cert = certificateRepository.findById(certificateId);
+        PartnerCertificate cert = certificateRepository.findById(certificateId).orElse(null);
         if (cert == null) {
             return false;
         }
-        cert.active = false;
+        cert.setActive(false);
+        certificateRepository.save(cert);
         return true;
     }
 
     @Transactional
     public boolean deleteCertificate(Long certificateId) {
-        return certificateRepository.deleteById(certificateId);
+        if (!certificateRepository.existsById(certificateId)) {
+            return false;
+        }
+        certificateRepository.deleteById(certificateId);
+        return true;
     }
 
     @Transactional
@@ -138,7 +137,7 @@ public class CertificateService {
     }
 
     public boolean validateCertificate(Long certificateId) {
-        PartnerCertificate cert = certificateRepository.findById(certificateId);
+        PartnerCertificate cert = certificateRepository.findById(certificateId).orElse(null);
         if (cert == null) {
             return false;
         }
@@ -147,12 +146,12 @@ public class CertificateService {
 
     public boolean validateCertificateWithTrust(Long certificateId, String trustedCertPem) {
         try {
-            PartnerCertificate cert = certificateRepository.findById(certificateId);
+            PartnerCertificate cert = certificateRepository.findById(certificateId).orElse(null);
             if (cert == null || !cert.isValid()) {
                 return false;
             }
 
-            X509Certificate partnerCert = parseCertificate(cert.certificatePem);
+            X509Certificate partnerCert = parseCertificate(cert.getCertificatePem());
             X509Certificate trustedCert = parseCertificate(trustedCertPem);
 
             try {
@@ -168,12 +167,12 @@ public class CertificateService {
 
     public boolean verifySignatureWithCertificate(Long certificateId, String data, String signatureB64) {
         try {
-            PartnerCertificate cert = certificateRepository.findById(certificateId);
+            PartnerCertificate cert = certificateRepository.findById(certificateId).orElse(null);
             if (cert == null || !cert.isValid()) {
                 return false;
             }
 
-            X509Certificate x509Cert = parseCertificate(cert.certificatePem);
+            X509Certificate x509Cert = parseCertificate(cert.getCertificatePem());
             PublicKey publicKey = x509Cert.getPublicKey();
 
             Signature sig = Signature.getInstance("SHA256withRSA");
@@ -218,17 +217,7 @@ public class CertificateService {
         }
     }
 
-    private String certificateToPem(X509Certificate cert) {
-        try {
-            String base64 = Base64.getEncoder().encodeToString(cert.getEncoded());
-            return "-----BEGIN CERTIFICATE-----\n" +
-                    base64.replaceAll("(.{64})", "$1\n") +
-                    "\n-----END CERTIFICATE-----";
-        } catch (java.security.cert.CertificateEncodingException e) {
-            throw new RuntimeException("Failed to encode certificate", e);
-        }
-    }
-
+    // Unchanged private methods can remain
     private String publicKeyToPem(PublicKey publicKey) {
         String base64 = Base64.getEncoder().encodeToString(publicKey.getEncoded());
         return "-----BEGIN PUBLIC KEY-----\n" +

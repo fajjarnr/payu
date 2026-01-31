@@ -1,18 +1,15 @@
 package id.payu.partner.repository;
 
 import id.payu.partner.domain.Partner;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import jakarta.enterprise.context.ApplicationScoped;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
-@ApplicationScoped
-public class PartnerRepository implements PanacheRepository<Partner> {
+@Repository
+public interface PartnerRepository extends JpaRepository<Partner, Long> {
     
-    public Optional<Partner> findByEmail(String email) {
-        return find("email", email).firstResultOptional();
-    }
+    Optional<Partner> findByEmail(String email);
 
-    public Optional<Partner> findByName(String name) {
-        return find("name", name).firstResultOptional();
-    }
+    Optional<Partner> findByClientId(String clientId);
 }

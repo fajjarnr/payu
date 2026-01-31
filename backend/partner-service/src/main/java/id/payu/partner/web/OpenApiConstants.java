@@ -1,7 +1,7 @@
 package id.payu.partner.web;
 
-import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType;
-import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 /**
  * OpenAPI constants and security scheme definitions for Partner Service.

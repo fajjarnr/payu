@@ -7,13 +7,15 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.TimeZone;
-import jakarta.enterprise.context.ApplicationScoped;
+import org.springframework.stereotype.Service;
 
-@ApplicationScoped
+@Service
 public class SnapBiSignatureService {
 
     private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
 
+    // Standard Java security/crypto implementation - already Spring Service compatible
+    
     public String generateSignature(String clientSecret, String httpMethod, String endpoint, String accessToken, String requestBody, String timestamp) {
         try {
             String stringToSign = httpMethod + ":" + endpoint + ":" + accessToken + ":" + requestBody + ":" + timestamp;

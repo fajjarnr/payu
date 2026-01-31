@@ -1,7 +1,7 @@
 package id.payu.partner.web;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 

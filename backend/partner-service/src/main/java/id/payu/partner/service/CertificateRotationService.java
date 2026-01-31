@@ -2,45 +2,44 @@ package id.payu.partner.service;
 
 import id.payu.partner.domain.PartnerCertificate;
 import id.payu.partner.repository.PartnerCertificateRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import java.security.*;
-import java.util.Base64;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@ApplicationScoped
+@Service
 public class CertificateRotationService {
 
-    private static final Logger LOG = Logger.getLogger(CertificateRotationService.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(CertificateRotationService.class);
     private static final int DEFAULT_ROTATION_DAYS = 90;
 
-    @Inject
+    @Autowired
     CertificateService certificateService;
 
-    @Inject
+    @Autowired
     PartnerCertificateRepository certificateRepository;
 
     @Transactional
     public void rotateCertificate(Long certificateId, int newValidityDays) {
-        PartnerCertificate oldCert = certificateRepository.findById(certificateId);
+        PartnerCertificate oldCert = certificateRepository.findById(certificateId).orElse(null);
         if (oldCert == null) {
             throw new IllegalArgumentException("Certificate not found with id: " + certificateId);
         }
 
-        Long partnerId = oldCert.partner.id;
+        Long partnerId = oldCert.getPartner().getId();
 
         try {
             PartnerCertificate newCert = certificateService.generateKeyPairAndStore(partnerId, newValidityDays);
 
-            oldCert.active = false;
+            oldCert.setActive(false);
+            certificateRepository.save(oldCert);
 
-            LOG.log(Level.INFO, "Successfully rotated certificate for partner {0}. Old cert ID: {1}, New cert ID: {2}",
-                    new Object[]{partnerId, certificateId, newCert.id});
+            LOG.info("Successfully rotated certificate for partner {}. Old cert ID: {}, New cert ID: {}",
+                    partnerId, certificateId, newCert.getId());
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Failed to rotate certificate for partner " + partnerId, e);
+            LOG.error("Failed to rotate certificate for partner " + partnerId, e);
             throw new RuntimeException("Certificate rotation failed", e);
         }
     }
@@ -57,14 +56,14 @@ public class CertificateRotationService {
         int rotatedCount = 0;
         for (PartnerCertificate cert : expiringCerts) {
             try {
-                rotateCertificate(cert.id);
+                rotateCertificate(cert.getId());
                 rotatedCount++;
             } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Failed to rotate expiring certificate ID: " + cert.id, e);
+                LOG.error("Failed to rotate expiring certificate ID: " + cert.getId(), e);
             }
         }
 
-        LOG.log(Level.INFO, "Rotated {0} out of {1} expiring certificates", new Object[]{rotatedCount, expiringCerts.size()});
+        LOG.info("Rotated {} out of {} expiring certificates", rotatedCount, expiringCerts.size());
         return rotatedCount;
     }
 
@@ -75,14 +74,14 @@ public class CertificateRotationService {
         int rotatedCount = 0;
         for (PartnerCertificate cert : expiredCerts) {
             try {
-                rotateCertificate(cert.id);
+                rotateCertificate(cert.getId());
                 rotatedCount++;
             } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Failed to rotate expired certificate ID: " + cert.id, e);
+                LOG.error("Failed to rotate expired certificate ID: " + cert.getId(), e);
             }
         }
 
-        LOG.log(Level.INFO, "Rotated {0} out of {1} expired certificates", new Object[]{rotatedCount, expiredCerts.size()});
+        LOG.info("Rotated {} out of {} expired certificates", rotatedCount, expiredCerts.size());
         return rotatedCount;
     }
 
@@ -92,7 +91,7 @@ public class CertificateRotationService {
 
         PartnerCertificate activeCert = null;
         for (PartnerCertificate cert : certs) {
-            if (cert.active) {
+            if (cert.isActive()) {
                 activeCert = cert;
                 break;
             }
@@ -101,18 +100,18 @@ public class CertificateRotationService {
         if (activeCert == null) {
             try {
                 certificateService.generateKeyPairAndStore(partnerId, newValidityDays);
-                LOG.log(Level.INFO, "Generated new certificate for partner {0} (no active cert found)", partnerId);
+                LOG.info("Generated new certificate for partner {} (no active cert found)", partnerId);
             } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Failed to generate certificate for partner " + partnerId, e);
+                LOG.error("Failed to generate certificate for partner " + partnerId, e);
                 throw new RuntimeException("Certificate generation failed", e);
             }
         } else {
-            rotateCertificate(activeCert.id, newValidityDays);
+            rotateCertificate(activeCert.getId(), newValidityDays);
         }
     }
 
     public boolean shouldRotateCertificate(PartnerCertificate cert, int rotationThresholdDays) {
-        if (!cert.active) {
+        if (!cert.isActive()) {
             return false;
         }
 
@@ -121,6 +120,6 @@ public class CertificateRotationService {
         }
 
         java.time.LocalDateTime threshold = java.time.LocalDateTime.now().plusDays(rotationThresholdDays);
-        return cert.validTo.isBefore(threshold);
+        return cert.getValidTo().isBefore(threshold);
     }
 }
