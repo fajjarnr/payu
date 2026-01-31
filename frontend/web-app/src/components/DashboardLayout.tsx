@@ -29,7 +29,21 @@ import ThemeToggle from './ThemeToggle';
 import { useTranslations, useLocale } from 'next-intl';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { PersonalizedGreeting } from './personalization';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 interface SidebarItemProps {
   href: string;
@@ -94,20 +108,20 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
     <div className="h-screen bg-background flex overflow-hidden font-inter text-foreground">
       {/* Desktop Sidebar - Increased spacing and font weight */}
       <aside
-        className="hidden lg:flex flex-col w-72 border-r border-border bg-background p-8 h-full overflow-y-auto"
+        className="hidden lg:flex flex-col w-80 border-r border-border bg-background p-10 h-full overflow-y-auto"
         aria-label="Sidebar Navigasi Desktop"
       >
-        <div className="flex items-center gap-4 mb-14 px-2 group cursor-pointer">
-          <Link href={l('/')} className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-emerald-500/20 rotate-3 transition-transform group-hover:rotate-0">
+        <div className="flex items-center gap-5 mb-16 px-2 group cursor-pointer">
+          <Link href={l('/')} className="flex items-center gap-5">
+            <div className="h-14 w-14 bg-emerald-500 rounded-[1.25rem] flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-emerald-500/20 rotate-3 transition-transform group-hover:rotate-0">
               U
             </div>
-            <span className="text-3xl font-black text-foreground uppercase tracking-tighter">PayU</span>
+            <span className="text-4xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
           </Link>
         </div>
 
-        <div className="space-y-4 mb-12">
-          <p className="text-xs sm:text-sm font-black text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('main')}</p>
+        <div className="space-y-5 mb-14">
+          <p className="text-xs sm:text-sm font-bold text-emerald-500/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('main')}</p>
           {mainMenu.map((item) => (
             <SidebarItem
               key={item.href}
@@ -117,8 +131,8 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
           ))}
         </div>
 
-        <div className="space-y-4 mt-auto">
-          <p className="text-xs sm:text-sm font-black text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('others')}</p>
+        <div className="space-y-5 mt-auto">
+          <p className="text-xs sm:text-sm font-bold text-emerald-500/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('others')}</p>
           {otherMenu.map((item) => (
             <SidebarItem
               key={item.href}
@@ -129,137 +143,118 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
         </div>
       </aside>
 
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-background/70 z-50 lg:hidden backdrop-blur-xl animate-in fade-in duration-500"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Mobile Sidebar */}
-      <aside className={clsx(
-        "fixed inset-y-0 left-0 w-80 bg-background z-50 transform transition-transform duration-500 lg:hidden p-8 border-r border-border shadow-[20px_0_50px_rgba(0,0,0,0.2)]",
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )} aria-label="Sidebar Navigasi Mobile">
-        <div className="flex justify-between items-center mb-14 px-2">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-emerald-500/20">
-              U
-            </div>
-            <span className="text-3xl font-black text-foreground uppercase tracking-tighter">PayU</span>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setIsSidebarOpen(false)} 
-            className="w-12 h-12 text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-2xl" 
-            aria-label="Tutup menu navigasi"
-          >
-            <X className="h-8 w-8" aria-hidden="true" />
-          </Button>
-        </div>
-
-        <nav className="space-y-3 overflow-y-auto max-h-[calc(100vh-180px)] scrollbar-hide">
-          <p className="text-xs sm:text-sm font-black text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('main')}</p>
-          {mainMenu.map((item) => (
-            <SidebarItem
-              key={item.href}
-              {...item}
-              active={pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'))}
-            />
-          ))}
-
-          <div className="h-12" />
-
-          <p className="text-xs sm:text-sm font-black text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('others')}</p>
-          {otherMenu.map((item) => (
-            <SidebarItem
-              key={item.href}
-              {...item}
-              active={pathname.includes(item.href)}
-            />
-          ))}
-        </nav>
-      </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-24 border-b border-border bg-background/80 backdrop-blur-2xl sticky top-0 z-30 shrink-0">
-          <div className="w-full px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSidebarOpen(true)}
-                className="lg:hidden w-12 h-12 -ml-2 text-foreground/60 hover:text-foreground hover:bg-foreground/5 rounded-2xl"
-                aria-label="Buka menu navigasi"
-                aria-expanded={isSidebarOpen}
-              >
-                <Menu className="h-7 w-7" aria-hidden="true" />
-              </Button>
+        <header className="h-28 border-b border-border bg-background/80 backdrop-blur-3xl sticky top-0 z-30 shrink-0">
+          <div className="w-full px-6 sm:px-10 lg:px-12 h-full flex items-center justify-between">
+            <div className="flex items-center gap-10">
+              <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="lg:hidden w-14 h-14 -ml-2 text-foreground/60 hover:text-foreground hover:bg-foreground/5 rounded-2xl"
+                    aria-label="Buka menu navigasi"
+                  >
+                    <Menu className="h-8 w-8" aria-hidden="true" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80 p-0 border-r border-border bg-background shadow-3xl">
+                  <SheetHeader className="p-8 pb-4">
+                    <SheetTitle className="sr-only">Navigasi Utama</SheetTitle>
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                        U
+                      </div>
+                      <span className="text-2xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
+                    </div>
+                  </SheetHeader>
+                  <nav className="px-4 py-4 space-y-2 overflow-y-auto h-[calc(100vh-120px)] scrollbar-hide">
+                    <p className="text-xs font-bold text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('main')}</p>
+                    {mainMenu.map((item) => (
+                      <SidebarItem
+                        key={item.href}
+                        {...item}
+                        active={pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'))}
+                      />
+                    ))}
+
+                    <div className="h-8" />
+
+                    <p className="text-xs font-bold text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('others')}</p>
+                    {otherMenu.map((item) => (
+                      <SidebarItem
+                        key={item.href}
+                        {...item}
+                        active={pathname.includes(item.href)}
+                      />
+                    ))}
+                  </nav>
+                </SheetContent>
+              </Sheet>
               <div className="hidden sm:flex flex-col justify-center">
-                <PersonalizedGreeting showTimeBased={true} showSegment={true} className="leading-tight" />
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1.5 ml-0.5">
+                <PersonalizedGreeting showTimeBased={true} showSegment={true} className="leading-tight text-lg font-bold" />
+                <p className="text-xs sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-2 ml-0.5 opacity-60">
                   AI Financial Forecaster Active
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-8">
                <ThemeToggle />
                <LanguageSwitcher />
 
-               <div className="hidden xl:flex items-center bg-foreground/[0.03] rounded-2xl px-6 py-3 w-80 gap-4 border border-border focus-within:border-emerald-500/40 focus-within:bg-foreground/[0.06] transition-all shadow-inner">
-                 <Search className="h-5 w-5 text-foreground/30" />
-                 <input
-                   type="text"
-                   placeholder="Universal search..."
-                   className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full placeholder:text-foreground/20 text-foreground tracking-wide"
-                 />
-               </div>
+                <div className="hidden xl:flex items-center bg-card rounded-[1.25rem] px-6 w-96 gap-4 border border-emerald-500/10 focus-within:border-emerald-500/40 focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all shadow-sm focus-within:shadow-md group">
+                  <Search className="h-5 w-5 text-emerald-500/40 group-focus-within:text-emerald-500 transition-colors" />
+                  <Input
+                    type="text"
+                    placeholder="Pencarian cerdas..."
+                    className="bg-transparent border-none focus-visible:ring-0 text-sm font-bold uppercase tracking-widest w-full placeholder:text-muted-foreground/40 text-foreground h-14 shadow-none"
+                  />
+                </div>
 
                <Button 
                  variant="ghost"
                  size="icon"
-                 className="w-12 h-12 text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-full relative shadow-sm border border-border" 
+                 className="w-14 h-14 bg-card text-foreground/60 hover:text-emerald-500 hover:bg-emerald-500/5 rounded-2xl relative shadow-sm border border-emerald-500/10 hover:border-emerald-500/30 transition-all" 
                  aria-label="Notifikasi"
                >
-                 <div className="absolute top-4 right-4 h-2.5 w-2.5 bg-emerald-500 rounded-full border-2 border-background" aria-label="Notifikasi baru" />
+                 <div className="absolute top-5 right-5 h-2.5 w-2.5 bg-emerald-500 rounded-full border-2 border-card shadow-sm" aria-label="Notifikasi baru" />
                  <Bell className="h-6 w-6" aria-hidden="true" />
                </Button>
 
-              <div className="relative group">
-                <Button 
-                  asChild
-                  variant="ghost"
-                  className="p-0 h-auto rounded-full dropdown-trigger" 
-                  aria-label="Menu profil pengguna" 
-                  aria-haspopup="true" 
-                  aria-expanded="false"
-                >
-                  <Avatar className="h-12 w-12 border border-border shadow-[0_4px_20px_rgba(0,0,0,0.1)] group-hover:ring-2 ring-emerald-500 transition-all">
-                    <AvatarFallback className="bg-foreground/[0.05]">
-                      <User className="h-6 w-6 text-emerald-500" aria-hidden="true" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-
-                <div className="absolute right-0 mt-5 w-72 bg-card border border-border rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.2)] py-4 hidden group-hover:block z-50 glass animate-in fade-in slide-in-from-top-4 duration-300">
-                  <div className="px-6 py-4 border-b border-border/10 mb-3">
-                    <p className="text-xs font-black text-emerald-500/50 uppercase tracking-[0.25em] mb-2">Authenticated SVR</p>
-                    <p className="text-lg font-black truncate text-foreground uppercase tracking-tight">{username}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    onClick={onLogout}
-                    className="w-full text-left px-6 py-4 text-xs text-red-400 hover:bg-red-500/10 font-black uppercase tracking-[0.25em] flex items-center justify-between transition-colors h-auto"
-                  >
-                    <span>{t('logout')}</span>
-                    <LogOut className="h-5 w-5 opacity-70" />
-                  </Button>
-                </div>
-              </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost"
+                      className="p-0 h-auto rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-emerald-500 shadow-lg border border-emerald-500/10" 
+                      aria-label="Menu profil pengguna" 
+                    >
+                      <Avatar className="h-14 w-14 border-2 border-card shadow-md">
+                        <AvatarFallback className="bg-emerald-500/5">
+                          <User className="h-7 w-7 text-emerald-500" aria-hidden="true" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-80 bg-card border border-border rounded-2xl shadow-[0_40px_80px_rgba(0,0,0,0.25)] py-6 glass" align="end" sideOffset={16}>
+                    <div className="px-8 py-5 border-b border-border/10 mb-4">
+                      <p className="text-xs font-bold text-emerald-500/50 uppercase tracking-[0.3em] mb-2">Authenticated User</p>
+                      <p className="text-xl font-bold truncate text-foreground uppercase tracking-tight">{username}</p>
+                    </div>
+                    <DropdownMenuItem className="p-0">
+                      <Button
+                        variant="ghost"
+                        onClick={onLogout}
+                        className="w-full text-left px-8 py-5 text-xs sm:text-sm text-red-500 hover:bg-red-500/10 hover:text-red-500 font-bold uppercase tracking-[0.3em] flex items-center justify-between transition-colors h-auto border-none focus-visible:ring-0"
+                      >
+                        <span>{t('logout')}</span>
+                        <LogOut className="h-6 w-6 opacity-70" />
+                      </Button>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </div>
           </div>
         </header>

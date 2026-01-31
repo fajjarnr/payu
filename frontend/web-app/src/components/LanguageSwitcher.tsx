@@ -55,10 +55,10 @@ export default function LanguageSwitcher() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          'flex items-center gap-2 px-3 py-2 rounded-lg transition-colors',
-          'text-xs font-bold tracking-widest border border-border',
-          'hover:bg-muted hover:border-primary/30',
-          'focus:outline-none focus:ring-2 focus:ring-primary/20'
+          'flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all',
+          'text-xs font-bold tracking-widest border border-emerald-500/10 bg-card shadow-md',
+          'hover:bg-emerald-500/5 hover:border-emerald-500/30 text-foreground',
+          'focus:outline-none focus:ring-4 focus:ring-emerald-500/10'
         )}
         aria-label={t('changeLanguage')}
       >

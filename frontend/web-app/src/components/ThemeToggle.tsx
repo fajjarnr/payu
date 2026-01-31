@@ -24,8 +24,8 @@ export default function ThemeToggle() {
     <button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
       className={clsx(
-        'w-12 h-12 flex items-center justify-center rounded-full transition-all cursor-pointer shadow-sm border border-border',
-        'hover:bg-white/[0.05] active:scale-95',
+        'w-12 h-12 flex items-center justify-center rounded-full transition-all cursor-pointer shadow-md border border-emerald-500/10 bg-card',
+        'hover:bg-emerald-500/5 hover:border-emerald-500/30 active:scale-95 transition-all',
         theme === 'dark' ? 'text-amber-400' : 'text-emerald-600'
       )}
       aria-label="Toggle theme"

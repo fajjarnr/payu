@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **UI Contrast & Visibility**:
+  - Enhanced visibility for dashboard header elements (Search bar, Notification button, and User menu) to prevent blending with backgrounds.
+  - Implemented `bg-card` and `shadow-md` for all interactive header components.
+- **Typography Standardization**:
+  - Aligned all application font sizes with standard Tailwind CSS utility scales (`text-xs` through `text-7xl`).
+  - Purged all arbitrary pixel-based font sizes (`text-[8px]`, `text-[10px]`, etc.) to ensure cross-page consistency.
+  - Standardized font weights to `font-bold` (700) for improved readability, replacing overly heavy `font-black` (900).
+  - Restored default Tailwind line-height logic by removing custom overrides in `globals.css`.
+
 ### Added
+- **UI Component Standardization (Shadcn UI)**:
+  - Conducted comprehensive audit and refactoring of `src/components` to replace custom UI with Shadcn primitives.
+  - **Analytics Page**: Migrated manual SVG charts to Shadcn `Chart` (Recharts) with premium emerald styling.
+  - **Promo Popup**: Refactored to use Shadcn `Dialog` and `Button`, improving accessibility and consistency.
+  - **Feedback Widget**: Refactored to use Shadcn `Dialog`, `Button`, `Input`, `Textarea`, and `Checkbox`.
+  - **Dashboard Layout**: Standardized navigation using Shadcn `Sheet` (mobile), `DropdownMenu` (profile), and `Input` (search).
+  - **Emergency Alert**: Refactored to use Shadcn `Alert` component with semantic variants (Info, Warning, Destructive).
+  - **VIP Badge**: Refactored to use Shadcn `Badge` with premium gradient styling.
+  - **Data Visualization**: Refactored `StatsCharts` and `InvestmentPerformance` to use Shadcn `Chart` and `Card`.
+  - **Marketing Components**: Refactored `BannerCarousel` to use Shadcn `Carousel`.
+  - **Transaction List**: Refactored `TransferActivity` to use Shadcn `Table` and TanStack Table.
+  - Standardized form elements across the application using `Input`, `Label`, `Textarea`, and `Checkbox`.
 - **Build System Standardization**:
   - Unified parent POM `id.payu:payu-backend-parent` across 12 services
   - Centralized Lombok configuration with `maven-compiler-plugin`
