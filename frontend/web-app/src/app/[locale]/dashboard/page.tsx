@@ -34,6 +34,10 @@ const SpendingInsights = dynamic(() => import('@/components/dashboard').then(mod
 const BudgetTracking = dynamic(() => import('@/components/dashboard').then(mod => mod.BudgetTracking), {
   loading: () => <Skeleton className="h-[150px] w-full rounded-xl" />
 });
+const InvestmentPerformance = dynamic(() => import('@/components/dashboard').then(mod => mod.InvestmentPerformance), {
+  loading: () => <Skeleton className="h-[250px] w-full rounded-xl" />,
+  ssr: false
+});
 const SegmentedOffers = dynamic(() => import('@/components/personalization').then(mod => mod.SegmentedOffers), {
   loading: () => <Skeleton className="h-[200px] w-full rounded-xl" />
 });
@@ -84,21 +88,12 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
       </StaggerItem>
 
       {/* High Priority Actions & Health - 8/4 Split */}
-      <StaggerItem className="md:col-span-6 lg:col-span-8">
+      <StaggerItem className="md:col-span-12 lg:col-span-8">
        <QuickActions maxActions={6} className="h-full" />
       </StaggerItem>
 
-      <StaggerItem className="md:col-span-6 lg:col-span-4">
+      <StaggerItem className="md:col-span-12 lg:col-span-4">
        <FinancialHealthScore score={78} previousScore={72} className="h-full" />
-      </StaggerItem>
-
-      {/* Insights & Charts - 4/8 Split */}
-      <StaggerItem className="md:col-span-6 lg:col-span-4">
-       <BudgetTracking className="h-full" />
-      </StaggerItem>
-
-      <StaggerItem className="md:col-span-12 lg:col-span-8">
-       <StatsCharts className="h-full" />
       </StaggerItem>
 
       {/* Activity & Insights - 8/4 Split */}
@@ -106,12 +101,25 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
        <TransferActivity className="h-full" />
       </StaggerItem>
 
-      <StaggerItem className="md:col-span-6 lg:col-span-4">
+      <StaggerItem className="md:col-span-12 lg:col-span-4">
        <SpendingInsights className="h-full" />
       </StaggerItem>
 
-      {/* Personalized Offers */}
-      <StaggerItem className="md:col-span-12 lg:col-span-12">
+      {/* Charts & Investment - 8/4 Split */}
+      <StaggerItem className="md:col-span-12 lg:col-span-8">
+       <StatsCharts className="h-full" />
+      </StaggerItem>
+
+      <StaggerItem className="md:col-span-12 lg:col-span-4">
+       <InvestmentPerformance className="h-full" />
+      </StaggerItem>
+
+      {/* Budget & Offers - 4/8 Split */}
+      <StaggerItem className="md:col-span-12 lg:col-span-4">
+       <BudgetTracking className="h-full" />
+      </StaggerItem>
+
+      <StaggerItem className="md:col-span-12 lg:col-span-8">
        <SegmentedOffers maxOffers={3} />
       </StaggerItem>
 

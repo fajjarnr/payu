@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Gift, Percent, Coins, Zap, Ticket, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Progress } from '@/components/ui/progress';
+import {
+Gift, Percent, Coins, Zap, Ticket, ChevronRight } from 'lucide-react';
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
 import { useAuthStore } from '@/stores';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -161,22 +163,14 @@ function OfferCard({ offer, index }: OfferCardProps) {
         )}
 
         <div className="mt-3 flex items-center gap-1.5">
-          <div className={clsx(
-            'h-1.5 flex-1 rounded-full bg-muted overflow-hidden'
-          )}>
-            <div
-              className={clsx(
-                'h-full rounded-full bg-gradient-to-r',
-                gradientStyle
-              )}
-              style={{
-                width: `${Math.max(0, Math.min(100, (
-                  (new Date(offer.validUntil).getTime() - new Date().getTime()) /
-                  (new Date(offer.validUntil).getTime() - new Date(offer.validFrom).getTime())
-                ) * 100))}%`
-              }}
-            />
-          </div>
+          <Progress 
+            value={Math.max(0, Math.min(100, (
+              (new Date(offer.validUntil).getTime() - new Date().getTime()) /
+              (new Date(offer.validUntil).getTime() - new Date(offer.validFrom).getTime())
+            ) * 100))}
+            className="h-1.5 flex-1"
+            indicatorClassName={clsx('bg-gradient-to-r', gradientStyle)}
+          />
           <span className={clsx(
             'text-[10px] font-bold',
             isValid ? 'text-primary' : 'text-destructive'

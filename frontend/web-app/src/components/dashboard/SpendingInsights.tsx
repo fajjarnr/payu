@@ -8,6 +8,13 @@ import clsx from 'clsx';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from '@/components/ui/accordion';
+import { Progress } from '@/components/ui/progress';
 
 interface SpendingCategory {
   id: string;
@@ -95,15 +102,12 @@ export default function SpendingInsights({
   className = '',
 }: SpendingInsightsProps) {
   const t = useTranslations('dashboard');
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'category' | 'monthly'>('category');
 
   const totalSpending = data.reduce((sum, cat) => sum + cat.amount, 0);
   const highestCategory = data.reduce((max, cat) => (cat.amount > max.amount ? cat : max), data[0]);
 
-  const toggleCategory = (categoryId: string) => {
-    setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
-  };
+  // State for manual expansion removed in favor of Accordion
 
   return (
     <Card className={cn("relative overflow-hidden h-full flex flex-col group", className)}>
@@ -177,38 +181,23 @@ export default function SpendingInsights({
             </CardContent>
           </Card>
         </div>
-        {/* Category List */}
-        <div className="space-y-3 pb-2" role="list">
-          <AnimatePresence mode="popLayout">
-            {data.map((category, index) => {
-              const Icon = category.icon;
-              const isExpanded = expandedCategory === category.id;
+        {/* Category List with Shadcn Accordion */}
+        <Accordion type="single" collapsible className="space-y-3 pb-2">
+          {data.map((category, index) => {
+            const Icon = category.icon;
 
-              return (
-                <motion.div
-                  key={category.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="bg-muted/30 rounded-lg overflow-hidden"
-                  role="listitem"
-                >
-                  {/* Category Header */}
-                  <Button
-                    variant="ghost"
-                    onClick={() => toggleCategory(category.id)}
-                    className={clsx(
-                      'w-full px-4 py-8 flex items-center gap-3 text-left transition-colors h-auto justify-start rounded-none border-b border-border/10',
-                      'hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset'
-                    )}
-                    aria-expanded={isExpanded}
-                    aria-controls={`category-details-${category.id}`}
-                  >
+            return (
+              <AccordionItem 
+                key={category.id} 
+                value={category.id}
+                className="bg-muted/30 rounded-xl border-none overflow-hidden"
+              >
+                <AccordionTrigger className="hover:no-underline px-4 py-8 group/trigger">
+                  <div className="flex items-center gap-3 w-full text-left">
                     {/* Icon */}
                     <div
-                      className={clsx(
-                        'h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0',
+                      className={cn(
+                        'h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover/trigger:scale-110',
                         category.color
                       )}
                     >
@@ -216,118 +205,71 @@ export default function SpendingInsights({
                     </div>
 
                     {/* Name and Progress */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-bold text-foreground">{category.name}</p>
-                        <p className="text-xs font-bold text-foreground tabular-nums">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-black text-foreground uppercase tracking-tight">{category.name}</p>
+                        <p className="text-xs font-black text-foreground tabular-nums">
                           {currency} {category.amount.toLocaleString('id-ID')}
                         </p>
                       </div>
                       {/* Progress bar */}
-                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <motion.div
-                          className={clsx('h-full rounded-full', category.color)}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${category.percentage}%` }}
-                          transition={{ duration: 0.8, delay: index * 0.05 }}
-                          role="progressbar"
-                          aria-valuenow={category.percentage}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-label={`${category.name}: ${category.percentage}% dari total`}
-                        />
-                      </div>
+                      <Progress 
+                        value={category.percentage} 
+                        className="h-1.5" 
+                        indicatorClassName={category.color}
+                        aria-label={`${category.name}: ${category.percentage}% dari total`}
+                      />
                     </div>
 
                     {/* Trend */}
                     <div
-                      className={clsx(
-                        'flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold flex-shrink-0',
+                      className={cn(
+                        'flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black flex-shrink-0 mr-4',
                         category.trend === 'up'
                           ? 'bg-destructive/10 text-destructive'
                           : category.trend === 'down'
-                          ? 'bg-success-light text-primary'
+                          ? 'bg-primary/10 text-primary'
                           : 'bg-muted text-muted-foreground'
                       )}
-                      aria-label={`Tren ${category.trend === 'up' ? 'naik' : category.trend === 'down' ? 'turun' : 'stabil'} ${Math.abs(category.trendValue)}%`}
                     >
-                      <TrendingUp className={clsx('h-3 w-3', category.trend === 'down' && 'rotate-180')} />
+                      <TrendingUp className={cn('h-3 w-3', category.trend === 'down' && 'rotate-180')} />
                       {category.trendValue}%
                     </div>
+                  </div>
+                </AccordionTrigger>
 
-                    {/* Expand/Collapse Icon */}
-                    <div className="flex-shrink-0">
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                      )}
+                <AccordionContent className="px-4 pb-4 pt-0">
+                  <div className="space-y-4 pt-4 border-t border-border/10">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Persentase</p>
+                        <p className="text-xs font-bold text-foreground">{category.percentage}% dari total</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Status</p>
+                        <p className={cn(
+                          "text-xs font-bold",
+                          category.trend === 'up' ? "text-destructive" : "text-primary"
+                        )}>
+                          {category.trend === 'up' ? 'Meningkat' : 'Menurun'}
+                        </p>
+                      </div>
                     </div>
-                  </Button>
 
-                  {/* Expanded Details */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        id={`category-details-${category.id}`}
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-4 pb-4 pt-2 space-y-3 border-t border-border/50">
-                          {/* Percentage of total */}
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] text-muted-foreground">Persentase dari Total</span>
-                            <span className="text-xs font-bold text-foreground">{category.percentage}%</span>
-                          </div>
-
-                          {/* Trend info */}
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] text-muted-foreground">Perubahan vs Bulan Lalu</span>
-                            <span
-                              className={clsx(
-                                'text-xs font-bold',
-                                category.trend === 'up'
-                                  ? 'text-destructive'
-                                  : category.trend === 'down'
-                                  ? 'text-primary'
-                                  : 'text-muted-foreground'
-                              )}
-                            >
-                              {category.trend === 'up' ? '+' : category.trend === 'down' ? '-' : ''}
-                              {category.trendValue}%
-                            </span>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex gap-2 pt-2">
-                            <Button
-                              size="sm"
-                              className="flex-1 text-[10px] font-bold h-9"
-                              aria-label={`Lihat detail transaksi ${category.name}`}
-                            >
-                              Lihat Transaksi
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 text-[10px] font-bold h-9 bg-muted/50"
-                              aria-label={`Set anggaran untuk ${category.name}`}
-                            >
-                              Set Anggaran
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1 text-[10px] font-black uppercase tracking-widest h-10">
+                        Lihat Detail
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 text-[10px] font-black uppercase tracking-widest h-10 bg-muted/30">
+                        Set Budget
+                      </Button>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
       </CardContent>
     </Card>
   );

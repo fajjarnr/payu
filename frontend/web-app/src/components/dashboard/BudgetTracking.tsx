@@ -2,9 +2,28 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, AlertTriangle, CheckCircle2, Edit, Trash2 } from 'lucide-react';
+import { 
+  Plus, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Edit, 
+  Trash2,
+  ChevronDown as ChevronDownIcon
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
+
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from '@/components/ui/accordion';
+import { Progress } from '@/components/ui/progress';
+
 
 interface Budget {
   id: string;
@@ -71,17 +90,13 @@ const defaultBudgets: Budget[] = [
   },
 ];
 
-import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-
 export default function BudgetTracking({
   budgets = defaultBudgets,
   currency = 'Rp',
   className = '',
 }: BudgetTrackingProps) {
   const t = useTranslations('dashboard');
-  const [expandedBudget, setExpandedBudget] = useState<string | null>(null);
+  // Manual expansion state removed
 
   const totalBudget = budgets.reduce((sum, b) => sum + b.limit, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
@@ -209,36 +224,21 @@ export default function BudgetTracking({
           </motion.div>
         )}
 
-        {/* Budget List */}
-        <div className="space-y-3" role="list">
-          <AnimatePresence mode="popLayout">
-            {budgets.map((budget, index) => {
-              const StatusIcon = getStatusIcon(budget.status);
-              const isExpanded = expandedBudget === budget.id;
+        <Accordion type="single" collapsible className="space-y-3">
+          {budgets.map((budget, index) => {
+            const StatusIcon = getStatusIcon(budget.status);
 
-              return (
-                <motion.div
-                  key={budget.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className={cn(
-                    'bg-muted/30 rounded-xl overflow-hidden transition-all border border-transparent',
-                    budget.status === 'exceeded' && 'border-destructive/30 ring-2 ring-destructive/10',
-                    isExpanded && 'bg-muted/50 border-border/50'
-                  )}
-                  role="listitem"
-                >
-                  <Button
-                    variant="ghost"
-                    onClick={() => setExpandedBudget(isExpanded ? null : budget.id)}
-                    className={cn(
-                      'w-full px-4 py-8 flex items-center gap-3 text-left transition-colors h-auto justify-start rounded-none',
-                      isExpanded && 'bg-muted/50'
-                    )}
-                    aria-expanded={isExpanded}
-                  >
+            return (
+              <AccordionItem 
+                key={budget.id} 
+                value={budget.id}
+                className={cn(
+                  'bg-muted/30 rounded-xl border-none overflow-hidden transition-all',
+                  budget.status === 'exceeded' && 'ring-2 ring-destructive/10'
+                )}
+              >
+                <AccordionTrigger className="hover:no-underline px-4 py-8 group/trigger">
+                  <div className="flex items-center gap-3 w-full text-left">
                     {/* Status Icon */}
                     <div
                       className={cn(
@@ -250,8 +250,8 @@ export default function BudgetTracking({
                     </div>
 
                     {/* Category and Progress */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex items-center justify-between mb-2">
                         <p className="text-xs font-black text-foreground uppercase tracking-tight">{budget.category}</p>
                         <span className="text-[10px] text-muted-foreground tabular-nums font-bold">
                           {budget.percentage.toFixed(0)}%
@@ -259,61 +259,46 @@ export default function BudgetTracking({
                       </div>
 
                       {/* Progress bar */}
-                      <div className="relative h-2 w-full bg-muted rounded-full overflow-hidden">
-                        <motion.div
-                          className={cn(
-                            'h-full rounded-full transition-colors',
-                            getProgressColor(budget.status)
-                          )}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(budget.percentage, 100)}%` }}
-                          transition={{ duration: 0.8, delay: index * 0.05 }}
-                          role="progressbar"
-                        />
-                      </div>
+                      <Progress 
+                        value={Math.min(budget.percentage, 100)} 
+                        className="h-2" 
+                        indicatorClassName={getProgressColor(budget.status)}
+                        aria-label={`${budget.category}: ${budget.percentage.toFixed(0)}%`}
+                      />
                     </div>
-                  </Button>
+                  </div>
+                </AccordionTrigger>
 
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden border-t border-border/20 bg-muted/20"
-                      >
-                        <div className="px-5 pb-5 pt-4 space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <DetailItem label="Batas Anggaran" value={budget.limit} currency={currency} />
-                            <DetailItem label="Terpakai" value={budget.spent} currency={currency} />
-                            <DetailItem 
-                              label={budget.remaining >= 0 ? t('budgetRemaining') : t('budgetOver')} 
-                              value={Math.abs(budget.remaining)} 
-                              currency={currency}
-                              valueColor={budget.remaining >= 0 ? 'text-primary' : 'text-destructive'}
-                            />
-                            <DetailItem label="Persentase" value={`${budget.percentage.toFixed(1)}%`} currency="" isPercentage />
-                          </div>
+                <AccordionContent className="px-5 pb-5 pt-0">
+                  <div className="pt-4 border-t border-border/20 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <DetailItem label="Batas Anggaran" value={budget.limit} currency={currency} />
+                      <DetailItem label="Terpakai" value={budget.spent} currency={currency} />
+                      <DetailItem 
+                        label={budget.remaining >= 0 ? t('budgetRemaining') : t('budgetOver')} 
+                        value={Math.abs(budget.remaining)} 
+                        currency={currency}
+                        valueColor={budget.remaining >= 0 ? 'text-primary' : 'text-destructive'}
+                      />
+                      <DetailItem label="Persentase" value={`${budget.percentage.toFixed(1)}%`} currency="" isPercentage />
+                    </div>
 
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="flex-1">
-                              <Edit className="h-3.5 w-3.5" />
-                              Edit
-                            </Button>
-                            <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/5">
-                              <Trash2 className="h-3.5 w-3.5" />
-                              Hapus
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 h-10 text-[10px] font-black uppercase tracking-widest bg-muted/30">
+                        <Edit className="h-3.5 w-3.5 mr-2" />
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 h-10 text-[10px] font-black uppercase tracking-widest text-destructive hover:text-white hover:bg-destructive">
+                        <Trash2 className="h-3.5 w-3.5 mr-2" />
+                        Hapus
+                      </Button>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
 
         <div className="mt-6 pt-4 border-t border-border">
           <Button variant="ghost" className="w-full text-xs font-black uppercase tracking-widest text-primary">

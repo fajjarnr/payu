@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Progress } from '@/components/ui/progress';
 import { Sun, Moon, Sparkles, Crown } from 'lucide-react';
 import { useUserSegment } from '@/hooks/useUserSegment';
 import { useAuthStore } from '@/stores';
@@ -168,14 +169,11 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
                 {progressToNext.toFixed(0)}%
               </p>
             </div>
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressToNext}%` }}
-                transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
-                className="h-full bg-white rounded-full"
-              />
-            </div>
+            <Progress 
+              value={progressToNext} 
+              className="h-2 bg-white/20" 
+              indicatorClassName="bg-white"
+            />
           </div>
         )}
       </div>

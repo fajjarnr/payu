@@ -1,9 +1,23 @@
 'use client';
 
 import React from 'react';
-import { ChevronDown, TrendingUp } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { 
+  Bar, 
+  BarChart, 
+  CartesianGrid, 
+  Label, 
+  PolarGrid, 
+  PolarRadiusAxis, 
+  RadialBar, 
+  RadialBarChart, 
+  XAxis,
+  YAxis,
+  ResponsiveContainer
+} from "recharts"
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 function ChartLegend({ color, label, percentage }: { color: string; label: string; percentage: string }) {
   return (
@@ -17,6 +31,37 @@ function ChartLegend({ color, label, percentage }: { color: string; label: strin
   );
 }
 
+const investmentData = [
+  { category: "return", value: 12.5, fill: "var(--color-return)" },
+]
+
+const investmentConfig = {
+  value: {
+    label: "Return",
+  },
+  return: {
+    label: "ROI",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig
+
+const spendingData = [
+  { month: "Jan", amount: 3000000 },
+  { month: "Feb", amount: 4500000 },
+  { month: "Mar", amount: 6000000 },
+  { month: "Apr", amount: 8000000 },
+  { month: "Mei", amount: 10000000 },
+  { month: "Jun", amount: 7000000 },
+  { month: "Jul", amount: 9000000 },
+]
+
+const spendingConfig = {
+  amount: {
+    label: "Pengeluaran",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig
+
 interface StatsChartsProps {
   className?: string;
 }
@@ -24,9 +69,9 @@ interface StatsChartsProps {
 export default function StatsCharts({ className = '' }: StatsChartsProps) {
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
-      {/* Investment Performance (Donut Chart Pattern) */}
+      {/* Investment Performance (Official Shadcn Radial Chart) */}
       <Card className="lg:col-span-5 relative overflow-hidden group">
-        <CardHeader className="flex flex-row items-center justify-between pb-8">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-black text-foreground tracking-widest uppercase">
             Performa Investasi
           </CardTitle>
@@ -35,40 +80,82 @@ export default function StatsCharts({ className = '' }: StatsChartsProps) {
           </div>
         </CardHeader>
 
-        <CardContent>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="space-y-4 w-full sm:w-auto">
-              <ChartLegend color="bg-chart-1" label="Saham" percentage="60%" />
-              <ChartLegend color="bg-chart-2" label="Obligasi" percentage="25%" />
-              <ChartLegend color="bg-chart-3" label="Emas Digital" percentage="15%" />
-            </div>
+        <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="space-y-4 w-full sm:w-auto">
+            <ChartLegend color="bg-primary" label="Saham" percentage="60%" />
+            <ChartLegend color="bg-primary/60" label="Obligasi" percentage="25%" />
+            <ChartLegend color="bg-primary/30" label="Emas Digital" percentage="15%" />
+          </div>
 
-            <div className="relative h-28 w-28 sm:h-32 sm:w-32 flex items-center justify-center">
-              <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(var(--muted))" strokeWidth="4" />
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(var(--chart-green3))" strokeWidth="4" strokeDasharray="100 100" strokeLinecap="round" />
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(var(--chart-green2))" strokeWidth="4" strokeDasharray="85 100" strokeLinecap="round" />
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(var(--chart-green1))" strokeWidth="4" strokeDasharray="60 100" strokeLinecap="round" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-success-light flex items-center justify-center mb-1 shadow-sm">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                </div>
-                <span className="text-[10px] sm:text-xs font-black text-foreground">+12.5%</span>
-              </div>
-            </div>
+          <div className="relative h-44 w-44 flex-shrink-0">
+            <ChartContainer
+              config={investmentConfig}
+              className="mx-auto aspect-square h-full w-full"
+            >
+              <RadialBarChart
+                data={investmentData}
+                startAngle={0}
+                endAngle={250}
+                innerRadius={65}
+                outerRadius={95}
+              >
+                <PolarGrid
+                  gridType="circle"
+                  radialLines={false}
+                  stroke="none"
+                  className="first:fill-muted/20 last:fill-background"
+                  polarRadius={[70, 60]}
+                />
+                <RadialBar 
+                  dataKey="value" 
+                  background 
+                  cornerRadius={10}
+                />
+                <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                          >
+                            <tspan
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              className="fill-foreground text-2xl font-black tabular-nums"
+                            >
+                              +12.5%
+                            </tspan>
+                            <tspan
+                              x={viewBox.cx}
+                              y={(viewBox.cy || 0) + 20}
+                              className="fill-muted-foreground text-[10px] font-black uppercase tracking-widest"
+                            >
+                              Yield
+                            </tspan>
+                          </text>
+                        )
+                      }
+                    }}
+                  />
+                </PolarRadiusAxis>
+              </RadialBarChart>
+            </ChartContainer>
+          </div>
 
-            <div className="text-right w-full sm:w-auto shrink-0">
-              <p className="text-[10px] text-muted-foreground font-black tracking-widest mb-1 uppercase">Total Nilai</p>
-              <h4 className="text-xl font-black text-foreground tabular-nums">Rp 8.750k</h4>
-            </div>
+          <div className="text-right w-full sm:w-auto shrink-0">
+            <p className="text-[10px] text-muted-foreground font-black tracking-widest mb-1 uppercase">Total Nilai</p>
+            <h4 className="text-xl font-black text-foreground tabular-nums">Rp 8.750k</h4>
           </div>
         </CardContent>
       </Card>
 
-      {/* Spending Overview (Bar Chart Pattern) */}
+      {/* Spending Overview (Official Shadcn Bar Chart) */}
       <Card className="lg:col-span-7 group overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between pb-8">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
           <CardTitle className="text-sm font-black text-foreground tracking-widest uppercase">
             Ikhtisar Pengeluaran
           </CardTitle>
@@ -78,37 +165,31 @@ export default function StatsCharts({ className = '' }: StatsChartsProps) {
         </CardHeader>
 
         <CardContent>
-          <div className="flex items-end justify-between h-36 sm:h-40 gap-2 sm:gap-4 mt-4 px-2">
-            {[
-              { label: 'Jan', value: 30 },
-              { label: 'Feb', value: 45 },
-              { label: 'Mar', value: 60 },
-              { label: 'Apr', value: 80 },
-              { label: 'Mei', value: 100, active: true },
-              { label: 'Jun', value: 70 },
-              { label: 'Jul', value: 90 },
-            ].map((bar, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-3">
-                <div className="w-full relative group/bar h-full flex items-end">
-                  <div
-                    className={cn(
-                      "w-full rounded-t-2xl transition-all duration-700",
-                      bar.active
-                        ? "bg-primary shadow-[0_4px_20px_hsl(var(--primary)/0.4)]"
-                        : "bg-muted/60 group-hover/bar:bg-primary/30"
-                    )}
-                    style={{ height: `${bar.value}%` }}
-                  />
-                  {bar.active && (
-                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-black px-2 py-1.5 rounded-lg whitespace-nowrap z-10 shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-500 uppercase tracking-tighter">
-                      Rp 3.5jt
-                    </div>
-                  )}
-                </div>
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{bar.label}</span>
-              </div>
-            ))}
-          </div>
+          <ChartContainer config={spendingConfig} className="h-48 w-full">
+            <BarChart data={spendingData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--muted)/0.3)" />
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }}
+                dy={10}
+              />
+              <YAxis
+                hide
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent hideLabel />}
+              />
+              <Bar
+                dataKey="amount"
+                fill="var(--color-amount)"
+                radius={[6, 6, 0, 0]}
+                barSize={32}
+              />
+            </BarChart>
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>

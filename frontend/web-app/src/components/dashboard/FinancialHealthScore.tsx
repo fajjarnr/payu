@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 
 interface FinancialHealthScoreProps {
   score: number;
@@ -198,19 +199,12 @@ interface ScoreFactorProps {
 function ScoreFactor({ label, value, color, ariaLabel }: ScoreFactorProps) {
   return (
     <div className="text-center">
-      <div className="h-1.5 w-full bg-muted rounded-full mb-2 overflow-hidden">
-        <motion.div
-          className={cn('h-full rounded-full', color)}
-          initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          role="progressbar"
-          aria-valuenow={value}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={ariaLabel}
-        />
-      </div>
+      <Progress 
+        value={value} 
+        className="h-1.5 mb-2" 
+        indicatorClassName={color}
+        aria-label={ariaLabel}
+      />
       <p className="text-[10px] text-muted-foreground font-black uppercase tracking-tight">{label}</p>
       <p className="text-xs font-black text-foreground tabular-nums">{value}</p>
     </div>

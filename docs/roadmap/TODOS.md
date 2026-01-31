@@ -1698,11 +1698,15 @@ _Last Updated: January 31, 2026 (Database Migrations Verified & Auth Service Har
 - **XL Optimization**: Updated `QuickActions` to support 6-column grid on XL screens, preventing card stretching.
 
 ### P16-C7: Shadcn UI Standardization ✅
-- **Protocols**: Migrated manual `<button>` and `<div avatar>` elements to official **Shadcn UI** primitives for consistency.
+- **Protocols**: Migrated manual `<button>`, `<div avatar>`, `<progress>`, and `<accordion>` elements to official **Shadcn UI** primitives for consistency.
 - **Components**:
-  - `Button`: Official Shadcn implementation with restored **Emerald Premium** variants (Emerald, Glass, Black Typography).
-  - `Avatar`: Implemented Radix-based Avatar primitive with high-end shadow effects.
-- **Refactoring**: Standardized Header, Profile Dropdown, and Dashboard Widgets (Transfer, Budget, Insights) to use standardized UI primitives.
+  - `Button`: Official Shadcn implementation with restored **Emerald Premium** variants.
+  - `Avatar`: Radix-based Avatar primitive with high-end shadow effects.
+  - `Accordion`: Replaced manual Framer Motion logic in `SpendingInsights` & `BudgetTracking`.
+  - `Chart`: Implemented Recharts-based `Radial` and `Bar` charts in `StatsCharts` & `InvestmentPerformance`.
+  - `Progress`: Standardized all linear progress indicators (Budget, Health, ROI).
+  - `Calendar` & `Popover`: Added to the UI kit for future Date Picker implementations (Filtering & Scheduling).
+- **Refactoring**: Standardized Header, Profile Dropdown, and Dashboard Widgets to use standardized UI primitives.
 
 #### P16 Roadmap Tasks:
 - **Routing & Path Separation**:
