@@ -1,8 +1,8 @@
 # Project Roadmap & Todo List
 
 > **Lab Project Status**: ✅ **FEATURE COMPLETE** - All 22 microservices implemented
-> **Primary Focus**: 🎯 **Production Readiness** - P0 Web App COMPLETE, P1 Mobile App COMPLETE
-> **Last Updated**: January 30, 2026 (P0 Web App & P1 Mobile App Production Ready - Actual: ~95% Complete)
+> **Primary Focus**: 🎯 **Production Readiness** - P0 & P1 COMPLETE, P2 Mobile Data Architecture NEXT
+> **Last Updated**: January 31, 2026 (Mobile Data Architecture Audit - Complete, Ready for P2 Improvements)
 
 ---
 
@@ -40,19 +40,20 @@
 |----------|----------|----------|--------|--------|
 | **P0** | Web App Production Readiness | 100% | 100% | ✅ **COMPLETE** - Build passes, all tests green |
 | **P1** | Mobile App Production Readiness | 95% | 100% | ✅ **COMPLETE** - Tests passing (538/569), TypeScript 0 errors |
-| **P2** | Backend API Documentation | 70% | 100% | 🟡 In Progress - 6 Quarkus services need Springdoc |
-| **P3** | Backend Integration Tests | 96% | 80% | 🟢 Exceeds Target |
-| **P4** | Developer Docs Tests | 100% | 50% | 🟢 Exceeds Target |
-| **P5** | Test Infrastructure | 90% | 80% | 🟢 Complete |
-| **P6** | Container Migration (Docker → Podman) | 100% | 100% | 🟢 Complete |
-| **P7** | Frontend Best Practices Review | 100% | 100% | 🟢 Complete |
-| **P8** | Integration Architecture (Events, Outbox, Saga) | 100% | 100% | 🟢 **Complete** |
-| **P9** | Core Banking Architecture (ArchUnit, Money, Idempotency) | 100% | 100% | 🟢 **Complete** |
-| **P10** | Mobile Enhancements (TanStack Query, E2E, A11y) | 100% | 100% | 🟢 **Complete** |
-| **P11** | API Best Practices (Response Envelope, Idempotency, OpenAPI) | 95% | 80% | 🟢 Exceeds Target |
-| **P12** | Security Audit & Remediation (JWT, RBAC, PII, CORS) | 95% | 80% | 🟢 Exceeds Target |
-| **P13** | Infrastructure Production Hardening | 85% | 100% | 🟡 In Progress |
-| **P14** | Documentation (ADR, OpenAPI Catalog) | 100% | 100% | 🟢 **Complete** |
+| **P2** | Mobile Data Architecture Improvements | 65% | 100% | 🔴 **NEXT** - State migration, security hardening |
+| **P3** | Backend API Documentation | 70% | 100% | 🟡 In Progress - 6 Quarkus services need Springdoc |
+| **P4** | Backend Integration Tests | 96% | 80% | 🟢 Exceeds Target |
+| **P5** | Developer Docs Tests | 100% | 50% | 🟢 Exceeds Target |
+| **P6** | Test Infrastructure | 90% | 80% | 🟢 Complete |
+| **P7** | Container Migration (Docker → Podman) | 100% | 100% | 🟢 Complete |
+| **P8** | Frontend Best Practices Review | 100% | 100% | 🟢 Complete |
+| **P9** | Integration Architecture (Events, Outbox, Saga) | 100% | 100% | 🟢 **Complete** |
+| **P10** | Core Banking Architecture (ArchUnit, Money, Idempotency) | 100% | 100% | 🟢 **Complete** |
+| **P11** | Mobile Enhancements (TanStack Query, E2E, A11y) | 100% | 100% | 🟢 **Complete** |
+| **P12** | API Best Practices (Response Envelope, Idempotency, OpenAPI) | 95% | 80% | 🟢 Exceeds Target |
+| **P13** | Security Audit & Remediation (JWT, RBAC, PII, CORS) | 95% | 80% | 🟢 Exceeds Target |
+| **P14** | Infrastructure Production Hardening | 85% | 100% | 🟡 In Progress |
+| **P15** | Documentation (ADR, OpenAPI Catalog) | 100% | 100% | 🟢 **Complete** |
 
 ---
 
@@ -159,11 +160,95 @@ npm run lint          # ✅ 0 errors, 13 warnings
 
 ---
 
-### 🔴 P2: HIGH - Backend API Documentation Gaps (NEXT PRIORITY)
+### 🔴 P2: HIGH - Mobile Data Architecture Improvements (NEXT PRIORITY)
+
+> **Status**: Data architecture audit complete - Critical issues found requiring fixes
+> **Audit Score**: 65/100 - Good foundation, needs alignment and hardening
+
+#### Data Architecture Audit Summary
+
+| Category | Score | Issues | Status |
+|----------|-------|--------|--------|
+| **State Management** | 50/100 | Duplicate Zustand + React Query, no single source of truth | 🔴 Critical |
+| **Security** | 60/100 | Tokens in multiple locations, query cache unencrypted | 🔴 Critical |
+| **Performance** | 65/100 | ScrollView instead of FlatList, no memoization | 🟡 Medium |
+| **Offline-First** | 70/100 | Queue exists but not integrated | 🟡 Medium |
+| **API Integration** | 80/100 | Good patterns, missing idempotency | 🟢 Good |
+
+#### Critical Issues Found
+
+**1. Duplicate State Management (Critical)**
+- Zustand stores (`/store/walletStore.ts`, `/store/transactionStore.ts`) actively used
+- React Query hooks (`/src/hooks/useWalletQuery.ts`, `/src/hooks/useTransactionQuery.ts`) exist but **NOT used**
+- Components use old Zustand-based hooks
+- No single source of truth
+
+**2. Security Issues (Critical)**
+- Tokens stored in 3 locations: Zustand state + React Query cache + SecureStore
+- Query cache persisted to AsyncStorage (less secure than SecureStore)
+- Sensitive data potentially logged
+- No request signing for API calls
+
+**3. Performance Issues (Medium)**
+- Using `ScrollView` + `map` instead of `FlatList` for transaction history
+- No memoization for expensive computations
+- Synchronous SecureStore operations
+- No request cancellation
+
+**4. Offline-First Gaps (Medium)**
+- Offline queue exists but not integrated with services
+- No conflict resolution strategy
+- Limited offline cache duration (1 hour)
+
+#### P2 Tasks
+
+| # | Task | Priority | Est. Time | Impact |
+|---|------|----------|-----------|--------|
+| P2-C1 | Migrate components to use React Query hooks | **CRITICAL** | 3-5 days | Remove Zustand dependency, unify state |
+| P2-C2 | Fix token storage (SecureStore only) | **CRITICAL** | 1-2 days | Security hardening |
+| P2-C3 | Encrypt query cache or exclude sensitive data | **HIGH** | 2-3 days | Data protection |
+| P2-C4 | Implement idempotency for financial operations | **HIGH** | 2-3 days | Prevent duplicate transactions |
+| P2-C5 | Replace ScrollView with FlatList | **MEDIUM** | 1-2 days | Performance optimization |
+| P2-C6 | Add request cancellation & memoization | **MEDIUM** | 1-2 days | Performance, memory leaks |
+| P2-C7 | Complete offline queue implementation | **MEDIUM** | 2-3 days | Offline-first UX |
+| P2-C8 | Sanitize logs & add error handling | **MEDIUM** | 1 day | Security, debugging |
+
+#### Technical Debt Created
+
+| Debt ID | Description | Type | Effort |
+|---------|-------------|------|--------|
+| TD-MOB-001 | Duplicate state management systems | Accidental | 3-5 days to migrate |
+| TD-MOB-002 | Unused React Query hooks in `/src/hooks/` | Accidental | 1 day to remove or integrate |
+| TD-MOB-003 | Parallel async operations should use Promise.all | Deliberate | 1 hour to fix |
+
+#### Files Requiring Changes
+
+**State Migration (P2-C1):**
+- `app/(tabs)/index.tsx` - Uses `useWallet` from Zustand
+- `app/(tabs)/history.tsx` - Uses `useTransactions` from Zustand
+- `app/(tabs)/transfers.tsx` - Uses `useTransactions` from Zustand
+- `hooks/useWallet.ts` - Zustand-based hook
+- `hooks/useTransactions.ts` - Zustand-based hook
+
+**Security Fixes (P2-C2, P2-C3):**
+- `src/providers/QueryProvider.tsx` - AsyncStorage persister
+- `store/authStore.ts` - Token in multiple locations
+- `context/AuthContext.tsx` - Sequential storage operations
+
+**Performance (P2-C5, P2-C6):**
+- `app/(tabs)/history.tsx` - ScrollView + map instead of FlatList
+- `components/shared/TransactionList.tsx` - No virtualization
+- All component files - Missing memoization
+
+**Offline (P2-C7):**
+- `hooks/useOfflineMode.ts` - Queue not integrated
+- `services/api.ts` - No offline queue usage
+
+**Estimated Total Effort**: 10-15 days
 
 ---
 
-### 🟡 P1: HIGH - Backend API Documentation Gaps
+### 🔴 P3: HIGH - Backend API Documentation Gaps
 
 > **Status**: 6 Quarkus services need Springdoc migration for consistency
 
@@ -522,14 +607,46 @@ make test-coverage                            # Coverage reports
 | **Backend Test Coverage** | 96% | Integration + Architecture tests passing |
 | **Backend API Readiness** | 70% | 🔴 6 services need OpenAPI completion |
 | **Frontend Readiness** | 97% | ✅ Web App & Mobile App production ready |
+| **Mobile Data Architecture** | 65% | 🔴 Duplicate state, security gaps (P2) |
 | **Infrastructure Readiness** | 85% | TLS, Vault, migrations needed |
 | **Security Compliance** | 95% | PCI-DSS, OWASP, OJK compliant |
 
-**Overall Lab Score: 95%** - P0 & P1 complete, Security hardened
+**Overall Lab Score: 90%** - P0 & P1 complete, P2 data architecture improvements needed
 
 ---
 
-## 📋 Recently Completed (January 30, 2026 - P1 Mobile App Session)
+## 📋 Recently Completed (January 31, 2026 - Data Architecture Audit)
+
+### Mobile Data Architecture Audit ✅ COMPLETE
+
+> **Status**: Comprehensive audit completed - Critical issues identified
+
+#### Audit Summary
+
+**Overall Score: 65/100**
+
+| Category | Score | Status |
+|----------|-------|--------|
+| **State Management** | 50/100 | 🔴 Duplicate Zustand + React Query |
+| **Security** | 60/100 | 🔴 Tokens in multiple locations |
+| **Performance** | 65/100 | 🟡 ScrollView instead of FlatList |
+| **Offline-First** | 70/100 | 🟡 Queue exists but not integrated |
+| **API Integration** | 80/100 | 🟢 Good patterns, missing idempotency |
+
+#### Critical Issues Found
+
+1. **Duplicate State Management** - Zustand stores actively used, React Query hooks exist but NOT used
+2. **Security Issues** - Tokens in 3 locations (Zustand + React Query cache + SecureStore)
+3. **Performance Issues** - ScrollView + map instead of FlatList, no memoization
+4. **Offline-First Gaps** - Queue not integrated, no conflict resolution
+
+#### Next Steps
+
+See **P2: Mobile Data Architecture Improvements** section for detailed task breakdown.
+
+---
+
+## 📋 Previously Completed (January 30, 2026 - P1 Mobile App Session)
 
 ### P1 Mobile App Production Readiness ✅ COMPLETE
 
