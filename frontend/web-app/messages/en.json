@@ -282,6 +282,23 @@
   "auth": {
     "login": "Login",
     "register": "Register",
+    "welcomeBack": "Welcome Back",
+    "subtitle": "Sign in to your financial dashboard",
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Sign In",
+    "loggingIn": "Signing in...",
+    "or": "Or",
+    "branding": {
+      "tag": "Enterprise Grade Security",
+      "title": "Future Digital Banking Platform.",
+      "desc": "Manage assets, investments, and daily transactions in one secure, encrypted, and fully integrated ecosystem.",
+      "footer": "© 2026 PayU Financial Infrastructure. Secure Environment.",
+      "features": {
+        "encryption": "Military Grade End-to-End Encryption",
+        "monitoring": "Real-time AI Transaction Monitoring",
+        "qris": "QRIS & BI-FAST Payment Integration"
+      }
+    },
     "phone": "Phone Number",
     "pin": "PIN",
     "forgotPin": "Forgot PIN?",
@@ -292,14 +309,59 @@
     "createAccount": "Create Account",
     "haveAccount": "Already have an account?",
     "noAccount": "Don't have an account?",
+    "registerLink": "Register Now",
     "onboarding": {
       "title": "Welcome to PayU",
       "subtitle": "The digital banking platform of the future",
-      "step1": "Personal Information",
-      "step2": "Security",
-      "step3": "Complete",
-      "success": "Registration Successful!",
-      "redirect": "Redirecting to login page..."
+      "back": "Back",
+      "steps": {
+        "identity": "Identity",
+        "profile": "Profile",
+        "complete": "Complete"
+      },
+      "step1": {
+        "title": "Upload e-ID (KTP)",
+        "subtitle": "Photo of your original ID for automated data validation",
+        "clickToUpload": "Click to take photo",
+        "formats": "JPG, PNG max 5MB",
+        "button": "Continue to Profile Data"
+      },
+      "step2": {
+        "title": "Complete Profile",
+        "subtitle": "Fill in personal data according to official ID",
+        "nik": "National Identity Number (NIK)",
+        "nikPlaceholder": "16 digit number...",
+        "fullName": "Full Name",
+        "fullNamePlaceholder": "As per ID",
+        "email": "Email",
+        "emailPlaceholder": "name@email.com",
+        "username": "Username",
+        "usernamePlaceholder": "unique & easy to remember",
+        "backButton": "Back",
+        "submitButton": "Confirm Registration",
+        "submitting": "Processing..."
+      },
+      "step3": {
+        "title": "Account Ready!",
+        "subtitle": "Redirecting you to the secure login gateway in a few seconds...",
+        "success": "Registration Successful!",
+        "redirect": "Redirecting to login page..."
+      },
+      "branding": {
+        "title": "Digital Identity Verification.",
+        "desc": "Join 2 Million+ users who have entrusted their financial future to the PayU ecosystem.",
+        "features": {
+            "ekyc": {
+                "title": "e-KYC Instant Liveness",
+                "desc": "Automated biometric face verification without video call queues."
+            },
+            "data": {
+                "title": "Data Sovereignty",
+                "desc": "Your personal data is fully encrypted and never shared with third parties."
+            }
+        },
+        "system": "System Operational"
+      }
     }
   },
   "errors": {
@@ -334,17 +396,30 @@
     "changeLanguage": "Change Language"
   },
   "landing": {
-    "heroTitle": "The Future of Digital Banking is Here.",
-    "heroSubtitle": "Manage your money with ease, security, and intelligence. Join the digital banking revolution.",
+    "heroTitle": "One App.<br />Millions of Solutions.",
+    "heroSubtitle": "A standalone digital banking platform redefining financial ease. Send, receive, and invest your assets in seconds.",
     "getStarted": "Get Started",
     "login": "Login",
+    "demo": "Demo",
+    "trustedBy": "Trusted by {count} Users",
+    "badge": "Banking 4.0 Updated",
+    "nav": {
+      "features": "Features",
+      "about": "About",
+      "support": "Support",
+      "contact": "Contact",
+      "login": "Login",
+      "openAccount": "Open Account"
+    },
     "features": {
+      "title": "Limitless Performance.",
+      "subtitle": "Built on modern microservices infrastructure.",
       "instantTransfer": {
         "title": "Instant Transfers",
         "desc": "Send money to any bank in seconds without hidden fees."
       },
       "secure": {
-        "title": "World-Class Security",
+        "title": "High Security",
         "desc": "Your data and assets are protected with advanced encryption and biometric authentication."
       },
       "smartInvesting": {
@@ -352,8 +427,57 @@
         "desc": "Grow your wealth with investment products curated specifically for you."
       }
     },
+    "bento": {
+      "title": "Smart Features for Modern Lifestyles.",
+      "subtitle": "One app, millions of possibilities. We designed every pixel for your financial ease.",
+      "analytics": {
+        "title": "AI Financial Insights",
+        "desc": "Automated spending analysis helping you save up to 20% monthly with smart recommendations."
+      },
+      "security": {
+        "tag": "SECURE",
+        "title": "Multi-Layer Protection",
+        "desc": "AES-256 Encryption, Biometrics, and real-time fraud detection keep your assets safe 24/7.",
+        "features": {
+          "faceAuth": "Face Auth",
+          "encryption": "Privacy Encryption",
+          "guarantee": "100% Balance Guarantee"
+        }
+      },
+      "global": {
+        "title": "Global Transactions",
+        "desc": "Send money to 50+ countries with competitive rates and transparent fees."
+      },
+      "invest": {
+        "title": "Start Investing",
+        "desc": "Buy Mutual Funds & Gold starting from Rp 10.000. Grow your assets now.",
+        "returnRate": "Return / Year",
+        "risk": "Risk"
+      }
+    },
+    "stats": {
+      "activeUsers": "Active Users",
+      "transactionVolume": "Transaction Volume",
+      "uptime": "SLA Uptime",
+      "latency": "Latency",
+      "support": "Support"
+    },
+    "cta": {
+      "title": "Ready to Move Forward?",
+      "subtitle": "Join the digital banking revolution today. No monthly admin fees. No hassle.",
+      "button": "Open Free Account",
+      "marketing": "New Banking Standard."
+    },
     "footer": {
-      "legal": "2026 PayU. All Rights Reserved."
+      "legal": "2026 PayU. All Rights Reserved.",
+      "rights": "© 2026 PayU Financial Infrastructure.",
+      "features": "Features",
+      "career": "Careers",
+      "blog": "Blog",
+      "privacy": "Privacy"
+    },
+    "ticker": {
+      "label": "Trusted by Leaders:"
     }
   }
 }

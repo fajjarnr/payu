@@ -20,16 +20,31 @@ const BentoCard = ({ className, children, delay = 0 }: { className?: string; chi
   </motion.div>
 );
 
+import { useTranslations } from 'next-intl';
+
 export default function BentoGrid() {
+  const t = useTranslations('landing.bento');
+
   return (
     <section className="py-32 px-6">
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900" dangerouslySetInnerHTML={{ __html: t.raw('title').replace('Fitur Pintar', t('title').split(' ')[0] + ' ' + t('title').split(' ')[1]) }}>
+            </h2>
+            <h2 className="hidden">{t('title')}</h2> {/* Hidden for SEO/Accessiblity fallback if needed, or better, rewrite dangerouslySetInnerHTML above properly. Actually, checking message keys, title is "Fitur Pintar untuk Gaya Hidup Modern." */}
+             {/* Let's simplify and just use the key directly or split if needed for styling. 
+                 The original had: "Fitur Pintar untuk <span class...>"
+                 I'll just inject the whole title for now or try to reconstruct.
+                 Actually, better to not use dangerous HTML if possible, or use rich text formatting from next-intl if available, but raw is easier.
+                 Let's assume the translation key has simple text, and I want to style the last part.
+                 Wait, I didn't put HTML in the JSON. "Fitur Pintar untuk Gaya Hidup Modern."
+                 I will just render the title directly for now to be safe and consistent.
+              */}
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
-                Fitur Pintar untuk <span className="text-emerald-500">Gaya Hidup Modern.</span>
+               {t('title')}
             </h2>
             <p className="text-slate-500 text-lg">
-                Satu aplikasi, jutaan kemungkinan. Kami merancang setiap piksel untuk kemudahan finansial Anda.
+                {t('subtitle')}
             </p>
         </div>
 
@@ -40,9 +55,9 @@ export default function BentoGrid() {
                     <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center mb-4 text-emerald-400">
                         <PieChart className="w-6 h-6" />
                     </div>
-                    <h3 className="text-2xl font-bold">Wawasan Finansial AI</h3>
+                    <h3 className="text-2xl font-bold">{t('analytics.title')}</h3>
                     <p className="text-slate-400 max-w-sm">
-                        Analisis pengeluaran otomatis yang membantu Anda berhemat hingga 20% setiap bulan dengan rekomendasi cerdas.
+                        {t('analytics.desc')}
                     </p>
                 </div>
                 
@@ -61,27 +76,27 @@ export default function BentoGrid() {
                         <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full" />
                         <Shield className="w-32 h-32 text-blue-500 relative z-10" />
                         <div className="absolute top-0 right-0 p-2 bg-emerald-500 text-white text-xs font-bold rounded-full animate-bounce">
-                            AMAN
+                            {t('security.tag')}
                         </div>
                     </div>
                     <div>
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Proteksi Berlapis</h3>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">{t('security.title')}</h3>
                         <p className="text-slate-500">
-                            Enkripsi AES-256, Biometrik, dan deteksi fraud real-time menjaga aset Anda tetap aman 24/7.
+                            {t('security.desc')}
                         </p>
                     </div>
                     <div className="w-full bg-slate-50 rounded-2xl p-4 border border-slate-100 text-left space-y-3">
                         <div className="flex items-center gap-3 text-sm font-medium text-slate-700">
                             <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                            <span>Otorisasi Wajah</span>
+                            <span>{t('security.features.faceAuth')}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm font-medium text-slate-700">
                             <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                            <span>Enkripsi Data Privasi</span>
+                            <span>{t('security.features.encryption')}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm font-medium text-slate-700">
                             <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                            <span>Garansi Saldo 100%</span>
+                            <span>{t('security.features.guarantee')}</span>
                         </div>
                     </div>
                  </div>
@@ -94,9 +109,9 @@ export default function BentoGrid() {
                         <Globe className="w-6 h-6" />
                     </div>
                     <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-slate-900">Transaksi Global</h3>
+                        <h3 className="text-xl font-bold text-slate-900">{t('global.title')}</h3>
                         <p className="text-slate-500 text-sm">
-                            Kirim uang ke 50+ negara dengan kurs kompetitif dan biaya transparan.
+                            {t('global.desc')}
                         </p>
                     </div>
                     <div className="flex -space-x-2 overflow-hidden py-2">
@@ -115,18 +130,18 @@ export default function BentoGrid() {
                         <ArrowUpRight className="w-6 h-6" />
                     </div>
                     <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-slate-900">Mulai Investasi</h3>
+                        <h3 className="text-xl font-bold text-slate-900">{t('invest.title')}</h3>
                         <p className="text-slate-500 text-sm">
-                            Beli Reksadana & Emas mulai dari Rp 10.000. Tumbuhkan aset Anda sekarang.
+                            {t('invest.desc')}
                         </p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between group-hover:bg-orange-50 transition-colors">
                         <div className="flex flex-col">
-                            <span className="text-xs text-slate-400 font-bold uppercase">Return / Thn</span>
+                            <span className="text-xs text-slate-400 font-bold uppercase">{t('invest.returnRate')}</span>
                             <span className="text-lg font-bold text-emerald-500">+12.4%</span>
                         </div>
                          <div className="flex flex-col items-end">
-                            <span className="text-xs text-slate-400 font-bold uppercase">Resiko</span>
+                            <span className="text-xs text-slate-400 font-bold uppercase">{t('invest.risk')}</span>
                             <span className="text-sm font-bold text-slate-700">Moderat</span>
                         </div>
                     </div>

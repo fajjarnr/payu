@@ -282,6 +282,23 @@
   "auth": {
     "login": "Masuk",
     "register": "Daftar",
+    "welcomeBack": "Selamat Datang Kembali",
+    "subtitle": "Masuk ke dashboard finansial Anda",
+    "forgotPassword": "Lupa password?",
+    "loginButton": "Masuk ke Akun",
+    "loggingIn": "Masuk...",
+    "or": "Atau",
+    "branding": {
+      "tag": "Keamanan Tingkat Enterprise",
+      "title": "Platform Perbankan Digital Masa Depan.",
+      "desc": "Kelola aset, investasi, dan transaksi harian Anda dalam satu ekosistem yang aman, terenkripsi, dan terintegrasi penuh.",
+      "footer": "© 2026 PayU Financial Infrastructure. Secure Environment.",
+      "features": {
+        "encryption": "Enkripsi End-to-End Standar Militer",
+        "monitoring": "Monitoring Transaksi Real-time AI",
+        "qris": "Integrasi Pembayaran QRIS & BI-FAST"
+      }
+    },
     "phone": "Nomor Telepon",
     "pin": "PIN",
     "forgotPin": "Lupa PIN?",
@@ -291,15 +308,60 @@
     "agreeTerms": "Saya setuju dengan Syarat dan Ketentuan",
     "createAccount": "Buat Akun",
     "haveAccount": "Sudah punya akun?",
-    "noAccount": "Belum punya akun?",
+    "noAccount": "Belum memiliki akun?",
+    "registerLink": "Daftar Sekarang",
     "onboarding": {
       "title": "Selamat Datang di PayU",
       "subtitle": "Platform perbankan digital masa depan",
-      "step1": "Informasi Pribadi",
-      "step2": "Keamanan",
-      "step3": "Selesai",
-      "success": "Registrasi Berhasil!",
-      "redirect": "Mengalihkan ke halaman login..."
+      "back": "Kembali",
+      "steps": {
+        "identity": "Identitas",
+        "profile": "Profil",
+        "complete": "Selesai"
+      },
+      "step1": {
+        "title": "Unggah e-KTP",
+        "subtitle": "Foto KTP asli Anda untuk validasi data otomatis",
+        "clickToUpload": "Klik untuk ambil foto",
+        "formats": "JPG, PNG maks 5MB",
+        "button": "Lanjut ke Profil Data"
+      },
+      "step2": {
+        "title": "Lengkapi Profil",
+        "subtitle": "Isi data diri sesuai identitas resmi",
+        "nik": "Nomor Induk Kependudukan (NIK)",
+        "nikPlaceholder": "16 digit angka...",
+        "fullName": "Nama Lengkap",
+        "fullNamePlaceholder": "Sesuai KTP",
+        "email": "Email",
+        "emailPlaceholder": "nama@email.com",
+        "username": "Username",
+        "usernamePlaceholder": "unik & mudah diingat",
+        "backButton": "Kembali",
+        "submitButton": "Konfirmasi Pendaftaran",
+        "submitting": "Memproses..."
+      },
+      "step3": {
+        "title": "Akun Siap Digunakan!",
+        "subtitle": "Mengalihkan Anda ke gerbang login aman dalam beberapa detik...",
+        "success": "Registrasi Berhasil!",
+        "redirect": "Mengalihkan ke halaman login..."
+      },
+      "branding": {
+        "title": "Verifikasi Identitas Digital.",
+        "desc": "Bergabung dengan 2 Juta+ pengguna yang telah mempercayakan masa depan finansial mereka pada ekosistem PayU.",
+        "features": {
+            "ekyc": {
+                "title": "e-KYC Instant Liveness",
+                "desc": "Verifikasi wajah biometrik otomatis tanpa antri video call agent."
+            },
+            "data": {
+                "title": "Kedaulatan Data",
+                "desc": "Data pribadi Anda dienkripsi penuh dan tidak pernah dibagikan ke pihak ketiga."
+            }
+        },
+        "system": "Sistem Operasional"
+      }
     }
   },
   "errors": {
@@ -334,17 +396,30 @@
     "changeLanguage": "Ganti Bahasa"
   },
   "landing": {
-    "heroTitle": "Masa Depan Perbankan Digital Ada di Sini.",
-    "heroSubtitle": "Kelola uang Anda dengan mudah, aman, dan cerdas. Bergabunglah dengan revolusi perbankan digital.",
+    "heroTitle": "Satu Aplikasi.<br />Jutaan Solusi.",
+    "heroSubtitle": "Platform perbankan digital mandiri yang mendefinisikan ulang kemudahan finansial. Kirim, terima, dan investasikan aset Anda dalam hitungan detik.",
     "getStarted": "Mulai Sekarang",
     "login": "Masuk",
+    "demo": "Demo",
+    "trustedBy": "Dipercaya oleh {count} Pengguna",
+    "badge": "Banking 4.0 Updated",
+    "nav": {
+      "features": "Fitur",
+      "about": "Tentang",
+      "support": "Bantuan",
+      "contact": "Kontak",
+      "login": "Masuk",
+      "openAccount": "Buka Rekening"
+    },
     "features": {
+      "title": "Kinerja Tanpa Batas.",
+      "subtitle": "Dibangun di atas infrastruktur microservices modern.",
       "instantTransfer": {
         "title": "Transfer Instan",
         "desc": "Kirim uang ke bank mana pun dalam hitungan detik tanpa biaya tersembunyi."
       },
       "secure": {
-        "title": "Keamanan Kelas Dunia",
+        "title": "Keamanan Tinggi",
         "desc": "Data dan aset Anda dilindungi dengan enkripsi tingkat lanjut dan autentikasi biometrik."
       },
       "smartInvesting": {
@@ -352,8 +427,57 @@
         "desc": "Tumbuhkan kekayaan Anda dengan produk investasi yang dikurasi khusus untuk Anda."
       }
     },
+    "bento": {
+      "title": "Fitur Pintar untuk Gaya Hidup Modern.",
+      "subtitle": "Satu aplikasi, jutaan kemungkinan. Kami merancang setiap piksel untuk kemudahan finansial Anda.",
+      "analytics": {
+        "title": "Wawasan Finansial AI",
+        "desc": "Analisis pengeluaran otomatis yang membantu Anda berhemat hingga 20% setiap bulan dengan rekomendasi cerdas."
+      },
+      "security": {
+        "tag": "AMAN",
+        "title": "Proteksi Berlapis",
+        "desc": "Enkripsi AES-256, Biometrik, dan deteksi fraud real-time menjaga aset Anda tetap aman 24/7.",
+        "features": {
+          "faceAuth": "Otorisasi Wajah",
+          "encryption": "Enkripsi Data Privasi",
+          "guarantee": "Garansi Saldo 100%"
+        }
+      },
+      "global": {
+        "title": "Transaksi Global",
+        "desc": "Kirim uang ke 50+ negara dengan kurs kompetitif dan biaya transparan."
+      },
+      "invest": {
+        "title": "Mulai Investasi",
+        "desc": "Beli Reksadana & Emas mulai dari Rp 10.000. Tumbuhkan aset Anda sekarang.",
+        "returnRate": "Return / Thn",
+        "risk": "Resiko"
+      }
+    },
+    "stats": {
+      "activeUsers": "Pengguna Aktif",
+      "transactionVolume": "Volume Transaksi",
+      "uptime": "SLA Uptime",
+      "latency": "Latency",
+      "support": "Support"
+    },
+    "cta": {
+      "title": "Siap Melangkah Maju?",
+      "subtitle": "Bergabunglah dengan revolusi perbankan digital hari ini. Tanpa biaya admin bulanan. Tanpa kerumitan.",
+      "button": "Buka Rekening Gratis",
+      "marketing": "Standar Baru Perbankan."
+    },
     "footer": {
-      "legal": "2026 PayU. Hak Cipta Dilindungi Undang-Undang."
+      "legal": "2026 PayU. Hak Cipta Dilindungi Undang-Undang.",
+      "rights": "© 2026 PayU Financial Infrastructure.",
+      "features": "Fitur",
+      "career": "Karir",
+      "blog": "Blog",
+      "privacy": "Privasi"
+    },
+    "ticker": {
+      "label": "Dipercaya oleh Pemimpin:"
     }
   }
 }

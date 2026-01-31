@@ -40,12 +40,12 @@ export default function LandingPage() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-12 font-medium">
-            <Link href="#app" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">Fitur</Link>
-            <Link href="#about" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">Tentang</Link>
-            <Link href="#support" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">Bantuan</Link>
-            <Link href={l('/login')} className="text-sm font-semibold text-emerald-600 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-all cursor-pointer">Masuk</Link>
+            <Link href="#app" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">{t('nav.features')}</Link>
+            <Link href="#about" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">{t('nav.about')}</Link>
+            <Link href="#support" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">{t('nav.support')}</Link>
+            <Link href={l('/login')} className="text-sm font-semibold text-emerald-600 hover:bg-emerald-50 px-4 py-2 rounded-lg transition-all cursor-pointer">{t('nav.login')}</Link>
             <Link href={l('/onboarding')} className="px-6 py-3 bg-slate-900 text-white hover:bg-slate-800 rounded-full text-sm font-semibold transition-all active:scale-95 cursor-pointer shadow-lg shadow-slate-900/20">
-              Buka Rekening
+              {t('nav.openAccount')}
             </Link>
           </div>
 
@@ -65,9 +65,9 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-100 p-8 shadow-xl flex flex-col gap-6 font-medium"
           >
-            <Link href="#app" className="text-lg text-slate-600" onClick={() => setMobileMenuOpen(false)}>Fitur</Link>
-            <Link href={l('/login')} className="text-lg text-slate-600" onClick={() => setMobileMenuOpen(false)}>Masuk</Link>
-            <Link href={l('/onboarding')} className="text-lg bg-emerald-500 text-white p-4 rounded-2xl text-center shadow-lg shadow-emerald-500/20" onClick={() => setMobileMenuOpen(false)}>Buka Rekening</Link>
+            <Link href="#app" className="text-lg text-slate-600" onClick={() => setMobileMenuOpen(false)}>{t('nav.features')}</Link>
+            <Link href={l('/login')} className="text-lg text-slate-600" onClick={() => setMobileMenuOpen(false)}>{t('nav.login')}</Link>
+            <Link href={l('/onboarding')} className="text-lg bg-emerald-500 text-white p-4 rounded-2xl text-center shadow-lg shadow-emerald-500/20" onClick={() => setMobileMenuOpen(false)}>{t('nav.openAccount')}</Link>
           </motion.div>
         )}
       </nav>
@@ -91,7 +91,7 @@ export default function LandingPage() {
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-bold uppercase tracking-widest"
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Banking 4.0 Updated
+                  {t('badge')}
                 </motion.div>
                 
                 <motion.h1 
@@ -99,12 +99,8 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                   className="text-5xl sm:text-7xl font-bold leading-[1.1] tracking-tight text-slate-900"
-                >
-                  Satu Aplikasi. <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-blue-500">
-                    Jutaan Solusi.
-                  </span>
-                </motion.h1>
+                  dangerouslySetInnerHTML={{ __html: t.raw('heroTitle') }}
+                />
                 
                 <motion.p 
                   initial={{ opacity: 0, y: 20 }}
@@ -112,7 +108,7 @@ export default function LandingPage() {
                   transition={{ delay: 0.2 }}
                   className="text-lg md:text-xl text-slate-500 leading-relaxed max-w-lg"
                 >
-                  Platform perbankan digital mandiri yang mendefinisikan ulang kemudahan finansial. Kirim, terima, dan investasikan aset Anda dalam hitungan detik.
+                  {t('heroSubtitle')}
                 </motion.p>
                 
                 <motion.div 
@@ -122,10 +118,10 @@ export default function LandingPage() {
                   className="pt-4 flex flex-wrap gap-4"
                 >
                    <Link href={l('/onboarding')} className="px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-lg shadow-xl shadow-slate-900/20 active:scale-95 transition-all">
-                      Mulai Sekarang
+                      {t('getStarted')}
                    </Link>
                    <Link href="#video" className="px-8 py-4 bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-2xl font-bold text-lg active:scale-95 transition-all flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-emerald-500" /> Demo
+                      <Zap className="w-5 h-5 text-emerald-500" /> {t('demo')}
                    </Link>
                 </motion.div>
                 
@@ -137,7 +133,7 @@ export default function LandingPage() {
                             </div>
                         ))}
                     </div>
-                    <div>Dipercaya oleh 2 Juta+ Pengguna</div>
+                    <div>{t('trustedBy', { count: '2M+' })}</div>
                 </div>
               </div>
 
@@ -173,14 +169,14 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 touch-none pointer-events-none" />
           <div className="max-w-7xl mx-auto px-6 md:px-12 text-center space-y-16 relative z-10">
             <div className="space-y-4">
-                <h2 className="text-4xl md:text-6xl font-bold tracking-tight">Kinerja Tanpa Batas.</h2>
-                <p className="text-xl text-slate-500">Dibangun di atas infrastruktur microservices modern.</p>
+                <h2 className="text-4xl md:text-6xl font-bold tracking-tight">{t('features.title')}</h2>
+                <p className="text-xl text-slate-500">{t('features.subtitle')}</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-              <StatItem value="2M+" label="Active Users" />
-              <StatItem value="Rp50T+" label="Volume Transaksi" />
-              <StatItem value="99.99%" label="SLA Uptime" />
-              <StatItem value="<50ms" label="Latency" />
+              <StatItem value="2M+" label={t('stats.activeUsers')} />
+              <StatItem value="Rp50T+" label={t('stats.transactionVolume')} />
+              <StatItem value="99.99%" label={t('stats.uptime')} />
+              <StatItem value="<50ms" label={t('stats.latency')} />
             </div>
           </div>
         </section>
@@ -193,13 +189,13 @@ export default function LandingPage() {
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px] -z-10" />
 
           <div className="max-w-4xl mx-auto px-6 text-center space-y-10 text-white">
-            <h2 className="text-5xl md:text-7xl font-bold tracking-tight">Siap Melangkah Maju?</h2>
+            <h2 className="text-5xl md:text-7xl font-bold tracking-tight">{t('cta.title')}</h2>
             <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              Bergabunglah dengan revolusi perbankan digital hari ini. Tanpa biaya admin bulanan. Tanpa kerumitan.
+              {t('cta.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-6 pt-8">
                <Link href={l('/onboarding')} className="px-12 py-6 bg-emerald-500 text-white rounded-2xl font-bold text-xl shadow-xl shadow-emerald-500/20 hover:scale-105 hover:bg-emerald-400 transition-all active:scale-95">
-                 Buka Rekening Gratis
+                 {t('cta.button')}
                </Link>
             </div>
           </div>
@@ -216,12 +212,12 @@ export default function LandingPage() {
               <span className="text-xl font-bold text-slate-900">PayU</span>
             </div>
             <div className="flex gap-8 text-sm text-slate-500 font-medium">
-              <Link href="#" className="hover:text-slate-900">Fitur</Link>
-              <Link href="#" className="hover:text-slate-900">Karir</Link>
-              <Link href="#" className="hover:text-slate-900">Blog</Link>
-              <Link href="#" className="hover:text-slate-900">Privasi</Link>
+              <Link href="#" className="hover:text-slate-900">{t('footer.features')}</Link>
+              <Link href="#" className="hover:text-slate-900">{t('footer.career')}</Link>
+              <Link href="#" className="hover:text-slate-900">{t('footer.blog')}</Link>
+              <Link href="#" className="hover:text-slate-900">{t('footer.privacy')}</Link>
             </div>
-            <p className="text-sm text-slate-400">© 2026 PayU Financial Infrastructure.</p>
+            <p className="text-sm text-slate-400">{t('footer.rights')}</p>
           </div>
         </div>
       </footer>

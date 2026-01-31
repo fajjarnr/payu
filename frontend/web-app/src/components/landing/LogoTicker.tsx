@@ -11,12 +11,18 @@ const logos = [
   { name: 'Kompas', color: '#10B981' },
 ];
 
+import { useTranslations } from 'next-intl';
+
+// ... (existing imports logos)
+
 export default function LogoTicker() {
+  const t = useTranslations('landing.ticker');
+
   return (
     <section className="py-10 bg-white border-y border-slate-100 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center gap-8">
         <span className="text-sm font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap hidden md:block">
-            Trusted by Leaders:
+            {t('label')}
         </span>
         
         <div className="flex-1 overflow-hidden relative mask-linear-fade">
