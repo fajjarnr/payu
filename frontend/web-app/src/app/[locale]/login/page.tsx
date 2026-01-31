@@ -7,6 +7,7 @@ import { loginSchema, LoginRequest } from '@/types';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/stores';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,8 +49,8 @@ export default function LoginPage() {
 
         <div className="relative z-10">
             <Link href="/" className="flex items-center gap-3 w-fit">
-                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                    <span className="text-white font-bold text-xl">U</span>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-500/20">
+                    <Image src="/logo.svg" alt="PayU Brand Logo" width={40} height={40} />
                 </div>
                 <span className="text-2xl font-bold tracking-tight text-white">PayU</span>
             </Link>

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
@@ -31,15 +32,7 @@ export default function LandingPage() {
       }`}>
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
           <Link href={l('/')} className="flex items-center gap-3 group cursor-pointer" aria-label="PayU Home">
-            <div className="w-10 h-10 bg-[#10b981] rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-              <div className="relative">
-                <span className="text-white font-bold text-xl leading-none">U</span>
-                <div className="absolute -top-1 -right-1 flex gap-0.5">
-                   <div className="w-1.5 h-1.5 bg-white/40 rounded-full" />
-                   <div className="w-1.5 h-1.5 bg-white/20 rounded-full" />
-                </div>
-              </div>
-            </div>
+            <Image src="/logo.svg" alt="PayU Logo" width={40} height={40} className="w-10 h-10 group-hover:scale-105 transition-transform" />
             <span className="text-2xl font-bold tracking-tight text-slate-900">
               PayU
             </span>
@@ -217,7 +210,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-bold">U</div>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+                <Image src="/logo.svg" alt="PayU Logo" width={32} height={32} />
+              </div>
               <span className="text-xl font-bold text-slate-900">PayU</span>
             </div>
             <div className="flex gap-8 text-sm text-slate-500 font-medium">
