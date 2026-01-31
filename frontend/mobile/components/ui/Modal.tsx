@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, memo, useCallback } from 'react';
 import {
   Modal as RNModal,
   View,
@@ -17,7 +17,7 @@ interface ModalProps {
   style?: ViewStyle;
 }
 
-export const Modal: React.FC<ModalProps> = ({
+export const ModalComponent: React.FC<ModalProps> = ({
   visible,
   onClose,
   title,
@@ -26,27 +26,43 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const { colors } = useTheme();
 
+  // Performance: Memoize container style
+  const containerStyle = useMemo<ViewStyle>(() => [
+    styles.container,
+    { backgroundColor: colors.background },
+    style,
+  ], [colors.background, style]);
+
+  // Performance: Memoize title style
+  const titleStyle = useMemo<ViewStyle>(() => [
+    styles.title,
+    { color: colors.text },
+  ], [colors.text]);
+
+  // Performance: Memoize close button handler
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  if (!visible) {
+    return null;
+  }
+
   return (
     <RNModal
       visible={visible}
       transparent
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        <View
-          style={[
-            styles.container,
-            { backgroundColor: colors.background },
-            style,
-          ]}
-        >
+        <View style={containerStyle}>
           {/* Header */}
           <View style={styles.header}>
             {title && (
-              <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+              <Text style={titleStyle}>{title}</Text>
             )}
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -58,6 +74,17 @@ export const Modal: React.FC<ModalProps> = ({
     </RNModal>
   );
 };
+
+// Performance: Memoize Modal component to prevent unnecessary re-renders
+export const Modal = memo(ModalComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.visible === nextProps.visible &&
+    prevProps.title === nextProps.title &&
+    prevProps.children === nextProps.children
+  );
+});
+
+Modal.displayName = 'Modal';
 
 const styles = StyleSheet.create({
   overlay: {

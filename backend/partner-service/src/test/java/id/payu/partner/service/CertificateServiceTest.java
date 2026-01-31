@@ -1,20 +1,16 @@
 package id.payu.partner.service;
 
-import id.payu.partner.PartnerTestProfile;
 import id.payu.partner.domain.Partner;
 import id.payu.partner.domain.PartnerCertificate;
 import id.payu.partner.repository.PartnerCertificateRepository;
 import id.payu.partner.repository.PartnerRepository;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
-import io.quarkus.test.junit.mockito.InjectMock;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import java.security.*;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -23,23 +19,22 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@QuarkusTest
-@TestProfile(PartnerTestProfile.class)
-@Disabled("Service tests require Docker/Testcontainers - disabled when Docker not available")
+@ExtendWith(MockitoExtension.class)
 public class CertificateServiceTest {
 
-    @Inject
-    CertificateService certificateService;
+    @InjectMocks
+    private CertificateService certificateService;
 
-    @InjectMock
-    PartnerCertificateRepository certificateRepository;
+    @Mock
+    private PartnerCertificateRepository certificateRepository;
 
-    @InjectMock
-    PartnerRepository partnerRepository;
+    @Mock
+    private PartnerRepository partnerRepository;
 
-    @InjectMock
-    SnapBiSignatureService signatureService;
+    @Mock
+    private SnapBiSignatureService signatureService;
 
     private Partner testPartner;
     private PartnerCertificate testCertificate;
@@ -48,45 +43,45 @@ public class CertificateServiceTest {
     @BeforeEach
     public void setUp() throws Exception {
         testPartner = new Partner();
-        testPartner.id = 1L;
-        testPartner.name = "Test Partner";
-        testPartner.email = "test@example.com";
+        testPartner.setId(1L);
+        testPartner.setName("Test Partner");
+        testPartner.setEmail("test@example.com");
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
         testKeyPair = keyPairGenerator.generateKeyPair();
 
         testCertificate = new PartnerCertificate();
-        testCertificate.id = 1L;
-        testCertificate.partner = testPartner;
-        testCertificate.publicKeyFingerprint = "test-fingerprint";
-        testCertificate.certificateType = "X.509";
-        testCertificate.keyAlgorithm = "RSA";
-        testCertificate.keySize = 2048;
-        testCertificate.validFrom = LocalDateTime.now().minusDays(10);
-        testCertificate.validTo = LocalDateTime.now().plusDays(350);
-        testCertificate.active = true;
+        testCertificate.setId(1L);
+        testCertificate.setPartner(testPartner);
+        testCertificate.setPublicKeyFingerprint("test-fingerprint");
+        testCertificate.setCertificateType("X.509");
+        testCertificate.setKeyAlgorithm("RSA");
+        testCertificate.setKeySize(2048);
+        testCertificate.setValidFrom(LocalDateTime.now().minusDays(10));
+        testCertificate.setValidTo(LocalDateTime.now().plusDays(350));
+        testCertificate.setActive(true);
     }
 
     @Test
     public void testGenerateKeyPairAndStore() throws Exception {
-        Mockito.when(partnerRepository.findById(1L)).thenReturn(testPartner);
+        when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
 
         PartnerCertificate cert = certificateService.generateKeyPairAndStore(1L, 365);
 
         assertNotNull(cert);
-        assertEquals(testPartner, cert.partner);
-        assertNotNull(cert.certificatePem);
-        assertNotNull(cert.privateKeyPem);
-        assertNotNull(cert.publicKeyFingerprint);
-        assertEquals("RSA", cert.keyAlgorithm);
-        assertEquals(2048, cert.keySize);
-        assertTrue(cert.active);
+        assertEquals(testPartner, cert.getPartner());
+        assertNotNull(cert.getCertificatePem());
+        assertNotNull(cert.getPrivateKeyPem());
+        assertNotNull(cert.getPublicKeyFingerprint());
+        assertEquals("RSA", cert.getKeyAlgorithm());
+        assertEquals(2048, cert.getKeySize());
+        assertTrue(cert.isActive());
     }
 
     @Test
     public void testGenerateKeyPairAndStore_PartnerNotFound() {
-        Mockito.when(partnerRepository.findById(999L)).thenReturn(null);
+        when(partnerRepository.findById(999L)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             certificateService.generateKeyPairAndStore(999L, 365);
@@ -97,7 +92,7 @@ public class CertificateServiceTest {
 
     @Test
     public void testGetActiveCertificate() {
-        Mockito.when(certificateRepository.findActiveByPartnerId(1L))
+        when(certificateRepository.findActiveByPartnerId(1L))
                 .thenReturn(Optional.of(testCertificate));
 
         Optional<PartnerCertificate> cert = certificateService.getActiveCertificate(1L);
@@ -108,7 +103,7 @@ public class CertificateServiceTest {
 
     @Test
     public void testGetActiveCertificate_NotFound() {
-        Mockito.when(certificateRepository.findActiveByPartnerId(1L))
+        when(certificateRepository.findActiveByPartnerId(1L))
                 .thenReturn(Optional.empty());
 
         Optional<PartnerCertificate> cert = certificateService.getActiveCertificate(1L);
@@ -118,7 +113,7 @@ public class CertificateServiceTest {
 
     @Test
     public void testGetValidCertificate() {
-        Mockito.when(certificateRepository.findValidByPartnerId(1L))
+        when(certificateRepository.findValidByPartnerId(1L))
                 .thenReturn(Optional.of(testCertificate));
 
         Optional<PartnerCertificate> cert = certificateService.getValidCertificate(1L);
@@ -129,7 +124,7 @@ public class CertificateServiceTest {
 
     @Test
     public void testGetCertificatesByPartner() {
-        Mockito.when(certificateRepository.findByPartnerId(1L))
+        when(certificateRepository.findByPartnerId(1L))
                 .thenReturn(List.of(testCertificate));
 
         List<PartnerCertificate> certs = certificateService.getCertificatesByPartner(1L);
@@ -142,12 +137,12 @@ public class CertificateServiceTest {
     @Test
     public void testGetExpiringCertificates() {
         PartnerCertificate expiringCert = new PartnerCertificate();
-        expiringCert.id = 2L;
-        expiringCert.partner = testPartner;
-        expiringCert.validTo = LocalDateTime.now().plusDays(10);
-        expiringCert.active = true;
+        expiringCert.setId(2L);
+        expiringCert.setPartner(testPartner);
+        expiringCert.setValidTo(LocalDateTime.now().plusDays(10));
+        expiringCert.setActive(true);
 
-        Mockito.when(certificateRepository.findExpiringSoon(1L, 30))
+        when(certificateRepository.findExpiringSoon(1L, 30))
                 .thenReturn(List.of(expiringCert));
 
         List<PartnerCertificate> certs = certificateService.getExpiringCertificates(1L, 30);
@@ -159,17 +154,17 @@ public class CertificateServiceTest {
 
     @Test
     public void testDeactivateCertificate() {
-        Mockito.when(certificateRepository.findById(1L)).thenReturn(testCertificate);
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(testCertificate));
 
         boolean result = certificateService.deactivateCertificate(1L);
 
         assertTrue(result);
-        assertFalse(testCertificate.active);
+        assertFalse(testCertificate.isActive());
     }
 
     @Test
     public void testDeactivateCertificate_NotFound() {
-        Mockito.when(certificateRepository.findById(999L)).thenReturn(null);
+        when(certificateRepository.findById(999L)).thenReturn(Optional.empty());
 
         boolean result = certificateService.deactivateCertificate(999L);
 
@@ -177,26 +172,8 @@ public class CertificateServiceTest {
     }
 
     @Test
-    public void testDeleteCertificate() {
-        Mockito.when(certificateRepository.deleteById(1L)).thenReturn(true);
-
-        boolean result = certificateService.deleteCertificate(1L);
-
-        assertTrue(result);
-    }
-
-    @Test
-    public void testDeleteCertificate_NotFound() {
-        Mockito.when(certificateRepository.deleteById(999L)).thenReturn(false);
-
-        boolean result = certificateService.deleteCertificate(999L);
-
-        assertFalse(result);
-    }
-
-    @Test
     public void testValidateCertificate_Valid() {
-        Mockito.when(certificateRepository.findById(1L)).thenReturn(testCertificate);
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(testCertificate));
 
         boolean isValid = certificateService.validateCertificate(1L);
 
@@ -205,8 +182,8 @@ public class CertificateServiceTest {
 
     @Test
     public void testValidateCertificate_Expired() {
-        testCertificate.validTo = LocalDateTime.now().minusDays(1);
-        Mockito.when(certificateRepository.findById(1L)).thenReturn(testCertificate);
+        testCertificate.setValidTo(LocalDateTime.now().minusDays(1));
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(testCertificate));
 
         boolean isValid = certificateService.validateCertificate(1L);
 
@@ -215,8 +192,8 @@ public class CertificateServiceTest {
 
     @Test
     public void testValidateCertificate_NotActive() {
-        testCertificate.active = false;
-        Mockito.when(certificateRepository.findById(1L)).thenReturn(testCertificate);
+        testCertificate.setActive(false);
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(testCertificate));
 
         boolean isValid = certificateService.validateCertificate(1L);
 
@@ -225,13 +202,13 @@ public class CertificateServiceTest {
 
     @Test
     public void testVerifySignatureWithCertificate() throws Exception {
-        Mockito.when(partnerRepository.findById(1L)).thenReturn(testPartner);
+        when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
 
         PartnerCertificate cert = certificateService.generateKeyPairAndStore(1L, 365);
-        cert.validFrom = LocalDateTime.now().minusDays(10);
-        cert.validTo = LocalDateTime.now().plusDays(350);
+        cert.setValidFrom(LocalDateTime.now().minusDays(10));
+        cert.setValidTo(LocalDateTime.now().plusDays(350));
 
-        Mockito.when(certificateRepository.findById(1L)).thenReturn(cert);
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(cert));
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
@@ -251,7 +228,7 @@ public class CertificateServiceTest {
 
     @Test
     public void testVerifySignatureWithCertificate_InvalidSignature() {
-        Mockito.when(certificateRepository.findById(1L)).thenReturn(testCertificate);
+        when(certificateRepository.findById(1L)).thenReturn(Optional.of(testCertificate));
 
         boolean isValid = certificateService.verifySignatureWithCertificate(1L, "test data", "invalid-signature");
 

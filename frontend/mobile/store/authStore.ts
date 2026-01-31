@@ -3,12 +3,13 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, AuthTokens } from '@/types';
 import { storage } from '@/utils/storage';
 import { authService } from '@/services/auth.service';
+import { Logger } from '@/utils/logger';
 import { AUTH_CONFIG } from '@/constants/config';
 
 /**
  * No-op storage for Zustand persistence
  *
- * SECURITY: We use a no-op storage to prevent Zustand from persisting
+ * SECURITY P2-C2: We use a no-op storage to prevent Zustand from persisting
  * any auth state to AsyncStorage. All sensitive data (tokens, user)
  * is stored ONLY in SecureStore (encrypted).
  *
@@ -16,6 +17,8 @@ import { AUTH_CONFIG } from '@/constants/config';
  * - Tokens are never in AsyncStorage (unencrypted)
  * - Tokens are never in React Query cache
  * - Tokens are never in Zustand persistence layer
+ *
+ * Logging: All operations use sanitized logger to prevent token leakage
  */
 const noOpStorage = {
   getItem: async (_name: string): Promise<string | null> => {
@@ -32,7 +35,7 @@ const noOpStorage = {
 /**
  * AuthState Interface
  *
- * SECURITY NOTE: Tokens are NOT stored in Zustand state.
+ * SECURITY P2-C2: Tokens are NOT stored in Zustand state.
  * Tokens are stored ONLY in SecureStore (encrypted storage).
  * This prevents token exposure in:
  * - Zustand state snapshots
@@ -42,6 +45,8 @@ const noOpStorage = {
  *
  * The `isAuthenticated` flag is computed based on token existence
  * in SecureStore during initialization and login/logout operations.
+ *
+ * Logging P2-C3: All operations use sanitized logger to prevent token leakage
  */
 interface AuthState {
   user: User | null;
@@ -191,9 +196,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           await authService.logout();
         } catch (error) {
-          console.error('Logout error:', error);
+          // Sanitized logging - error details are logged but tokens are not
+          Logger.error('AuthStore', 'Logout API call failed', error);
         } finally {
-          // SECURITY: Remove tokens from SecureStore only
+          // SECURITY P2-C2: Remove tokens from SecureStore only
+          // Execute sequentially to ensure both operations complete
           await tokenStorage.removeTokens();
           await tokenStorage.removeUser();
 
@@ -230,8 +237,10 @@ export const useAuthStore = create<AuthState>()(
       updateUser: (user: User) => {
         set({ user });
         // Also update user in SecureStore for persistence
+        // This is a fire-and-forget operation, but we log errors appropriately
         tokenStorage.saveUser(user).catch((error) => {
-          console.error('Failed to update user in SecureStore:', error);
+          // Sanitized logging - user data is NOT logged (may contain PII)
+          Logger.error('AuthStore', 'Failed to update user in SecureStore', error);
         });
       },
     }),

@@ -22,7 +22,7 @@ Semua konfigurasi AI dipusatkan di direktori `.agent/` dan diakses oleh Claude C
 payu/
 ├── .agent/               # Master Configuration (Source of Truth)
 │   ├── skills/           # 17 High-level AI Skills (Consolidated)
-│   ├── agents/           # 12 Specialized Execution Agents
+│   ├── agents/           # 11 Specialized Execution Agents
 │   ├── workflows/        # SDLC & Coordination Workflows
 │   ├── commands/         # Custom Slash Commands
 │   ├── resources/        # Shared assets (shadcn components)
@@ -79,41 +79,41 @@ graph TD
 The PayU platform is powered by specialized skill clusters:
 
 ### 🏗️ Core & Architecture
-| Spec | Skill | Description |
-| :--- | :--- | :--- |
+| Spec         | Skill                 | Description                                                                                                            |
+| :----------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------- |
 | **Strategy** | `principal-architect` | **Master Skill**: High-level Architecture, DORA, Strategy, C4, ADRs, Documentation. *(Merged from information-architect)* |
 
 ### ☕ Backend & Logic
-| Spec | Skill | Description |
-| :--- | :--- | :--- |
-| **Core** | `core-banking-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
-| **API** | `api-architect` | **Master Skill**: REST, OpenAPI, Versioning, & 3rd-party Integrations. |
-| **DB** | `data-architect` | **Master Skill**: PostgreSQL Design, Performance, Query Optimization, & Flyway. |
-| **Events** | `integration-architect` | **Master Skill**: Sagas, Event Sourcing, Kafka, Message Queues (CDC). |
-| **AI** | `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, Prompt Engineering, & GenAI. |
+| Spec       | Skill                    | Description                                                                         |
+| :--------- | :----------------------- | :---------------------------------------------------------------------------------- |
+| **Core**   | `core-banking-engineer`  | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience.            |
+| **API**    | `api-architect`          | **Master Skill**: REST, OpenAPI, Versioning, & 3rd-party Integrations.               |
+| **DB**     | `data-architect`         | **Master Skill**: PostgreSQL Design, Performance, Query Optimization, & Flyway.     |
+| **Events** | `integration-architect`  | **Master Skill**: Sagas, Event Sourcing, Kafka, Message Queues (CDC).               |
+| **AI**     | `ai-engineer`            | **Master Skill**: Intelligent Systems, FastAPI, Prompt Engineering, & GenAI.       |
 
 ### 📱 Frontend & Mobile
-| Spec | Skill | Description |
-| :--- | :--- | :--- |
-| **Web** | `frontend-architect` | **Master Skill**: Next.js 15+, React, Web Performance, Component Refactoring. |
-| **Mobile** | `mobile-architect` | **Master Skill**: React Native, Expo, Native UI, SF Symbols, Mobile Security. |
-| **Design** | `product-designer` | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y. |
-| **Artifacts** | `web-artifacts-builder` | **Master Skill**: Scaffolding single-file HTML/React artifacts for docs/demos. |
+| Spec          | Skill                    | Description                                                                         |
+| :------------ | :----------------------- | :---------------------------------------------------------------------------------- |
+| **Web**       | `frontend-architect`     | **Master Skill**: Next.js 15+, React, Web Performance, Component Refactoring.       |
+| **Mobile**    | `mobile-architect`       | **Master Skill**: React Native, Expo, Native UI, SF Symbols, Mobile Security.       |
+| **Design**    | `product-designer`       | **Master Skill**: Premium Aesthetics, Atomic Design, & A11y.                        |
+| **Artifacts** | `web-artifacts-builder`  | **Master Skill**: Scaffolding single-file HTML/React artifacts for docs/demos.      |
 
 ### 🛡️ Security & Compliance
-| Spec | Skill | Description |
-| :--- | :--- | :--- |
-| **Security** | `cybersecurity-architect` | **Master Skill**: Zero Trust, Vault, mTLS, Auth Patterns, PCI-DSS/OJK Compliance. |
-| **Data** | `data-governance-architect` | **Master Skill**: Data Lineage, PII Classification, Retention, & UU PDP. |
+| Spec         | Skill                        | Description                                                                         |
+| :----------- | :--------------------------- | :---------------------------------------------------------------------------------- |
+| **Security** | `cybersecurity-architect`    | **Master Skill**: Zero Trust, Vault, mTLS, Auth Patterns, PCI-DSS/OJK Compliance.   |
+| **Data**     | `data-governance-architect`  | **Master Skill**: Data Lineage, PII Classification, Retention, & UU PDP.            |
 
 ### ⚙️ DevOps, Reliability & Quality
-| Spec | Skill | Description |
-| :--- | :--- | :--- |
-| **Platform** | `platform-engineer` | **UNIFIED**: DevOps + SRE + Release Engineering. Tekton/ArgoCD, OpenShift, Feature Flags, Observability, Chaos, DR. *(v3.0.0)* |
-| **Quality** | `quality-engineer` | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact, Browser Testing. |
-| **Debugging** | `debugging-methodology` | **NEW**: Systematic debugging, Root Cause Analysis, Pattern Recognition. |
-| **FinOps** | `finops-engineer` | **UNIFIED**: Financial Ops + Cloud FinOps. Recon, GL, Cost Management, Tagging. |
-| **DX** | `dx-engineer` | **UNIFIED**: Git Workflows + Developer Onboarding + Slidev + Release Notes. |
+| Spec           | Skill                    | Description                                                                                                   |
+| :------------- | :----------------------- | :------------------------------------------------------------------------------------------------------------ |
+| **Platform**   | `platform-engineer`      | **UNIFIED**: DevOps + SRE + Release Engineering. Tekton/ArgoCD, OpenShift, Feature Flags, Observability, Chaos, DR. *(v3.0.0)* |
+| **Quality**    | `quality-engineer`       | **UNIFIED**: Testing + Performance + Contracts. TDD, Gatling/k6, Pact, Browser Testing.                       |
+| **Debugging**  | `debugging-methodology`  | **NEW**: Systematic debugging, Root Cause Analysis, Pattern Recognition.                                      |
+| **FinOps**     | `finops-engineer`        | **UNIFIED**: Financial Ops + Cloud FinOps. Recon, GL, Cost Management, Tagging.                               |
+| **DX**         | `dx-engineer`            | **UNIFIED**: Git Workflows + Developer Onboarding + Slidev + Release Notes.                                   |
 
 ---
 

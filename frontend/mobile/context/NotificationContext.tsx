@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { notificationService } from '@/services/notification.service';
 import { PushNotification } from '@/types';
+import { Logger } from '@/utils/logger';
 
 interface NotificationContextType {
   notifications: PushNotification[];
@@ -30,24 +31,35 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const registerNotifications = async () => {
-    const granted = await notificationService.requestPermissions();
-    setPermissionGranted(granted);
+    try {
+      const granted = await notificationService.requestPermissions();
+      setPermissionGranted(granted);
 
-    if (granted) {
-      await notificationService.registerPushToken();
+      Logger.info('NotificationContext', `Permissions ${granted ? 'granted' : 'denied'}`);
+
+      if (granted) {
+        await notificationService.registerPushToken();
+        Logger.info('NotificationContext', 'Push token registered successfully');
+      }
+    } catch (error) {
+      Logger.error('NotificationContext', 'Failed to register notifications', error);
     }
   };
 
   const setupNotificationListeners = () => {
     const subscription = notificationService.addNotificationListener(
       (notification) => {
-        console.log('Notification received:', notification);
+        Logger.debug('NotificationContext', 'Notification received', {
+          title: notification.request.content.title,
+        });
       }
     );
 
     const responseSubscription =
       notificationService.addNotificationResponseListener((response) => {
-        console.log('Notification tapped:', response);
+        Logger.debug('NotificationContext', 'Notification tapped', {
+          actionIdentifier: response.actionIdentifier,
+        });
       });
 
     return () => {
@@ -61,7 +73,14 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
     body: string,
     data?: any
   ) => {
-    await notificationService.sendLocalNotification(title, body, data);
+    try {
+      await notificationService.sendLocalNotification(title, body, data);
+      Logger.debug('NotificationContext', 'Local notification sent', { title });
+    } catch (error) {
+      Logger.error('NotificationContext', 'Failed to send local notification', error, {
+        title,
+      });
+    }
   };
 
   return (

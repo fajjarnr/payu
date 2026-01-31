@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import { View, ViewStyle } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 
@@ -10,7 +10,7 @@ interface CardProps {
   style?: ViewStyle;
 }
 
-export const Card: React.FC<CardProps> = ({
+export const CardComponent: React.FC<CardProps> = ({
   children,
   variant = 'elevated',
   padding = 'md',
@@ -19,7 +19,8 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const { colors } = useTheme();
 
-  const getPadding = () => {
+  // Memoize padding calculation
+  const paddingValue = useMemo(() => {
     switch (padding) {
       case 'none':
         return 0;
@@ -32,12 +33,13 @@ export const Card: React.FC<CardProps> = ({
       default:
         return 16;
     }
-  };
+  }, [padding]);
 
-  const cardStyle: ViewStyle = {
+  // Memoize card style to avoid recalculations
+  const cardStyle = useMemo<ViewStyle>(() => ({
     backgroundColor: colors.card,
     borderRadius: 20,
-    padding: getPadding(),
+    padding: paddingValue,
     ...(variant === 'elevated' && {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
@@ -50,7 +52,19 @@ export const Card: React.FC<CardProps> = ({
       borderColor: colors.border,
     }),
     ...style,
-  };
+  }), [colors.card, colors.border, paddingValue, variant, style]);
 
   return <View style={cardStyle}>{children}</View>;
 };
+
+// Memoize Card component for performance optimization in lists
+export const Card = memo(CardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.variant === nextProps.variant &&
+    prevProps.padding === nextProps.padding &&
+    prevProps.children === nextProps.children &&
+    prevProps.style === nextProps.style
+  );
+});
+
+Card.displayName = 'Card';

@@ -42,7 +42,7 @@
  * - PayU Security Policy P2-C2: Secure token storage
  *
  * @module QueryProvider
- * @version 2.0.0 - Security-hardened persistence
+ * @version 2.1.0 - Sanitized logging
  */
 
 import React, { ReactNode, useEffect, useState } from 'react';
@@ -54,6 +54,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { onlineManager, focusManager } from '@tanstack/react-query';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import { storage } from '@/utils/storage';
+import { logger } from '@/utils/logger';
 import { AUTH_CONFIG } from '@/constants/config';
 
 // Online manager setup with NetInfo
@@ -151,9 +152,19 @@ const persistConfig = {
 
       return isNonSensitive;
     },
+    shouldDehydrateMutation: (mutation: any) => {
+      const mutationKeyString = mutation.mutationKey?.[0]?.toString().toLowerCase() || '';
+
+      // SECURITY: Never persist auth mutations (login, register, token refresh)
+      // These contain credentials or tokens that must not be stored in AsyncStorage
+      const isAuthMutation = ['login', 'register', 'auth', 'token', 'logout'].some(key => 
+        mutationKeyString.includes(key)
+      );
+
+      return !isAuthMutation;
+    },
   },
 };
-
 interface QueryProviderProps {
   children: ReactNode;
 }
@@ -164,7 +175,13 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         queryCache: new QueryCache({
           onError: async (error: any, query) => {
-            console.error(`Query error for [${query.queryKey}]:`, error);
+            // Sanitized logging - query key may contain sensitive identifiers
+            // but the error object is sanitized by the logger
+            logger.error('Query failed', error, {
+              queryKey: Array.isArray(query.queryKey)
+                ? query.queryKey[0] // Log only the first element (usually the query name)
+                : query.queryKey,
+            });
 
             // Handle 401 errors globally
             if (error?.response?.status === 401) {
@@ -176,10 +193,10 @@ export function QueryProvider({ children }: QueryProviderProps) {
         }),
         mutationCache: new MutationCache({
           onError: (error: any, _variables, _context, mutation) => {
-            console.error(
-              `Mutation error for [${mutation.options.mutationKey}]:`,
-              error
-            );
+            // Sanitized logging - mutation key is logged, error is sanitized
+            logger.error('Mutation failed', error, {
+              mutationKey: mutation.options.mutationKey,
+            });
           },
         }),
         defaultOptions: {
@@ -236,7 +253,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
       client={queryClient}
       persistOptions={persistConfig}
       onSuccess={() => {
-        console.log('Query cache restored successfully');
+        logger.info('Query cache restored successfully');
       }}
     >
       {children}

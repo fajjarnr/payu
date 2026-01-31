@@ -1,24 +1,21 @@
 package id.payu.partner.service;
 
-import id.payu.partner.PartnerTestProfile;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
-@TestProfile(PartnerTestProfile.class)
-@Disabled("Service tests require Docker/Testcontainers - disabled when Docker not available")
+@ExtendWith(MockitoExtension.class)
 public class SnapBiSignatureServiceTest {
 
-    @jakarta.inject.Inject
-    SnapBiSignatureService signatureService;
+    @InjectMocks
+    private SnapBiSignatureService signatureService;
 
     @Test
     public void testGenerateSignature() {
-        // pragma: allowlist secret
-        String clientSecret = "test-secret-key"; // pragma: allowlist secret
+        String clientSecret = "test-secret-key";
         String httpMethod = "POST";
         String endpoint = "/v1/partner/auth/token";
         String timestamp = "2024-01-20T10:00:00Z";

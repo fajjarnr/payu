@@ -1,70 +1,46 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useCards as useCardsQuery, useCreateCard, useCardActions } from './useCardQuery';
 import { useCardStore } from '@/store/cardStore';
+import { Logger } from '@/utils/logger';
 
 export const useCards = () => {
-  const isMountedRef = useRef(true);
-  const {
-    cards,
-    selectedCard,
-    isLoading,
-    error,
-    loadCards,
-    selectCard,
-    createCard,
-    freezeCard,
-    unfreezeCard,
-    setSpendingLimit,
-    cancelCard,
-    clearError,
-  } = useCardStore();
+  const { data: cards = [], isLoading, error, refetch } = useCardsQuery();
+  const { mutateAsync: createCardMutation } = useCreateCard();
+  const { freezeCard, unfreezeCard } = useCardActions();
+  const { selectedCardId, selectCard: setSelectedCardId } = useCardStore();
 
+  // Derived state for selected card
+  const selectedCard = cards.find(c => c.id === selectedCardId) || cards[0] || null;
+
+  // Sync selected card if needed (e.g. initial load)
   useEffect(() => {
-    isMountedRef.current = true;
-
-    const loadData = async () => {
-      try {
-        await loadCards();
-      } catch (err) {
-        if (isMountedRef.current) {
-          console.error('Failed to load cards:', err);
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      isMountedRef.current = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Memoize refresh function
-  const refresh = useCallback(async () => {
-    if (!isMountedRef.current) return;
-
-    try {
-      await loadCards();
-    } catch (err) {
-      if (isMountedRef.current) {
-        console.error('Failed to refresh cards:', err);
-      }
+    if (!selectedCardId && cards.length > 0) {
+      setSelectedCardId(cards[0].id);
     }
-  }, [loadCards]);
+  }, [cards, selectedCardId, setSelectedCardId]);
+
+  const selectCard = useCallback((cardId: string) => {
+    setSelectedCardId(cardId);
+  }, [setSelectedCardId]);
+
+  const refresh = useCallback(async () => {
+    Logger.debug('Cards', 'Refreshing cards');
+    await refetch();
+  }, [refetch]);
 
   return {
     cards,
     selectedCard,
     isLoading,
-    error,
-    loadCards,
+    error: error ? (error as Error).message : null,
+    loadCards: refresh, // Alias for backward compatibility
     selectCard,
-    createCard,
+    createCard: createCardMutation,
     freezeCard,
     unfreezeCard,
-    setSpendingLimit,
-    cancelCard,
-    clearError,
+    setSpendingLimit: async () => {}, // Not implemented in query mutation yet
+    cancelCard: async () => {}, // Not implemented in query mutation yet
+    clearError: () => {}, // React Query handles error state automatically
     refresh,
   };
 };

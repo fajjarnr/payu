@@ -409,6 +409,7 @@ debts:
 |:-------|:-------------|:------------|
 | **Backend (Java)** | `@core-banking-engineer` | Spring Boot 3.4, Hexagonal, Resilience |
 | **Events** | `@integration-architect` | Sagas, Event Sourcing, Kafka |
+| **API** | `@api-architect` | REST API standards, OpenAPI, Versioning |
 | **AI** | `@ai-engineer` | Intelligent Systems, FastAPI, GenAI |
 | **Security** | `@cybersecurity-architect` | Zero Trust, Auth, Compliance |
 | **Data** | `@data-architect` | PostgreSQL, Flyway, CQRS |

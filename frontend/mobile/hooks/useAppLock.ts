@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useBiometrics } from './useBiometrics';
+import { Logger } from '@/utils/logger';
 
 const APP_LOCK_KEY = '@payu:app_lock_enabled';
 const LAST_ACTIVE_KEY = '@payu:last_active';
@@ -32,10 +33,14 @@ export const useAppLock = () => {
       const timeSinceActive = (Date.now() - lastActive) / 1000 / 60; // minutes
 
       if (timeSinceActive >= sessionTimeout) {
+        Logger.info('AppLock', 'Locking app due to session timeout', {
+          timeSinceActive: Math.round(timeSinceActive),
+          sessionTimeout,
+        });
         setIsLocked(true);
       }
     } catch (error) {
-      console.error('Error checking app lock:', error);
+      Logger.error('AppLock', 'Error checking app lock', error);
     }
   };
 
@@ -46,8 +51,13 @@ export const useAppLock = () => {
 
       setLockEnabled(enabled !== 'false');
       setSessionTimeout(timeout ? parseInt(timeout) : 5);
+
+      Logger.debug('AppLock', 'Settings loaded', {
+        lockEnabled: enabled !== 'false',
+        sessionTimeout: timeout ? parseInt(timeout) : 5,
+      });
     } catch (error) {
-      console.error('Failed to load app lock settings:', error);
+      Logger.error('AppLock', 'Failed to load app lock settings', error);
     }
   };
 
@@ -57,8 +67,9 @@ export const useAppLock = () => {
     const isJailbroken = await checkJailbreak();
 
     if (isJailbroken) {
-      // Could trigger security alerts or disable certain features
-      console.warn('Device appears to be jailbroken/rooted');
+      Logger.warn('AppLock', 'Device appears to be jailbroken/rooted', {
+        isJailbroken,
+      });
     }
   }, []);
 
@@ -67,14 +78,16 @@ export const useAppLock = () => {
 
     if (previousState.match(/inactive|background/) && nextAppState === 'active') {
       // App coming to foreground
+      Logger.debug('AppLock', 'App coming to foreground, checking lock status');
       await checkAndLock();
     } else if (nextAppState.match(/inactive|background/)) {
       // App going to background
       await SecureStore.setItemAsync(LAST_ACTIVE_KEY, Date.now().toString());
+      Logger.debug('AppLock', 'App going to background, saving last active time');
     }
 
     appState.current = nextAppState;
-  }, []);
+  }, [checkAndLock]);
 
   useEffect(() => {
     loadSettings();
@@ -93,12 +106,15 @@ export const useAppLock = () => {
     if (biometricAvailable) {
       const success = await authenticate('Unlock PayU');
       if (success) {
+        Logger.info('AppLock', 'App unlocked via biometrics');
         setIsLocked(false);
         return true;
       }
+      Logger.warn('AppLock', 'Biometric unlock failed');
       return false;
     } else {
       // Fall back to PIN
+      Logger.info('AppLock', 'App unlocked via PIN fallback');
       setIsLocked(false);
       return true;
     }
@@ -108,8 +124,9 @@ export const useAppLock = () => {
     try {
       await SecureStore.setItemAsync(APP_LOCK_KEY, enabled.toString());
       setLockEnabled(enabled);
+      Logger.info('AppLock', `App lock ${enabled ? 'enabled' : 'disabled'}`);
     } catch (error) {
-      console.error('Failed to toggle app lock:', error);
+      Logger.error('AppLock', 'Failed to toggle app lock', error);
     }
   };
 
@@ -117,12 +134,14 @@ export const useAppLock = () => {
     try {
       await SecureStore.setItemAsync(SESSION_TIMEOUT_KEY, minutes.toString());
       setSessionTimeout(minutes);
+      Logger.info('AppLock', 'Session timeout updated', { minutes });
     } catch (error) {
-      console.error('Failed to set session timeout:', error);
+      Logger.error('AppLock', 'Failed to set session timeout', error);
     }
   };
 
   const lockImmediately = () => {
+    Logger.info('AppLock', 'App locked immediately');
     setIsLocked(true);
   };
 
@@ -145,6 +164,7 @@ export const useScreenshotPrevention = () => {
     // iOS: Use UITextField with secureTextEntry
     // Android: Use FLAG_SECURE
     // This would require native modules
+    Logger.debug('AppLock', 'Screenshot prevention hook initialized');
   }, []);
 };
 
@@ -160,6 +180,9 @@ export const useSessionTimeout = (timeoutMinutes: number = 30) => {
       setIsSessionExpired(false);
 
       timeoutId = setTimeout(() => {
+        Logger.warn('AppLock', 'Session expired due to inactivity', {
+          timeoutMinutes,
+        });
         setIsSessionExpired(true);
       }, timeoutMinutes * 60 * 1000);
     };
@@ -174,6 +197,8 @@ export const useSessionTimeout = (timeoutMinutes: number = 30) => {
 
     resetTimer();
 
+    Logger.debug('AppLock', 'Session timeout initialized', { timeoutMinutes });
+
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
       events.forEach((event) => {
@@ -184,6 +209,7 @@ export const useSessionTimeout = (timeoutMinutes: number = 30) => {
   }, [timeoutMinutes]);
 
   const resetSession = () => {
+    Logger.debug('AppLock', 'Session reset');
     setIsSessionExpired(false);
   };
 

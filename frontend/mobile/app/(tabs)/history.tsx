@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,40 +8,60 @@ import {
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
-import { useInfiniteTransactions, useRefreshTransactions } from '@/src/hooks/useTransactionQuery';
+import { useInfiniteTransactions } from '@/src/hooks/useTransactionQuery';
 import { TransactionItem } from '@/components/shared/TransactionItem';
 import { Card } from '@/components/ui/Card';
 import { isToday, isYesterday, formatDate } from '@/utils/date';
 
+// Estimated height for transaction items (optimizes FlashList layout)
+const ESTIMATED_ITEM_HEIGHT = 80;
+
 export default function HistoryScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const isMountedRef = useRef(true);
   const {
     data: transactionsData,
     isLoading: isLoadingTransactions,
-    error: transactionsError,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
     refetch,
   } = useInfiniteTransactions();
-  const { refresh } = useRefreshTransactions();
 
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // Flatten infinite query pages into a single array
-  const transactions = transactionsData?.pages.flatMap(page => page.items) ?? [];
+  // Flatten infinite query pages into a single array (memoized)
+  const transactions = useMemo(
+    () => transactionsData?.pages.flatMap(page => page.items) ?? [],
+    [transactionsData]
+  );
   const hasMore = hasNextPage ?? false;
 
+  // Memoize onRefresh with mount check
   const onRefresh = useCallback(async () => {
+    if (!isMountedRef.current) return;
+
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    try {
+      await refetch();
+    } finally {
+      if (isMountedRef.current) {
+        setRefreshing(false);
+      }
+    }
   }, [refetch]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Transform data into grouped format with date headers
   const listData = useMemo(() => {
-    const groups: Array<{ type: 'header'; date: string } | { type: 'item'; transaction: any }> = [];
+    const groups: ({ type: 'header'; date: string } | { type: 'item'; transaction: any })[] = [];
 
     const groupedByDate: { [key: string]: any[] } = {};
 
@@ -149,6 +169,21 @@ export default function HistoryScreen() {
     </Card>
   ), [colors.text, colors.textSecondary]);
 
+  // Memoize key extractor for FlashList
+  const keyExtractor = useCallback((item: typeof listData[0], index: number) => {
+    if (item.type === 'header') {
+      return `header-${item.date}-${index}`;
+    }
+    return `transaction-${item.transaction.id}`;
+  }, []);
+
+  // Memoize end reached handler
+  const handleEndReached = useCallback(() => {
+    if (hasMore && !isFetchingNextPage && isMountedRef.current) {
+      fetchNextPage();
+    }
+  }, [hasMore, isFetchingNextPage, fetchNextPage]);
+
   // Show loading state separately
   if (isLoadingTransactions) {
     return (
@@ -177,26 +212,18 @@ export default function HistoryScreen() {
     <FlashList
       data={listData}
       renderItem={renderItem}
-      keyExtractor={useCallback((item: typeof listData[0], index: number) => {
-        if (item.type === 'header') {
-          return `header-${item.date}-${index}`;
-        }
-        return `transaction-${item.transaction.id}`;
-      }, [])}
+      keyExtractor={keyExtractor}
       getItemType={getItemType}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
-      onEndReached={() => {
-        if (hasMore && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      }}
+      onEndReached={handleEndReached}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={ListHeaderComponent}
       ListFooterComponent={ListFooterComponent}
       contentContainerStyle={styles.listContent}
       showsVerticalScrollIndicator={false}
+      estimatedItemSize={ESTIMATED_ITEM_HEIGHT}
     />
   );
 }

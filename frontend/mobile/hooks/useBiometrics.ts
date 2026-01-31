@@ -1,4 +1,5 @@
 import * as LocalAuthentication from 'expo-local-authentication';
+import { Logger } from '@/utils/logger';
 
 export const useBiometrics = () => {
   const checkAvailability = async (): Promise<boolean> => {
@@ -6,9 +7,14 @@ export const useBiometrics = () => {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 
+      Logger.debug('Biometrics', 'Hardware availability checked', {
+        hasHardware,
+        isEnrolled,
+      });
+
       return hasHardware && isEnrolled;
     } catch (error) {
-      console.error('Error checking biometric availability:', error);
+      Logger.error('Biometrics', 'Error checking biometric availability', error);
       return false;
     }
   };
@@ -17,6 +23,8 @@ export const useBiometrics = () => {
     promptMessage: string = 'Authenticate to continue'
   ): Promise<boolean> => {
     try {
+      Logger.debug('Biometrics', 'Starting biometric authentication');
+
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage,
         fallbackLabel: 'Use Passcode',
@@ -24,9 +32,11 @@ export const useBiometrics = () => {
         disableDeviceFallback: false,
       });
 
+      Logger.debug('Biometrics', 'Authentication result', { success: result.success });
+
       return result.success;
     } catch (error) {
-      console.error('Biometric authentication error:', error);
+      Logger.error('Biometrics', 'Biometric authentication error', error);
       return false;
     }
   };
@@ -34,9 +44,15 @@ export const useBiometrics = () => {
   const getSupportedTypes = async (): Promise<LocalAuthentication.AuthenticationType[]> => {
     try {
       const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+
+      Logger.debug('Biometrics', 'Supported biometric types', {
+        types,
+        count: types.length,
+      });
+
       return types;
     } catch (error) {
-      console.error('Error getting supported biometric types:', error);
+      Logger.error('Biometrics', 'Error getting supported biometric types', error);
       return [];
     }
   };

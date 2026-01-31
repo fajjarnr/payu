@@ -10,23 +10,27 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { usePrimaryWallet, useRefreshWallets } from '@/src/hooks/useWalletQuery';
-import { useInfiniteTransactions, useRefreshTransactions } from '@/src/hooks/useTransactionQuery';
+import { useInfiniteTransactions } from '@/src/hooks/useTransactionQuery';
+import { selectShowBalance, useUIStore } from '@/store/uiStore';
 import { BalanceCard } from '@/components/shared/BalanceCard';
 import { QuickActions } from '@/components/shared/QuickActions';
 import { TransactionItem } from '@/components/shared/TransactionItem';
 import { Card } from '@/components/ui/Card';
 import { Transaction } from '@/types';
 
+// Estimated height for transaction items (optimizes FlashList layout)
+const ESTIMATED_ITEM_HEIGHT = 80;
+
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const isMountedRef = useRef(true);
-  const { data: wallet, isLoading: isLoadingWallet, error: walletError } = usePrimaryWallet();
-  const { data: transactionsData, isLoading: isLoadingTransactions, error: transactionsError, hasNextPage, fetchNextPage, isFetchingNextPage, refetch } = useInfiniteTransactions();
+  const showBalance = useUIStore(selectShowBalance);
+  const setShowBalance = useUIStore((state) => state.setShowBalance);
+  const { data: wallet } = usePrimaryWallet();
+  const { data: transactionsData, isLoading: isLoadingTransactions, hasNextPage, fetchNextPage, isFetchingNextPage, refetch } = useInfiniteTransactions();
   const { refreshPrimary } = useRefreshWallets();
-  const { refresh } = useRefreshTransactions();
 
-  const [showBalance, setShowBalance] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Memoize balance calculation
@@ -48,6 +52,9 @@ export default function HomeScreen() {
   const handleTransactionPress = useCallback((transactionId: string) => {
     return () => router.push(`/transaction/${transactionId}`);
   }, [router]);
+
+  // Key extractor for FlashList
+  const keyExtractor = useCallback((item: Transaction) => `transaction-${item.id}`, []);
 
   // Render item for FlashList
   const renderTransactionItem: ListRenderItem<Transaction> = useCallback(({ item }) => (
@@ -83,8 +90,8 @@ export default function HomeScreen() {
 
   // Memoize toggle balance callback
   const handleToggleBalance = useCallback(() => {
-    setShowBalance(prev => !prev);
-  }, []);
+    setShowBalance(!showBalance);
+  }, [showBalance, setShowBalance]);
 
   // Memoize notification press callback
   const handleNotificationPress = useCallback(() => {
@@ -197,6 +204,7 @@ export default function HomeScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        estimatedItemSize={ESTIMATED_ITEM_HEIGHT}
       />
     );
   }
@@ -205,7 +213,7 @@ export default function HomeScreen() {
     <FlashList
       data={displayTransactions}
       renderItem={renderTransactionItem}
-      keyExtractor={useCallback((item: Transaction) => `transaction-${item.id}`, [])}
+      keyExtractor={keyExtractor}
       ListHeaderComponent={ListHeaderComponent}
       ListFooterComponent={ListFooterComponent}
       contentContainerStyle={styles.listContent}
@@ -213,6 +221,7 @@ export default function HomeScreen() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
+      estimatedItemSize={ESTIMATED_ITEM_HEIGHT}
     />
   );
 }

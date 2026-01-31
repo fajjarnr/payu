@@ -1,24 +1,24 @@
 package id.payu.partner.service;
 
-import id.payu.partner.PartnerTestProfile;
 import id.payu.partner.dto.snap.PaymentRequest;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.math.BigDecimal;
 
-@QuarkusTest
-@TestProfile(PartnerTestProfile.class)
-@Disabled("Service tests require Docker/Testcontainers - disabled when Docker not available")
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
 public class SnapBiPaymentServiceTest {
 
-    @jakarta.inject.Inject
-    SnapBiPaymentService paymentService;
+    @InjectMocks
+    private SnapBiPaymentService paymentService;
 
     @Test
-    public void testCreatePayment() throws Exception {
+    public void testCreatePayment() {
         String partnerId = "123";
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-TEST-001";
@@ -29,7 +29,7 @@ public class SnapBiPaymentServiceTest {
         request.beneficiaryBankCode = "014";
         request.sourceAccountNo = "0987654321";
 
-        var response = paymentService.createPayment(partnerId, request).await().indefinitely();
+        var response = paymentService.createPayment(partnerId, request);
 
         assertNotNull(response);
         assertEquals("2002500", response.responseCode);
@@ -39,7 +39,7 @@ public class SnapBiPaymentServiceTest {
     }
 
     @Test
-    public void testGetPaymentStatus() throws Exception {
+    public void testGetPaymentStatus() {
         String partnerId = "123";
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-TEST-002";
@@ -50,8 +50,8 @@ public class SnapBiPaymentServiceTest {
         request.beneficiaryBankCode = "014";
         request.sourceAccountNo = "0987654321";
 
-        var createResponse = paymentService.createPayment(partnerId, request).await().indefinitely();
-        var statusResponse = paymentService.getPaymentStatus(partnerId, createResponse.referenceNo).await().indefinitely();
+        var createResponse = paymentService.createPayment(partnerId, request);
+        var statusResponse = paymentService.getPaymentStatus(partnerId, createResponse.referenceNo);
 
         assertNotNull(statusResponse);
         assertEquals("2002500", statusResponse.responseCode);
@@ -61,7 +61,7 @@ public class SnapBiPaymentServiceTest {
     }
 
     @Test
-    public void testGetPaymentStatusByPartnerRef() throws Exception {
+    public void testGetPaymentStatusByPartnerRef() {
         String partnerId = "123";
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-TEST-003";
@@ -72,8 +72,8 @@ public class SnapBiPaymentServiceTest {
         request.beneficiaryBankCode = "014";
         request.sourceAccountNo = "0987654321";
 
-        paymentService.createPayment(partnerId, request).await().indefinitely();
-        var statusResponse = paymentService.getPaymentStatus(partnerId, "REF-TEST-003").await().indefinitely();
+        paymentService.createPayment(partnerId, request);
+        var statusResponse = paymentService.getPaymentStatus(partnerId, "REF-TEST-003");
 
         assertNotNull(statusResponse);
         assertEquals("2002500", statusResponse.responseCode);
@@ -82,7 +82,7 @@ public class SnapBiPaymentServiceTest {
     @Test
     public void testGetPaymentStatusNotFound() {
         String partnerId = "123";
-        var statusResponse = paymentService.getPaymentStatus(partnerId, "NON-EXISTENT-REF").await().indefinitely();
+        var statusResponse = paymentService.getPaymentStatus(partnerId, "NON-EXISTENT-REF");
 
         assertNotNull(statusResponse);
         assertEquals("4042500", statusResponse.responseCode);
@@ -90,7 +90,7 @@ public class SnapBiPaymentServiceTest {
     }
 
     @Test
-    public void testUpdatePaymentStatus() throws Exception {
+    public void testUpdatePaymentStatus() {
         String partnerId = "123";
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-TEST-004";
@@ -101,11 +101,11 @@ public class SnapBiPaymentServiceTest {
         request.beneficiaryBankCode = "014";
         request.sourceAccountNo = "0987654321";
 
-        var createResponse = paymentService.createPayment(partnerId, request).await().indefinitely();
+        var createResponse = paymentService.createPayment(partnerId, request);
 
         paymentService.updatePaymentStatus(createResponse.referenceNo, "COMPLETED");
 
-        var statusResponse = paymentService.getPaymentStatus(partnerId, createResponse.referenceNo).await().indefinitely();
+        var statusResponse = paymentService.getPaymentStatus(partnerId, createResponse.referenceNo);
         assertEquals("COMPLETED", statusResponse.status);
     }
 }

@@ -63,8 +63,11 @@ export function useLogin(
     onSuccess: async (data) => {
       // SECURITY: Store tokens ONLY in SecureStore (encrypted)
       // NEVER store tokens in React Query cache
-      await storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens);
-      await storage.set(AUTH_CONFIG.USER_KEY, data.user);
+      // Performance: Parallel write operations for better response time
+      await Promise.all([
+        storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens),
+        storage.set(AUTH_CONFIG.USER_KEY, data.user),
+      ]);
 
       // Update non-sensitive auth state in cache (user only, no tokens)
       queryClient.setQueryData(authKeys.user(), data.user);
@@ -102,8 +105,11 @@ export function useRegister(
     onSuccess: async (data) => {
       // SECURITY: Store tokens ONLY in SecureStore (encrypted)
       // NEVER store tokens in React Query cache
-      await storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens);
-      await storage.set(AUTH_CONFIG.USER_KEY, data.user);
+      // Performance: Parallel write operations for better response time
+      await Promise.all([
+        storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens),
+        storage.set(AUTH_CONFIG.USER_KEY, data.user),
+      ]);
 
       // Update non-sensitive auth state in cache (user only, no tokens)
       queryClient.setQueryData(authKeys.user(), data.user);
@@ -137,16 +143,22 @@ export function useLogout(
     },
     onSuccess: async () => {
       // Clear secure storage
-      await storage.remove(AUTH_CONFIG.TOKEN_KEY);
-      await storage.remove(AUTH_CONFIG.USER_KEY);
+      // Performance: Parallel delete operations
+      await Promise.all([
+        storage.remove(AUTH_CONFIG.TOKEN_KEY),
+        storage.remove(AUTH_CONFIG.USER_KEY),
+      ]);
 
       // Clear all queries from cache
       queryClient.clear();
     },
     onError: async () => {
       // Even if logout fails, clear local data
-      await storage.remove(AUTH_CONFIG.TOKEN_KEY);
-      await storage.remove(AUTH_CONFIG.USER_KEY);
+      // Performance: Parallel delete operations
+      await Promise.all([
+        storage.remove(AUTH_CONFIG.TOKEN_KEY),
+        storage.remove(AUTH_CONFIG.USER_KEY),
+      ]);
       queryClient.clear();
     },
     ...options,
@@ -270,8 +282,11 @@ export function useAuthState() {
      */
     setAuth: async (data: AuthResponse) => {
       // Store tokens in SecureStore (encrypted)
-      await storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens);
-      await storage.set(AUTH_CONFIG.USER_KEY, data.user);
+      // Performance: Parallel write operations
+      await Promise.all([
+        storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens),
+        storage.set(AUTH_CONFIG.USER_KEY, data.user),
+      ]);
 
       // Store only non-sensitive data in React Query cache
       queryClient.setQueryData(authKeys.user(), data.user);
@@ -282,8 +297,11 @@ export function useAuthState() {
     },
     clearAuth: async () => {
       // Clear SecureStore
-      await storage.remove(AUTH_CONFIG.TOKEN_KEY);
-      await storage.remove(AUTH_CONFIG.USER_KEY);
+      // Performance: Parallel delete operations
+      await Promise.all([
+        storage.remove(AUTH_CONFIG.TOKEN_KEY),
+        storage.remove(AUTH_CONFIG.USER_KEY),
+      ]);
 
       // Clear React Query cache
       queryClient.removeQueries({ queryKey: authKeys.all });
@@ -306,8 +324,11 @@ export function useInitializeAuth() {
       try {
         // SECURITY: Only load user data into cache
         // Tokens remain in SecureStore only
-        const user = await storage.get<User>(AUTH_CONFIG.USER_KEY);
-        const tokens = await storage.get<AuthTokens>(AUTH_CONFIG.TOKEN_KEY);
+        // Performance: Parallel read operations for faster initialization
+        const [user, tokens] = await Promise.all([
+          storage.get<User>(AUTH_CONFIG.USER_KEY),
+          storage.get<AuthTokens>(AUTH_CONFIG.TOKEN_KEY),
+        ]);
 
         if (tokens && user) {
           const authState: AuthState = {

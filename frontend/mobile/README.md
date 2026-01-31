@@ -8,7 +8,7 @@ Digital banking mobile application for the PayU Platform built with Expo and Rea
 - **Language**: TypeScript
 - **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/) (File-based routing)
 - **Styling**: NativeWind (Tailwind CSS for React Native)
-- **State Management**: Zustand
+- **State Management**: React Query (TanStack Query) for server state, Zustand for client state
 - **API Client**: Axios with interceptors for JWT management
 - **Design System**: Premium Emerald (Emerald Green #10b981)
 
@@ -27,9 +27,11 @@ mobile/
 │   └── shared/           # Business-specific shared components (BalanceCard, QuickActions, TransactionItem, CardPreview)
 ├── constants/            # Theme, Colors, and Config
 ├── context/              # React Context providers (Theme, Auth, Notification)
-├── hooks/                # Custom React hooks (useAuth, useWallet, useCards, useTransactions, useBiometrics, useNotifications, useCamera)
+├── hooks/                # Custom React hooks (useAuth, useCards, useBiometrics, useNotifications, useCamera)
+├── src/hooks/            # React Query hooks (useWalletQuery, useTransactionQuery, useAuthQuery)
 ├── services/             # API services (api, auth, wallet, transaction, card, notification, feedback)
-├── store/                # Global state (authStore, walletStore, transactionStore, cardStore)
+├── store/                # Client state only (authStore, cardStore, uiStore)
+│                        # Note: walletStore and transactionStore are deprecated
 ├── types/                # TypeScript definitions
 └── utils/                # Helper functions (currency, date, validation, storage)
 ```
@@ -70,6 +72,34 @@ mobile/
 - **Bio-Authentication**: Ready for FaceID/Fingerprint integration via `expo-local-authentication`.
 - **SSL Pinning**: Configured for production environments.
 
+## ⚡ Performance Optimizations (P2-C5, P2-C6)
+
+### List Virtualization
+- **FlashList** (@shopify/flash-list) for all transaction lists and card lists
+- Superior performance compared to FlatList with efficient cell recycling
+- Configured `estimatedItemSize`, `getItemType`, and `keyExtractor` for optimal rendering
+
+### Component Memoization
+All UI and shared components use `React.memo` with custom comparison functions:
+- `BalanceCard`, `TransactionItem`, `QuickActions`, `CardPreview`
+- `Button`, `Input`, `Card`, `Badge`, `Avatar`, `Modal`
+
+### Hook Optimizations
+- `useMemo` for expensive computations (currency formatting, style objects)
+- `useCallback` for event handlers and render props
+- Mount checks to prevent state updates after unmount
+
+### Request Cancellation
+- Automatic request deduplication via `AbortController`
+- `cancelAllRequests()` method for cleanup
+- Idempotency key tracking for financial operations
+
+### SecureStore Optimization
+- Parallel operations with `Promise.all` (`getMany`, `setMany`, `removeMany`)
+- Key tracking for efficient bulk operations
+
+See [docs/PERFORMANCE-OPTIMIZATIONS.md](./docs/PERFORMANCE-OPTIMIZATIONS.md) for details.
+
 ## 🎨 Design System
 
 Following the **PayU Premium Emerald** guidelines:
@@ -108,20 +138,37 @@ pnpm lint
 
 ## 🔑 Key Features
 
-### State Management (Zustand)
-- **Auth Store** - User authentication, tokens, session management
-- **Wallet Store** - Balance, pockets, wallet operations
-- **Transaction Store** - Transaction history, transfers
-- **Card Store** - Virtual cards, freeze/unfreeze, spending limits
+### State Management
+**Server State (React Query/TanStack Query)**
+- `useWalletQuery` - Primary wallet, wallets list, pocket operations
+- `useTransactionQuery` - Transaction history, transfers, top-up, QRIS payments
+- `useAuthQuery` - Authentication operations
 
-### Custom Hooks
+**Client State (Zustand)**
+- **Auth Store** - User authentication, tokens, session management
+- **Card Store** - Virtual cards, freeze/unfreeze, spending limits
+- **UI Store** - Theme, language, client-side UI settings
+
+**Deprecated (v1.2.0 - will be removed in v2.0.0)**
+- ~~Wallet Store~~ - Use `useWalletQuery` instead
+- ~~Transaction Store~~ - Use `useTransactionQuery` instead
+
+### Custom Hooks (Client-side)
 - `useAuth()` - Authentication operations
-- `useWallet()` - Wallet data and operations
-- `useTransactions()` - Transaction history and transfers
 - `useCards()` - Virtual card management
 - `useBiometrics()` - Biometric authentication
 - `useNotifications()` - Push notifications
 - `useCamera()` - Camera operations
+
+### React Query Hooks (Server-side)
+- `usePrimaryWallet()` - Fetch primary wallet with caching
+- `useWallets()` - Fetch all wallets
+- `useCreatePocket()` - Create new pocket (with optimistic update)
+- `useTransferToPocket()` - Transfer between pockets (with optimistic update)
+- `useInfiniteTransactions()` - Paginated transaction history
+- `useCreateTransfer()` - Create transfer (with optimistic update)
+- `useTopUp()` - Top-up wallet (with optimistic update)
+- `usePayQRIS()` - QRIS payment (with optimistic update)
 
 ### Services
 - **API Client** - Axios with JWT refresh interceptor

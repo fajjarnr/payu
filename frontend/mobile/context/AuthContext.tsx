@@ -2,14 +2,15 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter, useSegments } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { storage } from '@/utils/storage';
+import { Logger } from '@/utils/logger';
 import { AUTH_CONFIG } from '@/constants/config';
 import { User } from '@/types';
 
 /**
  * AuthContext - Authentication Context for PayU Mobile App
  *
- * SECURITY POLICY: Token Storage (P2-C2)
- * ========================================
+ * SECURITY POLICY P2-C2: Token Storage
+ * =====================================
  *
  * This context manages authentication state and routing protection.
  * CRITICAL: Tokens are NEVER stored in this context or React state.
@@ -38,8 +39,10 @@ import { User } from '@/types';
  * 3. If tokens exist, set isAuthenticated = true
  * 4. If no tokens, redirect to login
  *
+ * Logging P2-C3: All operations use sanitized logger to prevent token leakage
+ *
  * @module AuthContext
- * @version 2.0.0 - Secure token storage
+ * @version 2.1.0 - Sanitized logging
  */
 
 interface AuthContextType {
@@ -65,8 +68,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   /**
    * Initialize authentication state
    *
-   * SECURITY: This only checks SecureStore for tokens.
+   * SECURITY P2-C2: This only checks SecureStore for tokens.
    * No tokens are loaded into memory or state.
+   *
+   * Logging P2-C3: Sanitized logger used to prevent token leakage
    */
   useEffect(() => {
     const initializeAuth = async () => {
@@ -75,7 +80,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // This updates the Zustand store's isAuthenticated flag
         await checkAuthStatus();
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        // Sanitized logging - no tokens in logs
+        Logger.error('AuthContext', 'Auth initialization error', error);
       } finally {
         setIsLoading(false);
       }

@@ -1,19 +1,17 @@
 package id.payu.partner.service;
 
-import id.payu.partner.PartnerTestProfile;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
-@TestProfile(PartnerTestProfile.class)
-@Disabled("Service tests require Docker/Testcontainers - disabled when Docker not available")
+@ExtendWith(MockitoExtension.class)
 public class SnapBiTokenServiceTest {
 
-    @jakarta.inject.Inject
-    SnapBiTokenService tokenService;
+    @InjectMocks
+    private SnapBiTokenService tokenService;
 
     @Test
     public void testGenerateAccessToken() {

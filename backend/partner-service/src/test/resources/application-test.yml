@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: partner-service
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        show_sql: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+# Custom properties
+partner:
+  jwt:
+    secret: "test-secret-key-for-jwt-token-generation-validation-for-testing-only"
+    expiration-ms: 900000 # 15 minutes
+
+logging:
+  level:
+    id.payu.partner: DEBUG
+    org.springframework.web: INFO
+    org.springframework.test: INFO

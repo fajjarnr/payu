@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, memo, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { formatCurrency } from '@/utils/currency';
@@ -13,14 +13,34 @@ interface BalanceCardProps {
   style?: ViewStyle;
 }
 
-export const BalanceCard: React.FC<BalanceCardProps> = ({
+export const BalanceCardComponent: React.FC<BalanceCardProps> = ({
   balance,
   accountNumber,
   showBalance = true,
   onToggleBalance,
   style,
 }) => {
-  // useTheme is imported but not needed in this component
+  // Memoize balance text calculation
+  const balanceText = useMemo(() => {
+    return showBalance ? formatCurrency(balance) : '••••••••';
+  }, [showBalance, balance]);
+
+  // Memoize accessibility label
+  const a11yLabel = useMemo(() => {
+    return showBalance
+      ? `Balance: ${formatCurrencyForA11y(balance, 'IDR', 'id')}`
+      : 'Balance hidden';
+  }, [showBalance, balance]);
+
+  // Memoize eye button accessibility label
+  const eyeButtonA11yLabel = useMemo(() => {
+    return showBalance ? 'Hide balance' : 'Show balance';
+  }, [showBalance]);
+
+  // Memoize toggle handler
+  const handleToggle = useCallback(() => {
+    onToggleBalance?.();
+  }, [onToggleBalance]);
 
   return (
     <Card
@@ -32,9 +52,9 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
         <Text style={styles.label} accessibilityLabel="Total Balance">Total Balance</Text>
         {onToggleBalance && (
           <TouchableOpacity
-            onPress={onToggleBalance}
+            onPress={handleToggle}
             style={styles.eyeButton}
-            accessibilityLabel={showBalance ? 'Hide balance' : 'Show balance'}
+            accessibilityLabel={eyeButtonA11yLabel}
             accessibilityHint="Toggles balance visibility"
             accessibilityRole="button"
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -50,23 +70,13 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
 
       {/* Balance */}
       <View style={styles.balanceContainer}>
-        {showBalance ? (
-          <Text
-            style={styles.balance}
-            accessibilityLabel={`Balance: ${formatCurrencyForA11y(balance, 'IDR', 'id')}`}
-            accessibilityRole="text"
-          >
-            {formatCurrency(balance)}
-          </Text>
-        ) : (
-          <Text
-            style={styles.balance}
-            accessibilityLabel="Balance hidden"
-            accessibilityRole="text"
-          >
-            ••••••••
-          </Text>
-        )}
+        <Text
+          style={styles.balance}
+          accessibilityLabel={a11yLabel}
+          accessibilityRole="text"
+        >
+          {balanceText}
+        </Text>
       </View>
 
       {/* Account Number */}
@@ -89,6 +99,17 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
     </Card>
   );
 };
+
+// Memoize BalanceCard component for performance optimization
+export const BalanceCard = memo(BalanceCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.balance === nextProps.balance &&
+    prevProps.showBalance === nextProps.showBalance &&
+    prevProps.accountNumber === nextProps.accountNumber
+  );
+});
+
+BalanceCard.displayName = 'BalanceCard';
 
 const styles = StyleSheet.create({
   header: {

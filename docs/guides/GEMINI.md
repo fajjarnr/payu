@@ -11,7 +11,7 @@
 ### Quick Facts
 
 | Attribute             | Value                                 |
-| --------------------- | ------------------------------------- |
+| :-------------------- | :------------------------------------ |
 | **Project Name**      | PayU                                  |
 | **Type**              | Standalone Digital Banking Platform   |
 | **Architecture**      | Scalable Microservices + Event-Driven |
@@ -21,7 +21,7 @@
 ## ⚡ Quick Commands (for AI Agents)
 
 | Action             | Command                                     |
-| ------------------ | ------------------------------------------- |
+| :----------------- | :------------------------------------------ |
 | **Build Backend**  | `mvn clean package -DskipTests -T 1C`       |
 | **Run Web App**    | `cd frontend/web-app && npm run dev`        |
 | **Run Dev Docs**   | `cd frontend/developer-docs && npm run dev` |
@@ -35,7 +35,7 @@
 ### Technology Stack
 
 | Layer                   | Red Hat Product                    | Portable Alternative |
-| ----------------------- | ---------------------------------- | -------------------- |
+| :---------------------- | :--------------------------------- | :------------------- |
 | **Container Platform**  | Red Hat OpenShift 4.20+            | Kubernetes           |
 | **Core Banking**        | Red Hat Runtimes (Spring Boot 3.4) | Spring Boot          |
 | **Supporting Services** | Red Hat Build of Quarkus 3.x       | Quarkus              |
@@ -52,37 +52,36 @@
 ### Microservices
 
 | Service                | Technology         | Domain                                     |
-| ---------------------- | ------------------ | ------------------------------------------ |
+| :--------------------- | :----------------- | :----------------------------------------- |
 | `account-service`      | Spring Boot 3.4    | User accounts, profile, multi-pocket       |
-| `account-service` | Spring Boot 3.4 | User accounts, profile, multi-pocket |
-| `auth-service` | Spring Boot 3.4 | Authentication, Risk-based MFA, Biometrics |
-| `transaction-service` | Spring Boot 3.4 | Transfers, BI-FAST, QRIS, Sharding |
-| `wallet-service` | Spring Boot 3.4 | Double-entry ledger, balance management |
-| `investment-service` | Spring Boot 3.4 | Mutual funds, Gold, Robo-advisory |
-| `lending-service` | Spring Boot 3.4 | Loans, PayLater, Credit Scoring |
-| `fx-service` | Spring Boot 3.4 | Currency exchange rates & conversion |
-| `statement-service` | Spring Boot 3.4 | PDF E-Statement generation |
-| `backoffice-service` | Spring Boot 3.4 | Internal admin dashboard, audit |
-| `partner-service` | Spring Boot 3.4 | Partner integration & management |
-| `promotion-service` | Spring Boot 3.4 | Promo campaigns, vouchers, rewards |
-| `support-service` | Spring Boot 3.4 | Customer support, ticketing |
-| `compliance-service` | Spring Boot 3.4 | Regulatory compliance, AML |
-| `billing-service` | Quarkus 3.x Native | Bill payments (PLN, PDAM, etc) |
-| `notification-service` | Quarkus 3.x Native | Push, SMS, Email, WhatsApp |
-| `gateway-service` | Quarkus 3.x Native | API Gateway, Rate limiting |
-| `cms-service` | Spring Boot 3.4 | Banners, Promos, Dynamic Content |
-| `ab-testing-service` | Spring Boot 3.4 | UI/Feature experimentation |
-| `api-portal-service` | Quarkus 3.x Native | Centralized OpenAPI Docs & Sandbox |
-| `kyc-service` | Python FastAPI | OCR, Liveness Detection |
-| `analytics-service` | Python FastAPI | Fraud Scoring, User Insights |
+| `auth-service`         | Spring Boot 3.4    | Authentication, Risk-based MFA, Biometrics |
+| `transaction-service`  | Spring Boot 3.4    | Transfers, BI-FAST, QRIS, Sharding         |
+| `wallet-service`       | Spring Boot 3.4    | Double-entry ledger, balance management    |
+| `investment-service`   | Spring Boot 3.4    | Mutual funds, Gold, Robo-advisory          |
+| `lending-service`      | Spring Boot 3.4    | Loans, PayLater, Credit Scoring            |
+| `fx-service`           | Spring Boot 3.4    | Currency exchange rates & conversion       |
+| `statement-service`    | Spring Boot 3.4    | PDF E-Statement generation                 |
+| `backoffice-service`   | Spring Boot 3.4    | Internal admin dashboard, audit            |
+| `partner-service`      | Spring Boot 3.4    | Partner integration & management           |
+| `promotion-service`    | Spring Boot 3.4    | Promo campaigns, vouchers, rewards         |
+| `support-service`      | Spring Boot 3.4    | Customer support, ticketing                |
+| `compliance-service`   | Spring Boot 3.4    | Regulatory compliance, AML                 |
+| `billing-service`      | Quarkus 3.x Native | Bill payments (PLN, PDAM, etc)             |
+| `notification-service` | Quarkus 3.x Native | Push, SMS, Email, WhatsApp                 |
+| `gateway-service`      | Quarkus 3.x Native | API Gateway, Rate limiting                 |
+| `cms-service`          | Spring Boot 3.4    | Banners, Promos, Dynamic Content           |
+| `ab-testing-service`   | Spring Boot 3.4    | UI/Feature experimentation                  |
+| `api-portal-service`   | Quarkus 3.x Native | Centralized OpenAPI Docs & Sandbox         |
+| `kyc-service`          | Python FastAPI     | OCR, Liveness Detection                    |
+| `analytics-service`    | Python FastAPI     | Fraud Scoring, User Insights               |
 
 ### Shared Libraries (backend/shared/)
 
-| Library | Purpose |
-| -------------------- | ----------------------------------------------- |
-| `security-starter` | Field encryption, Data masking, Audit logging |
+| Library              | Purpose                                         |
+| :------------------- | :---------------------------------------------- |
+| `security-starter`   | Field encryption, Data masking, Audit logging   |
 | `resilience-starter` | Circuit Breaker, Retry, Bulkhead (Resilience4j) |
-| `cache-starter` | Multi-layer caching (Redis + Caffeine) |
+| `cache-starter`      | Multi-layer caching (Redis + Caffeine)          |
 
 ---
 
@@ -102,11 +101,11 @@ Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Paral
 ```
 payu/
 ├── .agent/               # AI Agent Ecosystem (Symlinked to .claude/)
-│   ├── skills/           # 20+ AI Skills (Logic, Stack, Standards)
+│   ├── skills/           # 17 AI Skills (Logic, Stack, Standards)
 │   ├── agents/           # Specialized Sub-agents (System-level prompts)
 │   ├── workflows/        # SOP for complex tasks (MUST READ BEFORE EXECUTION)
 │   └── resources/        # Shared assets (shadcn components, templates)
-├── backend/             # Microservices implementation (20+ services)
+├── backend/             # Microservices implementation (22 microservices)
 │   ├── shared/          # Shared Spring Boot starters
 │   │   ├── security-starter/    # PII encryption, audit logging
 │   │   ├── resilience-starter/  # Circuit breaker, retry, bulkhead
@@ -258,14 +257,14 @@ Skills are categorized by domain to help you choose the right tool for the task.
 | `principal-architect` | **Master Skill**: High-level Architecture, DORA metrics, Strategy, C4, ADRs, Documentation. |
 
 ### ☕ Backend & Logic
-| Skill | Description |
-| :--- | :--- |
-| `core-banking-engineer` | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience. |
-| `api-architect` | **Master Skill**: REST API standards, OpenAPI, Versioning, & 3rd-party Integrations. |
-| `integration-architect` | **Master Skill**: Sagas, Event Sourcing, Kafka, Message Queues (CDC). |
-| `data-architect` | **Master Skill**: PostgreSQL Design, Performance, Query Optimization, & Flyway. |
+| Skill                       | Description                                                                                |
+| :-------------------------- | :----------------------------------------------------------------------------------------- |
+| `core-banking-engineer`     | **Master Skill**: Spring Boot 3.4, Hexagonal Architecture, & Resilience.                   |
+| `api-architect`             | **Master Skill**: REST API standards, OpenAPI, Versioning, & 3rd-party Integrations.        |
+| `integration-architect`     | **Master Skill**: Sagas, Event Sourcing, Kafka, Message Queues (CDC).                      |
+| `data-architect`            | **Master Skill**: PostgreSQL Design, Performance, Query Optimization, & Flyway.            |
 | `data-governance-architect` | **Master Skill**: Data Lineage, PII Classification, Retention Policies, & UU PDP Compliance. |
-| `ai-engineer` | **Master Skill**: Intelligent Systems, FastAPI, Prompt Engineering, & GenAI. |
+| `ai-engineer`               | **Master Skill**: Intelligent Systems, FastAPI, Prompt Engineering, & GenAI.               |
 
 ### 📱 Frontend & Mobile
 | Skill | Description |

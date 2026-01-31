@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, memo, useCallback } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Card } from '@/components/ui/Card';
 import { VirtualCard } from '@/types';
@@ -9,25 +9,48 @@ interface CardPreviewProps {
   showDetails?: boolean;
 }
 
-export const CardPreview: React.FC<CardPreviewProps> = ({
+// Performance: Memoize card color calculation to avoid recalculation on every render
+const getCardColor = useCallback((status: string): string[] => {
+  switch (status) {
+    case 'active':
+      return ['#10b981', '#059669'];
+    case 'frozen':
+      return ['#6b7280', '#4b5563'];
+    case 'cancelled':
+      return ['#ef4444', '#dc2626'];
+    default:
+      return ['#10b981', '#059669'];
+  }
+}, []);
+
+export const CardPreviewComponent: React.FC<CardPreviewProps> = ({
   card,
   style,
   showDetails = false,
 }) => {
-  const getCardColor = () => {
-    switch (card.status) {
-      case 'active':
-        return ['#10b981', '#059669'];
-      case 'frozen':
-        return ['#6b7280', '#4b5563'];
-      case 'cancelled':
-        return ['#ef4444', '#dc2626'];
-      default:
-        return ['#10b981', '#059669'];
-    }
-  };
+  // Performance: Memoize card number display
+  const cardNumberDisplay = useMemo(() => {
+    return showDetails ? `•••• •••• •••• ${card.lastFour}` : '•••• •••• •••• ••••';
+  }, [showDetails, card.lastFour]);
 
-  const [, ] = getCardColor();
+  // Performance: Memoize balance display
+  const balanceDisplay = useMemo(() => {
+    return `Rp ${card.balance.toLocaleString('id-ID')}`;
+  }, [card.balance]);
+
+  // Performance: Memoize card colors (not currently used but kept for future styling)
+  const cardColors = useMemo(() => getCardColor(card.status), [card.status]);
+
+  // Performance: Memoize decorative circle styles
+  const circle1Style = useMemo<ViewStyle>(() => [
+    styles.circle1,
+    { backgroundColor: 'rgba(255,255,255,0.1)' },
+  ], []);
+
+  const circle2Style = useMemo<ViewStyle>(() => [
+    styles.circle2,
+    { backgroundColor: 'rgba(255,255,255,0.05)' },
+  ], []);
 
   return (
     <Card
@@ -45,7 +68,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
       {/* Card Number */}
       <View style={styles.cardNumberContainer}>
         <Text style={styles.cardNumber}>
-          {showDetails ? '•••• •••• •••• ' + card.lastFour : '•••• •••• •••• ••••'}
+          {cardNumberDisplay}
         </Text>
       </View>
 
@@ -70,15 +93,27 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
       {/* Balance */}
       <View style={styles.balanceContainer}>
         <Text style={styles.balanceLabel}>Available Balance</Text>
-        <Text style={styles.balance}>Rp {card.balance.toLocaleString('id-ID')}</Text>
+        <Text style={styles.balance}>{balanceDisplay}</Text>
       </View>
 
       {/* Decorative elements */}
-      <View style={[styles.circle1, { backgroundColor: 'rgba(255,255,255,0.1)' }]} />
-      <View style={[styles.circle2, { backgroundColor: 'rgba(255,255,255,0.05)' }]} />
+      <View style={circle1Style} />
+      <View style={circle2Style} />
     </Card>
   );
 };
+
+// Performance: Memoize CardPreview component to prevent unnecessary re-renders in lists
+export const CardPreview = memo(CardPreviewComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.card.id === nextProps.card.id &&
+    prevProps.card.status === nextProps.card.status &&
+    prevProps.card.balance === nextProps.card.balance &&
+    prevProps.showDetails === nextProps.showDetails
+  );
+});
+
+CardPreview.displayName = 'CardPreview';
 
 const styles = StyleSheet.create({
   cardContainer: {

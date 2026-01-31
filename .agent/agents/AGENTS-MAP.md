@@ -12,7 +12,7 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 | `@principal-architect` | `@lifecycle-manager`  | Pengelola SDLC penuh (End-to-End).             |
 | `@principal-architect` | `@scaffolding-expert` | Setup service end-to-end terintegrasi.         |
 | `@core-banking-engineer` | `@logic-builder`    | Implementasi Domain logic dan DDD entities.    |
-| `@api-architect`     | `@logic-builder`      | Standarisasi API Schemas & DTO logic.          |
+| `@api-architect`     | `@logic-builder`      | Standarisasi API Schemas, DTOs, & Contract-first logic. |
 | `@integration-architect` | `@logic-builder` | Implementasi Kafka messaging & Saga patterns.  |
 | `@data-architect`    | `@migrator`           | Pengelolaan skema database dan migrasi Flyway. |
 | `@data-governance-architect` | `@compliance-auditor` | Data lineage, PII audit, retention policies. |

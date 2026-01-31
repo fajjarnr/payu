@@ -6,6 +6,7 @@
  */
 
 import { apiClientInstance } from '@/services/api';
+import { Logger } from '@/utils/logger';
 
 // Track active abort controllers for cleanup
 const activeControllers = new Set<AbortController>();
@@ -73,7 +74,7 @@ export function cancelAllPendingRequests(): void {
   try {
     apiClientInstance.cancelAllRequests();
   } catch (error) {
-    console.warn('Failed to cancel API client requests:', error);
+    Logger.warn('RequestCleanup', 'Failed to cancel API client requests', { error });
   }
 }
 

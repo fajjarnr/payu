@@ -6,7 +6,7 @@ updated: 2026-01-30
 author: payu-platform-team
 requires: []
 tags: [api, rest, openapi, governance, fastapi, pydantic]
-related: [bff-architect]
+related: [core-banking-engineer]
 description: **Master Skill**: REST API design, OpenAPI standards, FastAPI Python patterns, and robust 3rd-party integrations (OAuth2, Webhooks, Retries).
 ---
 

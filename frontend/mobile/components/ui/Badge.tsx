@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import { View, Text, ViewStyle } from 'react-native';
 
 interface BadgeProps {
@@ -8,56 +8,62 @@ interface BadgeProps {
   style?: ViewStyle;
 }
 
-export const Badge: React.FC<BadgeProps> = ({
+export const BadgeComponent: React.FC<BadgeProps> = ({
   text,
   variant = 'info',
   size = 'sm',
   style,
 }) => {
-  const getBackgroundColor = () => {
-    switch (variant) {
-      case 'success':
-        return '#d1fae5';
-      case 'warning':
-        return '#fef3c7';
-      case 'error':
-        return '#fee2e2';
-      case 'info':
-        return '#dbeafe';
-      default:
-        return '#dbeafe';
-    }
-  };
+  // Memoize badge style to avoid recalculations on every render
+  const badgeStyle = useMemo<ViewStyle>(() => {
+    const getBackgroundColor = () => {
+      switch (variant) {
+        case 'success':
+          return '#d1fae5';
+        case 'warning':
+          return '#fef3c7';
+        case 'error':
+          return '#fee2e2';
+        case 'info':
+          return '#dbeafe';
+        default:
+          return '#dbeafe';
+      }
+    };
 
-  const getTextColor = () => {
-    switch (variant) {
-      case 'success':
-        return '#065f46';
-      case 'warning':
-        return '#92400e';
-      case 'error':
-        return '#991b1b';
-      case 'info':
-        return '#1e40af';
-      default:
-        return '#1e40af';
-    }
-  };
+    return {
+      backgroundColor: getBackgroundColor(),
+      paddingHorizontal: size === 'sm' ? 8 : 12,
+      paddingVertical: size === 'sm' ? 4 : 6,
+      borderRadius: 8,
+      alignSelf: 'flex-start',
+      ...style,
+    };
+  }, [variant, size, style]);
 
-  const badgeStyle: ViewStyle = {
-    backgroundColor: getBackgroundColor(),
-    paddingHorizontal: size === 'sm' ? 8 : 12,
-    paddingVertical: size === 'sm' ? 4 : 6,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-    ...style,
-  };
+  // Memoize text style
+  const textStyle = useMemo(() => {
+    const getTextColor = () => {
+      switch (variant) {
+        case 'success':
+          return '#065f46';
+        case 'warning':
+          return '#92400e';
+        case 'error':
+          return '#991b1b';
+        case 'info':
+          return '#1e40af';
+        default:
+          return '#1e40af';
+      }
+    };
 
-  const textStyle = {
-    color: getTextColor(),
-    fontSize: size === 'sm' ? 12 : 14,
-    fontWeight: '600' as const,
-  };
+    return {
+      color: getTextColor(),
+      fontSize: size === 'sm' ? 12 : 14,
+      fontWeight: '600' as const,
+    };
+  }, [variant, size]);
 
   return (
     <View style={badgeStyle}>
@@ -65,3 +71,14 @@ export const Badge: React.FC<BadgeProps> = ({
     </View>
   );
 };
+
+// Memoize Badge component for performance optimization in lists
+export const Badge = memo(BadgeComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.text === nextProps.text &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.size === nextProps.size
+  );
+});
+
+Badge.displayName = 'Badge';
