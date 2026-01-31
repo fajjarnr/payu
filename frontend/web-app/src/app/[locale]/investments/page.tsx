@@ -22,7 +22,7 @@ export default function InvestmentsPage() {
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                 <div>
-                  <h2 className="text-3xl font-black text-foreground">Manajemen Kekayaan</h2>
+                  <h2 className="text-3xl font-bold text-foreground">Manajemen Kekayaan</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">Tumbuhkan aset Anda dengan produk investasi kelas institusi.</p>
                 </div>
                 <ButtonMotion>
@@ -43,17 +43,17 @@ export default function InvestmentsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
                       <div className="space-y-6">
                         <div>
-                          <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-2">Total Portofolio Bersih</p>
-                          <h3 className="text-4xl sm:text-5xl font-black text-foreground">Rp 152.800.000</h3>
+                          <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Total Portofolio Bersih</p>
+                          <h3 className="text-4xl sm:text-5xl font-bold text-foreground">Rp 152.800.000</h3>
                         </div>
                         <div className="flex flex-wrap gap-3">
                           <div className="bg-success-light px-4 py-2 rounded-xl flex items-center gap-2 border border-primary/10">
                             <TrendingUp className="h-4 w-4 text-primary" />
-                            <span className="text-[10px] font-bold text-primary tracking-widest">+Rp 12,4 Jt (8.2%)</span>
+                            <span className="text-xs font-bold text-primary tracking-widest">+Rp 12,4 Jt (8.2%)</span>
                           </div>
                           <div className="bg-muted/50 px-4 py-2 rounded-xl flex items-center gap-2 border border-border">
                             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Terjamin LPS</span>
+                            <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Terjamin LPS</span>
                           </div>
                         </div>
                       </div>
@@ -62,7 +62,7 @@ export default function InvestmentsPage() {
                         {[40, 55, 45, 70, 60, 90, 85, 100].map((h, i) => (
                           <div key={i} className="flex-1 bg-primary/20 rounded-t-lg relative group/bar transition-all duration-500" style={{ height: `${h}%` }}>
                             <div className="absolute top-0 left-0 w-full h-1 bg-primary rounded-full" />
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-[8px] font-bold px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-all shadow-xl whitespace-nowrap">
+                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs font-bold px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-all shadow-xl whitespace-nowrap">
                               +{h / 10}%
                             </div>
                           </div>
@@ -72,16 +72,16 @@ export default function InvestmentsPage() {
 
                     <div className="mt-auto grid grid-cols-3 gap-6 pt-8 border-t border-border">
                       <div>
-                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-1">Pasar Uang</p>
-                        <p className="text-lg font-black text-foreground">45%</p>
+                        <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Pasar Uang</p>
+                        <p className="text-lg font-bold text-foreground">45%</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-1">Saham</p>
-                        <p className="text-lg font-black text-foreground">30%</p>
+                        <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Saham</p>
+                        <p className="text-lg font-bold text-foreground">30%</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-1">Komoditas</p>
-                        <p className="text-lg font-black text-foreground">25%</p>
+                        <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Komoditas</p>
+                        <p className="text-lg font-bold text-foreground">25%</p>
                       </div>
                     </div>
                   </div>
@@ -102,12 +102,12 @@ export default function InvestmentsPage() {
                         <Briefcase className="h-7 w-7 text-bank-green" />
                       </div>
                       <div>
-                        <p className="text-xl font-black">Moderat-Agresif</p>
-                        <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-0.5">ROI 15% / Thn</p>
+                        <p className="text-xl font-bold">Moderat-Agresif</p>
+                        <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mt-0.5">ROI 15% / Thn</p>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+                      <div className="flex justify-between text-xs font-bold text-gray-400 tracking-widest uppercase">
                         <span>Konservatif</span>
                         <span>Agresif</span>
                       </div>
@@ -116,7 +116,7 @@ export default function InvestmentsPage() {
                       </div>
                     </div>
                   </div>
-                  <button className="relative z-10 w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold text-[10px] tracking-widest uppercase hover:bg-white/10 transition-all mt-10">Optimasi Portofolio</button>
+                  <button className="relative z-10 w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-white/10 transition-all mt-10">Optimasi Portofolio</button>
                   <PieChart className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
                 </div>
               </StaggerItem>
@@ -125,11 +125,11 @@ export default function InvestmentsPage() {
             {/* Marketplace Grid */}
             <div className="space-y-8 mt-12">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-black text-foreground">Katalog Produk Terpilih</h3>
+                <h3 className="text-xl font-bold text-foreground">Katalog Produk Terpilih</h3>
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-lg uppercase tracking-widest shadow-lg shadow-primary/20">Semua</button>
-                  <button className="px-4 py-2 bg-muted/50 text-muted-foreground text-[10px] font-bold rounded-lg uppercase tracking-widest border border-border">Pasar Uang</button>
-                  <button className="px-4 py-2 bg-muted/50 text-muted-foreground text-[10px] font-bold rounded-lg uppercase tracking-widest border border-border">Emas</button>
+                  <button className="px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-lg uppercase tracking-widest shadow-lg shadow-primary/20">Semua</button>
+                  <button className="px-4 py-2 bg-muted/50 text-muted-foreground text-xs font-bold rounded-lg uppercase tracking-widest border border-border">Pasar Uang</button>
+                  <button className="px-4 py-2 bg-muted/50 text-muted-foreground text-xs font-bold rounded-lg uppercase tracking-widest border border-border">Emas</button>
                 </div>
               </div>
 
@@ -149,12 +149,12 @@ export default function InvestmentsPage() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-2">{prod.type}</p>
-                      <h4 className="text-xl font-black text-foreground mb-6 leading-tight group-hover:text-primary transition-colors">{prod.name}</h4>
+                      <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">{prod.type}</p>
+                      <h4 className="text-xl font-bold text-foreground mb-6 leading-tight group-hover:text-primary transition-colors">{prod.name}</h4>
                       <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border group-hover:border-primary/20 transition-all">
                         <div className="space-y-0.5">
-                          <p className="text-[8px] font-bold text-muted-foreground tracking-widest uppercase">Imbal Hasil</p>
-                          <span className="text-lg font-black text-primary">{prod.return}</span>
+                          <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Imbal Hasil</p>
+                          <span className="text-lg font-bold text-primary">{prod.return}</span>
                         </div>
                         <ButtonMotion>
                           <button className="h-10 w-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
@@ -175,7 +175,7 @@ export default function InvestmentsPage() {
                   <Target className="h-10 w-10 text-primary animate-pulse" />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-black text-foreground">Target Portofolio Hampir Tercapai.</h3>
+                  <h3 className="text-2xl font-bold text-foreground">Target Portofolio Hampir Tercapai.</h3>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed max-w-2xl">
                     Berdasarkan performa saat ini, Anda diprediksi akan mencapai target <span className="text-primary font-bold">Dana Pensiun</span> dalam 14 bulan lebih cepat. Pertimbangkan untuk merealokasi 5% aset ke produk yang lebih stabil untuk mengunci keuntungan.
                   </p>

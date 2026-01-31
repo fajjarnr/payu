@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useBanners } from '@/hooks';
 import type { Content } from '@/services/CMSService';
 import {
@@ -101,10 +101,10 @@ export default function BannerCarousel({
                     transition={{ delay: 0.2, duration: 0.5 }}
                     className="max-w-xl"
                   >
-                    <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-[10px] font-black tracking-[0.2em] rounded-full mb-4 backdrop-blur-md uppercase border border-white/20">
+                    <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-xs font-bold tracking-[0.2em] rounded-full mb-4 backdrop-blur-md uppercase border border-white/20">
                       Exclusive Promo
                     </span>
-                    <h3 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-3 leading-[1.1] tracking-tight uppercase">
+                    <h3 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 leading-[1.1] tracking-tight uppercase">
                       {banner.title}
                     </h3>
                     <p className="text-sm sm:text-lg text-white/80 font-medium line-clamp-2 max-w-md leading-relaxed">

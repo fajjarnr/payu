@@ -77,7 +77,7 @@ export default function BillsPage() {
       >
        <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 rotate-180" />
       </button>
-      <h2 className="text-2xl sm:text-3xl font-black text-foreground ">Bayar {selectedBiller.name}</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-foreground ">Bayar {selectedBiller.name}</h2>
      </div>
 
      <div className="bg-card rounded-xl p-6 sm:p-10 shadow-sm border border-border relative overflow-hidden group">
@@ -88,34 +88,34 @@ export default function BillsPage() {
         <selectedBiller.icon className="h-8 w-8 sm:h-10 sm:w-10" />
        </div>
        <div>
-        <p className="text-[10px] text-gray-400 font-black tracking-widest mb-1">Penyedia Layanan</p>
-        <h3 className="text-xl sm:text-2xl font-black text-foreground ">{selectedBiller.name}</h3>
+        <p className="text-xs text-gray-400 font-bold tracking-widest mb-1">Penyedia Layanan</p>
+        <h3 className="text-xl sm:text-2xl font-bold text-foreground ">{selectedBiller.name}</h3>
         <p className="text-xs font-bold text-bank-green tracking-widest">Mitra Pembayaran Resmi</p>
        </div>
       </div>
 
       <div className="space-y-6 sm:space-y-10 relative z-10">
        <div className="group">
-        <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">ID Pelanggan / Nomor Rekening</label>
+        <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">ID Pelanggan / Nomor Rekening</label>
         <input
          type="text"
          value={customerId}
          onChange={(e) => setCustomerId(e.target.value)}
          placeholder="Masukkan ID unik Anda"
-         className="w-full rounded-xl border-border bg-gray-50 dark:bg-gray-900/50 p-4 sm:p-6 text-base sm:text-xl font-black text-foreground placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none "
+         className="w-full rounded-xl border-border bg-gray-50 dark:bg-gray-900/50 p-4 sm:p-6 text-base sm:text-xl font-bold text-foreground placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none "
         />
        </div>
 
        <div className="group">
-        <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">Jumlah Pembayaran (IDR)</label>
+        <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3 group-focus-within:text-bank-green transition-colors">Jumlah Pembayaran (IDR)</label>
         <div className="relative">
-         <span className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-xl sm:text-2xl font-black text-gray-300">Rp</span>
+         <span className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-xl sm:text-2xl font-bold text-gray-300">Rp</span>
          <input
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0"
-          className="w-full rounded-xl border-border bg-gray-50 dark:bg-gray-900/50 p-4 sm:p-6 pl-14 sm:pl-16 text-2xl sm:text-3xl font-black text-foreground placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none "
+          className="w-full rounded-xl border-border bg-gray-50 dark:bg-gray-900/50 p-4 sm:p-6 pl-14 sm:pl-16 text-2xl sm:text-3xl font-bold text-foreground placeholder:text-gray-200 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none "
          />
         </div>
        </div>
@@ -126,11 +126,11 @@ export default function BillsPage() {
       <button
        onClick={handlePay}
        disabled={paymentMutation.isPending}
-       className="w-full bg-bank-green text-white py-5 sm:py-6 rounded-xl font-black text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-[0.98] shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50"
+       className="w-full bg-bank-green text-white py-5 sm:py-6 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-[0.98] shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50"
       >
        {paymentMutation.isPending ? 'Sedang Memproses Pembayaran...' : 'Konfirmasi & Bayar Sekarang'}
       </button>
-      <p className="text-center text-[10px] text-gray-400 font-black tracking-widest leading-relaxed">Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU</p>
+      <p className="text-center text-xs text-gray-400 font-bold tracking-widest leading-relaxed">Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU</p>
      </div>
     </div>
    </DashboardLayout>
@@ -142,18 +142,18 @@ export default function BillsPage() {
    <div className="space-y-12">
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
      <div>
-      <h2 className="text-2xl sm:text-3xl font-black text-foreground ">Tagihan & Top-up</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-foreground ">Tagihan & Top-up</h2>
       <p className="text-sm text-gray-500 font-medium">Bayar tagihan utilitas dan top up dompet digital Anda secara instan.</p>
      </div>
      <div className="bg-bank-green/10 px-4 sm:px-5 py-2.5 rounded-full border border-bank-green/20 hidden md:block shadow-sm">
-      <p className="text-[10px] font-black text-bank-green tracking-widest animate-pulse">Penyelesaian Real-time 24/7</p>
+      <p className="text-xs font-bold text-bank-green tracking-widest animate-pulse">Penyelesaian Real-time 24/7</p>
      </div>
     </div>
 
     {/* Biller Grid */}
     <div className="bg-card rounded-xl p-6 sm:p-10 shadow-sm border border-border relative overflow-hidden">
      <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-bank-green/5 rounded-full blur-3xl" />
-     <h3 className="text-[10px] font-black text-gray-400 tracking-[0.2em] mb-6 sm:mb-10 text-center">Kategori Layanan</h3>
+     <h3 className="text-xs font-bold text-gray-400 tracking-[0.2em] mb-6 sm:mb-10 text-center">Kategori Layanan</h3>
      <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-10 relative z-10">
       {billers.map((item) => (
        <button
@@ -164,21 +164,21 @@ export default function BillsPage() {
         <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-xl ${item.color} flex items-center justify-center shadow-lg shadow-black/5 group-hover:scale-110 group-hover:shadow-xl group-hover:border group-hover:border-white/20 transition-all duration-300`}>
          <item.icon className="h-6 w-6 sm:h-8 sm:w-8" />
         </div>
-        <span className="text-[9px] sm:text-[10px] font-black text-foreground tracking-widest">{item.name}</span>
+        <span className="text-xs sm:text-xs font-bold text-foreground tracking-widest">{item.name}</span>
        </button>
       ))}
       <button className="flex flex-col items-center gap-3 sm:gap-5 transition-all group active:scale-95">
        <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl bg-gray-50 dark:bg-gray-900 shadow-inner flex items-center justify-center text-gray-300 group-hover:text-bank-green transition-colors">
         <Plus className="h-6 w-6 sm:h-8 sm:w-8" />
        </div>
-       <span className="text-[9px] sm:text-[10px] font-black text-gray-400 tracking-widest">Lainnya</span>
+       <span className="text-xs sm:text-xs font-bold text-gray-400 tracking-widest">Lainnya</span>
       </button>
      </div>
     </div>
 
     {/* Recent Bills */}
     <div className="space-y-6 sm:space-y-8">
-     <h3 className="text-lg sm:text-xl font-black text-foreground ">Aktivitas Terakhir</h3>
+     <h3 className="text-lg sm:text-xl font-bold text-foreground ">Aktivitas Terakhir</h3>
      {!isLoading && recentBills.length > 0 ? (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
        {recentBills.map((bill: PaymentResponse) => (
@@ -188,13 +188,13 @@ export default function BillsPage() {
            <Zap className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
           <div>
-           <div className="font-black text-foreground text-xs sm:text-sm ">{bill.billerCode}</div>
-           <div className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">Ref: {bill.referenceNumber.slice(0, 10)}...</div>
+           <div className="font-bold text-foreground text-xs sm:text-sm ">{bill.billerCode}</div>
+           <div className="text-xs font-bold text-gray-400 tracking-widest mt-1">Ref: {bill.referenceNumber.slice(0, 10)}...</div>
           </div>
          </div>
          <div className="text-right">
-          <div className="font-black text-foreground text-sm sm:text-base">Rp {bill.amount.toLocaleString('id-ID')}</div>
-          <div className="text-[10px] font-black text-bank-green tracking-widest mt-1">{bill.status}</div>
+          <div className="font-bold text-foreground text-sm sm:text-base">Rp {bill.amount.toLocaleString('id-ID')}</div>
+          <div className="text-xs font-bold text-bank-green tracking-widest mt-1">{bill.status}</div>
          </div>
         </div>
        ))}
@@ -202,7 +202,7 @@ export default function BillsPage() {
      ) : (
       <div className="bg-card rounded-xl p-10 sm:p-16 text-center border border-border border-dashed border-2 flex flex-col items-center justify-center">
        <LifeBuoy className="h-12 w-12 sm:h-16 sm:w-16 text-gray-100 dark:text-gray-900 mb-4 sm:mb-6" />
-       <p className="text-gray-400 font-black tracking-[0.2em] text-[10px] max-w-xs leading-relaxed">Pembayaran tagihan terakhir Anda akan muncul di sini.</p>
+       <p className="text-gray-400 font-bold tracking-[0.2em] text-xs max-w-xs leading-relaxed">Pembayaran tagihan terakhir Anda akan muncul di sini.</p>
       </div>
      )}
     </div>

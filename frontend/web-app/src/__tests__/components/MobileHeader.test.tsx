@@ -96,7 +96,7 @@ describe('MobileHeader', () => {
     renderWithIntl(<MobileHeader {...defaultProps} />);
 
     const title = screen.getByText('Test Page');
-    expect(title).toHaveClass('text-lg', 'font-black', 'text-foreground');
+    expect(title).toHaveClass('text-lg', 'font-bold', 'text-foreground');
   });
 
   it('should have proper layout structure', () => {

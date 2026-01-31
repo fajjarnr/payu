@@ -60,7 +60,7 @@ export default function MobileNav() {
                 <item.icon className={clsx("h-6 w-6 transition-all", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} aria-hidden="true" />
               </div>
               <span className={clsx(
-                "text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-300 transform",
+                "text-xs font-bold uppercase tracking-[0.15em] transition-all duration-300 transform",
                 isActive ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 h-0 overflow-hidden"
               )}>
                 {item.label}

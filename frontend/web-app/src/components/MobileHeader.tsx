@@ -22,7 +22,7 @@ export default function MobileHeader({ title, showBack = true }: MobileHeaderPro
       <ArrowLeft className="h-5 w-5" />
      </button>
     )}
-    <h1 className="text-lg font-black text-foreground">{title}</h1>
+    <h1 className="text-lg font-bold text-foreground">{title}</h1>
    </div>
   </header>
  );

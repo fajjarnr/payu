@@ -255,7 +255,7 @@ describe('DashboardLayout', () => {
   it('should render logo with PayU branding', () => {
     const { container } = renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const logoElements = container.querySelectorAll('.text-2xl.font-black.text-primary');
+    const logoElements = container.querySelectorAll('.text-2xl.font-bold.text-primary');
     expect(logoElements.length).toBeGreaterThan(0);
   });
 

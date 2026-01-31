@@ -69,7 +69,7 @@ export default function LendingPage() {
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                 <div>
-                  <h2 className="text-3xl font-black text-foreground">Pinjaman & Kredit</h2>
+                  <h2 className="text-3xl font-bold text-foreground">Pinjaman & Kredit</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">Solusi pembiayaan fleksibel sesuai kebutuhan Anda.</p>
                 </div>
                 {activeTab === 'paylater' && (
@@ -110,14 +110,14 @@ export default function LendingPage() {
                     <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10 flex items-start justify-between mb-8">
                         <div>
-                          <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-2">Skor Kredit Anda</p>
+                          <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">Skor Kredit Anda</p>
                           <div className="flex items-baseline gap-3">
-                            <h3 className="text-5xl font-black">{creditScore.score}</h3>
+                            <h3 className="text-5xl font-bold">{creditScore.score}</h3>
                             <div className="flex items-center gap-2 bg-success-light/20 px-3 py-1 rounded-full border border-success-light/20">
                               <span className="text-lg font-bold text-success-light">Grade {creditScore.grade}</span>
                             </div>
                           </div>
-                          <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-3">Terakhir diperbarui: {creditScore.lastUpdated}</p>
+                          <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mt-3">Terakhir diperbarui: {creditScore.lastUpdated}</p>
                         </div>
                         <div className="h-16 w-16 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                           <ShieldCheck className="h-8 w-8 text-bank-green" />
@@ -146,15 +146,15 @@ export default function LendingPage() {
                       <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 border border-primary/10">
                         <Wallet className="h-6 w-6 text-primary" />
                       </div>
-                      <h3 className="text-lg font-black text-foreground mb-3">Total Limit Pinjaman</h3>
-                      <p className="text-3xl font-black text-primary mb-2">{formatCurrency(50000000)}</p>
-                      <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Tersedia berdasarkan skor kredit</p>
+                      <h3 className="text-lg font-bold text-foreground mb-3">Total Limit Pinjaman</h3>
+                      <p className="text-3xl font-bold text-primary mb-2">{formatCurrency(50000000)}</p>
+                      <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Tersedia berdasarkan skor kredit</p>
                     </div>
                   </StaggerItem>
                 </div>
 
                 <div className="space-y-8 mt-12">
-                  <h3 className="text-xl font-black text-foreground">Produk Pinjaman</h3>
+                  <h3 className="text-xl font-bold text-foreground">Produk Pinjaman</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {loanProducts.map((product, i) => (
                       <StaggerItem key={i} className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
@@ -167,7 +167,7 @@ export default function LendingPage() {
                           </div>
                         </div>
                         <div>
-                          <h4 className="text-xl font-black text-foreground mb-2 leading-tight">{product.name}</h4>
+                          <h4 className="text-xl font-bold text-foreground mb-2 leading-tight">{product.name}</h4>
                           <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{product.description}</p>
                           <div className="space-y-3 mb-6">
                             <div className="flex justify-between items-center text-sm">
@@ -210,14 +210,14 @@ export default function LendingPage() {
                               <CreditCard className="h-6 w-6" />
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold text-white/80 tracking-widest uppercase">PayLater Limit</p>
-                              <h3 className="text-2xl font-black">{formatCurrency(payLaterStats.availableLimit)}</h3>
+                              <p className="text-xs font-bold text-white/80 tracking-widest uppercase">PayLater Limit</p>
+                              <h3 className="text-2xl font-bold">{formatCurrency(payLaterStats.availableLimit)}</h3>
                             </div>
                           </div>
                           <p className="text-sm text-white/80">Tersedia untuk belanja sekarang, bayar nanti</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase mb-1">Jatuh Tempo</p>
+                          <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Jatuh Tempo</p>
                           <div className="flex items-center gap-2 justify-end">
                             <Calendar className="h-4 w-4" />
                             <span className="font-bold">{payLaterStats.dueDate}</span>
@@ -227,7 +227,7 @@ export default function LendingPage() {
 
                       <div className="space-y-4">
                         <div>
-                          <div className="flex justify-between text-[10px] font-bold text-white/80 tracking-widest uppercase mb-2">
+                          <div className="flex justify-between text-xs font-bold text-white/80 tracking-widest uppercase mb-2">
                             <span>Limit Terpakai</span>
                             <span>{formatCurrency(payLaterStats.usedLimit)} / {formatCurrency(payLaterStats.creditLimit)}</span>
                           </div>
@@ -237,8 +237,8 @@ export default function LendingPage() {
                         </div>
                         <div className="flex items-center justify-between pt-4 border-t border-white/20">
                           <div>
-                            <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase">Pembayaran Minimum</p>
-                            <p className="text-xl font-black">{formatCurrency(payLaterStats.minimumPayment)}</p>
+                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase">Pembayaran Minimum</p>
+                            <p className="text-xl font-bold">{formatCurrency(payLaterStats.minimumPayment)}</p>
                           </div>
                           <ButtonMotion>
                             <button className="px-6 py-3 bg-white text-primary rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-white/90 transition-all shadow-lg">
@@ -253,7 +253,7 @@ export default function LendingPage() {
                   <StaggerItem>
                     <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card h-full">
                       <div className="flex justify-between items-start mb-6">
-                        <h3 className="text-lg font-black text-foreground">Ringkasan Transaksi</h3>
+                        <h3 className="text-lg font-bold text-foreground">Ringkasan Transaksi</h3>
                         <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/10">
                           <TrendingUp className="h-4 w-4 text-primary" />
                         </div>
@@ -261,15 +261,15 @@ export default function LendingPage() {
                       <div className="space-y-4">
                         <div className="flex justify-between items-center py-3 border-b border-border">
                           <span className="text-sm text-muted-foreground font-medium">Total Transaksi</span>
-                          <span className="text-lg font-black text-foreground">3</span>
+                          <span className="text-lg font-bold text-foreground">3</span>
                         </div>
                         <div className="flex justify-between items-center py-3 border-b border-border">
                           <span className="text-sm text-muted-foreground font-medium">Pembayaran Berhasil</span>
-                          <span className="text-lg font-black text-success-light">2</span>
+                          <span className="text-lg font-bold text-success-light">2</span>
                         </div>
                         <div className="flex justify-between items-center py-3">
                           <span className="text-sm text-muted-foreground font-medium">Menunggu Pembayaran</span>
-                          <span className="text-lg font-black text-warning">1</span>
+                          <span className="text-lg font-bold text-warning">1</span>
                         </div>
                       </div>
                     </div>
@@ -277,7 +277,7 @@ export default function LendingPage() {
                 </div>
 
                 <div className="space-y-8 mt-12">
-                  <h3 className="text-xl font-black text-foreground">Riwayat Transaksi PayLater</h3>
+                  <h3 className="text-xl font-bold text-foreground">Riwayat Transaksi PayLater</h3>
                   <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                     <div className="divide-y divide-border">
                       {payLaterStats.transactions.map((txn) => (
@@ -292,13 +292,13 @@ export default function LendingPage() {
                               </div>
                               <div>
                                 <h4 className="font-bold text-foreground">{txn.merchant}</h4>
-                                <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">{txn.date}</p>
+                                <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">{txn.date}</p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-lg font-black text-foreground">{formatCurrency(txn.amount)}</p>
+                              <p className="text-lg font-bold text-foreground">{formatCurrency(txn.amount)}</p>
                               <p className={clsx(
-                                'text-[10px] font-bold tracking-widest uppercase flex items-center justify-end gap-1',
+                                'text-xs font-bold tracking-widest uppercase flex items-center justify-end gap-1',
                                 txn.status === 'paid' ? 'text-success-light' : 'text-warning'
                               )}>
                                 {txn.status === 'paid' ? 'Dibayar' : 'Menunggu Pembayaran'}

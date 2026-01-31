@@ -8,7 +8,7 @@ import api from '@/lib/api';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
-import { SkeletonBalance, SkeletonTransaction } from '@/components/ui/Skeleton';
+import { SkeletonBalance, SkeletonTransaction } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores';
 
 interface SharedPocket extends Pocket {
@@ -118,7 +118,7 @@ export default function PocketsPage() {
                         <StaggerItem>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                                 <div>
-                                    <h2 className="text-3xl font-black text-foreground">Manajemen Kantong</h2>
+                                    <h2 className="text-3xl font-bold text-foreground">Manajemen Kantong</h2>
                                     <p className="text-sm text-muted-foreground font-medium mt-1">Kelola dan alokasikan dana Anda dengan presisi tinggi.</p>
                                 </div>
                                 <div className="flex gap-3">
@@ -149,9 +149,9 @@ export default function PocketsPage() {
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <div className="h-2 w-2 bg-primary rounded-full shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
-                                                    <p className="text-[10px] font-bold text-primary tracking-widest uppercase">Dompet Aktif</p>
+                                                    <p className="text-xs font-bold text-primary tracking-widest uppercase">Dompet Aktif</p>
                                                 </div>
-                                                <h3 className="text-3xl font-black text-foreground">Kantong Utama Cair</h3>
+                                                <h3 className="text-3xl font-bold text-foreground">Kantong Utama Cair</h3>
                                             </div>
                                             <div className="h-12 w-12 bg-muted/50 rounded-xl flex items-center justify-center border border-border transition-transform group-hover:scale-110">
                                                 <Wallet className="h-6 w-6 text-primary" />
@@ -159,8 +159,8 @@ export default function PocketsPage() {
                                         </div>
 
                                         <div className="mt-auto">
-                                            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-2">Likuiditas Tersedia</p>
-                                            <h4 className="text-5xl sm:text-6xl font-black text-foreground">
+                                            <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Likuiditas Tersedia</p>
+                                            <h4 className="text-5xl sm:text-6xl font-bold text-foreground">
                                                 {balanceLoading ? (
                                                     <SkeletonBalance />
                                                 ) : (
@@ -181,8 +181,8 @@ export default function PocketsPage() {
                             <StaggerItem className="md:col-span-6 lg:col-span-4 grid grid-cols-1 gap-6">
                                 <div className="bg-card p-6 rounded-xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-                                    <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-1">Protokol Cadangan</p>
-                                    <p className="text-2xl font-black text-foreground">Rp {(balance?.reservedBalance ?? 0).toLocaleString('id-ID')}</p>
+                                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Protokol Cadangan</p>
+                                    <p className="text-2xl font-bold text-foreground">Rp {(balance?.reservedBalance ?? 0).toLocaleString('id-ID')}</p>
                                     <div className="h-1 w-full bg-muted rounded-full mt-4 overflow-hidden">
                                         <div className="h-full bg-primary/40" style={{ width: '15%' }} />
                                     </div>
@@ -194,11 +194,11 @@ export default function PocketsPage() {
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-bold">Keamanan Tier-1</h3>
-                                            <p className="text-[10px] text-gray-400">Terdaftar OJK & ASPI</p>
+                                            <p className="text-xs text-gray-400">Terdaftar OJK & ASPI</p>
                                         </div>
                                     </div>
                                     <div className="relative z-10">
-                                        <p className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-1">Status Enkripsi</p>
+                                        <p className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-1">Status Enkripsi</p>
                                         <p className="text-xs font-mono text-bank-green">RESP-V3 ACTIVE</p>
                                     </div>
                                     <Coins className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
@@ -209,7 +209,7 @@ export default function PocketsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8 mt-12">
                             <div className="md:col-span-6 lg:col-span-7 space-y-8">
                                 <div className="flex justify-between items-center">
-                                    <h3 className="text-xl font-black text-foreground">Tujuan Khusus</h3>
+                                    <h3 className="text-xl font-bold text-foreground">Tujuan Khusus</h3>
                                     <button className="text-xs font-bold text-primary hover:underline">Kelola Portofolio</button>
                                 </div>
 
@@ -227,31 +227,31 @@ export default function PocketsPage() {
                                                         <Icon className="h-7 w-7" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-black text-foreground text-base">{goal.name}</h4>
-                                                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Target: Rp {goal.target.toLocaleString('id-ID')}</p>
+                                                        <h4 className="font-bold text-foreground text-base">{goal.name}</h4>
+                                                        <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Target: Rp {goal.target.toLocaleString('id-ID')}</p>
                                                     </div>
                                                 </div>
 
                                                 {goal.locked ? (
                                                     <div className="space-y-4">
                                                         <div className="flex justify-between items-end">
-                                                            <p className="text-2xl font-black text-foreground">Rp {goal.current.toLocaleString('id-ID')}</p>
-                                                            <div className="bg-success-light text-primary px-3 py-1 rounded-full text-[10px] font-bold border border-primary/10">{goal.interestRate}</div>
+                                                            <p className="text-2xl font-bold text-foreground">Rp {goal.current.toLocaleString('id-ID')}</p>
+                                                            <div className="bg-success-light text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/10">{goal.interestRate}</div>
                                                         </div>
-                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-primary tracking-widest uppercase">
+                                                        <div className="flex items-center gap-2 text-xs font-bold text-primary tracking-widest uppercase">
                                                             <Lock className="h-3 w-3" /> Dana Terkunci & Dijamin
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-4">
                                                         <div className="flex justify-between items-end mb-1">
-                                                            <p className="text-2xl font-black text-foreground">Rp {goal.current.toLocaleString('id-ID')}</p>
+                                                            <p className="text-2xl font-bold text-foreground">Rp {goal.current.toLocaleString('id-ID')}</p>
                                                             <span className="text-xs font-bold text-primary">+{percentage}%</span>
                                                         </div>
                                                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                                                             <div className="h-full bg-primary rounded-full" style={{ width: `${percentage}%` }} />
                                                         </div>
-                                                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest text-right uppercase">Sisa: Rp {(goal.target - goal.current).toLocaleString('id-ID')}</p>
+                                                        <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">Sisa: Rp {(goal.target - goal.current).toLocaleString('id-ID')}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -262,7 +262,7 @@ export default function PocketsPage() {
 
                             <div className="md:col-span-6 lg:col-span-5 space-y-8">
                                 <div className="flex justify-between items-center">
-                                    <h3 className="text-xl font-black text-foreground">Buku Besar Terakhir</h3>
+                                    <h3 className="text-xl font-bold text-foreground">Buku Besar Terakhir</h3>
                                     <div className="h-10 w-10 bg-muted/50 rounded-xl flex items-center justify-center border border-border">
                                         <History className="h-5 w-5 text-muted-foreground" />
                                     </div>
@@ -291,7 +291,7 @@ export default function PocketsPage() {
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm font-bold text-foreground mb-0.5">{tx.description}</p>
-                                                                <p className="text-[10px] font-medium text-muted-foreground tracking-tight">
+                                                                <p className="text-xs font-medium text-muted-foreground tracking-tight">
                                                                     {new Date(tx.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })} • {tx.type === 'CREDIT' ? 'Masuk' : 'Keluar'}
                                                                 </p>
                                                             </div>
@@ -310,13 +310,13 @@ export default function PocketsPage() {
                                                 <div className="h-full flex flex-col items-center justify-center text-center py-20 px-10">
                                                     <History className="h-12 w-12 text-muted/20 mb-4" />
                                                     <p className="text-sm font-bold text-muted-foreground">Tidak Ada Aktivitas</p>
-                                                    <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-widest">Aktivitas keuangan Anda akan muncul di sini</p>
+                                                    <p className="text-xs text-muted-foreground/60 mt-1 uppercase tracking-widest">Aktivitas keuangan Anda akan muncul di sini</p>
                                                 </div>
                                             )}
                                         </div>
                                     )}
                                     <div className="p-6 mt-auto">
-                                        <button className="w-full py-4 bg-muted/50 rounded-xl font-bold text-[10px] tracking-widest uppercase border border-border hover:bg-muted transition-all text-muted-foreground">Lihat Rekening Koran</button>
+                                        <button className="w-full py-4 bg-muted/50 rounded-xl font-bold text-xs tracking-widest uppercase border border-border hover:bg-muted transition-all text-muted-foreground">Lihat Rekening Koran</button>
                                     </div>
                                 </div>
                             </div>
@@ -324,7 +324,7 @@ export default function PocketsPage() {
 
                         <div className="mt-12">
                             <div className="flex justify-between items-center mb-8">
-                                <h3 className="text-xl font-black text-foreground flex items-center gap-3">
+                                <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
                                     <Users className="h-5 w-5 text-primary" />
                                     Kantong Bersama
                                 </h3>
@@ -352,8 +352,8 @@ export default function PocketsPage() {
                                                             <Users className="h-5 w-5 text-primary" />
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-black text-foreground text-sm">{pocket.name}</h4>
-                                                            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">{pocket.sharedMembers?.length} Anggota</p>
+                                                            <h4 className="font-bold text-foreground text-sm">{pocket.name}</h4>
+                                                            <p className="text-xs text-muted-foreground tracking-widest uppercase">{pocket.sharedMembers?.length} Anggota</p>
                                                         </div>
                                                     </div>
                                                     <ChevronRight className={clsx("h-5 w-5 text-muted-foreground transition-transform", isSelected ? "rotate-90" : "")} />
@@ -361,21 +361,21 @@ export default function PocketsPage() {
 
                                                 <div className="space-y-3">
                                                     <div className="flex justify-between items-end">
-                                                        <p className="text-2xl font-black text-foreground">Rp {pocket.balance.toLocaleString('id-ID')}</p>
+                                                        <p className="text-2xl font-bold text-foreground">Rp {pocket.balance.toLocaleString('id-ID')}</p>
                                                         <span className="text-xs font-bold text-primary">{percentage}%</span>
                                                     </div>
                                                     <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                                                         <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${percentage}%` }} />
                                                     </div>
-                                                    <p className="text-[10px] font-bold text-muted-foreground tracking-widest text-right uppercase">Target: Rp {pocket.target.toLocaleString('id-ID')}</p>
+                                                    <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">Target: Rp {pocket.target.toLocaleString('id-ID')}</p>
                                                 </div>
                                             </div>
 
                                             {isSelected && pocket.sharedMembers && (
                                                 <div className="border-t border-border p-4 bg-muted/20">
                                                     <div className="flex justify-between items-center mb-3">
-                                                        <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Anggota</p>
-                                                        <button className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1">
+                                                        <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Anggota</p>
+                                                        <button className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
                                                             <UserPlus className="h-3 w-3" /> Undang
                                                         </button>
                                                     </div>
@@ -383,14 +383,14 @@ export default function PocketsPage() {
                                                         {pocket.sharedMembers.map((member, i) => (
                                                             <div key={i} className="flex items-center justify-between p-2 bg-background rounded-lg border border-border">
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center text-[10px] font-bold text-primary">
+                                                                    <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center text-xs font-bold text-primary">
                                                                         {member.fullName.charAt(0)}
                                                                     </div>
                                                                     <span className="text-xs font-bold text-foreground">{member.fullName}</span>
                                                                 </div>
                                                                 <div className="flex items-center gap-2">
                                                                     <span className={clsx(
-                                                                        "text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider",
+                                                                        "text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider",
                                                                         member.role === 'OWNER' ? "bg-primary/10 text-primary" : member.role === 'ADMIN' ? "bg-bank-emerald/10 text-bank-emerald" : "bg-muted/50 text-muted-foreground"
                                                                     )}>
                                                                         {member.role}
@@ -419,10 +419,10 @@ export default function PocketsPage() {
                                             <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                                                 <TrendingUp className="h-6 w-6 text-white" />
                                             </div>
-                                            <h3 className="text-2xl sm:text-3xl font-black">Akselerasi Kekayaan Anda.</h3>
+                                            <h3 className="text-2xl sm:text-3xl font-bold">Akselerasi Kekayaan Anda.</h3>
                                         </div>
                                         <p className="text-sm text-gray-400 font-medium leading-relaxed">
-                                            Pindahkan dana mengendap dari kantong ke reksa dana yield tinggi atau emas digital. AI kami menyarankan Anda bisa berhemat hingga <span className="text-bank-green font-black">Rp 12,5 Juta</span> lebih per tahun.
+                                            Pindahkan dana mengendap dari kantong ke reksa dana yield tinggi atau emas digital. AI kami menyarankan Anda bisa berhemat hingga <span className="text-bank-green font-bold">Rp 12,5 Juta</span> lebih per tahun.
                                         </p>
                                     </div>
                                     <ButtonMotion>

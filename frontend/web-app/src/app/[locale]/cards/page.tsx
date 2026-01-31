@@ -18,7 +18,7 @@ export default function CardsPage() {
                         <StaggerItem>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                                 <div>
-                                    <h2 className="text-3xl font-black text-foreground">Kartu Virtual</h2>
+                                    <h2 className="text-3xl font-bold text-foreground">Kartu Virtual</h2>
                                     <p className="text-sm text-muted-foreground font-medium mt-1">Pembayaran online yang aman dengan rincian kartu instan.</p>
                                 </div>
                                 <ButtonMotion>
@@ -44,8 +44,8 @@ export default function CardsPage() {
                                         <div className="relative z-10 h-full p-8 sm:p-10 flex flex-col justify-between text-white">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-black text-2xl border border-white/20 shadow-lg">U</div>
-                                                    <span className="text-3xl font-black">PayU</span>
+                                                    <div className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-bold text-2xl border border-white/20 shadow-lg">U</div>
+                                                    <span className="text-3xl font-bold">PayU</span>
                                                 </div>
                                                 <div className="h-4 w-4 bg-white rounded-full animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
                                             </div>
@@ -56,16 +56,16 @@ export default function CardsPage() {
                                                 </div>
                                                 <div className="flex justify-between items-end">
                                                     <div className="space-y-1">
-                                                        <p className="text-[10px] text-white/60 font-bold tracking-widest uppercase">Pemegang Kartu</p>
+                                                        <p className="text-xs text-white/60 font-bold tracking-widest uppercase">Pemegang Kartu</p>
                                                         <p className="text-base font-bold uppercase">PENGGUNA PAYU</p>
                                                     </div>
                                                     <div className="flex gap-8">
                                                         <div className="text-right space-y-1">
-                                                            <p className="text-[10px] text-white/60 font-bold tracking-widest uppercase">Berlaku</p>
+                                                            <p className="text-xs text-white/60 font-bold tracking-widest uppercase">Berlaku</p>
                                                             <p className="font-mono font-bold">08 / 29</p>
                                                         </div>
                                                         <div className="text-right space-y-1">
-                                                            <p className="text-[10px] text-white/60 font-bold tracking-widest uppercase">CVV</p>
+                                                            <p className="text-xs text-white/60 font-bold tracking-widest uppercase">CVV</p>
                                                             <p className="font-mono font-bold">{showFullDetails ? "892" : "•••"}</p>
                                                         </div>
                                                     </div>
@@ -77,12 +77,12 @@ export default function CardsPage() {
                                     <div className="flex flex-col sm:flex-row gap-4 mt-12 w-full max-w-sm relative z-10">
                                         <button
                                             onClick={() => setShowFullDetails(!showFullDetails)}
-                                            className="flex-1 bg-foreground text-background px-6 py-4 rounded-xl font-bold text-[10px] tracking-widest uppercase hover:bg-primary hover:text-white transition-all shadow-xl flex items-center justify-center gap-2"
+                                            className="flex-1 bg-foreground text-background px-6 py-4 rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-primary hover:text-white transition-all shadow-xl flex items-center justify-center gap-2"
                                         >
                                             {showFullDetails ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                             {showFullDetails ? "Sembunyikan" : "Tampilkan Detail"}
                                         </button>
-                                        <button className="flex-1 bg-muted/50 border border-border px-6 py-4 rounded-xl font-bold text-[10px] tracking-widest uppercase hover:bg-destructive hover:text-white hover:border-destructive transition-all flex items-center justify-center gap-2 text-muted-foreground">
+                                        <button className="flex-1 bg-muted/50 border border-border px-6 py-4 rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-destructive hover:text-white hover:border-destructive transition-all flex items-center justify-center gap-2 text-muted-foreground">
                                             <Lock className="h-4 w-4" /> Bekukan Kartu
                                         </button>
                                     </div>
@@ -92,7 +92,7 @@ export default function CardsPage() {
                             {/* Controls Section */}
                             <StaggerItem className="md:col-span-6 lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card flex flex-col">
-                                    <h3 className="text-xl font-black text-foreground mb-10">Kontrol Operasional</h3>
+                                    <h3 className="text-xl font-bold text-foreground mb-10">Kontrol Operasional</h3>
                                     <div className="space-y-8">
                                         {[
                                             { label: 'Transaksi Online', desc: 'Izinkan pembayaran di situs web retail', icon: Zap, status: true },
@@ -107,7 +107,7 @@ export default function CardsPage() {
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-foreground text-sm">{control.label}</p>
-                                                        <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{control.desc}</p>
+                                                        <p className="text-xs text-muted-foreground font-medium mt-0.5">{control.desc}</p>
                                                     </div>
                                                 </div>
                                                 <div className={clsx(
@@ -126,7 +126,7 @@ export default function CardsPage() {
 
                                 <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-10 text-white h-full flex flex-col justify-between relative overflow-hidden shadow-2xl group">
                                     <div className="relative z-10">
-                                        <h3 className="text-3xl font-black mb-4">Upgrade ke Premium.</h3>
+                                        <h3 className="text-3xl font-bold mb-4">Upgrade ke Premium.</h3>
                                         <p className="text-sm text-gray-400 font-medium mb-10 leading-relaxed max-w-sm">
                                             Dapatkan kartu virtual tak terbatas, limit transaksi lebih tinggi, dan cashback 2% untuk semua pembelian online.
                                         </p>
@@ -136,7 +136,7 @@ export default function CardsPage() {
                                     </div>
                                     <CreditCard className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
                                     <div className="mt-12 relative z-10 border-t border-white/5 pt-6 text-center">
-                                        <p className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Proteksi Real-time oleh Protokol PayU</p>
+                                        <p className="text-xs font-bold text-gray-500 tracking-widest uppercase">Proteksi Real-time oleh Protokol PayU</p>
                                     </div>
                                 </div>
                             </StaggerItem>

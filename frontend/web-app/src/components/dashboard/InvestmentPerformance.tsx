@@ -59,7 +59,7 @@ export default function InvestmentPerformance({
           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <TrendingUp className="h-4 w-4 text-primary" />
           </div>
-          <CardTitle className="text-sm font-black text-foreground tracking-widest uppercase">
+          <CardTitle className="text-sm font-bold text-foreground tracking-widest uppercase">
             Performa Investasi
           </CardTitle>
         </div>
@@ -104,14 +104,14 @@ export default function InvestmentPerformance({
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-foreground text-3xl font-black tabular-nums"
+                          className="fill-foreground text-3xl font-bold tabular-nums"
                         >
                           +{roi}%
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 20}
-                          className="fill-muted-foreground text-[10px] font-black uppercase tracking-widest"
+                          className="fill-muted-foreground text-xs font-bold uppercase tracking-widest"
                         >
                           Annual ROI
                         </tspan>
@@ -126,13 +126,13 @@ export default function InvestmentPerformance({
 
         <div className="grid grid-cols-2 gap-4 mt-2">
           <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
               <Target className="h-3 w-3" /> Target
             </p>
             <p className="text-xs font-bold text-foreground">15.0%</p>
           </div>
           <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
               <ArrowUpRight className="h-3 w-3" /> Profit
             </p>
             <p className="text-xs font-bold text-primary">Rp 18.75Jt</p>
@@ -141,10 +141,10 @@ export default function InvestmentPerformance({
       </CardContent>
 
       <CardFooter className="flex-col gap-2 pt-0 pb-6 border-t border-border/10">
-        <div className="flex items-center gap-2 leading-none font-black text-[10px] uppercase tracking-widest text-primary mt-4">
+        <div className="flex items-center gap-2 leading-none font-bold text-xs uppercase tracking-widest text-primary mt-4">
           Naik 2.1% bulan ini <TrendingUp className="h-3 w-3" />
         </div>
-        <div className="text-[10px] text-muted-foreground lowercase leading-none">
+        <div className="text-xs text-muted-foreground lowercase leading-none">
           Berdasarkan total investasi Rp {(totalInvestment / 1000000).toFixed(0)}Jt
         </div>
       </CardFooter>

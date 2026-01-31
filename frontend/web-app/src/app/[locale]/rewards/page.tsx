@@ -59,7 +59,7 @@ export default function RewardsPage() {
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                 <div>
-                  <h2 className="text-3xl font-black text-foreground">Rewards & Gamifikasi</h2>
+                  <h2 className="text-3xl font-bold text-foreground">Rewards & Gamifikasi</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">Kumpulkan poin, dapatkan cashback, dan raih lebih banyak keuntungan.</p>
                 </div>
               </div>
@@ -108,8 +108,8 @@ export default function RewardsPage() {
                                 <Coins className="h-6 w-6" />
                               </div>
                               <div>
-                                <p className="text-[10px] font-bold text-white/80 tracking-widest uppercase">Saldo Poin</p>
-                                <h3 className="text-3xl font-black">{loyaltyStats.currentBalance.toLocaleString()}</h3>
+                                <p className="text-xs font-bold text-white/80 tracking-widest uppercase">Saldo Poin</p>
+                                <h3 className="text-3xl font-bold">{loyaltyStats.currentBalance.toLocaleString()}</h3>
                               </div>
                             </div>
                             <p className="text-sm text-white/80">Tukarkan poin Anda untuk berbagai hadiah menarik</p>
@@ -118,12 +118,12 @@ export default function RewardsPage() {
 
                         <div className="grid grid-cols-2 gap-6 mb-8">
                           <div>
-                            <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase mb-1">Total Diperoleh</p>
-                            <p className="text-2xl font-black">{loyaltyStats.totalEarned.toLocaleString()}</p>
+                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Total Diperoleh</p>
+                            <p className="text-2xl font-bold">{loyaltyStats.totalEarned.toLocaleString()}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase mb-1">Total Ditukar</p>
-                            <p className="text-2xl font-black">{loyaltyStats.totalRedeemed.toLocaleString()}</p>
+                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Total Ditukar</p>
+                            <p className="text-2xl font-bold">{loyaltyStats.totalRedeemed.toLocaleString()}</p>
                           </div>
                         </div>
 
@@ -132,7 +132,7 @@ export default function RewardsPage() {
                             <div className="flex items-center gap-3">
                               <Calendar className="h-5 w-5 text-warning" />
                               <div>
-                                <p className="text-[10px] font-bold text-white/80 tracking-widest uppercase">Poin Akan Kadaluarsa</p>
+                                <p className="text-xs font-bold text-white/80 tracking-widest uppercase">Poin Akan Kadaluarsa</p>
                                 <p className="font-bold">{loyaltyStats.pointsExpiring.toLocaleString()} poin - {loyaltyStats.expiryDate}</p>
                               </div>
                             </div>
@@ -145,7 +145,7 @@ export default function RewardsPage() {
 
                   <StaggerItem className="lg:col-span-2">
                     <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card h-full">
-                      <h3 className="text-lg font-black text-foreground mb-6">Cara Mendapatkan Poin</h3>
+                      <h3 className="text-lg font-bold text-foreground mb-6">Cara Mendapatkan Poin</h3>
                       <div className="space-y-6">
                         <div className="flex items-start gap-4">
                           <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0 border border-primary/10">
@@ -189,7 +189,7 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="space-y-8 mt-12">
-                  <h3 className="text-xl font-black text-foreground">Riwayat Poin</h3>
+                  <h3 className="text-xl font-bold text-foreground">Riwayat Poin</h3>
                   <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                     <div className="divide-y divide-border">
                       {recentPoints.map((point) => (
@@ -204,12 +204,12 @@ export default function RewardsPage() {
                               </div>
                               <div>
                                 <h4 className="font-bold text-foreground">{point.description}</h4>
-                                <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">{point.date}</p>
+                                <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">{point.date}</p>
                               </div>
                             </div>
                             <div className="text-right">
                               <p className={clsx(
-                                'text-lg font-black',
+                                'text-lg font-bold',
                                 point.type === 'EARNED' ? 'text-success-light' : 'text-warning'
                               )}>
                                 {point.type === 'EARNED' ? '+' : ''}{point.points}
@@ -233,8 +233,8 @@ export default function RewardsPage() {
                             <DollarSign className="h-7 w-7" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Total Cashback</p>
-                            <h3 className="text-4xl font-black">{formatCurrency(190000)}</h3>
+                            <p className="text-xs font-bold text-gray-400 tracking-widest uppercase">Total Cashback</p>
+                            <h3 className="text-4xl font-bold">{formatCurrency(190000)}</h3>
                           </div>
                         </div>
                         <div className="space-y-4">
@@ -257,7 +257,7 @@ export default function RewardsPage() {
 
                   <StaggerItem className="lg:col-span-2">
                     <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card h-full">
-                      <h3 className="text-lg font-black text-foreground mb-6">Promosi Aktif</h3>
+                      <h3 className="text-lg font-bold text-foreground mb-6">Promosi Aktif</h3>
                       <div className="space-y-4">
                         {activePromotions.map((promo, i) => (
                           <div key={i} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border hover:border-primary/20 transition-all group">
@@ -271,8 +271,8 @@ export default function RewardsPage() {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-lg font-black text-primary">{promo.value}</p>
-                              <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">Berakhir: {promo.endDate}</p>
+                              <p className="text-lg font-bold text-primary">{promo.value}</p>
+                              <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">Berakhir: {promo.endDate}</p>
                             </div>
                           </div>
                         ))}
@@ -282,7 +282,7 @@ export default function RewardsPage() {
                 </div>
 
                 <div className="space-y-8 mt-12">
-                  <h3 className="text-xl font-black text-foreground">Riwayat Cashback</h3>
+                  <h3 className="text-xl font-bold text-foreground">Riwayat Cashback</h3>
                   <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                     <div className="divide-y divide-border">
                       {cashbackHistory.map((cb) => (
@@ -300,17 +300,17 @@ export default function RewardsPage() {
                                 <div className="flex items-center gap-2">
                                   <p className="text-sm text-muted-foreground">{cb.description}</p>
                                   <span className={clsx(
-                                    'text-[10px] font-bold tracking-widest uppercase',
+                                    'text-xs font-bold tracking-widest uppercase',
                                     cb.status === 'credited' ? 'text-success-light' : 'text-warning'
                                   )}>
                                     - {cb.status === 'credited' ? 'Dikreditkan' : 'Menunggu'}
                                   </span>
                                 </div>
-                                <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">{cb.date}</p>
+                                <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">{cb.date}</p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-lg font-black text-foreground">{formatCurrency(cb.amount)}</p>
+                              <p className="text-lg font-bold text-foreground">{formatCurrency(cb.amount)}</p>
                             </div>
                           </div>
                         </div>
@@ -326,7 +326,7 @@ export default function RewardsPage() {
                     <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-8">
-                          <h3 className="text-xl font-black">Kode Referral Anda</h3>
+                          <h3 className="text-xl font-bold">Kode Referral Anda</h3>
                           <div className="h-12 w-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                             <Gift className="h-6 w-6" />
                           </div>
@@ -334,7 +334,7 @@ export default function RewardsPage() {
 
                         <div className="bg-white/10 rounded-xl p-6 mb-8 border border-white/10">
                           <div className="flex items-center justify-between">
-                            <span className="text-4xl font-black tracking-widest">{referralStats.code}</span>
+                            <span className="text-4xl font-bold tracking-widest">{referralStats.code}</span>
                             <ButtonMotion>
                               <button className="h-12 w-12 bg-white/20 rounded-lg flex items-center justify-center border border-white/10 hover:bg-white/30 transition-all">
                                 <Copy className="h-6 w-6" />
@@ -346,12 +346,12 @@ export default function RewardsPage() {
 
                         <div className="grid grid-cols-2 gap-6">
                           <div>
-                            <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase mb-1">Total Teman</p>
-                            <p className="text-2xl font-black">{referralStats.totalReferrals}</p>
+                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Total Teman</p>
+                            <p className="text-2xl font-bold">{referralStats.totalReferrals}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-white/60 tracking-widest uppercase mb-1">Berhasil Bergabung</p>
-                            <p className="text-2xl font-black text-success-light">{referralStats.completedReferrals}</p>
+                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Berhasil Bergabung</p>
+                            <p className="text-2xl font-bold text-success-light">{referralStats.completedReferrals}</p>
                           </div>
                         </div>
                       </div>
@@ -361,7 +361,7 @@ export default function RewardsPage() {
 
                   <StaggerItem>
                     <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card h-full">
-                      <h3 className="text-lg font-black text-foreground mb-6">Ringkasan Referral</h3>
+                      <h3 className="text-lg font-bold text-foreground mb-6">Ringkasan Referral</h3>
                       <div className="space-y-6">
                         <div className="flex items-start gap-4">
                           <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0 border border-primary/10">

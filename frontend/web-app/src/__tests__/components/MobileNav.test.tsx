@@ -139,7 +139,7 @@ describe('MobileNav', () => {
     mockPathname = '/transfer';
     const { container } = renderWithIntl(<MobileNav />);
 
-    // Active item should have visible label (text-[9px] class)
+    // Active item should have visible label (text-xs class)
     const activeLabels = container.querySelectorAll('.opacity-100');
     expect(activeLabels.length).toBeGreaterThan(0);
 

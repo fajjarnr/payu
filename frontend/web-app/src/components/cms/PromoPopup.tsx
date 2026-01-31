@@ -7,6 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { usePopups } from '@/hooks';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface PromoPopupProps {
   segment?: string;
@@ -140,145 +148,115 @@ export default function PromoPopup({
     }
   };
 
-  if (!isOpen || eligiblePopups.length === 0) {
+  if (eligiblePopups.length === 0) {
     return null;
   }
 
   const currentPopup = eligiblePopups[currentPopupIndex];
   if (!currentPopup) return null;
 
-  // Get background style from metadata
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _backgroundStyle = currentPopup.metadata?.backgroundImage
-    ? {
-        backgroundImage: `url(${currentPopup.metadata.backgroundImage as string})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    : {};
-
   return (
-    <AnimatePresence>
-      {isOpen && currentPopup && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={() => handleClose(false)}
-          />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose(false)}>
+      <DialogContent className="p-0 border-none bg-card max-w-lg rounded-3xl overflow-hidden shadow-2xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{currentPopup.title}</DialogTitle>
+          <DialogDescription>{currentPopup.description}</DialogDescription>
+        </DialogHeader>
 
-          {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{
-                type: 'spring',
-                damping: 25,
-                stiffness: 300,
-              }}
-              className="relative w-full max-w-lg bg-card rounded-3xl shadow-2xl overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => handleClose(false)}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm transition-colors"
-                aria-label="Close popup"
-              >
-                <X className="h-5 w-5" />
-              </button>
+        {/* Close Button - Premium Position */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleClose(false)}
+          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-all h-9 w-9"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </Button>
 
-              {/* Image Banner */}
-              {currentPopup.imageUrl && (
-                <div className="relative h-48 sm:h-64">
-                  <Image
-                    src={currentPopup.imageUrl}
-                    alt={currentPopup.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, 512px"
-                  />
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                </div>
-              )}
-
-              {/* Content */}
-              <div
-                className={clsx(
-                  'p-6 sm:p-8',
-                  currentPopup.imageUrl ? '-mt-12 relative z-10' : ''
-                )}
-              >
-                <div className="mb-6">
-                  <span className="inline-block px-3 py-1 bg-bank-green/90 text-white text-xs font-bold tracking-wider rounded-full mb-3">
-                    SPECIAL OFFER
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-black text-foreground mb-3">
-                    {currentPopup.title}
-                  </h3>
-                  {currentPopup.description && (
-                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                      {currentPopup.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={handleAction}
-                    className="flex-1 px-6 py-3 bg-bank-green hover:bg-bank-emerald text-white font-bold rounded-2xl shadow-lg shadow-bank-green/30 transition-all hover:scale-105 active:scale-95"
-                  >
-                    Claim Now
-                  </button>
-                  <button
-                    onClick={() => handleClose(true)}
-                    className="flex-1 px-6 py-3 bg-muted hover:bg-muted/80 text-foreground font-bold rounded-2xl transition-all hover:scale-105 active:scale-95"
-                  >
-                    Don&apos;t Show Again
-                  </button>
-                </div>
-
-                {/* Pagination Indicator */}
-                {eligiblePopups.length > 1 && (
-                  <div className="flex justify-center gap-2 mt-6">
-                    {eligiblePopups.map((_, index) => (
-                      <div
-                        key={index}
-                        className={clsx(
-                          'h-2 rounded-full transition-all duration-300',
-                          index === currentPopupIndex
-                            ? 'w-8 bg-bank-green'
-                            : 'w-2 bg-muted-foreground/30'
-                        )}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Validity Date */}
-                {currentPopup.endDate && (
-                  <p className="text-xs text-center text-muted-foreground mt-4">
-                    Valid until{' '}
-                    {new Date(currentPopup.endDate).toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </p>
-                )}
-              </div>
-            </motion.div>
+        {/* Image Banner */}
+        {currentPopup.imageUrl && (
+          <div className="relative h-48 sm:h-64">
+            <Image
+              src={currentPopup.imageUrl}
+              alt={currentPopup.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, 512px"
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           </div>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+
+        {/* Content */}
+        <div
+          className={clsx(
+            'p-6 sm:p-10',
+            currentPopup.imageUrl ? '-mt-12 relative z-10' : ''
+          )}
+        >
+          <div className="mb-8">
+            <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-xs font-bold tracking-[0.2em] rounded-full mb-4 uppercase border border-white/20 backdrop-blur-md">
+              Special Offer
+            </span>
+            <h3 className="text-2xl sm:text-4xl font-bold text-foreground mb-4 leading-tight uppercase">
+              {currentPopup.title}
+            </h3>
+            {currentPopup.description && (
+              <p className="text-sm sm:text-lg text-muted-foreground leading-relaxed font-medium">
+                {currentPopup.description}
+              </p>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <Button
+              onClick={handleAction}
+              className="flex-1 h-14 bg-bank-green hover:bg-bank-emerald text-white font-bold uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-bank-green/20"
+            >
+              Claim Now
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleClose(true)}
+              className="flex-1 h-14 font-bold uppercase tracking-widest text-xs rounded-2xl border-border hover:bg-muted transition-all"
+            >
+              Don&apos;t Show
+            </Button>
+          </div>
+
+          {/* Pagination Indicator */}
+          {eligiblePopups.length > 1 && (
+            <div className="flex justify-center gap-3 mb-6">
+              {eligiblePopups.map((_, index) => (
+                <div
+                  key={index}
+                  className={clsx(
+                    'h-1.5 rounded-full transition-all duration-500',
+                    index === currentPopupIndex
+                      ? 'w-10 bg-bank-green'
+                      : 'w-2 bg-muted-foreground/20'
+                  )}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Validity Date */}
+          {currentPopup.endDate && (
+            <p className="text-xs text-center text-muted-foreground font-bold uppercase tracking-[0.1em] opacity-60">
+              Valid until{' '}
+              {new Date(currentPopup.endDate).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

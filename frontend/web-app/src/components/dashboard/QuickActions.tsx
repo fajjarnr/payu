@@ -159,12 +159,12 @@ export default function QuickActions({
       {/* Decorative background */}
       <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
         <div>
-          <CardTitle className="text-sm font-black text-foreground tracking-widest uppercase">
+          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('quickActionsTitle')}
           </CardTitle>
-          <CardDescription className="uppercase tracking-widest text-[10px] font-bold">
+          <CardDescription className="uppercase tracking-widest text-xs sm:text-xs font-bold opacity-60">
             {t('quickActionsSubtitle')}
           </CardDescription>
         </div>
@@ -173,7 +173,7 @@ export default function QuickActions({
           variant={isEditMode ? "default" : "outline"}
           size="sm"
           onClick={() => setIsEditMode(!isEditMode)}
-          className="text-[10px]"
+          className="text-xs sm:text-xs px-4"
         >
           {isEditMode ? 'Selesai' : 'Edit'}
         </Button>
@@ -187,12 +187,12 @@ export default function QuickActions({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-xl"
+              className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl"
               role="status"
               aria-live="polite"
             >
-              <p className="text-[10px] text-muted-foreground flex items-center gap-2">
-                <GripVertical className="h-4 w-4" aria-hidden="true" />
+              <p className="text-xs text-muted-foreground flex items-center gap-3">
+                <GripVertical className="h-5 w-5" aria-hidden="true" />
                 {t('quickActionsDragHint')} - Gunakan Tab untuk navigasi, Spasi/Enter untuk drag
               </p>
             </motion.div>
@@ -206,7 +206,7 @@ export default function QuickActions({
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-8">
               {items.map((action, index) => (
                 <SortableQuickAction
                   key={action.id}
@@ -220,14 +220,14 @@ export default function QuickActions({
         </DndContext>
 
         {/* More Actions Link */}
-        <div className="mt-6 pt-4 border-t border-border">
+        <div className="mt-8 pt-6 border-t border-border">
           <Button
             variant="ghost"
-            className="w-full text-xs font-black text-muted-foreground hover:text-foreground justify-center gap-2 h-10"
+            className="w-full text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground justify-center gap-3 h-12"
           >
-            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+            <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
             Lihat Semua Fitur
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
       </CardContent>
@@ -258,12 +258,12 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
       <motion.a
         href={action.href}
         className={clsx(
-          'group relative p-4 rounded-xl border transition-all',
+          'group relative p-6 rounded-2xl border transition-all flex flex-col items-center text-center',
           'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset',
           isDragging && 'opacity-50',
           isEditMode
             ? 'cursor-grab active:cursor-grabbing border-dashed border-primary/30 bg-muted/30'
-            : 'border-border bg-card hover:border-primary/30 hover:shadow-md hover:bg-primary/5'
+            : 'border-border bg-card hover:border-primary/30 hover:shadow-xl hover:bg-primary/5 shadow-sm'
         )}
         aria-label={action.ariaLabel}
         draggable={isEditMode}
@@ -271,13 +271,13 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2, delay: index * 0.05 }}
-        whileHover={!isEditMode ? { scale: 1.02 } : undefined}
+        whileHover={!isEditMode ? { scale: 1.05 } : undefined}
         tabIndex={isEditMode ? 0 : undefined}
       >
         {/* Drag Handle Indicator */}
         {isEditMode && (
-          <div className="absolute top-2 right-2 flex items-center gap-1">
-            <GripVertical className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          <div className="absolute top-4 right-4 flex items-center gap-1">
+            <GripVertical className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             <span className="sr-only">Drag untuk mengatur ulang</span>
           </div>
         )}
@@ -285,17 +285,17 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
         {/* Icon */}
         <div
           className={clsx(
-            'h-12 w-12 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110',
+            'h-16 w-16 rounded-[1.25rem] flex items-center justify-center mb-5 transition-transform group-hover:scale-110 shadow-lg',
             action.bgColor
           )}
         >
-          <Icon className={clsx('h-6 w-6', action.color)} aria-hidden="true" />
+          <Icon className={clsx('h-8 w-8', action.color)} aria-hidden="true" />
         </div>
 
         {/* Label */}
-        <p className="text-xs font-bold text-foreground mb-0.5">{action.label}</p>
+        <p className="text-sm font-bold text-foreground mb-1 shadow-sm">{action.label}</p>
         {action.description && (
-          <p className="text-[10px] text-muted-foreground line-clamp-1">{action.description}</p>
+          <p className="text-xs sm:text-xs text-muted-foreground font-medium line-clamp-1 opacity-80 uppercase tracking-[0.05em]">{action.description}</p>
         )}
       </motion.a>
     </div>

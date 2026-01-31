@@ -60,7 +60,7 @@ export default function PersonalizedGreeting({
         {showTimeBased && (
           <>
             <TimeIcon className="h-4 w-4 text-emerald-500" />
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               {timeGreeting.text}
             </span>
           </>
@@ -73,7 +73,7 @@ export default function PersonalizedGreeting({
         transition={{ delay: 0.1 }}
         className="flex items-center gap-3 flex-wrap"
       >
-        <span className="text-2xl font-black text-foreground uppercase tracking-tighter">
+        <span className="text-2xl font-bold text-foreground uppercase tracking-tighter">
           {user?.fullName?.split(' ')[0] || 'User'}!
         </span>
 
@@ -85,7 +85,7 @@ export default function PersonalizedGreeting({
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20"
           >
             <Crown className="h-3.5 w-3.5 text-white" />
-            <span className="text-[10px] font-bold tracking-[0.15em] text-white uppercase">
+            <span className="text-xs font-bold tracking-[0.15em] text-white uppercase">
               {segmentGreeting}
             </span>
           </motion.span>
@@ -146,12 +146,12 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4" />
-          <p className="text-[10px] font-bold tracking-widest opacity-80">
+          <p className="text-xs font-bold tracking-widest opacity-80">
             PERSONALIZED EXPERIENCE
           </p>
         </div>
 
-        <h2 className="text-xl sm:text-2xl font-black mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">
           {welcome.title}
         </h2>
 
@@ -162,10 +162,10 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         {progressToNext && nextTier && !isVIP && (
           <div className="max-w-md">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-bold opacity-80">
+              <p className="text-xs font-bold opacity-80">
                 Progress to {nextTier}
               </p>
-              <p className="text-[10px] font-bold">
+              <p className="text-xs font-bold">
                 {progressToNext.toFixed(0)}%
               </p>
             </div>

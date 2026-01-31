@@ -7,7 +7,7 @@ import {
 Gift, Percent, Coins, Zap, Ticket, ChevronRight } from 'lucide-react';
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
 import { useAuthStore } from '@/stores';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import clsx from 'clsx';
 import type { SegmentedOffer } from '@/services/SegmentationService';
 
@@ -52,7 +52,7 @@ export default function SegmentedOffers({ className, maxOffers = 3 }: SegmentedO
     <div className={clsx('space-y-4', className)}>
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-black text-foreground">Penawaran Spesial Untuk Anda</h3>
+          <h3 className="text-lg font-bold text-foreground">Penawaran Spesial Untuk Anda</h3>
           <p className="text-xs text-muted-foreground font-medium tracking-wider">
             Berdasarkan status akun Anda
           </p>
@@ -117,7 +117,7 @@ function OfferCard({ offer, index }: OfferCardProps) {
           </div>
 
           {offer.promoCode && (
-            <span className="text-[10px] px-2 py-1 rounded-md bg-muted font-mono font-bold tracking-wider">
+            <span className="text-xs px-2 py-1 rounded-md bg-muted font-mono font-bold tracking-wider">
               {offer.promoCode}
             </span>
           )}
@@ -133,10 +133,10 @@ function OfferCard({ offer, index }: OfferCardProps) {
 
         <div className="flex items-center justify-between pt-4 border-t border-border">
           <div>
-            <p className="text-[10px] text-muted-foreground font-medium tracking-wider">
+            <p className="text-xs text-muted-foreground font-medium tracking-wider">
               {offer.offerType.replace('_', ' ')}
             </p>
-            <p className="text-lg font-black text-primary">
+            <p className="text-lg font-bold text-primary">
               {formatValue()}
             </p>
           </div>
@@ -157,7 +157,7 @@ function OfferCard({ offer, index }: OfferCardProps) {
         </div>
 
         {offer.minTransaction && (
-          <p className="text-[10px] text-muted-foreground mt-3 font-medium">
+          <p className="text-xs text-muted-foreground mt-3 font-medium">
             Min. transaksi: Rp {offer.minTransaction.toLocaleString('id-ID')}
           </p>
         )}
@@ -172,7 +172,7 @@ function OfferCard({ offer, index }: OfferCardProps) {
             indicatorClassName={clsx('bg-gradient-to-r', gradientStyle)}
           />
           <span className={clsx(
-            'text-[10px] font-bold',
+            'text-xs font-bold',
             isValid ? 'text-primary' : 'text-destructive'
           )}>
             {isValid ? 'Berlaku' : 'Kedaluwarsa'}

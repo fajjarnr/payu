@@ -85,7 +85,7 @@ export default function MerchantRegisterPage() {
      <div className="inline-flex items-center justify-center h-20 w-20 bg-bank-green/10 rounded-3xl mb-4">
       <Building2 className="h-10 w-10 text-bank-green" />
      </div>
-     <h1 className="text-4xl font-black text-foreground ">Daftar Merchant Baru</h1>
+     <h1 className="text-4xl font-bold text-foreground ">Daftar Merchant Baru</h1>
      <p className="text-sm text-gray-500 font-medium max-w-xl mx-auto">
       Bergabunglah dengan ekosistem pembayaran PayU dan terima pembayaran instan dari jutaan pengguna.
      </p>
@@ -97,7 +97,7 @@ export default function MerchantRegisterPage() {
 
       <div className="relative z-10 space-y-8">
        <div>
-        <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 block mb-3">
+        <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
          Nama Merchant
         </label>
         <div className="relative">
@@ -108,17 +108,17 @@ export default function MerchantRegisterPage() {
           onChange={(e) => handleChange('name', e.target.value)}
           placeholder="Masukkan nama bisnis Anda"
           className={clsx(
-           "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-black text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none ",
+           "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-bold text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none ",
            errors.name && "border-red-500 focus:ring-red-500/10 focus:border-red-500"
           )}
          />
         </div>
-        {errors.name && <p className="text-red-500 text-[10px] mt-2 ml-4 font-black tracking-widest">{errors.name}</p>}
+        {errors.name && <p className="text-red-500 text-xs mt-2 ml-4 font-bold tracking-widest">{errors.name}</p>}
        </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-         <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 block mb-3">
+         <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
           Email Bisnis
          </label>
          <div className="relative">
@@ -129,16 +129,16 @@ export default function MerchantRegisterPage() {
            onChange={(e) => handleChange('email', e.target.value)}
            placeholder="email@perusahaan.com"
            className={clsx(
-            "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-black text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none lowercase",
+            "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-bold text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none lowercase",
             errors.email && "border-red-500 focus:ring-red-500/10 focus:border-red-500"
            )}
           />
          </div>
-         {errors.email && <p className="text-red-500 text-[10px] mt-2 ml-4 font-black tracking-widest">{errors.email}</p>}
+         {errors.email && <p className="text-red-500 text-xs mt-2 ml-4 font-bold tracking-widest">{errors.email}</p>}
         </div>
 
         <div>
-         <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 block mb-3">
+         <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
           Nomor Telepon
          </label>
          <div className="relative">
@@ -149,12 +149,12 @@ export default function MerchantRegisterPage() {
            onChange={(e) => handleChange('phone', e.target.value)}
            placeholder="+62 812-3456-7890"
            className={clsx(
-            "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-black text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none ",
+            "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-bold text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none ",
             errors.phone && "border-red-500 focus:ring-red-500/10 focus:border-red-500"
            )}
           />
          </div>
-         {errors.phone && <p className="text-red-500 text-[10px] mt-2 ml-4 font-black tracking-widest">{errors.phone}</p>}
+         {errors.phone && <p className="text-red-500 text-xs mt-2 ml-4 font-bold tracking-widest">{errors.phone}</p>}
         </div>
        </div>
       </div>
@@ -162,7 +162,7 @@ export default function MerchantRegisterPage() {
 
      <div className="bg-card rounded-[3rem] p-10 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
-      <h3 className="text-xl font-black text-foreground  mb-10 relative z-10">Tipe Merchant</h3>
+      <h3 className="text-xl font-bold text-foreground  mb-10 relative z-10">Tipe Merchant</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
        {merchantTypes.map((type) => (
         <button
@@ -183,23 +183,23 @@ export default function MerchantRegisterPage() {
           )}>
            <Building2 className={clsx("h-5 w-5", formData.type === type.value ? "text-white" : "text-gray-400 group-hover:text-white")} />
           </div>
-          <span className="font-black text-foreground text-sm">{type.label}</span>
+          <span className="font-bold text-foreground text-sm">{type.label}</span>
          </div>
-         <p className="text-[10px] font-bold text-gray-400 tracking-widest leading-relaxed">{type.description}</p>
+         <p className="text-xs font-bold text-gray-400 tracking-widest leading-relaxed">{type.description}</p>
          {formData.type === type.value && (
           <CheckCircle2 className="h-5 w-5 text-bank-green self-end" />
          )}
         </button>
        ))}
       </div>
-      {errors.type && <p className="text-red-500 text-[10px] mt-4 font-black tracking-widest">{errors.type}</p>}
+      {errors.type && <p className="text-red-500 text-xs mt-4 font-bold tracking-widest">{errors.type}</p>}
      </div>
 
      <div className="bg-card rounded-[3rem] p-10 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
       <div className="relative z-10 space-y-8">
        <div>
-        <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 block mb-3">
+        <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
          Public Key (Opsional)
         </label>
         <div className="relative">
@@ -212,7 +212,7 @@ export default function MerchantRegisterPage() {
           className="w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-sm font-mono text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none resize-none"
          />
         </div>
-        <p className="text-[10px] text-gray-400 font-bold tracking-widest mt-2 ml-4">
+        <p className="text-xs text-gray-400 font-bold tracking-widest mt-2 ml-4">
          Diperlukan untuk integrasi API custom
         </p>
        </div>
@@ -227,16 +227,16 @@ export default function MerchantRegisterPage() {
          <div className="h-10 w-10 bg-bank-green rounded-2xl flex items-center justify-center shadow-lg shadow-bank-green/20">
           <ShieldCheck className="h-5 w-5 text-white" />
          </div>
-         <h3 className="text-2xl font-black ">Siap untuk Mulai?</h3>
+         <h3 className="text-2xl font-bold ">Siap untuk Mulai?</h3>
         </div>
         <p className="text-sm text-gray-400 font-medium leading-relaxed tracking-wide">
-         Dengan mendaftar, Anda menyetujui <span className="text-bank-green font-black">Syarat & Ketentuan</span> serta <span className="text-bank-green font-black">Kebijakan Privasi</span> PayU.
+         Dengan mendaftar, Anda menyetujui <span className="text-bank-green font-bold">Syarat & Ketentuan</span> serta <span className="text-bank-green font-bold">Kebijakan Privasi</span> PayU.
         </p>
        </div>
        <button
         type="submit"
         disabled={registerMutation.isPending}
-        className="whitespace-nowrap bg-bank-green text-white px-12 py-6 rounded-3xl font-black text-xs tracking-widest hover:bg-bank-emerald transition-all active:scale-95 shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50 disabled:active:scale-100 flex items-center gap-3"
+        className="whitespace-nowrap bg-bank-green text-white px-12 py-6 rounded-3xl font-bold text-xs tracking-widest hover:bg-bank-emerald transition-all active:scale-95 shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50 disabled:active:scale-100 flex items-center gap-3"
        >
         {registerMutation.isPending ? 'Sedang Memproses...' : (
          <>
@@ -253,7 +253,7 @@ export default function MerchantRegisterPage() {
     <div className="text-center">
      <button
       onClick={() => router.push('/merchant')}
-      className="text-[10px] font-black text-gray-400 tracking-widest hover:text-foreground transition-colors"
+      className="text-xs font-bold text-gray-400 tracking-widest hover:text-foreground transition-colors"
      >
       Kembali ke Dashboard Merchant
      </button>

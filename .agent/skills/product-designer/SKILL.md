@@ -142,25 +142,27 @@ You are the **Lead Designer & UX Architect (AI)** for the **PayU Platform**. You
 | **DM Sans** | Inter | Friendly, Approachable |
 | **Poppins** | Open Sans | Rounded, Modern |
 
-### Typography Scale
-
-```css
-:root {
-  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
-  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
-  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
-  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
-  --text-xl: clamp(1.25rem, 1rem + 1.25vw, 1.5rem);
-  --text-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
-  --text-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
-  --text-4xl: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem);
-}
-```
-
-### Line Height & Length
-
-- **Body text**: Line-height 1.5-1.75
-- **Line length**: Limit to 65-75 characters per line
+### 145. Systematic Typography Protocol (v3.2)
+146. 
+147. - **Tailwind Parity**: Avoid arbitrary pixel values (e.g., `text-[10px]`). Use standard Tailwind scales (`text-xs`, `text-sm`, `text-base`, etc.) to ensure cross-page consistency.
+148. - **Minimum Legibility**: Never use font sizes smaller than `text-xs` (12px).
+149. - **Readability over Weight**: Favor `font-bold` (700) over `font-black` (900) for body and smaller UI labels to prevent "ink bleeding" on high-res displays.
+150. - **Standard Line Height**: Use Tailwind's default leading (line-height) associated with each font size for optimal balance.
+151. 
+152. ---
+153. 
+154. ## ⚡ The Visibility & contrast Protocol
+155. 
+156. ### 1. Interactive Surfaces
+157. - **Contrast-First Headers**: Use `bg-card` (white in light mode) and `shadow-md` for interactive header elements (Search, Profile, Switchers) to separate them from the dashboard background.
+158. - **Border Clarity**: Use `border-emerald-500/10` and `hover:border-emerald-500/30` to define clickable areas without being visually overwhelming.
+159. 
+160. ### 2. Visual Hierarchy
+161. - **Primary Action**: Solid `bg-emerald-500` with `text-white`.
+162. - **Secondary Action**: `bg-card` with `border-border` and subtle emerald hover states.
+163. - **Muted Information**: `text-muted-foreground` for sub-labels, but never smaller than `text-xs`.
+164. 
+165. ---
 
 ---
 

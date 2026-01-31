@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Tag, TrendingUp, Star, ArrowRight } from 'lucide-react';
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
 import { useAuthStore } from '@/stores';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import clsx from 'clsx';
 import type { SegmentedOffer } from '@/services/SegmentationService';
 
@@ -104,7 +104,7 @@ function PromoItem({ promo, index }: PromoItemProps) {
                 {promo.title}
               </h4>
               {promo.promoCode && (
-                <span className="text-[10px] px-2 py-0.5 rounded-md bg-muted font-mono font-bold shrink-0">
+                <span className="text-xs px-2 py-0.5 rounded-md bg-muted font-mono font-bold shrink-0">
                   {promo.promoCode}
                 </span>
               )}
@@ -116,17 +116,17 @@ function PromoItem({ promo, index }: PromoItemProps) {
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-muted-foreground font-medium">
+                <p className="text-xs text-muted-foreground font-medium">
                   {promo.offerType.replace('_', ' ').toLowerCase()}
                 </p>
-                <p className="text-sm font-black text-primary">
+                <p className="text-sm font-bold text-primary">
                   {getValueDisplay()}
                 </p>
               </div>
 
               <div className="text-right">
                 <p className={clsx(
-                  'text-[10px] font-bold',
+                  'text-xs font-bold',
                   isExpiringSoon ? 'text-orange-500' : 'text-muted-foreground'
                 )}>
                   {isExpiringSoon ? `Berakhir dalam ${daysLeft} hari` : `${daysLeft} hari lagi`}
@@ -135,7 +135,7 @@ function PromoItem({ promo, index }: PromoItemProps) {
             </div>
 
             {promo.minTransaction && (
-              <p className="text-[10px] text-muted-foreground mt-2 font-medium">
+              <p className="text-xs text-muted-foreground mt-2 font-medium">
                 Min. transaksi: Rp {promo.minTransaction.toLocaleString('id-ID')}
               </p>
             )}
@@ -175,11 +175,11 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-4 w-4" />
-            <p className="text-[10px] font-bold tracking-wider opacity-80">
+            <p className="text-xs font-bold tracking-wider opacity-80">
               PROMO SPESIAL
             </p>
           </div>
-          <h3 className="text-base font-black mb-1">{topPromo.title}</h3>
+          <h3 className="text-base font-bold mb-1">{topPromo.title}</h3>
           <p className="text-xs opacity-80 line-clamp-1">{topPromo.description}</p>
         </div>
 

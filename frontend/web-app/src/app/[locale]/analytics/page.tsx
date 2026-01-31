@@ -92,17 +92,17 @@ export default function AnalyticsPage() {
         <div className="space-y-12">
           <div className="flex justify-between items-end">
             <div>
-              <h2 className="text-3xl font-black text-foreground">Intelijen Keuangan</h2>
+              <h2 className="text-3xl font-bold text-foreground">Intelijen Keuangan</h2>
               <p className="text-sm text-gray-500 font-medium">Wawasan mendalam tentang kebiasaan pengeluaran dan pertumbuhan kekayaan Anda.</p>
             </div>
             <div className="flex items-center gap-4">
               <div className={clsx("flex items-center gap-2 px-4 py-2 rounded-xl border transition-all", isConnected ? "bg-success-light text-primary border-primary/10" : "bg-muted text-muted-foreground border-border")}>
                 {isConnected ? <Wifi className="h-4 w-4 animate-pulse" /> : <WifiOff className="h-4 w-4" />}
-                <span className="text-[10px] font-bold tracking-widest uppercase">
+                <span className="text-xs font-bold tracking-widest uppercase">
                   {isConnected ? 'Live Update' : 'Offline'}
                 </span>
               </div>
-              <button className="bg-gray-50 dark:bg-gray-900 border border-border px-6 py-3 rounded-xl font-black text-[10px] tracking-widest flex items-center gap-2 hover:bg-gray-100 transition-all shadow-sm">
+              <button className="bg-gray-50 dark:bg-gray-900 border border-border px-6 py-3 rounded-xl font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-gray-100 transition-all shadow-sm">
                 <Calendar className="h-4 w-4" /> Januari 2026
               </button>
             </div>
@@ -121,14 +121,14 @@ export default function AnalyticsPage() {
                     <stat.icon className={clsx("h-6 w-6", stat.isPos ? "text-bank-green" : "text-red-500")} />
                   </div>
                   <span className={clsx(
-                    "text-[10px] font-black px-3 py-1 rounded-full leading-none tracking-widest",
+                    "text-xs font-bold px-3 py-1 rounded-full leading-none tracking-widest",
                     stat.isPos ? "bg-bank-green/10 text-bank-green" : "bg-red-50 text-red-500"
                   )}>
                     {stat.change > 0 ? '+' : ''}{stat.change}%
                   </span>
                 </div>
-                <p className="text-[10px] font-black text-gray-400 tracking-[0.2em] mb-2">{stat.label}</p>
-                <h3 className="text-2xl font-black text-foreground">Rp {stat.amount.toLocaleString('id-ID')}</h3>
+                <p className="text-xs font-bold text-gray-400 tracking-[0.2em] mb-2">{stat.label}</p>
+                <h3 className="text-2xl font-bold text-foreground">Rp {stat.amount.toLocaleString('id-ID')}</h3>
               </div>
             ))}
           </div>
@@ -139,17 +139,17 @@ export default function AnalyticsPage() {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
                 <CardHeader className="flex flex-row items-center justify-between pb-8 relative z-10 p-10">
                   <div>
-                    <CardTitle className="text-xl font-black text-foreground">Trajektori Pengeluaran</CardTitle>
-                    <CardDescription className="text-[10px] text-gray-400 font-black tracking-widest mt-1 lowercase">Analisis arus kas harian periode ini</CardDescription>
+                    <CardTitle className="text-xl font-bold text-foreground">Trajektori Pengeluaran</CardTitle>
+                    <CardDescription className="text-xs text-gray-400 font-bold tracking-widest mt-1 lowercase">Analisis arus kas harian periode ini</CardDescription>
                   </div>
                   <div className="flex gap-4">
                     <div className="flex items-center gap-2 px-4 py-2 bg-bank-green/10 rounded-xl border border-bank-green/10">
                       <div className="h-2 w-2 bg-bank-green rounded-full animate-pulse" />
-                      <span className="text-[10px] font-black text-bank-green tracking-widest uppercase">Masuk</span>
+                      <span className="text-xs font-bold text-bank-green tracking-widest uppercase">Masuk</span>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-border">
                       <div className="h-2 w-2 bg-gray-400 rounded-full" />
-                      <span className="text-[10px] font-black text-gray-400 tracking-widest uppercase">Keluar</span>
+                      <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">Keluar</span>
                     </div>
                   </div>
                 </CardHeader>
@@ -191,7 +191,7 @@ export default function AnalyticsPage() {
             <div className="md:col-span-6 lg:col-span-4">
               <Card className="rounded-xl border border-border shadow-sm h-full flex flex-col group p-10">
                 <CardHeader className="p-0 mb-10">
-                  <CardTitle className="text-xl font-black text-foreground">Rincian Pengeluaran</CardTitle>
+                  <CardTitle className="text-xl font-bold text-foreground">Rincian Pengeluaran</CardTitle>
                 </CardHeader>
 
                 <CardContent className="p-0 flex flex-col h-full">
@@ -218,8 +218,8 @@ export default function AnalyticsPage() {
                       </PieChart>
                     </ChartContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-                      <p className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-1">Total Keluar</p>
-                      <p className="text-2xl font-black text-foreground">Rp {analyticsData.totalExpenses.toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</p>
+                      <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-1">Total Keluar</p>
+                      <p className="text-2xl font-bold text-foreground">Rp {analyticsData.totalExpenses.toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</p>
                     </div>
                   </div>
 
@@ -228,11 +228,11 @@ export default function AnalyticsPage() {
                       <div key={i} className="flex items-center justify-between group/cat cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className={clsx("h-3 w-3 rounded-full transition-transform group-hover/cat:scale-150 duration-300", cat.color)} />
-                          <span className="text-xs font-black text-foreground tracking-widest uppercase">{cat.label}</span>
+                          <span className="text-xs font-bold text-foreground tracking-widest uppercase">{cat.label}</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] font-black text-gray-400 tracking-[0.1em]">Rp {cat.amount.toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</span>
-                          <span className="text-[8px] font-black text-muted-foreground ml-1">({cat.percentage}%)</span>
+                          <span className="text-xs font-bold text-gray-400 tracking-[0.1em]">Rp {cat.amount.toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</span>
+                          <span className="text-xs font-bold text-muted-foreground ml-1">({cat.percentage}%)</span>
                         </div>
                       </div>
                     ))}
@@ -246,12 +246,12 @@ export default function AnalyticsPage() {
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
               <div className="space-y-4 max-w-xl text-center md:text-left">
-                <h3 className="text-3xl font-black text-white">Siap untuk menabung otomatis?</h3>
+                <h3 className="text-3xl font-bold text-white">Siap untuk menabung otomatis?</h3>
                 <p className="text-sm font-medium text-gray-400 leading-relaxed tracking-wide">
-                  Sistem AI kami mendeteksi Anda dapat menabung tambahan <span className="text-bank-green font-black">Rp 2.500.000</span> setiap bulan dengan mengoptimalkan tagihan utilitas dan langganan berulang Anda.
+                  Sistem AI kami mendeteksi Anda dapat menabung tambahan <span className="text-bank-green font-bold">Rp 2.500.000</span> setiap bulan dengan mengoptimalkan tagihan utilitas dan langganan berulang Anda.
                 </p>
               </div>
-              <button className="whitespace-nowrap bg-bank-green text-white px-10 py-6 rounded-xl font-black text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20">
+              <button className="whitespace-nowrap bg-bank-green text-white px-10 py-6 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20">
                 Terapkan Optimasi
               </button>
             </div>

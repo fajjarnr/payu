@@ -153,17 +153,17 @@ export default function BudgetTracking({
       {/* Decorative background */}
       <div className="absolute top-1/2 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6 shrink-0">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8 shrink-0">
         <div>
-          <CardTitle className="text-sm font-black text-foreground tracking-widest uppercase">
+          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('budgetTracking')}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
             {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
           </CardDescription>
         </div>
 
-        <Button size="sm" className="hidden sm:flex gap-2">
+        <Button size="sm" className="hidden sm:flex gap-3 px-6 h-11 text-xs font-bold uppercase tracking-widest">
           <Plus className="h-4 w-4" />
           <span>Tambah</span>
         </Button>
@@ -216,7 +216,7 @@ export default function BudgetTracking({
                     ? `${exceededCount} anggaran terlampaui`
                     : `${warningCount} anggaran hampir habis`}
                 </p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {exceededCount > 0 ? 'Pertimbangkan untuk mengurangi pengeluaran' : 'Berhati-hatilah dengan pengeluaran'}
                 </p>
               </div>
@@ -237,23 +237,23 @@ export default function BudgetTracking({
                   budget.status === 'exceeded' && 'ring-2 ring-destructive/10'
                 )}
               >
-                <AccordionTrigger className="hover:no-underline px-4 py-8 group/trigger">
-                  <div className="flex items-center gap-3 w-full text-left">
+                <AccordionTrigger className="hover:no-underline px-6 py-10 group/trigger">
+                  <div className="flex items-center gap-6 w-full text-left">
                     {/* Status Icon */}
                     <div
                       className={cn(
-                        'h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0',
+                        'h-14 w-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg',
                         getStatusColor(budget.status)
                       )}
                     >
-                      <StatusIcon className="h-5 w-5" aria-hidden="true" />
+                      <StatusIcon className="h-6 w-6" aria-hidden="true" />
                     </div>
 
                     {/* Category and Progress */}
-                    <div className="flex-1 min-w-0 pr-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-black text-foreground uppercase tracking-tight">{budget.category}</p>
-                        <span className="text-[10px] text-muted-foreground tabular-nums font-bold">
+                    <div className="flex-1 min-w-0 pr-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-sm sm:text-base font-bold text-foreground uppercase tracking-tight">{budget.category}</p>
+                        <span className="text-xs text-muted-foreground tabular-nums font-bold opacity-60">
                           {budget.percentage.toFixed(0)}%
                         </span>
                       </div>
@@ -261,7 +261,7 @@ export default function BudgetTracking({
                       {/* Progress bar */}
                       <Progress 
                         value={Math.min(budget.percentage, 100)} 
-                        className="h-2" 
+                        className="h-3" 
                         indicatorClassName={getProgressColor(budget.status)}
                         aria-label={`${budget.category}: ${budget.percentage.toFixed(0)}%`}
                       />
@@ -284,11 +284,11 @@ export default function BudgetTracking({
                     </div>
 
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1 h-10 text-[10px] font-black uppercase tracking-widest bg-muted/30">
+                      <Button variant="outline" size="sm" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest bg-muted/30">
                         <Edit className="h-3.5 w-3.5 mr-2" />
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 h-10 text-[10px] font-black uppercase tracking-widest text-destructive hover:text-white hover:bg-destructive">
+                      <Button variant="outline" size="sm" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest text-destructive hover:text-white hover:bg-destructive">
                         <Trash2 className="h-3.5 w-3.5 mr-2" />
                         Hapus
                       </Button>
@@ -301,7 +301,7 @@ export default function BudgetTracking({
         </Accordion>
 
         <div className="mt-6 pt-4 border-t border-border">
-          <Button variant="ghost" className="w-full text-xs font-black uppercase tracking-widest text-primary">
+          <Button variant="ghost" className="w-full text-xs font-bold uppercase tracking-widest text-primary">
             {t('manageBudgets')}
           </Button>
         </div>
@@ -320,9 +320,9 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, currency, color, textColor }: SummaryCardProps) {
   return (
-    <div className={clsx('p-3 rounded-lg', color)}>
-      <p className="text-[10px] text-muted-foreground font-semibold tracking-wider mb-1">{label}</p>
-      <p className={clsx('text-sm font-black tabular-nums', textColor)}>
+    <div className={clsx('p-4 rounded-2xl border border-white/5 shadow-sm', color)}>
+      <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">{label}</p>
+      <p className={clsx('text-base sm:text-lg font-bold tabular-nums tracking-tight', textColor)}>
         {currency} {value.toLocaleString('id-ID')}
       </p>
     </div>
@@ -339,9 +339,9 @@ interface DetailItemProps {
 
 function DetailItem({ label, value, currency, valueColor = 'text-foreground', isPercentage = false }: DetailItemProps) {
   return (
-    <div>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
-      <p className={clsx('text-xs font-bold tabular-nums', valueColor)}>
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider opacity-60">{label}</p>
+      <p className={clsx('text-sm font-bold tabular-nums tracking-tight', valueColor)}>
         {isPercentage ? value : `${currency} ${Number(value).toLocaleString('id-ID')}`}
       </p>
     </div>

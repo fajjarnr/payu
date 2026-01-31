@@ -18,7 +18,7 @@ export default function PrivacyPage() {
                     <Shield className="h-7 w-7 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black text-foreground">Kebijakan Privasi</h2>
+                    <h2 className="text-3xl font-bold text-foreground">Kebijakan Privasi</h2>
                     <p className="text-sm text-muted-foreground font-medium">Versi 1.0 - Terakhir diperbarui: Januari 2026</p>
                   </div>
                 </div>
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
                 
                 <div className="prose prose-sm max-w-none relative z-10">
                   <section className="space-y-4">
-                    <h3 className="text-xl font-black text-foreground flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
                       <Eye className="h-6 w-6 text-primary" />
                       1. Pengumpulan Informasi
                     </h3>
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
                   </section>
 
                   <section className="space-y-4">
-                    <h3 className="text-xl font-black text-foreground flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
                       <Database className="h-6 w-6 text-primary" />
                       2. Penggunaan Informasi
                     </h3>
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
                   </section>
 
                   <section className="space-y-4">
-                    <h3 className="text-xl font-black text-foreground flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
                       <Lock className="h-6 w-6 text-primary" />
                       3. Keamanan Data
                     </h3>
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
                   </section>
 
                   <section className="space-y-4">
-                    <h3 className="text-xl font-black text-foreground flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
                       <Shield className="h-6 w-6 text-primary" />
                       4. Berbagi Informasi
                     </h3>
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
                   </section>
 
                   <section className="space-y-4">
-                    <h3 className="text-xl font-black text-foreground flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
                       <RefreshCw className="h-6 w-6 text-primary" />
                       5. Hak Pengguna
                     </h3>
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
                   </section>
 
                   <section className="space-y-4">
-                    <h3 className="text-xl font-black text-foreground flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
                       <CheckCircle2 className="h-6 w-6 text-primary" />
                       6. Kepatuhan Regulasi
                     </h3>

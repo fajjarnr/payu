@@ -116,7 +116,7 @@ export default function SpendingInsights({
 
       <CardHeader className="flex flex-row items-start justify-between space-y-0 shrink-0 z-10">
         <div>
-          <CardTitle className="text-sm font-black text-foreground tracking-widest uppercase">
+          <CardTitle className="text-sm font-bold text-foreground tracking-widest uppercase">
             {t('spendingInsights')}
           </CardTitle>
           <CardDescription>
@@ -131,7 +131,7 @@ export default function SpendingInsights({
             size="sm"
             onClick={() => setViewMode('category')}
             className={clsx(
-              'px-3 py-1.5 h-auto text-[10px] font-extrabold transition-all',
+              'px-3 py-1.5 h-auto text-xs font-extrabold transition-all',
               viewMode === 'category' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
             )}
             aria-pressed={viewMode === 'category'}
@@ -143,7 +143,7 @@ export default function SpendingInsights({
             size="sm"
             onClick={() => setViewMode('monthly')}
             className={clsx(
-              'px-3 py-1.5 h-auto text-[10px] font-extrabold transition-all',
+              'px-3 py-1.5 h-auto text-xs font-extrabold transition-all',
               viewMode === 'monthly' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
             )}
             aria-pressed={viewMode === 'monthly'}
@@ -158,22 +158,22 @@ export default function SpendingInsights({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <Card className="bg-muted/50 border-white/5 shadow-sm">
             <CardContent className="p-4">
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider mb-1">
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
                 Total Pengeluaran
               </p>
-              <p className="text-xl font-black text-foreground tabular-nums">
+              <p className="text-xl font-bold text-foreground tabular-nums">
                 {currency} {totalSpending.toLocaleString('id-ID')}
               </p>
             </CardContent>
           </Card>
           <Card className="bg-muted/50 border-white/5 shadow-sm">
             <CardContent className="p-4">
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider mb-1">
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
                 Kategori Terbesar
               </p>
               <div className="flex items-center gap-2">
                 <highestCategory.icon className="h-4 w-4 text-primary" />
-                <p className="text-sm font-black text-foreground uppercase tracking-tight">{highestCategory.name}</p>
+                <p className="text-sm font-bold text-foreground uppercase tracking-tight">{highestCategory.name}</p>
               </div>
               <p className="text-xs text-muted-foreground tabular-nums font-medium">
                 {currency} {highestCategory.amount.toLocaleString('id-ID')}
@@ -207,8 +207,8 @@ export default function SpendingInsights({
                     {/* Name and Progress */}
                     <div className="flex-1 min-w-0 pr-4">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-black text-foreground uppercase tracking-tight">{category.name}</p>
-                        <p className="text-xs font-black text-foreground tabular-nums">
+                        <p className="text-xs font-bold text-foreground uppercase tracking-tight">{category.name}</p>
+                        <p className="text-xs font-bold text-foreground tabular-nums">
                           {currency} {category.amount.toLocaleString('id-ID')}
                         </p>
                       </div>
@@ -224,7 +224,7 @@ export default function SpendingInsights({
                     {/* Trend */}
                     <div
                       className={cn(
-                        'flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black flex-shrink-0 mr-4',
+                        'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold flex-shrink-0 mr-4',
                         category.trend === 'up'
                           ? 'bg-destructive/10 text-destructive'
                           : category.trend === 'down'
@@ -242,11 +242,11 @@ export default function SpendingInsights({
                   <div className="space-y-4 pt-4 border-t border-border/10">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Persentase</p>
+                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Persentase</p>
                         <p className="text-xs font-bold text-foreground">{category.percentage}% dari total</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Status</p>
+                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Status</p>
                         <p className={cn(
                           "text-xs font-bold",
                           category.trend === 'up' ? "text-destructive" : "text-primary"
@@ -257,10 +257,10 @@ export default function SpendingInsights({
                     </div>
 
                     <div className="flex gap-2">
-                      <Button size="sm" className="flex-1 text-[10px] font-black uppercase tracking-widest h-10">
+                      <Button size="sm" className="flex-1 text-xs font-bold uppercase tracking-widest h-10">
                         Lihat Detail
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 text-[10px] font-black uppercase tracking-widest h-10 bg-muted/30">
+                      <Button variant="outline" size="sm" className="flex-1 text-xs font-bold uppercase tracking-widest h-10 bg-muted/30">
                         Set Budget
                       </Button>
                     </div>

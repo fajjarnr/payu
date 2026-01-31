@@ -13,7 +13,7 @@ import {
   QuickActions,
 } from '@/components/dashboard';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton, SkeletonCard, SkeletonStatsGrid } from '@/components/ui/skeleton';
 import { BannerCarousel, PromoPopup } from '@/components/cms';
 import { SkipLink } from '@/lib/a11y';
 
@@ -128,7 +128,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
        <div className="card-gradient rounded-[2rem] p-8 sm:p-12 lg:p-16 text-primary-foreground relative overflow-hidden group shadow-card border border-white/10">
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
          <div className="space-y-6 text-center lg:text-left">
-          <h3 className="text-3xl sm:text-5xl font-black uppercase tracking-tight leading-none">{t('futureTitle')}</h3>
+          <h3 className="text-3xl sm:text-5xl font-bold uppercase tracking-tight leading-none">{t('futureTitle')}</h3>
           <p className="text-base sm:text-xl font-medium opacity-90 max-w-2xl leading-relaxed">
            {t('futureDesc')}
           </p>
@@ -138,7 +138,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
           whileTap={{ scale: 0.95 }}
           className="shrink-0"
          >
-          <Link href="/investments" className="bg-white text-emerald-600 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-2xl flex items-center gap-3 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-white/30">
+          <Link href="/investments" className="bg-white text-emerald-600 px-10 py-5 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all shadow-2xl flex items-center gap-3 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-white/30">
            {t('startInvesting')} <ChevronRight className="h-6 w-6" />
           </Link>
          </motion.div>

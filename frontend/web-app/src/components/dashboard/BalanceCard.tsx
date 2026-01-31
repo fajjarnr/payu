@@ -20,10 +20,10 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
         <Card className="flex flex-col justify-between flex-1 relative overflow-hidden group">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
             <div>
-              <CardTitle className="text-sm font-black text-muted-foreground tracking-widest uppercase">
+              <CardTitle className="text-xs sm:text-sm font-bold text-emerald-500 tracking-[0.2em] uppercase">
                 Saldo Utama
               </CardTitle>
-              <CardDescription className="mt-1">
+              <CardDescription className="mt-2 text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60">
                 {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
               </CardDescription>
             </div>
@@ -34,41 +34,42 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
           </CardHeader>
 
           <CardContent>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-black text-foreground tabular-nums leading-none">
+            <div className="space-y-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tabular-nums leading-none tracking-tighter">
                 {currency} {balance.toLocaleString('id-ID')}
               </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-xs px-2.5 py-1 rounded-lg bg-success-light text-primary font-black flex items-center gap-0.5 uppercase tracking-tighter">
-                  <ArrowUpRight className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-3">
+                <span className="text-xs px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 font-bold flex items-center gap-1 uppercase tracking-tighter border border-emerald-500/10">
+                  <ArrowUpRight className="h-4 w-4" />
                   +{percentage}%
                 </span>
-                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Faktor Pertumbuhan</span>
+                <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Faktor Pertumbuhan</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col justify-between flex-1 bg-muted/50 border-white/5 relative overflow-hidden group">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
-            <CardTitle className="text-sm font-black text-muted-foreground tracking-widest uppercase">
+        <Card className="flex flex-col justify-between flex-1 relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
+            <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
               Kekayaan Bersih
             </CardTitle>
-            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-primary/10">
-              <ArrowUpRight className="h-5 w-5" />
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-emerald-500/10">
+              <ArrowUpRight className="h-6 w-6" />
             </div>
           </CardHeader>
 
           <CardContent>
-            <div className="space-y-3">
-              <h3 className="text-2xl font-black text-foreground tabular-nums leading-none">
+            <div className="space-y-4">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight">
                 {currency} {(balance * 1.5).toLocaleString('id-ID')}
               </h3>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-primary uppercase tracking-tighter">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-emerald-500 uppercase tracking-tighter flex items-center gap-1">
+                  <ArrowUpRight className="h-4 w-4" />
                   +18% 
                 </span>
-                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Peningkatan Total</span>
+                <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Peningkatan Total</span>
               </div>
             </div>
           </CardContent>
@@ -91,26 +92,26 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
           <div className="relative z-10 p-7 h-full flex flex-col justify-between text-white">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 font-black text-2xl shadow-lg">
+                <div className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 font-bold text-2xl shadow-lg">
                   U
                 </div>
-                <span className="text-3xl font-black uppercase tracking-tighter">PayU</span>
+                <span className="text-3xl font-bold uppercase tracking-tighter">PayU</span>
               </div>
-              <div className="text-[10px] font-black tracking-widest opacity-80 bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">07/28</div>
+              <div className="text-xs font-bold tracking-widest opacity-80 bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">07/28</div>
             </div>
 
-            <div className="space-y-5">
-              <div className="text-xl sm:text-2xl font-black tracking-[0.25em] font-mono whitespace-nowrap overflow-hidden drop-shadow-md">
+            <div className="space-y-6">
+              <div className="text-xl sm:text-3xl lg:text-4xl font-bold tracking-[0.3em] font-mono whitespace-nowrap overflow-hidden drop-shadow-2xl">
                 4829 •••• •••• 1928
               </div>
               <div className="flex justify-between items-end">
                 <div>
-                  <p className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em] mb-1">Pemegang Kartu</p>
-                  <p className="text-sm font-black uppercase tracking-widest">PENGGUNA PAYU</p>
+                  <p className="text-xs text-white/60 font-bold uppercase tracking-[0.2em] mb-2">Pemegang Kartu</p>
+                  <p className="text-sm sm:text-base font-bold uppercase tracking-widest">PENGGUNA PAYU</p>
                 </div>
                 <div className="flex -space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-500/80 backdrop-blur-sm border border-white/20" />
-                  <div className="w-10 h-10 rounded-full bg-yellow-400/60 backdrop-blur-sm border border-white/20" />
+                  <div className="w-12 h-12 rounded-full bg-orange-500/80 backdrop-blur-sm border border-white/20 shadow-lg" />
+                  <div className="w-12 h-12 rounded-full bg-yellow-400/60 backdrop-blur-sm border border-white/20 shadow-lg" />
                 </div>
               </div>
             </div>
@@ -141,32 +142,32 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
 
 function SummaryItem({ label, amount, change, isPositive, currency }: { label: string; amount: number; change: number; isPositive: boolean; currency: string }) {
   return (
-    <Card className="flex flex-col justify-between h-full relative overflow-hidden group">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
-        <CardTitle className="text-sm font-black text-muted-foreground tracking-widest uppercase">
+    <Card className="flex flex-col justify-between h-full relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-10">
+        <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
           {label}
         </CardTitle>
         <div className={cn(
-          "w-10 h-10 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm",
-          isPositive ? "bg-success-light text-primary" : "bg-destructive/10 text-destructive"
+          "w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-white/5",
+          isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
         )}>
-          {isPositive ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
+          {isPositive ? <ArrowUpRight className="h-6 w-6" /> : <ArrowDownRight className="h-6 w-6" />}
         </div>
       </CardHeader>
 
       <CardContent>
-        <div className="space-y-2">
-          <h4 className="text-2xl font-black text-foreground tabular-nums">
+        <div className="space-y-4">
+          <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">
             {currency} {amount.toLocaleString('id-ID')}
           </h4>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <span className={cn(
-              "text-xs font-black",
-              isPositive ? "text-primary" : "text-destructive"
+              "text-xs font-bold px-2 py-0.5 rounded-md",
+              isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
             )}>
               {isPositive ? '+' : ''}{change}%
             </span>
-            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Bulan ini</span>
+            <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Bulan ini</span>
           </div>
         </div>
       </CardContent>

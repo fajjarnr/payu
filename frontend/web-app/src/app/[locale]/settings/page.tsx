@@ -29,7 +29,7 @@ export default function SettingsPage() {
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                 <div>
-                  <h2 className="text-3xl font-black text-foreground">Ekosistem Akun</h2>
+                  <h2 className="text-3xl font-bold text-foreground">Ekosistem Akun</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">Kelola profil pribadi, preferensi sistem, dan tata kelola akun.</p>
                 </div>
               </div>
@@ -41,21 +41,21 @@ export default function SettingsPage() {
                 <div className="bg-card rounded-xl p-10 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
-                  <div className="relative w-24 h-24 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-black text-4xl shadow-xl shadow-primary/20 mb-8 transition-transform group-hover:scale-110">
+                  <div className="relative w-24 h-24 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-bold text-4xl shadow-xl shadow-primary/20 mb-8 transition-transform group-hover:scale-110">
                     P
                   </div>
-                  <h3 className="text-xl font-black text-foreground">PENGGUNA PAYU</h3>
-                  <p className="text-[10px] font-bold text-primary tracking-widest uppercase mt-3 bg-success-light px-4 py-1.5 rounded-full border border-primary/10">Premium Member</p>
+                  <h3 className="text-xl font-bold text-foreground">PENGGUNA PAYU</h3>
+                  <p className="text-xs font-bold text-primary tracking-widest uppercase mt-3 bg-success-light px-4 py-1.5 rounded-full border border-primary/10">Premium Member</p>
 
                   <div className="w-full h-[1px] bg-border my-10" />
 
                   <div className="w-full space-y-4 px-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">ID Akun</span>
+                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">ID Akun</span>
                       <span className="text-xs font-bold text-foreground font-mono">PAYU-09228373</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Status</span>
+                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Status</span>
                       <span className="text-xs font-bold text-primary">eKYC Terverifikasi</span>
                     </div>
                   </div>
@@ -75,7 +75,7 @@ export default function SettingsPage() {
                       >
                         <div className="flex items-center gap-4">
                           <item.icon className="h-5 w-5" />
-                          <span className="text-[10px] font-bold tracking-widest uppercase">{item.label}</span>
+                          <span className="text-xs font-bold tracking-widest uppercase">{item.label}</span>
                         </div>
                         {item.active && <ChevronRight className="h-4 w-4" />}
                       </button>
@@ -95,7 +95,7 @@ export default function SettingsPage() {
                       <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
                         <User className="h-6 w-6 text-primary" />
                       </div>
-                      <h3 className="text-xl font-black text-foreground">Kredensial Profil</h3>
+                      <h3 className="text-xl font-bold text-foreground">Kredensial Profil</h3>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -106,7 +106,7 @@ export default function SettingsPage() {
                         { label: 'Domisili Saat Ini', val: 'Jakarta, Indonesia', type: 'text' },
                       ].map((field, i) => (
                         <div key={i} className="space-y-3">
-                          <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase ml-1">{field.label}</label>
+                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">{field.label}</label>
                           <input
                             type={field.type}
                             defaultValue={field.val}
@@ -125,7 +125,7 @@ export default function SettingsPage() {
                       <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
                         <Bell className="h-6 w-6 text-primary" />
                       </div>
-                      <h3 className="text-xl font-black text-foreground">Preferensi Sistem</h3>
+                      <h3 className="text-xl font-bold text-foreground">Preferensi Sistem</h3>
                     </div>
 
                     <div className="grid grid-cols-1 gap-8">
@@ -133,7 +133,7 @@ export default function SettingsPage() {
                         <div key={i} className="flex items-center justify-between group p-2 hover:bg-muted/20 rounded-xl transition-all">
                           <div>
                             <p className="font-bold text-foreground text-sm">{pref.label}</p>
-                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight mt-0.5">{pref.desc}</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight mt-0.5">{pref.desc}</p>
                           </div>
                           <div className={clsx(
                             "w-12 h-6 rounded-full relative p-1 transition-all cursor-pointer",
@@ -155,7 +155,7 @@ export default function SettingsPage() {
                     </button>
                     <button className="px-8 py-5 bg-destructive/5 text-destructive rounded-xl font-bold border border-destructive/10 hover:bg-destructive hover:text-white transition-all flex items-center justify-center gap-2 group">
                       <Trash2 className="h-5 w-5" />
-                      <span className="text-[10px] font-bold tracking-widest uppercase">Hapus Sesi</span>
+                      <span className="text-xs font-bold tracking-widest uppercase">Hapus Sesi</span>
                     </button>
                   </div>
                 </div>

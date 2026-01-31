@@ -21,6 +21,8 @@ const TIER_ICONS: Record<string, LucideIcon> = {
   PLATINUM: Shield,
 };
 
+import { Badge } from '@/components/ui/badge';
+
 export default function VIPBadge({
   size = 'md',
   showLabel = true,
@@ -34,26 +36,7 @@ export default function VIPBadge({
     return null;
   }
 
-  const sizeStyles = {
-    sm: {
-      badge: 'h-6 px-2 py-1 text-[10px]',
-      card: 'p-3',
-      icon: 'h-3 w-3',
-    },
-    md: {
-      badge: 'h-8 px-3 py-1.5 text-xs',
-      card: 'p-4',
-      icon: 'h-4 w-4',
-    },
-    lg: {
-      badge: 'h-10 px-4 py-2 text-sm',
-      card: 'p-5',
-      icon: 'h-5 w-5',
-    },
-  };
-
   const Icon = TIER_ICONS[tier] || Crown;
-  const currentSize = sizeStyles[size];
 
   if (variant === 'card') {
     return (
@@ -61,8 +44,7 @@ export default function VIPBadge({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className={clsx(
-          'bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 rounded-xl',
-          currentSize.card,
+          'bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 rounded-xl p-4',
           className
         )}
       >
@@ -75,10 +57,10 @@ export default function VIPBadge({
           </div>
 
           <div>
-            <p className="text-[10px] text-muted-foreground font-bold tracking-widest">
+            <p className="text-xs text-muted-foreground font-bold tracking-widest">
               STATUS MEMBER
             </p>
-            <p className="text-sm font-black text-foreground">
+            <p className="text-sm font-bold text-foreground">
               {tierLabel}
             </p>
           </div>
@@ -93,15 +75,15 @@ export default function VIPBadge({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className={clsx(
-          'inline-flex items-center gap-1.5 font-black',
+          'inline-flex items-center gap-1.5 font-bold',
           className
         )}
         style={{ color: tierColor }}
       >
-        {showIcon && <Icon className={currentSize.icon} />}
+        {showIcon && <Icon className="h-4 w-4" />}
         {showLabel && (
           <span className={clsx(
-            size === 'sm' ? 'text-[10px]' : size === 'md' ? 'text-xs' : 'text-sm'
+            size === 'sm' ? 'text-xs' : size === 'md' ? 'text-xs' : 'text-sm'
           )}>
             {tierLabel}
           </span>
@@ -114,18 +96,19 @@ export default function VIPBadge({
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className={clsx(
-        'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20',
-        currentSize.badge,
-        className
-      )}
     >
-      {showIcon && <Icon className={currentSize.icon} />}
-      {showLabel && (
-        <span className="font-bold tracking-wider text-white">
-          {tierLabel}
-        </span>
-      )}
+      <Badge
+        className={clsx(
+          'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-lg shadow-amber-500/20 font-bold tracking-widest uppercase py-1',
+          size === 'sm' ? 'px-2 h-6 text-xs' : size === 'md' ? 'px-3 h-8 text-xs' : 'px-4 h-10 text-xs',
+          className
+        )}
+      >
+        <div className="flex items-center gap-2">
+          {showIcon && <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} />}
+          {showLabel && <span>{tierLabel}</span>}
+        </div>
+      </Badge>
     </motion.div>
   );
 }

@@ -1,14 +1,14 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { Skeleton, SkeletonCard, SkeletonText, SkeletonTransaction, SkeletonChart, SkeletonStatsGrid } from '@/components/ui/Skeleton';
+import { Skeleton, SkeletonCard, SkeletonText, SkeletonTransaction, SkeletonChart, SkeletonStatsGrid } from '@/components/ui/skeleton';
 
 describe('Skeleton Components', () => {
- describe('Skeleton', () => {
-  it('renders with default classes', () => {
-   render(<Skeleton />);
-   const skeleton = document.querySelector('.animate-pulse');
-   expect(skeleton).toHaveClass('bg-gray-100', 'dark:bg-gray-800', 'rounded');
-  });
+  describe('Skeleton', () => {
+    it('renders with default classes', () => {
+      render(<Skeleton />);
+      const skeleton = document.querySelector('.animate-pulse');
+      expect(skeleton).toHaveClass('bg-muted/60', 'rounded-md');
+    });
 
   it('accepts custom className', () => {
    render(<Skeleton className="w-full h-20" />);

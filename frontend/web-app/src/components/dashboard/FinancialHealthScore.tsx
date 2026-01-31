@@ -94,12 +94,12 @@ export default function FinancialHealthScore({
       {/* Decorative background gradient */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
         <div>
-          <CardTitle className="text-sm font-black text-foreground tracking-widest uppercase">
+          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('financialHealthScore')}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
             Update terakhir: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
           </CardDescription>
         </div>
@@ -108,11 +108,11 @@ export default function FinancialHealthScore({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              'flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold',
-              isImprovement ? 'bg-success-light text-primary' : 'bg-destructive/10 text-destructive'
+              'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm',
+              isImprovement ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'
             )}
           >
-            {isImprovement ? <TrendingUp className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+            {isImprovement ? <TrendingUp className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
             {isImprovement ? '+' : ''}{scoreChange}
           </motion.div>
         )}
@@ -120,8 +120,8 @@ export default function FinancialHealthScore({
 
       <CardContent>
         {/* Score Display with Circular Progress */}
-        <div className="flex items-center gap-6 sm:gap-8 mb-8">
-          <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex-shrink-0">
+        <div className="flex flex-col xl:flex-row items-center gap-10 mb-12">
+          <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
             {/* Circular Progress */}
             <svg
               className="w-full h-full transform -rotate-90"
@@ -133,8 +133,8 @@ export default function FinancialHealthScore({
                 r="54"
                 fill="none"
                 stroke="hsl(var(--muted))"
-                strokeWidth="8"
-                className="opacity-20"
+                strokeWidth="6"
+                className="opacity-10"
               />
               <motion.circle
                 cx="60"
@@ -142,13 +142,13 @@ export default function FinancialHealthScore({
                 r="54"
                 fill="none"
                 stroke={score >= 70 ? 'hsl(var(--primary))' : score >= 50 ? 'hsl(45, 93%, 47%)' : 'hsl(var(--destructive))'}
-                strokeWidth="8"
+                strokeWidth="10"
                 strokeLinecap="round"
                 strokeDasharray={strokeDasharray}
                 initial={{ strokeDashoffset: circumference }}
                 animate={{ strokeDashoffset }}
                 transition={{ duration: 1, ease: 'easeOut' }}
-                className="filter drop-shadow-sm"
+                className="filter drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]"
               />
             </svg>
 
@@ -157,32 +157,32 @@ export default function FinancialHealthScore({
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="text-3xl sm:text-4xl font-black text-foreground tabular-nums"
+                className="text-4xl sm:text-6xl font-bold text-foreground tabular-nums tracking-tighter"
               >
                 {score}
               </motion.span>
-              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">dari 100</span>
+              <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest opacity-60">dari 100</span>
             </div>
           </div>
 
-          <div className="flex-1 space-y-3">
-            <div className={cn('inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-transparent transition-all hover:border-current', healthLevel.bgColor)}>
-              <healthLevel.icon className={cn('h-4 w-4', healthLevel.color)} />
-              <span className={cn('text-[10px] font-black uppercase tracking-widest', healthLevel.color)}>
+          <div className="flex-1 space-y-4 text-center xl:text-left">
+            <div className={cn('inline-flex items-center gap-3 px-4 py-2 rounded-xl border border-transparent transition-all shadow-sm', healthLevel.bgColor)}>
+              <healthLevel.icon className={cn('h-5 w-5', healthLevel.color)} />
+              <span className={cn('text-xs font-bold uppercase tracking-[0.2em]', healthLevel.color)}>
                 {healthLevel.label}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-bold opacity-80 uppercase tracking-tight">
               {healthLevel.description}
             </p>
           </div>
         </div>
 
         {/* Score Factors */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-border/50">
-          <ScoreFactor label="Tabungan" value={85} color="bg-primary" ariaLabel="Faktor tabungan" />
-          <ScoreFactor label="Investasi" value={70} color="bg-chart-2" ariaLabel="Faktor investasi" />
-          <ScoreFactor label="Pengeluaran" value={60} color="bg-chart-3" ariaLabel="Faktor pengeluaran" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-10 border-t border-border/30">
+          <ScoreFactor label="Tabungan" value={85} color="bg-emerald-500" ariaLabel="Faktor tabungan" />
+          <ScoreFactor label="Investasi" value={70} color="bg-emerald-400" ariaLabel="Faktor investasi" />
+          <ScoreFactor label="Pengeluaran" value={60} color="bg-emerald-300" ariaLabel="Faktor pengeluaran" />
         </div>
       </CardContent>
     </Card>
@@ -198,15 +198,17 @@ interface ScoreFactorProps {
 
 function ScoreFactor({ label, value, color, ariaLabel }: ScoreFactorProps) {
   return (
-    <div className="text-center">
+    <div className="text-center space-y-3">
       <Progress 
         value={value} 
-        className="h-1.5 mb-2" 
+        className="h-2 w-full" 
         indicatorClassName={color}
         aria-label={ariaLabel}
       />
-      <p className="text-[10px] text-muted-foreground font-black uppercase tracking-tight">{label}</p>
-      <p className="text-xs font-black text-foreground tabular-nums">{value}</p>
+      <div>
+        <p className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest opacity-60 mb-1">{label}</p>
+        <p className="text-sm sm:text-base font-bold text-foreground tabular-nums tracking-tight">{value}</p>
+      </div>
     </div>
   );
 }
