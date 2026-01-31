@@ -1,13 +1,18 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import Autoplay from 'embla-carousel-autoplay';
+import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useBanners } from '@/hooks';
 import type { Content } from '@/services/CMSService';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 interface BannerCarouselProps {
   className?: string;
@@ -27,35 +32,9 @@ export default function BannerCarousel({
   onBannerClick,
 }: BannerCarouselProps) {
   const { data: banners, isLoading, error } = useBanners({ segment, location, device });
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
-
-  // Auto-play functionality
-  useEffect(() => {
-    if (!banners || banners.length <= 1) return;
-
-    const timer = setInterval(() => {
-      setDirection(1);
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, autoPlayInterval);
-
-    return () => clearInterval(timer);
-  }, [banners, autoPlayInterval]);
-
-  const handlePrevious = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + banners!.length) % banners!.length);
-  };
-
-  const handleNext = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % banners!.length);
-  };
-
-  const handleIndicatorClick = (index: number) => {
-    setDirection(index > currentIndex ? 1 : -1);
-    setCurrentIndex(index);
-  };
+  const plugin = React.useRef(
+    Autoplay({ delay: autoPlayInterval, stopOnInteraction: true })
+  );
 
   const handleBannerClick = (banner: Content) => {
     if (onBannerClick) {
@@ -69,133 +48,81 @@ export default function BannerCarousel({
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <div className={clsx('w-full', className)}>
-        <Skeleton className="w-full h-full rounded-2xl aspect-[2/1] sm:aspect-[2.5/1] md:aspect-[3/1]" />
+        <Skeleton className="w-full rounded-2xl aspect-[2.1/1] sm:aspect-[2.5/1] md:aspect-[3/1]" />
       </div>
     );
   }
 
-  // Error or empty state
   if (error || !banners || banners.length === 0) {
     return null;
   }
 
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
-    }),
-  };
-
-  const currentBanner = banners[currentIndex];
-
   return (
-    <div className={clsx('relative w-full', className)}>
-      {/* Carousel */}
-      <div className="relative overflow-hidden rounded-2xl shadow-2xl shadow-bank-green/20 aspect-[2/1] sm:aspect-[2.5/1] md:aspect-[3/1]">
-        <AnimatePresence initial={false} custom={direction}>
-          <motion.div
-            key={currentIndex}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{
-              x: { type: 'spring', stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 },
-            }}
-            className="absolute inset-0 cursor-pointer group"
-            onClick={() => handleBannerClick(currentBanner)}
-          >
-            {/* Background Image */}
-            <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
-              <Image
-                src={currentBanner.imageUrl}
-                alt={currentBanner.title}
-                fill
-                className="object-cover object-center"
-                priority={currentIndex === 0}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-              />
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
-            </div>
-
-            {/* Content */}
-            <div className="relative z-10 h-full flex flex-col justify-center p-6 sm:p-8 md:p-12">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="max-w-lg"
+    <div className={clsx('relative w-full group/carousel', className)}>
+      <Carousel
+        plugins={[plugin.current]}
+        className="w-full"
+        onMouseEnter={plugin.current.stop}
+        onMouseLeave={plugin.current.reset}
+        opts={{
+          align: "start",
+          loop: true,
+        }}
+      >
+        <CarouselContent className="-ml-0">
+          {banners.map((banner, index) => (
+            <CarouselItem key={banner.id} className="pl-0">
+              <div 
+                className="relative overflow-hidden rounded-2xl shadow-2xl shadow-bank-green/20 aspect-[1.8/1] sm:aspect-[2.5/1] md:aspect-[3.2/1] cursor-pointer group/item"
+                onClick={() => handleBannerClick(banner)}
               >
-                <span className="inline-block px-3 py-1 bg-bank-green/90 text-white text-xs font-bold tracking-wider rounded-full mb-3 backdrop-blur-sm">
-                  PROMO
-                </span>
-                <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 leading-tight">
-                  {currentBanner.title}
-                </h3>
-                <p className="text-sm sm:text-base text-white/90 font-medium line-clamp-2">
-                  {currentBanner.description}
-                </p>
-              </motion.div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+                {/* Background Image */}
+                <div className="absolute inset-0 transition-transform duration-1000 group-hover/item:scale-105">
+                  <Image
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    fill
+                    className="object-cover object-center"
+                    priority={index === 0}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                  />
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+                </div>
 
-        {/* Navigation Arrows */}
-        {banners.length > 1 && (
-          <>
-            <button
-              onClick={handlePrevious}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 hover:bg-white text-foreground shadow-lg transition-all hover:scale-110 backdrop-blur-sm"
-              aria-label="Previous banner"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={handleNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 hover:bg-white text-foreground shadow-lg transition-all hover:scale-110 backdrop-blur-sm"
-              aria-label="Next banner"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Indicators */}
-      {banners.length > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => handleIndicatorClick(index)}
-              className={clsx(
-                'h-2 rounded-full transition-all duration-300',
-                index === currentIndex
-                  ? 'w-8 bg-bank-green shadow-lg shadow-bank-green/50'
-                  : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              )}
-              aria-label={`Go to banner ${index + 1}`}
-            />
+                {/* Content */}
+                <div className="relative z-10 h-full flex flex-col justify-center p-6 sm:p-10 md:p-16">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="max-w-xl"
+                  >
+                    <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-[10px] font-black tracking-[0.2em] rounded-full mb-4 backdrop-blur-md uppercase border border-white/20">
+                      Exclusive Promo
+                    </span>
+                    <h3 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-3 leading-[1.1] tracking-tight uppercase">
+                      {banner.title}
+                    </h3>
+                    <p className="text-sm sm:text-lg text-white/80 font-medium line-clamp-2 max-w-md leading-relaxed">
+                      {banner.description}
+                    </p>
+                  </motion.div>
+                </div>
+              </div>
+            </CarouselItem>
           ))}
+        </CarouselContent>
+        
+        {/* Navigation - Premium styling */}
+        <div className="hidden sm:block">
+          <CarouselPrevious className="left-6 h-12 w-12 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300" />
+          <CarouselNext className="right-6 h-12 w-12 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300" />
         </div>
-      )}
+      </Carousel>
     </div>
   );
 }
