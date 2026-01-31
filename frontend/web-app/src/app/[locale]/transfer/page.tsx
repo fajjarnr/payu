@@ -257,7 +257,7 @@ export default function TransferPage() {
                     </div>
                     <div className="bg-muted p-6 rounded-xl border border-border">
                       <div className="flex items-center gap-2 mb-2">
-                        {scheduleType !== 'NOW' && <Calendar className="h-4 w-4 text-primary" />}
+                        {scheduleType !== 'NOW' && <CalendarIcon className="h-4 w-4 text-primary" />}
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Jadwal</p>
                       </div>
                       <p className="font-bold text-foreground text-sm">{selectedScheduleType?.label}</p>
@@ -376,7 +376,7 @@ export default function TransferPage() {
                           <div className="flex items-center justify-between">
                             {s.type !== 'NOW' && (
                               <div className={clsx("h-10 w-10 rounded-lg flex items-center justify-center", isSelected ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground")}>
-                                {s.type === 'SCHEDULED' ? <Calendar className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                                {s.type === 'SCHEDULED' ? <CalendarIcon className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
                               </div>
                             )}
                             {isSelected && <div className="ml-auto h-2 w-2 bg-primary rounded-full animate-pulse" />}
