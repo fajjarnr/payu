@@ -1,3 +1,5 @@
+'use client';
+
 import { useQuery } from '@tanstack/react-query';
 import CMSService, { type ContentType } from '@/services/CMSService';
 

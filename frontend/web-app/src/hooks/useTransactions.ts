@@ -1,3 +1,5 @@
+'use client';
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import TransactionService from '@/services/TransactionService';
 import type { InitiateTransferRequest, ProcessQrisPaymentRequest } from '@/types';

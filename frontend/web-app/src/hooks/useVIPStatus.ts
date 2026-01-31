@@ -1,3 +1,5 @@
+'use client';
+
 import { useMemo } from 'react';
 import { useUserSegment } from './useUserSegment';
 import { useAuthStore } from '@/stores';

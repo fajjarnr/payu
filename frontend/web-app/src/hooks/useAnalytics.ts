@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { useWebSocket } from './useWebSocket';
 import type { AnalyticsData } from '@/types';

@@ -1,3 +1,5 @@
+'use client';
+
 export { useLogin, useLogout, useRefreshToken, useAuth } from './useAuth';
 export {
   useBalance,

@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '@/stores';
 import type { PortfolioUpdate } from '@/types';

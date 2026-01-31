@@ -1,3 +1,5 @@
+'use client';
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import WalletService from '@/services/WalletService';
 import type { ReserveBalanceRequest, CreditRequest } from '@/services/WalletService';
