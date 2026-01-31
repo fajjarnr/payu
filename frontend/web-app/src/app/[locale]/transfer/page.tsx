@@ -237,7 +237,7 @@ export default function TransferPage() {
                     </div>
                     <div className="text-left md:text-right">
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Jumlah Transfer</p>
-                      <p className="text-4xl sm:text-5xl font-bold text-foreground">Rp {amount.toLocaleString('id-ID')}</p>
+                      <p className="text-4xl sm:text-4xl lg:text-5xl font-bold text-foreground">Rp {amount.toLocaleString('id-ID')}</p>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mt-2">Mata Uang IDR</p>
                     </div>
                   </div>
@@ -532,14 +532,13 @@ export default function TransferPage() {
                   </div>
 
                   <div className="flex items-center gap-6 mb-10 relative z-10">
-                    <span className="text-4xl sm:text-5xl font-bold text-emerald-500/20">Rp</span>
-                    <input
-                      type="text"
-                      value={formattedAmount}
-                      onChange={handleAmountChange}
-                      placeholder="0"
-                      className="w-full bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/10 text-5xl sm:text-7xl font-bold outline-none text-foreground"
-                    />
+                      <input
+                        type="text"
+                        value={formattedAmount}
+                        onChange={handleAmountChange}
+                        placeholder="0"
+                        className="w-full bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/10 text-5xl sm:text-5xl lg:text-7xl font-bold outline-none text-foreground"
+                      />
                   </div>
 
                   {errors.amount && <p className="text-destructive text-xs mb-8 font-bold tracking-widest uppercase">{errors.amount.message}</p>}

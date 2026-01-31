@@ -44,7 +44,7 @@ export default function InvestmentsPage() {
                       <div className="space-y-6">
                         <div>
                           <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Total Portofolio Bersih</p>
-                          <h3 className="text-4xl sm:text-5xl font-bold text-foreground">Rp 152.800.000</h3>
+                          <h3 className="text-4xl sm:text-4xl lg:text-5xl font-bold text-foreground">Rp 152.800.000</h3>
                         </div>
                         <div className="flex flex-wrap gap-3">
                           <div className="bg-success-light px-4 py-2 rounded-xl flex items-center gap-2 border border-primary/10">

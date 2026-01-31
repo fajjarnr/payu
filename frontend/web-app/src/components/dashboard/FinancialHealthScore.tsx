@@ -157,7 +157,7 @@ export default function FinancialHealthScore({
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="text-4xl sm:text-6xl font-bold text-foreground tabular-nums tracking-tighter"
+                className="text-4xl sm:text-4xl lg:text-6xl font-bold text-foreground tabular-nums tracking-tighter"
               >
                 {score}
               </motion.span>

@@ -160,7 +160,7 @@ export default function PocketsPage() {
 
                                         <div className="mt-auto">
                                             <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2 opacity-60">Likuiditas Tersedia</p>
-                                            <h4 className="text-5xl sm:text-6xl font-bold text-foreground tracking-tighter tabular-nums">
+                                            <h4 className="text-5xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tighter tabular-nums">
                                                 {balanceLoading ? (
                                                     <SkeletonBalance />
                                                 ) : (

@@ -128,7 +128,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
        <div className="card-gradient rounded-[2rem] p-8 sm:p-12 lg:p-16 text-primary-foreground relative overflow-hidden group shadow-card border border-white/10">
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
          <div className="space-y-6 text-center lg:text-left">
-          <h3 className="text-3xl sm:text-5xl font-bold uppercase tracking-tight leading-none">{t('futureTitle')}</h3>
+          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight leading-none">{t('futureTitle')}</h3>
           <p className="text-base sm:text-xl font-medium opacity-90 max-w-2xl leading-relaxed">
            {t('futureDesc')}
           </p>
