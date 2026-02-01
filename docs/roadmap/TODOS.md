@@ -120,6 +120,62 @@ Audit against the *14 Immutable Laws of PayU*.
 
 ---
 
+## 🔍 Frontend-Backend Feature Parity Analysis
+*Analysis Date: February 1, 2026*
+
+### ✅ Matched Features (Frontend Page ↔ Backend Service)
+
+| Frontend Route | Backend Service | API Status | Notes |
+|:--------------|:---------------|:----------|:------|
+| `/dashboard` | account-service | ✅ | Account overview, balances |
+| `/transfer` | transaction-service | ✅ | BI-FAST, SKN, RTGS, Internal |
+| `/pockets` | account-service | ✅ | Multi-pocket accounts |
+| `/cards` | account-service | ✅ | Debit/Credit cards |
+| `/lending` | lending-service | ✅ | Loans, PayLater, Credit Score |
+| `/investments` | investment-service | ✅ | Mutual funds, Gold, Robo-advisory |
+| `/bills` | billing-service | ✅ | PLN, PDAM, BPJS |
+| `/qris` | transaction-service | ✅ | QRIS payments |
+| `/rewards` | promotion-service | ✅ | Promo, Cashback, Loyalty |
+| `/analytics` | analytics-service | ✅ | User insights, Fraud scoring |
+| `/security` | auth-service | ✅ | MFA, Biometrics, Password |
+| `/settings` | account-service | ✅ | Profile, Preferences |
+| `/support` | support-service | ✅ | Tickets, Help center |
+| `/backoffice` | backoffice-service | ✅ | Admin dashboard |
+| `/backoffice/kyc` | kyc-service | ✅ | KYC approval |
+| `/backoffice/fraud` | compliance-service | ✅ | Fraud detection |
+| `/merchant` | partner-service | ✅ | Partner management |
+| `/onboarding` | kyc-service | ✅ | User registration |
+| `/login` | auth-service | ✅ | Authentication |
+
+### ❌ Backend Services WITHOUT Frontend Pages
+
+| Backend Service | Missing Feature | Priority | Effort |
+|:---------------|:---------------|:---------|:-------|
+| **`fx-service`** | **Currency Exchange (`/exchange`)** | 🔴 **HIGH** | 2-3 days |
+| `statement-service` | E-Statement PDF (could be in `/settings`) | 🟡 Medium | 1 day |
+| `notification-service` | Notification preferences (could be in `/settings`) | 🟢 Low | Service-layer only |
+| `api-portal-service` | Developer Portal (separate app) | 🟢 Low | External |
+| `ab-testing-service` | A/B Testing (internal) | 🟢 Low | Service-layer only |
+| `cms-service` | CMS management (internal) | 🟢 Low | Service-layer only |
+| `compliance-service` | Compliance rules (used via backoffice) | 🟢 Low | Integrated |
+| `gateway-service` | API Gateway (infrastructure) | 🟢 Low | Infrastructure |
+
+### 🎯 New Priority Tasks
+
+- [ ] **P17-C15**: Create `/exchange` page for fx-service integration (Currency Exchange)
+- [ ] **P17-C16**: Add E-Statement download to `/settings` (statement-service integration)
+- [ ] **P17-C17**: Verify frontend-backend API completeness for all 22 services
+
+### 📊 Feature Completeness Score
+
+| Metric | Score | Target |
+|:-------|:-----|:-------|
+| **Backend Services with Frontend** | 15/22 (68%) | 90%+ |
+| **Frontend Pages with Backend API** | 18/20 (90%) | 95%+ |
+| **Critical Gaps** | 1 (fx-service) | 0 |
+
+---
+
 ## 🗺️ Milestone Lifecycle Archive
 
 | Phase | Milestone Name | Progress | Status | Completion Highlights |
