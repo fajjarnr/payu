@@ -1,5 +1,7 @@
 # Container Integration Test Profile
 spring:
+  config:
+    import:
   main:
     allow-bean-definition-overriding: true
   
@@ -15,7 +17,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -56,3 +58,6 @@ management:
 payu:
   security:
     encryption-enabled: false
+  cache:
+    invalidation:
+      enabled: false

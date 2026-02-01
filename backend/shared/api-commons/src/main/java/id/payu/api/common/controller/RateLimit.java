@@ -20,7 +20,6 @@ public @interface RateLimit {
     /**
      * Maximum number of requests allowed in the time window.
      */
-    @AliasFor("value")
     int value() default ApiConstants.DEFAULT_RATE_LIMIT_PER_MINUTE;
 
     /**

@@ -5,7 +5,7 @@ spring:
   application:
     name: auth-service
   config:
-    import: vault://
+    import: optional:vault://
   cloud:
     vault:
       enabled: ${VAULT_ENABLED:false}

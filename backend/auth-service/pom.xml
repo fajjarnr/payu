@@ -177,11 +177,10 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Spring Kafka for Cache Invalidation (test scope) -->
+        <!-- Spring Kafka for Cache Invalidation -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <!-- Testcontainers for Integration Testing -->

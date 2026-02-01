@@ -20,7 +20,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -77,3 +77,6 @@ payu:
 
 server:
   port: 8088
+  cache:
+    invalidation:
+      enabled: false

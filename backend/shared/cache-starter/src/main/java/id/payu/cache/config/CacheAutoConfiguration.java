@@ -118,6 +118,7 @@ public class CacheAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnClass(KafkaTemplate.class)
     @ConditionalOnProperty(
         prefix = "payu.cache.invalidation",
         name = "enabled",
@@ -130,6 +131,7 @@ public class CacheAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnClass(KafkaTemplate.class)
     @ConditionalOnProperty(
         prefix = "payu.cache.invalidation",
         name = "enabled",
