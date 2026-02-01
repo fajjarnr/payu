@@ -64,15 +64,29 @@ Audit against the *14 Immutable Laws of PayU*.
 4. ✅ Services now connect to PostgreSQL and run Flyway migrations
 
 **Remaining Issues:**
-1. ⚠️ Several services need container profiles (Vault configuration override)
-2. ⚠️ `promotion-service` requires extensive refactoring (Lombok field access → getters)
+1. ⚠️ `promotion-service` requires extensive refactoring (Lombok field access → getters)
+2. ⏳ 9/15 services still failing startup (being rebuilt with fixes)
 
 **Recent Fixes (Feb 1, 2026 - Afternoon):**
 1. ✅ Fixed Flyway V3 - Materialized views now query correct tables
 2. ✅ Fixed Flyway V4 - Replaced partial indexes with standard indexes
 3. ✅ Fixed Flyway V5 - Security hardening profiles
 4. ✅ Added AccountPersistenceAdapter for hexagonal architecture
-5. ✅ account-service now running successfully in container environment
+5. ✅ Fixed Vault configuration (`vault://` → `optional:vault://`)
+6. ✅ Fixed RateLimit annotation (@AliasFor circular reference)
+7. ✅ Removed test scope from spring-kafka dependency
+8. ✅ Added cache invalidation disabled to container profiles
+9. ✅ Set ddl-auto: none in container profiles
+
+**Services Running (5/15):**
+- ✅ account-service
+- ✅ auth-service
+- ✅ investment-service
+- ✅ partner-service
+- ✅ support-service
+
+**Services Being Rebuilt (9/15):**
+- ⏳ transaction-service, wallet-service, statement-service, backoffice-service, cms-service, compliance-service, fx-service, ab-testing-service, lending-service
 
 ### 📊 Reliability Audit (Playwright E2E)
 *Baseline: February 1, 2026*
