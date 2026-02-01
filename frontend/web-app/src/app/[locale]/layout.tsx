@@ -13,6 +13,11 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
+export const metadata = {
+  title: 'PayU Digital Banking | Masa Depan Finansial Anda',
+  description: 'Platform digital banking standalone yang aman, cepat, dan transparan.',
+};
+
 export default async function RootLayout({
   children,
   params

@@ -1,7 +1,7 @@
 ####
 # Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
 ####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.20 AS build
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
 
 USER root
 WORKDIR /build
@@ -9,17 +9,22 @@ WORKDIR /build
 # Install Maven
 RUN microdnf install -y maven && microdnf clean all
 
-# Copy entire project (needed for shared library dependencies)
-COPY . .
+# Copy parent pom and common dependencies
+COPY pom.xml .
+COPY shared shared
 
-# Build the application (includes building shared libraries)
-RUN mvn clean install -DskipTests -Dspring-boot.build-image.skip=true && \
-    mv target/*.jar target/app.jar
+# Copy the service code
+COPY wallet-service wallet-service
+
+# Build the application (includes building shared libraries as needed)
+# -pl: project list, -am: also make dependencies
+RUN mvn clean package -pl wallet-service -am -DskipTests && \
+    mv wallet-service/target/*.jar wallet-service/target/app.jar
 
 ####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
 ####
-FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.20
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
 LABEL maintainer="backend-team@payu.id"
@@ -39,9 +44,6 @@ LABEL id.payu.service.tier="core"
 LABEL id.payu.compliance.pci-dss="required"
 LABEL id.payu.security.scan-level="high"
 
-# Install curl for health checks
-USER root
-RUN microdnf install -y curl && microdnf clean all
 
 # Use non-root user (185 is the default jboss user in UBI images)
 USER 185
@@ -49,7 +51,7 @@ USER 185
 WORKDIR /deployments
 
 # Copy the built artifact from build stage
-COPY --from=build --chown=185 /build/target/app.jar /deployments/app.jar
+COPY --from=build --chown=185 /build/wallet-service/target/app.jar /deployments/app.jar
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]
@@ -67,9 +69,6 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:HeapDumpPath=/deployments/heapdump.hprof \
     -Djava.security.egd=file:/dev/./urandom"
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8004/actuator/health || exit 1
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

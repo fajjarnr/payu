@@ -7,10 +7,14 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   reporter: 'html',
+  timeout: 60000,
+  expect: {
+    timeout: 10000,
+  },
   use: {
     baseURL: 'http://localhost:3101', // Points to web-app-test container
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    screenshot: 'on',
     video: 'retain-on-failure',
   },
   projects: [
