@@ -3,50 +3,64 @@ package id.payu.promotion.service;
 import id.payu.promotion.domain.Promotion;
 import id.payu.promotion.domain.Reward;
 import id.payu.promotion.dto.*;
-import io.smallrye.reactive.messaging.kafka.KafkaRecord;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.jboss.logging.Logger;
+import id.payu.promotion.repository.PromotionRepository;
+import id.payu.promotion.repository.RewardRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@ApplicationScoped
+@Service
 public class PromotionService {
 
-    private static final Logger LOG = Logger.getLogger(PromotionService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PromotionService.class);
 
-    @Inject
-    @Channel("promotion-events")
-    Emitter<Map<String, Object>> promotionEvents;
+    private final PromotionRepository promotionRepository;
+    private final RewardRepository rewardRepository;
+    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
+    private final String promotionEventsTopic;
+
+    public PromotionService(
+            PromotionRepository promotionRepository,
+            RewardRepository rewardRepository,
+            KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
+            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic) {
+        this.promotionRepository = promotionRepository;
+        this.rewardRepository = rewardRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.promotionEventsTopic = promotionEventsTopic;
+    }
 
     @Transactional
     public Promotion createPromotion(CreatePromotionRequest request) {
-        LOG.infof("Creating promotion: code=%s, type=%s", request.code(), request.promotionType());
+        LOG.info("Creating promotion: code={}, type={}", request.code(), request.promotionType());
 
         validatePromotionDates(request.startDate(), request.endDate());
 
         Promotion promotion = new Promotion();
-        promotion.code = request.code();
-        promotion.name = request.name();
-        promotion.description = request.description();
-        promotion.promotionType = request.promotionType();
-        promotion.rewardType = request.rewardType();
-        promotion.rewardValue = request.rewardValue();
-        promotion.maxRedemptions = request.maxRedemptions();
-        promotion.minTransactionAmount = request.minTransactionAmount();
-        promotion.startDate = request.startDate();
-        promotion.endDate = request.endDate();
-        promotion.status = Promotion.Status.DRAFT;
+        promotion.setCode(request.code());
+        promotion.setName(request.name());
+        promotion.setDescription(request.description());
+        promotion.setPromotionType(request.promotionType());
+        promotion.setRewardType(request.rewardType());
+        promotion.setRewardValue(request.rewardValue());
+        promotion.setMaxRedemptions(request.maxRedemptions());
+        promotion.setMinTransactionAmount(request.minTransactionAmount());
+        promotion.setStartDate(request.startDate());
+        promotion.setEndDate(request.endDate());
+        promotion.setStatus(Promotion.Status.DRAFT);
 
-        promotion.persist();
-        LOG.infof("Promotion created: id=%s, code=%s", promotion.id, promotion.code);
+        promotion = promotionRepository.save(promotion);
+        LOG.info("Promotion created: id={}, code={}", promotion.getId(), promotion.getCode());
 
         publishPromotionEvent(promotion, "CREATED");
 
@@ -55,32 +69,30 @@ public class PromotionService {
 
     @Transactional
     public Promotion updatePromotion(UUID id, UpdatePromotionRequest request) {
-        Promotion promotion = Promotion.findById(id);
-        if (promotion == null) {
-            throw new IllegalArgumentException("Promotion not found");
-        }
+        Promotion promotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found"));
 
         if (request.name() != null) {
-            promotion.name = request.name();
+            promotion.setName(request.name());
         }
         if (request.description() != null) {
-            promotion.description = request.description();
+            promotion.setDescription(request.description());
         }
         if (request.startDate() != null) {
-            validatePromotionDates(request.startDate(), 
-                request.endDate() != null ? request.endDate() : promotion.endDate);
-            promotion.startDate = request.startDate();
+            validatePromotionDates(request.startDate(),
+                request.endDate() != null ? request.endDate() : promotion.getEndDate());
+            promotion.setStartDate(request.startDate());
         }
         if (request.endDate() != null) {
-            validatePromotionDates(promotion.startDate, request.endDate());
-            promotion.endDate = request.endDate();
+            validatePromotionDates(promotion.getStartDate(), request.endDate());
+            promotion.setEndDate(request.endDate());
         }
         if (request.status() != null) {
-            promotion.status = request.status();
+            promotion.setStatus(request.status());
         }
 
-        promotion.persist();
-        LOG.infof("Promotion updated: id=%s", promotion.id);
+        promotion = promotionRepository.save(promotion);
+        LOG.info("Promotion updated: id={}", promotion.getId());
 
         publishPromotionEvent(promotion, "UPDATED");
 
@@ -89,18 +101,16 @@ public class PromotionService {
 
     @Transactional
     public Promotion activatePromotion(UUID id) {
-        Promotion promotion = Promotion.findById(id);
-        if (promotion == null) {
-            throw new IllegalArgumentException("Promotion not found");
-        }
+        Promotion promotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Promotion not found"));
 
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(promotion.startDate) || now.isAfter(promotion.endDate)) {
+        if (now.isBefore(promotion.getStartDate()) || now.isAfter(promotion.getEndDate())) {
             throw new IllegalArgumentException("Cannot activate promotion outside its validity period");
         }
 
-        promotion.status = Promotion.Status.ACTIVE;
-        promotion.persist();
+        promotion.setStatus(Promotion.Status.ACTIVE);
+        promotion = promotionRepository.save(promotion);
 
         publishPromotionEvent(promotion, "ACTIVATED");
 
@@ -108,11 +118,16 @@ public class PromotionService {
     }
 
     public Optional<Promotion> getPromotion(UUID id) {
-        return Promotion.findByIdOptional(id);
+        return promotionRepository.findById(id);
     }
 
     public Optional<Promotion> getPromotionByCode(String code) {
-        return Promotion.find("code", code).firstResultOptional();
+        return promotionRepository.findByCode(code);
+    }
+
+    public List<Promotion> getActivePromotions() {
+        LocalDateTime now = LocalDateTime.now();
+        return promotionRepository.findActivePromotions(Promotion.Status.ACTIVE, now);
     }
 
     @Transactional
@@ -120,61 +135,62 @@ public class PromotionService {
         Promotion promotion = getPromotionByCode(code)
             .orElseThrow(() -> new IllegalArgumentException("Invalid promotion code"));
 
-        if (promotion.status != Promotion.Status.ACTIVE) {
+        if (promotion.getStatus() != Promotion.Status.ACTIVE) {
             throw new IllegalArgumentException("Promotion is not active");
         }
 
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(promotion.startDate) || now.isAfter(promotion.endDate)) {
+        if (now.isBefore(promotion.getStartDate()) || now.isAfter(promotion.getEndDate())) {
             throw new IllegalArgumentException("Promotion is expired or not yet started");
         }
 
-        if (promotion.maxRedemptions != null && promotion.redemptionCount >= promotion.maxRedemptions) {
+        if (promotion.getMaxRedemptions() != null &&
+            promotion.getRedemptionCount() >= promotion.getMaxRedemptions()) {
             throw new IllegalArgumentException("Promotion has reached maximum redemptions");
         }
 
-        if (promotion.minTransactionAmount != null && 
-            request.transactionAmount().compareTo(promotion.minTransactionAmount) < 0) {
+        if (promotion.getMinTransactionAmount() != null &&
+            request.transactionAmount().compareTo(promotion.getMinTransactionAmount()) < 0) {
             throw new IllegalArgumentException("Transaction amount below minimum required");
         }
 
         BigDecimal rewardAmount = calculateRewardAmount(promotion, request.transactionAmount());
 
         Reward reward = new Reward();
-        reward.accountId = request.accountId();
-        reward.transactionId = request.transactionId();
-        reward.promotionCode = promotion.code;
-        reward.type = Reward.RewardType.PROMOTION_REWARD;
-        reward.amount = rewardAmount;
-        reward.transactionAmount = request.transactionAmount();
-        reward.merchantCode = request.merchantCode();
-        reward.categoryCode = request.categoryCode();
-        reward.status = Reward.Status.AWARDED;
+        reward.setAccountId(request.accountId());
+        reward.setTransactionId(request.transactionId());
+        reward.setPromotionCode(promotion.getCode());
+        reward.setType(Reward.RewardType.PROMOTION_REWARD);
+        reward.setAmount(rewardAmount);
+        reward.setTransactionAmount(request.transactionAmount());
+        reward.setMerchantCode(request.merchantCode());
+        reward.setCategoryCode(request.categoryCode());
+        reward.setStatus(Reward.Status.AWARDED);
 
-        if (promotion.promotionType == Promotion.PromotionType.REWARD_POINTS) {
-            reward.pointsEarned = rewardAmount.intValue();
+        if (promotion.getPromotionType() == Promotion.PromotionType.REWARD_POINTS) {
+            reward.setPointsEarned(rewardAmount.intValue());
         }
 
-        reward.persist();
+        reward = rewardRepository.save(reward);
 
-        promotion.redemptionCount++;
-        promotion.persist();
+        promotion.setRedemptionCount(promotion.getRedemptionCount() + 1);
+        promotionRepository.save(promotion);
 
         publishPromotionEvent(promotion, "CLAIMED");
         publishRewardEvent(reward);
 
-        LOG.infof("Promotion claimed: code=%s, accountId=%s, reward=%s", 
+        LOG.info("Promotion claimed: code={}, accountId={}, reward={}",
             code, request.accountId(), rewardAmount);
 
         return reward;
     }
 
     private BigDecimal calculateRewardAmount(Promotion promotion, BigDecimal transactionAmount) {
-        return switch (promotion.rewardType) {
-            case PERCENTAGE -> transactionAmount.multiply(promotion.rewardValue)
+        return switch (promotion.getRewardType()) {
+            case PERCENTAGE -> transactionAmount.multiply(promotion.getRewardValue())
                 .divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
-            case FIXED_AMOUNT -> promotion.rewardValue;
-            case POINTS -> promotion.rewardValue;
+            case FIXED_AMOUNT -> promotion.getRewardValue();
+            case POINTS -> promotion.getRewardValue();
         };
     }
 
@@ -190,31 +206,31 @@ public class PromotionService {
     private void publishPromotionEvent(Promotion promotion, String eventType) {
         try {
             Map<String, Object> event = Map.of(
-                "promotionId", promotion.id.toString(),
-                "code", promotion.code,
-                "type", promotion.promotionType.name(),
-                "status", promotion.status.name(),
+                "promotionId", promotion.getId().toString(),
+                "code", promotion.getCode(),
+                "type", promotion.getPromotionType().name(),
+                "status", promotion.getStatus().name(),
                 "eventType", eventType,
                 "timestamp", LocalDateTime.now().toString()
             );
-            promotionEvents.send(KafkaRecord.of(promotion.code, event));
+            kafkaTemplate.send(promotionEventsTopic, promotion.getCode(), event);
         } catch (Exception e) {
-            LOG.warnf("Failed to publish promotion event: %s", e.getMessage());
+            LOG.warn("Failed to publish promotion event: {}", e.getMessage());
         }
     }
 
     private void publishRewardEvent(Reward reward) {
         try {
             Map<String, Object> event = Map.of(
-                "rewardId", reward.id.toString(),
-                "accountId", reward.accountId,
-                "amount", reward.amount,
-                "status", reward.status.name(),
+                "rewardId", reward.getId().toString(),
+                "accountId", reward.getAccountId(),
+                "amount", reward.getAmount().toString(),
+                "status", reward.getStatus().name(),
                 "timestamp", LocalDateTime.now().toString()
             );
-            promotionEvents.send(KafkaRecord.of(reward.accountId, event));
+            kafkaTemplate.send(promotionEventsTopic, reward.getAccountId(), event);
         } catch (Exception e) {
-            LOG.warnf("Failed to publish reward event: %s", e.getMessage());
+            LOG.warn("Failed to publish reward event: {}", e.getMessage());
         }
     }
 }

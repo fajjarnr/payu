@@ -83,6 +83,7 @@ export default function LendingPage() {
 
               <div className="flex gap-2 mb-8">
                 <button
+                  data-testid="loans-tab"
                   onClick={() => setActiveTab('loans')}
                   className={clsx(
                     'px-6 py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition-all',
@@ -92,6 +93,7 @@ export default function LendingPage() {
                   Pinjaman
                 </button>
                 <button
+                  data-testid="paylater-tab"
                   onClick={() => setActiveTab('paylater')}
                   className={clsx(
                     'px-6 py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition-all',

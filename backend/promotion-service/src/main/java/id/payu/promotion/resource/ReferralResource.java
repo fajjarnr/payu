@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -82,10 +83,12 @@ public class ReferralResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getReferral(@PathVariable UUID id) {
-        return referralService.getReferral(id)
-            .map(referral -> ResponseEntity.ok(ReferralResponse.from(referral)))
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Referral not found")));
+        Optional<Referral> referralOpt = referralService.getReferral(id);
+        if (referralOpt.isPresent()) {
+            return ResponseEntity.ok(ReferralResponse.from(referralOpt.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse("Referral not found"));
     }
 
     @GetMapping("/code/{code}")
@@ -99,10 +102,12 @@ public class ReferralResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getReferralByCode(@PathVariable String code) {
-        return referralService.getReferralByCode(code)
-            .map(referral -> ResponseEntity.ok(ReferralResponse.from(referral)))
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Referral code not found")));
+        Optional<Referral> referralOpt = referralService.getReferralByCode(code);
+        if (referralOpt.isPresent()) {
+            return ResponseEntity.ok(ReferralResponse.from(referralOpt.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse("Referral code not found"));
     }
 
     @GetMapping("/referrer/{referrerAccountId}")

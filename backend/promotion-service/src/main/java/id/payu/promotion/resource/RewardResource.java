@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -41,10 +42,12 @@ public class RewardResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getReward(@PathVariable UUID id) {
-        return rewardService.getReward(id)
-            .map(reward -> ResponseEntity.ok(RewardResponse.from(reward)))
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Reward not found")));
+        Optional<Reward> rewardOpt = rewardService.getReward(id);
+        if (rewardOpt.isPresent()) {
+            return ResponseEntity.ok(RewardResponse.from(rewardOpt.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse("Reward not found"));
     }
 
     @GetMapping("/account/{accountId}")

@@ -2,12 +2,11 @@ package id.payu.promotion.service;
 
 import id.payu.promotion.domain.*;
 import id.payu.promotion.dto.*;
-import io.smallrye.reactive.messaging.kafka.KafkaRecord;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
-import org.jboss.logging.Logger;
+import id.payu.promotion.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -16,28 +15,46 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@ApplicationScoped
+@Service
 public class GamificationService {
 
-    private static final Logger LOG = Logger.getLogger(GamificationService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GamificationService.class);
     private static final int[] XP_PER_LEVEL = {0, 100, 300, 600, 1000, 1500, 2100, 2800, 3700, 4800};
     private static final int[] POINTS_PER_STREAK = {0, 5, 10, 15, 25, 40, 60, 85, 115, 150, 200};
 
-    @Inject
-    EntityManager entityManager;
+    private final DailyCheckinRepository dailyCheckinRepository;
+    private final UserLevelRepository userLevelRepository;
+    private final XpTransactionRepository xpTransactionRepository;
+    private final BadgeRepository badgeRepository;
+    private final UserBadgeRepository userBadgeRepository;
+    private final LevelRewardRepository levelRewardRepository;
+    private final LoyaltyPointsService loyaltyPointsService;
 
-    @Inject
-    LoyaltyPointsService loyaltyPointsService;
+    public GamificationService(
+            DailyCheckinRepository dailyCheckinRepository,
+            UserLevelRepository userLevelRepository,
+            XpTransactionRepository xpTransactionRepository,
+            BadgeRepository badgeRepository,
+            UserBadgeRepository userBadgeRepository,
+            LevelRewardRepository levelRewardRepository,
+            LoyaltyPointsService loyaltyPointsService) {
+        this.dailyCheckinRepository = dailyCheckinRepository;
+        this.userLevelRepository = userLevelRepository;
+        this.xpTransactionRepository = xpTransactionRepository;
+        this.badgeRepository = badgeRepository;
+        this.userBadgeRepository = userBadgeRepository;
+        this.levelRewardRepository = levelRewardRepository;
+        this.loyaltyPointsService = loyaltyPointsService;
+    }
 
     @Transactional
     public DailyCheckinResponse performDailyCheckin(String accountId) {
         LocalDate today = LocalDate.now();
 
-        DailyCheckin existingCheckin = DailyCheckin.<DailyCheckin>find(
-            "accountId = ?1 and checkinDate = ?2", accountId, today)
-            .firstResult();
+        Optional<DailyCheckin> existingCheckin = dailyCheckinRepository
+                .findByAccountIdAndCheckinDate(accountId, today);
 
-        if (existingCheckin != null) {
+        if (existingCheckin.isPresent()) {
             throw new IllegalStateException("Already checked in today");
         }
 
@@ -47,16 +64,16 @@ public class GamificationService {
         Integer pointsEarned = calculateStreakPoints(streak);
 
         DailyCheckin checkin = new DailyCheckin();
-        checkin.accountId = accountId;
-        checkin.checkinDate = today;
-        checkin.streakCount = streak;
-        checkin.pointsEarned = pointsEarned;
-        checkin.persist();
+        checkin.setAccountId(accountId);
+        checkin.setCheckinDate(today);
+        checkin.setStreakCount(streak);
+        checkin.setPointsEarned(pointsEarned);
+        checkin = dailyCheckinRepository.save(checkin);
 
         if (pointsEarned > 0) {
             loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
                 accountId,
-                "checkin-" + checkin.id,
+                "checkin-" + checkin.getId(),
                 LoyaltyPoints.TransactionType.EARNED,
                 pointsEarned,
                 LocalDateTime.now().plusMonths(12)
@@ -67,7 +84,7 @@ public class GamificationService {
 
         checkAndAwardBadges(accountId, streak, null);
 
-        LOG.infof("Daily check-in: accountId=%s, streak=%s, points=%s", 
+        LOG.info("Daily check-in: accountId={}, streak={}, points={}",
             accountId, streak, pointsEarned);
 
         return toCheckinResponse(checkin);
@@ -75,35 +92,36 @@ public class GamificationService {
 
     public DailyCheckinResponse getTodayCheckin(String accountId) {
         LocalDate today = LocalDate.now();
-        DailyCheckin checkin = DailyCheckin.<DailyCheckin>find(
-            "accountId = ?1 and checkinDate = ?2", accountId, today)
-            .firstResult();
-        return checkin != null ? toCheckinResponse(checkin) : null;
+        Optional<DailyCheckin> checkin = dailyCheckinRepository
+                .findByAccountIdAndCheckinDate(accountId, today);
+        return checkin.map(this::toCheckinResponse).orElse(null);
     }
 
     public Integer getCurrentStreak(String accountId) {
-        DailyCheckin lastCheckin = DailyCheckin.<DailyCheckin>find(
-            "accountId = ?1 order by checkinDate desc", accountId)
-            .firstResult();
+        List<DailyCheckin> checkins = dailyCheckinRepository
+                .findByAccountIdOrderByCheckinDateDesc(accountId);
 
-        if (lastCheckin == null) {
+        if (checkins.isEmpty()) {
             return 0;
         }
 
+        DailyCheckin lastCheckin = checkins.get(0);
         LocalDate today = LocalDate.now();
-        LocalDate lastCheckinDate = lastCheckin.checkinDate;
+        LocalDate lastCheckinDate = lastCheckin.getCheckinDate();
 
         if (lastCheckinDate.equals(today)) {
-            return lastCheckin.streakCount;
+            return lastCheckin.getStreakCount();
         } else if (lastCheckinDate.equals(today.minusDays(1))) {
-            return lastCheckin.streakCount;
+            return lastCheckin.getStreakCount();
         }
 
         return 0;
     }
 
     public Long getTotalCheckins(String accountId) {
-        return DailyCheckin.count("accountId", accountId);
+        return dailyCheckinRepository.findByAccountIdOrderByCheckinDateDesc(accountId)
+                .stream()
+                .count();
     }
 
     @Transactional
@@ -112,12 +130,13 @@ public class GamificationService {
         String transactionId = request.transactionId();
         BigDecimal amount = request.amount();
 
-        XpTransaction xpTx = XpTransaction.<XpTransaction>find(
-            "transactionId = ?1", transactionId)
-            .firstResult();
+        List<XpTransaction> existingTx = xpTransactionRepository
+                .findByAccountIdOrderByCreatedAtDesc(accountId);
+        boolean alreadyProcessed = existingTx.stream()
+                .anyMatch(tx -> transactionId.equals(tx.getTransactionId()));
 
-        if (xpTx != null) {
-            LOG.infof("Transaction already processed: %s", transactionId);
+        if (alreadyProcessed) {
+            LOG.info("Transaction already processed: {}", transactionId);
             return new GamificationEventResponse(
                 Collections.emptyList(),
                 null,
@@ -127,16 +146,16 @@ public class GamificationService {
         }
 
         UserLevel oldUserLevel = getOrCreateUserLevel(accountId);
-        Integer oldLevel = oldUserLevel.level;
+        Integer oldLevel = oldUserLevel.getLevel();
 
         Integer xpEarned = calculateTransactionXp(amount);
         Integer newLevel = addXp(accountId, xpEarned, XpTransaction.SourceType.TRANSACTION, transactionId);
 
         UserLevelResponse levelUp = null;
         if (newLevel > oldLevel) {
-            UserLevel updatedUserLevel = UserLevel.<UserLevel>find("accountId", accountId).firstResult();
-            if (updatedUserLevel != null) {
-                levelUp = toUserLevelResponse(updatedUserLevel);
+            Optional<UserLevel> updatedUserLevel = userLevelRepository.findByAccountId(accountId);
+            if (updatedUserLevel.isPresent()) {
+                levelUp = toUserLevelResponse(updatedUserLevel.get());
             }
             grantLevelRewards(accountId, newLevel);
         }
@@ -144,7 +163,7 @@ public class GamificationService {
         List<EarnedBadgeResponse> badgesEarned = checkAndAwardBadges(
             accountId, null, transactionId);
 
-        LOG.infof("Transaction processed: accountId=%s, xp=%s, level=%s",
+        LOG.info("Transaction processed: accountId={}, xp={}, level={}",
             accountId, xpEarned, newLevel);
 
         return new GamificationEventResponse(
@@ -157,63 +176,68 @@ public class GamificationService {
 
     @Transactional
     public UserLevelResponse getUserLevel(String accountId) {
-        UserLevel userLevel = UserLevel.<UserLevel>find("accountId", accountId).firstResult();
-        if (userLevel == null) {
-            return null;
-        }
-        return toUserLevelResponse(userLevel);
+        Optional<UserLevel> userLevel = userLevelRepository.findByAccountId(accountId);
+        return userLevel.map(this::toUserLevelResponse).orElse(null);
     }
 
     public List<EarnedBadgeResponse> getUserBadges(String accountId) {
-        List<UserBadge> userBadges = UserBadge.<UserBadge>find("accountId", accountId).list();
+        List<UserBadge> userBadges = userBadgeRepository.findByAccountId(accountId);
         List<UUID> badgeIds = userBadges.stream()
-            .map(ub -> ub.badgeId)
+            .map(UserBadge::getBadgeId)
             .collect(Collectors.toList());
 
         if (badgeIds.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<Badge> badges = Badge.<Badge>list("id in ?1", badgeIds);
+        List<Badge> badges = badgeIds.stream()
+                .map(badgeRepository::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
         Map<UUID, Badge> badgeMap = badges.stream()
-            .collect(Collectors.toMap(b -> b.id, b -> b));
+                .collect(Collectors.toMap(Badge::getId, b -> b));
 
         return userBadges.stream()
-            .map(ub -> toEarnedBadgeResponse(ub, badgeMap.get(ub.badgeId)))
+            .map(ub -> toEarnedBadgeResponse(ub, badgeMap.get(ub.getBadgeId())))
             .collect(Collectors.toList());
     }
 
     public List<BadgeProgressResponse> getBadgeProgress(String accountId) {
-        List<Badge> allBadges = Badge.<Badge>list("isActive", true);
-        List<UserBadge> userBadges = UserBadge.<UserBadge>find("accountId", accountId).list();
+        List<Badge> allBadges = badgeRepository.findByActiveTrue();
+        List<UserBadge> userBadges = userBadgeRepository.findByAccountId(accountId);
         Set<UUID> earnedBadgeIds = userBadges.stream()
-            .map(ub -> ub.badgeId)
-            .collect(Collectors.toSet());
+                .map(UserBadge::getBadgeId)
+                .collect(Collectors.toSet());
 
-        UserLevel userLevel = UserLevel.<UserLevel>find("accountId", accountId).firstResult();
-        Long totalCheckins = DailyCheckin.count("accountId", accountId);
+        Optional<UserLevel> userLevelOpt = userLevelRepository.findByAccountId(accountId);
+        List<DailyCheckin> checkins = dailyCheckinRepository.findByAccountIdOrderByCheckinDateDesc(accountId);
+        List<XpTransaction> xpTransactions = xpTransactionRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
 
-        Integer currentLevel = userLevel != null ? userLevel.level : 1;
-        Integer currentXp = userLevel != null ? userLevel.xp : 0;
-        Long transactionCount = XpTransaction.count(
-            "accountId = ?1 and sourceType = ?2", accountId, XpTransaction.SourceType.TRANSACTION);
+        Integer currentLevel = userLevelOpt.map(UserLevel::getLevel).orElse(1);
+        Integer currentXp = userLevelOpt.map(UserLevel::getXp).orElse(0);
+        int totalCheckins = checkins.size();
+        long transactionCount = xpTransactions.stream()
+                .filter(tx -> tx.getSourceType() == XpTransaction.SourceType.TRANSACTION)
+                .count();
 
-        BigDecimal totalTransactionAmount = XpTransaction.<XpTransaction>find(
-            "accountId = ?1 and transactionId is not null", accountId)
-            .stream()
-            .map(tx -> getTransactionAmount(tx.transactionId))
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalTransactionAmount = xpTransactions.stream()
+                .map(XpTransaction::getTransactionId)
+                .filter(Objects::nonNull)
+                .map(this::getTransactionAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return allBadges.stream()
             .map(badge -> toBadgeProgressResponse(
                 badge,
-                earnedBadgeIds.contains(badge.id),
+                earnedBadgeIds.contains(badge.getId()),
                 currentLevel,
                 currentXp,
-                totalCheckins.intValue(),
-                transactionCount.intValue(),
+                totalCheckins,
+                (int) transactionCount,
                 totalTransactionAmount))
-            .sorted((a, b) -> Boolean.compare(a.isEligible(), b.isEligible()))
+            .sorted((a, b) -> Boolean.compare(b.isEligible(), a.isEligible()))
             .collect(Collectors.toList());
     }
 
@@ -237,15 +261,12 @@ public class GamificationService {
         LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
 
-        DailyCheckin yesterdayCheckin = DailyCheckin.<DailyCheckin>find(
-            "accountId = ?1 and checkinDate = ?2", accountId, yesterday)
-            .firstResult();
+        Optional<DailyCheckin> yesterdayCheckin = dailyCheckinRepository
+                .findByAccountIdAndCheckinDate(accountId, yesterday);
 
-        if (yesterdayCheckin == null) {
-            return 0;
-        }
-
-        return yesterdayCheckin.streakCount;
+        return yesterdayCheckin
+                .map(DailyCheckin::getStreakCount)
+                .orElse(0);
     }
 
     private Integer calculateStreakPoints(Integer streak) {
@@ -259,44 +280,43 @@ public class GamificationService {
     }
 
     private UserLevel getOrCreateUserLevel(String accountId) {
-        UserLevel userLevel = UserLevel.<UserLevel>find("accountId", accountId).firstResult();
-        if (userLevel == null) {
-            userLevel = new UserLevel();
-            userLevel.accountId = accountId;
-            userLevel.level = 1;
-            userLevel.xp = 0;
-            userLevel.levelName = "Pemula";
-            userLevel.persist();
+        Optional<UserLevel> userLevelOpt = userLevelRepository.findByAccountId(accountId);
+        if (userLevelOpt.isPresent()) {
+            return userLevelOpt.get();
         }
-        return userLevel;
+
+        UserLevel userLevel = new UserLevel();
+        userLevel.setAccountId(accountId);
+        userLevel.setLevel(1);
+        userLevel.setXp(0);
+        userLevel.setLevelName("Pemula");
+        return userLevelRepository.save(userLevel);
     }
 
     private Integer addXp(String accountId, Integer xpToAdd, XpTransaction.SourceType sourceType, String transactionId) {
         UserLevel userLevel = getOrCreateUserLevel(accountId);
 
-        Integer currentXp = userLevel.xp;
+        Integer currentXp = userLevel.getXp();
         Integer newXp = currentXp + xpToAdd;
 
-        Integer currentLevel = userLevel.level;
+        Integer currentLevel = userLevel.getLevel();
         Integer newLevel = calculateLevel(newXp);
 
-        userLevel.xp = newXp;
-        userLevel.level = newLevel;
-        userLevel.levelName = getLevelName(newLevel);
-        userLevel.updatedAt = LocalDateTime.now();
-        userLevel.persist();
+        userLevel.setXp(newXp);
+        userLevel.setLevel(newLevel);
+        userLevel.setLevelName(getLevelName(newLevel));
+        userLevel.setUpdatedAt(LocalDateTime.now());
+        userLevelRepository.save(userLevel);
 
         XpTransaction xpTx = new XpTransaction();
-        xpTx.accountId = accountId;
-        xpTx.transactionId = transactionId;
-        xpTx.sourceType = sourceType;
-        xpTx.xpEarned = xpToAdd;
-        xpTx.xpAfter = newXp;
-        xpTx.persist();
+        xpTx.setAccountId(accountId);
+        xpTx.setTransactionId(transactionId);
+        xpTx.setSourceType(sourceType);
+        xpTx.setXpEarned(xpToAdd);
+        xpTx.setXpAfter(newXp);
+        xpTransactionRepository.save(xpTx);
 
-        entityManager.flush();
-
-        LOG.infof("XP added: accountId=%s, xp=%s, level=%s -> %s",
+        LOG.info("XP added: accountId={}, xp={}, level={} -> {}",
             accountId, xpToAdd, currentLevel, newLevel);
 
         return newLevel;
@@ -335,75 +355,82 @@ public class GamificationService {
     }
 
     private void grantLevelRewards(String accountId, Integer level) {
-        LevelReward reward = LevelReward.<LevelReward>find("level", level).firstResult();
-        if (reward != null && reward.pointsReward > 0) {
-            loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
-                accountId,
-                "level-reward-" + level,
-                LoyaltyPoints.TransactionType.EARNED,
-                reward.pointsReward,
-                LocalDateTime.now().plusMonths(12)
-            ));
-            LOG.infof("Level reward granted: accountId=%s, level=%s, points=%s", 
-                accountId, level, reward.pointsReward);
+        List<LevelReward> rewards = levelRewardRepository.findByLevel(level);
+        for (LevelReward reward : rewards) {
+            if (reward.getPointsReward() > 0) {
+                loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
+                    accountId,
+                    "level-reward-" + level,
+                    LoyaltyPoints.TransactionType.EARNED,
+                    reward.getPointsReward(),
+                    LocalDateTime.now().plusMonths(12)
+                ));
+                LOG.info("Level reward granted: accountId={}, level={}, points={}",
+                    accountId, level, reward.getPointsReward());
+            }
         }
     }
 
     private List<EarnedBadgeResponse> checkAndAwardBadges(String accountId, Integer streak, String transactionId) {
         List<EarnedBadgeResponse> earnedBadges = new ArrayList<>();
-        List<Badge> allBadges = Badge.<Badge>list("isActive", true);
-        List<UserBadge> userBadges = UserBadge.<UserBadge>find("accountId", accountId).list();
+        List<Badge> allBadges = badgeRepository.findByActiveTrue();
+        List<UserBadge> userBadges = userBadgeRepository.findByAccountId(accountId);
         Set<UUID> earnedBadgeIds = userBadges.stream()
-            .map(ub -> ub.badgeId)
-            .collect(Collectors.toSet());
+                .map(UserBadge::getBadgeId)
+                .collect(Collectors.toSet());
 
-        UserLevel userLevel = UserLevel.<UserLevel>find("accountId", accountId).firstResult();
-        Integer currentLevel = userLevel != null ? userLevel.level : 1;
-        Long totalCheckins = DailyCheckin.count("accountId", accountId);
-        Long transactionCount = XpTransaction.count(
-            "accountId = ?1 and sourceType = ?2", accountId, XpTransaction.SourceType.TRANSACTION);
-        BigDecimal totalTransactionAmount = XpTransaction.<XpTransaction>find(
-            "accountId = ?1 and transactionId is not null", accountId)
-            .stream()
-            .map(tx -> getTransactionAmount(tx.transactionId))
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Optional<UserLevel> userLevelOpt = userLevelRepository.findByAccountId(accountId);
+        Integer currentLevel = userLevelOpt.map(UserLevel::getLevel).orElse(1);
+        List<DailyCheckin> checkins = dailyCheckinRepository.findByAccountIdOrderByCheckinDateDesc(accountId);
+        List<XpTransaction> xpTransactions = xpTransactionRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+
+        int totalCheckins = checkins.size();
+        long transactionCount = xpTransactions.stream()
+                .filter(tx -> tx.getSourceType() == XpTransaction.SourceType.TRANSACTION)
+                .count();
+
+        BigDecimal totalTransactionAmount = xpTransactions.stream()
+                .map(XpTransaction::getTransactionId)
+                .filter(Objects::nonNull)
+                .map(this::getTransactionAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         for (Badge badge : allBadges) {
-            if (earnedBadgeIds.contains(badge.id)) {
+            if (earnedBadgeIds.contains(badge.getId())) {
                 continue;
             }
 
-            if (checkBadgeRequirement(badge, streak, currentLevel, totalCheckins.intValue(), 
-                    transactionCount.intValue(), totalTransactionAmount)) {
+            if (checkBadgeRequirement(badge, streak, currentLevel, totalCheckins,
+                    (int) transactionCount, totalTransactionAmount)) {
                 UserBadge userBadge = new UserBadge();
-                userBadge.accountId = accountId;
-                userBadge.badgeId = badge.id;
-                userBadge.persist();
+                userBadge.setAccountId(accountId);
+                userBadge.setBadgeId(badge.getId());
+                userBadge = userBadgeRepository.save(userBadge);
 
-                if (badge.pointsReward > 0) {
+                if (badge.getPointsReward() > 0) {
                     loyaltyPointsService.addPoints(new CreateLoyaltyPointsRequest(
                         accountId,
-                        "badge-reward-" + badge.id,
+                        "badge-reward-" + badge.getId(),
                         LoyaltyPoints.TransactionType.EARNED,
-                        badge.pointsReward,
+                        badge.getPointsReward(),
                         LocalDateTime.now().plusMonths(12)
                     ));
                 }
 
                 earnedBadges.add(toEarnedBadgeResponse(userBadge, badge));
 
-                LOG.infof("Badge awarded: accountId=%s, badge=%s", accountId, badge.name);
+                LOG.info("Badge awarded: accountId={}, badge={}", accountId, badge.getName());
             }
         }
 
         return earnedBadges;
     }
 
-    private boolean checkBadgeRequirement(Badge badge, Integer streak, Integer level, 
+    private boolean checkBadgeRequirement(Badge badge, Integer streak, Integer level,
             Integer totalCheckins, Integer transactionCount, BigDecimal totalAmount) {
-        BigDecimal requirement = badge.requirementValue;
+        BigDecimal requirement = badge.getRequirementValue();
 
-        return switch (badge.requirementType) {
+        return switch (badge.getRequirementType()) {
             case STREAK_DAYS -> streak != null && streak >= requirement.intValue();
             case LEVEL_REACHED -> level >= requirement.intValue();
             case TRANSACTION_COUNT -> transactionCount >= requirement.intValue();
@@ -417,72 +444,70 @@ public class GamificationService {
     }
 
     private DailyCheckinResponse getLastCheckin(String accountId) {
-        DailyCheckin checkin = DailyCheckin.<DailyCheckin>find(
-            "accountId = ?1 order by checkinDate desc", accountId)
-            .firstResult();
-        return checkin != null ? toCheckinResponse(checkin) : null;
+        List<DailyCheckin> checkins = dailyCheckinRepository.findByAccountIdOrderByCheckinDateDesc(accountId);
+        return checkins.isEmpty() ? null : toCheckinResponse(checkins.get(0));
     }
 
     private DailyCheckinResponse toCheckinResponse(DailyCheckin checkin) {
         return new DailyCheckinResponse(
-            checkin.id,
-            checkin.accountId,
-            checkin.checkinDate,
-            checkin.streakCount,
-            checkin.pointsEarned,
-            checkin.createdAt
+            checkin.getId(),
+            checkin.getAccountId(),
+            checkin.getCheckinDate(),
+            checkin.getStreakCount(),
+            checkin.getPointsEarned(),
+            checkin.getCreatedAt()
         );
     }
 
     private UserLevelResponse toUserLevelResponse(UserLevel userLevel) {
         return new UserLevelResponse(
-            userLevel.id,
-            userLevel.accountId,
-            userLevel.level,
-            userLevel.levelName,
-            userLevel.xp,
-            getXpToNextLevel(userLevel.level),
-            userLevel.createdAt,
-            userLevel.updatedAt
+            userLevel.getId(),
+            userLevel.getAccountId(),
+            userLevel.getLevel(),
+            userLevel.getLevelName(),
+            userLevel.getXp(),
+            getXpToNextLevel(userLevel.getLevel()),
+            userLevel.getCreatedAt(),
+            userLevel.getUpdatedAt()
         );
     }
 
     private EarnedBadgeResponse toEarnedBadgeResponse(UserBadge userBadge, Badge badge) {
         return new EarnedBadgeResponse(
-            userBadge.id,
-            badge.id,
-            badge.name,
-            badge.description,
-            badge.iconUrl,
-            badge.requirementType,
-            badge.requirementValue,
-            badge.pointsReward,
-            badge.category,
-            userBadge.earnedAt
+            userBadge.getId(),
+            badge.getId(),
+            badge.getName(),
+            badge.getDescription(),
+            badge.getIconUrl(),
+            badge.getRequirementType(),
+            badge.getRequirementValue(),
+            badge.getPointsReward(),
+            badge.getCategory(),
+            userBadge.getEarnedAt()
         );
     }
 
-    private BadgeProgressResponse toBadgeProgressResponse(Badge badge, Boolean isEarned, 
-            Integer currentLevel, Integer currentXp, Integer totalCheckins, 
+    private BadgeProgressResponse toBadgeProgressResponse(Badge badge, Boolean isEarned,
+            Integer currentLevel, Integer currentXp, Integer totalCheckins,
             Integer transactionCount, BigDecimal totalAmount) {
         BigDecimal currentProgress = BigDecimal.ZERO;
 
-        switch (badge.requirementType) {
+        switch (badge.getRequirementType()) {
             case STREAK_DAYS -> currentProgress = BigDecimal.valueOf(totalCheckins);
             case LEVEL_REACHED -> currentProgress = BigDecimal.valueOf(currentLevel);
             case TRANSACTION_COUNT -> currentProgress = BigDecimal.valueOf(transactionCount);
             case TOTAL_AMOUNT -> currentProgress = totalAmount;
         }
 
-        boolean isEligible = !isEarned && currentProgress.compareTo(badge.requirementValue) >= 0;
+        boolean isEligible = !isEarned && currentProgress.compareTo(badge.getRequirementValue()) >= 0;
 
         return new BadgeProgressResponse(
-            badge.id,
-            badge.name,
-            badge.description,
-            badge.iconUrl,
-            badge.requirementType,
-            badge.requirementValue,
+            badge.getId(),
+            badge.getName(),
+            badge.getDescription(),
+            badge.getIconUrl(),
+            badge.getRequirementType(),
+            badge.getRequirementValue(),
             currentProgress,
             isEarned,
             isEligible,

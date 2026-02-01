@@ -2,6 +2,7 @@ package id.payu.lending.application.service;
 
 import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.RepaymentSchedule;
+import id.payu.lending.domain.model.RepaymentStatus;
 import id.payu.lending.domain.port.out.LoanPersistencePort;
 import id.payu.lending.domain.port.out.RepaymentSchedulePersistencePort;
 import org.junit.jupiter.api.BeforeEach;
@@ -171,7 +172,7 @@ class LoanManagementServiceTest {
             schedule.setInterestAmount(new BigDecimal("78000"));
             schedule.setOutstandingPrincipal(new BigDecimal("12000000"));
             schedule.setDueDate(LocalDate.now().plusMonths(1));
-            schedule.setStatus(RepaymentSchedule.RepaymentStatus.PENDING);
+            schedule.setStatus(RepaymentStatus.PENDING);
             schedule.setPaidAmount(null);
             schedule.setCreatedAt(LocalDateTime.now());
             schedule.setUpdatedAt(LocalDateTime.now());
@@ -181,7 +182,7 @@ class LoanManagementServiceTest {
 
             RepaymentSchedule result = loanManagementService.processRepayment(scheduleId, new BigDecimal("1078000"));
 
-            assertThat(result.getStatus()).isEqualTo(RepaymentSchedule.RepaymentStatus.FULLY_PAID);
+            assertThat(result.getStatus()).isEqualTo(RepaymentStatus.FULLY_PAID);
             assertThat(result.getPaidAmount()).isEqualByComparingTo(new BigDecimal("1078000"));
             assertThat(result.getPaidDate()).isNotNull();
             verify(repaymentSchedulePersistencePort).save(schedule);
@@ -200,7 +201,7 @@ class LoanManagementServiceTest {
             schedule.setInterestAmount(new BigDecimal("78000"));
             schedule.setOutstandingPrincipal(new BigDecimal("12000000"));
             schedule.setDueDate(LocalDate.now().plusMonths(1));
-            schedule.setStatus(RepaymentSchedule.RepaymentStatus.PENDING);
+            schedule.setStatus(RepaymentStatus.PENDING);
             schedule.setPaidAmount(BigDecimal.ZERO);
             schedule.setCreatedAt(LocalDateTime.now());
             schedule.setUpdatedAt(LocalDateTime.now());
@@ -210,7 +211,7 @@ class LoanManagementServiceTest {
 
             RepaymentSchedule result = loanManagementService.processRepayment(scheduleId, new BigDecimal("500000"));
 
-            assertThat(result.getStatus()).isEqualTo(RepaymentSchedule.RepaymentStatus.PARTIALLY_PAID);
+            assertThat(result.getStatus()).isEqualTo(RepaymentStatus.PARTIALLY_PAID);
             assertThat(result.getPaidAmount()).isEqualByComparingTo(new BigDecimal("500000"));
             assertThat(result.getPaidDate()).isNull();
             verify(repaymentSchedulePersistencePort).save(schedule);
@@ -238,7 +239,7 @@ class LoanManagementServiceTest {
             schedule.setId(scheduleId);
             schedule.setLoanId(loanId);
             schedule.setInstallmentAmount(new BigDecimal("1078000"));
-            schedule.setStatus(RepaymentSchedule.RepaymentStatus.FULLY_PAID);
+            schedule.setStatus(RepaymentStatus.FULLY_PAID);
             schedule.setPaidAmount(new BigDecimal("1078000"));
             schedule.setPaidDate(LocalDate.now());
 
@@ -260,7 +261,7 @@ class LoanManagementServiceTest {
             schedule.setLoanId(loanId);
             schedule.setInstallmentNumber(1);
             schedule.setInstallmentAmount(new BigDecimal("1078000"));
-            schedule.setStatus(RepaymentSchedule.RepaymentStatus.PARTIALLY_PAID);
+            schedule.setStatus(RepaymentStatus.PARTIALLY_PAID);
             schedule.setPaidAmount(new BigDecimal("500000"));
             schedule.setCreatedAt(LocalDateTime.now());
             schedule.setUpdatedAt(LocalDateTime.now());
@@ -270,7 +271,7 @@ class LoanManagementServiceTest {
 
             RepaymentSchedule result = loanManagementService.processRepayment(scheduleId, new BigDecimal("578000"));
 
-            assertThat(result.getStatus()).isEqualTo(RepaymentSchedule.RepaymentStatus.FULLY_PAID);
+            assertThat(result.getStatus()).isEqualTo(RepaymentStatus.FULLY_PAID);
             assertThat(result.getPaidAmount()).isEqualByComparingTo(new BigDecimal("1078000"));
             assertThat(result.getPaidDate()).isNotNull();
             verify(repaymentSchedulePersistencePort).save(schedule);

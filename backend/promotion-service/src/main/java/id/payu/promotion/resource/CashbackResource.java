@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -62,10 +63,12 @@ public class CashbackResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getCashback(@PathVariable UUID id) {
-        return cashbackService.getCashback(id)
-            .map(cashback -> ResponseEntity.ok(CashbackResponse.from(cashback)))
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Cashback not found")));
+        Optional<Cashback> cashbackOpt = cashbackService.getCashback(id);
+        if (cashbackOpt.isPresent()) {
+            return ResponseEntity.ok(CashbackResponse.from(cashbackOpt.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse("Cashback not found"));
     }
 
     @GetMapping("/account/{accountId}")

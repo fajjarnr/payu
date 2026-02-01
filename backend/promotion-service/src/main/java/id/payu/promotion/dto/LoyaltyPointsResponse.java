@@ -17,15 +17,15 @@ public record LoyaltyPointsResponse(
 ) {
     public static LoyaltyPointsResponse from(LoyaltyPoints loyaltyPoints) {
         return new LoyaltyPointsResponse(
-            loyaltyPoints.id,
-            loyaltyPoints.accountId,
-            loyaltyPoints.transactionId,
-            loyaltyPoints.transactionType,
-            loyaltyPoints.points,
-            loyaltyPoints.balanceAfter,
-            loyaltyPoints.expiryDate,
-            loyaltyPoints.redeemedAt,
-            loyaltyPoints.createdAt
+            loyaltyPoints.getId(),
+            loyaltyPoints.getAccountId(),
+            loyaltyPoints.getTransactionId(),
+            loyaltyPoints.getTransactionType(),
+            loyaltyPoints.getPoints(),
+            loyaltyPoints.getBalanceAfter(),
+            loyaltyPoints.getExpiryDate(),
+            loyaltyPoints.getRedeemedAt(),
+            loyaltyPoints.getCreatedAt()
         );
     }
 }

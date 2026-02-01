@@ -3,16 +3,14 @@ package id.payu.promotion.service;
 import id.payu.promotion.domain.LoyaltyPoints;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
-import id.payu.promotion.dto.LoyaltyPointsResponse;
 import id.payu.promotion.dto.LoyaltyBalanceResponse;
-import io.smallrye.reactive.messaging.kafka.KafkaRecord;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.jboss.logging.Logger;
+import id.payu.promotion.repository.LoyaltyPointsRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,45 +18,51 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@ApplicationScoped
+@Service
 public class LoyaltyPointsService {
 
-    private static final Logger LOG = Logger.getLogger(LoyaltyPointsService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoyaltyPointsService.class);
 
-    @jakarta.inject.Inject
-    EntityManager entityManager;
+    private final LoyaltyPointsRepository loyaltyPointsRepository;
+    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
+    private final String promotionEventsTopic;
 
-    @Inject
-    @Channel("promotion-events")
-    Emitter<Map<String, Object>> promotionEvents;
+    public LoyaltyPointsService(
+            LoyaltyPointsRepository loyaltyPointsRepository,
+            KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
+            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic) {
+        this.loyaltyPointsRepository = loyaltyPointsRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.promotionEventsTopic = promotionEventsTopic;
+    }
 
     @Transactional
     public LoyaltyPoints addPoints(CreateLoyaltyPointsRequest request) {
-        LOG.infof("Adding points: accountId=%s, points=%s", request.accountId(), request.points());
+        LOG.info("Adding points: accountId={}, points={}", request.accountId(), request.points());
 
         Integer currentBalance = calculateCurrentBalance(request.accountId());
 
         LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
-        loyaltyPoints.accountId = request.accountId();
-        loyaltyPoints.transactionId = request.transactionId();
-        loyaltyPoints.transactionType = request.transactionType();
-        loyaltyPoints.points = request.points();
-        loyaltyPoints.balanceAfter = currentBalance + request.points();
-        loyaltyPoints.expiryDate = request.expiryDate();
+        loyaltyPoints.setAccountId(request.accountId());
+        loyaltyPoints.setTransactionId(request.transactionId());
+        loyaltyPoints.setTransactionType(request.transactionType());
+        loyaltyPoints.setPoints(request.points());
+        loyaltyPoints.setBalanceAfter(currentBalance + request.points());
+        loyaltyPoints.setExpiryDate(request.expiryDate());
 
-        loyaltyPoints.persist();
+        loyaltyPoints = loyaltyPointsRepository.save(loyaltyPoints);
 
         publishLoyaltyEvent(loyaltyPoints);
 
-        LOG.infof("Points added: accountId=%s, balance=%s", 
-            request.accountId(), loyaltyPoints.balanceAfter);
+        LOG.info("Points added: accountId={}, balance={}",
+            request.accountId(), loyaltyPoints.getBalanceAfter());
 
         return loyaltyPoints;
     }
 
     @Transactional
     public LoyaltyPoints redeemPoints(RedeemLoyaltyPointsRequest request) {
-        LOG.infof("Redeeming points: accountId=%s, points=%s", 
+        LOG.info("Redeeming points: accountId={}, points={}",
             request.accountId(), request.points());
 
         Integer currentBalance = calculateCurrentBalance(request.accountId());
@@ -68,76 +72,76 @@ public class LoyaltyPointsService {
         }
 
         LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
-        loyaltyPoints.accountId = request.accountId();
-        loyaltyPoints.transactionId = request.transactionId();
-        loyaltyPoints.transactionType = LoyaltyPoints.TransactionType.REDEEMED;
-        loyaltyPoints.points = -request.points();
-        loyaltyPoints.balanceAfter = currentBalance - request.points();
-        loyaltyPoints.redeemedAt = LocalDateTime.now();
+        loyaltyPoints.setAccountId(request.accountId());
+        loyaltyPoints.setTransactionId(request.transactionId());
+        loyaltyPoints.setTransactionType(LoyaltyPoints.TransactionType.REDEEMED);
+        loyaltyPoints.setPoints(-request.points());
+        loyaltyPoints.setBalanceAfter(currentBalance - request.points());
+        loyaltyPoints.setRedeemedAt(LocalDateTime.now());
 
-        loyaltyPoints.persist();
+        loyaltyPoints = loyaltyPointsRepository.save(loyaltyPoints);
 
         publishLoyaltyEvent(loyaltyPoints);
 
-        LOG.infof("Points redeemed: accountId=%s, balance=%s", 
-            request.accountId(), loyaltyPoints.balanceAfter);
+        LOG.info("Points redeemed: accountId={}, balance={}",
+            request.accountId(), loyaltyPoints.getBalanceAfter());
 
         return loyaltyPoints;
     }
 
     public Optional<LoyaltyPoints> getLoyaltyPoints(UUID id) {
-        return LoyaltyPoints.findByIdOptional(id);
+        return loyaltyPointsRepository.findById(id);
     }
 
     public List<LoyaltyPoints> getLoyaltyPointsByAccount(String accountId) {
-        return LoyaltyPoints.<LoyaltyPoints>find("accountId = ?1 order by createdAt desc", accountId)
-            .list();
+        return loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
     }
 
     public LoyaltyBalanceResponse getBalance(String accountId) {
         Integer currentBalance = calculateCurrentBalance(accountId);
 
-        Long totalEarned = LoyaltyPoints.count("accountId = ?1 and transactionType = ?2", 
-            accountId, LoyaltyPoints.TransactionType.EARNED);
+        List<LoyaltyPoints> allPoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+        long totalEarned = allPoints.stream()
+            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EARNED)
+            .count();
 
-        Long totalRedeemed = LoyaltyPoints.count("accountId = ?1 and transactionType = ?2", 
-            accountId, LoyaltyPoints.TransactionType.REDEEMED);
+        long totalRedeemed = allPoints.stream()
+            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.REDEEMED)
+            .count();
 
-        Long expiredPointsCount = LoyaltyPoints.count("accountId = ?1 and transactionType = ?2", 
-            accountId, LoyaltyPoints.TransactionType.EXPIRED);
+        long expiredPointsCount = allPoints.stream()
+            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EXPIRED)
+            .count();
 
         return new LoyaltyBalanceResponse(
             currentBalance != null ? currentBalance : 0,
-            totalEarned != null ? totalEarned.intValue() : 0,
-            totalRedeemed != null ? totalRedeemed.intValue() : 0,
-            expiredPointsCount != null ? expiredPointsCount.intValue() : 0
+            (int) totalEarned,
+            (int) totalRedeemed,
+            (int) expiredPointsCount
         );
     }
 
-    static Integer calculateCurrentBalance(String accountId) {
-        LoyaltyPoints latestRecord = LoyaltyPoints.<LoyaltyPoints>find(
-            "accountId = ?1 order by createdAt desc", accountId)
-            .firstResult();
-        
-        if (latestRecord != null) {
-            return latestRecord.balanceAfter;
+    public Integer calculateCurrentBalance(String accountId) {
+        List<LoyaltyPoints> pointsList = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+        if (pointsList.isEmpty()) {
+            return 0;
         }
-        return 0;
+        return pointsList.get(0).getBalanceAfter();
     }
 
     private void publishLoyaltyEvent(LoyaltyPoints loyaltyPoints) {
         try {
             Map<String, Object> event = Map.of(
-                "pointsId", loyaltyPoints.id.toString(),
-                "accountId", loyaltyPoints.accountId,
-                "points", loyaltyPoints.points,
-                "balanceAfter", loyaltyPoints.balanceAfter,
-                "transactionType", loyaltyPoints.transactionType.name(),
+                "pointsId", loyaltyPoints.getId().toString(),
+                "accountId", loyaltyPoints.getAccountId(),
+                "points", loyaltyPoints.getPoints(),
+                "balanceAfter", loyaltyPoints.getBalanceAfter(),
+                "transactionType", loyaltyPoints.getTransactionType().name(),
                 "timestamp", LocalDateTime.now().toString()
             );
-            promotionEvents.send(KafkaRecord.of(loyaltyPoints.accountId, event));
+            kafkaTemplate.send(promotionEventsTopic, loyaltyPoints.getAccountId(), event);
         } catch (Exception e) {
-            LOG.warnf("Failed to publish loyalty event: %s", e.getMessage());
+            LOG.warn("Failed to publish loyalty event: {}", e.getMessage());
         }
     }
 }

@@ -7,7 +7,7 @@ spring:
     name: lending-service
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5435/lending_db}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/lending_db}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver

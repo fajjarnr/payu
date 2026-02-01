@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -82,10 +83,12 @@ public class LoyaltyPointsResource {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getLoyaltyPoints(@PathVariable UUID id) {
-        return loyaltyPointsService.getLoyaltyPoints(id)
-            .map(loyaltyPoints -> ResponseEntity.ok(LoyaltyPointsResponse.from(loyaltyPoints)))
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Loyalty points record not found")));
+        Optional<LoyaltyPoints> loyaltyPointsOpt = loyaltyPointsService.getLoyaltyPoints(id);
+        if (loyaltyPointsOpt.isPresent()) {
+            return ResponseEntity.ok(LoyaltyPointsResponse.from(loyaltyPointsOpt.get()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse("Loyalty points record not found"));
     }
 
     @GetMapping("/account/{accountId}")

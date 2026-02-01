@@ -67,12 +67,6 @@ public class Cashback {
         }
     }
 
-    // Static method for Panache-like query support
-    public static <T> T find(String query, Object... params) {
-        // This will be handled by Spring Data JPA repository
-        throw new UnsupportedOperationException("Use Repository instead");
-    }
-
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

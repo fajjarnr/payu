@@ -22,19 +22,19 @@ public record CashbackResponse(
 ) {
     public static CashbackResponse from(Cashback cashback) {
         return new CashbackResponse(
-            cashback.id,
-            cashback.accountId,
-            cashback.transactionId,
-            cashback.cashbackAmount,
-            cashback.transactionAmount,
-            cashback.percentage,
-            cashback.merchantCode,
-            cashback.categoryCode,
-            cashback.cashbackCode,
-            cashback.status,
-            cashback.creditedAt,
-            cashback.expiryDate,
-            cashback.createdAt
+            cashback.getId(),
+            cashback.getAccountId(),
+            cashback.getTransactionId(),
+            cashback.getCashbackAmount(),
+            cashback.getTransactionAmount(),
+            cashback.getPercentage(),
+            cashback.getMerchantCode(),
+            cashback.getCategoryCode(),
+            cashback.getCashbackCode(),
+            cashback.getStatus(),
+            cashback.getCreditedAt(),
+            cashback.getExpiryDate(),
+            cashback.getCreatedAt()
         );
     }
 }

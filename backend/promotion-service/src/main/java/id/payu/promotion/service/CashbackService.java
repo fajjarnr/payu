@@ -3,14 +3,13 @@ package id.payu.promotion.service;
 import id.payu.promotion.domain.Cashback;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.promotion.dto.CashbackSummaryResponse;
-import io.smallrye.reactive.messaging.kafka.KafkaRecord;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.jboss.logging.Logger;
+import id.payu.promotion.repository.CashbackRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,81 +18,85 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@ApplicationScoped
+@Service
 public class CashbackService {
 
-    private static final Logger LOG = Logger.getLogger(CashbackService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CashbackService.class);
 
-    @jakarta.inject.Inject
-    EntityManager entityManager;
+    private final CashbackRepository cashbackRepository;
+    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
+    private final String promotionEventsTopic;
 
-    @Inject
-    @Channel("promotion-events")
-    Emitter<Map<String, Object>> promotionEvents;
+    public CashbackService(
+            CashbackRepository cashbackRepository,
+            KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
+            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic) {
+        this.cashbackRepository = cashbackRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.promotionEventsTopic = promotionEventsTopic;
+    }
 
     @Transactional
     public Cashback createCashback(CreateCashbackRequest request) {
-        LOG.infof("Creating cashback: accountId=%s, transactionId=%s", 
+        LOG.info("Creating cashback: accountId={}, transactionId={}",
             request.accountId(), request.transactionId());
 
-        BigDecimal cashbackAmount = calculateCashback(request.transactionAmount(), 
+        BigDecimal cashbackAmount = calculateCashback(request.transactionAmount(),
             request.merchantCode(), request.categoryCode());
 
         Cashback cashback = new Cashback();
-        cashback.accountId = request.accountId();
-        cashback.transactionId = request.transactionId();
-        cashback.transactionAmount = request.transactionAmount();
-        cashback.cashbackAmount = cashbackAmount;
-        cashback.percentage = calculatePercentage(cashbackAmount, request.transactionAmount());
-        cashback.merchantCode = request.merchantCode();
-        cashback.categoryCode = request.categoryCode();
-        cashback.cashbackCode = request.cashbackCode();
-        cashback.status = Cashback.Status.CREDITED;
-        cashback.creditedAt = LocalDateTime.now();
+        cashback.setAccountId(request.accountId());
+        cashback.setTransactionId(request.transactionId());
+        cashback.setTransactionAmount(request.transactionAmount());
+        cashback.setCashbackAmount(cashbackAmount);
+        cashback.setPercentage(calculatePercentage(cashbackAmount, request.transactionAmount()));
+        cashback.setMerchantCode(request.merchantCode());
+        cashback.setCategoryCode(request.categoryCode());
+        cashback.setCashbackCode(request.cashbackCode());
+        cashback.setStatus(Cashback.Status.CREDITED);
+        cashback.setCreditedAt(LocalDateTime.now());
 
-        cashback.persist();
+        cashback = cashbackRepository.save(cashback);
 
         publishCashbackEvent(cashback);
 
-        LOG.infof("Cashback created: id=%s, amount=%s", cashback.id, cashbackAmount);
+        LOG.info("Cashback created: id={}, amount={}", cashback.getId(), cashbackAmount);
 
         return cashback;
     }
 
     public Optional<Cashback> getCashback(UUID id) {
-        return Cashback.findByIdOptional(id);
+        return cashbackRepository.findById(id);
     }
 
     public List<Cashback> getCashbacksByAccount(String accountId) {
-        return Cashback.list("accountId", accountId);
+        return cashbackRepository.findByAccountId(accountId);
     }
 
     public CashbackSummaryResponse getCashbackSummary(String accountId) {
-        BigDecimal totalCashback = new BigDecimal(
-            (Double) Cashback.getEntityManager()
-                .createQuery("select COALESCE(sum(c.cashbackAmount), 0) from Cashback c where c.accountId = ?1")
-                .setParameter(1, accountId)
-                .getSingleResult());
+        List<Cashback> cashbacks = cashbackRepository.findByAccountId(accountId);
 
-        BigDecimal pendingCashback = new BigDecimal(
-            (Double) Cashback.getEntityManager()
-                .createQuery("select COALESCE(sum(c.cashbackAmount), 0) from Cashback c where c.accountId = ?1 and c.status = 'PENDING'")
-                .setParameter(1, accountId)
-                .getSingleResult());
+        BigDecimal totalCashback = cashbacks.stream()
+            .map(Cashback::getCashbackAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal creditedCashback = new BigDecimal(
-            (Double) Cashback.getEntityManager()
-                .createQuery("select COALESCE(sum(c.cashbackAmount), 0) from Cashback c where c.accountId = ?1 and c.status = 'CREDITED'")
-                .setParameter(1, accountId)
-                .getSingleResult());
+        BigDecimal pendingCashback = cashbacks.stream()
+            .filter(c -> c.getStatus() == Cashback.Status.PENDING)
+            .map(Cashback::getCashbackAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        long transactionCount = Cashback.count("accountId", accountId);
+        BigDecimal creditedCashback = cashbacks.stream()
+            .filter(c -> c.getStatus() == Cashback.Status.CREDITED)
+            .map(Cashback::getCashbackAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int transactionCount = cashbacks.size();
 
         return new CashbackSummaryResponse(
             totalCashback != null ? totalCashback : BigDecimal.ZERO,
             pendingCashback != null ? pendingCashback : BigDecimal.ZERO,
             creditedCashback != null ? creditedCashback : BigDecimal.ZERO,
-            (int) transactionCount
+            transactionCount
         );
     }
 
@@ -124,15 +127,15 @@ public class CashbackService {
     private void publishCashbackEvent(Cashback cashback) {
         try {
             Map<String, Object> event = Map.of(
-                "cashbackId", cashback.id.toString(),
-                "accountId", cashback.accountId,
-                "amount", cashback.cashbackAmount,
-                "status", cashback.status.name(),
+                "cashbackId", cashback.getId().toString(),
+                "accountId", cashback.getAccountId(),
+                "amount", cashback.getCashbackAmount().toString(),
+                "status", cashback.getStatus().name(),
                 "timestamp", LocalDateTime.now().toString()
             );
-            promotionEvents.send(KafkaRecord.of(cashback.accountId, event));
+            kafkaTemplate.send(promotionEventsTopic, cashback.getAccountId(), event);
         } catch (Exception e) {
-            LOG.warnf("Failed to publish cashback event: %s", e.getMessage());
+            LOG.warn("Failed to publish cashback event: {}", e.getMessage());
         }
     }
 }

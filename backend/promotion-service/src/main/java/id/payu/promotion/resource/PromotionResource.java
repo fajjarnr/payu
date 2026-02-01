@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -52,7 +53,7 @@ public class PromotionResource extends BaseController {
     public ResponseEntity<?> createPromotion(@Valid @RequestBody CreatePromotionRequest request) {
         try {
             Promotion promotion = promotionService.createPromotion(request);
-            return created(PromotionResponse.from(promotion), "/api/v1/promotions/{id}", promotion.id);
+            return created(PromotionResponse.from(promotion), "/api/v1/promotions/{id}", promotion.getId());
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_001", e.getMessage());
         }
@@ -91,7 +92,7 @@ public class PromotionResource extends BaseController {
     public ResponseEntity<?> claimPromotion(@PathVariable String code, @Valid @RequestBody ClaimPromotionRequest request) {
         try {
             id.payu.promotion.domain.Reward reward = promotionService.claimPromotion(code, request);
-            return created(RewardResponse.from(reward), "/api/v1/promotions/rewards/{id}", reward.id);
+            return created(RewardResponse.from(reward), "/api/v1/promotions/rewards/{id}", reward.getId());
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_003", e.getMessage());
         }
@@ -128,9 +129,11 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getPromotion(@PathVariable UUID id) {
-        return promotionService.getPromotion(id)
-            .map(promotion -> ok(PromotionResponse.from(promotion)))
-            .orElse(notFound("PROMO_404", "Promotion not found"));
+        Optional<Promotion> promotionOpt = promotionService.getPromotion(id);
+        if (promotionOpt.isPresent()) {
+            return ok(PromotionResponse.from(promotionOpt.get()));
+        }
+        return notFound("PROMO_404", "Promotion not found");
     }
 
     @GetMapping("/code/{code}")
@@ -144,9 +147,11 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getPromotionByCode(@PathVariable String code) {
-        return promotionService.getPromotionByCode(code)
-            .map(promotion -> ok(PromotionResponse.from(promotion)))
-            .orElse(notFound("PROMO_404", "Promotion not found"));
+        Optional<Promotion> promotionOpt = promotionService.getPromotionByCode(code);
+        if (promotionOpt.isPresent()) {
+            return ok(PromotionResponse.from(promotionOpt.get()));
+        }
+        return notFound("PROMO_404", "Promotion not found");
     }
 
     @GetMapping
@@ -159,10 +164,7 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<?> getActivePromotions() {
-        List<Promotion> promotions = Promotion.<Promotion>find(
-            "status = ?1 and startDate <= ?2 and endDate >= ?3",
-            Promotion.Status.ACTIVE, LocalDateTime.now(), LocalDateTime.now())
-            .list();
+        List<Promotion> promotions = promotionService.getActivePromotions();
         return ok(promotions.stream().map(PromotionResponse::from).toList());
     }
 }
