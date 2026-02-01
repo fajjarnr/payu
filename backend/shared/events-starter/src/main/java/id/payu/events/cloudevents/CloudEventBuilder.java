@@ -158,7 +158,7 @@ public class CloudEventBuilder<T> {
             throw new IllegalStateException("Type is required");
         }
 
-        CloudEventEnvelope<T> envelope = new CloudEventEnvelope<>();
+        CloudEventEnvelope<T> envelope = new CloudEventEnvelope<T>();
         envelope.setSpecVersion(this.specVersion);
         envelope.setId(this.id);
         envelope.setSource(this.source);

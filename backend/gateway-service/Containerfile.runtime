@@ -1,22 +1,5 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy entire project (needed for shared library dependencies)
-COPY . .
-
-# Build the Quarkus application (fast-jar format for better caching)
-RUN mvn clean package -DskipTests
-
-####
-# Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+# Runtime-only Containerfile - Using pre-built Quarkus JAR
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
@@ -29,25 +12,22 @@ LABEL org.opencontainers.image.description="PayU Gateway Service - API Gateway w
 LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.url="https://payu.id"
-LABEL org.opencontainers.image.source="https://github.com/payu/backend/gateway-service"
 LABEL org.opencontainers.image.licenses="Proprietary"
 LABEL org.opencontainers.image.authors="PayU Backend Team"
+LABEL id.payu.service.tier="gateway"
+LABEL id.payu.compliance.pci-dss="required"
+LABEL id.payu.security.scan-level="critical"
 
 # Use non-root user (185 is the default jboss user in UBI images)
-USER 185
-
-# Install curl for health checks and debugging
-USER root
-RUN microdnf install -y curl && microdnf clean all
 USER 185
 
 WORKDIR /deployments
 
 # Copy Quarkus fast-jar structure for better layer caching
-COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build --chown=185 /build/target/quarkus-app/*.jar /deployments/
-COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
-COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --chown=185 gateway-service/target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 gateway-service/target/quarkus-app/*.jar /deployments/
+COPY --chown=185 gateway-service/target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 gateway-service/target/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Volume declarations for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]
@@ -66,10 +46,6 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -Dquarkus.http.host=0.0.0.0 \
     -Dquarkus.http.idle-timeout=30s \
     -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
-
-# Health check with shorter start period for faster failover
-HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
-    CMD curl -f http://localhost:8080/q/health || exit 1
 
 # Run the Quarkus application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

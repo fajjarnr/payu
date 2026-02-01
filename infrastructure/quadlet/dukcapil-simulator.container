@@ -1,16 +1,16 @@
-# Generated quadlet file for auth-service
+# Generated quadlet file for dukcapil-simulator
 # This file can be used with systemd to manage the container
 
 [Container]
-Image=localhost/auth-service:test
-ContainerName=auth-service
+Image=localhost/dukcapil-simulator:test
+ContainerName=dukcapil-simulator
 AutoUpdate=registry
 Network=podman
-PodmanArgs=--network=host --label=io.payu.service=auth-service
+PodmanArgs=--network=host --label=io.payu.service=dukcapil-simulator
 # Add your custom arguments below
-# EnvironmentFile=/auth-service/env
-# Volume=/auth-service/config:/etc/auth-service:ro
-# Volume=/auth-service/data:/var/lib/auth-service
+# EnvironmentFile=/dukcapil-simulator/env
+# Volume=/dukcapil-simulator/config:/etc/dukcapil-simulator:ro
+# Volume=/dukcapil-simulator/data:/var/lib/dukcapil-simulator
 
 [Service]
 # Restart on failure, after 5 seconds
@@ -19,7 +19,7 @@ RestartSec=5s
 
 # Health check
 ExecStartPre=/usr/bin/podman check-network podman
-ExecStartPre=/usr/bin/podman pull localhost/auth-service:test
+ExecStartPre=/usr/bin/podman pull localhost/dukcapil-simulator:test
 
 # Set resource limits
 # LimitMEM=512M

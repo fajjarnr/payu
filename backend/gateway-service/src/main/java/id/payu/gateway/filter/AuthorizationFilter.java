@@ -75,14 +75,14 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
         // Skip public endpoints
         if (isPublicEndpoint(path)) {
-            Log.debug("Skipping authorization for public endpoint: {}", path);
+            Log.debugf("Skipping authorization for public endpoint: %s", path);
             return;
         }
 
         // Get Authorization header
         String authHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
-            Log.warn("Missing or invalid Authorization header for path: {}", path);
+            Log.warnf("Missing or invalid Authorization header for path: %s", path);
             abortWithUnauthorized(requestContext, "MISSING_TOKEN", "Valid JWT token required");
             return;
         }
@@ -94,7 +94,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             UserContext userContext = validateToken(token);
 
             if (userContext == null) {
-                Log.warn("Invalid token for path: {}", path);
+                Log.warnf("Invalid token for path: %s", path);
                 abortWithUnauthorized(requestContext, "INVALID_TOKEN", "Token validation failed");
                 return;
             }
@@ -104,10 +104,10 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             requestContext.getHeaders().add(ACCOUNT_ID_HEADER, userContext.accountId);
             requestContext.getHeaders().add(ROLES_HEADER, String.join(",", userContext.roles));
 
-            Log.debug("Authorization successful for user: {} on path: {}", userContext.userId, path);
+            Log.debugf("Authorization successful for user: %s on path: %s", userContext.userId, path);
 
         } catch (Exception e) {
-            Log.error(e, "Authorization error for path: {}", path);
+            Log.errorf(e, "Authorization error for path: %s", path);
             abortWithUnauthorized(requestContext, "AUTH_ERROR", "Authorization processing error");
         }
     }
@@ -159,7 +159,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                     .build();
 
         } catch (Exception e) {
-            Log.error(e, "Token validation error");
+            Log.errorf(e, "Token validation error");
             return null;
         }
     }

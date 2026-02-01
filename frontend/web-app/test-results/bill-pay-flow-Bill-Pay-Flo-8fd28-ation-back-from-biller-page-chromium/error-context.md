@@ -3,98 +3,111 @@
 ```yaml
 - generic [active] [ref=e1]:
   - generic [ref=e2]:
-    - complementary [ref=e3]:
-      - generic [ref=e4]:
-        - generic [ref=e5]: U
-        - generic [ref=e6]: PayU
-      - generic [ref=e7]:
-        - paragraph [ref=e8]: Menu Utama
-        - link "Beranda" [ref=e9] [cursor=pointer]:
-          - /url: /
-          - img [ref=e10]
-          - generic [ref=e15]: Beranda
-        - link "Kantong" [ref=e16] [cursor=pointer]:
+    - complementary "Sidebar Navigasi Desktop" [ref=e3]:
+      - link "U PayU" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: U
+        - generic [ref=e7]: PayU
+      - generic [ref=e8]:
+        - paragraph [ref=e9]: Utama
+        - link "Dasbor" [ref=e10] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e11]
+          - generic [ref=e16]: Dasbor
+        - link "Akun" [ref=e17] [cursor=pointer]:
           - /url: /pockets
-          - img [ref=e17]
-          - generic [ref=e20]: Kantong
-        - link "Transfer" [ref=e21] [cursor=pointer]:
+          - img [ref=e18]
+          - generic [ref=e21]: Akun
+        - link "Transfer" [ref=e22] [cursor=pointer]:
           - /url: /transfer
-          - img [ref=e22]
-          - generic [ref=e25]: Transfer
-        - link "Pembayaran QRIS" [ref=e26] [cursor=pointer]:
+          - img [ref=e23]
+          - generic [ref=e26]: Transfer
+        - link "Bayar QRIS" [ref=e27] [cursor=pointer]:
           - /url: /qris
-          - img [ref=e27]
-          - generic [ref=e33]: Pembayaran QRIS
-        - link "Tagihan & Top-up" [ref=e34] [cursor=pointer]:
+          - img [ref=e28]
+          - generic [ref=e34]: Bayar QRIS
+        - link "Tagihan" [ref=e35] [cursor=pointer]:
           - /url: /bills
-          - img [ref=e35]
-          - generic [ref=e38]: Tagihan & Top-up
-        - link "Kartu Virtual" [ref=e39] [cursor=pointer]:
+          - img [ref=e36]
+          - generic [ref=e39]: Tagihan
+        - link "Kartu" [ref=e40] [cursor=pointer]:
           - /url: /cards
-          - img [ref=e40]
-          - generic [ref=e42]: Kartu Virtual
-        - link "Investasi" [ref=e43] [cursor=pointer]:
+          - img [ref=e41]
+          - generic [ref=e43]: Kartu
+        - link "Investasi" [ref=e44] [cursor=pointer]:
           - /url: /investments
-          - img [ref=e44]
-          - generic [ref=e47]: Investasi
-        - link "Analitik Keuangan" [ref=e48] [cursor=pointer]:
+          - img [ref=e45]
+          - generic [ref=e48]: Investasi
+        - link "Analitik" [ref=e49] [cursor=pointer]:
           - /url: /analytics
-          - img [ref=e49]
-          - generic [ref=e51]: Analitik Keuangan
-      - generic [ref=e52]:
-        - paragraph [ref=e53]: Lainnya
-        - link "Keamanan & MFA" [ref=e54] [cursor=pointer]:
+          - img [ref=e50]
+          - generic [ref=e52]: Analitik
+      - generic [ref=e53]:
+        - paragraph [ref=e54]: Lainnya
+        - link "Keamanan" [ref=e55] [cursor=pointer]:
           - /url: /security
-          - img [ref=e55]
-          - generic [ref=e58]: Keamanan & MFA
-        - link "Pengaturan Akun" [ref=e59] [cursor=pointer]:
+          - img [ref=e56]
+          - generic [ref=e59]: Keamanan
+        - link "Pengaturan" [ref=e60] [cursor=pointer]:
           - /url: /settings
-          - img [ref=e60]
-          - generic [ref=e63]: Pengaturan Akun
-        - link "Bantuan & Support" [ref=e64] [cursor=pointer]:
+          - img [ref=e61]
+          - generic [ref=e64]: Pengaturan
+        - link "Bantuan" [ref=e65] [cursor=pointer]:
           - /url: /support
-          - img [ref=e65]
-          - generic [ref=e72]: Bantuan & Support
-    - generic [ref=e73]:
-      - banner [ref=e74]:
-        - generic [ref=e75]:
-          - generic [ref=e77]:
-            - heading "Selamat Datang, Pengguna!" [level=1] [ref=e78]
-            - paragraph [ref=e79]: Kelola finansial Anda dengan wawasan real-time
-          - generic [ref=e80]:
-            - generic [ref=e81]:
-              - img [ref=e82]
-              - textbox "Cari apapun..." [ref=e85]
-            - button [ref=e86]:
-              - img [ref=e88]
-            - button [ref=e92]:
-              - img [ref=e93]
-      - main [ref=e96]:
-        - generic [ref=e98]:
-          - generic [ref=e99]:
-            - button [ref=e100]:
-              - img [ref=e101]
-            - heading "Bayar Listrik (PLN)" [level=2] [ref=e103]
-          - generic [ref=e104]:
-            - generic [ref=e106]:
-              - img [ref=e108]
-              - generic [ref=e110]:
-                - paragraph [ref=e111]: Penyedia Layanan
-                - heading "Listrik (PLN)" [level=3] [ref=e112]
-                - paragraph [ref=e113]: Mitra Pembayaran Resmi
-            - generic [ref=e114]:
-              - generic [ref=e115]:
-                - generic [ref=e116]: ID Pelanggan / Nomor Rekening
-                - textbox "Masukkan ID unik Anda" [ref=e117]
-              - generic [ref=e118]:
-                - generic [ref=e119]: Jumlah Pembayaran (IDR)
-                - generic [ref=e120]:
-                  - generic [ref=e121]: Rp
-                  - spinbutton [ref=e122]
+          - img [ref=e66]
+          - generic [ref=e73]: Bantuan
+    - generic [ref=e74]:
+      - banner [ref=e75]:
+        - generic [ref=e76]:
+          - generic [ref=e78]:
+            - generic [ref=e79]:
+              - generic [ref=e80]:
+                - img [ref=e81]
+                - generic [ref=e83]: Selamat Malam
+              - heading "User!" [level=1] [ref=e84]:
+                - generic [ref=e85]: User!
+            - paragraph [ref=e86]: AI Financial Forecaster Active
+          - generic [ref=e87]:
+            - button "Toggle theme" [ref=e88] [cursor=pointer]:
+              - img [ref=e89]
+            - button "Ganti Bahasa" [ref=e96]:
+              - img [ref=e97]
+              - generic [ref=e101]: 🇮🇩
+              - generic [ref=e102]: id
+              - img [ref=e103]
+            - generic [ref=e105]:
+              - img [ref=e106]
+              - textbox "Pencarian cerdas..." [ref=e109]
+            - button "Notifikasi" [ref=e110]:
+              - generic "Notifikasi baru" [ref=e111]
+              - img
+            - button "Menu profil pengguna" [ref=e112]:
+              - generic [ref=e114]:
+                - img
+      - main [ref=e115]:
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - button [ref=e119]:
+              - img [ref=e120]
+            - heading "Bayar Listrik (PLN)" [level=2] [ref=e122]
           - generic [ref=e123]:
-            - button "Konfirmasi & Bayar Sekarang" [ref=e124]
-            - paragraph [ref=e125]: Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU
-  - button "Open Next.js Dev Tools" [ref=e131] [cursor=pointer]:
-    - img [ref=e132]
-  - alert [ref=e135]
+            - generic [ref=e125]:
+              - img [ref=e127]
+              - generic [ref=e129]:
+                - paragraph [ref=e130]: Penyedia Layanan
+                - heading "Listrik (PLN)" [level=3] [ref=e131]
+                - paragraph [ref=e132]: Mitra Pembayaran Resmi
+            - generic [ref=e133]:
+              - generic [ref=e134]:
+                - generic [ref=e135]: ID Pelanggan / Nomor Rekening
+                - textbox "Masukkan ID unik Anda" [ref=e136]
+              - generic [ref=e137]:
+                - generic [ref=e138]: Jumlah Pembayaran (IDR)
+                - generic [ref=e139]:
+                  - generic [ref=e140]: Rp
+                  - spinbutton [ref=e141]
+          - generic [ref=e142]:
+            - button "Konfirmasi & Bayar Sekarang" [ref=e143]
+            - paragraph [ref=e144]: Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU
+  - alert [ref=e145]
 ```

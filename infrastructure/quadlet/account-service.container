@@ -1,58 +1,32 @@
-# PayU Account Service - Quadlet Container File
-# This file enables systemd management of the account-service container
-# Place in /etc/containers/systemd/ or ~/.config/containers/systemd/
+# Generated quadlet file for account-service
+# This file can be used with systemd to manage the container
 
 [Container]
-Image=registry.payu.internal/payu/account-service:latest
-ContainerName=payu-account-service
+Image=localhost/account-service:test
+ContainerName=account-service
 AutoUpdate=registry
-Network=payu-network
-
-# Port mapping
-PublishPort=8001:8001
-
-# Environment variables
-Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://payu-postgres:5432/payu_account
-Environment=SPRING_DATASOURCE_USERNAME=payu
-Environment=SPRING_KAFKA_BOOTSTRAP_SERVERS=payu-kafka:29092
-Environment=OTEL_ENDPOINT=http://payu-jaeger:4317
-Environment=JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
-
-# Secrets (use podman secret create)
-# Secret=postgres-password,type=env,target=SPRING_DATASOURCE_PASSWORD
-
-# Health check
-HealthCmd=curl -f http://localhost:8001/actuator/health/liveness || exit 1
-HealthInterval=15s
-HealthTimeout=5s
-HealthRetries=3
-HealthStartPeriod=30s
-
-# Resource limits
-Memory=1G
-MemorySwap=2G
-CPUShares=1024
-
-# Security options
-NoNewPrivileges=true
-SecurityLabelDisable=false
-RunInit=true
-
-# Logging
-LogDriver=journald
-LogOpt=tag=account-service
+Network=podman
+PodmanArgs=--network=host --label=io.payu.service=account-service
+# Add your custom arguments below
+# EnvironmentFile=/account-service/env
+# Volume=/account-service/config:/etc/account-service:ro
+# Volume=/account-service/data:/var/lib/account-service
 
 [Service]
+# Restart on failure, after 5 seconds
 Restart=on-failure
 RestartSec=5s
-TimeoutStartSec=60s
-TimeoutStopSec=30s
 
-# Resource limits
-MemoryMax=2G
-CPUQuota=200%
+# Health check
+ExecStartPre=/usr/bin/podman check-network podman
+ExecStartPre=/usr/bin/podman pull localhost/account-service:test
 
-# Security
+# Set resource limits
+# LimitMEM=512M
+# LimitCPU=1.0
+
+# Security settings
+NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true

@@ -1,22 +1,5 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy entire project (needed for parent POM and shared library dependencies)
-COPY . .
-
-# Build the Quarkus application (uber-jar format for simulator)
-RUN mvn clean package -DskipTests -Dquarkus.package.jar.type=uber-jar
-
-####
-# Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+# Runtime-only Containerfile - Using pre-built Quarkus JAR
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
@@ -29,20 +12,25 @@ LABEL org.opencontainers.image.description="PayU BI-FAST Simulator - Simulates B
 LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.url="https://payu.id"
-LABEL org.opencontainers.image.source="https://github.com/payu/backend/simulators/bi-fast-simulator"
 LABEL org.opencontainers.image.licenses="Proprietary"
 LABEL org.opencontainers.image.authors="PayU Backend Team"
 LABEL id.payu.service="bi-fast-simulator"
 LABEL id.payu.tier="simulator"
-LABEL id.payu.runtime="quarkus-native"
+LABEL id.payu.runtime="quarkus"
 
 # Use non-root user (185 is the default jboss user in UBI images)
 USER 185
 
 WORKDIR /deployments
 
-# Copy the uber-jar from build stage
-COPY --from=build --chown=185 /build/target/*-runner.jar /deployments/app.jar
+# Copy Quarkus fast-jar structure for better layer caching
+COPY --chown=185 simulators/bi-fast-simulator/target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 simulators/bi-fast-simulator/target/quarkus-app/*.jar /deployments/
+COPY --chown=185 simulators/bi-fast-simulator/target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 simulators/bi-fast-simulator/target/quarkus-app/quarkus/ /deployments/quarkus/
+
+# Volume mounts for temporary files and logs
+VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
 EXPOSE 8090
@@ -55,9 +43,5 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -Dquarkus.http.host=0.0.0.0 \
     -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 
-
-# Volume mounts for temporary files and logs
-VOLUME ["/deployments/tmp", "/deployments/logs"]
-
 # Run the Quarkus application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

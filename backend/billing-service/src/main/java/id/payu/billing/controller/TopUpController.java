@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -39,12 +39,12 @@ public class TopUpController {
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create e-wallet top-up", description = "Process an e-wallet top-up for supported providers")
-    @SwaggerApiResponse(responseCode = "201", description = "Top-up created successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Top-up created successfully",
             content = @Content(schema = @Schema(implementation = TopUpResponse.class)))
-    @SwaggerApiResponse(responseCode = "400", description = "Invalid request - validation error or invalid provider")
-    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized - valid JWT token required")
-    @SwaggerApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions")
-    @SwaggerApiResponse(responseCode = "500", description = "Internal server error")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request - validation error or invalid provider")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized - valid JWT token required")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error")
     public ApiResponse<TopUpResponse> createTopUp(
             @Parameter(description = "Top-up request details", required = true)
             @Valid @RequestBody TopUpRequest request) {
@@ -55,11 +55,11 @@ public class TopUpController {
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get top-up by ID", description = "Retrieve top-up details using transaction ID")
-    @SwaggerApiResponse(responseCode = "200", description = "Top-up found",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Top-up found",
             content = @Content(schema = @Schema(implementation = TopUpResponse.class)))
-    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized")
-    @SwaggerApiResponse(responseCode = "403", description = "Forbidden")
-    @SwaggerApiResponse(responseCode = "404", description = "Top-up not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Top-up not found")
     public ApiResponse<TopUpResponse> getTopUp(
             @Parameter(description = "Top-up ID", required = true)
             @PathVariable UUID id) {
@@ -71,11 +71,11 @@ public class TopUpController {
     @GetMapping("/reference/{referenceNumber}")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get top-up by reference number", description = "Retrieve top-up details using the reference number")
-    @SwaggerApiResponse(responseCode = "200", description = "Top-up found",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Top-up found",
             content = @Content(schema = @Schema(implementation = TopUpResponse.class)))
-    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized")
-    @SwaggerApiResponse(responseCode = "403", description = "Forbidden")
-    @SwaggerApiResponse(responseCode = "404", description = "Top-up not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Top-up not found")
     public ApiResponse<TopUpResponse> getTopUpByReference(
             @Parameter(description = "Reference number", required = true)
             @PathVariable String referenceNumber) {
@@ -86,7 +86,7 @@ public class TopUpController {
 
     @GetMapping("/providers")
     @Operation(summary = "List e-wallet providers", description = "Retrieve list of supported e-wallet providers")
-    @SwaggerApiResponse(responseCode = "200", description = "Providers retrieved successfully")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Providers retrieved successfully")
     public ApiResponse<List<ProviderInfo>> getProviders() {
         List<ProviderInfo> providers = List.of(
                 new ProviderInfo("GOPAY", "GoPay"),

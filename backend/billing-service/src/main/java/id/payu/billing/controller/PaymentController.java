@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -37,12 +37,12 @@ public class PaymentController {
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create bill payment", description = "Process a bill payment for utilities like PLN, PDAM, BPJS, etc.")
-    @SwaggerApiResponse(responseCode = "201", description = "Payment created successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Payment created successfully",
             content = @Content(schema = @Schema(implementation = PaymentResponse.class)))
-    @SwaggerApiResponse(responseCode = "400", description = "Invalid request - validation error or insufficient balance")
-    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized - valid JWT token required")
-    @SwaggerApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions")
-    @SwaggerApiResponse(responseCode = "500", description = "Internal server error")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request - validation error or insufficient balance")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized - valid JWT token required")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error")
     public ApiResponse<PaymentResponse> createPayment(
             @Parameter(description = "Payment request details", required = true)
             @Valid @RequestBody CreatePaymentRequest request) {
@@ -53,11 +53,11 @@ public class PaymentController {
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get payment by ID", description = "Retrieve payment details using payment ID")
-    @SwaggerApiResponse(responseCode = "200", description = "Payment found",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Payment found",
             content = @Content(schema = @Schema(implementation = PaymentResponse.class)))
-    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized")
-    @SwaggerApiResponse(responseCode = "403", description = "Forbidden")
-    @SwaggerApiResponse(responseCode = "404", description = "Payment not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Payment not found")
     public ApiResponse<PaymentResponse> getPayment(
             @Parameter(description = "Payment ID", required = true)
             @PathVariable UUID id) {
@@ -69,11 +69,11 @@ public class PaymentController {
     @GetMapping("/reference/{referenceNumber}")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get payment by reference number", description = "Retrieve payment details using the reference number")
-    @SwaggerApiResponse(responseCode = "200", description = "Payment found",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Payment found",
             content = @Content(schema = @Schema(implementation = PaymentResponse.class)))
-    @SwaggerApiResponse(responseCode = "401", description = "Unauthorized")
-    @SwaggerApiResponse(responseCode = "403", description = "Forbidden")
-    @SwaggerApiResponse(responseCode = "404", description = "Payment not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Payment not found")
     public ApiResponse<PaymentResponse> getPaymentByReference(
             @Parameter(description = "Reference number", required = true)
             @PathVariable String referenceNumber) {

@@ -123,12 +123,17 @@ public class IdempotencyFilter implements ContainerRequestFilter {
         // Check if this key was already used
         String redisKey = IDEMPOTENCY_PREFIX + idempotencyKey;
 
+        // Create effectively final copies for lambda
+        final String finalIdempotencyKey = idempotencyKey;
+        final String finalHeaderUsed = headerUsed;
+        final String finalRedisKey = redisKey;
+
         valueCommands.get(redisKey)
             .subscribe()
             .with(cachedResponse -> {
                 if (cachedResponse != null) {
                     // Idempotency key was already used, return cached response
-                    Log.infof("Returning cached response for idempotency key: %s (header: %s)", idempotencyKey, headerUsed);
+                    Log.infof("Returning cached response for idempotency key: %s (header: %s)", finalIdempotencyKey, finalHeaderUsed);
                     CachedResponse response = parseCachedResponse(cachedResponse);
                     requestContext.abortWith(
                         Response.status(response.status)
@@ -139,9 +144,9 @@ public class IdempotencyFilter implements ContainerRequestFilter {
                     );
                 } else {
                     // Store request context for later caching
-                    requestContext.setProperty("idempotency-key", idempotencyKey);
-                    requestContext.setProperty("idempotency-redis-key", redisKey);
-                    Log.debugf("Idempotency key registered: %s", idempotencyKey);
+                    requestContext.setProperty("idempotency-key", finalIdempotencyKey);
+                    requestContext.setProperty("idempotency-redis-key", finalRedisKey);
+                    Log.debugf("Idempotency key registered: %s", finalIdempotencyKey);
                 }
             }, failure -> {
                 // Redis error, allow request to proceed (fail-open)

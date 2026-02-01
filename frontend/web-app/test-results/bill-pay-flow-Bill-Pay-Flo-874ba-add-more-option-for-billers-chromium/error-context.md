@@ -3,115 +3,128 @@
 ```yaml
 - generic [active] [ref=e1]:
   - generic [ref=e2]:
-    - complementary [ref=e3]:
-      - generic [ref=e4]:
-        - generic [ref=e5]: U
-        - generic [ref=e6]: PayU
-      - generic [ref=e7]:
-        - paragraph [ref=e8]: Menu Utama
-        - link "Beranda" [ref=e9] [cursor=pointer]:
-          - /url: /
-          - img [ref=e10]
-          - generic [ref=e15]: Beranda
-        - link "Kantong" [ref=e16] [cursor=pointer]:
+    - complementary "Sidebar Navigasi Desktop" [ref=e3]:
+      - link "U PayU" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: U
+        - generic [ref=e7]: PayU
+      - generic [ref=e8]:
+        - paragraph [ref=e9]: Utama
+        - link "Dasbor" [ref=e10] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e11]
+          - generic [ref=e16]: Dasbor
+        - link "Akun" [ref=e17] [cursor=pointer]:
           - /url: /pockets
-          - img [ref=e17]
-          - generic [ref=e20]: Kantong
-        - link "Transfer" [ref=e21] [cursor=pointer]:
+          - img [ref=e18]
+          - generic [ref=e21]: Akun
+        - link "Transfer" [ref=e22] [cursor=pointer]:
           - /url: /transfer
-          - img [ref=e22]
-          - generic [ref=e25]: Transfer
-        - link "Pembayaran QRIS" [ref=e26] [cursor=pointer]:
+          - img [ref=e23]
+          - generic [ref=e26]: Transfer
+        - link "Bayar QRIS" [ref=e27] [cursor=pointer]:
           - /url: /qris
-          - img [ref=e27]
-          - generic [ref=e33]: Pembayaran QRIS
-        - link "Tagihan & Top-up" [ref=e34] [cursor=pointer]:
+          - img [ref=e28]
+          - generic [ref=e34]: Bayar QRIS
+        - link "Tagihan" [ref=e35] [cursor=pointer]:
           - /url: /bills
-          - img [ref=e35]
-          - generic [ref=e38]: Tagihan & Top-up
-        - link "Kartu Virtual" [ref=e39] [cursor=pointer]:
+          - img [ref=e36]
+          - generic [ref=e39]: Tagihan
+        - link "Kartu" [ref=e40] [cursor=pointer]:
           - /url: /cards
-          - img [ref=e40]
-          - generic [ref=e42]: Kartu Virtual
-        - link "Investasi" [ref=e43] [cursor=pointer]:
+          - img [ref=e41]
+          - generic [ref=e43]: Kartu
+        - link "Investasi" [ref=e44] [cursor=pointer]:
           - /url: /investments
-          - img [ref=e44]
-          - generic [ref=e47]: Investasi
-        - link "Analitik Keuangan" [ref=e48] [cursor=pointer]:
+          - img [ref=e45]
+          - generic [ref=e48]: Investasi
+        - link "Analitik" [ref=e49] [cursor=pointer]:
           - /url: /analytics
-          - img [ref=e49]
-          - generic [ref=e51]: Analitik Keuangan
-      - generic [ref=e52]:
-        - paragraph [ref=e53]: Lainnya
-        - link "Keamanan & MFA" [ref=e54] [cursor=pointer]:
+          - img [ref=e50]
+          - generic [ref=e52]: Analitik
+      - generic [ref=e53]:
+        - paragraph [ref=e54]: Lainnya
+        - link "Keamanan" [ref=e55] [cursor=pointer]:
           - /url: /security
-          - img [ref=e55]
-          - generic [ref=e58]: Keamanan & MFA
-        - link "Pengaturan Akun" [ref=e59] [cursor=pointer]:
+          - img [ref=e56]
+          - generic [ref=e59]: Keamanan
+        - link "Pengaturan" [ref=e60] [cursor=pointer]:
           - /url: /settings
-          - img [ref=e60]
-          - generic [ref=e63]: Pengaturan Akun
-        - link "Bantuan & Support" [ref=e64] [cursor=pointer]:
+          - img [ref=e61]
+          - generic [ref=e64]: Pengaturan
+        - link "Bantuan" [ref=e65] [cursor=pointer]:
           - /url: /support
-          - img [ref=e65]
-          - generic [ref=e72]: Bantuan & Support
-    - generic [ref=e73]:
-      - banner [ref=e74]:
-        - generic [ref=e75]:
-          - generic [ref=e77]:
-            - heading "Selamat Datang, Pengguna!" [level=1] [ref=e78]
-            - paragraph [ref=e79]: Kelola finansial Anda dengan wawasan real-time
-          - generic [ref=e80]:
-            - generic [ref=e81]:
-              - img [ref=e82]
-              - textbox "Cari apapun..." [ref=e85]
-            - button [ref=e86]:
-              - img [ref=e88]
-            - button [ref=e92]:
-              - img [ref=e93]
-      - main [ref=e96]:
-        - generic [ref=e98]:
-          - generic [ref=e99]:
-            - generic [ref=e100]:
-              - heading "Tagihan & Top-up" [level=2] [ref=e101]
-              - paragraph [ref=e102]: Bayar tagihan utilitas dan top up dompet digital Anda secara instan.
-            - paragraph [ref=e104]: Penyelesaian Real-time 24/7
-          - generic [ref=e105]:
-            - heading "Kategori Layanan" [level=3] [ref=e107]
-            - generic [ref=e108]:
-              - button "Pulsa" [ref=e109]:
-                - img [ref=e111]
-                - generic [ref=e113]: Pulsa
-              - button "Listrik (PLN)" [ref=e114]:
-                - img [ref=e116]
-                - generic [ref=e118]: Listrik (PLN)
-              - button "Air (PDAM)" [ref=e119]:
-                - img [ref=e121]
-                - generic [ref=e124]: Air (PDAM)
-              - button "Internet/TV" [ref=e125]:
-                - img [ref=e127]
-                - generic [ref=e131]: Internet/TV
-              - button "Saldo Kartu" [ref=e132]:
-                - img [ref=e134]
-                - generic [ref=e136]: Saldo Kartu
-              - button "BPJS" [ref=e137]:
-                - img [ref=e139]
-                - generic [ref=e141]: BPJS
-              - button "TV Kabel" [ref=e142]:
-                - img [ref=e144]
-                - generic [ref=e147]: TV Kabel
-              - button "Game Voucher" [ref=e148]:
-                - img [ref=e150]
-                - generic [ref=e152]: Game Voucher
-              - button "Lainnya" [ref=e153]:
-                - img [ref=e155]
-                - generic [ref=e156]: Lainnya
-          - generic [ref=e157]:
-            - heading "Aktivitas Terakhir" [level=3] [ref=e158]
-            - generic [ref=e159]:
-              - img [ref=e160]
-              - paragraph [ref=e167]: Pembayaran tagihan terakhir Anda akan muncul di sini.
-  - button "Open Next.js Dev Tools" [ref=e173] [cursor=pointer]:
-    - img [ref=e174]
-  - alert [ref=e177]
+          - img [ref=e66]
+          - generic [ref=e73]: Bantuan
+    - generic [ref=e74]:
+      - banner [ref=e75]:
+        - generic [ref=e76]:
+          - generic [ref=e78]:
+            - generic [ref=e79]:
+              - generic [ref=e80]:
+                - img [ref=e81]
+                - generic [ref=e83]: Selamat Malam
+              - heading "User!" [level=1] [ref=e84]:
+                - generic [ref=e85]: User!
+            - paragraph [ref=e86]: AI Financial Forecaster Active
+          - generic [ref=e87]:
+            - button "Toggle theme" [ref=e88] [cursor=pointer]:
+              - img [ref=e89]
+            - button "Ganti Bahasa" [ref=e96]:
+              - img [ref=e97]
+              - generic [ref=e101]: 🇮🇩
+              - generic [ref=e102]: id
+              - img [ref=e103]
+            - generic [ref=e105]:
+              - img [ref=e106]
+              - textbox "Pencarian cerdas..." [ref=e109]
+            - button "Notifikasi" [ref=e110]:
+              - generic "Notifikasi baru" [ref=e111]
+              - img
+            - button "Menu profil pengguna" [ref=e112]:
+              - generic [ref=e114]:
+                - img
+      - main [ref=e115]:
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - generic [ref=e119]:
+              - heading "Tagihan & Top-up" [level=2] [ref=e120]
+              - paragraph [ref=e121]: Bayar tagihan utilitas dan top up dompet digital Anda secara instan.
+            - paragraph [ref=e123]: Penyelesaian Real-time 24/7
+          - generic [ref=e124]:
+            - heading "Kategori Layanan" [level=3] [ref=e126]
+            - generic [ref=e127]:
+              - button "Pulsa" [ref=e128]:
+                - img [ref=e130]
+                - generic [ref=e132]: Pulsa
+              - button "Listrik (PLN)" [ref=e133]:
+                - img [ref=e135]
+                - generic [ref=e137]: Listrik (PLN)
+              - button "Air (PDAM)" [ref=e138]:
+                - img [ref=e140]
+                - generic [ref=e143]: Air (PDAM)
+              - button "Internet/TV" [ref=e144]:
+                - img [ref=e146]
+                - generic [ref=e150]: Internet/TV
+              - button "Saldo Kartu" [ref=e151]:
+                - img [ref=e153]
+                - generic [ref=e155]: Saldo Kartu
+              - button "BPJS" [ref=e156]:
+                - img [ref=e158]
+                - generic [ref=e160]: BPJS
+              - button "TV Kabel" [ref=e161]:
+                - img [ref=e163]
+                - generic [ref=e166]: TV Kabel
+              - button "Game Voucher" [ref=e167]:
+                - img [ref=e169]
+                - generic [ref=e171]: Game Voucher
+              - button "Lainnya" [ref=e172]:
+                - img [ref=e174]
+                - generic [ref=e175]: Lainnya
+          - generic [ref=e176]:
+            - heading "Aktivitas Terakhir" [level=3] [ref=e177]
+            - generic [ref=e178]:
+              - img [ref=e179]
+              - paragraph [ref=e186]: Pembayaran tagihan terakhir Anda akan muncul di sini.
+  - alert [ref=e187]
 ```

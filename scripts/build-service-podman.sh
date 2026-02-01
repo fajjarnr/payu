@@ -277,7 +277,7 @@ build_service() {
         podman build
         --tag "${full_tag}"
         --file "${containerfile}"
-        --context "${context_dir}"
+        "${context_dir}"
     )
 
     # Add platform if specified
@@ -303,6 +303,7 @@ build_service() {
         --security-opt no-new-privileges
         --cap-drop ALL
         --cap-add CAP_NET_BIND_SERVICE
+        --volume "${HOME}/.m2:/root/.m2:z"
     )
 
     # Add network if specified
