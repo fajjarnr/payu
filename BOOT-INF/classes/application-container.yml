@@ -4,19 +4,22 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
-  # Standard datasource configuration (uses Spring Boot auto-configuration)
+  # Multi-datasource configuration override
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_test_account}
-    username: ${DB_USERNAME:payu_test}
-    password: ${DB_PASSWORD:test_secret}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      pool-name: container-pool
+    primary:
+      jdbc-url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_test_account}
+      username: ${DB_USERNAME:payu_test}
+      password: ${DB_PASSWORD:test_secret}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 5
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+        pool-name: container-pool
+    read-replica:
+      enabled: false
 
   jpa:
     hibernate:

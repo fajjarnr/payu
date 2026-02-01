@@ -45,7 +45,7 @@ spring:
         pool-name: primary-pool
     # Read replica datasource for reporting/analytics queries
     read-replica:
-      enabled: ${READ_REPLICA_ENABLED}
+      enabled: ${READ_REPLICA_ENABLED:false}
       jdbc-url: ${READ_REPLICA_URL}
       username: ${READ_REPLICA_USERNAME}
       password: ${READ_REPLICA_PASSWORD}

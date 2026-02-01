@@ -5,11 +5,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -32,9 +34,11 @@ public class DataSourceConfiguration {
 
     /**
      * Primary datasource for write operations.
+     * Disabled in container profile to allow Spring Boot auto-configuration.
      */
     @Bean
     @Primary
+    @Profile("!container")
     @ConfigurationProperties(prefix = "spring.datasource.primary.hikari")
     public DataSource primaryDataSource() {
         log.info("Configuring primary datasource for write operations");
@@ -43,8 +47,10 @@ public class DataSourceConfiguration {
 
     /**
      * Read replica datasource for read operations.
+     * Disabled in container profile (no read replica in test environment).
      */
     @Bean
+    @Profile("!container")
     @ConditionalOnProperty(prefix = "spring.datasource.read-replica", name = "enabled", havingValue = "true")
     @ConfigurationProperties(prefix = "spring.datasource.read-replica.hikari")
     public DataSource readReplicaDataSource() {
@@ -54,8 +60,10 @@ public class DataSourceConfiguration {
 
     /**
      * JdbcTemplate for read operations using read replica.
+     * Disabled in container profile (no read replica in test environment).
      */
     @Bean
+    @Profile("!container")
     @ConditionalOnProperty(prefix = "spring.datasource.read-replica", name = "enabled", havingValue = "true")
     public JdbcTemplate readJdbcTemplate(@Qualifier("readReplicaDataSource") DataSource readReplicaDataSource) {
         return new JdbcTemplate(readReplicaDataSource);
