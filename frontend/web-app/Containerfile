@@ -1,14 +1,14 @@
 ####
 # Base Image - Red Hat UBI9 Node.js 20
 ####
-FROM registry.access.redhat.com/ubi9/nodejs-20:1-20 AS base
+FROM registry.access.redhat.com/ubi9/nodejs-20:9.7 AS base
 
 # Metadata labels
 LABEL maintainer="frontend-team@payu.id"
-LABEL description="PayU Web App - Digital Banking Next.js Frontend"
+LABEL description="PayU Web App - Digital Banking Next.js Frontend with E2E Testing"
 LABEL version="1.0.0"
 LABEL org.opencontainers.image.title="payu-web-app"
-LABEL org.opencontainers.image.description="PayU Digital Banking Web Application - Next.js 15 with React 18, TypeScript, and Tailwind CSS"
+LABEL org.opencontainers.image.description="PayU Digital Banking Web Application - Next.js 15 with React 18, TypeScript, Tailwind CSS, and Playwright E2E Testing"
 LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.url="https://payu.id"
@@ -29,8 +29,11 @@ FROM base AS deps
 USER root
 WORKDIR /app
 
-# Install build tools for native modules
-RUN microdnf install -y python3 make gcc-c++ && microdnf clean all
+# Install build tools for native modules and libraries needed for Playwright
+# UBI9 compatible package names - libnsl2 instead of libnsl, no xdg-utils needed
+RUN dnf install -y python3 make gcc-c++ libX11 libXcomposite libXcursor libXdamage libXext libXi libXtst cups-libs libXScrnSaver libxkbcommon at-spi2-atk alsa-lib nss && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf
 
 # Copy package files
 COPY package.json package-lock.json* ./
@@ -42,6 +45,7 @@ RUN npm ci --ignore-scripts
 # Stage 2: Builder
 ####
 FROM base AS builder
+USER root
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -57,9 +61,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 ####
-# Stage 3: Runner (Production)
+# Stage 3: Runner (Production with E2E Testing Support)
 ####
-FROM registry.access.redhat.com/ubi9/nodejs-20-minimal:1-20 AS runner
+FROM registry.access.redhat.com/ubi9/nodejs-20:9.7 AS runner
 
 WORKDIR /app
 
@@ -68,12 +72,16 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/.playwright
 
 # Create non-root user directory and set permissions
 USER root
 
-# Install curl for health checks
-RUN microdnf install -y curl && microdnf clean all
+# Install curl for health checks and libraries for Playwright browsers
+# Using UBI9 compatible package names
+RUN dnf install -y curl libX11 libXcomposite libXcursor libXdamage libXext libXi libXtst cups-libs libXScrnSaver libxkbcommon at-spi2-atk alsa-lib nss mesa-libgbm --allowerasing && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf
 
 # Copy public assets (static files)
 COPY --from=builder /app/public ./public
@@ -85,11 +93,22 @@ RUN mkdir -p .next && chown -R 1001:0 .next
 COPY --from=builder --chown=1001:0 /app/.next/standalone ./
 COPY --from=builder --chown=1001:0 /app/.next/static ./.next/static
 
+# Copy node_modules including Playwright for E2E testing
+COPY --from=builder --chown=1001:0 /app/node_modules ./node_modules
+COPY --from=builder --chown=1001:0 /app/package*.json ./
+
+# Copy Playwright configuration and tests
+COPY --from=builder --chown=1001:0 /app/playwright.config.ts ./
+COPY --from=builder --chown=1001:0 /app/playwright.podman.config.ts ./
+
+# Copy E2E test directory and any test files in root
+COPY --from=builder --chown=1001:0 /app/e2e ./e2e
+
 # Switch to non-root user (1001 is the default node user in UBI9)
 USER 1001
 
 # Volume mounts for caching and temporary files
-VOLUME ["/app/.next/cache", "/app/tmp"]
+VOLUME ["/app/.next/cache", "/app/tmp", "/app/.playwright"]
 
 # Expose the application port
 EXPOSE 3000
