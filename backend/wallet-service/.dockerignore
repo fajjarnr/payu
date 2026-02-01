@@ -4,10 +4,6 @@
 README.md
 Dockerfile
 .dockerignore
-target/
-!target/*.jar
-!target/*-runner
-!target/quarkus-app/
 node_modules/
 .env
 *.log

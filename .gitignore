@@ -123,3 +123,4 @@ ios/build/
 !.claude/agents
 !.claude/workflows
 !.agent/
+*.tar

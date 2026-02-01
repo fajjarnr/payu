@@ -11,9 +11,6 @@
 .github
 
 # --- Java Build Artifacts ---
-target/
-!target/*.jar
-!target/quarkus-app/
 .m2/
 *.class
 *.jar

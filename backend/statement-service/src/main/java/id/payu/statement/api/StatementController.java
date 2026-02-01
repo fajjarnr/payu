@@ -4,6 +4,7 @@ import id.payu.api.common.response.ApiResponse;
 import id.payu.statement.service.StatementService;
 import id.payu.statement.service.dto.StatementGenerationRequest;
 import id.payu.statement.service.dto.StatementResponse;
+import id.payu.statement.domain.entity.Statement;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -56,7 +57,11 @@ public class StatementController extends BaseController {
         UUID userId = UUID.fromString(jwt.getSubject());
         request.setUserId(userId);
 
-        StatementResponse response = statementService.generateStatement(request);
+        statementService.generateStatement(request);
+        StatementResponse response = StatementResponse.builder()
+                .userId(userId)
+                .status(Statement.StatementStatus.GENERATING)
+                .build();
         return ResponseEntity.accepted().body(ApiResponse.success(response));
     }
 
@@ -148,7 +153,11 @@ public class StatementController extends BaseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StatementResponse>> regenerateStatement(
             @Parameter(description = "Statement ID", required = true) @PathVariable UUID id) {
-        StatementResponse response = statementService.regenerateStatement(id);
+        statementService.regenerateStatement(id);
+        StatementResponse response = StatementResponse.builder()
+                .id(id)
+                .status(Statement.StatementStatus.GENERATING)
+                .build();
         return ResponseEntity.accepted().body(ApiResponse.success(response));
     }
 }

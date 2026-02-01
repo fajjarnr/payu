@@ -9,9 +9,6 @@ Dockerfile
 .dockerignore
 
 # Build artifacts
-target/
-!target/*.jar
-!target/quarkus-app/
 
 # Dependencies
 node_modules/

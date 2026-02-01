@@ -1,12 +1,10 @@
-# PayU Digital Banking - Container Compose Test Environment
-# Isolated test environment with clean databases and test data
-#
-# NOTE: This file is maintained for backward compatibility.
-# For Podman, use podman-compose.test.yml instead.
+# PayU Digital Banking - Podman Compose Test Environment
+# Uses pre-built images (Decoupled Build Strategy)
+# Run with: podman-compose -f podman-compose.test.yml up -d
 
 services:
   # ============================================
-  # DATA LAYER (Test-specific)
+  # DATA LAYER
   # ============================================
   postgres-test:
     image: docker.io/postgres:16-alpine
@@ -14,10 +12,9 @@ services:
     ports:
       - "5433:5432"
     environment:
-      # REQUIRED: Set in .env file
       POSTGRES_USER: ${TEST_POSTGRES_USER:-payu_test}
       POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
-      POSTGRES_DB: ${TEST_POSTGRES_DB:-payu_test_account}
+      POSTGRES_DB: payu_test_account
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
       - ./infrastructure/containers/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
@@ -26,97 +23,36 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-      start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - payu-test-network
+  
   redis-test:
     image: docker.io/redis:7-alpine
     container_name: payu-redis-test
     ports:
       - "6380:6379"
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 3
-      start_period: 5s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 64M
-    networks:
-      - payu-test-network
-  # TimescaleDB for Analytics Service
-  timescaledb-test:
-    image: docker.io/timescale/timescaledb:latest-pg16
-    container_name: payu-timescaledb-test
-    ports:
-      - "5434:5432"
-    environment:
-      POSTGRES_DB: payu_test_analytics
-      # REQUIRED: Set in .env file
-      POSTGRES_USER: ${TEST_POSTGRES_USER:-payu_test}
-      POSTGRES_PASSWORD: ${TEST_TIMESCALE_PASSWORD:-test_secret}
-    volumes:
-      - timescaledb_test_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U payu_test"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - payu-test-network
+
   # ============================================
-  # MESSAGE BROKER (Test)
+  # INFRASTRUCTURE
   # ============================================
   zookeeper-test:
-    image: docker.io/confluentinc/cp-zookeeper:7.5.0
+    image: docker.io/confluentinc/cp-zookeeper:7.7.7
     container_name: payu-zookeeper-test
     ports:
       - "2182:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-      KAFKA_HEAP_OPTS: "-Xmx256M -Xms256M"
     healthcheck:
       test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 1"]
       interval: 10s
-      timeout: 5s
       retries: 3
-      start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
-    networks:
-      - payu-test-network
+
   kafka-test:
-    image: docker.io/confluentinc/cp-kafka:7.5.0
+    image: docker.io/confluentinc/cp-kafka:7.7.7
     container_name: payu-kafka-test
     ports:
       - "9093:9092"
@@ -127,614 +63,170 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092,PLAINTEXT_HOST://localhost:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
     depends_on:
       zookeeper-test:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9093"]
       interval: 15s
-      timeout: 10s
       retries: 5
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - payu-test-network
-  # ============================================
-  # IDENTITY (Test)
-  # ============================================
+
   keycloak-test:
     image: quay.io/keycloak/keycloak:26.0
     container_name: payu-keycloak-test
     ports:
       - "8100:8080"
     environment:
-      # REQUIRED: Set in .env file
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres-test:5432/keycloak_test
-      KC_DB_USERNAME: ${TEST_POSTGRES_USER:-payu_test}
-      # REQUIRED: Set in .env file
-      KC_DB_PASSWORD: ${TEST_KEYCLOAK_DB_PASSWORD:-test_secret}
-      KC_HEALTH_ENABLED: "true"
-      JAVA_OPTS_APPEND: "-Xmx512M -Xms256M"
+      KC_DB_USERNAME: payu_test
+      KC_DB_PASSWORD: test_secret
     command: start-dev
     depends_on:
       postgres-test:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - payu-test-network
+
   # ============================================
-  # SIMULATORS (Test)
+  # CORE SERVICES (Pre-built Images)
   # ============================================
-  bi-fast-simulator-test:
-    build:
-      context: ./backend/simulators/bi-fast-simulator
-      dockerfile: Dockerfile
-    container_name: payu-bifast-simulator-test
-    ports:
-      - "8094:8080"
-    environment:
-      QUARKUS_HTTP_PORT: 8080
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_bifast
-      QUARKUS_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
-    depends_on:
-      postgres-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 128M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-    networks:
-      - payu-test-network
-  dukcapil-simulator-test:
-    build:
-      context: ./backend/simulators/dukcapil-simulator
-      dockerfile: Dockerfile
-    container_name: payu-dukcapil-simulator-test
-    ports:
-      - "8095:8080"
-    environment:
-      QUARKUS_HTTP_PORT: 8080
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_dukcapil
-      QUARKUS_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
-    depends_on:
-      postgres-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 128M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-    networks:
-      - payu-test-network
-  qris-simulator-test:
-    build:
-      context: ./backend/simulators/qris-simulator
-      dockerfile: Dockerfile
-    container_name: payu-qris-simulator-test
-    ports:
-      - "8096:8080"
-    environment:
-      QUARKUS_HTTP_PORT: 8080
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_qris
-      QUARKUS_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
-    depends_on:
-      postgres-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 128M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-    networks:
-      - payu-test-network
-  # ============================================
-  # CORE BANKING SERVICES (Test)
-  # ============================================
-  account-service-test:
-    build:
-      context: ./backend
-      dockerfile: account-service/Containerfile
-    container_name: payu-account-service-test
+  account-service:
+    image: localhost/payu-account-service:latest
+    container_name: payu-account-service
     ports:
       - "8101:8001"
     environment:
-      SPRING_PROFILES_ACTIVE: test
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_account
       SPRING_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      SPRING_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
+      SPRING_DATASOURCE_PASSWORD: test_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
-      SERVICES_DUKCAPIL_URL: http://dukcapil-simulator-test:8080
-      SERVICES_AUTH_URL: http://auth-service-test:8002
-      JAVA_OPTS: >-
-        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     depends_on:
       postgres-test:
         condition: service_healthy
       kafka-test:
         condition: service_healthy
-      dukcapil-simulator-test:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/actuator/health/liveness"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - payu-test-network
-  auth-service-test:
-    build:
-      context: ./backend
-      dockerfile: auth-service/Containerfile
-    container_name: payu-auth-service-test
+
+  auth-service:
+    image: localhost/payu-auth-service:latest
+    container_name: payu-auth-service
     ports:
       - "8102:8002"
     environment:
-      SPRING_PROFILES_ACTIVE: test
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_auth
       SPRING_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      SPRING_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
+      SPRING_DATASOURCE_PASSWORD: test_secret
       KEYCLOAK_SERVER_URL: http://keycloak-test:8080
-      KEYCLOAK_REALM: payu-test
-      KEYCLOAK_CLIENT_ID: payu-backend-test
-      # REQUIRED: Set in .env file
-      KEYCLOAK_CLIENT_SECRET: ${TEST_KEYCLOAK_CLIENT_SECRET:-test_secret}
-      JAVA_OPTS: >-
-        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     depends_on:
       postgres-test:
         condition: service_healthy
       keycloak-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/actuator/health/liveness"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - payu-test-network
-  transaction-service-test:
-    build:
-      context: ./backend
-      dockerfile: transaction-service/Containerfile
-    container_name: payu-transaction-service-test
+        condition: service_started
+
+  transaction-service:
+    image: localhost/payu-transaction-service:latest
+    container_name: payu-transaction-service
     ports:
       - "8103:8003"
     environment:
-      SPRING_PROFILES_ACTIVE: test
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_transaction
       SPRING_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      SPRING_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
+      SPRING_DATASOURCE_PASSWORD: test_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
-      SERVICES_WALLET_URL: http://wallet-service-test:8004
-      SERVICES_BIFAST_URL: http://bi-fast-simulator-test:8080
-      SERVICES_QRIS_URL: http://qris-simulator-test:8080
-      JAVA_OPTS: >-
-        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     depends_on:
       postgres-test:
         condition: service_healthy
       kafka-test:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/actuator/health/liveness"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - payu-test-network
-  wallet-service-test:
-    build:
-      context: ./backend
-      dockerfile: wallet-service/Containerfile
-    container_name: payu-wallet-service-test
+
+  wallet-service:
+    image: localhost/payu-wallet-service:latest
+    container_name: payu-wallet-service
     ports:
       - "8104:8004"
     environment:
-      SPRING_PROFILES_ACTIVE: test
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_wallet
       SPRING_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      SPRING_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
+      SPRING_DATASOURCE_PASSWORD: test_secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
-      JAVA_OPTS: >-
-        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     depends_on:
       postgres-test:
         condition: service_healthy
-      kafka-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8004/actuator/health/liveness"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - payu-test-network
-  billing-service-test:
-    build:
-      context: ./backend/billing-service
-      dockerfile: Dockerfile
-    container_name: payu-billing-service-test
+
+  lending-service:
+    image: localhost/payu-lending-service:latest
+    container_name: payu-lending-service
     ports:
-      - "8105:8080"
+      - "8109:8087"
     environment:
-      QUARKUS_PROFILE: test
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_billing
-      QUARKUS_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
-      KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
-      SERVICES_WALLET_URL: http://wallet-service-test:8004
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_lending
+      SPRING_DATASOURCE_USERNAME: payu_test
+      SPRING_DATASOURCE_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
     depends_on:
       postgres-test:
         condition: service_healthy
-      kafka-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 128M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-    networks:
-      - payu-test-network
-  notification-service-test:
-    build:
-      context: ./backend/notification-service
-      dockerfile: Dockerfile
-    container_name: payu-notification-service-test
+
+  investment-service:
+    image: localhost/payu-investment-service:latest
+    container_name: payu-investment-service
     ports:
-      - "8106:8080"
+      - "8110:8006"
     environment:
-      QUARKUS_PROFILE: test
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres-test:5432/payu_test_notification
-      QUARKUS_DATASOURCE_USERNAME: payu_test
-      # REQUIRED: Set in .env file
-      QUARKUS_DATASOURCE_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
-      KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_investment
+      SPRING_DATASOURCE_USERNAME: payu_test
+      SPRING_DATASOURCE_PASSWORD: test_secret
     depends_on:
       postgres-test:
         condition: service_healthy
-      kafka-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 128M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-    networks:
-      - payu-test-network
-  gateway-service-test:
-    build:
-      context: ./backend/gateway-service
-      dockerfile: Dockerfile
-    container_name: payu-gateway-service-test
+
+  statement-service:
+    image: localhost/payu-statement-service:latest
+    container_name: payu-statement-service
     ports:
-      - "8180:8080"
+      - "8115:8015"
     environment:
-      QUARKUS_PROFILE: test
-      QUARKUS_REDIS_HOSTS: redis-test:6379
-      KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
-      KEYCLOAK_URL: http://keycloak-test:8080
-      ROUTES_ACCOUNT_URL: http://account-service-test:8001
-      ROUTES_AUTH_URL: http://auth-service-test:8002
-      ROUTES_TRANSACTION_URL: http://transaction-service-test:8003
-      ROUTES_WALLET_URL: http://wallet-service-test:8004
-      ROUTES_BILLING_URL: http://billing-service-test:8080
-      ROUTES_NOTIFICATION_URL: http://notification-service-test:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_statement
+      SPRING_DATASOURCE_USERNAME: payu_test
+      SPRING_DATASOURCE_PASSWORD: test_secret
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379 
     depends_on:
+      postgres-test:
+        condition: service_healthy
       redis-test:
         condition: service_healthy
-      keycloak-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 128M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-    networks:
-      - payu-test-network
-  # ============================================
-  # ML SERVICES (Test)
-  # ============================================
-  kyc-service-test:
-    build:
-      context: ./backend/kyc-service
-      dockerfile: Dockerfile
-    container_name: payu-kyc-service-test
+
+  partner-service:
+    image: localhost/payu-partner-service:latest
+    container_name: payu-partner-service
     ports:
-      - "8107:8007"
+      - "8185:8085"
     environment:
-      # REQUIRED: Set in .env file
-      DATABASE_URL: postgresql+asyncpg://${TEST_POSTGRES_USER:-payu_test}:${TEST_POSTGRES_PASSWORD:-test_secret}@postgres-test:5432/payu_test_kyc
-      KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
-      DUKCAPIL_URL: http://dukcapil-simulator-test:8080/api/v1
-      PYTHONUNBUFFERED: "1"
-      PYTHONDONTWRITEBYTECODE: "1"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_partner
+      SPRING_DATASOURCE_USERNAME: payu_test
+      SPRING_DATASOURCE_PASSWORD: test_secret
     depends_on:
       postgres-test:
         condition: service_healthy
-      kafka-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-    networks:
-      - payu-test-network
-  analytics-service-test:
-    build:
-      context: ./backend/analytics-service
-      dockerfile: Dockerfile
-    container_name: payu-analytics-service-test
+
+  support-service:
+    image: localhost/payu-support-service:latest
+    container_name: payu-support-service
     ports:
-      - "8108:8008"
+      - "8186:8086"
     environment:
-      # REQUIRED: Set in .env file
-      DATABASE_URL: postgresql+asyncpg://${TEST_POSTGRES_USER:-payu_test}:${TEST_TIMESCALE_PASSWORD:-test_secret}@timescaledb-test:5432/payu_test_analytics
-      KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
-      PYTHONUNBUFFERED: "1"
-      PYTHONDONTWRITEBYTECODE: "1"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_support
+      SPRING_DATASOURCE_USERNAME: payu_test
+      SPRING_DATASOURCE_PASSWORD: test_secret
     depends_on:
-      timescaledb-test:
+      postgres-test:
         condition: service_healthy
-      kafka-test:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
-    networks:
-      - payu-test-network
-  # ============================================
-  # FRONTEND (Test)
-  # ============================================
-  web-app-test:
-    image: payu-web-app-test:latest
-    container_name: payu-web-app-test
-    ports:
-      - "3101:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8180/api/v1
-      NODE_ENV: test
-    depends_on:
-      gateway-service-test:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 64M
-    networks:
-      - payu-test-network
-  # ============================================
-  # MONITORING (Test)
-  # ============================================
-  jaeger-test:
-    image: docker.io/jaegertracing/all-in-one:1.58
-    container_name: payu-jaeger-test
-    ports:
-      - "5776:5775/udp"
-      - "6832:6831/udp"
-      - "6833:6832/udp"
-      - "5779:5778"
-      - "16687:16686"
-      - "14269:14268"
-      - "14251:14250"
-      - "4319:4317"
-      - "4320:4318"
-      - "9412:9411"
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-    command:
-      - "--collector.otlp.enabled=true"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/api/services"]
-      interval: 20s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
-    networks:
-      - payu-test-network
-  prometheus-test:
-    image: docker.io/prom/prometheus:v2.54.1
-    container_name: payu-prometheus-test
-    ports:
-      - "9190:9090"
-    volumes:
-      - ./infrastructure/containers/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_test_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=1d'
-      - '--web.enable-lifecycle'
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 20s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
-    networks:
-      - payu-test-network
-# ============================================
-# NETWORKS & VOLUMES (Test)
-# ============================================
-networks:
-  payu-test-network:
-    driver: bridge
+
 volumes:
   postgres_test_data:
-  timescaledb_test_data:
-  prometheus_test_data:
+  
+networks:
+  default:
+    name: payu-test-network

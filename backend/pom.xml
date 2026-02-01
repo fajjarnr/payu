@@ -173,6 +173,13 @@
                 <version>${hypersistence.version}</version>
             </dependency>
 
+            <!-- Security Patch for CVE-2025-41242 -->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.18.0</version>
+            </dependency>
+
             <!-- SpringDoc OpenAPI -->
             <dependency>
                 <groupId>org.springdoc</groupId>
