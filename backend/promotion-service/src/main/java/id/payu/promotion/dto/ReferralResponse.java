@@ -20,17 +20,17 @@ public record ReferralResponse(
 ) {
     public static ReferralResponse from(Referral referral) {
         return new ReferralResponse(
-            referral.id,
-            referral.referrerAccountId,
-            referral.refereeAccountId,
-            referral.referralCode,
-            referral.referrerReward,
-            referral.refereeReward,
-            referral.rewardType,
-            referral.status,
-            referral.completedAt,
-            referral.expiryDate,
-            referral.createdAt
+            referral.getId(),
+            referral.getReferrerAccountId(),
+            referral.getRefereeAccountId(),
+            referral.getReferralCode(),
+            referral.getReferrerReward(),
+            referral.getRefereeReward(),
+            referral.getRewardType(),
+            referral.getStatus(),
+            referral.getCompletedAt(),
+            referral.getExpiryDate(),
+            referral.getCreatedAt()
         );
     }
 }

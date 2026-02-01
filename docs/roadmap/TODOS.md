@@ -1,6 +1,6 @@
 # 📂 PayU Project Roadmap & Engineering Scorecard
 
-> **Platform Maturity**: 🟢 **99%** | **Production Readiness**: 🟡 **75%** (E2E Phase)
+> **Platform Maturity**: 🟢 **99%** | **Production Readiness**: 🟡 **80%** (Container Phase)
 > **Strategic Objective**: Standardize a stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
 > **Last Synchronized**: February 1, 2026
 
@@ -41,10 +41,26 @@ Audit against the *14 Immutable Laws of PayU*.
 - [x] **P17-C5**: Backend Build Context Fix (Account, Auth, Trans, Wallet)
 - [x] **P17-C7**: Web App Accessibility Remediation (A11y Audit 100%)
 - [x] **P17-C8**: Test Timeout & Environment Stabilization
-- [-] **P17-C9**: Build Remaining 18 Backend Service Images (Core Subset DONE)
-- [ ] **P17-C10**: Full-Stack Integration Verification (22 Services)
-- [x] **P17-C11**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
-- [ ] **P17-C12**: Lending Service Test Remediation (Re-enable & Fix Tests)
+- [x] **P17-C9**: Build 14/15 Backend Service Images (promotion-service pending)
+- [ ] **P17-C10**: Container Profile Configuration Fix (datasource, environment variables)
+- [ ] **P17-C11**: Full-Stack Integration Verification (15 Services)
+- [x] **P17-C12**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
+- [ ] **P17-C13**: Lending Service Test Remediation (Re-enable & Fix Tests)
+
+### 🔧 Container Environment Status (Feb 1, 2026)
+
+| Component | Status | Notes |
+|:----------|:-------|:------|
+| **Infrastructure** | ✅ Running | PostgreSQL, Redis, Kafka, Keycloak healthy |
+| **Docker Images Built** | ✅ 14/15 Services | ab-testing, backoffice, cms, fx, account, auth, transaction, wallet, investment, lending, statement, partner, support, compliance |
+| **Container Profiles** | ✅ Created | All 15 Spring Boot services have `application-container.yml` |
+| **Service Startup** | ⚠️ Blocked | Datasource configuration not properly applied from container profile |
+
+**Known Issues:**
+1. `application-container.yml` datasource configuration not overriding `application.yml`
+2. Missing `READ_REPLICA_ENABLED` environment variable causing startup failures
+3. `promotion-service` requires extensive refactoring (Lombok field access → getters)
+4. Need to bundle container profile configuration at JAR build time
 
 ### 📊 Reliability Audit (Playwright E2E)
 *Baseline: February 1, 2026*
@@ -82,8 +98,9 @@ Audit against the *14 Immutable Laws of PayU*.
 |:---|:------------|:---------------|:-------|:---------|:-------|
 | **TD-WEB-001** | LCP Optimization (9.3s → <2.5s) | Bit Rot | 3 Days | **P1** | Backlog |
 | **TD-MOB-001** | Duplicate State Management (Zustand/RQ) | Accidental | 5 Days | **P2** | In-Progress |
-| **TD-CORE-001** | Replace Lombok with Manual Implementation (Stability) | Deliberate | 7 Days | **P1** | In-Progress |
-| **TD-ARCH-001** | Protobuf/gRPC for Internal Service Comms | ASSESS | 10 Days | P4 | Proposed |
+| **TD-CORE-001** | Replace Lombok with Manual Implementation (Stability) | Deliberate | 7 Days | **P1** | In-Progress (lending DONE, promotion pending) |
+| **TD-ARCH-001** | Container Profile Configuration (datasource override) | Accidental | 2 Days | **P1** | Backlog |
+| **TD-ARCH-002** | Protobuf/gRPC for Internal Service Comms | ASSESS | 10 Days | P4 | Proposed |
 
 ---
 

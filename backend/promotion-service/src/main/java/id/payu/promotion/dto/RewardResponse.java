@@ -20,17 +20,17 @@ public record RewardResponse(
 ) {
     public static RewardResponse from(Reward reward) {
         return new RewardResponse(
-            reward.id,
-            reward.accountId,
-            reward.transactionId,
-            reward.promotionCode,
-            reward.type,
-            reward.amount,
-            reward.pointsEarned,
-            reward.transactionAmount,
-            reward.status,
-            reward.expiryDate,
-            reward.createdAt
+            reward.getId(),
+            reward.getAccountId(),
+            reward.getTransactionId(),
+            reward.getPromotionCode(),
+            reward.getType(),
+            reward.getAmount(),
+            reward.getPointsEarned(),
+            reward.getTransactionAmount(),
+            reward.getStatus(),
+            reward.getExpiryDate(),
+            reward.getCreatedAt()
         );
     }
 }

@@ -74,3 +74,10 @@ payu:
     encryption-enabled: false
     masking-enabled: false
     audit-enabled: false
+  datasource:
+    read-replica-enabled: false
+
+# Additional config
+read:
+  replica:
+    enabled: false

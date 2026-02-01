@@ -23,20 +23,20 @@ public record PromotionResponse(
 ) {
     public static PromotionResponse from(Promotion promotion) {
         return new PromotionResponse(
-            promotion.id,
-            promotion.code,
-            promotion.name,
-            promotion.description,
-            promotion.promotionType,
-            promotion.rewardType,
-            promotion.rewardValue,
-            promotion.maxRedemptions,
-            promotion.redemptionCount,
-            promotion.minTransactionAmount,
-            promotion.status,
-            promotion.startDate,
-            promotion.endDate,
-            promotion.createdAt
+            promotion.getId(),
+            promotion.getCode(),
+            promotion.getName(),
+            promotion.getDescription(),
+            promotion.getPromotionType(),
+            promotion.getRewardType(),
+            promotion.getRewardValue(),
+            promotion.getMaxRedemptions(),
+            promotion.getRedemptionCount(),
+            promotion.getMinTransactionAmount(),
+            promotion.getStatus(),
+            promotion.getStartDate(),
+            promotion.getEndDate(),
+            promotion.getCreatedAt()
         );
     }
 }
