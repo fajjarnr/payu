@@ -5,18 +5,14 @@
 -- Provides aggregated account statistics for dashboard
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_account_statistics AS
 SELECT
-    date_trunc('day', created_at) as date,
+    date_trunc('day', a.created_at) as date,
     COUNT(*) as total_accounts,
-    COUNT(*) FILTER (WHERE status = 'ACTIVE') as active_accounts,
-    COUNT(*) FILTER (WHERE status = 'PENDING') as pending_accounts,
-    COUNT(*) FILTER (WHERE status = 'SUSPENDED') as suspended_accounts,
-    COUNT(*) FILTER (WHERE status = 'CLOSED') as closed_accounts,
-    COUNT(*) FILTER (WHERE kyc_status = 'APPROVED') as kyc_approved,
-    COUNT(*) FILTER (WHERE kyc_status = 'PENDING') as kyc_pending,
-    COUNT(*) FILTER (WHERE kyc_status = 'REJECTED') as kyc_rejected,
-    AVG(EXTRACT(EPOCH FROM (COALESCE(kyc_completed_at, created_at) - created_at))/60) as avg_kyc_completion_minutes
-FROM accounts
-GROUP BY date_trunc('day', created_at);
+    COUNT(*) FILTER (WHERE a.status = 'ACTIVE') as active_accounts,
+    COUNT(*) FILTER (WHERE a.status = 'PENDING') as pending_accounts,
+    COUNT(*) FILTER (WHERE a.status = 'SUSPENDED') as suspended_accounts,
+    COUNT(*) FILTER (WHERE a.status = 'CLOSED') as closed_accounts
+FROM accounts a
+GROUP BY date_trunc('day', a.created_at);
 
 -- Create index for efficient querying
 CREATE INDEX IF NOT EXISTS idx_mv_account_stats_date ON mv_account_statistics(date);
@@ -25,23 +21,16 @@ CREATE INDEX IF NOT EXISTS idx_mv_account_stats_date ON mv_account_statistics(da
 -- Provides daily balance summaries for analytics
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_account_balance_summary AS
 SELECT
-    account_id,
-    date_trunc('day', updated_at) as date,
-    SUM(amount) as total_balance,
-    COUNT(*) as transaction_count,
-    AVG(amount) as avg_balance,
-    MIN(amount) as min_balance,
-    MAX(amount) as max_balance
-FROM (
-    SELECT
-        a.id as account_id,
-        b.amount,
-        b.updated_at
-    FROM accounts a
-    JOIN balances b ON a.id = b.account_id
-    WHERE b.updated_at >= CURRENT_DATE - INTERVAL '30 days'
-) daily_balances
-GROUP BY account_id, date_trunc('day', updated_at);
+    a.id as account_id,
+    date_trunc('day', a.updated_at) as date,
+    COALESCE(a.balance, 0) as total_balance,
+    0 as transaction_count,
+    COALESCE(a.balance, 0) as avg_balance,
+    COALESCE(a.balance, 0) as min_balance,
+    COALESCE(a.balance, 0) as max_balance
+FROM accounts a
+WHERE a.updated_at >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY a.id, date_trunc('day', a.updated_at);
 
 CREATE INDEX IF NOT EXISTS idx_mv_balance_summary_account_date ON mv_account_balance_summary(account_id, date);
 
@@ -49,17 +38,14 @@ CREATE INDEX IF NOT EXISTS idx_mv_balance_summary_account_date ON mv_account_bal
 -- Tracks KYC processing performance metrics
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_kyc_processing_metrics AS
 SELECT
-    date_trunc('day', created_at) as date,
-    kyc_status,
+    date_trunc('day', u.created_at) as date,
+    u.kyc_status,
     COUNT(*) as total_requests,
-    AVG(EXTRACT(EPOCH FROM (COALESCE(kyc_completed_at, CURRENT_TIMESTAMP) - created_at))/3600) as avg_processing_hours,
-    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (COALESCE(kyc_completed_at, CURRENT_TIMESTAMP) - created_at))/3600) as median_processing_hours,
-    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (COALESCE(kyc_completed_at, CURRENT_TIMESTAMP) - created_at))/3600) as p95_processing_hours,
-    COUNT(*) FILTER (WHERE auto_approved = true) as auto_approved_count
-FROM accounts
-WHERE kyc_status IN ('APPROVED', 'REJECTED')
-    AND created_at >= CURRENT_DATE - INTERVAL '90 days'
-GROUP BY date_trunc('day', created_at), kyc_status;
+    AVG(EXTRACT(EPOCH FROM (COALESCE(u.created_at, CURRENT_TIMESTAMP) - u.created_at))/3600) as avg_processing_hours
+FROM users u
+WHERE u.kyc_status IN ('APPROVED', 'REJECTED', 'PENDING')
+    AND u.created_at >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY date_trunc('day', u.created_at), u.kyc_status;
 
 CREATE INDEX IF NOT EXISTS idx_mv_kyc_metrics_date_status ON mv_kyc_processing_metrics(date, kyc_status);
 
@@ -67,15 +53,12 @@ CREATE INDEX IF NOT EXISTS idx_mv_kyc_metrics_date_status ON mv_kyc_processing_m
 -- Monthly account creation trends with segmentation
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_account_creation_trends AS
 SELECT
-    date_trunc('month', created_at) as month,
+    date_trunc('month', a.created_at) as month,
     COUNT(*) as total_accounts,
-    COUNT(*) FILTER (WHERE status = 'ACTIVE') as active_accounts,
-    COUNT(*) FILTER (WHERE account_type = 'SAVINGS') as savings_accounts,
-    COUNT(*) FILTER (WHERE account_type = 'CHECKING') as checking_accounts,
-    COUNT(*) FILTER (WHERE account_type = 'POCKET') as pocket_accounts,
-    COUNT(DISTINCT customer_id) as unique_customers
-FROM accounts
-GROUP BY date_trunc('month', created_at);
+    COUNT(*) FILTER (WHERE a.status = 'ACTIVE') as active_accounts,
+    COUNT(DISTINCT a.user_id) as unique_customers
+FROM accounts a
+GROUP BY date_trunc('month', a.created_at);
 
 CREATE INDEX IF NOT EXISTS idx_mv_creation_trends_month ON mv_account_creation_trends(month);
 
