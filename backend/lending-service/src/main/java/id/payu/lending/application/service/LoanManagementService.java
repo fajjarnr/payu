@@ -2,11 +2,12 @@ package id.payu.lending.application.service;
 
 import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.RepaymentSchedule;
+import id.payu.lending.domain.model.RepaymentStatus;
 import id.payu.lending.domain.port.in.LoanManagementUseCase;
 import id.payu.lending.domain.port.out.LoanPersistencePort;
 import id.payu.lending.domain.port.out.RepaymentSchedulePersistencePort;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +21,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class LoanManagementService implements LoanManagementUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(LoanManagementService.class);
 
     private final LoanPersistencePort loanPersistencePort;
     private final RepaymentSchedulePersistencePort repaymentSchedulePersistencePort;
+
+    public LoanManagementService(LoanPersistencePort loanPersistencePort, 
+                                 RepaymentSchedulePersistencePort repaymentSchedulePersistencePort) {
+        this.loanPersistencePort = loanPersistencePort;
+        this.repaymentSchedulePersistencePort = repaymentSchedulePersistencePort;
+    }
 
     @Override
     @Transactional
@@ -59,7 +66,7 @@ public class LoanManagementService implements LoanManagementUseCase {
         RepaymentSchedule schedule = repaymentSchedulePersistencePort.findById(repaymentScheduleId)
                 .orElseThrow(() -> new IllegalArgumentException("Repayment schedule not found: " + repaymentScheduleId));
 
-        if (schedule.getStatus() == RepaymentSchedule.RepaymentStatus.FULLY_PAID) {
+        if (schedule.getStatus() == RepaymentStatus.FULLY_PAID) {
             throw new IllegalStateException("Repayment already fully paid");
         }
 
@@ -70,11 +77,11 @@ public class LoanManagementService implements LoanManagementUseCase {
         BigDecimal newPaidAmount = totalPaid.add(amount);
 
         if (newPaidAmount.compareTo(schedule.getInstallmentAmount()) >= 0) {
-            schedule.setStatus(RepaymentSchedule.RepaymentStatus.FULLY_PAID);
+            schedule.setStatus(RepaymentStatus.FULLY_PAID);
             schedule.setPaidAmount(schedule.getInstallmentAmount());
             schedule.setPaidDate(LocalDate.now());
         } else {
-            schedule.setStatus(RepaymentSchedule.RepaymentStatus.PARTIALLY_PAID);
+            schedule.setStatus(RepaymentStatus.PARTIALLY_PAID);
             schedule.setPaidAmount(newPaidAmount);
         }
 
@@ -111,7 +118,7 @@ public class LoanManagementService implements LoanManagementUseCase {
             schedule.setInterestAmount(interestAmount);
             schedule.setOutstandingPrincipal(outstandingPrincipal);
             schedule.setDueDate(loan.getDisbursementDate().plusMonths(i));
-            schedule.setStatus(RepaymentSchedule.RepaymentStatus.PENDING);
+            schedule.setStatus(RepaymentStatus.PENDING);
             schedule.setCreatedAt(LocalDateTime.now());
             schedule.setUpdatedAt(LocalDateTime.now());
 

@@ -10,10 +10,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @org.springframework.stereotype.Component
-@RequiredArgsConstructor
 public class CreditScorePersistenceAdapter implements CreditScorePersistencePort {
 
     private final CreditScoreRepository creditScoreRepository;
+
+    public CreditScorePersistenceAdapter(CreditScoreRepository creditScoreRepository) {
+        this.creditScoreRepository = creditScoreRepository;
+    }
 
     @Override
     public CreditScore save(CreditScore creditScore) {

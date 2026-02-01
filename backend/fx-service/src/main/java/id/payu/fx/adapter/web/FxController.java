@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -62,10 +61,10 @@ public class FxController extends BaseController {
 
     @GetMapping("/rates/{fromCurrency}/{toCurrency}")
     @Operation(summary = "Get current FX rate", description = "Retrieve the current exchange rate between two currencies")
-    @ApiResponse(responseCode = "200", description = "FX rate retrieved successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "FX rate retrieved successfully",
             content = @Content(schema = @Schema(implementation = FxRateResponse.class)))
-    @ApiResponse(responseCode = "404", description = "FX rate not found for currency pair")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "FX rate not found for currency pair")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<FxRateResponse>> getCurrentRate(
             @Parameter(description = "Source currency code (e.g., USD)", required = true) @PathVariable String fromCurrency,
             @Parameter(description = "Target currency code (e.g., IDR)", required = true) @PathVariable String toCurrency) {
@@ -77,9 +76,9 @@ public class FxController extends BaseController {
 
     @GetMapping("/rates")
     @Operation(summary = "Get all FX rates", description = "Retrieve all available exchange rates")
-    @ApiResponse(responseCode = "200", description = "FX rates retrieved successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "FX rates retrieved successfully",
             content = @Content(schema = @Schema(implementation = FxRateResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<List<FxRateResponse>>> getAllRates() {
         List<FxRate> rates = fxRateService.getAllRates();
         List<FxRateResponse> responses = rates.stream()
@@ -90,11 +89,11 @@ public class FxController extends BaseController {
 
     @PostMapping("/conversions/estimate")
     @Operation(summary = "Estimate conversion", description = "Get a conversion estimate without executing the transaction")
-    @ApiResponse(responseCode = "200", description = "Conversion estimate retrieved successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversion estimate retrieved successfully",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Invalid request")
-    @ApiResponse(responseCode = "404", description = "FX rate not found")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "FX rate not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<FxConversionResponse>> estimateConversion(
             @Valid @RequestBody ConvertCurrencyRequest request) {
 
@@ -113,11 +112,11 @@ public class FxController extends BaseController {
 
     @PostMapping("/conversions")
     @Operation(summary = "Create conversion", description = "Execute a currency conversion transaction")
-    @ApiResponse(responseCode = "201", description = "Conversion executed successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Conversion executed successfully",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Invalid request - insufficient balance or validation error")
-    @ApiResponse(responseCode = "404", description = "FX rate not found")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request - insufficient balance or validation error")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "FX rate not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<FxConversionResponse>> createConversion(
             @Valid @RequestBody ConvertCurrencyRequest request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -150,10 +149,10 @@ public class FxController extends BaseController {
 
     @GetMapping("/conversions/{conversionId}")
     @Operation(summary = "Get conversion by ID", description = "Retrieve conversion transaction details")
-    @ApiResponse(responseCode = "200", description = "Conversion found",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversion found",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Conversion not found")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Conversion not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<FxConversionResponse>> getConversion(
             @Parameter(description = "Conversion ID", required = true) @PathVariable UUID conversionId) {
 
@@ -163,9 +162,9 @@ public class FxController extends BaseController {
 
     @GetMapping("/conversions")
     @Operation(summary = "Get user conversions", description = "Retrieve all conversion transactions for the authenticated user")
-    @ApiResponse(responseCode = "200", description = "Conversions retrieved successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversions retrieved successfully",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<List<FxConversionResponse>>> getConversions(
             @AuthenticationPrincipal Jwt jwt) {
 
@@ -181,11 +180,11 @@ public class FxController extends BaseController {
 
     @PostMapping("/conversions/{conversionId}/reverse")
     @Operation(summary = "Reverse conversion", description = "Reverse a previously executed currency conversion")
-    @ApiResponse(responseCode = "200", description = "Conversion reversed successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversion reversed successfully",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
-    @ApiResponse(responseCode = "403", description = "Forbidden - cannot reverse another user's conversion")
-    @ApiResponse(responseCode = "404", description = "Conversion not found")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - cannot reverse another user's conversion")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Conversion not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<FxConversionResponse>> reverseConversion(
             @Parameter(description = "Conversion ID", required = true) @PathVariable UUID conversionId,
             @AuthenticationPrincipal Jwt jwt) {

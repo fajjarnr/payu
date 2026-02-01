@@ -32,7 +32,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/training-status")
     @Operation(summary = "Get overall training status", description = "Retrieve training statistics including active and trained agents")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Training status retrieved successfully",
             content = @Content(schema = @Schema(implementation = TrainingStatusResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -51,7 +51,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/agents")
     @Operation(summary = "Get all support agents", description = "Retrieve list of all support agents")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Agents retrieved successfully",
             content = @Content(schema = @Schema(implementation = AgentResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -63,7 +63,7 @@ public class SupportController extends BaseController {
 
     @PostMapping("/agents")
     @Operation(summary = "Create a new support agent", description = "Register a new support agent in the system")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Agent created successfully",
             content = @Content(schema = @Schema(implementation = AgentResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request data"),
@@ -78,7 +78,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/agents/{id}")
     @Operation(summary = "Get agent by ID", description = "Retrieve a specific support agent by their ID")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Agent found",
             content = @Content(schema = @Schema(implementation = AgentResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Agent not found"),
@@ -96,7 +96,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/agents/employee/{employeeId}")
     @Operation(summary = "Get agent by employee ID", description = "Retrieve a support agent by their employee ID")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Agent found",
             content = @Content(schema = @Schema(implementation = AgentResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Agent not found"),
@@ -114,7 +114,7 @@ public class SupportController extends BaseController {
 
     @PatchMapping("/agents/{id}/status")
     @Operation(summary = "Update agent active status", description = "Activate or deactivate a support agent")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Agent status updated successfully",
             content = @Content(schema = @Schema(implementation = AgentResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Agent not found"),
@@ -134,7 +134,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/modules")
     @Operation(summary = "Get all training modules", description = "Retrieve list of all training modules")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Training modules retrieved successfully",
             content = @Content(schema = @Schema(implementation = TrainingModuleResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -146,7 +146,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/modules/mandatory")
     @Operation(summary = "Get mandatory training modules", description = "Retrieve all mandatory training modules that are active")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Mandatory training modules retrieved successfully",
             content = @Content(schema = @Schema(implementation = TrainingModuleResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -158,7 +158,7 @@ public class SupportController extends BaseController {
 
     @PostMapping("/modules")
     @Operation(summary = "Create a new training module", description = "Create a new training module in the system")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Training module created successfully",
             content = @Content(schema = @Schema(implementation = TrainingModuleResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request data"),
@@ -174,7 +174,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/modules/{id}")
     @Operation(summary = "Get training module by ID", description = "Retrieve a specific training module by its ID")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Training module found",
             content = @Content(schema = @Schema(implementation = TrainingModuleResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Training module not found"),
@@ -192,7 +192,7 @@ public class SupportController extends BaseController {
 
     @PatchMapping("/modules/{id}/status")
     @Operation(summary = "Update training module status", description = "Update the status of a training module")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Training module status updated successfully",
             content = @Content(schema = @Schema(implementation = TrainingModuleResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Training module not found"),
@@ -213,7 +213,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/trainings")
     @Operation(summary = "Get all agent trainings", description = "Retrieve all agent training records")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Agent trainings retrieved successfully",
             content = @Content(schema = @Schema(implementation = AgentTrainingResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -225,7 +225,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/trainings/agent/{agentId}")
     @Operation(summary = "Get trainings for a specific agent", description = "Retrieve all training records for a specific agent")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Agent trainings retrieved successfully",
             content = @Content(schema = @Schema(implementation = AgentTrainingResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Agent not found"),
@@ -239,7 +239,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/trainings/module/{moduleId}")
     @Operation(summary = "Get trainings for a specific module", description = "Retrieve all training records for a specific module")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Module trainings retrieved successfully",
             content = @Content(schema = @Schema(implementation = AgentTrainingResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Training module not found"),
@@ -253,7 +253,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/trainings/agent/{agentId}/module/{moduleId}")
     @Operation(summary = "Get specific training for an agent", description = "Retrieve a specific training record for an agent and module")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Training found",
             content = @Content(schema = @Schema(implementation = AgentTrainingResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Training not found"),
@@ -272,7 +272,7 @@ public class SupportController extends BaseController {
 
     @PostMapping("/trainings/assign")
     @Operation(summary = "Assign training to an agent", description = "Assign a training module to an agent or update existing training status")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Training assigned successfully",
             content = @Content(schema = @Schema(implementation = AgentTrainingResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request data"),
@@ -290,7 +290,7 @@ public class SupportController extends BaseController {
 
     @GetMapping("/trainings/agent/{agentId}/status")
     @Operation(summary = "Check if agent is fully trained", description = "Check if an agent has completed all mandatory training")
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Training status retrieved successfully"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Agent not found"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),

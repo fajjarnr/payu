@@ -4,7 +4,7 @@ import id.payu.lending.domain.model.PayLaterTransaction;
 import id.payu.lending.domain.port.out.PayLaterTransactionPersistencePort;
 import id.payu.lending.entity.PayLaterTransactionEntity;
 import id.payu.lending.repository.PayLaterTransactionRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -14,10 +14,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class PayLaterTransactionPersistenceAdapter implements PayLaterTransactionPersistencePort {
 
     private final PayLaterTransactionRepository repository;
+
+    public PayLaterTransactionPersistenceAdapter(PayLaterTransactionRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public PayLaterTransaction save(PayLaterTransaction transaction) {

@@ -1,6 +1,5 @@
 package id.payu.lending.adapter.web;
 
-import id.payu.api.common.controller.BaseController;
 import org.springframework.web.bind.annotation.RestController;
 
 /**

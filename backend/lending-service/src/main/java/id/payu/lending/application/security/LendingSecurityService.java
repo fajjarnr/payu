@@ -2,8 +2,8 @@ package id.payu.lending.application.security;
 
 import id.payu.lending.application.service.LendingApplicationService;
 import id.payu.lending.application.service.PayLaterTransactionService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -14,13 +14,19 @@ import java.util.UUID;
  * Security service for lending resource ownership validation.
  * Enforces RBAC policies for Loan, PayLater, and CreditScore resources.
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class LendingSecurityService {
+
+    private static final Logger log = LoggerFactory.getLogger(LendingSecurityService.class);
 
     private final LendingApplicationService lendingApplicationService;
     private final PayLaterTransactionService payLaterTransactionService;
+
+    public LendingSecurityService(LendingApplicationService lendingApplicationService, 
+                                  PayLaterTransactionService payLaterTransactionService) {
+        this.lendingApplicationService = lendingApplicationService;
+        this.payLaterTransactionService = payLaterTransactionService;
+    }
 
     /**
      * Verify loan belongs to authenticated user.

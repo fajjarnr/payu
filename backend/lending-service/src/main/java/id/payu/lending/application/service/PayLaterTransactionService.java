@@ -5,8 +5,8 @@ import id.payu.lending.domain.model.PayLaterTransaction;
 import id.payu.lending.domain.port.in.PayLaterTransactionUseCase;
 import id.payu.lending.domain.port.out.PayLaterPersistencePort;
 import id.payu.lending.domain.port.out.PayLaterTransactionPersistencePort;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +16,18 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class PayLaterTransactionService implements PayLaterTransactionUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(PayLaterTransactionService.class);
 
     private final PayLaterPersistencePort payLaterPersistencePort;
     private final PayLaterTransactionPersistencePort transactionPersistencePort;
+
+    public PayLaterTransactionService(PayLaterPersistencePort payLaterPersistencePort, 
+                                      PayLaterTransactionPersistencePort transactionPersistencePort) {
+        this.payLaterPersistencePort = payLaterPersistencePort;
+        this.transactionPersistencePort = transactionPersistencePort;
+    }
 
     @Override
     @Transactional

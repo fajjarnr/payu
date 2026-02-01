@@ -1,12 +1,6 @@
 package id.payu.lending.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,11 +8,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "repayment_schedules")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class RepaymentScheduleEntity {
 
     @Id
@@ -48,7 +37,7 @@ public class RepaymentScheduleEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private id.payu.lending.domain.model.RepaymentSchedule.RepaymentStatus status;
+    private id.payu.lending.domain.model.RepaymentStatus status;
 
     @Column(name = "paid_date")
     private LocalDate paidDate;
@@ -61,4 +50,89 @@ public class RepaymentScheduleEntity {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public RepaymentScheduleEntity() {}
+
+    public RepaymentScheduleEntity(UUID id, UUID loanId, Integer installmentNumber, BigDecimal installmentAmount,
+                                  BigDecimal principalAmount, BigDecimal interestAmount, BigDecimal outstandingPrincipal,
+                                  LocalDate dueDate, id.payu.lending.domain.model.RepaymentStatus status,
+                                  LocalDate paidDate, BigDecimal paidAmount, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.loanId = loanId;
+        this.installmentNumber = installmentNumber;
+        this.installmentAmount = installmentAmount;
+        this.principalAmount = principalAmount;
+        this.interestAmount = interestAmount;
+        this.outstandingPrincipal = outstandingPrincipal;
+        this.dueDate = dueDate;
+        this.status = status;
+        this.paidDate = paidDate;
+        this.paidAmount = paidAmount;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+    public UUID getLoanId() { return loanId; }
+    public void setLoanId(UUID loanId) { this.loanId = loanId; }
+    public Integer getInstallmentNumber() { return installmentNumber; }
+    public void setInstallmentNumber(Integer installmentNumber) { this.installmentNumber = installmentNumber; }
+    public BigDecimal getInstallmentAmount() { return installmentAmount; }
+    public void setInstallmentAmount(BigDecimal installmentAmount) { this.installmentAmount = installmentAmount; }
+    public BigDecimal getPrincipalAmount() { return principalAmount; }
+    public void setPrincipalAmount(BigDecimal principalAmount) { this.principalAmount = principalAmount; }
+    public BigDecimal getInterestAmount() { return interestAmount; }
+    public void setInterestAmount(BigDecimal interestAmount) { this.interestAmount = interestAmount; }
+    public BigDecimal getOutstandingPrincipal() { return outstandingPrincipal; }
+    public void setOutstandingPrincipal(BigDecimal outstandingPrincipal) { this.outstandingPrincipal = outstandingPrincipal; }
+    public LocalDate getDueDate() { return dueDate; }
+    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    public id.payu.lending.domain.model.RepaymentStatus getStatus() { return status; }
+    public void setStatus(id.payu.lending.domain.model.RepaymentStatus status) { this.status = status; }
+    public LocalDate getPaidDate() { return paidDate; }
+    public void setPaidDate(LocalDate paidDate) { this.paidDate = paidDate; }
+    public BigDecimal getPaidAmount() { return paidAmount; }
+    public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private UUID id;
+        private UUID loanId;
+        private Integer installmentNumber;
+        private BigDecimal installmentAmount;
+        private BigDecimal principalAmount;
+        private BigDecimal interestAmount;
+        private BigDecimal outstandingPrincipal;
+        private LocalDate dueDate;
+        private id.payu.lending.domain.model.RepaymentStatus status;
+        private LocalDate paidDate;
+        private BigDecimal paidAmount;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+
+        public Builder id(UUID id) { this.id = id; return this; }
+        public Builder loanId(UUID loanId) { this.loanId = loanId; return this; }
+        public Builder installmentNumber(Integer installmentNumber) { this.installmentNumber = installmentNumber; return this; }
+        public Builder installmentAmount(BigDecimal installmentAmount) { this.installmentAmount = installmentAmount; return this; }
+        public Builder principalAmount(BigDecimal principalAmount) { this.principalAmount = principalAmount; return this; }
+        public Builder interestAmount(BigDecimal interestAmount) { this.interestAmount = interestAmount; return this; }
+        public Builder outstandingPrincipal(BigDecimal outstandingPrincipal) { this.outstandingPrincipal = outstandingPrincipal; return this; }
+        public Builder dueDate(LocalDate dueDate) { this.dueDate = dueDate; return this; }
+        public Builder status(id.payu.lending.domain.model.RepaymentStatus status) { this.status = status; return this; }
+        public Builder paidDate(LocalDate paidDate) { this.paidDate = paidDate; return this; }
+        public Builder paidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; return this; }
+        public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
+        public Builder updatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; return this; }
+
+        public RepaymentScheduleEntity build() {
+            return new RepaymentScheduleEntity(id, loanId, installmentNumber, installmentAmount, principalAmount,
+                    interestAmount, outstandingPrincipal, dueDate, status, paidDate, paidAmount, createdAt, updatedAt);
+        }
+    }
 }

@@ -16,7 +16,7 @@
 | **Type**              | Standalone Digital Banking Platform   |
 | **Architecture**      | Scalable Microservices + Event-Driven |
 | **Primary Languages** | Java 21, Python 3.12, TypeScript      |
-| **Last Updated**      | January 2026                          |
+| **Last Updated**      | February 2026                          |
 
 ## ⚡ Quick Commands (for AI Agents)
 
@@ -146,7 +146,9 @@ payu/
 2. **DTO First**: Definisikan DTO/Request/Response di package `interfaces.dto` sebelum implementasi logic.
 3. **Port-Adapter Interface**: Gunakan Hexagonal Architecture untuk core services. Semua external communication harus lewat Port interface di domain layer.
 4. **Error Handling**: Gunakan `GlobalExceptionHandler` dan custom `BusinessException` dengan error codes yang unik (e.g., `ACC_001`).
-5. **Changelog Sync**: Setiap kali melakukan update signifikan pada `docs/roadmap/TODOS.md`, WAJIB melakukan update pada `CHANGELOG.md` untuk mencatat perubahan versi atau milestone yang tercapai.
+5. **Annotation Processor Fallback**: Jika Lombok (`@Getter`, `@Setter`, `@Builder`, `@Slf4j`) gagal dikompilasi setelah 2 upaya perbaikan konfigurasi, segera beralih ke implementasi manual (explicit) untuk menjamin stabilitas build.
+6. **Enum Placement**: Selalu definisikan Enum domain sebagai file top-level (bukan inner class) untuk menghindari masalah resolusi simbol dan kompatibilitas dengan Lombok/JPA.
+7. **Changelog Sync**: Setiap kali melakukan update signifikan pada `docs/roadmap/TODOS.md`, WAJIB melakukan update pada `CHANGELOG.md` untuk mencatat perubahan versi atau milestone yang tercapai.
 
 ### Testing Guidelines (TDD)
 
@@ -392,4 +394,4 @@ _Usage_: When tasked with complex refactoring or multi-service updates, read the
 
 ---
 
-_Last Updated: January 2026_
+_Last Updated: February 2026_

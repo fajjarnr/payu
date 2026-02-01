@@ -5,8 +5,8 @@ import id.payu.lending.adapter.external.TransactionClient;
 import id.payu.lending.domain.model.CreditScore;
 import id.payu.lending.dto.TransactionSummaryResponse;
 import id.payu.lending.dto.UserResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,12 +17,17 @@ import java.time.Period;
 import java.util.UUID;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class EnhancedCreditScoringService {
+
+    private static final Logger log = LoggerFactory.getLogger(EnhancedCreditScoringService.class);
 
     private final AccountClient accountClient;
     private final TransactionClient transactionClient;
+
+    public EnhancedCreditScoringService(AccountClient accountClient, TransactionClient transactionClient) {
+        this.accountClient = accountClient;
+        this.transactionClient = transactionClient;
+    }
 
     public BigDecimal calculateEnhancedCreditScore(UUID userId, BigDecimal baseScore) {
         log.info("Calculating enhanced credit score for user: {}", userId);

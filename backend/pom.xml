@@ -34,7 +34,7 @@
         <hypersistence.version>3.9.0</hypersistence.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <springdoc.version>2.3.0</springdoc.version>
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
     </properties>
 
     <modules>
@@ -187,10 +187,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.13.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <release>21</release>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -43,10 +42,10 @@ public class StatementController extends BaseController {
 
     @PostMapping("/generate")
     @Operation(summary = "Generate statement", description = "Generate e-statement for a specific month and year")
-    @ApiResponse(responseCode = "202", description = "Statement generation request accepted",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "Statement generation request accepted",
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Invalid request")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<StatementResponse>> generateStatement(
             @Valid @RequestBody StatementGenerationRequest request,
@@ -63,11 +62,11 @@ public class StatementController extends BaseController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get statement by ID", description = "Retrieve statement details by statement ID")
-    @ApiResponse(responseCode = "200", description = "Statement found",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Statement found",
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Statement not found")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
-    @ApiResponse(responseCode = "403", description = "Forbidden - cannot access other user's statement")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Statement not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - cannot access other user's statement")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<StatementResponse>> getStatement(
             @Parameter(description = "Statement ID", required = true) @PathVariable UUID id,
@@ -82,9 +81,9 @@ public class StatementController extends BaseController {
 
     @GetMapping
     @Operation(summary = "List statements", description = "List all e-statements for the current user with pagination")
-    @ApiResponse(responseCode = "200", description = "Statements retrieved successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Statements retrieved successfully",
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<StatementResponse>>> listStatements(
             @Parameter(description = "Pagination parameters") @PageableDefault(size = 12, sort = "statementPeriod", direction = Sort.Direction.DESC) Pageable pageable,
@@ -99,10 +98,10 @@ public class StatementController extends BaseController {
 
     @GetMapping("/latest")
     @Operation(summary = "Get latest statement", description = "Retrieve the most recent e-statement for the current user")
-    @ApiResponse(responseCode = "200", description = "Latest statement found",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Latest statement found",
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
-    @ApiResponse(responseCode = "404", description = "No statements found")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "No statements found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<StatementResponse>> getLatestStatement(Authentication authentication) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
@@ -115,11 +114,11 @@ public class StatementController extends BaseController {
 
     @GetMapping("/{id}/download")
     @Operation(summary = "Download statement PDF", description = "Download e-statement as PDF file")
-    @ApiResponse(responseCode = "200", description = "PDF downloaded successfully",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PDF downloaded successfully",
             content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE))
-    @ApiResponse(responseCode = "404", description = "Statement not found")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
-    @ApiResponse(responseCode = "403", description = "Forbidden - cannot access other user's statement")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Statement not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - cannot access other user's statement")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<byte[]> downloadStatement(
             @Parameter(description = "Statement ID", required = true) @PathVariable UUID id,
@@ -141,11 +140,11 @@ public class StatementController extends BaseController {
 
     @PostMapping("/{id}/regenerate")
     @Operation(summary = "Regenerate statement", description = "Regenerate an existing e-statement (admin only)")
-    @ApiResponse(responseCode = "202", description = "Statement regeneration request accepted",
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "Statement regeneration request accepted",
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Statement not found")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
-    @ApiResponse(responseCode = "403", description = "Forbidden - admin access required")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Statement not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - admin access required")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StatementResponse>> regenerateStatement(
             @Parameter(description = "Statement ID", required = true) @PathVariable UUID id) {

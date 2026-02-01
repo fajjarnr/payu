@@ -10,9 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import id.payu.billing.exception.PaymentNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -47,7 +47,7 @@ public class PaymentController {
             @Parameter(description = "Payment request details", required = true)
             @Valid @RequestBody CreatePaymentRequest request) {
         BillPayment payment = paymentService.createPayment(request);
-        return ApiResponse.success(PaymentResponse.from(payment), HttpStatus.CREATED);
+        return ApiResponse.success(PaymentResponse.from(payment));
     }
 
     @GetMapping("/{id}")

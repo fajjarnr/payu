@@ -90,7 +90,7 @@ public class TransactionController extends BaseController {
                     **Idempotency:** Use `Idempotency-Key` header to prevent duplicate transfers
                     """
     )
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "201",
                     description = "Transfer initiated successfully",
@@ -144,7 +144,7 @@ public class TransactionController extends BaseController {
             summary = "Get transaction details",
             description = "Retrieves detailed information about a specific transaction."
     )
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "Transaction found",
@@ -194,7 +194,7 @@ public class TransactionController extends BaseController {
                     - type: Filter by transaction type (TRANSFER, QRIS, BILL_PAYMENT)
                     """
     )
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "Transactions retrieved successfully",
@@ -268,7 +268,7 @@ public class TransactionController extends BaseController {
                     **Idempotency:** Use `Idempotency-Key` header to prevent duplicate payments
                     """
     )
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "202",
                     description = "QRIS payment accepted for processing"

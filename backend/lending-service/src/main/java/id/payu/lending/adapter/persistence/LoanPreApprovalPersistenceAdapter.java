@@ -4,8 +4,8 @@ import id.payu.lending.domain.model.LoanPreApproval;
 import id.payu.lending.domain.port.out.LoanPreApprovalPersistencePort;
 import id.payu.lending.entity.LoanPreApprovalEntity;
 import id.payu.lending.repository.LoanPreApprovalRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -13,11 +13,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@Slf4j
-@RequiredArgsConstructor
 public class LoanPreApprovalPersistenceAdapter implements LoanPreApprovalPersistencePort {
 
+    private static final Logger log = LoggerFactory.getLogger(LoanPreApprovalPersistenceAdapter.class);
+
     private final LoanPreApprovalRepository loanPreApprovalRepository;
+
+    public LoanPreApprovalPersistenceAdapter(LoanPreApprovalRepository loanPreApprovalRepository) {
+        this.loanPreApprovalRepository = loanPreApprovalRepository;
+    }
 
     @Override
     public LoanPreApproval save(LoanPreApproval preApproval) {

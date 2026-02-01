@@ -4,7 +4,7 @@ import id.payu.lending.domain.model.RepaymentSchedule;
 import id.payu.lending.domain.port.out.RepaymentSchedulePersistencePort;
 import id.payu.lending.entity.RepaymentScheduleEntity;
 import id.payu.lending.repository.RepaymentScheduleRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -14,10 +14,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class RepaymentSchedulePersistenceAdapter implements RepaymentSchedulePersistencePort {
 
     private final RepaymentScheduleRepository repository;
+
+    public RepaymentSchedulePersistenceAdapter(RepaymentScheduleRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public RepaymentSchedule save(RepaymentSchedule repaymentSchedule) {

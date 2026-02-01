@@ -64,7 +64,7 @@ public class AuthController extends BaseController {
                     **Rate Limiting:** 10 requests per minute per IP
                     """
     )
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "Successful login or MFA required",
@@ -154,7 +154,7 @@ public class AuthController extends BaseController {
                     **Rate Limiting:** 10 requests per minute per IP
                     """
     )
-    @ApiResponses(value = {
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "MFA verified successfully, returns JWT tokens",

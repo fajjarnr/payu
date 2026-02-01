@@ -11,10 +11,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @org.springframework.stereotype.Component
-@RequiredArgsConstructor
 public class LoanPersistenceAdapter implements LoanPersistencePort {
 
     private final LoanRepository loanRepository;
+
+    public LoanPersistenceAdapter(LoanRepository loanRepository) {
+        this.loanRepository = loanRepository;
+    }
 
     @Override
     public Loan save(Loan loan) {

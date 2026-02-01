@@ -21,13 +21,6 @@ public class RepaymentSchedule {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public enum RepaymentStatus {
-        PENDING,
-        PARTIALLY_PAID,
-        FULLY_PAID,
-        OVERDUE
-    }
-
     public RepaymentSchedule() {}
 
     public UUID getId() {

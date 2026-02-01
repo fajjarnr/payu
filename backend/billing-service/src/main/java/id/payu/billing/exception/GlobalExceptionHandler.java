@@ -1,7 +1,8 @@
 package id.payu.billing.exception;
 
 import id.payu.api.common.response.ApiResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,9 +16,10 @@ import java.util.Map;
 /**
  * Global exception handler for Billing Service.
  */
-@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BillerNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleBillerNotFound(BillerNotFoundException ex) {
@@ -63,7 +65,7 @@ public class GlobalExceptionHandler {
         log.warn("Validation failed: {}", errors);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("VALIDATION_FAILED", "Request validation failed", errors));
+                .body(ApiResponse.error("VALIDATION_FAILED", "Request validation failed: " + errors));
     }
 
     @ExceptionHandler(Exception.class)

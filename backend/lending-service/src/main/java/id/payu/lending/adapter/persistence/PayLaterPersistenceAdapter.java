@@ -10,10 +10,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @org.springframework.stereotype.Component
-@RequiredArgsConstructor
 public class PayLaterPersistenceAdapter implements PayLaterPersistencePort {
 
     private final PayLaterRepository payLaterRepository;
+
+    public PayLaterPersistenceAdapter(PayLaterRepository payLaterRepository) {
+        this.payLaterRepository = payLaterRepository;
+    }
 
     @Override
     public PayLater save(PayLater payLater) {

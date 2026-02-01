@@ -321,6 +321,24 @@ These techniques are part of systematic debugging and available in this director
 **Phase 2: Verification**
 Run `mvn clean compile -pl <module-name> -am`. If it fails, check if the parent POM is actually being used by running `mvn help:effective-pom`.
 
+**Protocol for Persistent Failure (The "Break Glass" Strategy):**
+If Lombok annotation processing continues to fail after 2 configuration attempts in a specific environment:
+1.  **Abandon Lombok Locally**: Do not waste time debugging the processor environment endlessly.
+2.  **Manual Implementation**: Replace `@Data`, `@Getter`, `@Setter`, `@Builder`, `@Slf4j` (and `@RequiredArgsConstructor`) with manual implementations.
+3.  **Rationale**: In critical situations, **Build Stability > Boilerplate Reduction**. Code that builds is always better than clean code that doesn't.
+
+### ☕ Enum Placement & Resolution (Architectural Best Practice)
+**Symptom:** "cannot find symbol" for enum values, or JPA mapping errors, specifically when enums are inner classes.
+**Symptom:** "cannot find symbol" for enum values, or JPA mapping errors, specifically when enums are inner classes.
+
+**Phase 1: Root Cause**
+1.  **Inner Class Enum**: Defining Enums inside Entity classes can confuse annotation processors or JPA providers.
+2.  **Circular Dependency**: If the Enum is used by other classes that the Entity depends on.
+
+**Fix Pattern:**
+1.  **Move to Top-Level**: Always extract Enums to their own file in `domain/model` or `constant` package.
+2.  **Avoid Inner Classes**: Do not use `public static enum Type { ... }` inside Entities for domain-critical types.
+
 ### 🦆 Quarkus to Spring Boot Migration (PayU Context)
 
 **Symptom:** Compilation errors when migrating legacy Quarkus services to Spring Boot.

@@ -8,8 +8,8 @@ import id.payu.lending.domain.port.out.CreditScorePersistencePort;
 import id.payu.lending.domain.port.out.LoanPreApprovalPersistencePort;
 import id.payu.lending.dto.LoanPreApprovalRequest;
 import id.payu.lending.dto.LoanPreApprovalResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,13 +20,21 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class LoanPreApprovalService implements LoanPreApprovalUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(LoanPreApprovalService.class);
 
     private final CreditScorePersistencePort creditScorePersistencePort;
     private final LoanPreApprovalPersistencePort preApprovalPersistencePort;
     private final EnhancedCreditScoringService enhancedCreditScoringService;
+
+    public LoanPreApprovalService(CreditScorePersistencePort creditScorePersistencePort, 
+                                   LoanPreApprovalPersistencePort preApprovalPersistencePort, 
+                                   EnhancedCreditScoringService enhancedCreditScoringService) {
+        this.creditScorePersistencePort = creditScorePersistencePort;
+        this.preApprovalPersistencePort = preApprovalPersistencePort;
+        this.enhancedCreditScoringService = enhancedCreditScoringService;
+    }
 
     private static final BigDecimal MIN_CREDIT_SCORE_FOR_APPROVAL = new BigDecimal("650");
     private static final BigDecimal MIN_CREDIT_SCORE_FOR_CONDITIONAL = new BigDecimal("600");

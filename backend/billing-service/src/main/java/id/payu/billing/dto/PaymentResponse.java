@@ -25,19 +25,19 @@ public record PaymentResponse(
 ) {
     public static PaymentResponse from(BillPayment payment) {
         return new PaymentResponse(
-            payment.id,
-            payment.referenceNumber,
-            payment.accountId,
-            payment.billerType.getCode(),
-            payment.billerType.getDisplayName(),
-            payment.customerId,
-            payment.amount,
-            payment.adminFee,
-            payment.totalAmount,
-            payment.status.name(),
-            payment.failureReason,
-            payment.createdAt,
-            payment.completedAt
+            payment.getId(),
+            payment.getReferenceNumber(),
+            payment.getAccountId(),
+            payment.getBillerType().getCode(),
+            payment.getBillerType().getDisplayName(),
+            payment.getCustomerId(),
+            payment.getAmount(),
+            payment.getAdminFee(),
+            payment.getTotalAmount(),
+            payment.getStatus().name(),
+            payment.getFailureReason(),
+            payment.getCreatedAt(),
+            payment.getCompletedAt()
         );
     }
 }
