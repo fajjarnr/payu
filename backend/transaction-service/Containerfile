@@ -1,65 +1,36 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy parent pom and common dependencies
-COPY pom.xml .
-COPY shared shared
-
-# Copy the service code
-COPY transaction-service transaction-service
-
-# Build the application (includes building shared libraries as needed)
-RUN mvn clean package -pl transaction-service -am -DskipTests && \
-    mv transaction-service/target/*.jar transaction-service/target/app.jar
-
-####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+# Note: Expects pre-built JAR from host (mvn package must be run first)
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
 LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU Transaction Service - Transfers, BI-FAST, QRIS"
+LABEL description="PayU transaction-service Service"
 LABEL version="1.0.0"
 LABEL org.opencontainers.image.title="payu-transaction-service"
-LABEL org.opencontainers.image.description="PayU Transaction Service - Core banking for transfers, BI-FAST, QRIS payments with Saga pattern"
+LABEL org.opencontainers.image.description="PayU transaction-service Service"
 LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
 LABEL org.opencontainers.image.source="https://github.com/payu/backend/transaction-service"
-LABEL org.opencontainers.image.licenses="Proprietary"
-LABEL org.opencontainers.image.authors="PayU Backend Team"
-
+LABEL id.payu.service.tier="core"
 
 # Use non-root user (185 is the default jboss user in UBI images)
 USER 185
 
 WORKDIR /deployments
 
-# Copy the built artifact from build stage
-COPY --from=build --chown=185 /build/transaction-service/target/app.jar /deployments/app.jar
+# Copy the pre-built artifact from host (requires mvn clean package run locally first)
+COPY --chown=185 target/*.jar /deployments/app.jar
+
+# Volume mounts for temporary files and logs
+VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
 EXPOSE 8003
 
 # JVM configuration for containers
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:InitialRAMPercentage=50.0 \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=200 \
-    -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/deployments/heapdump.hprof \
-    -Djava.security.egd=file:/dev/./urandom"
-
+ENV JAVA_OPTS="-XX:+UseContainerSupport     -XX:MaxRAMPercentage=75.0     -XX:InitialRAMPercentage=50.0     -XX:+UseG1GC     -XX:MaxGCPauseMillis=200     -Djava.security.egd=file:/dev/./urandom"
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

@@ -41,7 +41,7 @@ Audit against the *14 Immutable Laws of PayU*.
 - [x] **P17-C5**: Backend Build Context Fix (Account, Auth, Trans, Wallet)
 - [x] **P17-C7**: Web App Accessibility Remediation (A11y Audit 100%)
 - [x] **P17-C8**: Test Timeout & Environment Stabilization
-- [ ] **P17-C9**: Build Remaining 18 Backend Service Images (Lending Service UNBLOCKED)
+- [-] **P17-C9**: Build Remaining 18 Backend Service Images (Core Subset DONE)
 - [ ] **P17-C10**: Full-Stack Integration Verification (22 Services)
 - [x] **P17-C11**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
 - [ ] **P17-C12**: Lending Service Test Remediation (Re-enable & Fix Tests)

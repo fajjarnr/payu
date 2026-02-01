@@ -1,69 +1,36 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy entire project (needed for shared library dependencies)
-COPY . .
-
-# Build the Quarkus application (fast-jar format)
-RUN mvn clean package -DskipTests
-
-####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+# Note: Expects pre-built JAR from host (mvn package must be run first)
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
 LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU Billing Service - Bill Payments (PLN, PDAM, Pulsa, BPJS)"
+LABEL description="PayU billing-service Service"
 LABEL version="1.0.0"
 LABEL org.opencontainers.image.title="payu-billing-service"
-LABEL org.opencontainers.image.description="PayU Billing Service - Multi-biller payment support (PLN, PDAM, Pulsa, BPJS, Internet)"
+LABEL org.opencontainers.image.description="PayU billing-service Service"
 LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
 LABEL org.opencontainers.image.source="https://github.com/payu/backend/billing-service"
-LABEL org.opencontainers.image.licenses="Proprietary"
-LABEL org.opencontainers.image.authors="PayU Backend Team"
+LABEL id.payu.service.tier="core"
 
 # Use non-root user (185 is the default jboss user in UBI images)
 USER 185
 
-USER 185
-
 WORKDIR /deployments
 
-# Copy Quarkus fast-jar structure
-COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build --chown=185 /build/target/quarkus-app/*.jar /deployments/
-COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
-COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
+# Copy the pre-built artifact from host (requires mvn clean package run locally first)
+COPY --chown=185 target/*.jar /deployments/app.jar
 
-# Volume declarations for temporary files and logs
+# Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
-EXPOSE 8007
+EXPOSE 8085
 
-# JVM configuration optimized for Billing (frequent external API calls)
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:MinRAMPercentage=40.0 \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=100 \
-    -XX:+UnlockExperimentalVMOptions \
-    -XX:+UseStringDeduplication \
-    -Dquarkus.http.host=0.0.0.0 \
-    -Dquarkus.http.idle-timeout=60s \
-    -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+# JVM configuration for containers
+ENV JAVA_OPTS="-XX:+UseContainerSupport     -XX:MaxRAMPercentage=75.0     -XX:InitialRAMPercentage=50.0     -XX:+UseG1GC     -XX:MaxGCPauseMillis=200     -Djava.security.egd=file:/dev/./urandom"
 
-
-# Run the Quarkus application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]
