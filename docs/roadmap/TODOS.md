@@ -46,7 +46,7 @@ Audit against the *14 Immutable Laws of PayU*.
 - [ ] **P17-C11**: Full-Stack Integration Verification (15 Services)
 - [x] **P17-C12**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
 - [ ] **P17-C13**: Lending Service Test Remediation (Re-enable & Fix Tests)
-- [ ] **P17-C14**: Flyway Migration Schema Verification (account-service V3 issue)
+- [x] **P17-C14**: Flyway Migration Schema Verification (account-service V3, V4, V5 fixed)
 
 ### 🔧 Container Environment Status (Feb 1, 2026)
 
@@ -64,8 +64,15 @@ Audit against the *14 Immutable Laws of PayU*.
 4. ✅ Services now connect to PostgreSQL and run Flyway migrations
 
 **Remaining Issues:**
-1. ⚠️ Flyway migration V3 error in account-service (missing `kyc_status` column)
+1. ⚠️ Several services need container profiles (Vault configuration override)
 2. ⚠️ `promotion-service` requires extensive refactoring (Lombok field access → getters)
+
+**Recent Fixes (Feb 1, 2026 - Afternoon):**
+1. ✅ Fixed Flyway V3 - Materialized views now query correct tables
+2. ✅ Fixed Flyway V4 - Replaced partial indexes with standard indexes
+3. ✅ Fixed Flyway V5 - Security hardening profiles
+4. ✅ Added AccountPersistenceAdapter for hexagonal architecture
+5. ✅ account-service now running successfully in container environment
 
 ### 📊 Reliability Audit (Playwright E2E)
 *Baseline: February 1, 2026*
