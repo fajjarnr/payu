@@ -1,6 +1,6 @@
-# PayU Digital Banking - Podman Compose Test Environment
-# Uses pre-built images (Decoupled Build Strategy)
-# Run with: podman-compose -f podman-compose.test.yml up -d
+# PayU Digital Banking - Docker Compose Test Environment
+# Uses pre-built images with container profile
+# Run: docker-compose -f docker-compose.test.yml up -d
 
 services:
   # ============================================
@@ -12,8 +12,8 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_USER: ${TEST_POSTGRES_USER:-payu_test}
-      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:-test_secret}
+      POSTGRES_USER: payu_test
+      POSTGRES_PASSWORD: test_secret
       POSTGRES_DB: payu_test_account
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
@@ -23,6 +23,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - payu-test-network
   
   redis-test:
     image: docker.io/redis:7-alpine
@@ -34,6 +36,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
+    networks:
+      - payu-test-network
 
   # ============================================
   # INFRASTRUCTURE
@@ -50,6 +54,8 @@ services:
       test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 1"]
       interval: 10s
       retries: 3
+    networks:
+      - payu-test-network
 
   kafka-test:
     image: docker.io/confluentinc/cp-kafka:7.7.7
@@ -71,6 +77,8 @@ services:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9093"]
       interval: 15s
       retries: 5
+    networks:
+      - payu-test-network
 
   keycloak-test:
     image: quay.io/keycloak/keycloak:26.0
@@ -88,71 +96,119 @@ services:
     depends_on:
       postgres-test:
         condition: service_healthy
+    networks:
+      - payu-test-network
 
   # ============================================
-  # CORE SERVICES (Pre-built Images)
+  # CORE SERVICES (Pre-built Images + Container Profile)
   # ============================================
   account-service:
     image: localhost/payu-account-service:latest
     container_name: payu-account-service
     ports:
-      - "8101:8001"
+      - "8101:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_account
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_account
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak-test:8080/realms/payu/protocol/openid-connect/certs
     depends_on:
       postgres-test:
         condition: service_healthy
       kafka-test:
         condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
 
   auth-service:
     image: localhost/payu-auth-service:latest
     container_name: payu-auth-service
     ports:
-      - "8102:8002"
+      - "8102:8082"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_auth
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
-      KEYCLOAK_SERVER_URL: http://keycloak-test:8080
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_auth
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
     depends_on:
       postgres-test:
         condition: service_healthy
       keycloak-test:
         condition: service_started
+    networks:
+      - payu-test-network
 
   transaction-service:
     image: localhost/payu-transaction-service:latest
     container_name: payu-transaction-service
     ports:
-      - "8103:8003"
+      - "8103:8083"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_transaction
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_transaction
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
     depends_on:
       postgres-test:
         condition: service_healthy
       kafka-test:
         condition: service_healthy
+    networks:
+      - payu-test-network
 
   wallet-service:
     image: localhost/payu-wallet-service:latest
     container_name: payu-wallet-service
     ports:
-      - "8104:8004"
+      - "8104:8084"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_wallet
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_wallet
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
     depends_on:
       postgres-test:
         condition: service_healthy
+      kafka-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
+
+  investment-service:
+    image: localhost/payu-investment-service:latest
+    container_name: payu-investment-service
+    ports:
+      - "8106:8086"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_investment
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
 
   lending-service:
     image: localhost/payu-lending-service:latest
@@ -160,26 +216,19 @@ services:
     ports:
       - "8109:8087"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_lending
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_lending
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
       KAFKA_BROKERS: kafka-test:29092
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
     depends_on:
       postgres-test:
         condition: service_healthy
-
-  investment-service:
-    image: localhost/payu-investment-service:latest
-    container_name: payu-investment-service
-    ports:
-      - "8110:8006"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_investment
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
-    depends_on:
-      postgres-test:
+      kafka-test:
         condition: service_healthy
+    networks:
+      - payu-test-network
 
   statement-service:
     image: localhost/payu-statement-service:latest
@@ -187,16 +236,20 @@ services:
     ports:
       - "8115:8015"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_statement
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_statement
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
       REDIS_HOST: redis-test
-      REDIS_PORT: 6379 
+      REDIS_PORT: 6379
     depends_on:
       postgres-test:
         condition: service_healthy
       redis-test:
         condition: service_healthy
+    networks:
+      - payu-test-network
 
   partner-service:
     image: localhost/payu-partner-service:latest
@@ -204,12 +257,16 @@ services:
     ports:
       - "8185:8085"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_partner
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_partner
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
     depends_on:
       postgres-test:
         condition: service_healthy
+    networks:
+      - payu-test-network
 
   support-service:
     image: localhost/payu-support-service:latest
@@ -217,16 +274,152 @@ services:
     ports:
       - "8186:8086"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/payu_test_support
-      SPRING_DATASOURCE_USERNAME: payu_test
-      SPRING_DATASOURCE_PASSWORD: test_secret
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_support
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
     depends_on:
       postgres-test:
         condition: service_healthy
+    networks:
+      - payu-test-network
+
+  backoffice-service:
+    image: localhost/payu-backoffice-service:latest
+    container_name: payu-backoffice-service
+    ports:
+      - "8190:8090"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_backoffice
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
+
+  cms-service:
+    image: localhost/payu-cms-service:latest
+    container_name: payu-cms-service
+    ports:
+      - "8116:8016"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_cms
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
+
+  compliance-service:
+    image: localhost/payu-compliance-service:latest
+    container_name: payu-compliance-service
+    ports:
+      - "8112:8012"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_compliance
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
+
+  fx-service:
+    image: localhost/payu-fx-service:latest
+    container_name: payu-fx-service
+    ports:
+      - "8188:8088"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_fx
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
+
+  promotion-service:
+    image: localhost/payu-promotion-service:latest
+    container_name: payu-promotion-service
+    ports:
+      - "8117:8017"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_promotion
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
+
+  ab-testing-service:
+    image: localhost/payu-ab-testing-service:latest
+    container_name: payu-ab-testing-service
+    ports:
+      - "8119:8019"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres-test:5432/payu_test_ab_testing
+      DB_USERNAME: payu_test
+      DB_PASSWORD: test_secret
+      KAFKA_BROKERS: kafka-test:29092
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      OIDC_ISSUER: http://keycloak-test:8080/realms/payu
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - payu-test-network
 
 volumes:
   postgres_test_data:
   
 networks:
-  default:
-    name: payu-test-network
+  payu-test-network:
+    driver: bridge

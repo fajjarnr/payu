@@ -1,0 +1,79 @@
+# Container Integration Test Profile
+# Activated via: SPRING_PROFILES_ACTIVE=container
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  # Simple single datasource (override multi-datasource config)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_test_backoffice}
+    username: ${DB_USERNAME:payu_test}
+    password: ${DB_PASSWORD:test_secret}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: container-pool
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: false
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    consumer:
+      auto-startup: true
+      group-id: backoffice-service-container
+      auto-offset-reset: earliest
+    producer:
+      retries: 3
+      acks: all
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+
+  cloud:
+    vault:
+      enabled: false
+
+# Disable health checks for external services in container mode
+management:
+  health:
+    redis:
+      enabled: true
+    kafka:
+      enabled: true
+    db:
+      enabled: true
+
+# Application-specific overrides
+payu:
+  security:
+    encryption-enabled: false
+    masking-enabled: false
+    audit-enabled: false
+
+server:
+  port: 8090

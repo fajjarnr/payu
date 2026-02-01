@@ -1,8 +1,10 @@
 -- PayU Test Database Initialization
--- Creates isolated test databases with test-specific credentials
+-- Creates isolated test databases for all microservices
+-- Note: This script runs via Docker entrypoint (not psql), so no \c commands
 
--- Create Test Databases
+-- Create All Test Databases
 CREATE DATABASE keycloak_test;
+CREATE DATABASE payu_test_account;
 CREATE DATABASE payu_test_auth;
 CREATE DATABASE payu_test_transaction;
 CREATE DATABASE payu_test_wallet;
@@ -20,8 +22,13 @@ CREATE DATABASE payu_test_partner;
 CREATE DATABASE payu_test_promotion;
 CREATE DATABASE payu_test_support;
 CREATE DATABASE payu_test_statement;
+CREATE DATABASE payu_test_fx;
+CREATE DATABASE payu_test_cms;
+CREATE DATABASE payu_test_ab_testing;
+CREATE DATABASE payu_test_api_portal;
+CREATE DATABASE payu_test_gateway;
 
--- Grant Privileges to Test User
+-- Grant All Privileges to Test User (payu_test)
 GRANT ALL PRIVILEGES ON DATABASE keycloak_test TO payu_test;
 GRANT ALL PRIVILEGES ON DATABASE payu_test_account TO payu_test;
 GRANT ALL PRIVILEGES ON DATABASE payu_test_auth TO payu_test;
@@ -41,44 +48,8 @@ GRANT ALL PRIVILEGES ON DATABASE payu_test_partner TO payu_test;
 GRANT ALL PRIVILEGES ON DATABASE payu_test_promotion TO payu_test;
 GRANT ALL PRIVILEGES ON DATABASE payu_test_support TO payu_test;
 GRANT ALL PRIVILEGES ON DATABASE payu_test_statement TO payu_test;
-
--- Enable required extensions for testing
-\c payu_test_account
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
-\c payu_test_auth
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
-\c payu_test_transaction
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
-\c payu_test_wallet
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
-\c payu_test_notification
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-\c payu_test_billing
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-\c payu_test_kyc
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
-\c payu_test_compliance
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-\c payu_test_investment
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
-\c payu_test_lending
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
-\c payu_test_statement
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+GRANT ALL PRIVILEGES ON DATABASE payu_test_fx TO payu_test;
+GRANT ALL PRIVILEGES ON DATABASE payu_test_cms TO payu_test;
+GRANT ALL PRIVILEGES ON DATABASE payu_test_ab_testing TO payu_test;
+GRANT ALL PRIVILEGES ON DATABASE payu_test_api_portal TO payu_test;
+GRANT ALL PRIVILEGES ON DATABASE payu_test_gateway TO payu_test;
