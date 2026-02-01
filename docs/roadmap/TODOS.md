@@ -1,6 +1,6 @@
 # 📂 PayU Project Roadmap & Engineering Scorecard
 
-> **Platform Maturity**: 🟢 **99%** | **Production Readiness**: 🟡 **80%** (Container Phase)
+> **Platform Maturity**: 🟢 **99%** | **Production Readiness**: 🟡 **85%** (Container Phase)
 > **Strategic Objective**: Standardize a stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
 > **Last Synchronized**: February 1, 2026
 
@@ -42,10 +42,11 @@ Audit against the *14 Immutable Laws of PayU*.
 - [x] **P17-C7**: Web App Accessibility Remediation (A11y Audit 100%)
 - [x] **P17-C8**: Test Timeout & Environment Stabilization
 - [x] **P17-C9**: Build 14/15 Backend Service Images (promotion-service pending)
-- [ ] **P17-C10**: Container Profile Configuration Fix (datasource, environment variables)
+- [x] **P17-C10**: Container Profile Configuration Fix (datasource resolved)
 - [ ] **P17-C11**: Full-Stack Integration Verification (15 Services)
 - [x] **P17-C12**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
 - [ ] **P17-C13**: Lending Service Test Remediation (Re-enable & Fix Tests)
+- [ ] **P17-C14**: Flyway Migration Schema Verification (account-service V3 issue)
 
 ### 🔧 Container Environment Status (Feb 1, 2026)
 
@@ -53,14 +54,18 @@ Audit against the *14 Immutable Laws of PayU*.
 |:----------|:-------|:------|
 | **Infrastructure** | ✅ Running | PostgreSQL, Redis, Kafka, Keycloak healthy |
 | **Docker Images Built** | ✅ 14/15 Services | ab-testing, backoffice, cms, fx, account, auth, transaction, wallet, investment, lending, statement, partner, support, compliance |
-| **Container Profiles** | ✅ Created | All 15 Spring Boot services have `application-container.yml` |
-| **Service Startup** | ⚠️ Blocked | Datasource configuration not properly applied from container profile |
+| **Container Profiles** | ✅ Created & Fixed | Profile configuration now loads correctly via `@Profile("!container")` exclusion |
+| **Service Startup** | ✅ Resolved | Datasource connects successfully, Flyway migrations running |
 
-**Known Issues:**
-1. `application-container.yml` datasource configuration not overriding `application.yml`
-2. Missing `READ_REPLICA_ENABLED` environment variable causing startup failures
-3. `promotion-service` requires extensive refactoring (Lombok field access → getters)
-4. Need to bundle container profile configuration at JAR build time
+**Resolution Summary:**
+1. ✅ Added `@Profile("!container")` to custom DataSourceConfiguration beans
+2. ✅ Added default value `false` for `READ_REPLICA_ENABLED` in application.yaml
+3. ✅ Container profile uses flat datasource structure (Spring Boot auto-configuration)
+4. ✅ Services now connect to PostgreSQL and run Flyway migrations
+
+**Remaining Issues:**
+1. ⚠️ Flyway migration V3 error in account-service (missing `kyc_status` column)
+2. ⚠️ `promotion-service` requires extensive refactoring (Lombok field access → getters)
 
 ### 📊 Reliability Audit (Playwright E2E)
 *Baseline: February 1, 2026*
