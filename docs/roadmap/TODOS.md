@@ -41,8 +41,10 @@ Audit against the *14 Immutable Laws of PayU*.
 - [x] **P17-C5**: Backend Build Context Fix (Account, Auth, Trans, Wallet)
 - [x] **P17-C7**: Web App Accessibility Remediation (A11y Audit 100%)
 - [x] **P17-C8**: Test Timeout & Environment Stabilization
-- [ ] **P17-C9**: Build Remaining 18 Backend Service Images
+- [ ] **P17-C9**: Build Remaining 18 Backend Service Images (Lending Service UNBLOCKED)
 - [ ] **P17-C10**: Full-Stack Integration Verification (22 Services)
+- [x] **P17-C11**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
+- [ ] **P17-C12**: Lending Service Test Remediation (Re-enable & Fix Tests)
 
 ### 📊 Reliability Audit (Playwright E2E)
 *Baseline: February 1, 2026*
@@ -70,6 +72,7 @@ Audit against the *14 Immutable Laws of PayU*.
 | **P9** | Event-Driven Architecture | 100% | ✅ | Sagas, Outbox pattern, events-starter. |
 | **P14** | Persistence Hardening | 100% | ✅ | Flyway verified across 22 services. |
 | **P16** | Web App UX Standardization | 100% | ✅ | Emerald Design System, Shadcn, i18n Prefixing. |
+| **P17-Arch** | Build Strategy Standardization | 100% | ✅ | ADR-Container-01 (Decoupled Build) adopted. |
 
 ---
 
@@ -79,7 +82,7 @@ Audit against the *14 Immutable Laws of PayU*.
 |:---|:------------|:---------------|:-------|:---------|:-------|
 | **TD-WEB-001** | LCP Optimization (9.3s → <2.5s) | Bit Rot | 3 Days | **P1** | Backlog |
 | **TD-MOB-001** | Duplicate State Management (Zustand/RQ) | Accidental | 5 Days | **P2** | In-Progress |
-| **TD-CORE-001** | Replace Lombok with Java Records | Deliberate | 7 Days | P3 | Backlog |
+| **TD-CORE-001** | Replace Lombok with Manual Implementation (Stability) | Deliberate | 7 Days | **P1** | In-Progress |
 | **TD-ARCH-001** | Protobuf/gRPC for Internal Service Comms | ASSESS | 10 Days | P4 | Proposed |
 
 ---
