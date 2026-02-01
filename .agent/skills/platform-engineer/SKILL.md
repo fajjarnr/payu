@@ -757,6 +757,166 @@ metadata:
 
 ---
 
+## 🐛 Container Build Debugging (Podman/UBI9)
+
+> **Learned from**: E2E test infrastructure setup - February 1, 2026
+
+### Common Build Failure Patterns
+
+#### 1. Parent POM Resolution Failure
+
+**Symptom:** Maven build fails with `Could not resolve dependencies` or `parent POM not found`
+
+**Root Cause:** Containerfile copies only service pom.xml, but Spring Boot services reference parent POM at `../pom.xml`
+
+```dockerfile
+# ❌ WRONG - Only copies service pom.xml
+COPY pom.xml ./
+RUN mvn dependency:go-offline -B
+COPY src ./src
+
+# ✅ CORRECT - Copies entire project for parent POM access
+COPY . .
+RUN mvn clean package -DskipTests
+```
+
+**Fix:** Change `COPY pom.xml ./` to `COPY . .` in Containerfiles
+
+#### 2. Maven Build Hanging (4+ hours)
+
+**Symptom:** Maven build process hangs indefinitely during dependency download or compilation
+
+**Root Cause:**
+- Parallel builds (`-T 1C`) causing deadlock in certain services
+- Network issues accessing Maven Central during container build
+- Large dependency downloads timing out
+
+**Fix - Use Pre-Built JARs:**
+```dockerfile
+# Build stage: Skip Maven, use pre-built JAR
+# Runtime stage only
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
+
+# Copy pre-built JAR from local build
+COPY target/*.jar /app/app.jar
+
+USER 1001
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+```
+
+**Build Strategy:**
+1. Build all JARs first with Maven from backend directory:
+   ```bash
+   cd /home/ubuntu/payu/backend
+   mvn clean package -DskipTests -T 1C
+   ```
+2. Create runtime-only Containerfiles that copy pre-built JARs
+3. Build images much faster (minutes vs hours)
+
+#### 3. UBI9 Runtime Image Conflicts
+
+**Symptom:** `curl-minimal` conflicts when trying to install curl
+
+**Root Cause:** UBI9 runtime images have `curl-minimal` pre-installed, conflicts with installing regular curl
+
+**Fix:** Remove curl installation and curl-based health checks from Containerfiles, or use `curl-minimal` for health checks:
+
+```dockerfile
+# ❌ WRONG - Tries to install curl (conflicts)
+RUN microdnf install -y curl
+
+# ✅ CORRECT - curl-minimal already available
+HEALTHCHECK CMD curl-minimal --fail-with-body http://localhost:8080/actuator/health || exit 1
+```
+
+#### 4. User Creation Conflicts (GID 185)
+
+**Symptom:** `groupadd: GID '185' already exists` when creating non-root user
+
+**Root Cause:** UBI9 images already have user `jboss` with GID 185
+
+**Fix:** Use existing `jboss` user (UID 185) instead of creating new user:
+
+```dockerfile
+# ❌ WRONG - Tries to create user with GID 185
+RUN groupadd -r payu -g 1001 && \
+    useradd -r -g payu -u 1001 -d /app payu
+
+# ✅ CORRECT - Use existing jboss user
+USER 185
+```
+
+#### 5. Dockerfile Excludes Target Directory
+
+**Symptom:** `COPY target/*.jar /app/app.jar` fails with "no such file or directory"
+
+**Root Cause:** `.dockerignore` or `.containerignore` excludes `target/` directory
+
+**Fix:** Either:
+1. Build from parent directory with proper context
+2. Remove `target/` from ignore files
+3. Use `--ignorefile=.containerignore` to bypass dockerignore
+
+### Debugging Commands
+
+```bash
+# Check if parent POM is accessible
+cd backend/some-service
+cat ../pom.xml  # Should show parent POM content
+
+# Check Maven can resolve parent
+mvn help:evaluate -Dexpression=project.parentGroupId
+mvn help:evaluate -Dexpression=project.parentArtifactId
+
+# Check what's in target directory
+ls -la target/ | grep -E "\.jar$"
+
+# Test Maven build locally (without container)
+mvn clean package -DskipTests
+
+# Check dockerignore
+cat .dockerignore | grep target
+```
+
+### Build Performance Optimization
+
+| Strategy | Build Time | Disk Space | Use When |
+|----------|------------|------------|----------|
+| **Full container build** | 10-30 min/service | High | Initial setup, CI/CD |
+| **Pre-built JARs** | 1-2 min/service | Medium | Development, fast iteration |
+| **Multi-stage with cache** | 5-10 min/service | Medium | Production, optimized |
+| **Runtime-only (local JAR)** | <1 min/service | Low | Debugging, testing |
+
+### PayU Build Standards
+
+1. **All Spring Boot services** use `payu-backend-parent` (not direct `spring-boot-starter-parent`)
+2. **Containerfiles** use `COPY . .` for parent POM resolution
+3. **Non-root user** with UID 1001 or existing `jboss` user (185)
+4. **UBI9 images**: `ubi9/openjdk-21:1.24-2` for build, `ubi9/openjdk-21-runtime:1.24-2` for runtime
+5. **Node.js images**: `ubi9/nodejs-20:9.7` for frontend
+
+### Known Working Services
+
+| Service | Image | Build Method |
+|---------|-------|--------------|
+| account-service | ✅ payu-account-service:test | Pre-built JAR |
+| auth-service | ✅ payu-auth-service:test | Pre-built JAR |
+| wallet-service | ✅ payu-wallet-service:test | Pre-built JAR |
+| transaction-service | ✅ payu-transaction-service:test | Pre-built JAR |
+| investment-service | ✅ payu-investment-service:test | Pre-built JAR |
+| gateway-service | ✅ payu-gateway-service:test | Pre-built JAR |
+| bi-fast-simulator | ✅ payu-bifast-simulator:test | Pre-built JAR |
+| dukcapil-simulator | ✅ payu-dukcapil-simulator:test | Full build |
+| qris-simulator | ✅ payu-qris-simulator:test | Pre-built JAR |
+
+### References
+
+- [Podman Documentation](https://docs.podman.io/)
+- [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
+- [Spring Boot Docker Guide](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#container-images)
+
+---
+
 ## 🛡️ Platform Integrity Checklist
 
 ### Security

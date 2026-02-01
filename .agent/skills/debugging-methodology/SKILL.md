@@ -352,6 +352,131 @@ Run `mvn clean compile -pl <module-name> -am`. If it fails, check if the parent 
     *   **Symptom:** Code compiles but tests fail with "Unknown annotation".
     *   **Fix:** `@QuarkusTest` -> `@SpringBootTest`, `@InjectMock` -> `@MockBean`, `@Test` (JUnit 4) -> `@Test` (JUnit 5).
 
+### 🐳 Container/Podman Build Failures (PayU Context)
+
+**Symptom:** Container build fails with Maven errors, parent POM not found, or build hangs indefinitely.
+
+#### Pattern 1: Parent POM Resolution Failure
+
+**Symptom:** `Could not resolve dependencies` or `parent POM not found`
+
+**Phase 1: Root Cause**
+1. **Check Containerfile COPY strategy:**
+   ```dockerfile
+   # ❌ WRONG - Only copies service pom.xml
+   COPY pom.xml ./
+   RUN mvn dependency:go-offline -B
+   COPY src ./src
+
+   # ✅ CORRECT - Copies entire project for parent POM access
+   COPY . .
+   RUN mvn clean package -DskipTests
+   ```
+2. **Verify parent POM is accessible:**
+   ```bash
+   cd backend/some-service
+   cat ../pom.xml  # Should show parent POM content
+   mvn help:evaluate -Dexpression=project.parentGroupId
+   ```
+
+**Phase 2: Verification**
+Build locally first to isolate container vs Maven issues:
+```bash
+cd backend/some-service
+mvn clean package -DskipTests
+```
+
+#### Pattern 2: Maven Build Hanging (4+ hours)
+
+**Symptom:** `mvn package` in container hangs indefinitely
+
+**Root Cause:**
+- Parallel builds (`-T 1C`) causing resource deadlock
+- Network timeouts accessing Maven Central
+- Large dependency downloads with poor connectivity
+
+**Fix - Use Pre-Built JAR Strategy:**
+```dockerfile
+# Runtime-only Containerfile (no Maven build in container)
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
+
+# Copy pre-built JAR from local Maven build
+COPY target/*.jar /app/app.jar
+
+USER 1001
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+```
+
+**Build Process:**
+1. Build JARs locally first (much faster):
+   ```bash
+   cd backend
+   mvn clean package -DskipTests -T 1C
+   ```
+2. Create container images from pre-built JARs
+
+#### Pattern 3: UBI9 Image Conflicts
+
+**Symptom:** Package installation fails or `curl-minimal` conflicts
+
+**Issue: UBI9 runtime images have `curl-minimal` pre-installed**
+
+**Fix:**
+```dockerfile
+# ❌ WRONG - Tries to install curl (conflicts)
+RUN microdnf install -y curl
+
+# ✅ CORRECT - curl-minimal already available
+# Remove curl installation from Containerfile
+# Use curl-minimal for health checks
+```
+
+#### Pattern 4: User Creation Conflicts
+
+**Symptom:** `groupadd: GID '185' already exists` or `useradd: UID 1001 exists`
+
+**Issue:** UBI9 images already have `jboss` user (UID 185)
+
+**Fix:**
+```dockerfile
+# ❌ WRONG - Creates user with conflicting IDs
+RUN groupadd -r payu -g 1001 && \
+    useradd -r -g payu -u 1001 -d /app payu
+
+# ✅ CORRECT - Use existing jboss user
+USER 185
+```
+
+#### Pattern 5: Dockerfile Excludes Target Directory
+
+**Symptom:** `COPY target/*.jar` fails with "no such file or directory"
+
+**Root Cause:** `.dockerignore` or `.containerignore` excludes `target/`
+
+**Fix Options:**
+1. Build from parent directory with proper context
+2. Remove `target/` from ignore files
+3. Use `--ignorefile=.containerignore` to bypass dockerignore
+
+#### Debugging Commands
+
+```bash
+# Test Maven build locally (without container)
+cd backend/some-service
+mvn clean package -DskipTests
+
+# Check parent POM resolution
+mvn help:evaluate -Dexpression=project.parentGroupId
+mvn help:evaluate -Dexpression=project.parentArtifactId
+
+# Check what's in target directory
+ls -la target/ | grep -E "\.jar$"
+
+# Verify dockerignore
+cat .dockerignore | grep target
+```
+
 ## Real-World Impact
 
 From debugging sessions:
