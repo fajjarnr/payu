@@ -72,8 +72,8 @@ public class StatementService {
         LocalDate statementPeriod = YearMonth.of(request.getYear(), request.getMonth()).atDay(1);
 
         // Check if statement already exists
-        if (statementRepository.existsByUserIdAndStatementPeriod(request.getUserId(), statementPeriod)) {
-            log.info("Statement already exists for user {} and period {}", request.getUserId(), statementPeriod);
+        if (statementRepository.existsByCustomerIdAndStatementPeriod(request.getCustomerId(), statementPeriod)) {
+            log.info("Statement already exists for customer {} and period {}", request.getCustomerId(), statementPeriod);
             return;
         }
 
@@ -81,7 +81,7 @@ public class StatementService {
             // Create statement entity
             Statement statement = Statement.builder()
                 .id(UUID.randomUUID())
-                .userId(request.getUserId())
+                .customerId(request.getCustomerId())
                 .accountNumber(request.getAccountNumber())
                 .statementPeriod(statementPeriod)
                 .status(Statement.StatementStatus.GENERATING)
@@ -90,7 +90,7 @@ public class StatementService {
             statement = statementRepository.save(statement);
 
             // Fetch data from wallet and transaction services
-            StatementData data = fetchStatementData(request.getUserId(), statementPeriod);
+            StatementData data = fetchStatementData(request.getCustomerId(), statementPeriod);
 
             // Generate PDF
             byte[] pdfBytes = generatePdf(statement.getId(), data);
@@ -111,15 +111,15 @@ public class StatementService {
             // Publish event
             publishStatementGeneratedEvent(statement);
 
-            log.info("Successfully generated statement {} for user {}", statement.getId(), request.getUserId());
+            log.info("Successfully generated statement {} for customer {}", statement.getId(), request.getCustomerId());
 
         } catch (Exception e) {
-            log.error("Failed to generate statement for user {} and period {}",
-                request.getUserId(), statementPeriod, e);
+            log.error("Failed to generate statement for customer {} and period {}",
+                request.getCustomerId(), statementPeriod, e);
 
             // Mark as failed
-            Optional<Statement> failedStatement = statementRepository.findByUserIdAndStatementPeriod(
-                request.getUserId(), statementPeriod);
+            Optional<Statement> failedStatement = statementRepository.findByCustomerIdAndStatementPeriod(
+                request.getCustomerId(), statementPeriod);
             failedStatement.ifPresent(s -> {
                 s.markFailed();
                 statementRepository.save(s);
@@ -133,8 +133,8 @@ public class StatementService {
      * Get statement by ID (with user validation)
      */
     @Transactional(readOnly = true)
-    public StatementResponse getStatement(UUID statementId, UUID userId) {
-        Statement statement = statementRepository.findByIdAndUserId(statementId, userId)
+    public StatementResponse getStatement(UUID statementId, String customerId) {
+        Statement statement = statementRepository.findByIdAndUserId(statementId, customerId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
 
         statement.recordAccess();
@@ -147,8 +147,8 @@ public class StatementService {
      * List all statements for a user
      */
     @Transactional(readOnly = true)
-    public Page<StatementResponse> listStatements(UUID userId, Pageable pageable) {
-        Page<Statement> statements = statementRepository.findAllByUserId(userId, pageable);
+    public Page<StatementResponse> listStatements(String customerId, Pageable pageable) {
+        Page<Statement> statements = statementRepository.findAllByUserId(customerId, pageable);
         return new PageImpl<>(
             statements.stream().map(this::mapToResponse).toList(),
             statements.getPageable(),
@@ -160,16 +160,16 @@ public class StatementService {
      * Get latest statement for user
      */
     @Transactional(readOnly = true)
-    public Optional<StatementResponse> getLatestStatement(UUID userId) {
-        return statementRepository.findLatestCompletedByUserId(userId)
+    public Optional<StatementResponse> getLatestStatement(String customerId) {
+        return statementRepository.findLatestCompletedByUserId(customerId)
             .map(this::mapToResponse);
     }
 
     /**
      * Get statement PDF bytes
      */
-    public byte[] getStatementPdf(UUID statementId, UUID userId) {
-        Statement statement = statementRepository.findByIdAndUserId(statementId, userId)
+    public byte[] getStatementPdf(UUID statementId, String customerId) {
+        Statement statement = statementRepository.findByIdAndUserId(statementId, customerId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
 
         if (statement.getStatus() != Statement.StatementStatus.COMPLETED) {
@@ -195,7 +195,7 @@ public class StatementService {
             .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
 
         StatementGenerationRequest request = StatementGenerationRequest.builder()
-            .userId(statement.getUserId())
+            .customerId(statement.getCustomerId())
             .accountNumber(statement.getAccountNumber())
             .year(statement.getStatementPeriod().getYear())
             .month(statement.getStatementPeriod().getMonthValue())
@@ -220,17 +220,17 @@ public class StatementService {
     /**
      * Fetch statement data from wallet and transaction services
      */
-    private StatementData fetchStatementData(UUID userId, LocalDate statementPeriod) {
+    private StatementData fetchStatementData(String customerId, LocalDate statementPeriod) {
         LocalDate startDate = statementPeriod;
         LocalDate endDate = statementPeriod.plusMonths(1).minusDays(1);
 
         // Get balances from wallet service
-        BigDecimal openingBalance = walletServiceClient.getBalanceAtDate(userId, startDate.minusDays(1));
-        BigDecimal closingBalance = walletServiceClient.getBalanceAtDate(userId, endDate);
+        BigDecimal openingBalance = walletServiceClient.getBalanceAtDate(customerId, startDate.minusDays(1));
+        BigDecimal closingBalance = walletServiceClient.getBalanceAtDate(customerId, endDate);
 
         // Get transactions from transaction service
         List<TransactionRecord> transactions = transactionServiceClient.getTransactions(
-            userId, startDate, endDate);
+            customerId, startDate, endDate);
 
         // Calculate totals
         BigDecimal totalCredits = transactions.stream()
@@ -244,7 +244,7 @@ public class StatementService {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return StatementData.builder()
-            .userId(userId)
+            .customerId(customerId)
             .statementPeriod(statementPeriod)
             .openingBalance(openingBalance)
             .closingBalance(closingBalance)
@@ -536,7 +536,7 @@ public class StatementService {
     private void publishStatementGeneratedEvent(Statement statement) {
         StatementGeneratedEvent event = StatementGeneratedEvent.builder()
             .statementId(statement.getId())
-            .userId(statement.getUserId())
+            .customerId(statement.getCustomerId())
             .accountNumber(statement.getAccountNumber())
             .statementPeriod(statement.getStatementPeriod())
             .storagePath(statement.getStoragePath())
@@ -549,7 +549,7 @@ public class StatementService {
     private StatementResponse mapToResponse(Statement statement) {
         return StatementResponse.builder()
             .id(statement.getId())
-            .userId(statement.getUserId())
+            .customerId(statement.getCustomerId())
             .accountNumber(statement.getAccountNumber())
             .statementPeriod(statement.getStatementPeriod())
             .openingBalance(statement.getOpeningBalance())
@@ -567,7 +567,7 @@ public class StatementService {
     @lombok.Data
     @lombok.Builder
     private static class StatementData {
-        private UUID userId;
+        private UUID customerId;
         private LocalDate statementPeriod;
         private BigDecimal openingBalance;
         private BigDecimal closingBalance;
@@ -594,7 +594,7 @@ public class StatementService {
     @lombok.Builder
     public static class StatementGeneratedEvent {
         private UUID statementId;
-        private UUID userId;
+        private UUID customerId;
         private String accountNumber;
         private LocalDate statementPeriod;
         private String storagePath;

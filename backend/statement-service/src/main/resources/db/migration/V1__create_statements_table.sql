@@ -4,7 +4,7 @@
 -- Statements table for e-statement metadata
 CREATE TABLE IF NOT EXISTS statements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
+    customer_id VARCHAR(50) NOT NULL,
     account_number VARCHAR(50) NOT NULL,
     statement_period DATE NOT NULL,
     storage_path VARCHAR(500) NOT NULL,
@@ -21,19 +21,20 @@ CREATE TABLE IF NOT EXISTS statements (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_statements_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT chk_statements_status CHECK (status IN ('GENERATING', 'COMPLETED', 'FAILED', 'ARCHIVED')),
-    CONSTRAINT chk_statement_period UNIQUE (user_id, statement_period)
+    CONSTRAINT chk_statement_period UNIQUE (customer_id, statement_period)
 );
 
 -- Indexes for performance
-CREATE INDEX idx_statements_user_id ON statements(user_id);
+CREATE INDEX idx_statements_customer_id ON statements(customer_id);
 CREATE INDEX idx_statements_period ON statements(statement_period DESC);
 CREATE INDEX idx_statements_status ON statements(status);
-CREATE INDEX idx_statements_user_period ON statements(user_id, statement_period DESC);
+CREATE INDEX idx_statements_customer_period ON statements(customer_id, statement_period DESC);
 
 -- Comments for documentation
-COMMENT ON TABLE statements IS 'Monthly e-statement metadata for user accounts';
+COMMENT ON TABLE statements IS 'Monthly e-statement metadata for customer accounts';
+COMMENT ON COLUMN statements.customer_id IS 'Customer identifier from account-service';
+COMMENT ON COLUMN statements.account_number IS 'Customer account number';
 COMMENT ON COLUMN statements.statement_period IS 'First day of the statement month';
 COMMENT ON COLUMN statements.storage_path IS 'Path to PDF file in storage (S3 or local)';
 COMMENT ON COLUMN statements.status IS 'GENERATING, COMPLETED, FAILED, or ARCHIVED';

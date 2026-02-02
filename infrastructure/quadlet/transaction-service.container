@@ -1,48 +1,35 @@
-# PayU Transaction Service - Quadlet Container File
+# Generated quadlet file for transaction-service
+# This file can be used with systemd to manage the container
 
 [Container]
-Image=registry.payu.internal/payu/transaction-service:latest
-ContainerName=payu-transaction-service
+Image=localhost/transaction-service:latest
+ContainerName=transaction-service
 AutoUpdate=registry
-Network=payu-network
-
-# Port mapping
-PublishPort=8003:8003
-
-# Environment variables
-Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://payu-postgres:5432/payu_transaction
-Environment=SPRING_DATASOURCE_USERNAME=payu
-Environment=SPRING_KAFKA_BOOTSTRAP_SERVERS=payu-kafka:29092
-Environment=SERVICES_WALLET_URL=http://payu-wallet-service:8004
-Environment=SERVICES_BIFAST_URL=http://payu-bifast-simulator:8080
-Environment=SERVICES_QRIS_URL=http://payu-qris-simulator:8080
-Environment=OTEL_ENDPOINT=http://payu-jaeger:4317
-Environment=JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
-
-# Health check
-HealthCmd=curl -f http://localhost:8003/actuator/health/liveness || exit 1
-HealthInterval=15s
-HealthTimeout=5s
-HealthRetries=3
-HealthStartPeriod=30s
-
-# Resource limits
-Memory=1G
-MemorySwap=2G
-
-# Security options
-NoNewPrivileges=true
-RunInit=true
-
-# Logging
-LogDriver=journald
-LogOpt=tag=transaction-service
+Network=podman
+PodmanArgs=--network=host --label=io.payu.service=transaction-service
+# Add your custom arguments below
+# EnvironmentFile=/transaction-service/env
+# Volume=/transaction-service/config:/etc/transaction-service:ro
+# Volume=/transaction-service/data:/var/lib/transaction-service
 
 [Service]
+# Restart on failure, after 5 seconds
 Restart=on-failure
 RestartSec=5s
-TimeoutStartSec=60s
-TimeoutStopSec=30s
+
+# Health check
+ExecStartPre=/usr/bin/podman check-network podman
+ExecStartPre=/usr/bin/podman pull localhost/transaction-service:latest
+
+# Set resource limits
+# LimitMEM=512M
+# LimitCPU=1.0
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
 
 [Install]
 WantedBy=default.target

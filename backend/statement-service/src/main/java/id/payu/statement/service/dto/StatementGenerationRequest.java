@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StatementGenerationRequest {
 
-    @NotNull(message = "User ID is required")
-    private java.util.UUID userId;
+    @NotBlank(message = "Customer ID is required")
+    private String customerId;
 
     @NotBlank(message = "Account number is required")
     private String accountNumber;

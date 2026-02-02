@@ -1,0 +1,70 @@
+package id.payu.backoffice.config;
+
+import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.sql.DataSource;
+
+/**
+ * Configuration for Primary and Read Replica DataSources with optimized HikariCP.
+ *
+ * <p>Features:</p>
+ * <ul>
+ *   <li>Primary datasource for write operations</li>
+ *   <li>Read replica datasource for reporting/analytics queries</li>
+ *   <li>Tuned HikariCP connection pool settings</li>
+ *   <li>Connection validation and leak detection</li>
+ * </ul>
+ */
+@Configuration
+public class DataSourceConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(DataSourceConfiguration.class);
+
+    /**
+     * Primary datasource for write operations.
+     * Disabled in container profile to allow Spring Boot auto-configuration.
+     */
+    @Bean
+    @Primary
+    @Profile("!container")
+    @ConfigurationProperties(prefix = "spring.datasource.primary.hikari")
+    public DataSource primaryDataSource() {
+        log.info("Configuring primary datasource for write operations");
+        return DataSourceBuilder.create().type(HikariDataSource.class).build();
+    }
+
+    /**
+     * Read replica datasource for read operations.
+     * Disabled in container profile (no read replica in test environment).
+     */
+    @Bean
+    @Profile("!container")
+    @ConditionalOnProperty(prefix = "spring.datasource.read-replica", name = "enabled", havingValue = "true")
+    @ConfigurationProperties(prefix = "spring.datasource.read-replica.hikari")
+    public DataSource readReplicaDataSource() {
+        log.info("Configuring read replica datasource for read operations");
+        return DataSourceBuilder.create().type(HikariDataSource.class).build();
+    }
+
+    /**
+     * JdbcTemplate for read operations using read replica.
+     * Disabled in container profile (no read replica in test environment).
+     */
+    @Bean
+    @Profile("!container")
+    @ConditionalOnProperty(prefix = "spring.datasource.read-replica", name = "enabled", havingValue = "true")
+    public JdbcTemplate readJdbcTemplate(@Qualifier("readReplicaDataSource") DataSource readReplicaDataSource) {
+        return new JdbcTemplate(readReplicaDataSource);
+    }
+}

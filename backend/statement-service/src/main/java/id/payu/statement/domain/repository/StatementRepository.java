@@ -20,20 +20,20 @@ import java.util.UUID;
 public interface StatementRepository extends JpaRepository<Statement, UUID> {
 
     /**
-     * Find all statements for a user with pagination
+     * Find all statements for a customer with pagination
      */
-    @Query("SELECT s FROM Statement s WHERE s.userId = :userId ORDER BY s.statementPeriod DESC")
-    Page<Statement> findAllByUserId(@Param("userId") UUID userId, Pageable pageable);
+    @Query("SELECT s FROM Statement s WHERE s.customerId = :customerId ORDER BY s.statementPeriod DESC")
+    Page<Statement> findAllByCustomerId(@Param("customerId") String customerId, Pageable pageable);
 
     /**
-     * Find statement by user and period
+     * Find statement by customer and period
      */
-    Optional<Statement> findByUserIdAndStatementPeriod(UUID userId, LocalDate statementPeriod);
+    Optional<Statement> findByCustomerIdAndStatementPeriod(String customerId, LocalDate statementPeriod);
 
     /**
-     * Check if statement exists for user and period
+     * Check if statement exists for customer and period
      */
-    boolean existsByUserIdAndStatementPeriod(UUID userId, LocalDate statementPeriod);
+    boolean existsByCustomerIdAndStatementPeriod(String customerId, LocalDate statementPeriod);
 
     /**
      * Find statements by status
@@ -41,20 +41,20 @@ public interface StatementRepository extends JpaRepository<Statement, UUID> {
     List<Statement> findByStatus(Statement.StatementStatus status);
 
     /**
-     * Find statement by ID and user ID (security check)
+     * Find statement by ID and customer ID (security check)
      */
-    Optional<Statement> findByIdAndUserId(UUID id, UUID userId);
+    Optional<Statement> findByIdAndCustomerId(UUID id, String customerId);
 
     /**
-     * Get latest completed statement for user
+     * Get latest completed statement for customer
      */
-    @Query("SELECT s FROM Statement s WHERE s.userId = :userId AND s.status = 'COMPLETED' ORDER BY s.statementPeriod DESC LIMIT 1")
-    Optional<Statement> findLatestCompletedByUserId(@Param("userId") UUID userId);
+    @Query("SELECT s FROM Statement s WHERE s.customerId = :customerId AND s.status = 'COMPLETED' ORDER BY s.statementPeriod DESC LIMIT 1")
+    Optional<Statement> findLatestCompletedByCustomerId(@Param("customerId") String customerId);
 
     /**
-     * Count statements by user
+     * Count statements by customer
      */
-    long countByUserId(UUID userId);
+    long countByCustomerId(String customerId);
 
     /**
      * Find statements needing archival (older than 24 months)
@@ -63,10 +63,10 @@ public interface StatementRepository extends JpaRepository<Statement, UUID> {
     List<Statement> findStatementsForArchival(@Param("cutoffDate") LocalDate cutoffDate);
 
     /**
-     * Find statements by date range for user
+     * Find statements by date range for customer
      */
-    @Query("SELECT s FROM Statement s WHERE s.userId = :userId AND s.statementPeriod BETWEEN :startDate AND :endDate ORDER BY s.statementPeriod DESC")
-    List<Statement> findByUserIdAndStatementPeriodBetween(UUID userId, LocalDate startDate, LocalDate endDate);
+    @Query("SELECT s FROM Statement s WHERE s.customerId = :customerId AND s.statementPeriod BETWEEN :startDate AND :endDate ORDER BY s.statementPeriod DESC")
+    List<Statement> findByCustomerIdAndStatementPeriodBetween(String customerId, LocalDate startDate, LocalDate endDate);
 
     /**
      * Find statements in generating status that may be stuck

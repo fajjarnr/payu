@@ -1,50 +1,35 @@
-# PayU Wallet Service - Quadlet Container File
-# Core ledger and balance management service
+# Generated quadlet file for wallet-service
+# This file can be used with systemd to manage the container
 
 [Container]
-Image=registry.payu.internal/payu/wallet-service:latest
-ContainerName=payu-wallet-service
+Image=localhost/wallet-service:latest
+ContainerName=wallet-service
 AutoUpdate=registry
-Network=payu-network
-
-# Port mapping
-PublishPort=8004:8004
-
-# Environment variables
-Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://payu-postgres:5432/payu_wallet
-Environment=SPRING_DATASOURCE_USERNAME=payu
-Environment=SPRING_KAFKA_BOOTSTRAP_SERVERS=payu-kafka:29092
-Environment=OTEL_ENDPOINT=http://payu-jaeger:4317
-Environment=JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
-
-# Health check
-HealthCmd=curl -f http://localhost:8004/actuator/health/liveness || exit 1
-HealthInterval=15s
-HealthTimeout=5s
-HealthRetries=3
-HealthStartPeriod=30s
-
-# Resource limits - higher for ledger operations
-Memory=1.5G
-MemorySwap=3G
-CPUShares=2048
-
-# Security options
-NoNewPrivileges=true
-RunInit=true
-
-# Logging
-LogDriver=journald
-LogOpt=tag=wallet-service
+Network=podman
+PodmanArgs=--network=host --label=io.payu.service=wallet-service
+# Add your custom arguments below
+# EnvironmentFile=/wallet-service/env
+# Volume=/wallet-service/config:/etc/wallet-service:ro
+# Volume=/wallet-service/data:/var/lib/wallet-service
 
 [Service]
+# Restart on failure, after 5 seconds
 Restart=on-failure
 RestartSec=5s
-TimeoutStartSec=60s
-TimeoutStopSec=30s
 
-# Resource limits
-MemoryMax=2G
+# Health check
+ExecStartPre=/usr/bin/podman check-network podman
+ExecStartPre=/usr/bin/podman pull localhost/wallet-service:latest
+
+# Set resource limits
+# LimitMEM=512M
+# LimitCPU=1.0
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
 
 [Install]
 WantedBy=default.target

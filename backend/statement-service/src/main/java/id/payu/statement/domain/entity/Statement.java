@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "statements", indexes = {
-    @Index(name = "idx_statements_user_id", columnList = "user_id"),
+    @Index(name = "idx_statements_customer_id", columnList = "customer_id"),
     @Index(name = "idx_statements_period", columnList = "statement_period"),
     @Index(name = "idx_statements_status", columnList = "status")
 })
@@ -34,8 +34,8 @@ public class Statement {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @Column(name = "customer_id", nullable = false, length = 50)
+    private String customerId;
 
     @Column(name = "account_number", nullable = false, length = 50)
     private String accountNumber;

@@ -1,7 +1,6 @@
 package id.payu.api.common.controller;
 
 import id.payu.api.common.constant.ApiConstants;
-import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -25,7 +24,6 @@ public @interface RateLimit {
     /**
      * Alias for value.
      */
-    @AliasFor("value")
     int requests() default ApiConstants.DEFAULT_RATE_LIMIT_PER_MINUTE;
 
     /**

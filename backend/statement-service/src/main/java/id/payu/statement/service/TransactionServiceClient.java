@@ -28,9 +28,9 @@ public class TransactionServiceClient {
     /**
      * Get transactions for a user within a date range
      */
-    public List<StatementService.TransactionRecord> getTransactions(UUID userId, LocalDate startDate, LocalDate endDate) {
+    public List<StatementService.TransactionRecord> getTransactions(String customerId, LocalDate startDate, LocalDate endDate) {
         try {
-            String url = transactionServiceUrl + "/api/v1/transactions/user/" + userId
+            String url = transactionServiceUrl + "/api/v1/transactions/customer/" + customerId
                 + "?startDate=" + startDate + "&endDate=" + endDate;
 
             TransactionListResponse response = restTemplate.getForObject(url, TransactionListResponse.class);

@@ -1,10 +1,14 @@
 package id.payu.cms.domain.entity;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -66,9 +70,11 @@ public class Content {
     @Builder.Default
     private ContentStatus status = ContentStatus.DRAFT;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "targeting_rules", columnDefinition = "JSONB")
     private Map<String, Object> targetingRules; // User segment, location, device
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "JSONB")
     private Map<String, Object> metadata; // Custom fields
 

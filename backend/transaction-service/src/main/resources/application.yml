@@ -31,7 +31,7 @@ spring:
         pool-name: primary-pool
     # Read replica datasource for reporting/analytics queries
     read-replica:
-      enabled: ${READ_REPLICA_ENABLED}
+      enabled: ${READ_REPLICA_ENABLED:false}
       jdbc-url: jdbc:postgresql://${READ_REPLICA_HOST}:${READ_REPLICA_PORT}/payu_transactions_replica
       username: ${READ_REPLICA_USERNAME}
       password: ${READ_REPLICA_PASSWORD}

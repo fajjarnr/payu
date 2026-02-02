@@ -28,9 +28,9 @@ public class WalletServiceClient {
      * Get balance at a specific date (historical balance query)
      * For now, returns current balance - can be enhanced with balance history
      */
-    public BigDecimal getBalanceAtDate(UUID userId, LocalDate date) {
+    public BigDecimal getBalanceAtDate(String customerId, LocalDate date) {
         try {
-            String url = walletServiceUrl + "/api/v1/wallets/user/" + userId + "/balance";
+            String url = walletServiceUrl + "/api/v1/wallets/customer/" + customerId + "/balance";
             WalletBalanceResponse response = restTemplate.getForObject(url, WalletBalanceResponse.class);
             return response != null ? response.getBalance() : BigDecimal.ZERO;
         } catch (Exception e) {

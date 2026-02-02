@@ -21,7 +21,7 @@ import java.util.UUID;
 public class StatementResponse {
 
     private UUID id;
-    private UUID userId;
+    private String customerId;
     private String accountNumber;
     private LocalDate statementPeriod;
     private BigDecimal openingBalance;
@@ -47,7 +47,7 @@ public class StatementResponse {
     public static StatementResponse fromEntity(Statement entity, String baseUrl) {
         StatementResponse response = StatementResponse.builder()
             .id(entity.getId())
-            .userId(entity.getUserId())
+            .customerId(entity.getCustomerId())
             .accountNumber(entity.getAccountNumber())
             .statementPeriod(entity.getStatementPeriod())
             .openingBalance(entity.getOpeningBalance())

@@ -22,7 +22,7 @@ public class OpenApiConfiguration {
 
     public static final String SECURITY_SCHEME_NAME = "bearerAuth";
 
-    @Bean
+    @Bean("backofficeOpenApi")
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()

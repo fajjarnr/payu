@@ -1,0 +1,128 @@
+# ==================================================
+# PayU AB Testing Service Configuration
+# ==================================================
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ab-testing-service
+
+  # ==================================================
+  # Database Configuration (PostgreSQL)
+  # ==================================================
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/payu_ab_testing
+    username: ${DB_USERNAME:payu}
+    password: ${DB_PASSWORD:payu_password}
+    driver-class-name: org.postgresql.Driver
+
+  # ==================================================
+  # JPA/Hibernate Configuration
+  # ==================================================
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  # ==================================================
+  # Flyway Configuration
+  # ==================================================
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  # ==================================================
+  # Redis Configuration
+  # ==================================================
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+  # ==================================================
+  # Kafka Configuration
+  # ==================================================
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: ab-testing-service
+      auto-offset-reset: earliest
+
+  # ==================================================
+  # Keycloak/OAuth2 Configuration
+  # ==================================================
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+
+# ==================================================
+# Actuator Configuration
+# ==================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    enabled: true
+  observations:
+    enabled: true
+
+# ==================================================
+# Logging Configuration
+# ==================================================
+logging:
+  level:
+    id.payu.abtesting: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ==================================================
+# OpenAPI Documentation
+# ==================================================
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

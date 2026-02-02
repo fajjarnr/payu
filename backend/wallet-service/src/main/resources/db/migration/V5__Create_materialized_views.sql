@@ -6,37 +6,34 @@
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_wallet_balance_summary AS
 SELECT
     w.id as wallet_id,
-    w.customer_id,
-    date_trunc('day', b.updated_at) as date,
-    b.currency,
-    SUM(b.amount) as total_balance,
-    COUNT(b.*) as balance_entries,
-    AVG(b.amount) as avg_balance
+    w.account_id,
+    date_trunc('day', w.updated_at) as date,
+    w.currency,
+    w.balance as total_balance,
+    COUNT(*) as wallet_entries
 FROM wallets w
-JOIN balances b ON w.id = b.wallet_id
-WHERE b.updated_at >= CURRENT_DATE - INTERVAL '30 days'
-GROUP BY w.id, w.customer_id, date_trunc('day', b.updated_at), b.currency;
+WHERE w.updated_at >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY w.id, w.account_id, date_trunc('day', w.updated_at), w.currency, w.balance;
 
 CREATE INDEX IF NOT EXISTS idx_mv_wallet_balance_wallet_date ON mv_wallet_balance_summary(wallet_id, date);
-CREATE INDEX IF NOT EXISTS idx_mv_wallet_balance_customer_date ON mv_wallet_balance_summary(customer_id, date);
+CREATE INDEX IF NOT EXISTS idx_mv_wallet_balance_account_date ON mv_wallet_balance_summary(account_id, date);
 
 -- 2. Pocket Balance Distribution Materialized View
 -- Tracks balance distribution across pockets
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_pocket_balance_distribution AS
 SELECT
-    date_trunc('day', pb.updated_at) as date,
-    p.pocket_type,
-    COUNT(DISTINCT p.wallet_id) as pockets_count,
-    SUM(pb.amount) as total_balance,
-    AVG(pb.amount) as avg_balance,
-    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY pb.amount) as median_balance,
-    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY pb.amount) as p95_balance
+    date_trunc('day', p.updated_at) as date,
+    p.currency,
+    COUNT(DISTINCT p.account_id) as pockets_count,
+    SUM(p.balance) as total_balance,
+    AVG(p.balance) as avg_balance,
+    PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY p.balance) as median_balance,
+    PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY p.balance) as p95_balance
 FROM pockets p
-JOIN pocket_balances pb ON p.id = pb.pocket_id
-WHERE pb.updated_at >= CURRENT_DATE - INTERVAL '30 days'
-GROUP BY date_trunc('day', pb.updated_at), p.pocket_type;
+WHERE p.updated_at >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY date_trunc('day', p.updated_at), p.currency;
 
-CREATE INDEX IF NOT EXISTS idx_mv_pocket_dist_date_type ON mv_pocket_balance_distribution(date, pocket_type);
+CREATE INDEX IF NOT EXISTS idx_mv_pocket_dist_date_currency ON mv_pocket_balance_distribution(date, currency);
 
 -- 3. Ledger Entry Summary Materialized View
 -- Daily ledger summaries for reconciliation
@@ -47,9 +44,9 @@ SELECT
     currency,
     COUNT(*) as entry_count,
     SUM(amount) as total_amount,
-    SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as total_credits,
-    SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as total_debits,
-    COUNT(DISTINCT wallet_id) as unique_wallets
+    SUM(CASE WHEN entry_type = 'CREDIT' THEN amount ELSE 0 END) as total_credits,
+    SUM(CASE WHEN entry_type = 'DEBIT' THEN amount ELSE 0 END) as total_debits,
+    COUNT(DISTINCT account_id) as unique_wallets
 FROM ledger_entries
 WHERE created_at >= CURRENT_DATE - INTERVAL '90 days'
 GROUP BY date_trunc('day', created_at), entry_type, currency;
@@ -60,17 +57,13 @@ CREATE INDEX IF NOT EXISTS idx_mv_ledger_summary_date ON mv_ledger_daily_summary
 -- Daily card transaction metrics
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_card_transaction_summary AS
 SELECT
-    date_trunc('day', t.created_at) as date,
-    c.card_type,
-    c.status,
-    COUNT(t.id) as transaction_count,
-    SUM(t.amount) as total_amount,
-    AVG(t.amount) as avg_amount
-FROM cards c
-JOIN card_transactions t ON c.id = t.card_id
-WHERE t.created_at >= CURRENT_DATE - INTERVAL '90 days'
-    AND t.status = 'COMPLETED'
-GROUP BY date_trunc('day', t.created_at), c.card_type, c.status;
+    date_trunc('day', wt.created_at) as date,
+    COUNT(wt.id) as transaction_count,
+    SUM(wt.amount) as total_amount,
+    AVG(wt.amount) as avg_amount
+FROM wallet_transactions wt
+WHERE wt.created_at >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY date_trunc('day', wt.created_at);
 
 CREATE INDEX IF NOT EXISTS idx_mv_card_tx_summary_date ON mv_card_transaction_summary(date);
 
@@ -79,12 +72,10 @@ CREATE INDEX IF NOT EXISTS idx_mv_card_tx_summary_date ON mv_card_transaction_su
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_wallet_active_users AS
 SELECT
     date_trunc('day', le.created_at) as date,
-    COUNT(DISTINCT le.wallet_id) as active_wallets,
-    COUNT(DISTINCT w.customer_id) as active_customers,
+    COUNT(DISTINCT le.account_id) as active_wallets,
     SUM(le.amount) as total_volume,
     COUNT(le.id) as total_transactions
 FROM ledger_entries le
-JOIN wallets w ON le.wallet_id = w.id
 WHERE le.created_at >= CURRENT_DATE - INTERVAL '90 days'
 GROUP BY date_trunc('day', le.created_at);
 
@@ -104,7 +95,7 @@ $$ LANGUAGE plpgsql;
 
 -- Comments for documentation
 COMMENT ON MATERIALIZED VIEW mv_wallet_balance_summary IS 'Daily wallet balance summaries';
-COMMENT ON MATERIALIZED VIEW mv_pocket_balance_distribution IS 'Balance distribution across pocket types';
+COMMENT ON MATERIALIZED VIEW mv_pocket_balance_distribution IS 'Balance distribution across pockets';
 COMMENT ON MATERIALIZED VIEW mv_ledger_daily_summary IS 'Daily ledger summaries for reconciliation';
 COMMENT ON MATERIALIZED VIEW mv_card_transaction_summary IS 'Daily card transaction metrics';
 COMMENT ON MATERIALIZED VIEW mv_wallet_active_users IS 'Daily active wallet users and volume';
