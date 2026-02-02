@@ -285,7 +285,7 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
         {/* Icon */}
         <div
           className={clsx(
-            'h-16 w-16 rounded-[1.25rem] flex items-center justify-center mb-5 transition-transform group-hover:scale-110 shadow-lg',
+            'h-16 w-16 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 shadow-lg',
             action.bgColor
           )}
         >

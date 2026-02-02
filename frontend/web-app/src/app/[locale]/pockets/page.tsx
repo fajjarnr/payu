@@ -113,7 +113,7 @@ export default function PocketsPage() {
     return (
         <DashboardLayout>
             <PageTransition>
-                <div className="space-y-10">
+                <div className="space-y-12">
                     <StaggerContainer>
                         <StaggerItem>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
@@ -141,7 +141,7 @@ export default function PocketsPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
                             <StaggerItem className="md:col-span-12 lg:col-span-8">
-                                <div className="bg-card rounded-2xl p-8 sm:p-10 border border-border shadow-card flex flex-col justify-between min-h-[400px] relative overflow-hidden group shadow-2xl">
+                                <div className="bg-card rounded-2xl p-8 sm:p-8 border border-border shadow-card flex flex-col justify-between min-h-[400px] relative overflow-hidden group shadow-2xl">
                                     <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -z-0" />
 
                                     <div className="relative z-10 flex flex-col h-full">
@@ -390,7 +390,7 @@ export default function PocketsPage() {
                                                                 </div>
                                                                 <div className="flex items-center gap-2">
                                                                     <span className={clsx(
-                                                                        "text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider",
+                                                                        "text-xs font-bold px-2 py-0.5 rounded uppercase tracking-widest",
                                                                         member.role === 'OWNER' ? "bg-primary/10 text-primary" : member.role === 'ADMIN' ? "bg-bank-emerald/10 text-bank-emerald" : "bg-muted/50 text-muted-foreground"
                                                                     )}>
                                                                         {member.role}
@@ -411,9 +411,9 @@ export default function PocketsPage() {
                         </div>
 
                         <StaggerItem className="mt-12">
-                            <div className="bg-foreground text-background rounded-xl p-8 sm:p-12 relative overflow-hidden group shadow-card">
+                            <div className="bg-foreground text-background rounded-xl p-8 sm:p-8 relative overflow-hidden group shadow-card">
                                 <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
-                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                                     <div className="space-y-4 max-w-xl text-center md:text-left">
                                         <div className="flex items-center justify-center md:justify-start gap-4">
                                             <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">

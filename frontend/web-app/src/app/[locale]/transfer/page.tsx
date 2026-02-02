@@ -14,6 +14,7 @@ import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/c
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -210,21 +211,23 @@ export default function TransferPage() {
             <StaggerContainer>
               <StaggerItem>
                 <div className="flex items-center gap-6">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setShowReview(false)}
-                    className="p-3 bg-muted rounded-xl border border-border hover:bg-muted font-bold transition-all active:scale-95"
+                    className="w-14 h-14 bg-card rounded-xl border border-border shadow-sm"
                   >
                     <ChevronRight className="h-6 w-6 rotate-180" />
-                  </button>
+                  </Button>
                   <h2 className="text-3xl font-bold text-foreground">Tinjau Transfer</h2>
                 </div>
               </StaggerItem>
 
               <StaggerItem>
-                <div className="bg-card rounded-xl p-8 sm:p-12 shadow-card border border-border relative overflow-hidden group">
+                <div className="bg-card rounded-xl p-8 sm:p-8 shadow-card border border-border relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
 
-                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10 mb-12 pb-12 border-b border-border">
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 pb-12 border-b border-border">
                     <div className="flex items-center gap-6">
                       <div className={clsx("w-20 h-20 rounded-2xl flex items-center justify-center font-bold text-3xl shadow-lg transition-transform group-hover:rotate-3", selectedContactData?.color)}>
                         {selectedContactData?.initial}
@@ -289,14 +292,14 @@ export default function TransferPage() {
               </StaggerItem>
 
               <StaggerItem>
-                <ButtonMotion>
-                  <button
+                <ButtonMotion className="w-full">
+                  <Button
                     onClick={handleSubmit(onSubmit)}
                     disabled={transferMutation.isPending}
-                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-6 rounded-2xl font-bold text-xs tracking-widest uppercase shadow-2xl shadow-emerald-500/20 disabled:from-emerald-600/50 disabled:to-emerald-500/50 transition-all hover:shadow-emerald-500/40 active:scale-[0.98] border border-emerald-400/20"
+                    className="w-full h-16 rounded-2xl shadow-2xl shadow-emerald-500/20"
                   >
                     {transferMutation.isPending ? 'Memvalidasi Transaksi...' : 'Otorisasi Transfer Sekarang'}
-                  </button>
+                  </Button>
                 </ButtonMotion>
               </StaggerItem>
             </StaggerContainer>
@@ -318,7 +321,7 @@ export default function TransferPage() {
               </div>
             </StaggerItem>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-8">
               <StaggerItem className="md:col-span-12 lg:col-span-8 space-y-8">
                 <div className="bg-card rounded-2xl p-8 border border-border shadow-card">
                   <h3 className="text-sm font-bold text-foreground mb-6 tracking-widest uppercase">Pilih Metode Transfer</h3>
@@ -347,8 +350,8 @@ export default function TransferPage() {
                             <h4 className="font-bold text-foreground text-sm mb-1">{t.label}</h4>
                             <p className="text-xs text-muted-foreground mb-2">{t.description}</p>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider bg-muted/50 px-2 py-1 rounded">{t.fee}</span>
-                              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider bg-muted/50 px-2 py-1 rounded">{t.processingTime}</span>
+                              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/50 px-2 py-1 rounded">{t.fee}</span>
+                              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/50 px-2 py-1 rounded">{t.processingTime}</span>
                             </div>
                           </div>
                         </button>
@@ -402,7 +405,7 @@ export default function TransferPage() {
                               <Button
                                 variant={"outline"}
                                 className={clsx(
-                                  "w-full justify-start text-left font-bold py-10 rounded-[2rem] border-2 border-border bg-card hover:bg-muted/50 transition-all shadow-sm",
+                                  "w-full h-16 justify-start text-left font-bold rounded-xl border border-border bg-card hover:bg-muted/50 transition-all shadow-sm",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
@@ -414,8 +417,8 @@ export default function TransferPage() {
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-full sm:w-[600px] p-0 border-border bg-card shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] rounded-[2.5rem] overflow-hidden border-2" align="start" sideOffset={16}>
-                              <div className="px-10 py-8 border-b border-border bg-muted/30 flex items-center justify-between">
+                            <PopoverContent className="w-full sm:w-[400px] p-0 border-border bg-card shadow-2xl rounded-2xl overflow-hidden border" align="start" sideOffset={16}>
+                              <div className="px-8 py-6 border-b border-border bg-muted/30 flex items-center justify-between">
                                 <div className="space-y-1">
                                   <p className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase">Konfigurasi Jadwal</p>
                                   <p className="text-sm font-bold text-foreground">Pilih Tanggal Transfer</p>
@@ -439,14 +442,14 @@ export default function TransferPage() {
                   )}
 
                   {scheduleType === 'RECURRING' && (
-                    <div className="mt-8 space-y-10 animate-fade-in">
+                    <div className="mt-8 space-y-12 animate-fade-in">
                       <div className="space-y-4">
                         <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2">Pilih Tanggal Tagihan / Transfer</label>
                         <Controller
                           control={control}
                           name="recurringDay"
                           render={({ field }) => (
-                            <div className="grid grid-cols-7 gap-2 bg-muted/30 p-4 rounded-[2rem] border border-border">
+                            <div className="grid grid-cols-7 gap-2 bg-muted/30 p-4 rounded-xl border border-border">
                               {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
                                 <button
                                   key={d}
@@ -482,7 +485,7 @@ export default function TransferPage() {
                           control={control}
                           name="recurringMonth"
                           render={({ field }) => (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 bg-muted/30 p-4 rounded-[2.5rem] border border-border">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 bg-muted/30 p-4 rounded-2xl border border-border">
                               {['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'].map((m, idx) => {
                                 const val = idx + 1;
                                 return (
@@ -510,17 +513,17 @@ export default function TransferPage() {
                 </div>
 
                 <div className="relative group">
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <input
+                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
+                  <Input
                     {...register('toAccountId')}
                     type="text"
                     placeholder="Masukkan ID Akun atau Nomor Rekening"
-                    className="w-full pl-16 pr-8 py-8 rounded-2xl border border-border bg-card shadow-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg font-bold placeholder:text-muted-foreground/40 outline-none"
+                    className="pl-16 h-16 text-lg"
                   />
                   {errors.toAccountId && <p className="text-destructive text-xs mt-4 ml-6 font-bold tracking-widest uppercase">{errors.toAccountId.message}</p>}
                 </div>
 
-                <div className="bg-card rounded-2xl p-10 border border-border shadow-card relative overflow-hidden">
+                <div className="bg-card rounded-2xl p-8 border border-border shadow-card relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -z-0" />
 
                   <div className="flex justify-between items-center mb-10 relative z-10">
@@ -554,19 +557,19 @@ export default function TransferPage() {
                   </div>
                 </div>
 
-                <ButtonMotion>
-                  <button
+                <ButtonMotion className="w-full">
+                  <Button
                     onClick={handleReview}
-                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-6 rounded-2xl font-bold text-xs tracking-widest uppercase shadow-2xl shadow-emerald-500/20 flex items-center justify-center gap-4 group transition-all hover:shadow-emerald-500/40 active:scale-[0.98] border border-emerald-400/20"
+                    className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20 group"
                   >
                     Tinjau Ringkasan Transfer
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform" />
-                  </button>
+                    <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-2 transition-transform" />
+                  </Button>
                 </ButtonMotion>
               </StaggerItem>
 
               <StaggerItem className="md:col-span-12 lg:col-span-4 space-y-8">
-                <div className="bg-card rounded-2xl p-10 border border-border shadow-card h-full flex flex-col">
+                <div className="bg-card rounded-2xl p-8 border border-border shadow-card h-full flex flex-col">
                   <div className="flex justify-between items-center mb-10">
                     <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">Penerima Favorit</h3>
                     <div className="h-1 w-8 bg-primary rounded-full" />

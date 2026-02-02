@@ -19,27 +19,27 @@ import { SkipLink } from '@/lib/a11y';
 
 // Lazy load below-the-fold components
 const StatsCharts = dynamic(() => import('@/components/dashboard').then(mod => mod.StatsCharts), {
-  loading: () => <Skeleton className="h-[300px] w-full rounded-xl" />,
+  loading: () => <Skeleton className="h-[300px] w-full rounded-2xl" />,
   ssr: false
 });
 const TransferActivity = dynamic(() => import('@/components/dashboard').then(mod => mod.TransferActivity), {
-  loading: () => <Skeleton className="h-[200px] w-full rounded-xl" />
+  loading: () => <Skeleton className="h-[200px] w-full rounded-2xl" />
 });
 const FinancialHealthScore = dynamic(() => import('@/components/dashboard').then(mod => mod.FinancialHealthScore), {
-  loading: () => <Skeleton className="h-[150px] w-full rounded-xl" />
+  loading: () => <Skeleton className="h-[150px] w-full rounded-2xl" />
 });
 const SpendingInsights = dynamic(() => import('@/components/dashboard').then(mod => mod.SpendingInsights), {
-  loading: () => <Skeleton className="h-[200px] w-full rounded-xl" />
+  loading: () => <Skeleton className="h-[200px] w-full rounded-2xl" />
 });
 const BudgetTracking = dynamic(() => import('@/components/dashboard').then(mod => mod.BudgetTracking), {
-  loading: () => <Skeleton className="h-[150px] w-full rounded-xl" />
+  loading: () => <Skeleton className="h-[150px] w-full rounded-2xl" />
 });
 const InvestmentPerformance = dynamic(() => import('@/components/dashboard').then(mod => mod.InvestmentPerformance), {
-  loading: () => <Skeleton className="h-[250px] w-full rounded-xl" />,
+  loading: () => <Skeleton className="h-[250px] w-full rounded-2xl" />,
   ssr: false
 });
 const SegmentedOffers = dynamic(() => import('@/components/personalization').then(mod => mod.SegmentedOffers), {
-  loading: () => <Skeleton className="h-[200px] w-full rounded-xl" />
+  loading: () => <Skeleton className="h-[200px] w-full rounded-2xl" />
 });
 
 export default function Home() {
@@ -71,7 +71,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
 
    <main id="main-content">
     <PageTransition>
-     <StaggerContainer className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-12">
+     <StaggerContainer className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-8">
       {/* Banner Carousel - Full Width */}
       <StaggerItem className="md:col-span-12 lg:col-span-12">
        <BannerCarousel autoPlayInterval={6000} />
@@ -79,7 +79,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
 
       {/* Balance Card - Priority Content */}
       <StaggerItem className="md:col-span-12 lg:col-span-12">
-       {balanceLoading ? <Skeleton className="h-64 rounded-xl" /> : (
+       {balanceLoading ? <Skeleton className="h-64 rounded-2xl" /> : (
         <BalanceCard
          balance={balance?.balance || 0}
          percentage={45.2}
@@ -125,8 +125,8 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
 
       {/* Investment CTA - Full Width */}
       <StaggerItem className="md:col-span-12 lg:col-span-12">
-       <div className="card-gradient rounded-[2rem] p-8 sm:p-12 lg:p-16 text-primary-foreground relative overflow-hidden group shadow-card border border-white/10">
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+       <div className="card-gradient rounded-2xl p-8 sm:p-8 lg:p-8 text-primary-foreground relative overflow-hidden group shadow-card border border-white/10">
+        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
          <div className="space-y-6 text-center lg:text-left">
           <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight leading-none">{t('futureTitle')}</h3>
           <p className="text-base sm:text-xl font-medium opacity-90 max-w-2xl leading-relaxed">

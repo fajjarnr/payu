@@ -1,4 +1,5 @@
 -- Transaction archives table for data archival strategy
+-- Simplified version without partitioning for compatibility
 CREATE TABLE transaction_archives (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reference_number VARCHAR(50) UNIQUE NOT NULL,
@@ -30,36 +31,8 @@ CREATE INDEX idx_transaction_archives_created ON transaction_archives(created_at
 CREATE INDEX idx_transaction_archives_status ON transaction_archives(status);
 CREATE INDEX idx_transaction_archives_archived_at ON transaction_archives(archived_at DESC);
 CREATE INDEX idx_transaction_archives_batch ON transaction_archives(archived_batch_id);
-
--- Partition transaction_archives by year for better performance
-CREATE TABLE transaction_archives_y2024 PARTITION OF transaction_archives
-    FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
-
-CREATE TABLE transaction_archives_y2025 PARTITION OF transaction_archives
-    FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
-
-CREATE TABLE transaction_archives_y2026 PARTITION OF transaction_archives
-    FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
+-- Index for date-based queries (using generated column pattern)
+CREATE INDEX idx_transaction_archives_created_date ON transaction_archives(created_at DESC);
 
 -- Create a sequence for batch IDs
-CREATE SEQUENCE archival_batch_id_seq START WITH 1;
-
--- Function to create new yearly partitions automatically
-CREATE OR REPLACE FUNCTION create_transaction_archive_partition(year INT)
-RETURNS VOID AS $$
-DECLARE
-    start_date DATE;
-    end_date DATE;
-    partition_name TEXT;
-BEGIN
-    start_date := TO_DATE(year::TEXT, 'YYYY');
-    end_date := start_date + INTERVAL '1 year';
-    partition_name := 'transaction_archives_y' || year::TEXT;
-
-    EXECUTE FORMAT(
-        'CREATE TABLE IF NOT EXISTS %I PARTITION OF transaction_archives
-         FOR VALUES FROM (%L) TO (%L)',
-        partition_name, start_date, end_date
-    );
-END;
-$$ LANGUAGE plpgsql;
+CREATE SEQUENCE IF NOT EXISTS archival_batch_id_seq START WITH 1;

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
@@ -6,6 +6,9 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Export isAxiosError for type checking
+export { isAxiosError };
 
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {

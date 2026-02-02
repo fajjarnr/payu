@@ -1,0 +1,201 @@
+'use client';
+
+import React, { useState } from 'react';
+import { 
+  Bell, 
+  Search, 
+  Trash2, 
+  CheckCircle2, 
+  Clock, 
+  MessageSquare, 
+  Gift, 
+  ShieldAlert, 
+  ArrowRight,
+  Filter,
+  MoreVertical,
+  Inbox
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import DashboardLayout from '@/components/DashboardLayout';
+import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import clsx from 'clsx';
+
+const MOCK_NOTIFICATIONS = [
+  {
+    id: '1',
+    title: 'Bonus Deposito Ramadan',
+    content: 'Selamat! Anda berhak mendapatkan cashback 10% untuk deposito hari ini. Promo berlaku hingga pukul 23:59 WIB.',
+    type: 'PROMO',
+    read: false,
+    timestamp: '2026-02-02T05:00:00Z'
+  },
+  {
+    id: '2',
+    title: 'Pemeliharaan BI-FAST',
+    content: 'Layanan BI-FAST akan dihentikan sementara pada tanggal 5 Februari 2026 pukul 01:00 - 05:00 WIB untuk peningkatan kualitas.',
+    type: 'ALERT',
+    read: true,
+    timestamp: '2026-02-01T15:30:00Z'
+  },
+  {
+    id: '3',
+    title: 'Login Baru Terdeteksi',
+    content: 'Akun Anda baru saja login dari perangkat Linux di Jakarta. Jika ini bukan Anda, segera ubah PIN keamanan Anda.',
+    type: 'SECURITY',
+    read: false,
+    timestamp: '2026-02-01T10:15:00Z'
+  },
+  {
+    id: '4',
+    title: 'Update Syarat & Ketentuan',
+    content: 'Kami telah memperbarui kebijakan privasi kami. Silakan tinjau perubahan terbaru untuk terus menggunakan layanan PayU.',
+    type: 'INFO',
+    read: true,
+    timestamp: '2026-01-25T09:00:00Z'
+  }
+];
+
+export default function NotificationsPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('ALL');
+
+  const filteredNotifs = MOCK_NOTIFICATIONS.filter(n => {
+    const matchesSearch = n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          n.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'ALL' || n.type === filter || (filter === 'UNREAD' && !n.read);
+    return matchesSearch && matchesFilter;
+  });
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'PROMO': return <Gift className="h-5 w-5 text-emerald-500" />;
+      case 'ALERT': return <ShieldAlert className="h-5 w-5 text-rose-500" />;
+      case 'SECURITY': return <Clock className="h-5 w-5 text-amber-500" />;
+      default: return <MessageSquare className="h-5 w-5 text-blue-500" />;
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      <PageTransition>
+        <div className="w-full space-y-12">
+          <StaggerContainer>
+            {/* Header */}
+            <StaggerItem>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Kotak Masuk</h2>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Kelola notifikasi, promo, dan peringatan keamanan Anda.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" className="text-xs font-bold tracking-widest uppercase hover:text-emerald-500">
+                    Tandai Semua Dibaca
+                  </Button>
+                  <Button variant="ghost" className="text-xs font-bold tracking-widest uppercase text-rose-500 hover:bg-rose-500/5">
+                    Hapus Semua
+                  </Button>
+                </div>
+              </div>
+            </StaggerItem>
+
+            {/* Toolbar */}
+            <StaggerItem>
+              <div className="flex flex-col md:flex-row gap-4 bg-card border border-border p-3 rounded-2xl shadow-sm">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Cari notifikasi..." 
+                    className="pl-12 bg-transparent border-none focus-visible:ring-0 h-12 text-sm font-bold uppercase tracking-widest"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2 pr-2">
+                  {['ALL', 'UNREAD', 'PROMO', 'SECURITY'].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setFilter(f)}
+                      className={clsx(
+                        "px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase transition-all",
+                        filter === f 
+                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" 
+                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                      )}
+                    >
+                      {f === 'ALL' ? 'Semua' : f === 'UNREAD' ? 'Belum Dibaca' : f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </StaggerItem>
+
+            {/* Notifications List */}
+            <StaggerItem>
+              <div className="space-y-4 mt-8">
+                {filteredNotifs.length === 0 ? (
+                  <div className="text-center py-20 bg-card border border-border rounded-2xl">
+                    <Inbox className="h-16 w-16 text-muted-foreground mx-auto opacity-20 mb-6" />
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Tidak ada notifikasi</p>
+                  </div>
+                ) : (
+                  filteredNotifs.map((n) => (
+                    <div 
+                      key={n.id} 
+                      className={clsx(
+                        "group bg-card border border-border p-6 rounded-2xl shadow-sm transition-all hover:shadow-md hover:border-emerald-500/30 flex items-start gap-6 relative overflow-hidden",
+                        !n.read && "border-l-4 border-l-emerald-500"
+                      )}
+                    >
+                      {!n.read && (
+                        <div className="absolute top-0 right-0 p-2">
+                          <div className="h-2 w-2 bg-emerald-500 rounded-full" />
+                        </div>
+                      )}
+                      
+                      <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center border border-border shrink-0 text-xl shadow-sm group-hover:scale-110 transition-transform">
+                        {getIcon(n.type)}
+                      </div>
+
+                      <div className="flex-1 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <Badge variant="outline" className="text-xs font-bold uppercase tracking-widest px-2 py-0 border-emerald-500/20 text-emerald-500">
+                            {n.type}
+                          </Badge>
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                            {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <h3 className={clsx("text-lg font-bold text-foreground", !n.read && "text-emerald-600")}>
+                          {n.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {n.content}
+                        </p>
+                        <div className="pt-4 flex items-center justify-between">
+                          <button className="text-xs font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-2 group/btn">
+                            Lihat Detail
+                            <ArrowRight className="h-3 w-3 transition-transform group-hover/btn:translate-x-1" />
+                          </button>
+                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/5">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </StaggerItem>
+          </StaggerContainer>
+        </div>
+      </PageTransition>
+    </DashboardLayout>
+  );
+}

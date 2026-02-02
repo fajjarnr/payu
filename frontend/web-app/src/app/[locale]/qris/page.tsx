@@ -18,15 +18,15 @@ export default function QRISPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8 xl:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8 xl:gap-8">
           {/* Main Scanner Column (8 units) */}
-          <div className="md:col-span-12 lg:col-span-8 space-y-8 xl:space-y-10">
-            <div className="bg-card rounded-2xl border border-border shadow-2xl relative overflow-hidden group min-h-[480px] xl:min-h-[550px] flex flex-col items-center justify-center p-10 sm:p-14 xl:p-16">
+          <div className="md:col-span-12 lg:col-span-8 space-y-8 xl:space-y-12">
+            <div className="bg-card rounded-2xl border border-border shadow-2xl relative overflow-hidden group min-h-[480px] xl:min-h-[550px] flex flex-col items-center justify-center p-8 sm:p-14 xl:p-8">
               {/* Premium Background Effects */}
               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -z-0" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] -z-0" />
               
-              <div className="relative z-10 w-full max-w-md text-center space-y-10">
+              <div className="relative z-10 w-full max-w-md text-center space-y-12">
                 <div className="relative aspect-square max-w-[350px] xl:max-w-[400px] mx-auto">
                     {/* Scanner Frame */}
                     <div className="absolute inset-0 bg-muted/20 rounded-2xl border-2 border-dashed border-border group-hover:border-emerald-500/40 transition-all duration-700" />
@@ -59,7 +59,7 @@ export default function QRISPage() {
             </div>
 
             {/* Recent Payments Section */}
-            <div className="bg-card rounded-2xl border border-border shadow-sm p-8 sm:p-10 xl:p-12">
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-8 sm:p-8 xl:p-8">
               <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-3">
                     <History className="h-5 w-5 text-emerald-500" />
@@ -80,9 +80,9 @@ export default function QRISPage() {
           </div>
 
           {/* Right Sidebar Column (4 units) */}
-          <div className="md:col-span-12 lg:col-span-4 space-y-8 xl:space-y-10">
+          <div className="md:col-span-12 lg:col-span-4 space-y-8 xl:space-y-12">
             {/* Security Status Card */}
-            <div className="bg-card rounded-2xl p-8 xl:p-10 border border-border shadow-sm">
+            <div className="bg-card rounded-2xl p-8 xl:p-8 border border-border shadow-sm">
               <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] mb-8 uppercase opacity-60">Protokol Keamanan</h3>
               <div className="space-y-8">
                 <div className="flex gap-4">
@@ -107,7 +107,7 @@ export default function QRISPage() {
             </div>
 
             {/* My QR Card */}
-            <div className="bg-gray-900 rounded-2xl p-8 xl:p-10 text-white relative overflow-hidden shadow-2xl group border border-white/5">
+            <div className="bg-gray-900 rounded-2xl p-8 xl:p-8 text-white relative overflow-hidden shadow-2xl group border border-white/5">
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-8">
                     <div>
@@ -132,7 +132,7 @@ export default function QRISPage() {
             </div>
 
             {/* Daily Limit Card */}
-            <div className="bg-muted/30 rounded-2xl p-8 xl:p-10 border border-border flex flex-col justify-between min-h-[180px] xl:min-h-[200px]">
+            <div className="bg-muted/30 rounded-2xl p-8 xl:p-8 border border-border flex flex-col justify-between min-h-[180px] xl:min-h-[200px]">
                <div className="space-y-1">
                   <p className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase opacity-60">Limit Harian QRIS</p>
                   <p className="text-2xl xl:text-3xl font-bold text-foreground tabular-nums">Rp 10.000.000</p>

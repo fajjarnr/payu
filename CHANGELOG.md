@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+
+- **UI Inconsistencies**: Fixed mismatched padding, inconsistent corner radii, and arbitrary font sizes across 15+ micro-frontend pages.
+- **Icon Naming**: Standardized Lucide icon imports to PascalCase across the Bills and Transfer pages.
+- **Store Signatures**: Updated `addToast` calls to match the new `useUIStore` signature.
+- **JSX Syntax**: Fixed nested `div` errors in the Rewards and KYC/Customer Ops pages.
 - **E2E Test Improvements (P17-C13)**:
   - **Registration Flow**: Increased pass rate from 7% (2/27) to **100%** (23/23)
     - Fixed translation content mismatches (hardcoded vs `next-intl`)
@@ -39,8 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `debugging-methodology` skill with recent PayU case studies
   - Added `playwright-e2e-debugging.md` reference guide
   - Updated `TODOS.md` with current E2E test status
+  - Expanded `TODOS.md` with detailed P17 execution breakdown
 
 ### Added
+
 - **GEMINI Debugging Knowledge Base**:
   - Location: `docs/guides/GEMINI_DEBUGGING_GUIDE.md`
   - Covers: Four-phase debugging process, platform-specific patterns, case studies
@@ -54,8 +61,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Verified frontend-backend service alignment
   - Identified missing `/exchange` page for fx-service
   - Documented all microservice mappings
+- **UI Standardization & Premium Design System (Emerald v4.0)**:
+  - **Global Audit**: Conducted a full-stack UI audit across 22 pages to ensure design consistency.
+  - **Typography**: Enforced Outfit (Headers) and Inter (Body) fonts with standardized size scales.
+  - **Spacing System**: Implemented strict 8pt grid with unified padding (`p-8`, `px-6 sm:px-10 lg:px-12`).
+  - **Geometry**: Standardized corner radii to `rounded-xl` (12px) for controls and `rounded-2xl` (16px) for containers.
+  - **Component Migration**: Replaced custom UI with Radix UI Primitives (Tabs, Switch, Slider) and custom Stepper.
+  - **Input High-Density**: Standardized all form inputs to `h-14` with refined focus states.
+  - **Backoffice Refactor**: Redesigned the Command Center, Fraud Monitoring, and KYC Review pages.
 
 ### Fixed
+
 - **UI Contrast & Visibility**:
   - Enhanced visibility for dashboard header elements (Search bar, Notification button, and User menu) to prevent blending with backgrounds.
   - Implemented `bg-card` and `shadow-md` for all interactive header components.
@@ -68,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Restored default Tailwind line-height logic by removing custom overrides in `globals.css`.
 
 ### Added
+
 - **Rupiah Formatting Protocol**:
   - Implemented automatic thousand separator (.) for Rupiah inputs in the transfer flow.
   - Standardized monetary displays to use `toLocaleString('id-ID')` for consistent Indonesian formatting.
@@ -102,6 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **P1 Complete**: Mobile App Production Ready (Jest, Types, Lint)
 
 ### Changed
+
 - **Backend Standardization (Phase 2)**:
   - **Backoffice Service Migration**:
     - Migrated from Quarkus/Panache to Spring Boot 3.4/JPA
@@ -132,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-02-02
 
 ### Fixed
+
 - **Container Environment - All Backend Services**: Resolved all 9 failing service startup issues
   - Created DataSourceConfiguration with @Profile("!container") for 9 services
   - Services: transaction-service, wallet-service, statement-service, backoffice-service, cms-service, compliance-service, fx-service, ab-testing-service, lending-service
@@ -153,10 +172,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed V1 migration to remove FK constraint and use String type
 
 ### Changed
+
 - **Production Readiness**: 85% → 95% (All 18 containers running healthy)
 - **Platform Maturity**: Container phase now complete with all services operational
 
 ### Infrastructure
+
 - Created quadlet container definitions for 7 new services:
   - ab-testing-service.container, backoffice-service.container, cms-service.container
   - fx-service.container, lending-service.container, statement-service.container
@@ -165,10 +186,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-01-31
 
 ### Fixed
+
 - **Wallet Service**: Fixed unit tests by mocking `CacheService` and restoring missing imports.
 - **Gateway Service**: Fixed unit tests by disabling infrastructure-dependent tests and configuring comprehensive mock overrides in `application.yaml`.
 
 ### Added
+
 - **TDD Practices Skill**: Created comprehensive TDD skill for error prevention
   - Location: `.claude/skills/tdd-practices/SKILL.md`
   - Covers: Red-Green-Refactor cycle, test design principles, configuration validation
@@ -186,6 +209,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Metrics: 11 port interfaces created, 5 files modified, 4 services fixed
 
 ### Fixed
+
 - **Wallet-Service & Compliance-Service Port Interfaces - Complete**:
   - wallet-service: Added FxRateProviderPort (FX rate operations) and PocketPersistencePort (multi-currency sub-wallets)
   - compliance-service: Added AuditReportPersistencePort (regulatory compliance) and DataAccessAuditPersistencePort (GDPR compliance)
@@ -302,6 +326,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.1] - 2026-01-25
 
 ### Added
+
 - **Testing Infrastructure**:
   - Fixed compilation issues in account-service by replacing Lombok annotations with explicit code
     - Replaced @Data, @Builder, @Getter, @Setter with explicit getters/setters/builders
@@ -740,6 +765,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All services now include resource limits and optimized health checks
 
 ### Added
+
 - **Developer Documentation Site** (Frontend):
   - Built comprehensive developer documentation site with Next.js 16 and TypeScript
   - Integration guides for Partner payments, QRIS, and BI-FAST
@@ -847,7 +873,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - MFATokenServiceTest (23 test cases)
     - KeycloakServiceTest (13 test cases including MFA flows)
   - Structured JSON logging for audit trail
-
 
 - **Biometric Edge Authentication Bridge** (Backend - Auth Service):
   - Implemented biometric authentication bridge for mobile app using asymmetric cryptography (ECDSA)
@@ -960,19 +985,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added DTOs: `CreateScheduledTransferRequest`, `ScheduledTransferResponse`
   - Enabled Spring scheduling via `@EnableScheduling` annotation
 
- - **Gamification System** (Backend - Promotion Service):
-   - Daily check-in rewards with consecutive day tracking
-   - Streak-based loyalty point rewards (5-200 points based on streak length)
-   - Transaction-based XP system (1 XP per 10,000 IDR)
-   - 10-level progression system with Indonesian level names
-   - Automatic badge earning for transactions, amounts, and achievements
-   - Level rewards with loyalty points at each milestone
-   - Domain models: `DailyCheckin`, `Badge`, `UserBadge`, `UserLevel`, `XpTransaction`, `LevelReward`
-   - REST API endpoints at `/api/v1/gamification/`
-   - Database migration `V2__create_gamification_tables.sql`
-   - DTOs for all gamification operations
-   - Comprehensive unit tests with 20 test cases
-   - Integration tests for REST endpoints
+- **Gamification System** (Backend - Promotion Service):
+  - Daily check-in rewards with consecutive day tracking
+  - Streak-based loyalty point rewards (5-200 points based on streak length)
+  - Transaction-based XP system (1 XP per 10,000 IDR)
+  - 10-level progression system with Indonesian level names
+  - Automatic badge earning for transactions, amounts, and achievements
+  - Level rewards with loyalty points at each milestone
+  - Domain models: `DailyCheckin`, `Badge`, `UserBadge`, `UserLevel`, `XpTransaction`, `LevelReward`
+  - REST API endpoints at `/api/v1/gamification/`
+  - Database migration `V2__create_gamification_tables.sql`
+  - DTOs for all gamification operations
+  - Comprehensive unit tests with 20 test cases
+  - Integration tests for REST endpoints
 
 - **Frontend Quality Assurance** (Frontend):
   - Implemented Vitest unit testing suite for critical frontend components and logic
@@ -1385,13 +1410,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `backup_restore_kafka.sh` - Kafka topic backup and restore
   - `verify_docker_compose.sh` - Docker infrastructure verification
 
-   - **Backup-Restore Test Suite** (`tests/infrastructure/test_backup_restore.py`):
-   - 31 tests covering backup scripts, documentation, and DRP scenarios
-   - Tests: Script existence, syntax validation, DRP documentation content
-   - Coverage: PostgreSQL, Redis, Kafka, orchestration, and DRP workflows
-   - All 22 tests passing (9 tests skipped - require running infrastructure)
+  - **Backup-Restore Test Suite** (`tests/infrastructure/test_backup_restore.py`):
+  - 31 tests covering backup scripts, documentation, and DRP scenarios
+  - Tests: Script existence, syntax validation, DRP documentation content
+  - Coverage: PostgreSQL, Redis, Kafka, orchestration, and DRP workflows
+  - All 22 tests passing (9 tests skipped - require running infrastructure)
 
 ### Fixed
+
 - **Backup Script Configuration**:
   - Added `BACKUP_ROOT` environment variable support to all backup scripts
   - Modified scripts: `backup_postgres.sh`, `backup_restore_redis.sh`, `backup_restore_kafka.sh`, `restore_postgres.sh`
@@ -1414,11 +1440,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Infrastructure tests: PostgreSQL backup/restore, Redis backup, Kafka backup
   - Generates test report with pass/fail/skip counts
 
- - **E2E Tests for KYC Service** (`backend/kyc-service/tests/e2e/`):
-  - `test_kyc_workflow.py` - Complete KYC verification workflow tests
-  - Tests: Start verification, KTP upload, selfie upload, status retrieval
-  - Test scenarios: Success case, liveness failure, face match failure
-  - Mock services: OCR, Liveness, Face Matching, Dukcapil, Kafka
+- **E2E Tests for KYC Service** (`backend/kyc-service/tests/e2e/`):
+- `test_kyc_workflow.py` - Complete KYC verification workflow tests
+- Tests: Start verification, KTP upload, selfie upload, status retrieval
+- Test scenarios: Success case, liveness failure, face match failure
+- Mock services: OCR, Liveness, Face Matching, Dukcapil, Kafka
 
 - **E2E Tests for Analytics Service** (`backend/analytics-service/tests/e2e/`):
   - `test_analytics_workflow.py` - Complete analytics workflow tests

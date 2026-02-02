@@ -27,15 +27,15 @@ import javax.sql.DataSource;
  * </ul>
  */
 @Configuration
-public class DataSourceConfiguration {
+public class BackofficeDataSourceConfiguration {
 
-    private static final Logger log = LoggerFactory.getLogger(DataSourceConfiguration.class);
+    private static final Logger log = LoggerFactory.getLogger(BackofficeDataSourceConfiguration.class);
 
     /**
      * Primary datasource for write operations.
      * Disabled in container profile to allow Spring Boot auto-configuration.
      */
-    @Bean
+    @Bean("backofficePrimaryDataSource")
     @Primary
     @Profile("!container")
     @ConfigurationProperties(prefix = "spring.datasource.primary.hikari")
@@ -48,7 +48,7 @@ public class DataSourceConfiguration {
      * Read replica datasource for read operations.
      * Disabled in container profile (no read replica in test environment).
      */
-    @Bean
+    @Bean("backofficeReadReplicaDataSource")
     @Profile("!container")
     @ConditionalOnProperty(prefix = "spring.datasource.read-replica", name = "enabled", havingValue = "true")
     @ConfigurationProperties(prefix = "spring.datasource.read-replica.hikari")
@@ -61,10 +61,10 @@ public class DataSourceConfiguration {
      * JdbcTemplate for read operations using read replica.
      * Disabled in container profile (no read replica in test environment).
      */
-    @Bean
+    @Bean("backofficeReadJdbcTemplate")
     @Profile("!container")
     @ConditionalOnProperty(prefix = "spring.datasource.read-replica", name = "enabled", havingValue = "true")
-    public JdbcTemplate readJdbcTemplate(@Qualifier("readReplicaDataSource") DataSource readReplicaDataSource) {
+    public JdbcTemplate readJdbcTemplate(@Qualifier("backofficeReadReplicaDataSource") DataSource readReplicaDataSource) {
         return new JdbcTemplate(readReplicaDataSource);
     }
 }

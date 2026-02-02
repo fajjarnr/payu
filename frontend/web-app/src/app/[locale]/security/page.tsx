@@ -5,6 +5,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { ShieldCheck, Fingerprint, Key, Smartphone, Lock, Monitor, ShieldAlert } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 
 export default function SecurityPage() {
   const sessions = [
@@ -35,7 +37,7 @@ export default function SecurityPage() {
             {/* Security Options */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <StaggerItem>
-                <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card relative overflow-hidden group h-full">
+                <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card relative overflow-hidden group h-full">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all" />
 
                   <div className="flex items-center gap-6 mb-8 relative z-10">
@@ -52,18 +54,16 @@ export default function SecurityPage() {
                     <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                       Wajibkan sidik jari atau FaceID untuk setiap transaksi di atas <span className="font-bold text-foreground">Rp 1.000.000</span>.
                     </p>
-                    <div className="flex items-center justify-between p-5 bg-muted/30 rounded-xl border border-border group-hover:border-primary/20 transition-all">
+                    <div className="flex items-center justify-between p-5 bg-muted/20 rounded-xl border border-border group-hover:border-primary/20 transition-all">
                       <span className="text-xs font-bold text-foreground tracking-widest uppercase">Status Keamanan: Aktif</span>
-                      <div className="w-12 h-6 bg-primary rounded-full p-1 relative cursor-pointer shadow-inner shadow-black/10">
-                        <div className="w-4 h-4 bg-white rounded-full translate-x-6 shadow-md transition-all" />
-                      </div>
+                      <Switch defaultChecked />
                     </div>
                   </div>
                 </div>
               </StaggerItem>
 
               <StaggerItem>
-                <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card relative overflow-hidden group h-full">
+                <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card relative overflow-hidden group h-full">
                   <div className="flex items-center gap-6 mb-8 relative z-10">
                     <div className="h-16 w-16 bg-blue-500/10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
                       <Key className="h-8 w-8 text-blue-600" />
@@ -78,9 +78,9 @@ export default function SecurityPage() {
                     <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                       Gunakan kunci keamanan fisik atau aplikasi autentikator digital untuk login pada perangkat baru.
                     </p>
-                    <button className="w-full py-4 bg-foreground text-background rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-primary hover:text-white transition-all shadow-xl">
+                    <Button className="w-full h-14 rounded-xl shadow-xl">
                       Atur Autentikator Sekarang
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </StaggerItem>
@@ -88,7 +88,7 @@ export default function SecurityPage() {
 
             {/* Active Sessions */}
             <StaggerItem className="mt-8">
-              <div className="bg-card rounded-xl p-8 sm:p-12 border border-border shadow-card relative overflow-hidden">
+              <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card relative overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 relative z-10">
                   <h3 className="text-xl font-bold text-foreground">Sesi Terautentikasi</h3>
                   <div className="flex items-center gap-3 px-4 py-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
@@ -109,7 +109,7 @@ export default function SecurityPage() {
                           <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mt-0.5">{session.location} • {session.status}</p>
                         </div>
                       </div>
-                      <button className="sm:mt-0 mt-4 text-xs font-bold text-destructive tracking-widest uppercase hover:bg-destructive/5 px-4 py-2 rounded-lg transition-all border border-transparent hover:border-destructive/10 whitespace-nowrap">Putuskan Sesi</button>
+                      <Button variant="ghost" className="sm:mt-0 mt-4 text-xs font-bold text-destructive tracking-widest uppercase hover:bg-destructive/5 px-4 h-10 border border-transparent hover:border-destructive/10 whitespace-nowrap">Putuskan Sesi</Button>
                     </div>
                   ))}
                 </div>
@@ -118,16 +118,16 @@ export default function SecurityPage() {
 
             {/* Panic Button Section */}
             <StaggerItem className="mt-8">
-              <div className="bg-destructive rounded-xl p-8 sm:p-12 text-white relative overflow-hidden shadow-card group">
-                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
+              <div className="bg-destructive rounded-xl p-8 sm:p-8 text-white relative overflow-hidden shadow-card group">
+                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
                   <div className="text-center lg:text-left space-y-4">
                     <h3 className="text-3xl font-bold">Protokol Panic.</h3>
                     <p className="text-sm font-medium text-white/70 max-w-xl leading-relaxed">Membekukan semua dompet, menonaktifkan kartu virtual, dan mencabut semua sesi aktif secara instan. Gunakan hanya jika akun Anda dalam bahaya besar.</p>
                   </div>
-                  <ButtonMotion>
-                    <button className="whitespace-nowrap bg-white text-destructive px-12 py-6 rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-muted transition-all shadow-2xl">
+                  <ButtonMotion className="w-full lg:w-auto">
+                    <Button variant="secondary" className="px-12 h-16 rounded-xl shadow-2xl text-destructive hover:bg-white bg-white">
                       Inisialisasi Lockdown Global
-                    </button>
+                    </Button>
                   </ButtonMotion>
                 </div>
                 <Lock className="absolute bottom-[-60px] right-[-60px] h-72 w-72 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />

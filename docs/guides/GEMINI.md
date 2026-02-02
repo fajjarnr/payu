@@ -327,6 +327,10 @@ After completing a complex task (Workflow), generate a "Lesson Learned" block in
 
 **Core Principle:** NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
 
+> [!IMPORTANT]
+> **The Iron Law**: If you haven't completed Phase 1 (Root Cause Investigation), you are NOT allowed to propose or implement fixes.
+> For detailed patterns and case studies, use the **`systematic-debugging` skill** ([SKILL.md](../../.agent/skills/debugging-methodology/SKILL.md)).
+
 When encountering ANY technical issue (test failure, bug, performance issue):
 
 **Phase 1: Root Cause Investigation**

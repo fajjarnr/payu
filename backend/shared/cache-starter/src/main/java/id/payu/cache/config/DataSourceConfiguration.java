@@ -5,10 +5,12 @@ import com.zaxxer.hikari.HikariDataSource;
 import id.payu.cache.properties.DataSourceProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
 
@@ -22,15 +24,19 @@ import javax.sql.DataSource;
  *   <li>Tuned HikariCP connection pool settings</li>
  *   <li>Connection validation and leak detection</li>
  * </ul>
+ *
+ * <p>Disabled in container profile to allow Spring Boot auto-configuration.</p>
  */
 @Slf4j
 @Configuration
 @EnableConfigurationProperties(DataSourceProperties.class)
 @ConditionalOnClass(HikariDataSource.class)
+@Profile("!container")
 public class DataSourceConfiguration {
 
     /**
      * Primary datasource for write operations.
+     * Disabled in container profile to allow Spring Boot auto-configuration.
      */
     @Bean
     @Primary

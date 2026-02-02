@@ -197,7 +197,7 @@ export default function SpendingInsights({
                     {/* Icon */}
                     <div
                       className={cn(
-                        'h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover/trigger:scale-110',
+                        'h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover/trigger:scale-110',
                         category.color
                       )}
                     >

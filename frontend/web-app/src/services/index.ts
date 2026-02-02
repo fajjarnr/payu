@@ -8,3 +8,5 @@ export { default as PromotionService, type CreatePromotionRequest, type UpdatePr
 export { default as CMSService, type Content, type ContentResponse, type ContentType, type ActionType } from './CMSService';
 export { default as ABTestingService, type Experiment, type Variant, type VariantAssignment, type ConversionEvent, type TrackConversionRequest, type AssignVariantRequest, type CachedVariantAssignment, ExperimentStatus, AllocationStrategy } from './ABTestingService';
 export { default as SegmentationService, type CustomerSegment, type SegmentMembership, type SegmentedOffer, type UserSegmentsResponse, type SegmentedOffersResponse, type SegmentTier, type SegmentStatus } from './SegmentationService';
+export { default as StatementService, type Statement, type StatementGenerationRequest, type StatementsListResponse, type StatementStatus, type PeriodType, type StatementFormat } from './StatementService';
+export { default as FxService, type FxRate, type FxConversion, type FxRateResponse, type FxConversionResponse, type ConvertCurrencyRequest, type FxConversionRequest, type CurrencyInfo, SUPPORTED_CURRENCIES } from './FxService';

@@ -26,8 +26,7 @@ public class LedgerEntryEntity {
     @Column(name = "account_id", nullable = false, updatable = false)
     private UUID accountId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "entry_type", nullable = false, length = 10)
+    @Column(name = "type", nullable = false, length = 10)
     private String entryType;
 
     @Column(name = "amount", nullable = false, precision = 19, scale = 4)

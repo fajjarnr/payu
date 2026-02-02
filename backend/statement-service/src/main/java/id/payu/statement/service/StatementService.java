@@ -134,7 +134,7 @@ public class StatementService {
      */
     @Transactional(readOnly = true)
     public StatementResponse getStatement(UUID statementId, String customerId) {
-        Statement statement = statementRepository.findByIdAndUserId(statementId, customerId)
+        Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
 
         statement.recordAccess();
@@ -148,7 +148,7 @@ public class StatementService {
      */
     @Transactional(readOnly = true)
     public Page<StatementResponse> listStatements(String customerId, Pageable pageable) {
-        Page<Statement> statements = statementRepository.findAllByUserId(customerId, pageable);
+        Page<Statement> statements = statementRepository.findAllByCustomerId(customerId, pageable);
         return new PageImpl<>(
             statements.stream().map(this::mapToResponse).toList(),
             statements.getPageable(),
@@ -161,7 +161,7 @@ public class StatementService {
      */
     @Transactional(readOnly = true)
     public Optional<StatementResponse> getLatestStatement(String customerId) {
-        return statementRepository.findLatestCompletedByUserId(customerId)
+        return statementRepository.findLatestCompletedByCustomerId(customerId)
             .map(this::mapToResponse);
     }
 
@@ -169,7 +169,7 @@ public class StatementService {
      * Get statement PDF bytes
      */
     public byte[] getStatementPdf(UUID statementId, String customerId) {
-        Statement statement = statementRepository.findByIdAndUserId(statementId, customerId)
+        Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));
 
         if (statement.getStatus() != Statement.StatementStatus.COMPLETED) {
@@ -567,7 +567,7 @@ public class StatementService {
     @lombok.Data
     @lombok.Builder
     private static class StatementData {
-        private UUID customerId;
+        private String customerId;
         private LocalDate statementPeriod;
         private BigDecimal openingBalance;
         private BigDecimal closingBalance;
@@ -594,7 +594,7 @@ public class StatementService {
     @lombok.Builder
     public static class StatementGeneratedEvent {
         private UUID statementId;
-        private UUID customerId;
+        private String customerId;
         private String accountNumber;
         private LocalDate statementPeriod;
         private String storagePath;

@@ -1,46 +1,83 @@
 import Link from 'next/link';
+import { Users, AlertTriangle, Headphones, FileText, FlaskConical, ClipboardCheck, ArrowUpRight, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 
 export default function BackofficeDashboard() {
- return (
-  <div className="space-y-6">
-   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-     <h3 className="text-lg font-medium text-gray-900">KYC Reviews</h3>
-     <p className="mt-2 text-sm text-gray-500">
-      Review pending customer verifications and documents.
-     </p>
-     <Link
-      href="/backoffice/kyc"
-      className="mt-4 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
-     >
-      Go to KYC Reviews &rarr;
-     </Link>
-    </div>
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-     <h3 className="text-lg font-medium text-gray-900">Fraud Monitoring</h3>
-     <p className="mt-2 text-sm text-gray-500">
-      Investigate suspicious transactions and high-risk activities.
-     </p>
-     <Link
-      href="/backoffice/fraud"
-      className="mt-4 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
-     >
-      Go to Fraud Monitoring &rarr;
-     </Link>
-    </div>
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-     <h3 className="text-lg font-medium text-gray-900">Customer Operations</h3>
-     <p className="mt-2 text-sm text-gray-500">
-      Manage customer support cases and inquiries.
-     </p>
-     <Link
-      href="/backoffice/customers"
-      className="mt-4 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
-     >
-      Go to Customer Operations &rarr;
-     </Link>
-    </div>
-   </div>
-  </div>
- );
+  const stats = [
+    { label: 'Total Customers', value: '45,289', change: '+12.5%', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Active Sessions', value: '1,204', change: '+3.2%', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { label: 'Security Alerts', value: '0', change: '0%', icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  ];
+
+  const quickLinks = [
+    { name: 'KYC Reviews', description: 'Review pending customer verifications', href: '/backoffice/kyc', icon: Users, color: 'bg-indigo-500' },
+    { name: 'Fraud Monitoring', description: 'Investigate suspicious activities', href: '/backoffice/fraud', icon: AlertTriangle, color: 'bg-rose-500' },
+    { name: 'Customer Ops', description: 'Manage support cases and inquiries', href: '/backoffice/customers', icon: Headphones, color: 'bg-blue-500' },
+    { name: 'CMS Content', description: 'Manage banners and dynamic content', href: '/backoffice/cms', icon: FileText, color: 'bg-emerald-500' },
+    { name: 'A/B Testing', description: 'Monitor active experiments', href: '/backoffice/ab-testing', icon: FlaskConical, color: 'bg-amber-500' },
+    { name: 'Audit Logs', description: 'Review system changes and audits', href: '/backoffice/compliance', icon: ClipboardCheck, color: 'bg-slate-500' },
+  ];
+
+  return (
+    <PageTransition>
+      <div className="space-y-12 pb-12">
+        <StaggerContainer>
+          <StaggerItem>
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-foreground tracking-tight">Command Center</h2>
+              <p className="text-sm text-muted-foreground font-medium mt-1">Sistem orkestrasi internal PayU Digital Banking.</p>
+            </div>
+          </StaggerItem>
+
+          <StaggerItem>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              {stats.map((stat, i) => (
+                <div key={i} className="bg-card p-8 rounded-2xl border border-border shadow-sm group hover:shadow-card transition-all">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className={`h-12 w-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
+                      <stat.icon className="h-6 w-6" />
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                      {stat.change}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">{stat.label}</p>
+                    <h3 className="text-3xl font-bold text-foreground tabular-nums">{stat.value}</h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </StaggerItem>
+
+          <StaggerItem>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {quickLinks.map((link, i) => (
+                <Link key={i} href={link.href} className="group">
+                  <div className="bg-card p-8 rounded-2xl border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all h-full flex flex-col">
+                    <div className="flex justify-between items-start mb-8">
+                      <div className={`h-14 w-14 rounded-xl ${link.color} text-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
+                        <link.icon className="h-7 w-7" />
+                      </div>
+                      <div className="h-10 w-10 bg-muted/50 rounded-lg flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
+                        <ArrowUpRight className="h-5 w-5" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">{link.name}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{link.description}</p>
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-border">
+                      <span className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase group-hover:text-primary transition-colors">Open Management &rarr;</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </StaggerItem>
+        </StaggerContainer>
+      </div>
+    </PageTransition>
+  );
 }

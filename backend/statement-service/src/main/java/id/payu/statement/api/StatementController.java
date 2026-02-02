@@ -54,12 +54,12 @@ public class StatementController extends BaseController {
 
         // Ensure user can only generate their own statements
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        UUID userId = UUID.fromString(jwt.getSubject());
-        request.setUserId(userId);
+        String customerId = jwt.getSubject();
+        request.setCustomerId(customerId);
 
         statementService.generateStatement(request);
         StatementResponse response = StatementResponse.builder()
-                .userId(userId)
+                .customerId(customerId)
                 .status(Statement.StatementStatus.GENERATING)
                 .build();
         return ResponseEntity.accepted().body(ApiResponse.success(response));
@@ -78,9 +78,9 @@ public class StatementController extends BaseController {
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        UUID userId = UUID.fromString(jwt.getSubject());
+        String customerId = jwt.getSubject();
 
-        StatementResponse response = statementService.getStatement(id, userId);
+        StatementResponse response = statementService.getStatement(id, customerId);
         return ok(response);
     }
 
@@ -95,9 +95,9 @@ public class StatementController extends BaseController {
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        UUID userId = UUID.fromString(jwt.getSubject());
+        String customerId = jwt.getSubject();
 
-        Page<StatementResponse> statements = statementService.listStatements(userId, pageable);
+        Page<StatementResponse> statements = statementService.listStatements(customerId, pageable);
         return ok(statements, statements);
     }
 
@@ -110,9 +110,9 @@ public class StatementController extends BaseController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<StatementResponse>> getLatestStatement(Authentication authentication) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        UUID userId = UUID.fromString(jwt.getSubject());
+        String customerId = jwt.getSubject();
 
-        return statementService.getLatestStatement(userId)
+        return statementService.getLatestStatement(customerId)
             .map(this::ok)
             .orElse(ResponseEntity.notFound().build());
     }
@@ -130,9 +130,9 @@ public class StatementController extends BaseController {
             Authentication authentication) {
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        UUID userId = UUID.fromString(jwt.getSubject());
+        String customerId = jwt.getSubject();
 
-        byte[] pdfBytes = statementService.getStatementPdf(id, userId);
+        byte[] pdfBytes = statementService.getStatementPdf(id, customerId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);

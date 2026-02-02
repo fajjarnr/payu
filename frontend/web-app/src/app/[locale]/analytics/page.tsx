@@ -137,7 +137,7 @@ export default function AnalyticsPage() {
             <div className="md:col-span-6 lg:col-span-8">
               <Card className="rounded-xl border border-border shadow-sm h-full relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
-                <CardHeader className="flex flex-row items-center justify-between pb-8 relative z-10 p-10">
+                <CardHeader className="flex flex-row items-center justify-between pb-8 relative z-10 p-8">
                   <div>
                     <CardTitle className="text-xl font-bold text-foreground">Trajektori Pengeluaran</CardTitle>
                     <CardDescription className="text-xs text-gray-400 font-bold tracking-widest mt-1 lowercase">Analisis arus kas harian periode ini</CardDescription>
@@ -189,7 +189,7 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="md:col-span-6 lg:col-span-4">
-              <Card className="rounded-xl border border-border shadow-sm h-full flex flex-col group p-10">
+              <Card className="rounded-xl border border-border shadow-sm h-full flex flex-col group p-8">
                 <CardHeader className="p-0 mb-10">
                   <CardTitle className="text-xl font-bold text-foreground">Rincian Pengeluaran</CardTitle>
                 </CardHeader>
@@ -242,9 +242,9 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="bg-foreground text-background rounded-xl p-12 relative overflow-hidden group shadow-2xl">
+          <div className="bg-foreground text-background rounded-xl p-8 relative overflow-hidden group shadow-2xl">
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="space-y-4 max-w-xl text-center md:text-left">
                 <h3 className="text-3xl font-bold text-white">Siap untuk menabung otomatis?</h3>
                 <p className="text-sm font-medium text-gray-400 leading-relaxed tracking-wide">

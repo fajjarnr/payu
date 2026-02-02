@@ -24,3 +24,12 @@ export type { UseExperimentOptions, UseExperimentResult } from './useExperiment'
 export { useUserSegment, useSegmentDetails, useAllSegments } from './useUserSegment';
 export { useSegmentedOffers, useOffersBySegment, useVIPOffers } from './useSegmentedOffers';
 export { useVIPStatus, type VIPStatus } from './useVIPStatus';
+export {
+  useFxRate,
+  useAllFxRates,
+  useFxEstimate,
+  useFxConversion,
+  useFxConversions,
+  useFxConversion as useFxConversionById,
+  useFxReverse
+} from './useFx';

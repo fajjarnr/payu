@@ -5,6 +5,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText, TrendingUp } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function LendingPage() {
   const [activeTab, setActiveTab] = useState<'loans' | 'paylater'>('loans');
@@ -66,50 +68,32 @@ export default function LendingPage() {
       <PageTransition>
         <div className="space-y-12">
           <StaggerContainer>
-            <StaggerItem>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-foreground">Pinjaman & Kredit</h2>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">Solusi pembiayaan fleksibel sesuai kebutuhan Anda.</p>
+            <Tabs defaultValue="loans" className="w-full">
+              <StaggerItem>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+                  <div>
+                    <h2 className="text-3xl font-bold text-foreground">Pinjaman & Kredit</h2>
+                    <p className="text-sm text-muted-foreground font-medium mt-1">Solusi pembiayaan fleksibel sesuai kebutuhan Anda.</p>
+                  </div>
+                  <TabsContent value="paylater" className="mt-0">
+                    <ButtonMotion>
+                      <Button className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
+                        <Plus className="h-4 w-4" /> Aktifkan PayLater
+                      </Button>
+                    </ButtonMotion>
+                  </TabsContent>
                 </div>
-                {activeTab === 'paylater' && (
-                  <ButtonMotion>
-                    <button className="bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-primary/20 flex items-center gap-2 hover:bg-bank-emerald transition-all">
-                      <Plus className="h-4 w-4" /> Aktifkan PayLater
-                    </button>
-                  </ButtonMotion>
-                )}
-              </div>
 
-              <div className="flex gap-2 mb-8">
-                <button
-                  data-testid="loans-tab"
-                  onClick={() => setActiveTab('loans')}
-                  className={clsx(
-                    'px-6 py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition-all',
-                    activeTab === 'loans' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-muted/50 text-muted-foreground border border-border'
-                  )}
-                >
-                  Pinjaman
-                </button>
-                <button
-                  data-testid="paylater-tab"
-                  onClick={() => setActiveTab('paylater')}
-                  className={clsx(
-                    'px-6 py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition-all',
-                    activeTab === 'paylater' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-muted/50 text-muted-foreground border border-border'
-                  )}
-                >
-                  PayLater
-                </button>
-              </div>
-            </StaggerItem>
+                <TabsList className="mb-8">
+                  <TabsTrigger value="loans" className="px-8">Pinjaman</TabsTrigger>
+                  <TabsTrigger value="paylater" className="px-8">PayLater</TabsTrigger>
+                </TabsList>
+              </StaggerItem>
 
-            {activeTab === 'loans' ? (
-              <>
+              <TabsContent value="loans" className="mt-0 space-y-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <StaggerItem className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-8 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10 flex items-start justify-between mb-8">
                         <div>
                           <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">Skor Kredit Anda</p>
@@ -144,7 +128,7 @@ export default function LendingPage() {
                   </StaggerItem>
 
                   <StaggerItem>
-                    <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card h-full">
                       <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 border border-primary/10">
                         <Wallet className="h-6 w-6 text-primary" />
                       </div>
@@ -189,22 +173,22 @@ export default function LendingPage() {
                               <span className="font-bold text-foreground">{product.processingTime}</span>
                             </div>
                           </div>
-                          <ButtonMotion>
-                            <button className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold text-xs tracking-widest uppercase shadow-xl shadow-primary/20 hover:bg-bank-emerald transition-all flex items-center justify-center gap-2">
+                          <ButtonMotion className="w-full">
+                            <Button className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
                               Ajukan Sekarang <ArrowRight className="h-4 w-4" />
-                            </button>
+                            </Button>
                           </ButtonMotion>
                         </div>
                       </StaggerItem>
                     ))}
                   </div>
                 </div>
-              </>
-            ) : (
-              <>
+              </TabsContent>
+
+              <TabsContent value="paylater" className="mt-0 space-y-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <StaggerItem className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-8 sm:p-8 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
                         <div>
                           <div className="flex items-center gap-3 mb-3">
@@ -243,9 +227,9 @@ export default function LendingPage() {
                             <p className="text-xl font-bold">{formatCurrency(payLaterStats.minimumPayment)}</p>
                           </div>
                           <ButtonMotion>
-                            <button className="px-6 py-3 bg-white text-primary rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-white/90 transition-all shadow-lg">
+                            <Button variant="secondary" className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg">
                               Bayar Tagihan
-                            </button>
+                            </Button>
                           </ButtonMotion>
                         </div>
                       </div>
@@ -253,7 +237,7 @@ export default function LendingPage() {
                   </StaggerItem>
 
                   <StaggerItem>
-                    <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card h-full">
                       <div className="flex justify-between items-start mb-6">
                         <h3 className="text-lg font-bold text-foreground">Ringkasan Transaksi</h3>
                         <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/10">
@@ -312,8 +296,8 @@ export default function LendingPage() {
                     </div>
                   </div>
                 </div>
-              </>
-            )}
+              </TabsContent>
+            </Tabs>
           </StaggerContainer>
         </div>
       </PageTransition>

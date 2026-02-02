@@ -495,6 +495,46 @@ ls -la target/ | grep -E "\.jar$"
 cat .dockerignore | grep target
 ```
 
+### 🎭 Playwright E2E Test Failures (PayU Context)
+
+**Symptom:** Tests failing with timeouts, strict mode violations, or text mismatches.
+
+**Common Patterns:**
+
+| Symptom | Root Cause | Fix |
+|:---|:---|:---|
+| `strict mode violation` | Selector matches multiple elements | Use `.first()` or more specific selectors |
+| `Timeout 5000ms exceeded` | Element not visible/clickable | Add explicit wait or `waitForSelector` |
+| Text content mismatch | Translations vs hardcoded | Match actual translation content |
+| Currency format mismatch | `Rp 50.000` vs `Rp50.000` | Use regex `\s*` for optional space |
+
+**Fix Example:**
+```typescript
+// ❌ WRONG
+await expect(page.getByText('Rp50.000.000')).toBeVisible();
+
+// ✅ CORRECT
+await expect(page.getByText(/Rp\s*50\.000\.000/).first()).toBeVisible();
+```
+
+### 🔐 Vault Configuration Issues (Spring Cloud Vault)
+
+**Symptom:** `Could not resolve placeholder` or service fails to start because it can't find secrets.
+
+**Root Cause:** Wrong Vault import syntax in `application.yml`.
+
+```yaml
+# ❌ WRONG
+spring:
+  config:
+    import: optional:vault://  # Invalid syntax
+
+# ✅ CORRECT
+spring:
+  config:
+    import: optional:vault  # Correct syntax
+```
+
 ## Real-World Impact
 
 From debugging sessions:

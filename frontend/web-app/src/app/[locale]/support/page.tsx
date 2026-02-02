@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { LifeBuoy, MessageCircle, Mail, Phone, ExternalLink, HelpCircle, FileText, CheckCircle2 } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+import { Button } from '@/components/ui/button';
 
 export default function SupportPage() {
   const supportChannels = [
@@ -39,7 +40,7 @@ export default function SupportPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {supportChannels.map((channel, i) => (
                 <StaggerItem key={i}>
-                  <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
+                  <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
                     <div className={clsx(
                       "h-20 w-20 mb-8 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110",
                       channel.color === 'primary' ? "bg-primary shadow-primary/20" :
@@ -49,9 +50,9 @@ export default function SupportPage() {
                     </div>
                     <h3 className="text-lg font-bold text-foreground mb-3">{channel.label}</h3>
                     <p className="text-xs text-muted-foreground font-medium leading-relaxed mb-10 max-w-[200px]">{channel.desc}</p>
-                    <button className="w-full py-4 bg-muted/50 border border-border rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-primary hover:text-white hover:border-primary transition-all text-muted-foreground">
+                    <Button variant="outline" className="w-full h-14 rounded-xl mt-10">
                       {channel.action}
-                    </button>
+                    </Button>
                   </div>
                 </StaggerItem>
               ))}
@@ -59,7 +60,7 @@ export default function SupportPage() {
 
             {/* Knowledge Base */}
             <StaggerItem className="mt-4">
-              <div className="bg-card rounded-xl p-8 sm:p-12 border border-border shadow-card relative overflow-hidden">
+              <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
                 <h3 className="text-xl font-bold text-foreground mb-10 relative z-10">Repositori Inteligensi</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
@@ -73,7 +74,7 @@ export default function SupportPage() {
                           <h4 className="font-bold text-foreground text-sm">{faq.title}</h4>
                           <ExternalLink className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <p className="text-xs text-muted-foreground font-medium leading-relaxed uppercase tracking-wider">{faq.desc}</p>
+                        <p className="text-xs text-muted-foreground font-medium leading-relaxed uppercase tracking-widest">{faq.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -83,8 +84,8 @@ export default function SupportPage() {
 
             {/* System Status Banner */}
             <StaggerItem className="mt-4">
-              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-12 text-white relative overflow-hidden shadow-2xl group">
-                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12 text-center lg:text-left">
+              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-8 text-white relative overflow-hidden shadow-2xl group">
+                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left">
                   <div className="space-y-6 max-w-2xl">
                     <h3 className="text-3xl font-bold">Integritas Sistem Aktif.</h3>
                     <div className="flex flex-wrap justify-center lg:justify-start gap-3">
@@ -97,10 +98,10 @@ export default function SupportPage() {
                     </div>
                     <p className="text-sm text-gray-400 font-medium pt-2 leading-relaxed">Seluruh node infrastruktur saat ini melaporkan uptime 100%. Tidak ada gangguan atau latensi yang terdeteksi dalam 24 jam terakhir.</p>
                   </div>
-                  <ButtonMotion>
-                    <button className="whitespace-nowrap px-10 py-5 bg-bank-green text-white rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-bank-emerald transition-all shadow-2xl shadow-bank-green/20">
+                  <ButtonMotion className="w-full lg:w-auto">
+                    <Button className="h-16 px-10 shadow-2xl shadow-bank-green/20">
                       Cek Detail Infrastruktur
-                    </button>
+                    </Button>
                   </ButtonMotion>
                 </div>
                 <LifeBuoy className="absolute bottom-[-60px] right-[-60px] h-72 w-72 text-white/5 -rotate-12 group-hover:rotate-12 transition-transform duration-[3000ms]" />

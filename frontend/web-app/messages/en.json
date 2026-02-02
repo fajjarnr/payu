@@ -28,6 +28,7 @@
     "accounts": "Accounts",
     "transactions": "Transactions",
     "transfers": "Transfers",
+    "exchange": "Exchange",
     "bills": "Bills",
     "cards": "Cards",
     "investments": "Investments",

@@ -91,6 +91,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
     { href: l('/dashboard'), icon: LayoutDashboard, label: t('dashboard') },
     { href: l('/pockets'), icon: Wallet, label: t('accounts') },
     { href: l('/transfer'), icon: ArrowRightLeft, label: t('transfers') },
+    { href: l('/exchange'), icon: TrendingUp, label: t('exchange') },
     { href: l('/qris'), icon: QrCode, label: t('qrPayment') },
     { href: l('/bills'), icon: Receipt, label: t('bills') },
     { href: l('/cards'), icon: CreditCard, label: t('cards') },
@@ -108,12 +109,12 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
     <div className="h-screen bg-background flex overflow-hidden font-inter text-foreground">
       {/* Desktop Sidebar - Increased spacing and font weight */}
       <aside
-        className="hidden lg:flex flex-col w-[320px] 2xl:w-[380px] border-r border-border bg-background p-10 2xl:p-12 h-screen overflow-y-auto shrink-0 sticky top-0"
+        className="hidden lg:flex flex-col w-[320px] 2xl:w-[380px] border-r border-border bg-background p-8 2xl:p-8 h-screen overflow-y-auto shrink-0 sticky top-0"
         aria-label="Sidebar Navigasi Desktop"
       >
         <div className="flex items-center gap-5 mb-16 px-2 group cursor-pointer">
           <Link href={l('/')} className="flex items-center gap-5">
-            <div className="h-14 w-14 bg-emerald-500 rounded-[1.25rem] flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-emerald-500/20 rotate-3 transition-transform group-hover:rotate-0">
+            <div className="h-14 w-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-emerald-500/20 rotate-3 transition-transform group-hover:rotate-0">
               U
             </div>
             <span className="text-4xl 2xl:text-5xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
@@ -148,7 +149,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <header className="h-28 border-b border-border bg-background/80 backdrop-blur-3xl sticky top-0 z-30 shrink-0">
           <div className="w-full px-6 sm:px-10 lg:px-12 h-full flex items-center justify-between">
-            <div className="flex items-center gap-10">
+            <div className="flex items-center gap-8">
               <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
                 <SheetTrigger asChild>
                   <Button
@@ -205,7 +206,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                <ThemeToggle />
                <LanguageSwitcher />
 
-                <div className="hidden xl:flex items-center bg-card rounded-[1.25rem] px-6 w-96 gap-4 border border-emerald-500/10 focus-within:border-emerald-500/40 focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all shadow-sm focus-within:shadow-md group">
+                <div className="hidden xl:flex items-center bg-card rounded-2xl px-6 w-96 gap-4 border border-emerald-500/10 focus-within:border-emerald-500/40 focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all shadow-sm focus-within:shadow-md group">
                   <Search className="h-5 w-5 text-emerald-500/40 group-focus-within:text-emerald-500 transition-colors" />
                   <Input
                     type="text"
@@ -260,7 +261,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
         </header>
 
         <main className="flex-1 overflow-y-auto scrollbar-hide bg-background">
-          <div className="w-full px-6 sm:px-8 lg:px-10 py-8 lg:py-10 pb-32 transition-all duration-500">
+          <div className="w-full px-6 sm:px-10 lg:px-12 py-8 lg:py-10 pb-32 transition-all duration-500">
             {children}
           </div>
         </main>

@@ -162,7 +162,7 @@ function SummaryItem({ label, amount, change, isPositive, currency }: { label: s
           </h4>
           <div className="flex items-center gap-2">
             <span className={cn(
-              "text-xs font-bold px-2 py-0.5 rounded-md",
+              "text-xs font-bold px-2 py-0.5 rounded-lg",
               isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
             )}>
               {isPositive ? '+' : ''}{change}%

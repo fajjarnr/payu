@@ -80,9 +80,9 @@ export default function MerchantRegisterPage() {
 
  return (
   <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12 px-4">
-   <div className="max-w-4xl mx-auto space-y-10">
+   <div className="max-w-4xl mx-auto space-y-12">
     <div className="text-center space-y-4">
-     <div className="inline-flex items-center justify-center h-20 w-20 bg-bank-green/10 rounded-3xl mb-4">
+     <div className="inline-flex items-center justify-center h-20 w-20 bg-bank-green/10 rounded-2xl mb-4">
       <Building2 className="h-10 w-10 text-bank-green" />
      </div>
      <h1 className="text-4xl font-bold text-foreground ">Daftar Merchant Baru</h1>
@@ -92,7 +92,7 @@ export default function MerchantRegisterPage() {
     </div>
 
     <form onSubmit={handleSubmit} className="space-y-8">
-     <div className="bg-card rounded-[3rem] p-10 border border-border shadow-sm relative overflow-hidden">
+     <div className="bg-card rounded-[3rem] p-8 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
 
       <div className="relative z-10 space-y-8">
@@ -160,7 +160,7 @@ export default function MerchantRegisterPage() {
       </div>
      </div>
 
-     <div className="bg-card rounded-[3rem] p-10 border border-border shadow-sm relative overflow-hidden">
+     <div className="bg-card rounded-[3rem] p-8 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
       <h3 className="text-xl font-bold text-foreground  mb-10 relative z-10">Tipe Merchant</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
@@ -195,7 +195,7 @@ export default function MerchantRegisterPage() {
       {errors.type && <p className="text-red-500 text-xs mt-4 font-bold tracking-widest">{errors.type}</p>}
      </div>
 
-     <div className="bg-card rounded-[3rem] p-10 border border-border shadow-sm relative overflow-hidden">
+     <div className="bg-card rounded-[3rem] p-8 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
       <div className="relative z-10 space-y-8">
        <div>
@@ -219,7 +219,7 @@ export default function MerchantRegisterPage() {
       </div>
      </div>
 
-     <div className="bg-foreground text-background rounded-[3rem] p-12 relative overflow-hidden shadow-2xl">
+     <div className="bg-foreground text-background rounded-[3rem] p-8 relative overflow-hidden shadow-2xl">
       <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
        <div className="space-y-4 max-w-xl text-center md:text-left">
@@ -236,7 +236,7 @@ export default function MerchantRegisterPage() {
        <button
         type="submit"
         disabled={registerMutation.isPending}
-        className="whitespace-nowrap bg-bank-green text-white px-12 py-6 rounded-3xl font-bold text-xs tracking-widest hover:bg-bank-emerald transition-all active:scale-95 shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50 disabled:active:scale-100 flex items-center gap-3"
+        className="whitespace-nowrap bg-bank-green text-white px-12 py-6 rounded-2xl font-bold text-xs tracking-widest hover:bg-bank-emerald transition-all active:scale-95 shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50 disabled:active:scale-100 flex items-center gap-3"
        >
         {registerMutation.isPending ? 'Sedang Memproses...' : (
          <>

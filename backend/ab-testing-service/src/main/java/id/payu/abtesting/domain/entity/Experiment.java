@@ -1,6 +1,8 @@
 package id.payu.abtesting.domain.entity;
 
+import id.payu.abtesting.persistence.JsonMapConverter;
 import jakarta.persistence.*;
+import jakarta.persistence.Convert;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,7 +42,7 @@ public class Experiment {
     private String description;
 
     @Column(name = "key", nullable = false, unique = true, length = 100)
-    private String key; // Unique identifier for frontend
+    private String key;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -54,25 +56,29 @@ public class Experiment {
     private LocalDate endDate;
 
     @Column(name = "traffic_split", nullable = false)
-    private Integer trafficSplit; // Percentage for variant B (0-100)
+    private Integer trafficSplit;
 
+    @Convert(converter = JsonMapConverter.class)
     @Column(name = "variant_a_config", columnDefinition = "JSONB")
-    private Map<String, Object> variantAConfig; // Control configuration
+    private Map<String, Object> variantAConfig;
 
+    @Convert(converter = JsonMapConverter.class)
     @Column(name = "variant_b_config", columnDefinition = "JSONB")
-    private Map<String, Object> variantBConfig; // Test configuration
+    private Map<String, Object> variantBConfig;
 
+    @Convert(converter = JsonMapConverter.class)
     @Column(name = "targeting_rules", columnDefinition = "JSONB")
     private Map<String, Object> targetingRules;
 
+    @Convert(converter = JsonMapConverter.class)
     @Column(name = "metrics", columnDefinition = "JSONB")
-    private Map<String, Object> metrics; // Conversion rates, engagement
+    private Map<String, Object> metrics;
 
     @Column(name = "confidence_level")
-    private Double confidenceLevel; // Statistical significance
+    private Double confidenceLevel;
 
     @Column(name = "winner", length = 50)
-    private String winner; // CONTROL, VARIANT_B, INCONCLUSIVE
+    private String winner;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -86,21 +92,17 @@ public class Experiment {
     private String createdBy;
 
     public enum ExperimentStatus {
-        DRAFT,      // Not yet started
-        RUNNING,    // Currently active
-        PAUSED,     // Temporarily stopped
-        COMPLETED,  // Finished with winner
-        CANCELLED   // Stopped without conclusion
+        DRAFT,
+        RUNNING,
+        PAUSED,
+        COMPLETED,
+        CANCELLED
     }
 
-    /**
-     * Check if experiment is currently running
-     */
     public boolean isRunning() {
         if (status != ExperimentStatus.RUNNING) {
             return false;
         }
-
         LocalDate now = LocalDate.now();
         if (startDate != null && now.isBefore(startDate)) {
             return false;
@@ -111,70 +113,23 @@ public class Experiment {
         return true;
     }
 
-    /**
-     * Get variant for a user based on user ID hashing
-     */
     public String getVariantForUser(UUID userId) {
-        // Consistent bucket assignment based on user ID
         int hash = userId.hashCode();
         int bucket = Math.abs(hash % 100);
-
         return bucket < trafficSplit ? "VARIANT_B" : "CONTROL";
     }
 
-    /**
-     * Calculate conversion rate for a variant
-     */
     public double getConversionRate(String variant) {
         if (metrics == null) {
             return 0.0;
         }
-
         @SuppressWarnings("unchecked")
         Map<String, Object> variantMetrics = (Map<String, Object>) metrics.get(variant);
         if (variantMetrics == null) {
             return 0.0;
         }
-
         int conversions = ((Number) variantMetrics.getOrDefault("conversions", 0)).intValue();
         int participants = ((Number) variantMetrics.getOrDefault("participants", 0)).intValue();
-
         return participants > 0 ? (double) conversions / participants : 0.0;
     }
-
-    // Manual accessors to bypass Lombok issues
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-    public String getKey() { return key; }
-    public void setKey(String key) { this.key = key; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public ExperimentStatus getStatus() { return status; }
-    public void setStatus(ExperimentStatus status) { this.status = status; }
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
-    public LocalDate getEndDate() { return endDate; }
-    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
-    public Integer getTrafficSplit() { return trafficSplit; }
-    public void setTrafficSplit(Integer trafficSplit) { this.trafficSplit = trafficSplit; }
-    public Map<String, Object> getVariantAConfig() { return variantAConfig; }
-    public void setVariantAConfig(Map<String, Object> variantAConfig) { this.variantAConfig = variantAConfig; }
-    public Map<String, Object> getVariantBConfig() { return variantBConfig; }
-    public void setVariantBConfig(Map<String, Object> variantBConfig) { this.variantBConfig = variantBConfig; }
-    public Map<String, Object> getTargetingRules() { return targetingRules; }
-    public void setTargetingRules(Map<String, Object> targetingRules) { this.targetingRules = targetingRules; }
-    public Map<String, Object> getMetrics() { return metrics; }
-    public void setMetrics(Map<String, Object> metrics) { this.metrics = metrics; }
-    public Double getConfidenceLevel() { return confidenceLevel; }
-    public void setConfidenceLevel(Double confidenceLevel) { this.confidenceLevel = confidenceLevel; }
-    public String getWinner() { return winner; }
-    public void setWinner(String winner) { this.winner = winner; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-    public String getCreatedBy() { return createdBy; }
-    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
 }

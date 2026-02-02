@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { TrendingUp, PieChart, Landmark, ArrowUpRight, ShieldCheck, Briefcase, Plus, Coins, BarChart3, Target } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
+import { Button } from '@/components/ui/button';
 
 export default function InvestmentsPage() {
   const investmentProducts = [
@@ -26,9 +27,9 @@ export default function InvestmentsPage() {
                   <p className="text-sm text-muted-foreground font-medium mt-1">Tumbuhkan aset Anda dengan produk investasi kelas institusi.</p>
                 </div>
                 <ButtonMotion>
-                  <button className="bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-primary/20 flex items-center gap-2 hover:bg-bank-emerald transition-all">
+                  <Button className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
                     <Plus className="h-4 w-4" /> Investasi Baru
-                  </button>
+                  </Button>
                 </ButtonMotion>
               </div>
             </StaggerItem>
@@ -36,11 +37,11 @@ export default function InvestmentsPage() {
             {/* Portfolio Overview */}
             <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
               <StaggerItem className="md:col-span-6 lg:col-span-8">
-                <div className="bg-card rounded-xl p-8 sm:p-10 border border-border shadow-card h-full relative overflow-hidden group">
+                <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card h-full relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-0" />
 
                   <div className="relative z-10 flex flex-col h-full">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                       <div className="space-y-6">
                         <div>
                           <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Total Portofolio Bersih</p>
@@ -62,7 +63,7 @@ export default function InvestmentsPage() {
                         {[40, 55, 45, 70, 60, 90, 85, 100].map((h, i) => (
                           <div key={i} className="flex-1 bg-primary/20 rounded-t-lg relative group/bar transition-all duration-500" style={{ height: `${h}%` }}>
                             <div className="absolute top-0 left-0 w-full h-1 bg-primary rounded-full" />
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs font-bold px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-all shadow-xl whitespace-nowrap">
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs font-bold px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-all shadow-xl whitespace-nowrap">
                               +{h / 10}%
                             </div>
                           </div>
@@ -89,7 +90,7 @@ export default function InvestmentsPage() {
               </StaggerItem>
 
               <StaggerItem className="md:col-span-6 lg:col-span-4">
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-10 text-white h-full relative overflow-hidden flex flex-col justify-between shadow-2xl group">
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-8 text-white h-full relative overflow-hidden flex flex-col justify-between shadow-2xl group">
                   <div className="relative z-10">
                     <div className="flex justify-between items-start mb-6">
                       <h3 className="text-lg font-bold">Profil Risiko</h3>
@@ -116,7 +117,7 @@ export default function InvestmentsPage() {
                       </div>
                     </div>
                   </div>
-                  <button className="relative z-10 w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold text-xs tracking-widest uppercase hover:bg-white/10 transition-all mt-10">Optimasi Portofolio</button>
+                  <Button variant="outline" className="relative z-10 w-full h-14 bg-white/5 border border-white/10 text-white hover:bg-white/10 mt-10">Optimasi Portofolio</Button>
                   <PieChart className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
                 </div>
               </StaggerItem>
@@ -127,9 +128,9 @@ export default function InvestmentsPage() {
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold text-foreground">Katalog Produk Terpilih</h3>
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-lg uppercase tracking-widest shadow-lg shadow-primary/20">Semua</button>
-                  <button className="px-4 py-2 bg-muted/50 text-muted-foreground text-xs font-bold rounded-lg uppercase tracking-widest border border-border">Pasar Uang</button>
-                  <button className="px-4 py-2 bg-muted/50 text-muted-foreground text-xs font-bold rounded-lg uppercase tracking-widest border border-border">Emas</button>
+                  <Button size="sm" className="px-4">Semua</Button>
+                  <Button size="sm" variant="ghost" className="px-4 border border-border">Pasar Uang</Button>
+                  <Button size="sm" variant="ghost" className="px-4 border border-border">Emas</Button>
                 </div>
               </div>
 
@@ -157,9 +158,9 @@ export default function InvestmentsPage() {
                           <span className="text-lg font-bold text-primary">{prod.return}</span>
                         </div>
                         <ButtonMotion>
-                          <button className="h-10 w-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
+                          <Button size="icon" className="h-10 w-10 shadow-lg shadow-primary/20">
                             <Plus className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </ButtonMotion>
                       </div>
                     </div>
@@ -169,8 +170,8 @@ export default function InvestmentsPage() {
             </div>
 
             {/* Smart Advice Section */}
-            <div className="mt-12 bg-primary/5 rounded-xl border border-primary/10 p-8 sm:p-12 relative overflow-hidden group">
-              <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+            <div className="mt-12 bg-primary/5 rounded-xl border border-primary/10 p-8 sm:p-8 relative overflow-hidden group">
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                 <div className="h-20 w-20 bg-primary/20 rounded-2xl flex items-center justify-center shrink-0 border border-primary/20">
                   <Target className="h-10 w-10 text-primary animate-pulse" />
                 </div>
@@ -181,7 +182,7 @@ export default function InvestmentsPage() {
                   </p>
                 </div>
                 <div className="md:ml-auto">
-                  <button className="px-8 py-4 bg-primary text-primary-foreground rounded-xl font-bold text-xs tracking-widest uppercase shadow-xl shadow-primary/20 hover:bg-bank-emerald transition-all">Tinjau Strategi</button>
+                  <Button className="h-14 px-8 shadow-xl shadow-primary/20">Tinjau Strategi</Button>
                 </div>
               </div>
             </div>

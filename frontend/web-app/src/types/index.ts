@@ -305,3 +305,46 @@ export interface UserSegmentsResponse {
   progressToNext?: number;
   totalScore: number;
 }
+
+// FX Exchange Types
+export type FxConversionStatus = 'PENDING' | 'COMPLETED' | 'REVERSED' | 'FAILED';
+
+export interface FxRate {
+  id: string;
+  fromCurrency: string;
+  toCurrency: string;
+  rate: number;
+  inverseRate: number;
+  validFrom: string;
+  validUntil: string;
+}
+
+export interface FxConversion {
+  id: string;
+  accountId: string;
+  fromCurrency: string;
+  toCurrency: string;
+  fromAmount: number;
+  toAmount: number;
+  exchangeRate: number;
+  fee: number;
+  effectiveAmount: number;
+  conversionDate: string;
+  status: FxConversionStatus;
+}
+
+export interface CurrencyInfo {
+  code: string;
+  name: string;
+  symbol: string;
+  flag: string;
+  decimalPlaces: number;
+}
+
+export const exchangeSchema = z.object({
+  fromCurrency: z.enum(['IDR', 'USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'CNY'] as const),
+  toCurrency: z.enum(['IDR', 'USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'CNY'] as const),
+  amount: z.number().positive('Amount must be positive'),
+});
+
+export type ExchangeRequest = z.infer<typeof exchangeSchema>;

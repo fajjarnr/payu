@@ -39,7 +39,7 @@ export default function LandingPage() {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-12 font-medium">
+          <div className="hidden md:flex items-center gap-8 font-medium">
             <Link href="#app" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">{t('nav.features')}</Link>
             <Link href="#about" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">{t('nav.about')}</Link>
             <Link href="#support" className="text-sm text-slate-500 hover:text-slate-900 transition-colors cursor-pointer">{t('nav.support')}</Link>
@@ -82,7 +82,7 @@ export default function LandingPage() {
           </div>
 
           <div className="max-w-7xl mx-auto px-6 md:px-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20 items-center">
               {/* Left Column - Content */}
               <div className="space-y-8 max-w-2xl text-left relative z-10">
                 <motion.div 
@@ -172,7 +172,7 @@ export default function LandingPage() {
                 <h2 className="text-4xl md:text-6xl font-bold tracking-tight">{t('features.title')}</h2>
                 <p className="text-xl text-slate-500">{t('features.subtitle')}</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               <StatItem value="2M+" label={t('stats.activeUsers')} />
               <StatItem value="Rp50T+" label={t('stats.transactionVolume')} />
               <StatItem value="99.99%" label={t('stats.uptime')} />
@@ -188,7 +188,7 @@ export default function LandingPage() {
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-[120px] -z-10" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px] -z-10" />
 
-          <div className="max-w-4xl mx-auto px-6 text-center space-y-10 text-white">
+          <div className="max-w-4xl mx-auto px-6 text-center space-y-12 text-white">
             <h2 className="text-5xl md:text-7xl font-bold tracking-tight">{t('cta.title')}</h2>
             <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
               {t('cta.subtitle')}

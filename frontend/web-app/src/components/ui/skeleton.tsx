@@ -6,7 +6,7 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-gray-200 dark:bg-gray-800", className)}
+      className={cn("animate-pulse rounded-xl bg-muted/50", className)}
       {...props}
     />
   )
@@ -14,14 +14,14 @@ function Skeleton({
 
 // Higher-level utility components for common patterns
 const SkeletonCard = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("bg-card p-8 rounded-xl border border-border shadow-sm space-y-6", className)} {...props}>
+  <div className={cn("bg-card p-8 rounded-2xl border border-border shadow-sm space-y-6", className)} {...props}>
     <div className="flex justify-between items-start">
-      <Skeleton className="h-12 w-12 rounded-xl" />
+      <Skeleton className="h-12 w-12 rounded-2xl" />
       <Skeleton className="h-8 w-20 rounded-full" />
     </div>
     <div className="space-y-3">
-      <Skeleton className="h-3 w-32 rounded" />
-      <Skeleton className="h-8 w-40 rounded" />
+      <Skeleton className="h-3 w-32 rounded-lg" />
+      <Skeleton className="h-8 w-40 rounded-lg" />
     </div>
   </div>
 )
@@ -40,13 +40,13 @@ const SkeletonText = ({ lines = 3, className, ...props }: { lines?: number } & R
 const SkeletonTransaction = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("flex items-center justify-between p-4 space-x-4", className)} {...props}>
     <div className="flex items-center gap-4">
-      <Skeleton className="h-12 w-12 rounded-xl" />
+      <Skeleton className="h-12 w-12 rounded-2xl" />
       <div className="space-y-2">
-        <Skeleton className="h-4 w-32 rounded" />
-        <Skeleton className="h-3 w-24 rounded" />
+        <Skeleton className="h-4 w-32 rounded-lg" />
+        <Skeleton className="h-3 w-24 rounded-lg" />
       </div>
     </div>
-    <Skeleton className="h-6 w-20 rounded" />
+    <Skeleton className="h-6 w-20 rounded-lg" />
   </div>
 )
 

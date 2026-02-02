@@ -32,57 +32,57 @@
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
 
   /* Fonts */
-  --font-sans: 'Google Sans', system-ui, sans-serif;
-  --font-heading: 'Google Sans', system-ui, sans-serif;
-  --font-mono: 'Google Sans', ui-monospace, monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'Inter', ui-monospace, monospace;
 }
 
 :root {
-  /* Emerald Green Theme */
-  --background: 140 20% 96%;
-  --foreground: 160 10% 10%;
+  /* Emerald Green Theme - Fixed to #10b981 (Emerald-500) */
+  --background: 160 20% 98%;
+  --foreground: 160 20% 8%;
 
-  --primary: 145 63% 42%;
+  --primary: 160 84.3% 39.4%;
   --primary-foreground: 0 0% 100%;
 
   --card: 0 0% 100%;
-  --card-foreground: 160 10% 10%;
+  --card-foreground: 160 20% 8%;
 
-  --accent: 145 30% 90%;
-  --accent-foreground: 145 63% 30%;
+  --accent: 160 84% 95%;
+  --accent-foreground: 160 84% 25%;
 
-  --muted: 140 15% 92%;
+  --muted: 160 15% 94%;
   --muted-foreground: 160 10% 45%;
 
   --destructive: 0 84% 60%;
-  --success-light: 145 40% 90%;
+  --success-light: 160 84% 95%;
   --warning: 45 93% 47%;
   --info: 199 89% 48%;
 
-  --border: 140 15% 90%;
-  --ring: 145 63% 42%;
+  --border: 160 15% 90%;
+  --ring: 160 84% 39%;
 
   /* Chart Colors */
-  --chart-green1: 145 63% 42%;
-  --chart-green2: 145 50% 55%;
-  --chart-green3: 145 40% 70%;
-  --chart-green4: 145 40% 80%;
+  --chart-green1: 160 84% 39%;
+  --chart-green2: 160 70% 50%;
+  --chart-green3: 160 60% 65%;
+  --chart-green4: 160 50% 80%;
 }
 
 .dark {
-  --background: 160 10% 5%;
-  --foreground: 140 20% 96%;
+  --background: 160 20% 3%;
+  --foreground: 160 20% 98%;
 
-  --card: 160 10% 8%;
-  --card-foreground: 140 20% 96%;
+  --card: 160 20% 6%;
+  --card-foreground: 160 20% 98%;
 
-  --accent: 145 63% 15%;
-  --accent-foreground: 145 30% 90%;
+  --accent: 160 84% 12%;
+  --accent-foreground: 160 84% 90%;
 
-  --muted: 160 10% 12%;
-  --muted-foreground: 160 10% 65%;
+  --muted: 160 20% 8%;
+  --muted-foreground: 160 10% 60%;
 
-  --border: 160 10% 15%;
+  --border: 160 20% 12%;
 }
 
 @layer base {

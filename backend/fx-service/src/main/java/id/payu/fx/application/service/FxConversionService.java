@@ -5,12 +5,14 @@ import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.in.FxConversionUseCase;
 import id.payu.fx.domain.port.in.FxRateUseCase;
 import id.payu.fx.domain.port.out.FxConversionRepositoryPort;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
 public class FxConversionService implements FxConversionUseCase {
 
     private final FxConversionRepositoryPort conversionRepository;

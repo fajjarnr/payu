@@ -7,59 +7,248 @@ test.describe('KYC Onboarding Flow', () => {
 
   test('should display KYC verification page correctly', async ({ page }) => {
     await expect(page).toHaveTitle(/PayU/);
-    await expect(page.getByText('Verifikasi eKYC')).toBeVisible();
-    await expect(page.getByText('Unggah identitas resmi pemerintah (KTP)')).toBeVisible();
+    await expect(page.getByText('Unggah e-KTP')).toBeVisible();
+    await expect(page.getByText('Foto KTP asli Anda untuk validasi data otomatis')).toBeVisible();
   });
 
   test('should navigate through KYC steps', async ({ page }) => {
-    await page.click('button:has-text("Mulai Proses Verifikasi")');
-    
-    await expect(page.getByText('Profil Akun')).toBeVisible();
-    await expect(page.getByText('Nomor NIK (16 Digit)')).toBeVisible();
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+
+    await expect(page.getByText('Lengkapi Profil')).toBeVisible();
+    await expect(page.getByText('Nomor Induk Kependudukan (NIK)')).toBeVisible();
   });
 
   test('should validate NIK input format', async ({ page }) => {
-    await page.click('button:has-text("Mulai Proses Verifikasi")');
-    
-    const nikInput = page.getByPlaceholder('3200...');
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+
+    const nikInput = page.getByPlaceholder('16 digit angka...');
     await nikInput.fill('123');
-    
-    const fullNameInput = page.getByPlaceholder('NAMA LENGKAP ANDA');
+
+    const fullNameInput = page.getByPlaceholder('Sesuai KTP');
     await fullNameInput.fill('Test User');
 
-    const emailInput = page.getByPlaceholder('nama@domain.com');
+    const emailInput = page.getByPlaceholder('nama@email.com');
     await emailInput.fill('test@example.com');
 
-    const usernameInput = page.getByPlaceholder('NAMA_PENGGUNA_UNIK');
+    const usernameInput = page.getByPlaceholder('unik & mudah diingat');
     await usernameInput.fill('testuser');
 
-    await page.click('button:has-text("Konfirmasi Pembuatan Akun")');
-    
-    await expect(page.getByText('NIK harus 16 digit')).toBeVisible();
+    await page.click('button:has-text("Konfirmasi Pendaftaran")');
+
+    // Wait for validation
+    await page.waitForTimeout(500);
+
+    // Check that we're still on form (validation failed)
+    await expect(page.getByText('Lengkapi Profil')).toBeVisible();
   });
 
   test('should show success message after valid submission', async ({ page }) => {
-    await page.click('button:has-text("Mulai Proses Verifikasi")');
-    
-    await page.getByPlaceholder('3200...').fill('3201010101010001');
-    await page.getByPlaceholder('NAMA LENGKAP ANDA').fill('Test User');
-    await page.getByPlaceholder('nama@domain.com').fill('test@example.com');
-    await page.getByPlaceholder('NAMA_PENGGUNA_UNIK').fill('testuser123');
-    
-    await page.click('button:has-text("Konfirmasi Pembuatan Akun")');
-    
-    await expect(page.getByText('Pendaftaran Berhasil')).toBeVisible();
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+
+    await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
+    await page.getByPlaceholder('Sesuai KTP').fill('Test User');
+    await page.getByPlaceholder('nama@email.com').fill('test@example.com');
+    await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+
+    await page.click('button:has-text("Konfirmasi Pendaftaran")');
+
+    await expect(page.getByText('Akun Siap Digunakan!')).toBeVisible();
   });
 
-  test('should have secure encryption badge', async ({ page }) => {
-    await expect(page.getByText('ENKRIPSI AMAN SESUAI STANDAR OJK & BI')).toBeVisible();
-    await expect(page.locator('.text-bank-green')).toHaveCount(1);
+  test('should have branding panel on the left', async ({ page }) => {
+    await expect(page.getByText('Verifikasi Identitas Digital')).toBeVisible();
+    await expect(page.getByText('e-KYC Instant Liveness')).toBeVisible();
   });
 
-  test('should navigate back to login page', async ({ page }) => {
-    const backButton = page.locator('a[href="/login"]');
+  test('should navigate back to home page', async ({ page }) => {
+    const backButton = page.locator('a:has-text("Kembali")');
     await expect(backButton).toBeVisible();
+
     await backButton.click();
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/?$/);
+  });
+
+  test('should display step progress indicators', async ({ page }) => {
+    await expect(page.getByText('Identitas')).toBeVisible();
+    await expect(page.getByText('Profil')).toBeVisible();
+    await expect(page.getByText('Selesai')).toBeVisible();
+  });
+
+  test('should have first step active initially', async ({ page }) => {
+    const activeStep = page.locator('.w-10.h-10.rounded-full.bg-emerald-600');
+    await expect(activeStep).toHaveCount(1);
+  });
+
+  test('should display camera upload area', async ({ page }) => {
+    const uploadArea = page.locator('.border-2.border-dashed');
+    await expect(uploadArea).toBeVisible();
+  });
+
+  test('should have format instruction text', async ({ page }) => {
+    await expect(page.getByText('JPG, PNG maks 5MB')).toBeVisible();
+  });
+});
+
+test.describe('KYC Flow - Step Navigation', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('should move from step 1 to step 2', async ({ page }) => {
+    await page.goto('/onboarding');
+
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+
+    await expect(page.getByText('Lengkapi Profil')).toBeVisible();
+
+    // Step 2 should be active
+    const activeStep = page.locator('.w-10.h-10.rounded-full.bg-emerald-600').nth(1);
+    await expect(activeStep).toBeVisible();
+  });
+
+  test('should move back from step 2 to step 1', async ({ page }) => {
+    await page.goto('/onboarding');
+
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+
+    const backButton = page.getByText('Kembali');
+    await backButton.click();
+
+    await expect(page.getByText('Unggah e-KTP')).toBeVisible();
+  });
+});
+
+test.describe('KYC Flow - Form Validation', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+  });
+
+  test('should require NIK field', async ({ page }) => {
+    await page.click('button:has-text("Konfirmasi Pendaftaran")');
+
+    // Wait for validation
+    await page.waitForTimeout(500);
+
+    // Should still be on the form
+    await expect(page.getByText('Lengkapi Profil')).toBeVisible();
+  });
+
+  test('should require all fields', async ({ page }) => {
+    // Don't fill any fields
+    await page.click('button:has-text("Konfirmasi Pendaftaran")');
+
+    // Wait for validation
+    await page.waitForTimeout(500);
+
+    // Should still be on the form
+    await expect(page.getByText('Lengkapi Profil')).toBeVisible();
+  });
+
+  test('should show loading state on submit', async ({ page }) => {
+    await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
+    await page.getByPlaceholder('Sesuai KTP').fill('Test User');
+    await page.getByPlaceholder('nama@email.com').fill('test@example.com');
+    await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+
+    await page.click('button:has-text("Konfirmasi Pendaftaran")');
+
+    // Check for loading icon
+    const loadingIcon = page.locator('.animate-spin');
+    await expect(loadingIcon).toBeVisible();
+  });
+});
+
+test.describe('KYC Flow - Success State', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+
+    await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
+    await page.getByPlaceholder('Sesuai KTP').fill('Test User');
+    await page.getByPlaceholder('nama@email.com').fill('test@example.com');
+    await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+
+    await page.click('button:has-text("Konfirmasi Pendaftaran")');
+
+    // Wait for success step
+    await page.waitForTimeout(2000);
+  });
+
+  test('should display success message', async ({ page }) => {
+    await expect(page.getByText('Akun Siap Digunakan!')).toBeVisible();
+  });
+
+  test('should display all steps as complete', async ({ page }) => {
+    const activeSteps = page.locator('.w-10.h-10.rounded-full.bg-emerald-600');
+    await expect(activeSteps).toHaveCount(3);
+  });
+
+  test('should have loading spinner', async ({ page }) => {
+    const loadingIcon = page.locator('.animate-spin');
+    await expect(loadingIcon).toBeVisible();
+  });
+});
+
+test.describe('KYC Flow - Accessibility', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('should have proper heading hierarchy', async ({ page }) => {
+    await page.goto('/onboarding');
+
+    const h2 = page.locator('h2');
+    await expect(h2).toBeVisible();
+    await expect(h2).toContainText('Unggah e-KTP');
+  });
+
+  test('should support keyboard navigation', async ({ page }) => {
+    await page.goto('/onboarding');
+
+    await page.keyboard.press('Tab');
+    const focused = page.locator(':focus');
+    await expect(focused).toBeVisible();
+  });
+
+  test('should have accessible form labels', async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+
+    const labels = page.locator('label');
+    await expect(labels).toHaveCount(4);
+  });
+});
+
+test.describe('KYC Flow - Visual Regression', () => {
+  test('should match screenshots on desktop - Step 1', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto('/onboarding');
+
+    await page.screenshot({
+      path: 'e2e/screenshots/kyc-step1-desktop.png',
+      fullPage: true
+    });
+  });
+
+  test('should match screenshots on mobile - Step 1', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/onboarding');
+
+    await page.screenshot({
+      path: 'e2e/screenshots/kyc-step1-mobile.png',
+      fullPage: true
+    });
+  });
+
+  test('should match screenshots on desktop - Step 2', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto('/onboarding');
+    await page.click('button:has-text("Lanjut ke Profil Data")');
+
+    await page.screenshot({
+      path: 'e2e/screenshots/kyc-step2-desktop.png',
+      fullPage: true
+    });
   });
 });

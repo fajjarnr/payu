@@ -23,6 +23,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Stepper } from '@/components/ui/stepper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 
@@ -55,7 +56,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen w-full flex bg-background font-inter">
       {/* Left Panel - Branding */}
-      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-zinc-900 border-r border-border/10 p-12 relative overflow-hidden text-white" aria-label="Branding">
+      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-zinc-900 border-r border-border/10 p-8 relative overflow-hidden text-white" aria-label="Branding">
         {/* Background Effects */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
@@ -109,23 +110,11 @@ export default function OnboardingPage() {
       <main className="flex-1 flex flex-col items-center justify-center p-8 bg-background relative" aria-labelledby="onboarding-title">
         <div className="w-full max-w-[520px]">
             {/* Progress Steps */}
-            <nav className="mb-10" aria-label="Registration Progress">
-                <div className="flex items-center justify-between relative">
-                    <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-muted -z-10" aria-hidden="true" />
-                    {[1, 2, 3].map((s) => (
-                        <div key={s} 
-                             className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-4 transition-all duration-500 ${step >= s ? 'bg-emerald-600 border-emerald-100 text-white' : 'bg-background border-muted text-muted-foreground'}`}
-                             aria-current={step === s ? 'step' : undefined}
-                        >
-                            {step > s ? <CheckCircle2 className="w-5 h-5 text-white" aria-label="Complete" /> : s}
-                        </div>
-                    ))}
-                </div>
-                <div className="flex justify-between mt-2 text-xs font-bold text-muted-foreground px-1">
-                    <span className={step >= 1 ? 'text-emerald-700' : ''}>{t('steps.identity')}</span>
-                    <span className={step >= 2 ? 'text-emerald-700' : ''}>{t('steps.profile')}</span>
-                    <span className={step >= 3 ? 'text-emerald-700' : ''}>{t('steps.complete')}</span>
-                </div>
+            <nav className="mb-12" aria-label="Registration Progress">
+              <Stepper 
+                steps={[t('steps.identity'), t('steps.profile'), t('steps.complete')]} 
+                currentStep={step - 1} 
+              />
             </nav>
             
             <AnimatePresence mode="wait">
@@ -142,7 +131,7 @@ export default function OnboardingPage() {
                             <p className="text-muted-foreground">{t('step1.subtitle')}</p>
                         </div>
 
-                        <div className="border-2 border-dashed border-muted-foreground/25 hover:border-emerald-500/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-2xl p-12 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4" tabIndex={0} role="button" aria-label={t('step1.clickToUpload')}>
+                        <div className="border-2 border-dashed border-muted-foreground/25 hover:border-emerald-500/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 rounded-2xl p-8 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4" tabIndex={0} role="button" aria-label={t('step1.clickToUpload')}>
                             <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <Camera className="w-8 h-8 text-emerald-600" aria-hidden="true" />
                             </div>
@@ -152,7 +141,7 @@ export default function OnboardingPage() {
                             </div>
                         </div>
 
-                        <Button onClick={() => setStep(2)} className="w-full h-12 text-base font-bold bg-emerald-600 hover:bg-emerald-500">
+                        <Button onClick={() => setStep(2)} className="w-full h-14 text-base font-bold shadow-xl shadow-emerald-500/20">
                             {t('step1.button')} <ChevronRight className="ml-2 w-4 h-4" />
                         </Button>
                     </motion.div>
@@ -196,11 +185,11 @@ export default function OnboardingPage() {
                             
                             <input type="hidden" {...register('externalId')} defaultValue="KTP-PREMIUM-V2" />
 
-                            <div className="pt-4 flex gap-4">
-                                <Button type="button" variant="outline" onClick={() => setStep(1)} className="h-12 px-6">
+                             <div className="pt-6 flex gap-4">
+                                <Button type="button" variant="outline" onClick={() => setStep(1)} className="h-14 px-8">
                                     {t('step2.backButton')}
                                 </Button>
-                                <Button type="submit" className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 font-bold" disabled={mutation.isPending}>
+                                <Button type="submit" className="flex-1 h-14 font-bold shadow-xl shadow-emerald-500/20" disabled={mutation.isPending}>
                                     {mutation.isPending ? <Loader2 className="animate-spin" /> : t('step2.submitButton')}
                                 </Button>
                             </div>

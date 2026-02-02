@@ -5,11 +5,13 @@ import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.in.FxRateUseCase;
 import id.payu.fx.domain.port.out.FxRateProviderPort;
 import id.payu.fx.domain.port.out.FxRateRepositoryPort;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Service
 public class FxRateService implements FxRateUseCase {
 
     private final FxRateRepositoryPort fxRateRepository;
