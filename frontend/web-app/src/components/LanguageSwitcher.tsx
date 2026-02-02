@@ -55,6 +55,7 @@ export default function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
+        data-testid="language-switcher-button"
         className={clsx(
           'flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all',
           'text-xs font-bold tracking-widest border border-emerald-500/10 bg-card shadow-md',
@@ -88,6 +89,7 @@ export default function LanguageSwitcher() {
               <button
                 key={loc.code}
                 onClick={() => switchLocale(loc.code)}
+                data-testid={`locale-${loc.code}`}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-2.5',
                   'text-xs font-semibold transition-colors',

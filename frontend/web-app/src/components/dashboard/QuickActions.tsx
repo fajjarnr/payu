@@ -155,7 +155,7 @@ export default function QuickActions({
   };
 
   return (
-    <Card className={cn("relative overflow-hidden group", className)}>
+    <Card data-testid="quick-actions-card" className={cn("relative overflow-hidden group", className)}>
       {/* Decorative background */}
       <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -172,6 +172,7 @@ export default function QuickActions({
         <Button
           variant={isEditMode ? "default" : "outline"}
           size="sm"
+          data-testid="edit-quick-actions-button"
           onClick={() => setIsEditMode(!isEditMode)}
           className="text-xs sm:text-xs px-4"
         >
@@ -223,6 +224,7 @@ export default function QuickActions({
         <div className="mt-8 pt-6 border-t border-border">
           <Button
             variant="ghost"
+            data-testid="view-all-features-button"
             className="w-full text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground justify-center gap-3 h-12"
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -257,6 +259,7 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
     <div ref={setNodeRef} style={style} className="relative">
       <motion.a
         href={action.href}
+        data-testid={`quick-action-${action.id}`}
         className={clsx(
           'group relative p-6 rounded-2xl border transition-all flex flex-col items-center text-center',
           'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset',

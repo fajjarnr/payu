@@ -37,9 +37,9 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
   ];
 
   return (
-    <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
+    <div data-testid="transfer-activity-section" className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
       {/* Quick Transfer Section - Now on the Left */}
-      <Card className="lg:col-span-4 relative overflow-hidden group min-h-[400px]">
+      <Card data-testid="quick-transfer-card" className="lg:col-span-4 relative overflow-hidden group min-h-[400px]">
         {/* Decorative background */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl transition-transform group-hover:scale-125 pointer-events-none" />
 
@@ -62,7 +62,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                 { icon: ReceiptText, label: 'Tagihan' },
                 { icon: MoreIcon, label: 'Lain' },
               ].map((item, i) => (
-                <Button key={i} variant="ghost" className="flex flex-col items-center gap-4 group/btn h-auto p-0 hover:bg-transparent">
+                <Button key={i} data-testid={`quick-transfer-category-${item.label.toLowerCase()}`} variant="ghost" className="flex flex-col items-center gap-4 group/btn h-auto p-0 hover:bg-transparent">
                   <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-emerald-500/[0.03] flex items-center justify-center group-hover/btn:bg-emerald-500/10 group-hover/btn:scale-105 transition-all border border-emerald-500/10 group-hover/btn:border-emerald-500/30 shadow-sm overflow-hidden">
                     <item.icon className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-500" />
                   </div>
@@ -83,14 +83,14 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
             </div>
           </div>
 
-          <Button className="w-full uppercase tracking-[0.2em] font-bold text-xs h-14 sm:h-16 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 transition-all mt-4">
+          <Button data-testid="quick-transfer-send-button" className="w-full uppercase tracking-[0.2em] font-bold text-xs h-14 sm:h-16 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 transition-all mt-4">
             Kirim Sekarang
           </Button>
         </CardContent>
       </Card>
 
       {/* Recent Transfer Activity List - Now on the Right */}
-      <Card className="lg:col-span-8 overflow-hidden">
+      <Card data-testid="recent-activity-card" className="lg:col-span-8 overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between pb-10">
           <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             Aktivitas Terakhir
@@ -114,7 +114,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
               </TableHeader>
               <TableBody>
                 {transfers.map((item) => (
-                  <TableRow key={item.id} className="group border-b border-border/30 hover:bg-muted/30 transition-colors">
+                  <TableRow key={item.id} data-testid={`transfer-row-${item.id}`} className="group border-b border-border/30 hover:bg-muted/30 transition-colors">
                     <TableCell className="py-8 sm:py-10 whitespace-nowrap text-xs sm:text-xs text-muted-foreground font-bold tabular-nums uppercase tracking-tighter opacity-70">
                       {item.date}
                     </TableCell>
@@ -153,7 +153,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
           {/* Mobile Card Layout */}
           <div className="md:hidden space-y-4">
             {transfers.map((item) => (
-              <div key={item.id} className="bg-muted/30 p-4 rounded-xl border border-transparent hover:border-primary/20 transition-all">
+              <div key={item.id} data-testid={`transfer-card-mobile-${item.id}`} className="bg-muted/30 p-4 rounded-xl border border-transparent hover:border-primary/20 transition-all">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-xl bg-card flex items-center justify-center border border-border shadow-sm">
@@ -180,10 +180,10 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
           </div>
 
           <div className="mt-10 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-6">
-            <Button variant="ghost" size="sm" className="flex items-center gap-3 text-xs font-bold text-primary hover:text-primary/80 tracking-widest transition-colors uppercase h-auto p-0 hover:bg-transparent">
+            <Button variant="ghost" size="sm" data-testid="repeat-last-transfer-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:text-primary/80 tracking-widest transition-colors uppercase h-auto p-0 hover:bg-transparent">
               <RotateCcw className="h-4 w-4" /> Ulangi Transfer Terakhir
             </Button>
-            <Button variant="ghost" size="sm" className="flex items-center gap-3 text-xs font-bold text-primary hover:underline tracking-widest transition-all uppercase h-auto p-0 hover:bg-transparent">
+            <Button variant="ghost" size="sm" data-testid="view-full-history-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:underline tracking-widest transition-all uppercase h-auto p-0 hover:bg-transparent">
               Riwayat Lengkap <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

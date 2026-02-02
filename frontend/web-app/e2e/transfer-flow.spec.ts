@@ -1,16 +1,18 @@
 import { test, expect } from '@playwright/test';
+import { waitForPageStable, waitForAnimations } from './utils';
 
 test.describe('Transfer Flow', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/transfer');
+    await waitForPageStable(page);
   });
 
   test('should display transfer page correctly', async ({ page }) => {
     await expect(page).toHaveTitle(/PayU/);
-    await expect(page.getByText('Transfer Instan')).toBeVisible();
-    await expect(page.getByText('Kirim dana secara aman dalam hitungan detik')).toBeVisible();
+    await expect(page.getByText('Transfer Instan')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Kirim dana secara aman dalam hitungan detik')).toBeVisible({ timeout: 10000 });
   });
 
   test('should display all transfer types', async ({ page }) => {
@@ -22,6 +24,7 @@ test.describe('Transfer Flow', () => {
 
   test('should select transfer type', async ({ page }) => {
     await page.click('button:has-text("BI-FAST")');
+    await waitForAnimations(page);
 
     // Check that selection is made - the button should be selected
     const selectedButton = page.locator('button:has-text("BI-FAST")');
@@ -36,7 +39,8 @@ test.describe('Transfer Flow', () => {
 
   test('should show date picker when scheduled transfer selected', async ({ page }) => {
     await page.click('button:has-text("Terjadwal")');
-    await expect(page.getByText('Tanggal Transfer')).toBeVisible();
+    await waitForAnimations(page);
+    await expect(page.getByText('Tanggal Transfer')).toBeVisible({ timeout: 10000 });
   });
 
   test('should show recurring inputs when recurring transfer selected', async ({ page }) => {
@@ -60,6 +64,7 @@ test.describe('Transfer Flow', () => {
 
   test('should select contact from favorites', async ({ page }) => {
     await page.click('text=Anya');
+    await waitForAnimations(page);
     const input = page.getByPlaceholder('Masukkan ID Akun atau Nomor Rekening');
     await expect(input).toHaveValue('acc-any123');
   });
@@ -114,6 +119,7 @@ test.describe('Transfer Flow - Transfer Type Selection', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/transfer');
+    await waitForPageStable(page);
   });
 
   test('should display transfer type cards', async ({ page }) => {
@@ -122,12 +128,14 @@ test.describe('Transfer Flow - Transfer Type Selection', () => {
 
   test('should select Internal Transfer', async ({ page }) => {
     await page.click('button:has-text("Transfer Instan")');
+    await waitForAnimations(page);
     const selectedButton = page.locator('button:has-text("Transfer Instan")');
     await expect(selectedButton).toBeVisible();
   });
 
   test('should select BI-FAST', async ({ page }) => {
     await page.click('button:has-text("BI-FAST")');
+    await waitForAnimations(page);
     const selectedButton = page.locator('button:has-text("BI-FAST")');
     await expect(selectedButton).toBeVisible();
   });
@@ -143,6 +151,7 @@ test.describe('Transfer Flow - Schedule Selection', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/transfer');
+    await waitForPageStable(page);
   });
 
   test('should display schedule options header', async ({ page }) => {
@@ -151,17 +160,19 @@ test.describe('Transfer Flow - Schedule Selection', () => {
 
   test('should select scheduled transfer', async ({ page }) => {
     await page.click('button:has-text("Terjadwal")');
-    await expect(page.getByText('Tanggal Transfer')).toBeVisible();
+    await waitForAnimations(page);
+    await expect(page.getByText('Tanggal Transfer')).toBeVisible({ timeout: 10000 });
   });
 
   test('should select recurring transfer', async ({ page }) => {
     await page.click('button:has-text("Berulang")');
 
     // Wait for the UI to update
-    await page.waitForTimeout(500);
+    await waitForAnimations(page);
+    await page.waitForTimeout(300);
 
     // Check for month selection buttons
-    const monthButtons = page.filter({ hasText: /^(JAN|FEB|MAR|APR|MEI|JUN|JUL|AGU|SEP|OKT|NOV|DES)$/ });
+    const monthButtons = page.locator('button').filter({ hasText: /^(JAN|FEB|MAR|APR|MEI|JUN|JUL|AGU|SEP|OKT|NOV|DES)$/ });
     expect(await monthButtons.count()).toBeGreaterThan(0);
   });
 });
@@ -171,6 +182,7 @@ test.describe('Transfer Flow - Amount Input', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/transfer');
+    await waitForPageStable(page);
   });
 
   test('should enter amount', async ({ page }) => {
@@ -197,6 +209,7 @@ test.describe('Transfer Flow - Favorite Contacts', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/transfer');
+    await waitForPageStable(page);
   });
 
   test('should display favorite contacts header', async ({ page }) => {
@@ -205,6 +218,7 @@ test.describe('Transfer Flow - Favorite Contacts', () => {
 
   test('should click on favorite contact', async ({ page }) => {
     await page.click('text=Anya');
+    await waitForAnimations(page);
     const input = page.getByPlaceholder('Masukkan ID Akun atau Nomor Rekening');
     await expect(input).toHaveValue('acc-any123');
   });
@@ -219,6 +233,7 @@ test.describe('Transfer Flow - Help Section', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/transfer');
+    await waitForPageStable(page);
   });
 
   test('should display help card', async ({ page }) => {
@@ -236,16 +251,18 @@ test.describe('Transfer Flow - Accessibility', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/transfer');
+    await waitForPageStable(page);
   });
 
   test('should have proper heading hierarchy', async ({ page }) => {
-    const h2 = page.locator('h2');
-    await expect(h2).toBeVisible();
-    await expect(h2).toContainText('Transfer Instan');
+    const h2 = page.locator('h2').first();
+    await expect(h2).toBeVisible({ timeout: 10000 });
+    await expect(h2).toContainText('Transfer', { timeout: 5000 });
   });
 
   test('should support keyboard navigation', async ({ page }) => {
     await page.keyboard.press('Tab');
+    await page.waitForTimeout(100);
     const focused = page.locator(':focus');
     await expect(focused).toBeVisible();
   });

@@ -36,10 +36,12 @@ export default function MobileNav() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className={clsx(
-      "fixed bottom-0 left-0 right-0 bg-card/70 backdrop-blur-2xl border-t border-border pb-[env(safe-area-inset-bottom,1.5rem)] pt-3 px-8 z-50",
-      "lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl"
-    )} role="navigation" aria-label="Navigasi Mobile">
+    <div
+      data-testid="mobile-nav"
+      className={clsx(
+        "fixed bottom-0 left-0 right-0 bg-card/70 backdrop-blur-2xl border-t border-border pb-[env(safe-area-inset-bottom,1.5rem)] pt-3 px-8 z-50",
+        "lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl"
+      )} role="navigation" aria-label="Navigasi Mobile">
       <div className="flex justify-between items-center max-w-lg mx-auto h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'));
@@ -47,6 +49,7 @@ export default function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
+              data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               className={clsx(
                 "flex flex-col items-center gap-1.5 transition-all relative group",
                 isActive ? "text-emerald-500 scale-105" : "text-foreground/40 hover:text-foreground"

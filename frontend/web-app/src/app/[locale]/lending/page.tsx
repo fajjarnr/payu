@@ -68,7 +68,7 @@ export default function LendingPage() {
       <PageTransition>
         <div className="space-y-12">
           <StaggerContainer>
-            <Tabs defaultValue="loans" className="w-full">
+            <Tabs defaultValue="loans" data-testid="lending-tabs" className="w-full">
               <StaggerItem>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                   <div>
@@ -77,7 +77,7 @@ export default function LendingPage() {
                   </div>
                   <TabsContent value="paylater" className="mt-0">
                     <ButtonMotion>
-                      <Button className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
+                      <Button data-testid="activate-paylater-button" className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
                         <Plus className="h-4 w-4" /> Aktifkan PayLater
                       </Button>
                     </ButtonMotion>
@@ -85,8 +85,8 @@ export default function LendingPage() {
                 </div>
 
                 <TabsList className="mb-8">
-                  <TabsTrigger value="loans" className="px-8">Pinjaman</TabsTrigger>
-                  <TabsTrigger value="paylater" className="px-8">PayLater</TabsTrigger>
+                  <TabsTrigger value="loans" data-testid="loans-tab" className="px-8">Pinjaman</TabsTrigger>
+                  <TabsTrigger value="paylater" data-testid="paylater-tab" className="px-8">PayLater</TabsTrigger>
                 </TabsList>
               </StaggerItem>
 
@@ -143,7 +143,7 @@ export default function LendingPage() {
                   <h3 className="text-xl font-bold text-foreground">Produk Pinjaman</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {loanProducts.map((product, i) => (
-                      <StaggerItem key={i} className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
+                      <StaggerItem key={i} data-testid={`loan-product-${i}`} className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
                         <div className="flex justify-between items-start mb-8">
                           <div className={clsx("h-16 w-16 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110", product.bg, product.color)}>
                             <product.icon className="h-8 w-8" />
@@ -174,7 +174,7 @@ export default function LendingPage() {
                             </div>
                           </div>
                           <ButtonMotion className="w-full">
-                            <Button className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
+                            <Button data-testid={`apply-loan-${i}`} className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
                               Ajukan Sekarang <ArrowRight className="h-4 w-4" />
                             </Button>
                           </ButtonMotion>
@@ -227,7 +227,7 @@ export default function LendingPage() {
                             <p className="text-xl font-bold">{formatCurrency(payLaterStats.minimumPayment)}</p>
                           </div>
                           <ButtonMotion>
-                            <Button variant="secondary" className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg">
+                            <Button data-testid="pay-bill-button" variant="secondary" className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg">
                               Bayar Tagihan
                             </Button>
                           </ButtonMotion>
@@ -267,7 +267,7 @@ export default function LendingPage() {
                   <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                     <div className="divide-y divide-border">
                       {payLaterStats.transactions.map((txn) => (
-                        <div key={txn.id} className="p-6 hover:bg-muted/30 transition-colors">
+                        <div key={txn.id} data-testid={`transaction-${txn.id}`} className="p-6 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                               <div className={clsx(

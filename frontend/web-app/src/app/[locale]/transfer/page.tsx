@@ -214,6 +214,7 @@ export default function TransferPage() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    data-testid="back-from-review-button"
                     onClick={() => setShowReview(false)}
                     className="w-14 h-14 bg-card rounded-xl border border-border shadow-sm"
                   >
@@ -295,6 +296,7 @@ export default function TransferPage() {
                 <ButtonMotion className="w-full">
                   <Button
                     onClick={handleSubmit(onSubmit)}
+                    data-testid="confirm-transfer-button"
                     disabled={transferMutation.isPending}
                     className="w-full h-16 rounded-2xl shadow-2xl shadow-emerald-500/20"
                   >
@@ -333,6 +335,7 @@ export default function TransferPage() {
                         <button
                           key={t.type}
                           onClick={() => setValue('transferType', t.type)}
+                          data-testid={`transfer-type-${t.type.toLowerCase()}`}
                           className={clsx(
                             "flex flex-col gap-4 p-6 rounded-xl border-2 transition-all group",
                             isSelected
@@ -369,6 +372,7 @@ export default function TransferPage() {
                         <button
                           key={s.type}
                           onClick={() => setValue('scheduleType', s.type)}
+                          data-testid={`schedule-type-${s.type.toLowerCase()}`}
                           className={clsx(
                             "flex flex-col gap-3 p-6 rounded-xl border-2 transition-all group",
                             isSelected
@@ -516,6 +520,7 @@ export default function TransferPage() {
                   <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
                   <Input
                     {...register('toAccountId')}
+                    data-testid="recipient-account-input"
                     type="text"
                     placeholder="Masukkan ID Akun atau Nomor Rekening"
                     className="pl-16 h-16 text-lg"
@@ -539,6 +544,7 @@ export default function TransferPage() {
                         type="text"
                         value={formattedAmount}
                         onChange={handleAmountChange}
+                        data-testid="amount-input"
                         placeholder="0"
                         className="w-full bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/10 text-5xl sm:text-5xl lg:text-7xl font-bold outline-none text-foreground"
                       />
@@ -550,6 +556,7 @@ export default function TransferPage() {
                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3">Memo Transaksi</p>
                     <input
                       {...register('description')}
+                      data-testid="description-input"
                       type="text"
                       placeholder="Apa tujuan transfer ini?"
                       className="w-full text-base font-bold bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/40 outline-none"
@@ -560,6 +567,7 @@ export default function TransferPage() {
                 <ButtonMotion className="w-full">
                   <Button
                     onClick={handleReview}
+                    data-testid="review-transfer-button"
                     className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20 group"
                   >
                     Tinjau Ringkasan Transfer
@@ -580,6 +588,7 @@ export default function TransferPage() {
                       <button
                         key={c.name}
                         onClick={() => handleContactSelect(c)}
+                        data-testid={`favorite-contact-${c.name.toLowerCase()}`}
                         className={clsx(
                           "flex flex-col items-center gap-4 p-6 rounded-xl border transition-all group",
                           selectedContact === c.accountId

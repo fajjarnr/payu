@@ -23,6 +23,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      data-testid="theme-toggle-button"
       className={clsx(
         'w-12 h-12 flex items-center justify-center rounded-full transition-all cursor-pointer shadow-md border border-emerald-500/10 bg-card',
         'hover:bg-emerald-500/5 hover:border-emerald-500/30 active:scale-95 transition-all',

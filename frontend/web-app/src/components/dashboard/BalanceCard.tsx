@@ -14,10 +14,10 @@ interface BalanceCardProps {
 
 export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp' }: BalanceCardProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 xl:grid-cols-3 gap-6">
+    <div data-testid="balance-card" className="grid grid-cols-1 md:grid-cols-12 xl:grid-cols-3 gap-6">
       {/* Col 1: Primary Balance & Net Worth */}
       <div className="md:col-span-12 lg:col-span-4 xl:col-span-1 flex flex-col gap-6">
-        <Card className="flex flex-col justify-between flex-1 relative overflow-hidden group min-h-[220px]">
+        <Card data-testid="primary-balance-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group min-h-[220px]">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
             <div>
               <CardTitle className="text-xs sm:text-sm font-bold text-emerald-500 tracking-[0.2em] uppercase">
@@ -49,7 +49,7 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col justify-between flex-1 relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow min-h-[220px]">
+        <Card data-testid="net-worth-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow min-h-[220px]">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
             <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
               Kekayaan Bersih
@@ -122,6 +122,7 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
       {/* Col 3: Summary Stats (Pemasukan/Pengeluaran) */}
       <div className="md:col-span-12 lg:col-span-12 xl:col-span-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-6">
         <SummaryItem
+          data-testid="income-card"
           label="Pemasukan"
           amount={75200000}
           change={+6.5}
@@ -129,6 +130,7 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
           currency={currency}
         />
         <SummaryItem
+          data-testid="expense-card"
           label="Pengeluaran"
           amount={42750000}
           change={-4.2}
@@ -140,9 +142,18 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
   );
 }
 
-function SummaryItem({ label, amount, change, isPositive, currency }: { label: string; amount: number; change: number; isPositive: boolean; currency: string }) {
+interface SummaryItemProps {
+  label: string;
+  amount: number;
+  change: number;
+  isPositive: boolean;
+  currency: string;
+  'data-testid'?: string;
+}
+
+function SummaryItem({ label, amount, change, isPositive, currency, 'data-testid': testId }: SummaryItemProps) {
   return (
-    <Card className="flex flex-col justify-between h-full relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+    <Card data-testid={testId} className="flex flex-col justify-between h-full relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-10">
         <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
           {label}

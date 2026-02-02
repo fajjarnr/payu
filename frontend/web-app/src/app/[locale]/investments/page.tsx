@@ -27,7 +27,7 @@ export default function InvestmentsPage() {
                   <p className="text-sm text-muted-foreground font-medium mt-1">Tumbuhkan aset Anda dengan produk investasi kelas institusi.</p>
                 </div>
                 <ButtonMotion>
-                  <Button className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
+                  <Button data-testid="new-investment-button" className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
                     <Plus className="h-4 w-4" /> Investasi Baru
                   </Button>
                 </ButtonMotion>
@@ -37,7 +37,7 @@ export default function InvestmentsPage() {
             {/* Portfolio Overview */}
             <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
               <StaggerItem className="md:col-span-6 lg:col-span-8">
-                <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card h-full relative overflow-hidden group">
+                <div data-testid="portfolio-overview-card" className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card h-full relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-0" />
 
                   <div className="relative z-10 flex flex-col h-full">
@@ -117,7 +117,7 @@ export default function InvestmentsPage() {
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" className="relative z-10 w-full h-14 bg-white/5 border border-white/10 text-white hover:bg-white/10 mt-10">Optimasi Portofolio</Button>
+                  <Button data-testid="optimize-portfolio-button" variant="outline" className="relative z-10 w-full h-14 bg-white/5 border border-white/10 text-white hover:bg-white/10 mt-10">Optimasi Portofolio</Button>
                   <PieChart className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
                 </div>
               </StaggerItem>
@@ -136,7 +136,7 @@ export default function InvestmentsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {investmentProducts.map((prod, i) => (
-                  <div key={i} className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
+                  <div key={i} data-testid={`investment-product-${i}`} className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
                     <div className="flex justify-between items-start mb-10">
                       <div className={clsx(
                         "h-16 w-16 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110",
@@ -158,7 +158,7 @@ export default function InvestmentsPage() {
                           <span className="text-lg font-bold text-primary">{prod.return}</span>
                         </div>
                         <ButtonMotion>
-                          <Button size="icon" className="h-10 w-10 shadow-lg shadow-primary/20">
+                          <Button data-testid={`buy-investment-${i}`} size="icon" className="h-10 w-10 shadow-lg shadow-primary/20">
                             <Plus className="h-4 w-4" />
                           </Button>
                         </ButtonMotion>
@@ -182,7 +182,7 @@ export default function InvestmentsPage() {
                   </p>
                 </div>
                 <div className="md:ml-auto">
-                  <Button className="h-14 px-8 shadow-xl shadow-primary/20">Tinjau Strategi</Button>
+                  <Button data-testid="review-strategy-button" className="h-14 px-8 shadow-xl shadow-primary/20">Tinjau Strategi</Button>
                 </div>
               </div>
             </div>

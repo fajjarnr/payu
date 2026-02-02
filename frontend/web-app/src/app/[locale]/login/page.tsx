@@ -108,6 +108,7 @@ export default function LoginPage() {
                         <Label htmlFor="username">Username</Label>
                         <Input
                             id="username"
+                            data-testid="username-input"
                             placeholder="username123"
                             {...register('username')}
                             className="h-12 bg-muted/30"
@@ -119,12 +120,13 @@ export default function LoginPage() {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="password">Password</Label>
-                            <Link href="#" className="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline">
+                            <Link href="#" data-testid="forgot-password-link" className="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline">
                                 {t('forgotPassword')}
                             </Link>
                         </div>
                         <Input
                             id="password"
+                            data-testid="password-input"
                             type="password"
                             placeholder="••••••••"
                             {...register('password')}
@@ -136,8 +138,9 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                <Button 
-                    type="submit" 
+                <Button
+                    type="submit"
+                    data-testid="login-submit-button"
                     className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
                     disabled={mutation.isPending}
                 >
@@ -162,7 +165,7 @@ export default function LoginPage() {
 
             <div className="text-center text-sm">
                 <span className="text-muted-foreground">{t('noAccount')}</span>{" "}
-                <Link href="/onboarding" className="font-bold text-emerald-700 hover:text-emerald-800 hover:underline inline-flex items-center">
+                <Link href="/onboarding" data-testid="register-link" className="font-bold text-emerald-700 hover:text-emerald-800 hover:underline inline-flex items-center">
                     {t('registerLink')} <ArrowRight className="ml-1 w-3 h-3" />
                 </Link>
             </div>

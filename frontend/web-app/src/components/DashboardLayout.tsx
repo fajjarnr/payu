@@ -155,6 +155,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                   <Button
                     variant="ghost"
                     size="icon"
+                    data-testid="mobile-menu-trigger"
                     className="lg:hidden w-14 h-14 -ml-2 text-foreground/60 hover:text-foreground hover:bg-foreground/5 rounded-2xl"
                     aria-label="Buka menu navigasi"
                   >
@@ -210,15 +211,17 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                   <Search className="h-5 w-5 text-emerald-500/40 group-focus-within:text-emerald-500 transition-colors" />
                   <Input
                     type="text"
+                    data-testid="search-input"
                     placeholder="Pencarian cerdas..."
                     className="bg-transparent border-none focus-visible:ring-0 text-sm font-bold uppercase tracking-widest w-full placeholder:text-muted-foreground/40 text-foreground h-14 shadow-none"
                   />
                 </div>
 
-               <Button 
+               <Button
                  variant="ghost"
                  size="icon"
-                 className="w-14 h-14 bg-card text-foreground/60 hover:text-emerald-500 hover:bg-emerald-500/5 rounded-2xl relative shadow-sm border border-emerald-500/10 hover:border-emerald-500/30 transition-all" 
+                 data-testid="notification-button"
+                 className="w-14 h-14 bg-card text-foreground/60 hover:text-emerald-500 hover:bg-emerald-500/5 rounded-2xl relative shadow-sm border border-emerald-500/10 hover:border-emerald-500/30 transition-all"
                  aria-label="Notifikasi"
                >
                  <div className="absolute top-5 right-5 h-2.5 w-2.5 bg-emerald-500 rounded-full border-2 border-card shadow-sm" aria-label="Notifikasi baru" />
@@ -227,10 +230,11 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button 
+                    <Button
                       variant="ghost"
-                      className="p-0 h-auto rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-emerald-500 shadow-lg border border-emerald-500/10" 
-                      aria-label="Menu profil pengguna" 
+                      data-testid="profile-menu-trigger"
+                      className="p-0 h-auto rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-emerald-500 shadow-lg border border-emerald-500/10"
+                      aria-label="Menu profil pengguna"
                     >
                       <Avatar className="h-14 w-14 border-2 border-card shadow-md">
                         <AvatarFallback className="bg-emerald-500/5">
@@ -248,6 +252,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                       <Button
                         variant="ghost"
                         onClick={onLogout}
+                        data-testid="logout-button"
                         className="w-full text-left px-8 py-5 text-xs sm:text-sm text-red-500 hover:bg-red-500/10 hover:text-red-500 font-bold uppercase tracking-[0.3em] flex items-center justify-between transition-colors h-auto border-none focus-visible:ring-0"
                       >
                         <span>{t('logout')}</span>
