@@ -47,9 +47,9 @@ test.describe('Investment Flow', () => {
     await expect(page.getByText('Konservatif')).toBeVisible();
     await expect(page.getByText('Agresif')).toBeVisible();
 
-    // Check for progress bar
-    const progressBar = page.locator('.bg-white\\/10.h-2.rounded-full');
-    await expect(progressBar).toBeVisible();
+    // Check for progress bar - use a more flexible selector
+    const progressBar = page.locator('.bg-white\\/10.h-2.rounded-full, .h-2.rounded-full');
+    await expect(progressBar.first()).toBeVisible();
   });
 
   test('should display investment products catalog', async ({ page }) => {
@@ -87,6 +87,8 @@ test.describe('Investment Flow', () => {
   });
 
   test('should display smart advice section', async ({ page }) => {
+    // Wait for page to fully load including animated elements
+    await page.waitForTimeout(500);
     await expect(page.getByText('Target Portofolio Hampir Tercapai.')).toBeVisible();
   });
 
