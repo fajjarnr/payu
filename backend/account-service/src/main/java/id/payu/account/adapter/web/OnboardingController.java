@@ -3,6 +3,8 @@ package id.payu.account.adapter.web;
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,12 @@ public class OnboardingController {
     private final RegisterUserUseCase registerUserUseCase;
 
     @PostMapping("/register")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.CREATE,
+            entityType = "User",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     public CompletableFuture<ResponseEntity<User>> register(@Valid @RequestBody RegisterUserRequest request) {
         return registerUserUseCase.registerUser(request)
                 .thenApply(ResponseEntity::ok);

@@ -1,12 +1,29 @@
 package id.payu.lending.exception;
 
-public class LendingDomainException extends RuntimeException {
+import id.payu.api.common.exception.BusinessException;
 
-    public LendingDomainException(String message) {
-        super(message);
+/**
+ * Base exception for Lending Service domain errors.
+ *
+ * Error Code Structure: LENDING_[CATEGORY]_[SPECIFIC]
+ *
+ * Categories:
+ * - VAL: Validation errors
+ * - BUS: Business rule violations
+ * - EXT: External service errors
+ * - SYS: System/technical errors
+ */
+public abstract class LendingDomainException extends BusinessException {
+
+    protected LendingDomainException(String code, String message) {
+        super(code, message);
     }
 
-    public LendingDomainException(String message, Throwable cause) {
-        super(message, cause);
+    protected LendingDomainException(String code, String message, Throwable cause) {
+        super(code, message, cause);
+    }
+
+    protected LendingDomainException(String code, String message, Object... args) {
+        super(code, message, args);
     }
 }

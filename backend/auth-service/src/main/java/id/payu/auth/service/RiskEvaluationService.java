@@ -153,6 +153,26 @@ public class RiskEvaluationService {
         return hour >= unusualHoursStart || hour < unusualHoursEnd;
     }
 
+    /**
+     * Checks if a user account is active (not locked due to too many failed attempts).
+     *
+     * @param userId the user ID to check
+     * @return true if account is active, false if locked
+     */
+    public boolean isAccountActive(String userId) {
+        return riskProfileRepository.findById(userId)
+                .map(profile -> {
+                    // Consider account inactive if failed attempts exceed threshold
+                    boolean isActive = profile.getFailedAttempts() < mfaThreshold;
+                    if (!isActive) {
+                        log.warn("Account {} is inactive due to {} failed attempts",
+                                userId, profile.getFailedAttempts());
+                    }
+                    return isActive;
+                })
+                .orElse(true); // New users are considered active
+    }
+
     public static class RiskEvaluationResult {
         private final int riskScore;
         private final boolean mfaRequired;

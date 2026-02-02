@@ -1,5 +1,6 @@
 package id.payu.wallet.adapter.persistence.entity;
 
+import id.payu.security.annotation.Sensitive;
 import id.payu.wallet.multitenancy.TenantAware;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,12 +29,15 @@ public class WalletEntity {
     private String tenantId;
 
     @Column(nullable = false, unique = true)
+    @Sensitive
     private String accountId;
 
     @Column(nullable = false, precision = 19, scale = 4)
+    @Sensitive
     private BigDecimal balance;
 
     @Column(nullable = false, precision = 19, scale = 4)
+    @Sensitive
     private BigDecimal reservedBalance;
 
     @Column(nullable = false, length = 3)

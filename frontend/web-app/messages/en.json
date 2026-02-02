@@ -403,6 +403,7 @@
     "login": "Login",
     "demo": "Demo",
     "trustedBy": "Trusted by {count} Users",
+    "trustedByLabel": "Happy Users",
     "badge": "Banking 4.0 Updated",
     "nav": {
       "features": "Features",
@@ -427,6 +428,28 @@
         "title": "Smart Investing",
         "desc": "Grow your wealth with investment products curated specifically for you."
       }
+    },
+    "about": {
+      "badge": "Our Vision",
+      "title": "Beyond Traditional Banking.",
+      "desc": "We built PayU to break existing financial barriers. With blockchain-ready technology and cloud-native infrastructure, we give you full control over your assets without slow intermediaries.",
+      "mission1": {
+        "title": "Total Transparency",
+        "desc": "No hidden fees. Every transaction is recorded with high-level encryption."
+      },
+      "mission2": {
+        "title": "Financial Inclusion",
+        "desc": "Providing high-end banking access for everyone, everywhere."
+      }
+    },
+    "support": {
+      "subtitle": "Our support center is active 24/7 to ensure your transaction security.",
+      "liveChat": "Live Chat",
+      "liveChatDesc": "Estimation response less than 2 minutes.",
+      "securitySupport": "Email Support",
+      "emailDesc": "For technical assistance and deep security support.",
+      "faqs": "FAQs",
+      "faqsDesc": "Find quick answers in our knowledge database."
     },
     "bento": {
       "title": "Smart Features for Modern Lifestyles.",

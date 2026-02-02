@@ -18,6 +18,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 
 import java.util.List;
 import java.util.Map;
@@ -125,6 +127,12 @@ public class WalletController extends BaseController {
     }
 
     @PostMapping("/{accountId}/credit")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "Wallet",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
     @Operation(summary = "Credit wallet", description = "Credit amount to wallet balance")

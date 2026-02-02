@@ -17,6 +17,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -46,6 +48,12 @@ public class InvestmentController extends BaseController {
     }
 
     @PostMapping("/deposits")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "Deposit",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @Operation(summary = "Buy deposit", description = "Purchases a time deposit product")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Deposit purchased successfully",
@@ -62,6 +70,12 @@ public class InvestmentController extends BaseController {
     }
 
     @PostMapping("/mutual-funds")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "InvestmentTransaction",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @Operation(summary = "Buy mutual fund", description = "Purchases a mutual fund product")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Mutual fund purchased successfully",
@@ -78,6 +92,12 @@ public class InvestmentController extends BaseController {
     }
 
     @PostMapping("/gold")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "Gold",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @Operation(summary = "Buy gold", description = "Purchases gold investment")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Gold purchased successfully",
@@ -91,6 +111,12 @@ public class InvestmentController extends BaseController {
     }
 
     @PostMapping("/sell")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "InvestmentTransaction",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @Operation(summary = "Sell investment", description = "Sells an existing investment")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Investment sold successfully",

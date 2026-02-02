@@ -2,7 +2,7 @@ quarkus:
   application:
     name: notification-service
   http:
-    port: 8086
+    port: 8094
   otel:
     service:
       name: notification-service

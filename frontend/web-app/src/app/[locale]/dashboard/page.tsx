@@ -70,23 +70,21 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
    <PromoPopup delay={3000} />
 
    <main id="main-content">
-    <PageTransition>
+    <div className="space-y-6 md:space-y-8 lg:space-y-8">
+     {/* Banner Carousel - LCP Element 1 */}
+     <BannerCarousel autoPlayInterval={6000} />
+
+     {/* Balance Card - LCP Element 2 (Priority Content) */}
+     <div>
+      {balanceLoading ? <Skeleton className="h-64 rounded-2xl" /> : (
+       <BalanceCard
+        balance={balance?.balance || 0}
+        percentage={45.2}
+       />
+      )}
+     </div>
+
      <StaggerContainer className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-8">
-      {/* Banner Carousel - Full Width */}
-      <StaggerItem className="md:col-span-12 lg:col-span-12">
-       <BannerCarousel autoPlayInterval={6000} />
-      </StaggerItem>
-
-      {/* Balance Card - Priority Content */}
-      <StaggerItem className="md:col-span-12 lg:col-span-12">
-       {balanceLoading ? <Skeleton className="h-64 rounded-2xl" /> : (
-        <BalanceCard
-         balance={balance?.balance || 0}
-         percentage={45.2}
-        />
-       )}
-      </StaggerItem>
-
       {/* High Priority Actions & Health - 4/8 Split (Aligned with Balance) */}
       <StaggerItem className="md:col-span-12 lg:col-span-4">
        <FinancialHealthScore score={78} previousScore={72} className="h-full" />
@@ -148,7 +146,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
        </div>
       </StaggerItem>
      </StaggerContainer>
-    </PageTransition>
+    </div>
    </main>
   </DashboardLayout>
  );

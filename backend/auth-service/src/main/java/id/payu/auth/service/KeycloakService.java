@@ -199,6 +199,19 @@ public class KeycloakService {
                 .block(); // Block until Mono completes
     }
 
+    /**
+     * Blocking version of refreshToken for use in servlet (non-reactive) contexts.
+     * This method blocks the thread until the token refresh completes.
+     *
+     * @param refreshToken the refresh token
+     * @return LoginResponse containing new access tokens
+     * @throws IllegalArgumentException if refresh fails
+     */
+    public LoginResponse refreshTokenBlocking(String refreshToken) {
+        return refreshToken(refreshToken)
+                .block(); // Block until Mono completes
+    }
+
     private Mono<LoginResponse> loginInternal(String username, String password) {
         if (isAccountLocked(username)) {
             log.warn("Login attempt for locked account: {}", username);

@@ -1,6 +1,7 @@
 package id.payu.account.entity;
 
 import id.payu.account.multitenancy.TenantAware;
+import id.payu.security.annotation.Sensitive;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -24,12 +25,15 @@ public class User {
     private String externalId; // Keycloak ID or other IAM ID
 
     @Column(name = "username", unique = true, nullable = false)
+    @Sensitive
     private String username;
 
     @Column(name = "email", unique = true, nullable = false)
+    @Sensitive
     private String email;
 
     @Column(name = "phone_number", unique = true)
+    @Sensitive
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)

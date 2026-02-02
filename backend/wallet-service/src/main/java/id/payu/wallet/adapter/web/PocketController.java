@@ -20,6 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 
 import java.util.List;
 import java.util.UUID;
@@ -107,6 +109,12 @@ public class PocketController extends BaseController {
     }
 
     @PostMapping("/{pocketId}/credit")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "Pocket",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @Operation(summary = "Credit pocket", description = "Credits amount to a pocket")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Amount credited successfully")
@@ -121,6 +129,12 @@ public class PocketController extends BaseController {
     }
 
     @PostMapping("/{pocketId}/debit")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "Pocket",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @Operation(summary = "Debit pocket", description = "Debits amount from a pocket")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Amount debited successfully")

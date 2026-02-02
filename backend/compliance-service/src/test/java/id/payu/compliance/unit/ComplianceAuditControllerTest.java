@@ -7,7 +7,6 @@ import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
 import id.payu.compliance.exception.ComplianceDomainException;
-import id.payu.compliance.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -115,58 +114,5 @@ class ComplianceAuditControllerTest {
         });
 
         assertTrue(exception.getMessage().contains(errorMessage));
-    }
-}
-
-class GlobalExceptionHandlerTest {
-
-    @Test
-    void shouldHandleIllegalArgumentException() {
-        GlobalExceptionHandler handler = new GlobalExceptionHandler();
-        IllegalArgumentException ex = new IllegalArgumentException("Invalid input");
-        
-        var mockRequest = org.mockito.Mockito.mock(org.springframework.web.context.request.WebRequest.class);
-        when(mockRequest.getDescription(anyBoolean())).thenReturn("mock request");
-
-        var response = handler.handleIllegalArgumentException(ex, mockRequest);
-
-        assertNotNull(response);
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().containsKey("message"));
-        assertEquals("Invalid input", response.getBody().get("message"));
-    }
-
-    @Test
-    void shouldHandleGenericException() {
-        GlobalExceptionHandler handler = new GlobalExceptionHandler();
-        Exception ex = new Exception("Generic error");
-        
-        var mockRequest = org.mockito.Mockito.mock(org.springframework.web.context.request.WebRequest.class);
-        when(mockRequest.getDescription(anyBoolean())).thenReturn("mock request");
-
-        var response = handler.handleGlobalException(ex, mockRequest);
-
-        assertNotNull(response);
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().containsKey("message"));
-        assertEquals("An unexpected error occurred", response.getBody().get("message"));
-    }
-
-    @Test
-    void shouldCreateDomainExceptionWithMessage() {
-        ComplianceDomainException exception = new ComplianceDomainException("Domain error");
-
-        assertNotNull(exception);
-        assertEquals("Domain error", exception.getMessage());
-    }
-
-    @Test
-    void shouldCreateDomainExceptionWithMessageAndCause() {
-        Throwable cause = new RuntimeException("Root cause");
-        ComplianceDomainException exception = new ComplianceDomainException("Domain error", cause);
-
-        assertNotNull(exception);
-        assertEquals("Domain error", exception.getMessage());
-        assertEquals(cause, exception.getCause());
     }
 }

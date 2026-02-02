@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import id.payu.billing.exception.TopUpNotFoundException;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,6 +38,12 @@ public class TopUpController {
     private final PaymentService paymentService;
 
     @PostMapping
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
+            entityType = "TopUp",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create e-wallet top-up", description = "Process an e-wallet top-up for supported providers")

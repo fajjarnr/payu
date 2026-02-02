@@ -1,5 +1,6 @@
 package id.payu.transaction.dto;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -34,11 +35,13 @@ public class InitiateTransferRequest {
     @NotBlank(message = "Recipient account number is required")
     @Size(min = 10, max = 20, message = "Account number must be between 10 and 20 digits")
     @Pattern(regexp = "^[0-9]+$", message = "Account number must contain only digits")
+    @Sensitive
     private String recipientAccountNumber;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
     @Pattern(regexp = "^\\d{1,12}(\\.\\d{1,2})?$", message = "Amount must have maximum 12 digits and 2 decimal places")
+    @Sensitive
     private BigDecimal amount;
 
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be a valid ISO 4217 code (e.g., IDR, USD)")
@@ -53,6 +56,7 @@ public class InitiateTransferRequest {
 
     @Size(min = 6, max = 6, message = "Transaction PIN must be exactly 6 digits")
     @Pattern(regexp = "^\\d{6}$", message = "Transaction PIN must be exactly 6 digits")
+    @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
     private String transactionPin;
 
     @Size(max = 100, message = "Device ID is too long")

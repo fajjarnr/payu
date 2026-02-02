@@ -154,7 +154,10 @@ public class RefreshTokenService {
         // In production, you'd maintain a set of token IDs per user
         // For now, we'll use a pattern-based deletion
         String pattern = REFRESH_TOKEN_PREFIX + userId + ":*";
-        redisTemplate.delete(redisTemplate.keys(pattern));
+        java.util.Set<String> keys = redisTemplate.keys(pattern);
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
         log.info("Invalidated all refresh tokens for user: {}", maskUserId(userId));
     }
 
@@ -276,21 +279,51 @@ public class RefreshTokenService {
         return token.substring(0, 8) + "...";
     }
 
-    @Data
     @AllArgsConstructor
     public static class RefreshTokenResponse {
         private final String refreshToken;
         private final Instant expiresAt;
+
+        public String refreshToken() {
+            return refreshToken;
+        }
+
+        public Instant expiresAt() {
+            return expiresAt;
+        }
     }
 
-    @Data
     @lombok.Builder
-    private static class RefreshTokenMetadata {
+    static class RefreshTokenMetadata {
         private String tokenId;
         private String userId;
         private Instant createdAt;
         private Instant expiresAt;
         private int rotationCount;
         private String hashedToken;
+
+        public String getTokenId() {
+            return tokenId;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public Instant getCreatedAt() {
+            return createdAt;
+        }
+
+        public Instant getExpiresAt() {
+            return expiresAt;
+        }
+
+        public int getRotationCount() {
+            return rotationCount;
+        }
+
+        public String getHashedToken() {
+            return hashedToken;
+        }
     }
 }

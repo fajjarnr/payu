@@ -44,6 +44,48 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles illegal argument exceptions (invalid input values).
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(
+            IllegalArgumentException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Illegal argument in {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("INVALID_ARGUMENT", ex.getMessage()));
+    }
+
+    /**
+     * Handles illegal state exceptions (invalid state transitions).
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalStateException(
+            IllegalStateException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Illegal state in {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("INVALID_STATE", ex.getMessage()));
+    }
+
+    /**
+     * Handles insufficient funds exceptions.
+     */
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInsufficientFunds(
+            InsufficientFundsException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Insufficient funds in {}: {}", request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponse.error(ex.getCode(), ex.getMessage()));
+    }
+
+    /**
      * Handles validation exceptions from @Valid annotation with field errors.
      */
     @ExceptionHandler(ValidationException.class)
@@ -226,6 +268,8 @@ public class GlobalExceptionHandler {
             return HttpStatus.BAD_GATEWAY;
         } else if (ex instanceof ValidationException) {
             return HttpStatus.BAD_REQUEST;
+        } else if (ex instanceof InsufficientFundsException) {
+            return HttpStatus.UNPROCESSABLE_ENTITY;
         }
 
         // Check error code pattern

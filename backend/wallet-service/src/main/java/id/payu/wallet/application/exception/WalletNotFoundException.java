@@ -1,7 +1,17 @@
 package id.payu.wallet.application.exception;
 
-public class WalletNotFoundException extends RuntimeException {
+import id.payu.api.common.exception.ResourceNotFoundException;
+
+/**
+ * Exception thrown when a wallet is not found.
+ */
+public class WalletNotFoundException extends ResourceNotFoundException {
+
     public WalletNotFoundException(String identifier) {
-        super("Wallet not found: " + identifier);
+        super("Wallet", identifier);
+    }
+
+    public WalletNotFoundException(String code, String message) {
+        super(code, message);
     }
 }

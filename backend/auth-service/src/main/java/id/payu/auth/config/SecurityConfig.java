@@ -37,6 +37,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/forgot-password").permitAll()
                 .requestMatchers("/api/v1/auth/reset-password").permitAll()
 
+                // Protected endpoints - require authentication
+                .requestMatchers("/api/v1/auth/validate").authenticated()
+
                 // Actuator endpoints - only health endpoint is public, others require authentication
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/actuator/info").permitAll()

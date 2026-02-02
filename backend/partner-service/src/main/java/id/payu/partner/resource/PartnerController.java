@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 
 import java.util.List;
 
@@ -95,6 +97,12 @@ public class PartnerController extends BaseController {
     }
 
     @PostMapping
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.CREATE,
+            entityType = "Partner",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Operation(
         summary = "Create a new partner",
         description = "Creates a new partner with auto-generated client ID and client secret. The partner will be active by default."
@@ -180,6 +188,12 @@ public class PartnerController extends BaseController {
     }
 
     @PostMapping("/{id}/keys/regenerate")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "Partner",
+            maskData = true,
+            level = AuditLevel.WARN
+    )
     @Operation(
         summary = "Regenerate partner API keys",
         description = "Regenerates the client ID and client secret for a partner. This invalidates all existing credentials immediately."

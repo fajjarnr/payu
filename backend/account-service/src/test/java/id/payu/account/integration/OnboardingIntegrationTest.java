@@ -4,8 +4,8 @@ import id.payu.account.adapter.client.GatewayClient;
 import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.account.application.service.UserApplicationService;
 import id.payu.account.domain.model.User;
-import id.payu.account.dto.DukcapilResponse;
 import id.payu.account.dto.RegisterUserRequest;
+import id.payu.account.dto.VerifyNikResponse;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +20,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDate;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -50,7 +51,7 @@ class OnboardingIntegrationTest {
     static void startContainer() {
         postgres.start();
     }
-    
+
     @AfterAll
     static void stopContainer() {
         postgres.stop();
@@ -70,11 +71,16 @@ class OnboardingIntegrationTest {
         );
 
         given(gatewayClient.verifyNik(any()))
-                .willReturn(new DukcapilResponse(
+                .willReturn(new VerifyNikResponse(
                         UUID.randomUUID().toString(),
                         request.nik(),
                         true,
-                        "VALID",
+                        "Integration Test User",
+                        "Jakarta",
+                        LocalDate.of(1990, 1, 1),
+                        "MALE",
+                        "Jl. Test",
+                        "ACTIVE",
                         "00",
                         "Success"
                 ));
@@ -92,7 +98,7 @@ class OnboardingIntegrationTest {
         assertThat(userFromDb.getEmail()).isEqualTo("integration@payu.id");
         assertThat(userFromDb.getKycStatus().name()).isEqualTo(User.KycStatus.APPROVED.name());
     }
-    
+
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
          registry.add("spring.datasource.url", postgres::getJdbcUrl);

@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -111,6 +113,12 @@ public class FxController extends BaseController {
     }
 
     @PostMapping("/conversions")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
+            entityType = "FxConversion",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Operation(summary = "Create conversion", description = "Execute a currency conversion transaction")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Conversion executed successfully",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
@@ -179,6 +187,12 @@ public class FxController extends BaseController {
     }
 
     @PostMapping("/conversions/{conversionId}/reverse")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "FxConversion",
+            maskData = true,
+            level = AuditLevel.WARN
+    )
     @Operation(summary = "Reverse conversion", description = "Reverse a previously executed currency conversion")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversion reversed successfully",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))

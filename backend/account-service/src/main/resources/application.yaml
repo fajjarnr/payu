@@ -154,6 +154,16 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 3
         slow-call-rate-threshold: 50
         slow-call-duration-threshold: 2000ms
+      dukcapilService:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 60s
+        permitted-number-of-calls-in-half-open-state: 5
+        slow-call-rate-threshold: 70
+        slow-call-duration-threshold: 3000ms
   retry:
     instances:
       gatewayService:
@@ -166,10 +176,28 @@ resilience4j:
           - java.util.concurrent.TimeoutException
         ignore-exceptions:
           - java.lang.IllegalArgumentException
+      dukcapilService:
+        max-attempts: 2
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - id.payu.account.exception.AccountDomainException$InvalidNikException
   timelimiter:
     instances:
       gatewayService:
         timeout-duration: 5s
+      dukcapilService:
+        timeout-duration: 10s
+  bulkhead:
+    instances:
+      dukcapilService:
+        max-concurrent-calls: 50
+        max-wait-duration: 2s
 # Application Configuration
 payu:
   gateway:

@@ -1,5 +1,6 @@
 package id.payu.wallet.dto;
 
+import id.payu.security.annotation.Sensitive;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
@@ -7,6 +8,7 @@ public class CreditRequest {
 
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
+    @Sensitive
     private BigDecimal amount;
 
     @NotBlank(message = "Reference ID is required")

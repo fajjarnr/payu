@@ -27,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -51,6 +53,12 @@ public class LendingController extends BaseController {
     private final LendingSecurityService lendingSecurityService;
 
     @PostMapping("/loans")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "Loan",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Operation(summary = "Apply for a loan", description = "Submit a new loan application")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Loan application submitted successfully",
             content = @Content(schema = @Schema(implementation = Loan.class)))
@@ -185,6 +193,12 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/paylater/{userId}/purchase")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            entityType = "PayLaterTransaction",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Operation(summary = "Record PayLater purchase", description = "Record a purchase transaction using PayLater")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Purchase recorded successfully",
             content = @Content(schema = @Schema(implementation = PayLaterTransaction.class)))

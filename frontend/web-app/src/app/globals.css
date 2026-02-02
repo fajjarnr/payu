@@ -32,9 +32,9 @@
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
 
   /* Fonts */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-heading: 'Outfit', system-ui, sans-serif;
-  --font-mono: 'Inter', ui-monospace, monospace;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-heading: var(--font-outfit), system-ui, sans-serif;
+  --font-mono: var(--font-inter), ui-monospace, monospace;
 }
 
 :root {

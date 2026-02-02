@@ -1,6 +1,7 @@
 package id.payu.account.entity;
 
 import id.payu.account.multitenancy.TenantAware;
+import id.payu.security.annotation.Sensitive;
 import id.payu.security.converter.EncryptedStringConverter;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
@@ -36,6 +37,7 @@ public class Profile {
     private User user;
 
     @Column(name = "full_name", nullable = false)
+    @Sensitive
     private String fullName;
 
     /**
@@ -47,6 +49,7 @@ public class Profile {
     @Convert(converter = EncryptedStringConverter.class)
     @Comment("NIK encrypted at rest for UU PDP compliance")
     @Column(name = "nik", unique = true, length = 512, nullable = false)
+    @Sensitive
     private String nik;
 
     @Column(name = "birth_date")
@@ -59,6 +62,7 @@ public class Profile {
     private String gender;
 
     @Column(name = "address")
+    @Sensitive
     private String address;
 
     @Type(JsonType.class)

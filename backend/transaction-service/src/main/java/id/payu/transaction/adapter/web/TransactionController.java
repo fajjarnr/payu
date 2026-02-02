@@ -18,6 +18,8 @@ import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.InitiateTransferResponse;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -75,6 +77,12 @@ public class TransactionController extends BaseController {
      * Supports BI-FAST, SKN, and internal transfers.
      */
     @PostMapping("/transfer")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
+            entityType = "Transaction",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Operation(
             summary = "Initiate fund transfer",
             description = """
@@ -258,6 +266,12 @@ public class TransactionController extends BaseController {
      * Process QRIS payment.
      */
     @PostMapping("/qris/pay")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
+            entityType = "Transaction",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Operation(
             summary = "Process QRIS payment",
             description = """

@@ -397,13 +397,14 @@
     "changeLanguage": "Ganti Bahasa"
   },
   "landing": {
-    "heroTitle": "Satu Aplikasi.<br />Jutaan Solusi.",
-    "heroSubtitle": "Platform perbankan digital mandiri yang mendefinisikan ulang kemudahan finansial. Kirim, terima, dan investasikan aset Anda dalam hitungan detik.",
-    "getStarted": "Mulai Sekarang",
+    "heroTitle": "Solusi Finansial<br />Masa Depan.",
+    "heroSubtitle": "Nikmati kemudahan bertransaksi, menabung, dan berinvestasi dalam satu aplikasi yang aman dan terpercaya.",
+    "getStarted": "Buka Rekening",
     "login": "Masuk",
     "demo": "Demo",
     "trustedBy": "Dipercaya oleh {count} Pengguna",
-    "badge": "Banking 4.0 Updated",
+    "trustedByLabel": "Nasabah Aktif",
+    "badge": "Terpercaya & Aman",
     "nav": {
       "features": "Fitur",
       "about": "Tentang",
@@ -427,6 +428,28 @@
         "title": "Investasi Cerdas",
         "desc": "Tumbuhkan kekayaan Anda dengan produk investasi yang dikurasi khusus untuk Anda."
       }
+    },
+    "about": {
+      "badge": "Visi Kami",
+      "title": "Melampaui Perbankan Tradisional.",
+      "desc": "Kami membangun PayU untuk memecahkan hambatan finansial yang ada. Dengan teknologi blockchain-ready dan infrastruktur cloud-native, kami memberikan kontrol penuh atas aset Anda tanpa perantara yang lambat.",
+      "mission1": {
+        "title": "Transparansi Total",
+        "desc": "Tanpa biaya tersembunyi. Setiap transaksi tercatat dengan enkripsi tingkat tinggi."
+      },
+      "mission2": {
+        "title": "Inklusi Finansial",
+        "desc": "Memberikan akses perbankan kelas atas untuk semua orang, di mana saja."
+      }
+    },
+    "support": {
+      "subtitle": "Pusat bantuan kami aktif 24/7 untuk memastikan keamanan transaksi Anda.",
+      "liveChat": "Live Chat",
+      "liveChatDesc": "Estimasi respon kurang dari 2 menit.",
+      "securitySupport": "Email Support",
+      "emailDesc": "Untuk bantuan teknis dan keamanan mendalam.",
+      "faqs": "FAQs",
+      "faqsDesc": "Cari jawaban cepat di database pengetahuan kami."
     },
     "bento": {
       "title": "Fitur Pintar untuk Gaya Hidup Modern.",

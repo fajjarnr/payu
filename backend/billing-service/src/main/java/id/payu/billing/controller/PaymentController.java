@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import id.payu.billing.exception.PaymentNotFoundException;
+import id.payu.security.annotation.Audited;
+import id.payu.security.annotation.Audited.AuditLevel;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,12 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
+            entityType = "BillPayment",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create bill payment", description = "Process a bill payment for utilities like PLN, PDAM, BPJS, etc.")

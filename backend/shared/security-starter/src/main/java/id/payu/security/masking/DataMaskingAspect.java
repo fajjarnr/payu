@@ -1,5 +1,6 @@
 package id.payu.security.masking;
 
+import id.payu.security.annotation.Sensitive;
 import id.payu.security.config.SecurityProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -7,12 +8,29 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.IdentityHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Aspect for masking sensitive data in method arguments and return values
+ * Aspect for masking sensitive data in method arguments and return values.
+ *
+ * <p>This aspect automatically masks fields annotated with {@link Sensitive} in:
+ * <ul>
+ *   <li>Method arguments (controllers, services)</li>
+ *   <li>Return values</li>
+ *   <li>Nested objects</li>
+ *   <li>Record components</li>
+ * </ul>
+ *
+ * <h3>Masking Strategy:</h3>
+ * <ul>
+ *   <li><b>STANDARD:</b> Partial visibility (email: u***@domain.com)</li>
+ *   <li><b>HIGH:</b> Last 4 digits only (account: ****1234)</li>
+ *   <li><b>CRITICAL:</b> Fully masked (password: ****)</li>
+ * </ul>
  */
 @Slf4j
 @Aspect
@@ -88,6 +106,11 @@ public class DataMaskingAspect {
             return maskString((String) value);
         }
 
+        // Handle BigDecimal (amounts, balances)
+        if (value instanceof BigDecimal) {
+            return maskAmount((BigDecimal) value);
+        }
+
         // Handle objects by converting to string and masking
         return maskObject(value);
     }
@@ -102,19 +125,19 @@ public class DataMaskingAspect {
             return maskEmail(value);
         }
 
-        // Check if it's a phone number
-        if (value.matches("\\d+")) {
-            if (value.length() >= 10 && value.length() <= 15) {
-                return maskPhone(value);
-            }
-            // Check if it's a card number (16 digits)
-            if (value.length() == 16) {
-                return maskCard(value);
-            }
-            // Check if it's an account number (10+ digits)
-            if (value.length() >= 10) {
-                return maskAccount(value);
-            }
+        // Check if it's a phone number (with optional + prefix)
+        if (value.matches("^[+]?\\d{10,15}$")) {
+            return maskPhone(value);
+        }
+
+        // Check if it's a card number (16 digits)
+        if (value.matches("^\\d{16}$")) {
+            return maskCard(value);
+        }
+
+        // Check if it's an account number (10+ digits)
+        if (value.matches("^\\d{10,}$")) {
+            return maskAccount(value);
         }
 
         // Generic masking: show first 4 chars, mask the rest
@@ -130,6 +153,13 @@ public class DataMaskingAspect {
     }
 
     private String maskPhone(String phone) {
+        // Handle phone with country code
+        if (phone.startsWith("+")) {
+            String digits = phone.substring(1);
+            if (digits.length() >= 7) {
+                return "+" + digits.substring(0, 3) + "****" + digits.substring(digits.length() - 4);
+            }
+        }
         Matcher matcher = PHONE_PATTERN.matcher(phone);
         if (matcher.matches()) {
             return matcher.group(1) + "****" + matcher.group(2);
@@ -148,7 +178,7 @@ public class DataMaskingAspect {
     private String maskAccount(String account) {
         Matcher matcher = ACCOUNT_PATTERN.matcher(account);
         if (matcher.matches()) {
-            return matcher.group(1) + "******";
+            return "****" + account.substring(account.length() - 4);
         }
         return maskGeneric(account);
     }
@@ -157,7 +187,11 @@ public class DataMaskingAspect {
         if (value.length() <= 4) {
             return "****";
         }
-        return value.substring(0, 4) + "****";
+        return value.substring(0, Math.min(4, value.length())) + "****";
+    }
+
+    private String maskAmount(BigDecimal amount) {
+        return "****";
     }
 
     private String maskObject(Object obj) {
@@ -176,18 +210,34 @@ public class DataMaskingAspect {
             // Use reflection to mask sensitive fields
             StringBuilder sb = new StringBuilder(obj.getClass().getSimpleName()).append("{");
 
-            java.lang.reflect.Field[] fields = obj.getClass().getDeclaredFields();
+            // Get all fields including inherited ones
+            Field[] fields = getAllFields(obj.getClass());
             for (int i = 0; i < fields.length; i++) {
                 fields[i].setAccessible(true);
                 String fieldName = fields[i].getName();
-                Object fieldValue = fields[i].get(obj);
 
-                // Check if field should be masked
-                boolean shouldMask = properties.getMasking().getFields().stream()
+                // Get field value
+                Object fieldValue;
+                try {
+                    fieldValue = fields[i].get(obj);
+                } catch (IllegalAccessException e) {
+                    sb.append(fieldName).append("=[ACCESS_DENIED]");
+                    continue;
+                }
+
+                // Check if field has @Sensitive annotation
+                Sensitive sensitiveAnnotation = fields[i].getAnnotation(Sensitive.class);
+                boolean isFieldSensitive = sensitiveAnnotation != null;
+
+                // Check if field name is in masking properties configuration
+                boolean isConfiguredMasked = properties.getMasking().getFields().stream()
                         .anyMatch(fieldName::equalsIgnoreCase);
 
+                boolean shouldMask = isFieldSensitive || isConfiguredMasked;
+
+                // Apply masking based on sensitivity level
                 if (shouldMask && fieldValue != null) {
-                    sb.append(fieldName).append("=****");
+                    sb.append(fieldName).append("=").append(maskFieldBySensitivity(fieldValue, sensitiveAnnotation));
                 } else if (fieldValue != null) {
                     sb.append(fieldName).append("=").append(maskValue(fieldValue));
                 } else {
@@ -208,6 +258,53 @@ public class DataMaskingAspect {
             // Clean up to prevent memory leaks
             visited.remove(obj);
         }
+    }
+
+    /**
+     * Get all fields including inherited ones from parent classes
+     */
+    private Field[] getAllFields(Class<?> clazz) {
+        java.util.List<Field> fields = new java.util.ArrayList<>();
+        while (clazz != null && clazz != Object.class) {
+            fields.addAll(java.util.Arrays.asList(clazz.getDeclaredFields()));
+            clazz = clazz.getSuperclass();
+        }
+        return fields.toArray(new Field[0]);
+    }
+
+    /**
+     * Mask field value based on its @Sensitive annotation level
+     */
+    private String maskFieldBySensitivity(Object value, Sensitive annotation) {
+        if (annotation == null) {
+            // Use default masking for fields configured in properties
+            return "****";
+        }
+
+        Sensitive.SensitivityLevel level = annotation.value();
+
+        // CRITICAL level: always fully mask
+        if (level == Sensitive.SensitivityLevel.CRITICAL) {
+            return "****";
+        }
+
+        // HIGH level: show partial (last 4 for strings, **** for amounts)
+        if (level == Sensitive.SensitivityLevel.HIGH) {
+            if (value instanceof String) {
+                String strValue = (String) value;
+                if (strValue.length() <= 4) {
+                    return "****";
+                }
+                return "****" + strValue.substring(strValue.length() - 4);
+            }
+            return "****";
+        }
+
+        // STANDARD level: use intelligent masking based on content
+        if (value instanceof String) {
+            return maskString((String) value);
+        }
+        return "****";
     }
 
     private String formatArgs(Object[] args) {
@@ -234,17 +331,18 @@ public class DataMaskingAspect {
             return value;
         }
 
+        DataMaskingAspect aspect = new DataMaskingAspect(new SecurityProperties());
         switch (fieldType.toLowerCase()) {
             case "email":
-                return new DataMaskingAspect(new SecurityProperties()).maskEmail(value);
+                return aspect.maskEmail(value);
             case "phone":
-                return new DataMaskingAspect(new SecurityProperties()).maskPhone(value);
+                return aspect.maskPhone(value);
             case "card":
-                return new DataMaskingAspect(new SecurityProperties()).maskCard(value);
+                return aspect.maskCard(value);
             case "account":
-                return new DataMaskingAspect(new SecurityProperties()).maskAccount(value);
+                return aspect.maskAccount(value);
             default:
-                return new DataMaskingAspect(new SecurityProperties()).maskGeneric(value);
+                return aspect.maskGeneric(value);
         }
     }
 }

@@ -1,23 +1,20 @@
 package id.payu.statement.service.exception;
 
+import id.payu.api.common.exception.BusinessException;
 import lombok.Getter;
 
 /**
  * Custom exception for Statement service
  */
 @Getter
-public class StatementException extends RuntimeException {
-
-    private final String errorCode;
+public class StatementException extends BusinessException {
 
     public StatementException(String errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
+        super(errorCode, message);
     }
 
     public StatementException(String errorCode, String message, Throwable cause) {
-        super(message, cause);
-        this.errorCode = errorCode;
+        super(errorCode, message, cause);
     }
 
     // Error code constants
