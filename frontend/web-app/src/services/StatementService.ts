@@ -1,4 +1,4 @@
-import api from '@/lib/api';
+import api, { isAxiosError } from '@/lib/api';
 
 /**
  * Statement Service Types
@@ -124,7 +124,7 @@ export class StatementService {
       return response.data.data;
     } catch (error) {
       // Return null if 404 (no statements found)
-      if (api.isAxiosError(error) && error.response?.status === 404) {
+      if (isAxiosError(error) && error.response?.status === 404) {
         return null;
       }
       throw error;
