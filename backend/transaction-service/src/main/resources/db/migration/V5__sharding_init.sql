@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS transactions_partitioned (
 
 -- 2. Create default partition for any data that doesn't match partitions
 -- ===================================================================
-CREATE TABLE IF NOT EXISTS transactions_partition_default PARTITION OF transactions_partitioned DEFAULT;
+-- NOTE: HASH partitioning does not support default partitions in PostgreSQL.
+-- Removing CREATE TABLE IF NOT EXISTS transactions_partition_default...
 
 -- 3. Create individual partitions
 -- ===================================================================
@@ -81,7 +82,7 @@ ALTER TABLE transactions_partitioned ADD CONSTRAINT pk_transactions_partitioned
 
 -- Create unique index on reference number (global across all partitions)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_partitioned_reference
-    ON transactions_partitioned (reference_number);
+    ON transactions_partitioned (reference_number, sender_account_id);
 
 -- Create indexes for common query patterns
 CREATE INDEX IF NOT EXISTS idx_transactions_partitioned_sender

@@ -65,7 +65,7 @@ class StatementServiceTest {
 
         testStatement = Statement.builder()
                 .id(testStatementId)
-                .userId(testUserId)
+                .customerId(testUserId.toString())
                 .accountNumber(testAccountNumber)
                 .statementPeriod(LocalDate.of(2024, 1, 1))
                 .status(Statement.StatementStatus.COMPLETED)
@@ -90,10 +90,10 @@ class StatementServiceTest {
         @Test
         @DisplayName("should get statement successfully")
         void shouldGetStatementSuccessfully() {
-            when(statementRepository.findByIdAndUserId(testStatementId, testUserId))
+            when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
                     .thenReturn(Optional.of(testStatement));
 
-            StatementResponse result = statementService.getStatement(testStatementId, testUserId);
+            StatementResponse result = statementService.getStatement(testStatementId, testUserId.toString());
 
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(testStatementId);
@@ -105,10 +105,10 @@ class StatementServiceTest {
         @Test
         @DisplayName("should throw exception when statement not found")
         void shouldThrowExceptionWhenStatementNotFound() {
-            when(statementRepository.findByIdAndUserId(testStatementId, testUserId))
+            when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> statementService.getStatement(testStatementId, testUserId))
+            assertThatThrownBy(() -> statementService.getStatement(testStatementId, testUserId.toString()))
                     .isInstanceOf(StatementException.class)
                     .hasMessageContaining("Statement not found");
         }
@@ -116,10 +116,10 @@ class StatementServiceTest {
         @Test
         @DisplayName("should record access when getting statement")
         void shouldRecordAccessWhenGettingStatement() {
-            when(statementRepository.findByIdAndUserId(testStatementId, testUserId))
+            when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
                     .thenReturn(Optional.of(testStatement));
 
-            statementService.getStatement(testStatementId, testUserId);
+            statementService.getStatement(testStatementId, testUserId.toString());
 
             ArgumentCaptor<Statement> captor = ArgumentCaptor.forClass(Statement.class);
             verify(statementRepository).save(captor.capture());
@@ -137,10 +137,10 @@ class StatementServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             Page<Statement> statementPage = new PageImpl<>(List.of(testStatement), pageable, 1);
 
-            when(statementRepository.findAllByUserId(testUserId, pageable))
+            when(statementRepository.findAllByCustomerId(testUserId.toString(), pageable))
                     .thenReturn(statementPage);
 
-            Page<StatementResponse> result = statementService.listStatements(testUserId, pageable);
+            Page<StatementResponse> result = statementService.listStatements(testUserId.toString(), pageable);
 
             assertThat(result).isNotNull();
             assertThat(result.getTotalElements()).isEqualTo(1);
@@ -153,10 +153,10 @@ class StatementServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             Page<Statement> emptyPage = new PageImpl<>(List.of(), pageable, 0);
 
-            when(statementRepository.findAllByUserId(testUserId, pageable))
+            when(statementRepository.findAllByCustomerId(testUserId.toString(), pageable))
                     .thenReturn(emptyPage);
 
-            Page<StatementResponse> result = statementService.listStatements(testUserId, pageable);
+            Page<StatementResponse> result = statementService.listStatements(testUserId.toString(), pageable);
 
             assertThat(result).isEmpty();
         }
@@ -169,10 +169,10 @@ class StatementServiceTest {
         @Test
         @DisplayName("should get latest completed statement")
         void shouldGetLatestCompletedStatement() {
-            when(statementRepository.findLatestCompletedByUserId(testUserId))
+            when(statementRepository.findLatestCompletedByCustomerId(testUserId.toString()))
                     .thenReturn(Optional.of(testStatement));
 
-            Optional<StatementResponse> result = statementService.getLatestStatement(testUserId);
+            Optional<StatementResponse> result = statementService.getLatestStatement(testUserId.toString());
 
             assertThat(result).isPresent();
             assertThat(result.get().getId()).isEqualTo(testStatementId);
@@ -181,10 +181,10 @@ class StatementServiceTest {
         @Test
         @DisplayName("should return empty when no statement found")
         void shouldReturnEmptyWhenNoStatementFound() {
-            when(statementRepository.findLatestCompletedByUserId(testUserId))
+            when(statementRepository.findLatestCompletedByCustomerId(testUserId.toString()))
                     .thenReturn(Optional.empty());
 
-            Optional<StatementResponse> result = statementService.getLatestStatement(testUserId);
+            Optional<StatementResponse> result = statementService.getLatestStatement(testUserId.toString());
 
             assertThat(result).isEmpty();
         }
@@ -197,10 +197,10 @@ class StatementServiceTest {
         @Test
         @DisplayName("should throw exception when statement not found")
         void shouldThrowExceptionWhenStatementNotFound() {
-            when(statementRepository.findByIdAndUserId(testStatementId, testUserId))
+            when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> statementService.getStatementPdf(testStatementId, testUserId))
+            assertThatThrownBy(() -> statementService.getStatementPdf(testStatementId, testUserId.toString()))
                     .isInstanceOf(StatementException.class)
                     .hasMessageContaining("Statement not found");
         }
@@ -209,10 +209,10 @@ class StatementServiceTest {
         @DisplayName("should throw exception when statement not completed")
         void shouldThrowExceptionWhenStatementNotCompleted() {
             testStatement.setStatus(Statement.StatementStatus.GENERATING);
-            when(statementRepository.findByIdAndUserId(testStatementId, testUserId))
+            when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
                     .thenReturn(Optional.of(testStatement));
 
-            assertThatThrownBy(() -> statementService.getStatementPdf(testStatementId, testUserId))
+            assertThatThrownBy(() -> statementService.getStatementPdf(testStatementId, testUserId.toString()))
                     .isInstanceOf(StatementException.class)
                     .hasMessageContaining("Statement is not ready for download");
         }
@@ -240,7 +240,7 @@ class StatementServiceTest {
                     .thenReturn(Optional.of(testStatement));
             when(statementRepository.save(any(Statement.class))).thenAnswer(inv -> inv.getArgument(0));
             // Mock the exists check to return true so generateStatement doesn't run
-            when(statementRepository.existsByUserIdAndStatementPeriod(any(), any()))
+            when(statementRepository.existsByCustomerIdAndStatementPeriod(any(), any()))
                     .thenReturn(true);
 
             statementService.regenerateStatement(testStatementId);

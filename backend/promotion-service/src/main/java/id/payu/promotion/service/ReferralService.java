@@ -110,11 +110,11 @@ public class ReferralService {
     }
 
     public List<Referral> getReferralsByReferrer(String referrerAccountId) {
-        return referralRepository.findByReferrerId(referrerAccountId);
+        return referralRepository.findByReferrerAccountId(referrerAccountId);
     }
 
     public ReferralSummaryResponse getReferralSummary(String referrerAccountId) {
-        List<Referral> referrals = referralRepository.findByReferrerId(referrerAccountId);
+        List<Referral> referrals = referralRepository.findByReferrerAccountId(referrerAccountId);
         long totalReferrals = referrals.size();
         long completedReferrals = referrals.stream()
             .filter(r -> r.getStatus() == Referral.Status.COMPLETED)

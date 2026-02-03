@@ -36,6 +36,14 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
 
+  # Security Configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/payu/protocol/openid-connect/certs}
+
   # REST Client for Wallet Service
   web:
     client:
@@ -108,6 +116,8 @@ management:
   tracing:
     sampling:
       probability: 1.0
+
+
 
 # Vault Configuration for Secrets (optional)
 vault:

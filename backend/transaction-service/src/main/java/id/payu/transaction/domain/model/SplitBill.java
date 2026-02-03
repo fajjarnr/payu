@@ -1,5 +1,6 @@
 package id.payu.transaction.domain.model;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,20 +15,52 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "split_bills")
 public class SplitBill {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "reference_number", nullable = false, unique = true)
     private String referenceNumber;
+
+    @Column(name = "creator_account_id", nullable = false)
     private UUID creatorAccountId;
+
+    @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
+
+    @Column(nullable = false)
     private String currency;
+
+    @Column(nullable = false)
     private String title;
+
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "split_type", nullable = false)
     private SplitType splitType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private SplitStatus status;
+
+    @Column(name = "due_date")
     private Instant dueDate;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "split_bill_id")
     private List<SplitBillParticipant> participants;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "completed_at")
     private Instant completedAt;
 
     public enum SplitType {

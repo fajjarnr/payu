@@ -76,6 +76,7 @@ public class IdempotencyAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(IdempotencyService.class)
+    @ConditionalOnBean(IdempotencyRepository.class)
     public IdempotencyService idempotencyService(
             IdempotencyRepository repository,
             ObjectMapper objectMapper) {
@@ -89,6 +90,7 @@ public class IdempotencyAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(IdempotencyInterceptor.class)
+    @ConditionalOnBean(IdempotencyService.class)
     public IdempotencyInterceptor idempotencyInterceptor(
             IdempotencyService idempotencyService,
             ObjectMapper objectMapper) {
@@ -105,6 +107,7 @@ public class IdempotencyAutoConfiguration {
     public static class IdempotencyWebMvcConfiguration {
 
         @Bean
+        @ConditionalOnBean(IdempotencyInterceptor.class)
         public WebMvcConfigurer idempotencyWebMvcConfigurer(
                 IdempotencyInterceptor idempotencyInterceptor,
                 IdempotencyProperties properties) {

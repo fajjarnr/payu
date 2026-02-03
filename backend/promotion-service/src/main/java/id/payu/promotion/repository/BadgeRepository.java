@@ -11,7 +11,7 @@ import java.util.UUID;
 @Repository
 public interface BadgeRepository extends JpaRepository<Badge, UUID> {
 
-    List<Badge> findByActiveTrue();
+    List<Badge> findByIsActiveTrue();
 
-    Optional<Badge> findByCode(String code);
+    Optional<Badge> findByName(String name);
 }

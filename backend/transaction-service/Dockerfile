@@ -9,12 +9,12 @@ WORKDIR /build
 # Install Maven
 RUN microdnf install -y maven && microdnf clean all
 
-# Copy entire project (needed for shared library dependencies)
+# Copy entire project (needed for parent pom/shared dependencies)
 COPY . .
 
-# Build the application (includes building shared libraries)
-RUN mvn clean install -DskipTests -Dspring-boot.build-image.skip=true && \
-    mv target/*.jar target/app.jar
+# Build the application
+RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true -pl :transaction-service -am && \
+    mv transaction-service/target/*.jar transaction-service/target/app.jar
 
 ####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
@@ -23,16 +23,13 @@ FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
 LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU Transaction Service - Transfers, BI-FAST, QRIS"
+LABEL description="PayU transaction-service"
 LABEL version="1.0.0"
-LABEL org.opencontainers.image.title="payu-transaction-service"
-LABEL org.opencontainers.image.description="PayU Transaction Service - Core banking for transfers, BI-FAST, QRIS payments with Saga pattern"
-LABEL org.opencontainers.image.version="1.0.0"
-LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
-LABEL org.opencontainers.image.source="https://github.com/payu/backend/transaction-service"
-LABEL org.opencontainers.image.licenses="Proprietary"
-LABEL org.opencontainers.image.authors="PayU Backend Team"
+LABEL id.payu.service.tier="core"
+
+# Install curl for health checks (MUST BE ROOT)
+USER root
+RUN microdnf install -y curl-minimal && microdnf clean all
 
 # Use non-root user (185 is the default jboss user in UBI images)
 USER 185
@@ -40,7 +37,10 @@ USER 185
 WORKDIR /deployments
 
 # Copy the built artifact from build stage
-COPY --from=build --chown=185 /build/target/app.jar /deployments/app.jar
+COPY --from=build --chown=185 /build/transaction-service/target/app.jar /deployments/app.jar
+
+# Volume mounts for temporary files and logs
+VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
 EXPOSE 8003
@@ -55,7 +55,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:HeapDumpPath=/deployments/heapdump.hprof \
     -Djava.security.egd=file:/dev/./urandom"
 
-# Health check
+# Health check (Actuator)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8003/actuator/health || exit 1
 

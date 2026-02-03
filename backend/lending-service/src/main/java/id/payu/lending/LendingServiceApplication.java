@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
+@org.springframework.cloud.openfeign.EnableFeignClients(basePackages = "id.payu.lending")
 public class LendingServiceApplication {
 
     public static void main(String[] args) {

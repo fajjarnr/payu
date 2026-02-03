@@ -495,6 +495,45 @@ ls -la target/ | grep -E "\.jar$"
 cat .dockerignore | grep target
 ```
 
+### 🐳 Podman & Ecosystem Troubleshooting
+
+**Symptom:** Code changes not reflecting, database migrations failing repeatedly, or containers exiting immediately.
+
+#### Protocol 1: The "Clean Build" Strategy
+If you suspect code changes aren't being picked up:
+1.  **Stop & Remove**: `podman stop <name> && podman rm <name>`
+2.  **Remove Image**: `podman rmi localhost/<image-name>` (Critical step)
+3.  **Force Clean Build**:
+    ```bash
+    podman build --no-cache -f backend/<service>/Dockerfile -t localhost/<image-name> backend/
+    ```
+
+#### Protocol 2: Manual Run Fallback
+If `podman-compose` acts erratically (fails to map ports/names):
+1.  **Stop using compose**.
+2.  **Run manually** with explicit env vars to isolate the issue:
+    ```bash
+    podman run -d --name payu-<service> \
+      --network local-podman_payu-network \
+      -e SPRING_PROFILES_ACTIVE=container \
+      -e DB_URL='jdbc:postgresql://postgres:5432/<db_name>' \
+      ... \
+      localhost/payu-<service>
+    ```
+
+#### Protocol 3: Database Reset Procedure
+If Flyway migrations are stuck or checksums mismatch during dev:
+1.  **Drop Database** (Faster than fixing checksums):
+    ```bash
+    podman exec -it payu-postgres psql -U payu -d postgres -c "DROP DATABASE <db_name>; CREATE DATABASE <db_name> OWNER payu;"
+    ```
+2.  **Restart Service**: `podman restart payu-<service>`
+
+#### Protocol 4: Immutable Index Constraints
+**Error:** `functions in index predicate must be marked IMMUTABLE`
+*   **Cause**: Using `CURRENT_DATE`, `NOW()` in index `WHERE` clause.
+*   **Fix**: Remove time-based filtering from Index definitions. Indices must be deterministic.
+
 ### 🎭 Playwright E2E Test Failures (PayU Context)
 
 **Symptom:** Tests failing with timeouts, strict mode violations, or text mismatches.

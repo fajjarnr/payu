@@ -52,7 +52,7 @@ public class InvestmentController extends BaseController {
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "Deposit",
             maskData = true,
-            level = AuditLevel.INFO
+            level = Audited.AuditLevel.INFO
     )
     @Idempotent(required = true)
     @Operation(summary = "Buy deposit", description = "Purchases a time deposit product")
@@ -74,7 +74,7 @@ public class InvestmentController extends BaseController {
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "InvestmentTransaction",
             maskData = true,
-            level = AuditLevel.INFO
+            level = Audited.AuditLevel.INFO
     )
     @Idempotent(required = true)
     @Operation(summary = "Buy mutual fund", description = "Purchases a mutual fund product")
@@ -96,7 +96,7 @@ public class InvestmentController extends BaseController {
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "Gold",
             maskData = true,
-            level = AuditLevel.INFO
+            level = Audited.AuditLevel.INFO
     )
     @Idempotent(required = true)
     @Operation(summary = "Buy gold", description = "Purchases gold investment")
@@ -115,7 +115,7 @@ public class InvestmentController extends BaseController {
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "InvestmentTransaction",
             maskData = true,
-            level = AuditLevel.INFO
+            level = Audited.AuditLevel.INFO
     )
     @Idempotent(required = true)
     @Operation(summary = "Sell investment", description = "Sells an existing investment")

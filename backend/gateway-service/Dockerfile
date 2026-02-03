@@ -13,7 +13,7 @@ RUN microdnf install -y maven && microdnf clean all
 COPY . .
 
 # Build the Quarkus application (fast-jar format for better caching)
-RUN mvn clean package -DskipTests
+RUN mvn package -DskipTests -Dquarkus.package.jar.type=fast-jar -pl :gateway-service -am
 
 ####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
@@ -38,16 +38,16 @@ USER 185
 
 # Install curl for health checks and debugging
 USER root
-RUN microdnf install -y curl && microdnf clean all
+RUN microdnf install -y curl-minimal && microdnf clean all
 USER 185
 
 WORKDIR /deployments
 
 # Copy Quarkus fast-jar structure for better layer caching
-COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build --chown=185 /build/target/quarkus-app/*.jar /deployments/
-COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
-COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --from=build --chown=185 /build/gateway-service/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build --chown=185 /build/gateway-service/target/quarkus-app/*.jar /deployments/
+COPY --from=build --chown=185 /build/gateway-service/target/quarkus-app/app/ /deployments/app/
+COPY --from=build --chown=185 /build/gateway-service/target/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Volume declarations for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]

@@ -11,9 +11,9 @@ import java.util.UUID;
 @Repository
 public interface CustomerSegmentRepository extends JpaRepository<CustomerSegment, UUID> {
 
-    List<CustomerSegment> findByActiveTrue();
+    List<CustomerSegment> findByIsActiveTrue();
 
-    Optional<CustomerSegment> findByCode(String code);
+    Optional<CustomerSegment> findByName(String name);
 
-    boolean existsByCode(String code);
+    boolean existsByName(String name);
 }

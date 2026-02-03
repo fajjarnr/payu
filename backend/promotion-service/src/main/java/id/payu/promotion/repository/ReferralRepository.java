@@ -11,11 +11,11 @@ import java.util.UUID;
 @Repository
 public interface ReferralRepository extends JpaRepository<Referral, UUID> {
 
-    Optional<Referral> findByReferrerIdAndStatus(String referrerId, Referral.Status status);
+    Optional<Referral> findByReferrerAccountIdAndStatus(String referrerAccountId, Referral.Status status);
 
-    List<Referral> findByReferrerId(String referrerId);
+    List<Referral> findByReferrerAccountId(String referrerAccountId);
 
-    List<Referral> findByReferredAccountId(String referredAccountId);
+    List<Referral> findByRefereeAccountId(String refereeAccountId);
 
     Optional<Referral> findByReferralCode(String referralCode);
 }

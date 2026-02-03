@@ -18,9 +18,14 @@ import java.time.Duration;
 @Slf4j
 public class RateLimitInterceptor implements HandlerInterceptor {
 
-    private final RedisTemplate<String, String> redisTemplate;
-    private final int defaultLimit;
-    private final int windowSeconds;
+    private RedisTemplate<String, String> redisTemplate;
+    private int defaultLimit;
+    private int windowSeconds;
+
+    public RateLimitInterceptor() {
+        this.defaultLimit = ApiConstants.DEFAULT_RATE_LIMIT_PER_MINUTE;
+        this.windowSeconds = ApiConstants.DEFAULT_RATE_LIMIT_WINDOW_SECONDS;
+    }
 
     public RateLimitInterceptor(
             RedisTemplate<String, String> redisTemplate,

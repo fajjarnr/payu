@@ -205,7 +205,7 @@ public class GamificationService {
     }
 
     public List<BadgeProgressResponse> getBadgeProgress(String accountId) {
-        List<Badge> allBadges = badgeRepository.findByActiveTrue();
+        List<Badge> allBadges = badgeRepository.findByIsActiveTrue();
         List<UserBadge> userBadges = userBadgeRepository.findByAccountId(accountId);
         Set<UUID> earnedBadgeIds = userBadges.stream()
                 .map(UserBadge::getBadgeId)
@@ -373,7 +373,7 @@ public class GamificationService {
 
     private List<EarnedBadgeResponse> checkAndAwardBadges(String accountId, Integer streak, String transactionId) {
         List<EarnedBadgeResponse> earnedBadges = new ArrayList<>();
-        List<Badge> allBadges = badgeRepository.findByActiveTrue();
+        List<Badge> allBadges = badgeRepository.findByIsActiveTrue();
         List<UserBadge> userBadges = userBadgeRepository.findByAccountId(accountId);
         Set<UUID> earnedBadgeIds = userBadges.stream()
                 .map(UserBadge::getBadgeId)

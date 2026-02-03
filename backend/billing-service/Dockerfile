@@ -9,11 +9,12 @@ WORKDIR /build
 # Install Maven
 RUN microdnf install -y maven && microdnf clean all
 
-# Copy entire project (needed for shared library dependencies)
+# Copy entire project (needed for parent pom/shared dependencies)
 COPY . .
 
-# Build the Quarkus application (fast-jar format)
-RUN mvn clean package -DskipTests
+# Build the application
+RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true -pl :billing-service -am && \
+    mv billing-service/target/*.jar billing-service/target/app.jar
 
 ####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
@@ -22,54 +23,41 @@ FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
 LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU Billing Service - Bill Payments (PLN, PDAM, Pulsa, BPJS)"
+LABEL description="PayU billing-service"
 LABEL version="1.0.0"
-LABEL org.opencontainers.image.title="payu-billing-service"
-LABEL org.opencontainers.image.description="PayU Billing Service - Multi-biller payment support (PLN, PDAM, Pulsa, BPJS, Internet)"
-LABEL org.opencontainers.image.version="1.0.0"
-LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
-LABEL org.opencontainers.image.source="https://github.com/payu/backend/billing-service"
-LABEL org.opencontainers.image.licenses="Proprietary"
-LABEL org.opencontainers.image.authors="PayU Backend Team"
+LABEL id.payu.service.tier="core"
+
+# Install curl for health checks (MUST BE ROOT)
+USER root
+RUN microdnf install -y curl-minimal && microdnf clean all
 
 # Use non-root user (185 is the default jboss user in UBI images)
 USER 185
 
-# Install curl for health checks and debugging
-USER root
-RUN microdnf install -y curl && microdnf clean all
-USER 185
-
 WORKDIR /deployments
 
-# Copy Quarkus fast-jar structure
-COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build --chown=185 /build/target/quarkus-app/*.jar /deployments/
-COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
-COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
+# Copy the built artifact from build stage
+COPY --from=build --chown=185 /build/billing-service/target/app.jar /deployments/app.jar
 
-# Volume declarations for temporary files and logs
+# Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
-EXPOSE 8007
+EXPOSE 8080
 
-# JVM configuration optimized for Billing (frequent external API calls)
+# JVM configuration for containers
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
-    -XX:MinRAMPercentage=40.0 \
+    -XX:InitialRAMPercentage=50.0 \
     -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=100 \
-    -XX:+UnlockExperimentalVMOptions \
-    -XX:+UseStringDeduplication \
-    -Dquarkus.http.host=0.0.0.0 \
-    -Dquarkus.http.idle-timeout=60s \
-    -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+    -XX:MaxGCPauseMillis=200 \
+    -XX:+HeapDumpOnOutOfMemoryError \
+    -XX:HeapDumpPath=/deployments/heapdump.hprof \
+    -Djava.security.egd=file:/dev/./urandom"
 
-# Health check using Quarkus health endpoint
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8007/q/health || exit 1
+# Health check (Actuator)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-# Run the Quarkus application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

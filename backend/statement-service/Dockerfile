@@ -1,83 +1,63 @@
-# Statement Service Dockerfile
-# Multi-stage build using Red Hat UBI9
+####
+# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
+####
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
 
-# ============================================
-# Builder Stage
-# ============================================
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS builder
-
-LABEL maintainer="PayU Engineering <engineering@payu.id>"
-LABEL description="PayU Statement Service - E-Statement PDF Generation"
-
-# Set working directory
+USER root
 WORKDIR /build
 
-# Copy Maven files
-COPY pom.xml .
-COPY src ./src
+# Install Maven
+RUN microdnf install -y maven && microdnf clean all
+
+# Copy entire project (needed for parent pom/shared dependencies)
+COPY . .
 
 # Build the application
-RUN mvn clean package -DskipTests -q
+RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true -pl :statement-service -am && \
+    mv statement-service/target/*.jar statement-service/target/app.jar
 
-# ============================================
-# Runtime Stage
-# ============================================
+####
+# Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
-LABEL maintainer="PayU Engineering <engineering@payu.id>"
-LABEL description="PayU Statement Service - E-Statement PDF Generation"
+LABEL maintainer="backend-team@payu.id"
+LABEL description="PayU statement-service"
 LABEL version="1.0.0"
-LABEL org.opencontainers.image.title="payu-statement-service"
-LABEL org.opencontainers.image.description="PayU Statement Service - PDF e-statement generation, delivery management"
-LABEL org.opencontainers.image.version="1.0.0"
-LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
-LABEL org.opencontainers.image.source="https://github.com/payu/backend/statement-service"
-LABEL org.opencontainers.image.licenses="Proprietary"
-LABEL org.opencontainers.image.authors="PayU Backend Team"
-LABEL org.opencontainers.image.created="${SOURCE_DATE_EPOCH}"
-LABEL org.opencontainers.image.revision="${VCS_REF}"
-LABEL id.payu.service.tier="supporting"
-LABEL id.payu.compliance.pci-dss="required"
-LABEL id.payu.security.scan-level="medium"
+LABEL id.payu.service.tier="core"
 
-# Create non-root user
-RUN groupadd -r payu -g 185 && \
-    useradd -r -g payu -u 185 -m -d /home/payu -s /sbin/nologin -c "PayU Statement Service" payu
+# Install curl for health checks (MUST BE ROOT)
+USER root
+RUN microdnf install -y curl-minimal && microdnf clean all
 
-# Install curl for health checks
-RUN microdnf install -y curl && microdnf clean all
+# Use non-root user (185 is the default jboss user in UBI images)
+USER 185
 
-# Set working directory
-WORKDIR /app
+WORKDIR /deployments
 
-# Copy JAR from builder
-COPY --from=builder /build/target/statement-service-*.jar app.jar
-
-# Change ownership
-RUN chown -R payu:payu /app
-
-# Switch to non-root user
-USER payu
+# Copy the built artifact from build stage
+COPY --from=build --chown=185 /build/statement-service/target/app.jar /deployments/app.jar
 
 # Volume mounts for temporary files and logs
-VOLUME ["/app/tmp", "/app/logs"]
+VOLUME ["/deployments/tmp", "/deployments/logs"]
 
-# Expose port
+# Expose the service port
 EXPOSE 8015
 
-# Health check
-HEALTHCHECK --interval=15s --timeout=5s --retries=3 --start-period=30s \
-    CMD curl -f http://localhost:8015/actuator/health/liveness || exit 1
-
-# JVM tuning for production
-ENV JAVA_OPTS="-Xmx512m -Xms256m \
+# JVM configuration for containers
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:InitialRAMPercentage=50.0 \
     -XX:+UseG1GC \
     -XX:MaxGCPauseMillis=200 \
     -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/tmp/heapdump.hprof \
+    -XX:HeapDumpPath=/deployments/heapdump.hprof \
     -Djava.security.egd=file:/dev/./urandom"
 
+# Health check (Actuator)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8015/actuator/health || exit 1
+
 # Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

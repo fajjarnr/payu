@@ -9,17 +9,11 @@ WORKDIR /build
 # Install Maven
 RUN microdnf install -y maven && microdnf clean all
 
-# Copy pom.xml first for dependency caching
-COPY pom.xml ./
+# Copy entire project (needed for parent pom/shared dependencies)
+COPY . .
 
-# Download dependencies (cached layer)
-RUN mvn dependency:go-offline -B
-
-# Copy source code
-COPY src ./src
-
-# Build the Quarkus application (uber-jar format for simulator)
-RUN mvn package -DskipTests -Dquarkus.package.jar.type=uber-jar
+# Build the Quarkus application
+RUN mvn package -DskipTests -Dquarkus.package.jar.type=uber-jar -pl :bi-fast-simulator -am
 
 ####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
@@ -28,30 +22,20 @@ FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
 LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU BI-FAST Simulator - Bank Transfer Simulation"
+LABEL description="PayU bi-fast-simulator"
 LABEL version="1.0.0"
-LABEL org.opencontainers.image.title="payu-bi-fast-simulator"
-LABEL org.opencontainers.image.description="PayU BI-FAST Simulator - Simulates BI-FAST bank transfer operations for testing"
-LABEL org.opencontainers.image.version="1.0.0"
-LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
-LABEL org.opencontainers.image.source="https://github.com/payu/backend/simulators/bi-fast-simulator"
-LABEL org.opencontainers.image.licenses="Proprietary"
-LABEL org.opencontainers.image.authors="PayU Backend Team"
-LABEL id.payu.service="bi-fast-simulator"
-LABEL id.payu.tier="simulator"
-LABEL id.payu.runtime="quarkus-native"
+
+# Install curl for health checks (MUST BE ROOT)
+USER root
+RUN microdnf install -y curl-minimal && microdnf clean all
 
 # Use non-root user (185 is the default jboss user in UBI images)
 USER 185
 
-# Install curl for health checks and debugging
-RUN microdnf install -y curl && microdnf clean all
-
 WORKDIR /deployments
 
-# Copy the uber-jar from build stage
-COPY --from=build --chown=185 /build/target/*-runner.jar /deployments/app.jar
+# Copy built artifact from build stage
+COPY --from=build --chown=185 /build/simulators/bi-fast-simulator/target/*-runner.jar /deployments/app.jar
 
 # Expose the service port
 EXPOSE 8090
