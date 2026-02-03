@@ -118,27 +118,42 @@ Audit against the _14 Immutable Laws of PayU_.
     - ✅ **Gateway Stability**: Fixed Quarkus mandatory configuration validation.
     - ✅ **Vault Port Resolution**: Fixed port 8200 conflict in Podman Compose.
 
-### **P17-C20: Backend Service Healthcheck & Security Fix (Feb 3, 2026 - In Progress)**
+### **P17-C20: Backend Service Healthcheck & Security Fix (Feb 3, 2026)**
 
 **Issue Summary:**
 - Multiple backend services showing "unhealthy" status in podman ps
 - Health endpoints returning 401 Unauthorized due to Spring Security blocking actuator endpoints
 - Gateway service blocking public endpoints (registration, login) requiring JWT/API key
+- Public endpoints (/api/v1/accounts/register) returning 401 due to OAuth2 Resource Server global filter
 
 **Progress:**
-- [x] **Healthcheck Fixes**: Added WebSecurityCustomizer to 7 services (compliance, investment, billing, backoffice, promotion, support, lending) to bypass Spring Security for `/actuator/**` endpoints
+- [x] **Healthcheck Fixes**: Added WebSecurityCustomizer to 11 services (compliance, investment, billing, backoffice, promotion, support, lending, account, transaction, wallet, fx) to bypass Spring Security for `/actuator/**` endpoints
 - [x] **Application.yml Updates**:
   - compliance-service: Removed duplicate management config
   - billing/backoffice: Added liveness/readiness probe configuration
+  - lending/promotion/support: Added management endpoint configuration
 - [x] **Gateway Authorization Filter**: Fixed public endpoint path from `/api/v1/auth/register` to `/api/v1/accounts/register`
 - [x] **Gateway API Key Config**: Disabled API key validation (set `enabled: false`) for dev/testing
 - [x] **Gateway Service URLs**: Fixed default service URLs to use container network names (account-service:8001 instead of localhost:8081)
-- [ ] **Account Service Security**: Need to verify `/api/v1/accounts/register` permitAll is working
-- [ ] **E2E Test Updates**: Updated `test_full_flow.py` to use correct request fields (fullName, externalId, nik)
+- [x] **E2E Test Updates**: Updated `test_full_flow.py` to use correct request fields (fullName, externalId, nik)
+- [x] **New SecurityConfig Files Created**:
+  - investment-service/SecurityConfig.java
+  - lending-service/SecurityConfig.java
+  - promotion-service/SecurityConfig.java
+  - support-service/SecurityConfig.java
+- [x] **OAuth2 Resource Server Configuration**:
+  - Excluded OAuth2ResourceServerAutoConfiguration from AccountServiceApplication and AuthServiceApplication
+  - Added manual JwtDecoder bean configuration for JWT-enabled filter chains
+  - Implemented multiple filter chains with @Order (public endpoints first, JWT second)
+
+**Known Issues (WIP):**
+- [ ] **Public Endpoint 401 Issue**: `/api/v1/accounts/register` still returns 401 despite security configuration
+  - Root cause: OAuth2 Resource Server auto-configuration creates global JWT filter that processes requests before custom filter chains
+  - Attempted fixes: Multiple filter chains with @Order, explicit oauth2ResourceServer.disable(), manual JwtDecoder bean
+  - Next steps: (1) Disable OAuth2 for dev environment, (2) Use conditional configuration, or (3) Custom OncePerRequestFilter
 
 **Remaining Tasks:**
-- [ ] Rebuild and restart account-service with updated security config
-- [ ] Verify registration endpoint works without authentication
+- [ ] Resolve public endpoint 401 issue (OAuth2 Resource Server global filter)
 - [ ] Run E2E test suite to verify end-to-end flow
 - [ ] Fix any additional backend service security issues discovered during testing
 
