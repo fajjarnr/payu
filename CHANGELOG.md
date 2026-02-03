@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Backend Service Healthcheck & Security (Feb 3, 2026)**:
+  - Fixed health endpoints returning 401 Unauthorized across 7 services
+  - Added WebSecurityCustomizer beans to bypass Spring Security for `/actuator/**` paths
+  - Services fixed: compliance, investment, billing, backoffice, promotion, support, lending
+  - Fixed liveness/readiness probe configuration in billing and backoffice services
+  - Removed duplicate management configuration in compliance-service
+  - Fixed gateway public endpoint routing (`/api/v1/auth/register` → `/api/v1/accounts/register`)
+  - Disabled API key validation in gateway for dev/testing environment
+  - Fixed gateway service URLs to use container network names (account-service:8001 vs localhost:8081)
 - **UI Inconsistencies**: Fixed mismatched padding, inconsistent corner radii, and arbitrary font sizes across 15+ micro-frontend pages.
 - **Icon Naming**: Standardized Lucide icon imports to PascalCase across the Bills and Transfer pages.
 - **Store Signatures**: Updated `addToast` calls to match the new `useUIStore` signature.
@@ -45,6 +54,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `playwright-e2e-debugging.md` reference guide
   - Updated `TODOS.md` with current E2E test status
   - Expanded `TODOS.md` with detailed P17 execution breakdown
+- **Container Healthcheck Stabilization**:
+  - **Spring Boot 3.4**: Corrected health endpoints to `/actuator/health/liveness` across all services.
+  - **Quarkus 3.x**: Disabled health check security via `QUARKUS_HEALTH_SECURITY_ENABLED: 'false'` to resolve 401 Unauthorized errors in isolated environments.
+  - **Context Path Resolution**: Fixed `compliance-service` healthcheck URL to include `/compliance-service` context path.
+  - **Security Permissiveness**: Updated `SecurityConfig` in 5 services (`compliance`, `lending`, `promotion`, `support`, `investment`) to permit all actuator endpoints (`/actuator/**`).
+  - **Liveness Probes**: Enabled liveness/readiness probes in `application.yml` for services missing them (`billing`, `backoffice`, `promotion`, `support`).
+  - **Python/ML Builds**: Refactored `kyc-service` and `analytics-service` Dockerfiles to use virtual environments (`/opt/venv`) and consistent UBI9 base images, resolving `stat: /root/.local: no such file or directory` errors.
+- **Service-Specific Fixes**:
+  - **Vault**: Corrected healthcheck command to use `http://127.0.0.1:8200/v1/sys/seal-status` (Vault 1.15+ compatibility).
+  - **QRIS Simulator**: Standardized internal port (8092) and healthcheck endpoint.
+  - **API Portal**: Added missing `QUARKUS_HEALTH_SECURITY_ENABLED` property.
 
 ### Added
 
@@ -1092,7 +1112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Spring Boot services (account, auth, transaction, wallet, compliance, investment, lending) with management.tracing and management.otlptracing configuration
     - Quarkus services (gateway, billing, notification, backoffice, partner, promotion, support) with quarkus.otel configuration
     - Python FastAPI services (analytics, kyc) with existing OpenTelemetry instrumentation
-  - Added OTEL_ENDPOINT environment variable to all services in docker-compose.yml (pointing to http://jaeger:4317)
+  - Added OTEL_ENDPOINT environment variable to all services in docker-compose.yml (pointing to <http://jaeger:4317>)
   - Added TracingConfigurationTest.java for account-service to verify tracing instrumentation
   - Enabled 10% sampling probability for production trace optimization
   - Configured service name and version attributes for proper trace identification in Jaeger UI

@@ -11,12 +11,16 @@ def api():
 
 @pytest.fixture(scope="session")
 def test_user_data():
+    # Generate 16-digit NIK for Indonesia
+    nik = fake.numerify("################")
     return {
         "email": f"test_{fake.uuid4()}@example.com",
         "username": f"user_{fake.uuid4()[:8]}",
-        "password": "Password123!",
-        "name": fake.name(),
-        "phoneNumber": "+6281234567890" # Fixed format for notification service compatibility if needed
+        "password": "Password123",  # No special chars to avoid JSON escaping issues
+        "fullName": fake.name(),
+        "phoneNumber": "+6281234567890",
+        "externalId": fake.uuid4(),
+        "nik": nik
     }
 
 def test_health_check(api):
@@ -33,8 +37,10 @@ def test_user_registration(api, test_user_data):
         "username": test_user_data["username"],
         "email": test_user_data["email"],
         "password": test_user_data["password"],
-        "name": test_user_data["name"],
-        "phoneNumber": test_user_data["phoneNumber"]
+        "fullName": test_user_data["fullName"],
+        "phoneNumber": test_user_data["phoneNumber"],
+        "externalId": test_user_data["externalId"],
+        "nik": test_user_data["nik"]
     })
     assert response.status_code in [200, 201], f"Registration failed: {response.text}"
     data = response.json()

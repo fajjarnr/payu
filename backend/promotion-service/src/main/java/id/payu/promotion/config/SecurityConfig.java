@@ -1,4 +1,4 @@
-package id.payu.billing.config;
+package id.payu.promotion.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Security configuration for Billing Service.
+ * Security configuration for Promotion Service.
  */
 @Configuration
 @EnableWebSecurity

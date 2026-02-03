@@ -1,9 +1,9 @@
+server:
+  port: 8088
+
 spring:
   application:
     name: promotion-service
-
-  server:
-    port: 8088
 
   datasource:
     url: jdbc:postgresql://localhost:5432/promotiondb
@@ -54,6 +54,8 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
   metrics:
     export:
       prometheus:

@@ -90,16 +90,16 @@ payu:
 
 # Management Endpoints
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-      base-path: /actuator
   endpoint:
     health:
       show-details: always
       probes:
         enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      base-path: /actuator
   health:
     livenessstate:
       enabled: true

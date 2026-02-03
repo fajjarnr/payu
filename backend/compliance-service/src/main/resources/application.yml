@@ -78,7 +78,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: "*"
       base-path: /actuator
   endpoint:
     health:

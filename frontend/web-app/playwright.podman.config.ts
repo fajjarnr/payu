@@ -12,7 +12,7 @@ export default defineConfig({
     timeout: 10000,
   },
   use: {
-    baseURL: 'http://localhost:3101', // Points to web-app-test container
+    baseURL: 'http://localhost:3001', // Points to the production-ready dev container
     trace: 'on-first-retry',
     screenshot: 'on',
     video: 'retain-on-failure',

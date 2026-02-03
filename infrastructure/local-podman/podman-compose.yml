@@ -61,7 +61,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -94,7 +94,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -125,6 +125,7 @@ services:
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID:-dev-only-token}
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      VAULT_ADDR: http://127.0.0.1:8200
     cap_add:
     - IPC_LOCK
     security_opt:
@@ -169,7 +170,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -222,7 +223,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -280,7 +281,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -334,7 +335,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -385,7 +386,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -432,11 +433,11 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8087/actuator/health/liveness
+      - http://localhost:8087/compliance-service/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -488,7 +489,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -540,7 +541,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -557,9 +558,10 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
+      QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DB_URL: jdbc:postgresql://postgres:5432/payu_bifast
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_bifast
-      SERVER_PORT: '8080'
+      QUARKUS_HTTP_PORT: '8080'
       PORT: '8080'
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
@@ -585,7 +587,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -604,7 +606,7 @@ services:
       OTEL_ENDPOINT: http://jaeger:4317
       DB_URL: jdbc:postgresql://postgres:5432/payu_dukcapil
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_dukcapil
-      SERVER_PORT: '8080'
+      QUARKUS_HTTP_PORT: '8080'
       PORT: '8080'
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
@@ -630,7 +632,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -647,9 +649,10 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
+      QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DB_URL: jdbc:postgresql://postgres:5432/payu_qris
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_qris
-      SERVER_PORT: '8080'
+      QUARKUS_HTTP_PORT: '8080'
       PORT: '8080'
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
@@ -675,7 +678,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -721,11 +724,11 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8080/q/health
+      - http://localhost:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -742,6 +745,7 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
+      QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DB_URL: jdbc:postgresql://postgres:5432/payu_notification
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_notification
       SERVER_PORT: '8080'
@@ -774,7 +778,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -810,6 +814,7 @@ services:
       ROUTES_STATEMENT_URL: http://statement-service:8015
       WEBHOOK_PARTNER_1_SECRET: ${WEBHOOK_PARTNER_1_SECRET:-dummy_secret_for_dev_only}
       GATEWAY_AUTHORIZATION_JWT_SECRET: ${GATEWAY_AUTHORIZATION_JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
+      QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DB_URL: jdbc:postgresql://postgres:5432/payu_gateway
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_gateway
       SERVER_PORT: '8080'
@@ -843,7 +848,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -888,11 +893,11 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8080/q/health
+      - http://localhost:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -935,11 +940,11 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8080/q/health
+      - http://localhost:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -982,11 +987,11 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8080/q/health
+      - http://localhost:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -1029,11 +1034,11 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8080/q/health
+      - http://localhost:8080/actuator/health/liveness
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -1065,6 +1070,7 @@ services:
       SUPPORT_SERVICE_URL: http://support-service:8080
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
+      QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DB_URL: jdbc:postgresql://postgres:5432/payu_api_portal
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_api_portal
       SERVER_PORT: '8099'
@@ -1107,7 +1113,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -1159,7 +1165,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -1174,6 +1180,7 @@ services:
     ports:
     - 8007:8007
     environment:
+      QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DATABASE_URL: postgresql+asyncpg://payu:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_kyc
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       DUKCAPIL_URL: http://dukcapil-simulator:8080/api/v1
@@ -1210,6 +1217,7 @@ services:
     ports:
     - 8008:8008
     environment:
+      QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DATABASE_URL: postgresql+asyncpg://payu:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_analytics
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTLP_ENDPOINT: http://jaeger:4317
@@ -1245,7 +1253,8 @@ services:
     ports:
     - 3001:3000
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+      NEXT_PUBLIC_API_URL: /api/v1
+      GATEWAY_URL: http://gateway-service:8080
       NODE_ENV: production
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
@@ -1296,7 +1305,7 @@ services:
       interval: 20s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -1329,7 +1338,7 @@ services:
       interval: 20s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -1355,7 +1364,7 @@ services:
       interval: 20s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -1403,7 +1412,7 @@ services:
       interval: 20s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
@@ -1431,7 +1440,7 @@ services:
       interval: 20s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 120s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry

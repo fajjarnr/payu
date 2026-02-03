@@ -34,7 +34,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     // Public endpoints that don't require authentication
     private static final String[] PUBLIC_ENDPOINTS = {
         "/api/v1/auth/login",
-        "/api/v1/auth/register",
+        "/api/v1/accounts/register",  // Registration endpoint in account-service
         "/api/v1/auth/refresh",
         "/api/v1/otp/send",
         "/api/v1/otp/verify",
@@ -44,6 +44,12 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         "/api/v1/partners/webhook",
         "/api/v1/bi-fast/callback",
         "/api/v1/qris/callback"
+    };
+
+    // Exact match public endpoints (must match exactly)
+    private static final String[] EXACT_PUBLIC_ENDPOINTS = {
+        "/api/v1/accounts/register",
+        "/api/v1/auth/login"
     };
 
     @Inject
@@ -113,6 +119,13 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     }
 
     private boolean isPublicEndpoint(String path) {
+        // Check exact matches first
+        for (String publicEndpoint : EXACT_PUBLIC_ENDPOINTS) {
+            if (path.equals(publicEndpoint)) {
+                return true;
+            }
+        }
+        // Then check prefix matches for paths with wildcards
         for (String publicEndpoint : PUBLIC_ENDPOINTS) {
             if (path.startsWith(publicEndpoint)) {
                 return true;

@@ -12,24 +12,23 @@ RUN dnf install -y gcc g++ glibc-devel && dnf clean all
 # Copy entire project
 COPY . .
 
-# Install dependencies from the specific service directory
-RUN pip install --user --no-cache-dir -r kyc-service/requirements.txt
+# Create virtual environment and install dependencies
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir -r kyc-service/requirements.txt
 
 ####
-# Runtime stage - UBI9 Minimal
+# Runtime stage - UBI9 Python 3.11
 ####
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.3
-
-# Install runtime dependencies
-RUN microdnf install -y curl-minimal && microdnf clean all
+FROM registry.access.redhat.com/ubi9/python-311:latest
 
 WORKDIR /app
 
-# Copy Python packages and source
-COPY --from=builder /root/.local /root/.local
+# Copy virtual environment and source
+COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /app/kyc-service/src /app/src
 
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
@@ -42,7 +41,7 @@ USER 185
 # Expose service port
 EXPOSE 8007
 
-# Health check
+# Health check (Standardize to /health or /actuator/health for uniformity)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8007/health || exit 1
 

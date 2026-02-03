@@ -12,24 +12,23 @@ RUN dnf install -y gcc g++ glibc-devel && dnf clean all
 # Copy entire project
 COPY . .
 
-# Install dependencies from the specific service directory
-RUN pip install --user --no-cache-dir -r analytics-service/requirements.txt
+# Create virtual environment and install dependencies
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir -r analytics-service/requirements.txt
 
 ####
-# Runtime stage - UBI9 Minimal
+# Runtime stage - UBI9 Python 3.11
 ####
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.3
-
-# Install runtime dependencies
-RUN microdnf install -y curl-minimal && microdnf clean all
+FROM registry.access.redhat.com/ubi9/python-311:latest
 
 WORKDIR /app
 
-# Copy Python packages and source
-COPY --from=builder /root/.local /root/.local
+# Copy virtual environment and source
+COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /app/analytics-service/src /app/src
 
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 

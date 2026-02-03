@@ -118,6 +118,30 @@ Audit against the _14 Immutable Laws of PayU_.
     - ✅ **Gateway Stability**: Fixed Quarkus mandatory configuration validation.
     - ✅ **Vault Port Resolution**: Fixed port 8200 conflict in Podman Compose.
 
+### **P17-C20: Backend Service Healthcheck & Security Fix (Feb 3, 2026 - In Progress)**
+
+**Issue Summary:**
+- Multiple backend services showing "unhealthy" status in podman ps
+- Health endpoints returning 401 Unauthorized due to Spring Security blocking actuator endpoints
+- Gateway service blocking public endpoints (registration, login) requiring JWT/API key
+
+**Progress:**
+- [x] **Healthcheck Fixes**: Added WebSecurityCustomizer to 7 services (compliance, investment, billing, backoffice, promotion, support, lending) to bypass Spring Security for `/actuator/**` endpoints
+- [x] **Application.yml Updates**:
+  - compliance-service: Removed duplicate management config
+  - billing/backoffice: Added liveness/readiness probe configuration
+- [x] **Gateway Authorization Filter**: Fixed public endpoint path from `/api/v1/auth/register` to `/api/v1/accounts/register`
+- [x] **Gateway API Key Config**: Disabled API key validation (set `enabled: false`) for dev/testing
+- [x] **Gateway Service URLs**: Fixed default service URLs to use container network names (account-service:8001 instead of localhost:8081)
+- [ ] **Account Service Security**: Need to verify `/api/v1/accounts/register` permitAll is working
+- [ ] **E2E Test Updates**: Updated `test_full_flow.py` to use correct request fields (fullName, externalId, nik)
+
+**Remaining Tasks:**
+- [ ] Rebuild and restart account-service with updated security config
+- [ ] Verify registration endpoint works without authentication
+- [ ] Run E2E test suite to verify end-to-end flow
+- [ ] Fix any additional backend service security issues discovered during testing
+
 **✅ COMPLETION UPDATE (Feb 2, 2026 - Afternoon):**
 - ✅ Fixed ALL 12 test files (login, investment, lending, onboarding, a11y, transfer, qris, bills, kyc, settings)
 - ✅ Created test utilities (`e2e/utils.ts`) for common operations

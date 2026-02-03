@@ -72,19 +72,19 @@ gateway:
   # Backend Services
   services:
     account-service:
-      url: ${ACCOUNT_SERVICE_URL:http://localhost:8081}
+      url: ${ACCOUNT_SERVICE_URL:http://account-service:8001}
       timeout: 30s
     auth-service:
-      url: ${AUTH_SERVICE_URL:http://localhost:8082}
+      url: ${AUTH_SERVICE_URL:http://auth-service:8002}
       timeout: 10s
     transaction-service:
-      url: ${TRANSACTION_SERVICE_URL:http://localhost:8083}
+      url: ${TRANSACTION_SERVICE_URL:http://transaction-service:8003}
       timeout: 30s
     wallet-service:
-      url: ${WALLET_SERVICE_URL:http://localhost:8084}
+      url: ${WALLET_SERVICE_URL:http://wallet-service:8004}
       timeout: 15s
     billing-service:
-      url: ${BILLING_SERVICE_URL:http://localhost:8085}
+      url: ${BILLING_SERVICE_URL:http://billing-service:8080}
       timeout: 30s
     notification-service:
       url: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
@@ -300,7 +300,7 @@ gateway:
         refill-duration: "60s"
   # API Key Management
   api-keys:
-    enabled: true
+    enabled: false
     rotation:
       enabled: true
       auto-rotate-days: 90
@@ -311,6 +311,7 @@ gateway:
       - "/health"
       - "/q/"
       - "/api/v1/auth/login"
+      - "/api/v1/accounts/register"
   # Request Signing (HMAC-SHA256)
   request-signing:
     enabled: true

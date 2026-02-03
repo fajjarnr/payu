@@ -1,11 +1,17 @@
 package id.payu.auth.config;
 
 import id.payu.api.common.security.SecurityHeadersFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
@@ -14,37 +20,85 @@ import org.springframework.security.web.context.SecurityContextPersistenceFilter
  *
  * Configures which endpoints require authentication and which are public.
  * The login endpoint must be accessible without authentication.
+ *
+ * Uses multiple security filter chains to prevent JWT authentication filter
+ * from processing public endpoints before permitAll() can take effect.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+    private static final String[] PUBLIC_ENDPOINTS = {
+        "/api/v1/auth/login",
+        "/api/v1/auth/register",
+        "/api/v1/auth/refresh",
+        "/api/v1/auth/forgot-password",
+        "/api/v1/auth/reset-password"
+    };
+
+    private static final String[] PUBLIC_ACTUATOR_ENDPOINTS = {
+        "/actuator/health",
+        "/actuator/health/**",
+        "/actuator/info"
+    };
 
     @Bean
     public SecurityHeadersFilter securityHeadersFilter() {
         return new SecurityHeadersFilter();
     }
 
+    /**
+     * Public security filter chain - handles requests without JWT authentication.
+     * This chain processes public endpoints first (Order 1) to prevent JWT validation
+     * from rejecting requests before permitAll() can take effect.
+     */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher(PUBLIC_ENDPOINTS)
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .oauth2ResourceServer(oauth2 -> oauth2.disable())
+            .addFilterBefore(securityHeadersFilter(), SecurityContextPersistenceFilter.class);
+
+        return http.build();
+    }
+
+    /**
+     * Public actuator security filter chain - handles actuator health/info endpoints.
+     * Separate chain (Order 2) for monitoring without authentication.
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain publicActuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher(PUBLIC_ACTUATOR_ENDPOINTS)
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+    /**
+     * JWT security filter chain - handles authenticated requests.
+     * This chain (Order 3) processes all other requests and requires valid JWT.
+     */
+    @Bean
+    @Order(3)
+    public SecurityFilterChain jwtSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints - no authentication required
-                .requestMatchers("/api/v1/auth/login").permitAll()
-                .requestMatchers("/api/v1/auth/register").permitAll()
-                .requestMatchers("/api/v1/auth/refresh").permitAll()
-                .requestMatchers("/api/v1/auth/forgot-password").permitAll()
-                .requestMatchers("/api/v1/auth/reset-password").permitAll()
-
                 // Protected endpoints - require authentication
                 .requestMatchers("/api/v1/auth/validate").authenticated()
-
-                // Actuator endpoints - only health endpoint is public, others require authentication
-                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                .requestMatchers("/actuator/info").permitAll()
+                // Actuator endpoints - require authentication
                 .requestMatchers("/actuator/**").authenticated()
-
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
@@ -54,5 +108,23 @@ public class SecurityConfig {
             .addFilterBefore(securityHeadersFilter(), SecurityContextPersistenceFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Configure JWT decoder for OAuth2 Resource Server.
+     * This bean is required since we excluded OAuth2ResourceServerAutoConfiguration.
+     */
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        String issuerUri = System.getenv().getOrDefault("OIDC_ISSUER", "http://localhost:8080/realms/payu");
+        String jwkSetUri = System.getenv().getOrDefault("OIDC_JWK_SET_URI",
+            "http://localhost:8080/realms/payu/protocol/openid-connect/certs");
+
+        log.info("Configuring JwtDecoder with issuer: {}", issuerUri);
+
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuerUri));
+
+        return jwtDecoder;
     }
 }
