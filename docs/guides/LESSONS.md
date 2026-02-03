@@ -50,13 +50,19 @@
   * **Example**: Updating `dukcapil-simulator` from `256M` to `512M` resolved startup crashes.
   * **Note**: JVM `MAX_RAM_PERCENTAGE` automatically adjusts heap size based on container limits, but overhead (metaspace, thread stacks, native memory) must also fit within the limit.
 
-### 6. Port Standardization Strategy
+### 6. Port Standardization (Feb 2026 Mass Update)
 
-* **The Problem**: Using different internal ports for every service (8001, 8002, 8003...) creates maintenance hell in Dockerfiles (EXPOSE instructions) and Healthchecks.
-* **The Fix**: Standardize ALL backend services to use **8080** internally.
-  * **Dockerfile**: Always `EXPOSE 8080`.
-  * **Docker Compose**: Map unique external ports to standard internal port: `"8001:8080"`, `"8002:8080"`.
-  * **Healthcheck**: Always check `http://localhost:8080/...`.
+* **The Problem**: Managing 22 different internal ports (8001-8099) caused constant "unhealthy" statuses and broken gateways because of mismatches between `application.yml`, Dockerfiles, and `docker-compose` healthchecks.
+* **The Standard**: All 22 microservices (Java, Python, Quarkus) MUST listen on internal port **8080**.
+* **Why?**:
+  * **Convention over Configuration**: DNS-based service discovery (e.g., `http://service-name:8080`) is more reliable than remembering unique ports.
+  * **Cloud-Native Compliance**: Standard port for non-root containers in OpenShift/K8s.
+  * **Unified Monitoring**: Simple, consistent healthcheck and Prometheus scrape configs.
+* **The Implementation**:
+  * **Dockerfile**: Universal `EXPOSE 8080`.
+  * **Application**: Enforce `server.port=8080` or use `PORT` env var default.
+  * **Compose**: Use unique host ports (e.g., `8001:8080`) but always point healthcheck to `localhost:8080`.
+  * **Gateway**: Standardize all backend URLs to port 8080.
 
 ### 7. Environment vs. Persistence Mismatches
 

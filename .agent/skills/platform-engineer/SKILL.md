@@ -20,6 +20,7 @@ You are the **Lead Platform Engineer** for the **PayU Platform**. You design and
 2. **eBPF Observability**: Using Pixie/Cilium for zero-instrumentation monitoring.
 3. **GreenOps**: Carbon-aware scheduling for batch jobs.
 4. **Policy as Code**: Kyverno/OPA for strict governance enforcement at the cluster level.
+5. **Container Port Standardization**: All 22 microservices MUST listen on internal port **8080** to simplify networking, healthchecks, and service mesh routing.
 
 ---
 
@@ -413,10 +414,11 @@ spec:
 Platform PayU mengandalkan SELinux untuk pertahanan *Enforced* secara default. Jangan pernah mematikan SELinux (`setenforce 0`) di lingkungan produksi.
 
 #### Volume Labeling (`:Z` vs `:z`)
+
 Saat mounting volume di Podman, label SELinux harus dikelola agar proses kontainer memiliki izin akses.
 
-*   **`:Z`**: Private unshared volume. Mencegah kontainer lain mengakses data ini. (Direkomendasikan).
-*   **`:z`**: Shared volume. Bisa diakses oleh beberapa kontainer.
+* **`:Z`**: Private unshared volume. Mencegah kontainer lain mengakses data ini. (Direkomendasikan).
+* **`:z`**: Shared volume. Bisa diakses oleh beberapa kontainer.
 
 ```bash
 # Contoh running rootless podman dengan SELinux labeling
@@ -424,21 +426,45 @@ podman run -v /data/db:/var/lib/postgresql/data:Z postgres:16
 ```
 
 #### OpenShift MCS (Multi-Category Security)
+
 Di OpenShift, setiap namespace mendapatkan kategori SELinux yang unik (misal: `s0:c12,c34`). Ini mencegah kontainer di Namespace A mengakses volume di Namespace B meskipun UUID-nya sama.
 
 #### Security Context Constraints (SCC)
+
 Gunakan SCC `restricted-v2` (default di OCP 4.12+) yang secara otomatis:
-1.  Mengalokasikan UID unik dari range namespace.
-2.  Menerapkan tipe SELinux `container_t`.
-3.  Memaksa penggunaan `seccompProfile` tipe `RuntimeDefault`.
+
+1. Mengalokasikan UID unik dari range namespace.
+2. Menerapkan tipe SELinux `container_t`.
+3. Memaksa penggunaan `seccompProfile` tipe `RuntimeDefault`.
 
 #### Troubleshooting Commands
+
 Jika terjadi `Permission Denied` meskipun permission file di host (Linux) sudah `777`:
-1.  Cek audit log: `ausearch -m avc -ts recent`
-2.  Lihat konteks file: `ls -Z /path/to/data`
-3.  Perbaiki label: `restorecon -Rv /path/to/data`
+
+1. Cek audit log: `ausearch -m avc -ts recent`
+2. Lihat konteks file: `ls -Z /path/to/data`
+3. Perbaiki label: `restorecon -Rv /path/to/data`
 
 ---
+
+## ⚓ Platform Port Standardization
+
+ All PayU backend services follow the **8080 Standard** for internal container networking. This reduces configuration complexity and aligns with OpenShift/Kubernetes networking patterns.
+
+### 1. Port Mapping Principles
+
+* **Internal Port**: Always **8080**. All applications (Spring Boot, Quarkus, FastAPI) must listen on this port inside the container.
+* **External Port**: Managed via `docker-compose` or `podman-compose` host mapping (e.g., `8001:8080`).
+* **Service Discovery**: Internal communication between containers uses the service name and port 8080 (e.g., `http://account-service:8080`).
+
+### 2. Implementation Checklist
+
+* [x] **Dockerfile**: `EXPOSE 8080`.
+* [x] **Application Config**: `server.port=8080` (Spring) or `quarkus.http.port=8080`.
+* [x] **Health Check**: Endpoint must be matched to port 8080 (e.g., `http://localhost:8080/actuator/health`).
+* [x] **Gateway Routes**: All `ROUTES_URL` must point to port 8080 of the target service.
+
+ ---
 
 ### 4. OCI & Metadata Standards (Legacy Container Engineer)
 
@@ -787,11 +813,13 @@ RUN mvn clean package -DskipTests
 **Symptom:** Maven build process hangs indefinitely during dependency download or compilation
 
 **Root Cause:**
-- Parallel builds (`-T 1C`) causing deadlock in certain services
-- Network issues accessing Maven Central during container build
-- Large dependency downloads timing out
+
+* Parallel builds (`-T 1C`) causing deadlock in certain services
+* Network issues accessing Maven Central during container build
+* Large dependency downloads timing out
 
 **Fix - Use Pre-Built JARs:**
+
 ```dockerfile
 # Build stage: Skip Maven, use pre-built JAR
 # Runtime stage only
@@ -805,11 +833,14 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ```
 
 **Build Strategy:**
+
 1. Build all JARs first with Maven from backend directory:
+
    ```bash
    cd /home/ubuntu/payu/backend
    mvn clean package -DskipTests -T 1C
    ```
+
 2. Create runtime-only Containerfiles that copy pre-built JARs
 3. Build images much faster (minutes vs hours)
 
@@ -853,6 +884,7 @@ USER 185
 **Root Cause:** `.dockerignore` or `.containerignore` excludes `target/` directory
 
 **Fix:** Either:
+
 1. Build from parent directory with proper context
 2. Remove `target/` from ignore files
 3. Use `--ignorefile=.containerignore` to bypass dockerignore
@@ -911,38 +943,46 @@ cat .dockerignore | grep target
 
 ### References
 
-- [Podman Documentation](https://docs.podman.io/)
-- [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
-- [Spring Boot Docker Guide](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#container-images)
+* [Podman Documentation](https://docs.podman.io/)
+* [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
+* [Spring Boot Docker Guide](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#container-images)
 
 ---
 
 ## 🛡️ Platform Integrity Checklist
 
 ### Security
-- [ ] Containerfile menggunakan UBI9-minimal dan non-root USER
-- [ ] Dijalankan menggunakan Podman rootless (UID 1001)
-- [ ] SecurityContext drops all capabilities
-- [ ] NetworkPolicies isolate service traffic
-- [ ] Secrets managed via Vault/SealedSecrets (not Git)
+
+* [ ] Containerfile menggunakan UBI9-minimal dan non-root USER
+
+* [ ] Dijalankan menggunakan Podman rootless (UID 1001)
+* [ ] SecurityContext drops all capabilities
+* [ ] NetworkPolicies isolate service traffic
+* [ ] Secrets managed via Vault/SealedSecrets (not Git)
 
 ### Delivery
-- [ ] Service deployed via ArgoCD (GitOps)
-- [ ] Sync windows configured for production
-- [ ] Automated rollback enabled
-- [ ] Tekton pipeline includes security scanning
+
+* [ ] Service deployed via ArgoCD (GitOps)
+
+* [ ] Sync windows configured for production
+* [ ] Automated rollback enabled
+* [ ] Tekton pipeline includes security scanning
 
 ### Observability
-- [ ] PodMonitor/ServiceMonitor configured
-- [ ] Distributed tracing enabled (Jaeger/OpenTelemetry)
-- [ ] Log aggregation configured (Loki)
-- [ ] eBPF probes enabled for network visibility
+
+* [ ] PodMonitor/ServiceMonitor configured
+
+* [ ] Distributed tracing enabled (Jaeger/OpenTelemetry)
+* [ ] Log aggregation configured (Loki)
+* [ ] eBPF probes enabled for network visibility
 
 ### Resilience
-- [ ] PodDisruptionBudget defined
-- [ ] HPA configured with appropriate thresholds
-- [ ] Multi-region DR tested quarterly
-- [ ] Chaos testing run in staging automatically
+
+* [ ] PodDisruptionBudget defined
+
+* [ ] HPA configured with appropriate thresholds
+* [ ] Multi-region DR tested quarterly
+* [ ] Chaos testing run in staging automatically
 
 ---
 
@@ -958,18 +998,18 @@ cat .dockerignore | grep target
 
 ### External Documentation
 
-- [OpenShift Documentation](https://docs.openshift.com/)
-- [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
-- [Tekton Documentation](https://tekton.dev/docs/)
-- [Helm Documentation](https://helm.sh/docs/)
-- [Istio Documentation](https://istio.io/latest/docs/)
-- [Strimzi Kafka Operator](https://strimzi.io/documentation/)
-- [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
-- [Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/)
-- [CNCF Landscape](https://landscape.cncf.io/)
-- [FinOps Foundation](https://www.finops.org/)
-- [Google SRE Book](https://sre.google/sre-book/table-of-contents/)
-- [LaunchDarkly Feature Flags](https://docs.launchdarkly.com/)
+* [OpenShift Documentation](https://docs.openshift.com/)
+* [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
+* [Tekton Documentation](https://tekton.dev/docs/)
+* [Helm Documentation](https://helm.sh/docs/)
+* [Istio Documentation](https://istio.io/latest/docs/)
+* [Strimzi Kafka Operator](https://strimzi.io/documentation/)
+* [UBI9 Container Guide](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/building_running_and_managing_containers/)
+* [Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/)
+* [CNCF Landscape](https://landscape.cncf.io/)
+* [FinOps Foundation](https://www.finops.org/)
+* [Google SRE Book](https://sre.google/sre-book/table-of-contents/)
+* [LaunchDarkly Feature Flags](https://docs.launchdarkly.com/)
 
 ---
 *Last Updated: January 2026*
