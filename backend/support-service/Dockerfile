@@ -1,22 +1,4 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy entire project (needed for parent pom/shared dependencies)
-COPY . .
-
-# Build the application
-RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true -pl :support-service -am && \
-    mv support-service/target/*.jar support-service/target/app.jar
-
-####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
@@ -25,21 +7,20 @@ FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 LABEL maintainer="backend-team@payu.id"
 LABEL description="PayU support-service"
 LABEL version="1.0.0"
-LABEL id.payu.service.tier="core"
 
 # Install curl for health checks (MUST BE ROOT)
 USER root
 RUN microdnf install -y curl-minimal && microdnf clean all
 
-# Use non-root user (185 is the default jboss user in UBI images)
+# Use non-root user
 USER 185
 
 WORKDIR /deployments
 
-# Copy the built artifact from build stage
-COPY --from=build --chown=185 /build/support-service/target/app.jar /deployments/app.jar
+# Copy the built artifact from the target directory
+COPY target/*.jar /deployments/app.jar
 
-# Volume mounts for temporary files and logs
+# Volume mounts
 VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
@@ -55,9 +36,9 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:HeapDumpPath=/deployments/heapdump.hprof \
     -Djava.security.egd=file:/dev/./urandom"
 
-# Health check (Actuator)
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health || exit 1
+    CMD curl -f http://localhost:8080/actuator/health/liveness || exit 1
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

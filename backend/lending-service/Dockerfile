@@ -43,7 +43,7 @@ COPY --from=build --chown=185 /build/lending-service/target/app.jar /deployments
 VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
-EXPOSE 8087
+EXPOSE 8080
 
 # JVM configuration for containers
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
@@ -57,7 +57,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
 
 # Health check (Actuator)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8087/actuator/health || exit 1
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

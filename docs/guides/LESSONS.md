@@ -42,6 +42,30 @@
 * **UBI9 Minimal & Curl**: The standard `curl` package conflicts with `curl-minimal` in UBI9 minimal images.
   * **The Fix**: Use `microdnf install -y curl-minimal` instead. If you must use full curl, you might need `--allowerasing` (though `curl-minimal` is usually sufficient for healthchecks).
 
+### 5. Memory Limits & OOM Kills (Exit Code 137)
+
+* **The Problem**: Java applications (especially Quarkus/Spring Boot) in containers may be killed by the OOM Killer (Exit Code 137) if the container memory limit is too tight compared to the JVM heap requirements.
+* **The Symptom**: Container starts, runs for a few seconds/minutes, then exits silently or with "Killed". `podman ps` shows "Exited (137)".
+* **The Fix**: Increase the `mem_limit` or `deploy.resources.limits.memory`.
+  * **Example**: Updating `dukcapil-simulator` from `256M` to `512M` resolved startup crashes.
+  * **Note**: JVM `MAX_RAM_PERCENTAGE` automatically adjusts heap size based on container limits, but overhead (metaspace, thread stacks, native memory) must also fit within the limit.
+
+### 6. Port Standardization Strategy
+
+* **The Problem**: Using different internal ports for every service (8001, 8002, 8003...) creates maintenance hell in Dockerfiles (EXPOSE instructions) and Healthchecks.
+* **The Fix**: Standardize ALL backend services to use **8080** internally.
+  * **Dockerfile**: Always `EXPOSE 8080`.
+  * **Docker Compose**: Map unique external ports to standard internal port: `"8001:8080"`, `"8002:8080"`.
+  * **Healthcheck**: Always check `http://localhost:8080/...`.
+
+### 7. Environment vs. Persistence Mismatches
+
+* **The Problem**: Changing a password in `.env` (e.g., `POSTGRES_PASSWORD`) does **not** update the password of an existing, persistent database volume. The container starts, but applications fail to connect with "Password authentication failed".
+* **The Fix**:
+  1. **Reset**: Delete the volume (`podman volume rm ...`) to let it recreate with the new password (DATA LOSS WARNING).
+  2. **Sync**: Update `.env` to match the *actual* password currently used by the database (Safe).
+  3. **SQL**: Manually change the password via `ALTER USER` inside the database.
+
 ## 🛠️ Build & Dependency Management
 
 ### 1. Multi-Module Project Dependencies
@@ -65,6 +89,16 @@
 
 * **Inner Class Resolution**: When using custom annotations with inner enums (like `@Audited(level = AuditLevel.INFO)`), Java may fail to resolve the enum if not fully qualified or correctly imported.
 * **Correction**: Use `Audited.AuditLevel.INFO` to guarantee resolution.
+
+### 4. Ambiguous Enum References (Swagger vs Security Starter)
+
+* **The Problem**: Importing `id.payu.security.annotation.Audited.Operation` can conflict with `io.swagger.v3.oas.annotations.Operation`, leading to `reference to Operation is ambiguous` compilation errors.
+* **The Fix**: Use semi-qualified names in annotations: `@Audited(operation = Audited.Operation.CREATE, ...)` instead of importing the inner enum directly.
+
+### 5. Abstract Exception Instantiation in Tests
+
+* **The Problem**: Making a base domain exception `abstract` prevents direct instantiation in unit tests, leading to compilation errors.
+* **The Fix**: Either make the base exception concrete with a generic error code (e.g., `COMPLIANCE_GENERIC_ERROR`) or ensure tests always use a concrete subclass.
 
 ### 3. JPA Entity Architecture (Pragmatic Hexagonal)
 
@@ -166,6 +200,23 @@
   * **Context Path**: If `server.servlet.context-path` is set (e.g., `/compliance-service`), the healthcheck URL in `podman-compose.yml` MUST include it: `http://localhost:8087/compliance-service/actuator/health/liveness`.
   * **401 in Spring Boot**: If `/actuator/health/liveness` returns 401 even if `/actuator/health` is permitted, ensure the `requestMatchers` use wildcards (`/actuator/**`) to cover sub-paths.
 
+### 5. Misconfigured Service Labels (Spring Boot vs Quarkus)
+
+* **The Problem**: A service built with Spring Boot but configured in `docker-compose.yml` using Quarkus environment variables (e.g., `QUARKUS_DATASOURCE_JDBC_URL`) and healthchecks (`/q/health`) will fail to start or report as unhealthy.
+* **The Fix**: Ensure the configuration matches the framework:
+  * **Spring**: `SPRING_DATASOURCE_URL`, `actuator/health/liveness`.
+  * **Quarkus**: `QUARKUS_DATASOURCE_JDBC_URL`, `q/health`.
+
+### 6. Vault Dev Mode Healthcheck
+
+* **The Problem**: `vault status` inside a container defaults to HTTPS, causing 401/error when Vault is running in `-dev` mode (HTTP).
+* **The Fix**: Explicitly set `VAULT_ADDR` in the healthcheck command:
+
+  ```yaml
+  healthcheck:
+    test: ["CMD-SHELL", "VAULT_ADDR=http://127.0.0.1:8200 vault status || exit 1"]
+  ```
+
 ## 🧪 Systematic Debugging
 
 ### 6. Spring Boot 3.4 Security & Public Endpoints (Feb 2026)
@@ -173,6 +224,7 @@
 * **The Problem**: Spring Security OAuth2 resource server configuration can intercept requests before permitAll() rules are evaluated, causing 401 errors even on public endpoints like `/actuator/health` and `/api/v1/accounts/register`.
 * **Root Cause**: When using `oauth2ResourceServer().jwt()`, Spring creates a filter chain that validates JWT tokens BEFORE the authorization rules (`permitAll()`) are checked.
 * **The Fix**: Use `WebSecurityCustomizer` bean to completely bypass Spring Security for specific paths:
+
   ```java
   @Bean
   public WebSecurityCustomizer webSecurityCustomizer() {
@@ -182,6 +234,7 @@
               .requestMatchers("/api/v1/auth/login");
   }
   ```
+
 * **Note**: Spring will warn "This is not recommended" but this is necessary when OAuth2 resource server is enabled globally.
 * **Alternative**: Disable OAuth2 for specific paths using `securityMatcher()`.
 
@@ -190,11 +243,13 @@
 * **The Problem**: Gateway proxying fails with "Connection refused: localhost/127.0.0.1:8081" even though service is running.
 * **Root Cause**: Default service URLs in `application.yaml` use `localhost:PORT` which doesn't resolve in container networks.
 * **The Fix**: Update default URLs to use service names from container network:
+
   ```yaml
   services:
     account-service:
       url: ${ACCOUNT_SERVICE_URL:http://account-service:8001}  # NOT localhost:8081
   ```
+
 * **Environment Variable Mismatch**: podman-compose.yml may set different variable names (e.g., `ROUTES_ACCOUNT_URL` vs `ACCOUNT_SERVICE_URL`). Ensure ENV variable names match config property names.
 
 ### 8. API Key vs JWT Authorization Layering (Feb 2026)

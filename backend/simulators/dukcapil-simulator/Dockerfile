@@ -1,21 +1,4 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy entire project (needed for parent pom/shared dependencies)
-COPY . .
-
-# Build the Quarkus application
-RUN mvn package -DskipTests -Dquarkus.package.jar.type=uber-jar -pl :dukcapil-simulator -am
-
-####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
@@ -29,16 +12,16 @@ LABEL version="1.0.0"
 USER root
 RUN microdnf install -y curl-minimal && microdnf clean all
 
-# Use non-root user (185 is the default jboss user in UBI images)
+# Use non-root user
 USER 185
 
 WORKDIR /deployments
 
-# Copy built artifact from build stage
-COPY --from=build --chown=185 /build/simulators/dukcapil-simulator/target/*-runner.jar /deployments/app.jar
+# Copy built artifact from host build (Quarkus fast-jar)
+COPY target/quarkus-app/ /deployments/
 
 # Expose the service port
-EXPOSE 8091
+EXPOSE 8080
 
 # JVM configuration
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
@@ -46,14 +29,15 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:+UseG1GC \
     -XX:MaxGCPauseMillis=100 \
     -Dquarkus.http.host=0.0.0.0 \
+    -Dquarkus.http.port=8080 \
     -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8091/q/health || exit 1
+    CMD curl -f http://localhost:8080/q/health || exit 1
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Run the Quarkus application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

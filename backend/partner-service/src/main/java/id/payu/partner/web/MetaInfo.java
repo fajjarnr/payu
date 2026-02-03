@@ -3,9 +3,6 @@ package id.payu.partner.web;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,9 +13,6 @@ import java.util.UUID;
  */
 @Schema(description = "Response metadata")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class MetaInfo {
 
     @Schema(
@@ -35,6 +29,18 @@ public class MetaInfo {
     )
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private Instant timestamp;
+
+    public MetaInfo() {}
+
+    public MetaInfo(String requestId, Instant timestamp) {
+        this.requestId = requestId;
+        this.timestamp = timestamp;
+    }
+
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
+    public Instant getTimestamp() { return timestamp; }
+    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
 
     /**
      * Creates MetaInfo with current timestamp and generated request ID.

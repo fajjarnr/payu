@@ -78,7 +78,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         }
 
         String path = requestContext.getUriInfo().getPath();
-
+        
         // Skip public endpoints
         if (isPublicEndpoint(path)) {
             Log.debugf("Skipping authorization for public endpoint: %s", path);
@@ -87,6 +87,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
         // Get Authorization header
         String authHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
+        Log.infof("GW Auth Filter: path=%s, header=%s", path, authHeader);
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
             Log.warnf("Missing or invalid Authorization header for path: %s", path);
             abortWithUnauthorized(requestContext, "MISSING_TOKEN", "Valid JWT token required");
@@ -119,18 +120,28 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     }
 
     private boolean isPublicEndpoint(String path) {
-        // Check exact matches first
-        for (String publicEndpoint : EXACT_PUBLIC_ENDPOINTS) {
-            if (path.equals(publicEndpoint)) {
+        if (path == null) return false;
+        
+        // Normalize path: ensure leading slash and remove trailing slash for comparison
+        String normalizedPath = path.startsWith("/") ? path : "/" + path;
+        if (normalizedPath.length() > 1 && normalizedPath.endsWith("/")) {
+            normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
+        }
+
+        // Check exact matches
+        for (String endpoint : EXACT_PUBLIC_ENDPOINTS) {
+            if (normalizedPath.equals(endpoint)) {
                 return true;
             }
         }
-        // Then check prefix matches for paths with wildcards
-        for (String publicEndpoint : PUBLIC_ENDPOINTS) {
-            if (path.startsWith(publicEndpoint)) {
+
+        // Check prefix/pattern matches
+        for (String endpoint : PUBLIC_ENDPOINTS) {
+            if (normalizedPath.startsWith(endpoint)) {
                 return true;
             }
         }
+
         return false;
     }
 

@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
@@ -28,10 +27,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/partners")
 @Tag(name = OpenApiConstants.TAG_PARTNER, description = "Partner management operations")
-@RequiredArgsConstructor
 public class PartnerController extends BaseController {
 
     private final PartnerService partnerService;
+
+    public PartnerController(PartnerService partnerService) {
+        this.partnerService = partnerService;
+    }
 
     @GetMapping
     @Operation(
@@ -98,7 +100,7 @@ public class PartnerController extends BaseController {
 
     @PostMapping
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.CREATE,
+            operation = Audited.Operation.CREATE,
             entityType = "Partner",
             maskData = true,
             level = AuditLevel.INFO
@@ -189,7 +191,7 @@ public class PartnerController extends BaseController {
 
     @PostMapping("/{id}/keys/regenerate")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = Audited.Operation.OTHER,
             entityType = "Partner",
             maskData = true,
             level = AuditLevel.WARN

@@ -1,5 +1,6 @@
 package id.payu.investment.adapter.web;
 
+import id.payu.api.common.response.ApiResponse;
 import id.payu.investment.application.service.InvestmentApplicationService;
 import id.payu.investment.domain.model.Deposit;
 import id.payu.investment.domain.model.Gold;
@@ -66,12 +67,12 @@ class InvestmentControllerTest {
             given(investmentApplicationService.createAccount(testUserId))
                     .willReturn(CompletableFuture.completedFuture(account));
 
-            ResponseEntity<InvestmentAccount> response = 
+            ResponseEntity<ApiResponse<InvestmentAccount>> response = 
                     investmentController.createAccount(new id.payu.investment.dto.CreateInvestmentAccountRequest(testUserId))
                             .get();
 
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getUserId()).isEqualTo(testUserId);
+            assertThat(response.getBody().getData().getUserId()).isEqualTo(testUserId);
             verify(investmentApplicationService).createAccount(testUserId);
         }
     }
@@ -94,12 +95,12 @@ class InvestmentControllerTest {
             given(investmentApplicationService.buyDeposit(testAccountId, testUserId, testAmount, 6))
                     .willReturn(CompletableFuture.completedFuture(deposit));
 
-            ResponseEntity<Deposit> response = 
+            ResponseEntity<ApiResponse<Deposit>> response = 
                     investmentController.buyDeposit(testAccountId, testUserId, testAmount, 6)
                             .get();
 
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getAmount()).isEqualTo(testAmount);
+            assertThat(response.getBody().getData().getAmount()).isEqualTo(testAmount);
             verify(investmentApplicationService).buyDeposit(testAccountId, testUserId, testAmount, 6);
         }
     }
@@ -122,12 +123,12 @@ class InvestmentControllerTest {
             given(investmentApplicationService.buyGold(testUserId, testAmount))
                     .willReturn(CompletableFuture.completedFuture(gold));
 
-            ResponseEntity<Gold> response = 
+            ResponseEntity<ApiResponse<Gold>> response = 
                     investmentController.buyGold(testUserId, testAmount)
                             .get();
 
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getUserId()).isEqualTo(testUserId);
+            assertThat(response.getBody().getData().getUserId()).isEqualTo(testUserId);
             verify(investmentApplicationService).buyGold(testUserId, testAmount);
         }
     }

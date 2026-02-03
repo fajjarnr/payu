@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed gateway public endpoint routing (`/api/v1/auth/register` → `/api/v1/accounts/register`)
   - Disabled API key validation in gateway for dev/testing environment
   - Fixed gateway service URLs to use container network names (account-service:8001 vs localhost:8081)
+- **Simulator & Environment Standardization (Feb 3, 2026)**:
+  - Unified all 22 microservices to run on internal port **8080** for consistency.
+  - Standardized all inter-service communication URLs across `docker-compose.yml` and gateway routes to use port 8080.
+  - Fixed container healthcheck commands in `docker-compose.yml` to target standardized port 8080.
+  - Optimized Dockerfiles across the platform to use standard UBI9 runtime and port 8080.
+  - Resolved OOM errors in `dukcapil-simulator` by increasing memory limits to 512M.
+  - Fixed database connectivity by synchronizing `.env` credentials with persisted Postgres volumes.
+  - Enforced `SPRING_PROFILES_ACTIVE=container` to ensure correct datasource URL resolution in compose.
 - **UI Inconsistencies**: Fixed mismatched padding, inconsistent corner radii, and arbitrary font sizes across 15+ micro-frontend pages.
 - **Icon Naming**: Standardized Lucide icon imports to PascalCase across the Bills and Transfer pages.
 - **Store Signatures**: Updated `addToast` calls to match the new `useUIStore` signature.

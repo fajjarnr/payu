@@ -2,7 +2,7 @@
 
 > **Platform Maturity**: 🟢 **100%** | **Production Readiness**: 🟢 **100%** (Feature Complete & Parity Achieved)
 > **Strategic Objective**: Standardize a stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
-> **Last Synchronized**: February 3, 2026 (Infrastructure Fixes: Redis, Gateway & Build Optimization)
+> **Last Synchronized**: February 3, 2026 (Simulator Stabilization & Port Standardization)
 
 ---
 
@@ -47,12 +47,12 @@ Audit against the _14 Immutable Laws of PayU_.
 - [x] **P17-C9**: Build 15/15 Backend Service Images (All Services Built)
 - [x] **P17-C10**: Container Profile Configuration Fix (datasource resolved)
 - [x] **P17-C11**: Full-Stack Integration Verification (All 22 Services)
-    - [x] **Env Variable Fixes**: `fix_envs.py` updated for monorepo submodule context.
-    - [x] **Dependency Resolution**: `api-commons` groupId mismatch fixed.
-    - [x] **Curl Compatibility**: UBI9 minimal image curl fix applied.
-    - [x] **Transaction Service**: Flyway partitioning hash fix applied.
-    - [x] **Billing Service**: OAuth2 Security configuration hardened.
-    - [x] **Backoffice Service**: RateLimitInterceptor constructor fix.
+  - [x] **Env Variable Fixes**: `fix_envs.py` updated for monorepo submodule context.
+  - [x] **Dependency Resolution**: `api-commons` groupId mismatch fixed.
+  - [x] **Curl Compatibility**: UBI9 minimal image curl fix applied.
+  - [x] **Transaction Service**: Flyway partitioning hash fix applied.
+  - [x] **Billing Service**: OAuth2 Security configuration hardened.
+  - [x] **Backoffice Service**: RateLimitInterceptor constructor fix.
 - [x] **P17-C12**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
 - [x] **P17-C13**: Lending Service Test Remediation (27 tests passing)
 - [x] **P17-C14**: Flyway Migration Schema Verification (account-service V3, V4, V5 fixed)
@@ -113,20 +113,22 @@ Audit against the _14 Immutable Laws of PayU_.
 - [x] **CI gating**: Block merges under 95% pass rate
 - [x] **Daily burn-down**: Track and reduce failed test count
 - [x] **Infrastructure Resilience (Feb 3)**:
-    - ✅ **Selective Builds**: Fixed 22 service Dockerfiles to use `-pl -am`.
-    - ✅ **Redis Connectivity**: Resolved `cache-starter` property mapping issues.
-    - ✅ **Gateway Stability**: Fixed Quarkus mandatory configuration validation.
-    - ✅ **Vault Port Resolution**: Fixed port 8200 conflict in Podman Compose.
+  - ✅ **Selective Builds**: Fixed 22 service Dockerfiles to use `-pl -am`.
+  - ✅ **Redis Connectivity**: Resolved `cache-starter` property mapping issues.
+  - ✅ **Gateway Stability**: Fixed Quarkus mandatory configuration validation.
+  - ✅ **Vault Port Resolution**: Fixed port 8200 conflict in Podman Compose.
 
 ### **P17-C20: Backend Service Healthcheck & Security Fix (Feb 3, 2026)**
 
 **Issue Summary:**
+
 - Multiple backend services showing "unhealthy" status in podman ps
 - Health endpoints returning 401 Unauthorized due to Spring Security blocking actuator endpoints
 - Gateway service blocking public endpoints (registration, login) requiring JWT/API key
 - Public endpoints (/api/v1/accounts/register) returning 401 due to OAuth2 Resource Server global filter
 
 **Progress:**
+
 - [x] **Healthcheck Fixes**: Added WebSecurityCustomizer to 11 services (compliance, investment, billing, backoffice, promotion, support, lending, account, transaction, wallet, fx) to bypass Spring Security for `/actuator/**` endpoints
 - [x] **Application.yml Updates**:
   - compliance-service: Removed duplicate management config
@@ -145,19 +147,44 @@ Audit against the _14 Immutable Laws of PayU_.
   - Excluded OAuth2ResourceServerAutoConfiguration from AccountServiceApplication and AuthServiceApplication
   - Added manual JwtDecoder bean configuration for JWT-enabled filter chains
   - Implemented multiple filter chains with @Order (public endpoints first, JWT second)
+- [x] **Partner service build fix**: Resolved Lombok constructor issues and ambiguous enum refs.
+- [x] **Auth service runtime fix**: Added missing RedisTemplate bean.
+- [x] **Compliance service test fix**: Made domain exception non-abstract for testing.
+- [x] **Investment service test fix**: Standardized ApiResponse wrapper in controller tests.
+- [x] **Infrastructure health check stability**: Fixed Vault and Spring services in docker-compose.
 
 **Known Issues (WIP):**
+
 - [ ] **Public Endpoint 401 Issue**: `/api/v1/accounts/register` still returns 401 despite security configuration
   - Root cause: OAuth2 Resource Server auto-configuration creates global JWT filter that processes requests before custom filter chains
   - Attempted fixes: Multiple filter chains with @Order, explicit oauth2ResourceServer.disable(), manual JwtDecoder bean
   - Next steps: (1) Disable OAuth2 for dev environment, (2) Use conditional configuration, or (3) Custom OncePerRequestFilter
 
+### **P17-C21: Simulator & Environment Standardization (Feb 3, 2026)**
+
+**Issue Summary:**
+
+- `dukcapil-simulator` failing with OOM (Exit 137).
+- Database authentication failures due to password mismatch between `.env` and persisted volume data.
+- Inconsistent port mappings (8001, 8002, 8091 mixed) causing complex Dockerfile maintenance.
+
+**Progress:**
+
+- [x] **Port Standardization**: Unified all 22 backend services to run on internal port **8080**.
+- [x] **Environment Unified**: Standardized all inter-service URLs and healthchecks in `docker-compose.yml` to use port 8080.
+- [x] **Dockerfile Optimization**: Simplified Dockerfiles for Dukcapil, Account, Transaction, Wallet, etc., to use standard UBI9 runtime and port 8080.
+- [x] **OOM Resolution**: Increased `dukcapil-simulator` memory limit from 256M to 512M.
+- [x] **Auth Match**: Synchronized `.env` password (`payu_secret`) to match existing Postgres volume state, restoring database connectivity.
+- [x] **Profile Config**: Enforced `SPRING_PROFILES_ACTIVE=container` across `docker-compose.yml` to ensure correct datasource URLs are used.
+
 **Remaining Tasks:**
+
 - [ ] Resolve public endpoint 401 issue (OAuth2 Resource Server global filter)
 - [ ] Run E2E test suite to verify end-to-end flow
 - [ ] Fix any additional backend service security issues discovered during testing
 
 **✅ COMPLETION UPDATE (Feb 2, 2026 - Afternoon):**
+
 - ✅ Fixed ALL 12 test files (login, investment, lending, onboarding, a11y, transfer, qris, bills, kyc, settings)
 - ✅ Created test utilities (`e2e/utils.ts`) for common operations
 - ✅ Added 59 `data-testid` attributes to key components (auth, dashboard, transfer, investment, lending)
@@ -165,6 +192,7 @@ Audit against the _14 Immutable Laws of PayU_.
 - ✅ Documentation created: `P17_E2E_FIX_COMPLETION_REPORT.md`, `E2E_TESTIDS_SUMMARY.md`
 
 **Test Files Fixed (12/12):**
+
 1. `login-flow.spec.ts` - Auth flow fixes
 2. `investment-flow.spec.ts` - Animation waits, selector fixes
 3. `lending-flow.spec.ts` - Currency format regex
@@ -178,10 +206,9 @@ Audit against the _14 Immutable Laws of PayU_.
 11. `check_ui.spec.ts` - Screenshot verification
 12. `registration-flow.spec.ts` - Translation fixes
 
-### 🔧 Container Environment Status (Feb 2, 2026)
+### 🔧 Container Environment Status (Feb 3, 2026)
 
 | Component | Status | Notes |
-
 | :---------------------- | :----------------- | :------------------------------------------------------------------------------- |
 | **Infrastructure** | ✅ Running | PostgreSQL, Redis, Kafka, Keycloak healthy |
 | **Docker Images Built** | ✅ 15/15 Services | All backend services successfully built |
@@ -367,4 +394,4 @@ _Framework: Spring Boot 3.4 / Quarkus 3.x / FastAPI_
 
 ---
 
-_Last Updated: February 2, 2026 | PayU Engineering Team_
+_Last Updated: February 3, 2026 | PayU Engineering Team_

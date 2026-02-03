@@ -13,17 +13,25 @@ import id.payu.api.common.exception.BusinessException;
  * - EXT: External service errors
  * - SYS: System/technical errors
  */
-public abstract class ComplianceDomainException extends BusinessException {
+public class ComplianceDomainException extends BusinessException {
 
-    protected ComplianceDomainException(String code, String message) {
+    public ComplianceDomainException(String message) {
+        super("COMPLIANCE_GENERIC_ERROR", message);
+    }
+
+    public ComplianceDomainException(String message, Throwable cause) {
+        super("COMPLIANCE_GENERIC_ERROR", message, cause);
+    }
+
+    public ComplianceDomainException(String code, String message) {
         super(code, message);
     }
 
-    protected ComplianceDomainException(String code, String message, Throwable cause) {
+    public ComplianceDomainException(String code, String message, Throwable cause) {
         super(code, message, cause);
     }
 
-    protected ComplianceDomainException(String code, String message, Object... args) {
+    public ComplianceDomainException(String code, String message, Object... args) {
         super(code, message, args);
     }
 }

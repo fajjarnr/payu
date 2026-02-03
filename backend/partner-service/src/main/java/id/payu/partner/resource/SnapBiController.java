@@ -256,11 +256,18 @@ public class SnapBiController {
         return ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(new SnapErrorResponse(code, message));
     }
 
-    @Schema(name = "SnapErrorResponse")
-    @lombok.Data
-    @lombok.AllArgsConstructor
     private static class SnapErrorResponse {
         public String responseCode;
         public String responseMessage;
+
+        public SnapErrorResponse(String responseCode, String responseMessage) {
+            this.responseCode = responseCode;
+            this.responseMessage = responseMessage;
+        }
+
+        public String getResponseCode() { return responseCode; }
+        public void setResponseCode(String responseCode) { this.responseCode = responseCode; }
+        public String getResponseMessage() { return responseMessage; }
+        public void setResponseMessage(String responseMessage) { this.responseMessage = responseMessage; }
     }
 }

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.api.common.webhook.WebhookHandler;
 import id.payu.api.common.webhook.WebhookValidationException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -47,13 +47,18 @@ import java.time.Instant;
  * @see WebhookHandler
  * @since 1.0.0
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class PaymentWebhookHandler implements WebhookHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentWebhookHandler.class);
 
     private final ObjectMapper objectMapper;
     private final PaymentNotificationService notificationService;
+
+    public PaymentWebhookHandler(ObjectMapper objectMapper, PaymentNotificationService notificationService) {
+        this.objectMapper = objectMapper;
+        this.notificationService = notificationService;
+    }
 
     private static final String EVENT_COMPLETED = "payment.completed";
     private static final String EVENT_FAILED = "payment.failed";

@@ -8,9 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -18,9 +15,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "partner_certificates")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class PartnerCertificate {
 
     @Id
@@ -61,7 +55,9 @@ public class PartnerCertificate {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-    
+
+    public PartnerCertificate() {}
+
     public PartnerCertificate(Partner partner, String certificatePem, String privateKeyPem,
                                String publicKeyFingerprint, String certificateType,
                                String keyAlgorithm, int keySize,
@@ -80,6 +76,37 @@ public class PartnerCertificate {
         this.subject = subject;
         this.active = true;
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Partner getPartner() { return partner; }
+    public void setPartner(Partner partner) { this.partner = partner; }
+    public String getCertificatePem() { return certificatePem; }
+    public void setCertificatePem(String certificatePem) { this.certificatePem = certificatePem; }
+    public String getPrivateKeyPem() { return privateKeyPem; }
+    public void setPrivateKeyPem(String privateKeyPem) { this.privateKeyPem = privateKeyPem; }
+    public String getPublicKeyFingerprint() { return publicKeyFingerprint; }
+    public void setPublicKeyFingerprint(String publicKeyFingerprint) { this.publicKeyFingerprint = publicKeyFingerprint; }
+    public String getCertificateType() { return certificateType; }
+    public void setCertificateType(String certificateType) { this.certificateType = certificateType; }
+    public String getKeyAlgorithm() { return keyAlgorithm; }
+    public void setKeyAlgorithm(String keyAlgorithm) { this.keyAlgorithm = keyAlgorithm; }
+    public int getKeySize() { return keySize; }
+    public void setKeySize(int keySize) { this.keySize = keySize; }
+    public LocalDateTime getValidFrom() { return validFrom; }
+    public void setValidFrom(LocalDateTime validFrom) { this.validFrom = validFrom; }
+    public LocalDateTime getValidTo() { return validTo; }
+    public void setValidTo(LocalDateTime validTo) { this.validTo = validTo; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+    public String getIssuer() { return issuer; }
+    public void setIssuer(String issuer) { this.issuer = issuer; }
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(validTo);

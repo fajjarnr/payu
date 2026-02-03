@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
@@ -30,11 +29,14 @@ import java.util.concurrent.CompletableFuture;
  */
 @RestController
 @RequestMapping("/api/v1/investments")
-@RequiredArgsConstructor
 @Tag(name = "Investment", description = "Investment management APIs for deposits, mutual funds, and gold")
 public class InvestmentController extends BaseController {
 
     private final InvestmentApplicationService investmentApplicationService;
+
+    public InvestmentController(InvestmentApplicationService investmentApplicationService) {
+        this.investmentApplicationService = investmentApplicationService;
+    }
 
     @PostMapping("/accounts")
     @Operation(summary = "Create investment account", description = "Creates a new investment account for a user")
@@ -49,10 +51,10 @@ public class InvestmentController extends BaseController {
 
     @PostMapping("/deposits")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = Audited.Operation.OTHER,
             entityType = "Deposit",
             maskData = true,
-            level = Audited.AuditLevel.INFO
+            level = AuditLevel.INFO
     )
     @Idempotent(required = true)
     @Operation(summary = "Buy deposit", description = "Purchases a time deposit product")
@@ -71,10 +73,10 @@ public class InvestmentController extends BaseController {
 
     @PostMapping("/mutual-funds")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = Audited.Operation.OTHER,
             entityType = "InvestmentTransaction",
             maskData = true,
-            level = Audited.AuditLevel.INFO
+            level = AuditLevel.INFO
     )
     @Idempotent(required = true)
     @Operation(summary = "Buy mutual fund", description = "Purchases a mutual fund product")
@@ -93,10 +95,10 @@ public class InvestmentController extends BaseController {
 
     @PostMapping("/gold")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = Audited.Operation.OTHER,
             entityType = "Gold",
             maskData = true,
-            level = Audited.AuditLevel.INFO
+            level = AuditLevel.INFO
     )
     @Idempotent(required = true)
     @Operation(summary = "Buy gold", description = "Purchases gold investment")
@@ -112,10 +114,10 @@ public class InvestmentController extends BaseController {
 
     @PostMapping("/sell")
     @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.OTHER,
+            operation = Audited.Operation.OTHER,
             entityType = "InvestmentTransaction",
             maskData = true,
-            level = Audited.AuditLevel.INFO
+            level = AuditLevel.INFO
     )
     @Idempotent(required = true)
     @Operation(summary = "Sell investment", description = "Sells an existing investment")
