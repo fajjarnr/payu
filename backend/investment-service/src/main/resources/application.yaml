@@ -77,7 +77,7 @@ management:
 
 services:
   wallet:
-    url: ${WALLET_SERVICE_URL:http://wallet-service:8084}
+    url: ${WALLET_SERVICE_URL:http://wallet-service:8080}
 
 logging:
   pattern:

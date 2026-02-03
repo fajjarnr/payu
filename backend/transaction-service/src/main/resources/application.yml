@@ -8,8 +8,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
   datasource:
     # Primary datasource for write operations
     primary:
@@ -72,7 +72,7 @@ spring:
     locations: classpath:db/migration
 services:
   wallet:
-    url: http://localhost:8084
+    url: http://localhost:8080
   bifast:
     url: http://localhost:9000
   qris:

@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8080
   shutdown: graceful
 spring:
   application:
@@ -24,7 +24,7 @@ spring:
         jwt:
           # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks
           # This mitigates the "none" algorithm attack and ensures asymmetric encryption
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
           jws-algorithm: RS256
 management:
   endpoints:

@@ -72,9 +72,9 @@ statement:
 # Service URLs
 services:
   wallet:
-    url: ${SERVICES_WALLET_URL:http://wallet-service:8004}
+    url: ${SERVICES_WALLET_URL:http://wallet-service:8080}
   transaction:
-    url: ${SERVICES_TRANSACTION_URL:http://transaction-service:8003}
+    url: ${SERVICES_TRANSACTION_URL:http://transaction-service:8080}
 
 # OpenTelemetry Configuration
 management:
@@ -107,5 +107,5 @@ logging:
 
 # Server Configuration
 server:
-  port: 8015
+  port: 8080
   shutdown: graceful

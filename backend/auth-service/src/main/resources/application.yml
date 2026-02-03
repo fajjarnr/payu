@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8002}
+  port: ${PORT:8080}
   shutdown: graceful
 
 spring:
@@ -11,8 +11,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/payu/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_auth}
     username: ${DATABASE_USERNAME:payu}

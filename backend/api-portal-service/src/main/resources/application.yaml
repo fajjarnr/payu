@@ -3,7 +3,7 @@ quarkus:
     name: api-portal-service
     version: 1.0.0
   http:
-    port: 8099
+    port: 8080
   smallrye-openapi:
     info-title: PayU API Portal
     info-version: 1.0.0
@@ -25,71 +25,71 @@ portal:
   services:
     account-service:
       name: Account Service
-      url: http://localhost:8001
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     auth-service:
       name: Auth Service
-      url: http://localhost:8002
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     transaction-service:
       name: Transaction Service
-      url: http://localhost:8003
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     wallet-service:
       name: Wallet Service
-      url: http://localhost:8004
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     billing-service:
       name: Billing Service
-      url: http://localhost:8005
+      url: http://localhost:8080
       openapi-path: /q/openapi
     notification-service:
       name: Notification Service
-      url: http://localhost:8006
+      url: http://localhost:8080
       openapi-path: /q/openapi
     kyc-service:
       name: KYC Service
-      url: http://localhost:8007
+      url: http://localhost:8080
       openapi-path: /openapi.json
     analytics-service:
       name: Analytics Service
-      url: http://localhost:8008
+      url: http://localhost:8080
       openapi-path: /openapi.json
     investment-service:
       name: Investment Service
-      url: http://localhost:8009
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     lending-service:
       name: Lending Service
-      url: http://localhost:8010
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     backoffice-service:
       name: Backoffice Service
-      url: http://localhost:8011
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     partner-service:
       name: Partner Service
-      url: http://localhost:8012
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     promotion-service:
       name: Promotion Service
-      url: http://localhost:8013
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     support-service:
       name: Support Service
-      url: http://localhost:8014
+      url: http://localhost:8080
       openapi-path: /q/openapi
     statement-service:
       name: Statement Service
-      url: http://localhost:8015
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     fx-service:
       name: FX Service
-      url: http://localhost:8086
+      url: http://localhost:8080
       openapi-path: /fx-api/v3/api-docs
     cms-service:
       name: CMS Service
-      url: http://localhost:8082
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     ab-testing-service:
       name: AB Testing Service
@@ -101,11 +101,11 @@ portal:
       openapi-path: /q/openapi
     compliance-service:
       name: Compliance Service
-      url: http://localhost:8087
+      url: http://localhost:8080
       openapi-path: /v3/api-docs
     api-portal-service:
       name: API Portal Service
-      url: http://localhost:8099
+      url: http://localhost:8080
       openapi-path: /q/openapi
   cache:
     ttl: 5m

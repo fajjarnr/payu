@@ -9,14 +9,14 @@ quarkus:
   # OIDC Configuration (Red Hat SSO / Keycloak)
   oidc:
     enabled: ${OIDC_ENABLED:false}
-    auth-server-url: ${OIDC_AUTH_SERVER_URL:http://localhost:8180/realms/payu}
+    auth-server-url: ${OIDC_AUTH_SERVER_URL:http://localhost:8080/realms/payu}
     client-id: ${OIDC_CLIENT_ID:gateway-service}
     credentials:
       secret: ${OIDC_CLIENT_SECRET:secret} # pragma: allowlist secret
     tls:
       verification: none # pragma: allowlist secret
     token:
-      issuer: ${OIDC_ISSUER:http://localhost:8180/realms/payu}
+      issuer: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
     # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks
     # This mitigates the "none" algorithm attack and ensures asymmetric encryption
     jws-algorithm: RS256
@@ -72,49 +72,49 @@ gateway:
   # Backend Services
   services:
     account-service:
-      url: ${ACCOUNT_SERVICE_URL:http://account-service:8001}
+      url: ${ACCOUNT_SERVICE_URL:http://account-service:8080}
       timeout: 30s
     auth-service:
-      url: ${AUTH_SERVICE_URL:http://auth-service:8002}
+      url: ${AUTH_SERVICE_URL:http://auth-service:8080}
       timeout: 10s
     transaction-service:
-      url: ${TRANSACTION_SERVICE_URL:http://transaction-service:8003}
+      url: ${TRANSACTION_SERVICE_URL:http://transaction-service:8080}
       timeout: 30s
     wallet-service:
-      url: ${WALLET_SERVICE_URL:http://wallet-service:8004}
+      url: ${WALLET_SERVICE_URL:http://wallet-service:8080}
       timeout: 15s
     billing-service:
       url: ${BILLING_SERVICE_URL:http://billing-service:8080}
       timeout: 30s
     notification-service:
-      url: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
+      url: ${NOTIFICATION_SERVICE_URL:http://localhost:8080}
       timeout: 10s
     kyc-service:
-      url: ${KYC_SERVICE_URL:http://localhost:8087}
+      url: ${KYC_SERVICE_URL:http://localhost:8080}
       timeout: 60s
     analytics-service:
-      url: ${ANALYTICS_SERVICE_URL:http://localhost:8088}
+      url: ${ANALYTICS_SERVICE_URL:http://localhost:8080}
       timeout: 30s
     partner-service:
-      url: ${PARTNER_SERVICE_URL:http://localhost:8089}
+      url: ${PARTNER_SERVICE_URL:http://localhost:8080}
       timeout: 30s
     promotion-service:
-      url: ${PROMOTION_SERVICE_URL:http://localhost:8090}
+      url: ${PROMOTION_SERVICE_URL:http://localhost:8080}
       timeout: 30s
     lending-service:
-      url: ${LENDING_SERVICE_URL:http://localhost:8091}
+      url: ${LENDING_SERVICE_URL:http://localhost:8080}
       timeout: 30s
     investment-service:
-      url: ${INVESTMENT_SERVICE_URL:http://localhost:8092}
+      url: ${INVESTMENT_SERVICE_URL:http://localhost:8080}
       timeout: 30s
     compliance-service:
-      url: ${COMPLIANCE_SERVICE_URL:http://localhost:8093}
+      url: ${COMPLIANCE_SERVICE_URL:http://localhost:8080}
       timeout: 30s
     backoffice-service:
-      url: ${BACKOFFICE_SERVICE_URL:http://localhost:8094}
+      url: ${BACKOFFICE_SERVICE_URL:http://localhost:8080}
       timeout: 30s
     support-service:
-      url: ${SUPPORT_SERVICE_URL:http://localhost:8095}
+      url: ${SUPPORT_SERVICE_URL:http://localhost:8080}
       timeout: 30s
   # Simulators
   simulators:
@@ -130,7 +130,7 @@ gateway:
   # CORS Configuration (strict mode)
   cors:
     enabled: true
-    allowed-origins: https://payu.id,http://localhost:3000,http://localhost:8081
+    allowed-origins: https://payu.id,http://localhost:3000,http://localhost:8080
     allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
     allowed-headers: Content-Type,Authorization,X-Request-Id,X-Correlation-Id,X-Client-Id
     exposed-headers: X-Request-Id,X-Correlation-Id
