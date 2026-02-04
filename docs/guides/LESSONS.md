@@ -469,3 +469,69 @@
   ```
 
 * **Note**: The `--with-deps` flag installs system-level dependencies (like libraries for Chromium, Firefox, WebKit) which are required for headless browser operation in Linux environments.
+
+### 11. Standalone Quarkus Service Dockerfile Pattern (Feb 4, 2026)
+
+* **The Problem**: Quarkus services built with `-pl :service-name -am` flag fail with "no such file or directory" when the service is a standalone module (not part of a multi-module parent POM structure).
+* **Root Cause**: The `-pl` flag is designed for multi-module Maven projects where you need to specify which module to build. Standalone services should build the current directory without the `-pl` flag.
+* **The Fix**: Remove the `-pl :service-name -am` flags and fix COPY paths:
+
+  ```dockerfile
+  # WRONG (for standalone services):
+  RUN mvn package -DskipTests -Dquarkus.package.jar.type=fast-jar -pl :api-portal-service -am
+  COPY --from=build --chown=185 /build/api-portal-service/target/quarkus-app/lib/ /deployments/lib/
+  
+  # CORRECT:
+  RUN mvn package -DskipTests -Dquarkus.package.jar.type=fast-jar
+  COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
+  ```
+
+* **Services Affected**: api-portal-service, gateway-service
+
+### 12. Spring Boot Service with Pre-built JAR Pattern (Feb 4, 2026)
+
+* **The Problem**: Multi-module Maven build inside Docker fails when the parent POM is not accessible from the build context (subdirectory build).
+* **Root Cause**: Dockerfile with `context: ./backend/service-name` cannot access `../pom.xml` for multi-module builds.
+* **The Fix**: Build the JAR locally first, then use a simplified Dockerfile:
+
+  ```bash
+  # Step 1: Build JAR locally
+  mvn -f backend/service-name/pom.xml clean package -DskipTests
+  cp target/service-name-*.jar target/app.jar
+  
+  # Step 2: Use simplified Dockerfile
+  FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
+  COPY target/app.jar /deployments/app.jar
+  ```
+
+* **Services Affected**: lending-service (and any service with complex multi-module dependencies)
+
+### 13. PostgreSQL Password in Container Environment (Feb 4, 2026)
+
+* **The Problem**: Spring Boot services fail with "FATAL: password authentication failed for user 'payu'" when connecting to PostgreSQL, even though the correct password is configured.
+* **Root Cause**: The running PostgreSQL container was created with a different password than what's configured in `docker-compose.yml`. The environment variable `POSTGRES_PASSWORD` was set when the container was first created, and changing it in `docker-compose.yml` doesn't affect running containers.
+* **The Fix**: Either:
+  1. Recreate the PostgreSQL container with the correct password, OR
+  2. Use the actual password from the running container when connecting services
+  3. Check the actual password: `podman inspect payu-postgres | grep POSTGRES_PASSWORD`
+
+* **Lesson**: PostgreSQL password is set at container creation time. Changing `docker-compose.yml` doesn't update running containers.
+
+### 14. Context Path in Healthcheck URLs (Feb 4, 2026)
+
+* **The Problem**: Healthcheck fails with 404 even though the service is running correctly.
+* **Root Cause**: Services with `server.servlet.context-path` (like `/compliance-service`) require the context path in healthcheck URLs.
+* **The Fix**: Include the context path in healthcheck configuration:
+
+  ```yaml
+  # compliance-service has context-path: /compliance-service
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/compliance-service/actuator/health/liveness"]
+  
+  # partner-service has no context-path (uses root)
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+  ```
+
+* **Services Affected**: compliance-service, any service with custom context-path
+
