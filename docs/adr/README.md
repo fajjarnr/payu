@@ -12,9 +12,9 @@ This directory contains the historical record of architectural decisions made fo
 ## 🚀 How to Create a New ADR
 
 1.  Copy `0001-template.md` to a new file: `XXXX-my-decision-title.md`. (Increment XXXX).
-2.  Fill out the template following the guidelines in `@docs-engineer`.
+2.  Fill out the template following the guidelines in `@principal-architect`.
 3.  Submit a PR and assign relevant engineers for review.
 4.  Once merged, update this `README.md` index.
 
 ---
-*Reference: PayU Agent Skills Guide -> @docs-engineer*
+*Reference: PayU Agent Skills Guide -> @principal-architect*

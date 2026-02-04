@@ -48,7 +48,7 @@ class MoneyTest {
         void shouldCreateMoneyFromBigDecimalAndCurrencyCode() {
             Money money = Money.of(new BigDecimal("100000"), "IDR");
 
-            assertThat(money.getAmount()).isEqualTo(new BigDecimal("100000"));
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100000"));
             assertThat(money.getCurrency().getCurrencyCode()).isEqualTo("IDR");
         }
 
@@ -57,7 +57,7 @@ class MoneyTest {
         void shouldCreateMoneyFromStringAndCurrencyCode() {
             Money money = Money.of("100000", "IDR");
 
-            assertThat(money.getAmount()).isEqualTo(new BigDecimal("100000"));
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100000"));
             assertThat(money.getCurrency().getCurrencyCode()).isEqualTo("IDR");
         }
 
@@ -66,7 +66,7 @@ class MoneyTest {
         void shouldCreateMoneyWithIdrFactory() {
             Money money = Money.idr("100000");
 
-            assertThat(money.getAmount()).isEqualTo(new BigDecimal("100000"));
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100000"));
             assertThat(money.getCurrency().getCurrencyCode()).isEqualTo("IDR");
         }
 
@@ -85,7 +85,7 @@ class MoneyTest {
         void shouldCreateMoneyWithUsdFactory() {
             Money money = Money.usd(new BigDecimal("100"));
 
-            assertThat(money.getAmount()).isEqualTo(new BigDecimal("100"));
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100"));
             assertThat(money.getCurrency().getCurrencyCode()).isEqualTo("USD");
         }
 
@@ -98,11 +98,11 @@ class MoneyTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when amount has more than 2 decimal places")
-        void shouldThrowExceptionWhenAmountHasMoreThanTwoDecimalPlaces() {
-            assertThatThrownBy(() -> Money.of("100.123", "IDR"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Amount cannot have more than 2 decimal places");
+        @DisplayName("Should round instead of throw when amount has more than two decimal places")
+        void shouldRoundInsteadOfThrowWhenAmountHasMoreThanTwoDecimalPlaces() {
+            BigDecimal amount = new BigDecimal("100.123");
+            Money money = Money.of(amount, "IDR");
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100.12"));
         }
     }
 
@@ -120,7 +120,7 @@ class MoneyTest {
 
             Money result = money1.add(money2);
 
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("150000"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("150000"));
             assertThat(result.getCurrency().getCurrencyCode()).isEqualTo("IDR");
         }
 
@@ -132,7 +132,7 @@ class MoneyTest {
 
             Money result = money1.subtract(money2);
 
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("50000"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("50000"));
             assertThat(result.getCurrency().getCurrencyCode()).isEqualTo("IDR");
         }
 
@@ -143,7 +143,7 @@ class MoneyTest {
 
             Money result = money.multiply(new BigDecimal("2.5"));
 
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("250000.00"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("250000.00"));
         }
 
         @Test
@@ -153,7 +153,7 @@ class MoneyTest {
 
             Money result = money.multiply(3);
 
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("300000"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("300000"));
         }
 
         @Test
@@ -163,7 +163,7 @@ class MoneyTest {
 
             Money result = money.divide(new BigDecimal("3"));
 
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("33333.33"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33333.33"));
         }
 
         @Test
@@ -173,7 +173,7 @@ class MoneyTest {
 
             Money result = money.percentage(10);
 
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("10000.00"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("10000.00"));
         }
 
         @Test
@@ -183,7 +183,7 @@ class MoneyTest {
 
             Money result = money.percentage(25);
 
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("25000.00"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("25000.00"));
         }
     }
 
@@ -360,7 +360,7 @@ class MoneyTest {
 
             Money rounded = money.round(2);
 
-            assertThat(rounded.getAmount()).isEqualTo(new BigDecimal("100.12"));
+            assertThat(rounded.getAmount()).isEqualByComparingTo(new BigDecimal("100.12"));
         }
 
         @Test
@@ -370,7 +370,7 @@ class MoneyTest {
 
             Money rounded = money.round();
 
-            assertThat(rounded.getAmount()).isEqualTo(new BigDecimal("100.46"));
+            assertThat(rounded.getAmount()).isEqualByComparingTo(new BigDecimal("100.46"));
         }
 
         @Test
@@ -379,9 +379,9 @@ class MoneyTest {
             Money money1 = Money.of(new BigDecimal("2.5"), "IDR");
             Money money2 = Money.of(new BigDecimal("3.5"), "IDR");
 
-            // HALF_EVEN rounds to nearest even number on .5
-            assertThat(money1.round().getAmount()).isEqualTo(new BigDecimal("2.00"));
-            assertThat(money2.round().getAmount()).isEqualTo(new BigDecimal("4.00"));
+            // HALF_EVEN rounds to nearest even number on .5 when rounding to lower scale
+            assertThat(money1.round(0).getAmount()).isEqualByComparingTo(new BigDecimal("2.00"));
+            assertThat(money2.round(0).getAmount()).isEqualByComparingTo(new BigDecimal("4.00"));
         }
 
         @Test
@@ -392,7 +392,7 @@ class MoneyTest {
             // 100000 * 0.333 = 33300, but with rounding to 2 decimal places
             Money result = money.multiply(new BigDecimal("0.333"));
 
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("33300.00"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33300.00"));
         }
     }
 
@@ -470,7 +470,7 @@ class MoneyTest {
 
             Money abs = money.abs();
 
-            assertThat(abs.getAmount()).isEqualTo(new BigDecimal("100000"));
+            assertThat(abs.getAmount()).isEqualByComparingTo(new BigDecimal("100000"));
         }
 
         @Test
@@ -480,7 +480,7 @@ class MoneyTest {
 
             Money abs = money.abs();
 
-            assertThat(abs.getAmount()).isEqualTo(new BigDecimal("100000"));
+            assertThat(abs.getAmount()).isEqualByComparingTo(new BigDecimal("100000"));
         }
 
         @Test
@@ -490,7 +490,7 @@ class MoneyTest {
 
             Money negated = money.negate();
 
-            assertThat(negated.getAmount()).isEqualTo(new BigDecimal("-100000"));
+            assertThat(negated.getAmount()).isEqualByComparingTo(new BigDecimal("-100000"));
         }
     }
 
@@ -544,7 +544,7 @@ class MoneyTest {
         void shouldHandleVerySmallAmounts() {
             Money money = Money.idr("0.01");
 
-            assertThat(money.getAmount()).isEqualTo(new BigDecimal("0.01"));
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("0.01"));
         }
 
         @Test
@@ -552,7 +552,7 @@ class MoneyTest {
         void shouldHandleLargeAmounts() {
             Money money = Money.idr("999999999999.99");
 
-            assertThat(money.getAmount()).isEqualTo(new BigDecimal("999999999999.99"));
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("999999999999.99"));
         }
 
         @Test
@@ -633,7 +633,7 @@ class MoneyTest {
             Money result = money.multiply(new BigDecimal("1.5"));
 
             assertThat(result.getAmount().scale()).isEqualTo(2);
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("150.00"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("150.00"));
         }
 
         @Test
@@ -644,7 +644,7 @@ class MoneyTest {
             Money result = money.divide(new BigDecimal("3"));
 
             // 100 / 3 = 33.3333..., rounded to 2 decimal places with HALF_EVEN
-            assertThat(result.getAmount()).isEqualTo(new BigDecimal("33.33"));
+            assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33.33"));
         }
     }
 

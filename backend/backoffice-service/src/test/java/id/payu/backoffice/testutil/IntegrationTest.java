@@ -19,8 +19,8 @@ import java.lang.annotation.Target;
  * <pre>
  * {@code
  * @IntegrationTest
- * @QuarkusTest
- * @QuarkusTestResource(PostgreSQLResourceTestLifecycleManager.class)
+ * @SpringBootTest
+ * @ActiveProfiles("integrationtest")
  * class MyRepositoryIntegrationTest {
  *     // Integration test methods
  * }

@@ -28,7 +28,7 @@ Improve E2E test pass rate from 71% to 95%+ by fixing failing tests in core, fin
 
 ### Files Modified
 
-1. **`/home/ubuntu/payu/frontend/web-app/e2e/login-flow.spec.ts`**
+1. **`frontend/web-app/e2e/login-flow.spec.ts`**
    - Fixed placeholder text: `Username atau ID Akun` → `username123`
    - Fixed placeholder text: `••••••••••••` → `••••••••`
    - Fixed loading text: `Memvalidasi Akun...` → `Masuk...`
@@ -36,7 +36,7 @@ Improve E2E test pass rate from 71% to 95%+ by fixing failing tests in core, fin
    - Updated all text expectations to match current i18n translations
    - Removed failing intentional test
 
-2. **`/home/ubuntu/payu/frontend/web-app/e2e/onboarding-flow.spec.ts`**
+2. **`frontend/web-app/e2e/onboarding-flow.spec.ts`**
    - Fixed button text: `Mulai Proses Verifikasi` → `Lanjut ke Profil Data`
    - Fixed placeholders: `3200...` → `16 digit angka...`
    - Fixed placeholders: `NAMA LENGKAP ANDA` → `Sesuai KTP`
@@ -48,29 +48,29 @@ Improve E2E test pass rate from 71% to 95%+ by fixing failing tests in core, fin
    - Fixed strict mode violations with `.first()` selectors
    - Increased wait timeout for success step
 
-3. **`/home/ubuntu/payu/frontend/web-app/e2e/transfer-flow.spec.ts`**
+3. **`frontend/web-app/e2e/transfer-flow.spec.ts`**
    - Complete rewrite to match current UI implementation
    - Fixed all transfer type selectors
    - Fixed schedule option selectors
    - Added proper waits for UI updates
    - Organized into logical test suites
 
-4. **`/home/ubuntu/payu/frontend/web-app/e2e/qris-flow.spec.ts`**
+4. **`frontend/web-app/e2e/qris-flow.spec.ts`**
    - Complete rewrite to match current UI implementation
    - Fixed all text expectations
    - Removed tests for non-existent elements
    - Organized into logical test suites
 
-5. **`/home/ubuntu/payu/frontend/web-app/e2e/kyc-flow.spec.ts`**
+5. **`frontend/web-app/e2e/kyc-flow.spec.ts`**
    - Complete rewrite to match current UI implementation
    - Fixed all text expectations to use i18n translations
    - Fixed step navigation tests
 
-6. **`/home/ubuntu/payu/frontend/web-app/src/hooks/useFx.ts`**
+6. **`frontend/web-app/src/hooks/useFx.ts`**
    - Fixed duplicate export name: `useFxConversion` → `useFxConversionDetail`
    - Resolved compilation error blocking web server startup
 
-7. **`/home/ubuntu/payu/frontend/web-app/playwright.config.ts`**
+7. **`frontend/web-app/playwright.config.ts`**
    - Changed `fullyParallel: false` for better stability
    - Increased `retries` to 1 for local development
    - Set `workers: 1` for stability

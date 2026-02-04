@@ -97,7 +97,7 @@ class StatementServiceTest {
 
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(testStatementId);
-            assertThat(result.getUserId()).isEqualTo(testUserId);
+            assertThat(result.getCustomerId()).isEqualTo(testUserId.toString());
             assertThat(result.getStatus()).isEqualTo(Statement.StatementStatus.COMPLETED);
             verify(statementRepository).save(any(Statement.class));
         }

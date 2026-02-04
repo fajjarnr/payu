@@ -149,4 +149,4 @@ spring:
 
 ---
 
-*Created via @docs-engineer*
+*Created via @principal-architect*

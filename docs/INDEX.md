@@ -4,7 +4,7 @@
 
 ## 📚 Documentation Structure
 
-| Directory | Purpose | Files |
+| Path | Purpose | Files |
 |-----------|---------|-------|
 | `architecture/` | Technical design & C4 diagrams | ARCHITECTURE.md, SERVICE_CATALOG.md, EVENT_CATALOG.md, CICD-MONITORING-GUIDE.md |
 | `product/` | Product requirements & features | PRD.md |
@@ -17,6 +17,7 @@
 | `reports/` | Test reports | QA_TEST_REPORT.md |
 | `roadmap/` | Project roadmap & todos | TODOS.md |
 | `adr/` | Architecture decision records | 0000-0007 (ADR index) |
+| `test-improvements.md` | E2E test fixes summary | test-improvements.md |
 
 ---
 
@@ -29,7 +30,7 @@
 - **[API_STANDARDS.md](api/API_STANDARDS.md)** - REST API standards and conventions
 - **[CONTRIBUTING.md](guides/CONTRIBUTING.md)** - Git workflow, commit conventions, PR process
 - **[ONBOARDING.md](guides/ONBOARDING.md)** - Developer onboarding guide
-- **[GEMINI.md](guides/GEMINI.md)** - AI Assistant guidelines (CLAUDE.md)
+- **[GEMINI.md](guides/GEMINI.md)** - AI Assistant guidelines (mirrored in `CLAUDE.md`)
 - **[QA_STRATEGY.md](qa/QA_STRATEGY.md)** - Testing standards, TDD workflow, coverage thresholds
 
 ### For Product Managers
@@ -54,6 +55,7 @@
 - **[QA_STRATEGY.md](qa/QA_STRATEGY.md)** - Testing philosophy, test pyramid, patterns
 - **[JACOCO_SETUP.md](qa/JACOCO_SETUP.md)** - Code coverage setup
 - **[QA_TEST_REPORT.md](reports/QA_TEST_REPORT.md)** - Latest test execution reports
+- **[test-improvements.md](test-improvements.md)** - E2E fixes summary and remaining work
 
 ### For AI/ML Engineers
 - **[AGENT_SKILLS_GUIDE.md](guides/AGENT_SKILLS_GUIDE.md)** - AI Skills & Agents catalog
@@ -100,6 +102,8 @@ docs/
 │
 ├── roadmap/
 │   └── TODOS.md                     # Project roadmap & task tracking
+│
+├── test-improvements.md             # E2E test fixes summary
 │
 └── adr/
     ├── README.md                    # ADR index
@@ -154,7 +158,7 @@ docs/
 
 ### Review Process
 1. Create/Edit documentation
-2. Run `@docs-engineer` skill for review
+2. Run `@dx-engineer` skill for review (or `@principal-architect` for architecture docs)
 3. Submit PR for review
 4. Update INDEX.md if adding new docs
 
@@ -169,4 +173,4 @@ docs/
 
 ---
 
-_Last Updated: January 30, 2026_
+_Last Updated: February 4, 2026_

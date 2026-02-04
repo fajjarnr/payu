@@ -22,8 +22,7 @@ quarkus:
     jws-algorithm: RS256
   # Redis Configuration (for rate limiting & caching)
   redis:
-    hosts: ${REDIS_URL:redis://localhost:6379}
-    password: ${REDIS_PASSWORD:}
+    hosts: ${QUARKUS_REDIS_HOSTS:redis://redis:6379}
     timeout: 5s
   # Health & Metrics
   smallrye-health:
@@ -69,6 +68,10 @@ quarkus:
       json: false
 # Gateway Configuration
 gateway:
+  # Authorization Configuration
+  authorization:
+    enabled: true
+    jwt-secret: ${JWT_SECRET:dGVzdC1qd3Qtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC0xMjM0NTY3ODkw}
   # Backend Services
   services:
     account-service:
@@ -325,7 +328,8 @@ gateway:
     partner-keys:
       # Partner ID: Secret Key (base64 encoded)
       # In production, these should be stored securely (e.g., Vault)
-      partner-1: ${WEBHOOK_PARTNER_1_SECRET:}
+      # For local development, a default test key is provided
+      partner-1: ${WEBHOOK_PARTNER_1_SECRET:dGVzdC1wYXJ0bmVyLWtleS0xMjM0NTY3ODkw}
   # IP Whitelisting
   ip-whitelist:
     enabled: true

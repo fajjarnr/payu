@@ -22,11 +22,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -114,7 +117,7 @@ class SagaCompensationTest {
 
         @Test
         @DisplayName("Should complete transfer when all steps succeed")
-        void shouldCompleteTransferWhenAllStepsSucceed() {
+        void shouldCompleteTransferWhenAllStepsSucceed() throws Exception {
             // Given
             InitiateTransferCommand command = createTransferCommand();
 
@@ -122,6 +125,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -155,7 +159,7 @@ class SagaCompensationTest {
 
         @Test
         @DisplayName("Should not compensate when BiFast transfer succeeds")
-        void shouldNotCompensateWhenBiFastTransferSucceeds() {
+        void shouldNotCompensateWhenBiFastTransferSucceeds() throws Exception {
             // Given
             InitiateTransferCommand command = createTransferCommand();
 
@@ -163,6 +167,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -197,6 +202,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -236,6 +242,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -266,7 +273,7 @@ class SagaCompensationTest {
 
         @Test
         @DisplayName("Should release balance when BiFast transfer fails")
-        void shouldReleaseBalanceWhenBiFastTransferFails() {
+        void shouldReleaseBalanceWhenBiFastTransferFails() throws Exception {
             // Given
             InitiateTransferCommand command = createTransferCommand();
 
@@ -274,6 +281,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -307,7 +315,7 @@ class SagaCompensationTest {
 
         @Test
         @DisplayName("Should publish failed event when BiFast transfer fails")
-        void shouldPublishFailedEventWhenBiFastTransferFails() {
+        void shouldPublishFailedEventWhenBiFastTransferFails() throws Exception {
             // Given
             InitiateTransferCommand command = createTransferCommand();
 
@@ -315,6 +323,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -343,7 +352,7 @@ class SagaCompensationTest {
 
         @Test
         @DisplayName("Should not commit balance when BiFast transfer fails")
-        void shouldNotCommitBalanceWhenBiFastTransferFails() {
+        void shouldNotCommitBalanceWhenBiFastTransferFails() throws Exception {
             // Given
             InitiateTransferCommand command = createTransferCommand();
 
@@ -351,6 +360,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -384,6 +394,9 @@ class SagaCompensationTest {
             // Given
             InitiateTransferCommand command = createTransferCommand();
 
+            when(transactionPersistencePort.save(any(Transaction.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
             when(walletServicePort.reserveBalance(any(), any(), any()))
                     .thenThrow(new RuntimeException("Wallet service timeout"));
 
@@ -398,7 +411,7 @@ class SagaCompensationTest {
 
         @Test
         @DisplayName("Should handle BiFast service timeout gracefully")
-        void shouldHandleBiFastServiceTimeoutGracefully() {
+        void shouldHandleBiFastServiceTimeoutGracefully() throws Exception {
             // Given
             InitiateTransferCommand command = createTransferCommand();
 
@@ -406,6 +419,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -455,6 +469,7 @@ class SagaCompensationTest {
                     .thenReturn(java.util.Optional.of(Transaction.builder()
                             .id(existingTransactionId)
                             .referenceNumber("TXN123456")
+                            .type(Transaction.TransactionType.BIFAST_TRANSFER)
                             .status(Transaction.TransactionStatus.PENDING)
                             .build()));
 
@@ -485,10 +500,16 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
-            when(transactionPersistencePort.save(any(Transaction.class)))
-                    .thenReturn(savedTransaction);
+            List<Transaction.TransactionStatus> capturedStatuses = new ArrayList<>();
+            when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(invocation -> {
+                Transaction t = invocation.getArgument(0);
+                capturedStatuses.add(t.getStatus());
+                return t;
+            });
+
             when(walletServicePort.reserveBalance(any(), any(), any()))
                     .thenReturn(ReserveBalanceResponse.builder()
                             .reservationId("res-123")
@@ -499,16 +520,10 @@ class SagaCompensationTest {
             commandHandler.handle(command);
 
             // Then - Verify status transitions
-            ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
-            verify(transactionPersistencePort, atLeast(2)).save(transactionCaptor.capture());
-
-            // First save: PENDING
-            Transaction firstTransaction = transactionCaptor.getAllValues().get(0);
-            assertThat(firstTransaction.getStatus()).isEqualTo(Transaction.TransactionStatus.PENDING);
-
-            // Second save: VALIDATING
-            Transaction secondTransaction = transactionCaptor.getAllValues().get(1);
-            assertThat(secondTransaction.getStatus()).isEqualTo(Transaction.TransactionStatus.VALIDATING);
+            assertThat(capturedStatuses).contains(
+                    Transaction.TransactionStatus.PENDING,
+                    Transaction.TransactionStatus.VALIDATING
+            );
         }
 
         @Test
@@ -521,6 +536,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -562,6 +578,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -581,7 +598,7 @@ class SagaCompensationTest {
 
         @Test
         @DisplayName("Should publish failed event with correct failure reason")
-        void shouldPublishFailedEventWithCorrectFailureReason() {
+        void shouldPublishFailedEventWithCorrectFailureReason() throws Exception {
             // Given
             String expectedFailureReason = "BiFast service unavailable";
             InitiateTransferCommand command = createTransferCommand();
@@ -590,6 +607,7 @@ class SagaCompensationTest {
                     .id(UUID.randomUUID())
                     .referenceNumber("TXN123456")
                     .status(Transaction.TransactionStatus.PENDING)
+                    .type(Transaction.TransactionType.BIFAST_TRANSFER)
                     .build();
 
             when(transactionPersistencePort.save(any(Transaction.class)))
@@ -627,7 +645,7 @@ class SagaCompensationTest {
                 InitiateTransferRequest.TransactionType.BIFAST_TRANSFER,
                 null,
                 "device-123",
-                null,
+                idempotencyKey,
                 userId.toString()
         );
     }

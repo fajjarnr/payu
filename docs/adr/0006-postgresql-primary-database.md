@@ -150,4 +150,4 @@ Each service has its own database:
 
 ---
 
-*Created via @docs-engineer*
+*Created via @principal-architect*

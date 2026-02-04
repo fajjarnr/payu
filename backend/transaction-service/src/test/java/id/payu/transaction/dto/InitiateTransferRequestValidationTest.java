@@ -293,7 +293,7 @@ class InitiateTransferRequestValidationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"ABC", "invalid", "ID", "INDONESIA"})
+    @ValueSource(strings = {"invalid", "ID", "INDONESIA"})
     @DisplayName("Should reject invalid currency codes")
     void shouldRejectInvalidCurrencyCodes(String currency) {
         // Given

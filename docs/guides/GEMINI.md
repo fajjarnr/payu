@@ -1,4 +1,4 @@
-# AI_GUIDELINES.md - PayU Digital Banking Platform
+# GEMINI.md - PayU Digital Banking Platform
 
 > AI Assistant Guidelines & Project Context for Gemini, Claude, and other Agents
 
@@ -16,17 +16,26 @@
 | **Type**              | Standalone Digital Banking Platform   |
 | **Architecture**      | Scalable Microservices + Event-Driven |
 | **Primary Languages** | Java 21, Python 3.12, TypeScript      |
-| **Last Updated**      | February 2026                          |
+| **Last Updated**      | February 4, 2026                       |
 
 ## ⚡ Quick Commands (for AI Agents)
 
-| Action             | Command                                     |
-| :----------------- | :------------------------------------------ |
-| **Build Backend**  | `mvn clean package -DskipTests -T 1C`       |
-| **Run Web App**    | `cd frontend/web-app && npm run dev`        |
-| **Run Dev Docs**   | `cd frontend/developer-docs && npm run dev` |
-| **Infrastructure** | `docker-compose up -d`                      |
-| **Check Services** | `oc get pods` or `docker ps`                |
+| Action                       | Command                                                             |
+| :--------------------------- | :------------------------------------------------------------------ |
+| **Build Backend**            | `mvn -f backend/pom.xml clean package -DskipTests -T 1C`            |
+| **Run Web App**              | `cd frontend/web-app && npm run dev`                                |
+| **Run Dev Docs**             | `cd frontend/developer-docs && npm run dev`                         |
+| **Start Local Infra**        | `podman compose up -d` (default) or `docker compose up -d`           |
+| **Run All Tests**            | `make test` or `./scripts/run-all-tests.sh`                         |
+| **Run Single Service Tests** | `./scripts/test-single-service.sh <service-name>`                   |
+| **Check Services**           | `oc get pods` or `podman ps` (or `docker ps`)                        |
+
+## 📌 Fast Entry Points
+
+- `docs/INDEX.md` — Doc map & navigation hub
+- `docs/roadmap/TODOS.md` — Active roadmap and open tasks
+- `backend/SERVICES_STATUS.md` — Current service status summary
+- `backend/FACTORY_IMPLEMENTATION_SUMMARY.md` — Build/implementation summary
 
 ---
 
@@ -83,6 +92,8 @@
 | `resilience-starter` | Circuit Breaker, Retry, Bulkhead (Resilience4j) |
 | `cache-starter`      | Multi-layer caching (Redis + Caffeine)          |
 
+Other shared modules: `api-commons`, `archunit-starter`, `events-starter`, `outbox-starter`, `saga-starter`, `flyway` (see `backend/shared/`).
+
 ---
 
 ## ⚡ Decentralized Orchestration (Swarm Mode)
@@ -93,6 +104,7 @@ Platform PayU didesain untuk dikembangkan menggunakan pola **Decentralized Paral
 1. **Parallel Dispatching**: Tugas Full-stack didelegasikan ke `@styler` (Frontend) dan `@logic-builder` (Backend) secara bersamaan untuk reduksi waktu eksekusi hingga 80%.
 2. **Specialized Handshake**: Setiap Skill (misal: `@core-banking-engineer`) memiliki instruksi eksplisit untuk memanggil spesialis lain (misal: `@tester` atau `@migrator`) jika tugas menyentuh domain mereka.
 3. **Implicit Interconnectivity**: Asisten wajib secara proaktif mendispatch agen pendukung (seperti `@auditor` untuk security atau `@dx-engineer` untuk presentasi) berdasarkan jenis perubahan kode tanpa menunggu perintah manual.
+4. **Collision Guard**: Parallel hanya jika file/service berbeda. Jika menyentuh file yang sama atau shared module, gunakan eksekusi sequential.
 
 ---
 
@@ -152,7 +164,7 @@ payu/
 
 ### Testing Guidelines (TDD)
 
-1. **Unit Tests**: 100% logic coverage menggunakan JUnit 5 & Mockito.
+1. **Unit Tests**: 100% coverage untuk core domain/critical flows; minimum 80–90% untuk non-critical modules (exception harus didokumentasikan).
 2. **ArchUnit**: Pastikan setiap service baru memiliki `ArchitectureTest` untuk menjaga layering.
 3. **Testcontainers**: Gunakan untuk integration tests yang membutuhkan PostgreSQL atau Kafka (jika enviroment memungkinkan).
 
@@ -165,7 +177,7 @@ Untuk menjaga konsistensi UI yang premium:
 1. **Color Palette**: Primary `bank-green` (#10b981), Background `bg-gray-950` (Dark Mode).
 2. **Typography**: Inter (UI) dan Outfit (Headers).
 3. **Aesthetics**: Glassmorphism, smooth gradients, subtle micro-animations.
-4. **A11y**: Pastikan komponen support screen readers dan keyboard navigation (pake `@src/lib/a11y.tsx`).
+4. **A11y**: Pastikan komponen support screen readers dan keyboard navigation (lihat `frontend/web-app/.a11yrc.json`, `frontend/web-app/scripts/a11y-audit.ts`, `frontend/web-app/e2e/a11y-audit.spec.ts`).
 
 ---
 
@@ -188,6 +200,8 @@ AI Assistant **TIDAK BOLEH** mengimplementasikan kode atau konfigurasi untuk are
 - Kubernetes manifests, Helm charts, OpenShift configurations
 - Terraform, Ansible, atau IaC (Infrastructure as Code)
 
+**Default policy**: Jangan mengubah `infrastructure/` atau manifest cluster produksi. Jika user meminta pembelajaran, batasi contoh ke `docs/` atau folder sandbox.
+
 ### Ketika diminta untuk area di atas:
 
 1. Tolak dengan sopan dan jelaskan bahwa ini adalah tanggung jawab tim DevOps/SRE
@@ -198,7 +212,7 @@ AI Assistant **TIDAK BOLEH** mengimplementasikan kode atau konfigurasi untuk are
 
 ## 📚 Learning Allowed (DevOps & Security)
 
-AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
+AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran **hanya** di `docs/` atau sandbox. Jangan ubah `infrastructure/` kecuali diminta eksplisit.
 
 ### CI/CD & Pipelines
 
@@ -240,13 +254,14 @@ AI Assistant **BOLEH** membantu area berikut untuk tujuan pembelajaran:
 | **SSO/Keycloak**           | Realm config, client setup, OIDC        | ✅ Explain & implement |
 | **Network Policies**       | Pod-to-pod security, ingress rules      | ✅ Explain & implement |
 
-> **Note**: Ini adalah lab project, jadi AI dapat membantu implementasi untuk pembelajaran.
+> **Note**: Ini adalah lab project, jadi AI dapat membantu implementasi untuk pembelajaran **tanpa** menyentuh konfigurasi produksi.
 
 ---
 
 ## 🤖 Available AI Skills (17 Skills - v3.0.0)
 
 Skills are categorized by domain to help you choose the right tool for the task. All skills are located in `.agent/skills/` and indexed in `REGISTRY.yaml`.
+Skill-to-agent mapping ada di `.agent/agents/AGENTS-MAP.md`.
 
 > **Consolidation Notes (January 2026)**:
 > - `information-architect` merged into `principal-architect`
@@ -329,7 +344,7 @@ After completing a complex task (Workflow), generate a "Lesson Learned" block in
 
 > [!IMPORTANT]
 > **The Iron Law**: If you haven't completed Phase 1 (Root Cause Investigation), you are NOT allowed to propose or implement fixes.
-> For detailed patterns and case studies, use the **`systematic-debugging` skill** ([SKILL.md](../../.agent/skills/debugging-methodology/SKILL.md)).
+> For detailed patterns and case studies, use the **`debugging-methodology` skill** ([SKILL.md](../../.agent/skills/debugging-methodology/SKILL.md)).
 
 When encountering ANY technical issue (test failure, bug, performance issue):
 
@@ -430,6 +445,10 @@ This section defines the high-performance operational protocol for all AI Agents
 - **Explain Changes**: High-level summary at each step.
 - **Document Results**: Add review section to `docs/roadmap/TODOS.md`.
 - **Capture Lessons**: Update `docs/guides/LESSONS.md` after corrections.
+
+**Fast Path (Small Changes)**:
+- Boleh skip update `docs/roadmap/TODOS.md` dan `docs/guides/LESSONS.md` untuk perubahan kecil (<=2 file, 1 service, tanpa keputusan arsitektural).
+- Tetap berikan rencana singkat + langkah verifikasi di respons.
 
 ### ⚖️ Core Engineering Principles
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.

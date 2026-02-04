@@ -4,13 +4,16 @@ import id.payu.billing.client.WalletClient;
 import id.payu.billing.domain.BillPayment;
 import id.payu.billing.domain.BillerType;
 import id.payu.billing.dto.TopUpRequest;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
+import id.payu.billing.repository.BillPaymentRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.math.BigDecimal;
 
@@ -19,16 +22,36 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@QuarkusTest
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Top-up Service Unit Tests")
 class TopUpServiceTest {
 
-    @Inject
+    @InjectMocks
     PaymentService paymentService;
-
-    @InjectMock
-    @RestClient
+ 
+    @Mock
+    BillPaymentRepository billPaymentRepository;
+ 
+    @Mock
     WalletClient walletClient;
+ 
+    @Mock
+    KafkaTemplate<String, Object> kafkaTemplate;
+
+    @BeforeEach
+    void setup() {
+        lenient().when(billPaymentRepository.save(any(BillPayment.class)))
+                .thenAnswer(invocation -> {
+                    BillPayment p = invocation.getArgument(0);
+                    if (p.getId() == null) {
+                        p.setId(java.util.UUID.randomUUID());
+                    }
+                    if (p.getReferenceNumber() == null) {
+                        p.setReferenceNumber("BILL" + System.currentTimeMillis());
+                    }
+                    return p;
+                });
+    }
 
     @Nested
     @DisplayName("Create Top-up Tests")

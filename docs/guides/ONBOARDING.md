@@ -60,11 +60,11 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 export MAVEN_HOME=/usr/local/opt/maven
 ```
 
-#### Node.js 20+
+#### Node.js 22+
 
 ```bash
 # Verify Node.js
-node -v  # Should show v20.x or higher
+node -v  # Should show v22.x or higher
 npm -v   # Should show 10.x or higher
 
 # If not installed:
@@ -83,12 +83,16 @@ python3 --version  # Should show 3.12.x
 # Ubuntu: sudo apt install python3.12 python3.12-venv
 ```
 
-#### Docker & Docker Compose
+#### Podman (Preferred) / Docker (Fallback)
 
 ```bash
-# Verify Docker
+# Verify Podman
+podman --version
+podman compose version || podman-compose --version
+
+# If using Docker instead
 docker --version
-docker-compose --version
+docker compose version
 
 # Start Docker Desktop if not running
 open -a Docker
@@ -133,17 +137,24 @@ code --install-extension esbenp.prettier-vscode
 
 ## 🔧 Development Environment Setup
 
-### 1. Local Infrastructure (Docker Compose)
+### 1. Local Infrastructure (Compose)
 
 ```bash
-# Start all infrastructure services
-docker-compose up -d
+# Start all infrastructure services (preferred)
+podman compose up -d
+
+# Or with Docker
+docker compose up -d
 
 # Verify services are running
-docker-compose ps
+podman compose ps
 
 # Check logs
-docker-compose logs -f
+podman compose logs -f
+
+# Docker fallback
+docker compose ps
+docker compose logs -f
 ```
 
 Services started:
@@ -276,7 +287,7 @@ java -version  # Expected: openjdk 21.x.x
 mvn -version   # Expected: Apache Maven 3.9.x
 
 # 3. Verify Node.js
-node -v        # Expected: v20.x.x
+node -v        # Expected: v22.x.x
 npm -v         # Expected: 10.x.x
 
 # 4. Verify Python

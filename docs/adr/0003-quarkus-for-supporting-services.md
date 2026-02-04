@@ -127,4 +127,4 @@ CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]
 
 ---
 
-*Created via @docs-engineer*
+*Created via @principal-architect*

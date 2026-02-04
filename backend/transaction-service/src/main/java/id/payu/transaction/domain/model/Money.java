@@ -79,10 +79,6 @@ public class Money implements Comparable<Money> {
         if (amount == null) {
             throw new IllegalArgumentException("Amount cannot be null");
         }
-        if (amount.scale() > 2) {
-            throw new IllegalArgumentException(
-                "Amount cannot have more than 2 decimal places. Scale was: " + amount.scale());
-        }
 
         Currency currency = Currency.getInstance(currencyCode);
         return new Money(amount, currency);
@@ -127,6 +123,16 @@ public class Money implements Comparable<Money> {
      */
     public static Money usd(BigDecimal amount) {
         return new Money(amount, Currency.getInstance("USD"));
+    }
+
+    /**
+     * Creates a Money instance with USD currency from string.
+     *
+     * @param amount the monetary amount as a string
+     * @return a new Money instance in USD
+     */
+    public static Money usd(String amount) {
+        return new Money(new BigDecimal(amount), Currency.getInstance("USD"));
     }
 
     /**

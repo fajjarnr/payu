@@ -5,5 +5,5 @@ Internal management portal for manual KYC review, fraud monitoring, and customer
 
 ## Tech Stack
 - Java 21
-- Quarkus 3.x
+- Spring Boot 3.4
 - Architecture: Layered

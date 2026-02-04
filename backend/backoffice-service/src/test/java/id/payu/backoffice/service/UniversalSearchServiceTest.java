@@ -4,11 +4,15 @@ import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.domain.FraudCase;
 import id.payu.backoffice.domain.KycReview;
 import id.payu.backoffice.dto.UniversalSearchResponse;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import id.payu.backoffice.repository.CustomerCaseRepository;
+import id.payu.backoffice.repository.FraudCaseRepository;
+import id.payu.backoffice.repository.KycReviewRepository;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,12 +20,23 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
-@Disabled("Service tests require Docker/Testcontainers - disabled when Docker not available")
+@SpringBootTest
+@ActiveProfiles("test")
+@Disabled("Service tests require Docker + PostgreSQL environment")
+@Transactional
 class UniversalSearchServiceTest {
 
-    @Inject
-    UniversalSearchService universalSearchService;
+    @Autowired
+    UniversalSearchService searchService;
+
+    @Autowired
+    KycReviewRepository kycReviewRepository;
+
+    @Autowired
+    FraudCaseRepository fraudCaseRepository;
+
+    @Autowired
+    CustomerCaseRepository customerCaseRepository;
 
     @Test
     @Transactional
@@ -38,7 +53,7 @@ class UniversalSearchServiceTest {
         kycReview.phoneNumber = "08123456789";
         kycReview.status = KycReview.KycStatus.PENDING;
         kycReview.createdAt = LocalDateTime.now();
-        kycReview.persist();
+        kycReviewRepository.save(kycReview);
 
         FraudCase fraudCase = new FraudCase();
         fraudCase.userId = uniqueUserId;
@@ -51,9 +66,9 @@ class UniversalSearchServiceTest {
         fraudCase.status = FraudCase.CaseStatus.OPEN;
         fraudCase.description = "Unauthorized transfer detected";
         fraudCase.createdAt = LocalDateTime.now();
-        fraudCase.persist();
+        fraudCaseRepository.save(fraudCase);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueUserId, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueUserId, null, 0, 20);
 
         assertNotNull(response);
         assertEquals(uniqueUserId, response.query());
@@ -83,7 +98,7 @@ class UniversalSearchServiceTest {
         kycReview.phoneNumber = "08198765432";
         kycReview.status = KycReview.KycStatus.PENDING;
         kycReview.createdAt = LocalDateTime.now();
-        kycReview.persist();
+        kycReviewRepository.save(kycReview);
 
         FraudCase fraudCase = new FraudCase();
         fraudCase.userId = "user_" + System.currentTimeMillis();
@@ -96,9 +111,9 @@ class UniversalSearchServiceTest {
         fraudCase.status = FraudCase.CaseStatus.OPEN;
         fraudCase.description = "Suspicious transaction pattern";
         fraudCase.createdAt = LocalDateTime.now();
-        fraudCase.persist();
+        fraudCaseRepository.save(fraudCase);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueAccount, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueAccount, null, 0, 20);
 
         assertNotNull(response);
         assertTrue(response.totalResults() >= 2);
@@ -128,9 +143,9 @@ class UniversalSearchServiceTest {
         kycReview.phoneNumber = "08111111111";
         kycReview.status = KycReview.KycStatus.PENDING;
         kycReview.createdAt = LocalDateTime.now();
-        kycReview.persist();
+        kycReviewRepository.save(kycReview);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueDocumentNumber, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueDocumentNumber, null, 0, 20);
 
         assertNotNull(response);
         assertTrue(response.totalResults() >= 1);
@@ -155,9 +170,9 @@ class UniversalSearchServiceTest {
         kycReview.phoneNumber = "08122222222";
         kycReview.status = KycReview.KycStatus.PENDING;
         kycReview.createdAt = LocalDateTime.now();
-        kycReview.persist();
+        kycReviewRepository.save(kycReview);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueName, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueName, null, 0, 20);
 
         assertNotNull(response);
         assertTrue(response.totalResults() >= 1);
@@ -183,9 +198,9 @@ class UniversalSearchServiceTest {
         fraudCase.status = FraudCase.CaseStatus.OPEN;
         fraudCase.description = "Test fraud case";
         fraudCase.createdAt = LocalDateTime.now();
-        fraudCase.persist();
+        fraudCaseRepository.save(fraudCase);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueFraudType, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueFraudType, null, 0, 20);
 
         assertNotNull(response);
         assertTrue(response.totalResults() >= 1);
@@ -210,9 +225,9 @@ class UniversalSearchServiceTest {
         customerCase.description = "Test case description";
         customerCase.status = CustomerCase.CaseStatus.OPEN;
         customerCase.createdAt = LocalDateTime.now();
-        customerCase.persist();
+        customerCaseRepository.save(customerCase);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueCaseNumber, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueCaseNumber, null, 0, 20);
 
         assertNotNull(response);
         assertTrue(response.totalResults() >= 1);
@@ -237,9 +252,9 @@ class UniversalSearchServiceTest {
         customerCase.description = "Test subject case";
         customerCase.status = CustomerCase.CaseStatus.OPEN;
         customerCase.createdAt = LocalDateTime.now();
-        customerCase.persist();
+        customerCaseRepository.save(customerCase);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueSubject, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueSubject, null, 0, 20);
 
         assertNotNull(response);
         assertTrue(response.totalResults() >= 1);
@@ -264,9 +279,9 @@ class UniversalSearchServiceTest {
         kycReview.phoneNumber = "08133333333";
         kycReview.status = KycReview.KycStatus.PENDING;
         kycReview.createdAt = LocalDateTime.now();
-        kycReview.persist();
+        kycReviewRepository.save(kycReview);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueUserId, "kyc", 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueUserId, "kyc", 0, 20);
 
         assertNotNull(response);
         assertEquals(uniqueUserId, response.query());
@@ -280,8 +295,8 @@ class UniversalSearchServiceTest {
     void testSearchWithPagination() {
         String uniqueQuery = "paginate_" + System.currentTimeMillis();
 
-        UniversalSearchResponse page1 = universalSearchService.search(uniqueQuery, null, 0, 1);
-        UniversalSearchResponse page2 = universalSearchService.search(uniqueQuery, null, 1, 1);
+        UniversalSearchResponse page1 = searchService.search(uniqueQuery, null, 0, 1);
+        UniversalSearchResponse page2 = searchService.search(uniqueQuery, null, 1, 1);
 
         assertNotNull(page1);
         assertNotNull(page2);
@@ -294,7 +309,7 @@ class UniversalSearchServiceTest {
     @Test
     void testSearchNoResults() {
         String nonExistentQuery = "nonexistent_" + System.currentTimeMillis() + "_" + UUID.randomUUID();
-        UniversalSearchResponse response = universalSearchService.search(nonExistentQuery, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(nonExistentQuery, null, 0, 20);
 
         assertNotNull(response);
         assertEquals(0, response.totalResults());
@@ -303,7 +318,7 @@ class UniversalSearchServiceTest {
 
     @Test
     void testSearchEmptyQuery() {
-        UniversalSearchResponse response = universalSearchService.search("", null, 0, 20);
+        UniversalSearchResponse response = searchService.search("", null, 0, 20);
 
         assertNotNull(response);
         assertEquals(0, response.totalResults());
@@ -324,9 +339,9 @@ class UniversalSearchServiceTest {
         kycReview.phoneNumber = "08144444444";
         kycReview.status = KycReview.KycStatus.PENDING;
         kycReview.createdAt = LocalDateTime.now();
-        kycReview.persist();
+        kycReviewRepository.save(kycReview);
 
-        UniversalSearchResponse response = universalSearchService.search(uniqueUserId, null, 0, 20);
+        UniversalSearchResponse response = searchService.search(uniqueUserId, null, 0, 20);
 
         UniversalSearchResponse.SearchResultItem kycItem = response.results().stream()
                 .filter(r -> r.id().equals(kycReview.id))

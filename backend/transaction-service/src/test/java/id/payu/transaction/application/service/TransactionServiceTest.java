@@ -1,9 +1,17 @@
 package id.payu.transaction.application.service;
 
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandHandler;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
+import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommand;
+import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommandHandler;
+import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQuery;
+import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQueryHandler;
+import id.payu.transaction.application.cqrs.query.GetTransactionQuery;
+import id.payu.transaction.application.cqrs.query.GetTransactionQueryHandler;
 import id.payu.transaction.domain.model.Transaction;
-import id.payu.transaction.domain.port.out.*;
-import id.payu.transaction.dto.*;
-import org.junit.jupiter.api.BeforeEach;
+import id.payu.transaction.dto.InitiateTransferRequest;
+import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,112 +20,111 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceTest {
 
     @Mock
-    private TransactionPersistencePort transactionPersistencePort;
+    private InitiateTransferCommandHandler initiateTransferHandler;
     @Mock
-    private WalletServicePort walletServicePort;
+    private ProcessQrisPaymentCommandHandler processQrisPaymentHandler;
     @Mock
-    private BifastServicePort bifastServicePort;
+    private GetTransactionQueryHandler getTransactionHandler;
     @Mock
-    private QrisServicePort qrisServicePort;
-    @Mock
-    private TransactionEventPublisherPort eventPublisherPort;
+    private GetAccountTransactionsQueryHandler getAccountTransactionsQueryHandler;
 
     @InjectMocks
     private TransactionService transactionService;
 
-    private InitiateTransferRequest transferRequest;
-
-    @BeforeEach
-    void setUp() {
-        transferRequest = new InitiateTransferRequest();
-        transferRequest.setSenderAccountId(UUID.randomUUID());
-        transferRequest.setRecipientAccountNumber("1234567890");
-        transferRequest.setAmount(new BigDecimal("100000"));
-        transferRequest.setCurrency("IDR");
-        transferRequest.setDescription("Test Transfer");
-        transferRequest.setType(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER);
-    }
-
     @Test
-    @DisplayName("should initiate transfer successfully")
-    void shouldInitiateTransferSuccessfully() {
+    @DisplayName("should delegate initiateTransfer to handler")
+    void shouldDelegateInitiateTransferToHandler() {
         // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> {
-            Transaction t = invocation.getArgument(0);
-            if (t.getId() == null) t.setId(UUID.randomUUID());
-            return t;
-        });
-
-        given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder()
-                        .reservationId("res-123")
-                        .status("RESERVED")
-                        .build()
-        );
+        InitiateTransferCommand command = mock(InitiateTransferCommand.class);
+        InitiateTransferCommandResult expectedResult = mock(InitiateTransferCommandResult.class);
+        when(initiateTransferHandler.handle(command)).thenReturn(expectedResult);
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(transferRequest);
+        InitiateTransferCommandResult result = transactionService.initiateTransfer(command);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo("VALIDATING");
-        verify(transactionPersistencePort, times(2)).save(any(Transaction.class)); // Saved initially and after validation update
-        verify(eventPublisherPort).publishTransactionInitiated(any(Transaction.class));
-        verify(walletServicePort).reserveBalance(eq(transferRequest.getSenderAccountId()), anyString(), eq(transferRequest.getAmount()));
+        assertThat(result).isEqualTo(expectedResult);
+        verify(initiateTransferHandler).handle(command);
     }
 
     @Test
-    @DisplayName("should fail transfer when balance insufficient")
-    void shouldFailTransferWhenBalanceInsufficient() {
+    @DisplayName("should delegate processQrisPayment to handler")
+    void shouldDelegateProcessQrisPaymentToHandler() {
         // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
-
-        given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder()
-                        .status("FAILED")
-                        .build()
-        );
-
-        // When/Then
-        assertThatThrownBy(() -> transactionService.initiateTransfer(transferRequest))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Insufficient balance");
-
-        verify(eventPublisherPort).publishTransactionFailed(any(Transaction.class), anyString());
-    }
-
-    @Test
-    @DisplayName("should process QRIS payment successfully")
-    void shouldProcessQrisPaymentSuccessfully() {
-        // Given
-        ProcessQrisPaymentRequest request = new ProcessQrisPaymentRequest();
-        request.setQrisCode("ValidQRISCode");
-        request.setAmount(new BigDecimal("50000"));
-
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
-
-        given(qrisServicePort.processPayment(any(QrisPaymentRequest.class))).willReturn(
-                QrisPaymentResponse.builder().status("SUCCESS").build()
-        );
+        ProcessQrisPaymentCommand command = mock(ProcessQrisPaymentCommand.class);
 
         // When
-        transactionService.processQrisPayment(request);
+        transactionService.processQrisPayment(command);
 
         // Then
-        verify(eventPublisherPort).publishTransactionCompleted(any(Transaction.class));
+        verify(processQrisPaymentHandler).handle(command);
+    }
+
+    @Test
+    @DisplayName("should delegate getTransaction to handler")
+    void shouldDelegateGetTransactionToHandler() {
+        // Given
+        GetTransactionQuery query = mock(GetTransactionQuery.class);
+        Transaction expectedTransaction = mock(Transaction.class);
+        when(getTransactionHandler.handle(query)).thenReturn(expectedTransaction);
+
+        // When
+        Transaction result = transactionService.getTransaction(query);
+
+        // Then
+        assertThat(result).isEqualTo(expectedTransaction);
+        verify(getTransactionHandler).handle(query);
+    }
+
+    @Test
+    @DisplayName("should delegate getAccountTransactions to handler")
+    void shouldDelegateGetAccountTransactionsToHandler() {
+        // Given
+        GetAccountTransactionsQuery query = mock(GetAccountTransactionsQuery.class);
+        List<Transaction> expectedList = Collections.emptyList();
+        when(getAccountTransactionsQueryHandler.handle(query)).thenReturn(expectedList);
+
+        // When
+        List<Transaction> result = transactionService.getAccountTransactions(query);
+
+        // Then
+        assertThat(result).isEqualTo(expectedList);
+        verify(getAccountTransactionsQueryHandler).handle(query);
+    }
+
+    @Test
+    @DisplayName("should delegate deprecated initiateTransfer correctly")
+    void shouldDelegateDeprecatedInitiateTransfer() {
+        // Given
+        InitiateTransferRequest request = InitiateTransferRequest.builder()
+                .senderAccountId(UUID.randomUUID())
+                .recipientAccountNumber("1234567890")
+                .amount(new BigDecimal("1000"))
+                .type(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
+                .description("Test")
+                .build();
+        String userId = "user-123";
+        InitiateTransferCommandResult expectedResult = mock(InitiateTransferCommandResult.class);
+        
+        when(initiateTransferHandler.handle(any(InitiateTransferCommand.class))).thenReturn(expectedResult);
+
+        // When
+        InitiateTransferCommandResult result = transactionService.initiateTransfer(request, userId);
+
+        // Then
+        assertThat(result).isEqualTo(expectedResult);
+        verify(initiateTransferHandler).handle(any(InitiateTransferCommand.class));
     }
 }

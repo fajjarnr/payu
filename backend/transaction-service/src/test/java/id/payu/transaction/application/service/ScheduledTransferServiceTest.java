@@ -1,12 +1,12 @@
 package id.payu.transaction.application.service;
 
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.domain.model.ScheduledTransfer;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
 import id.payu.transaction.dto.CreateScheduledTransferRequest;
-import id.payu.transaction.dto.InitiateTransferRequest;
-import id.payu.transaction.dto.InitiateTransferResponse;
 import id.payu.transaction.dto.ScheduledTransferResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -179,18 +179,20 @@ class ScheduledTransferServiceTest {
     void processDueScheduledTransfer_Success() {
         scheduledTransfer.setNextExecutionDate(Instant.now().minusSeconds(60));
         UUID transactionId = UUID.randomUUID();
-        InitiateTransferResponse transactionResponse = InitiateTransferResponse.builder()
-                .transactionId(transactionId)
-                .referenceNumber("TXN123")
-                .status("PENDING")
-                .build();
+        InitiateTransferCommandResult transactionResponse = new InitiateTransferCommandResult(
+                transactionId,
+                "TXN123",
+                "PENDING",
+                BigDecimal.ZERO,
+                "2 seconds"
+        );
 
-        when(transactionUseCase.initiateTransfer(any(InitiateTransferRequest.class))).thenReturn(transactionResponse);
+        when(transactionUseCase.initiateTransfer(any(InitiateTransferCommand.class))).thenReturn(transactionResponse);
         when(persistencePort.save(any(ScheduledTransfer.class))).thenReturn(scheduledTransfer);
 
         service.processDueScheduledTransfer(scheduledTransfer);
 
-        verify(transactionUseCase, times(1)).initiateTransfer(any(InitiateTransferRequest.class));
+        verify(transactionUseCase, times(1)).initiateTransfer(any(InitiateTransferCommand.class));
         verify(persistencePort, times(1)).save(any(ScheduledTransfer.class));
     }
 
@@ -200,7 +202,7 @@ class ScheduledTransferServiceTest {
 
         service.processDueScheduledTransfer(scheduledTransfer);
 
-        verify(transactionUseCase, never()).initiateTransfer(any(InitiateTransferRequest.class));
+        verify(transactionUseCase, never()).initiateTransfer(any(InitiateTransferCommand.class));
         verify(persistencePort, never()).save(any(ScheduledTransfer.class));
     }
 

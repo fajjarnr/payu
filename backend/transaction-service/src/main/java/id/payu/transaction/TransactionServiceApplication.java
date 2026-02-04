@@ -9,8 +9,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableKafka
 @EnableFeignClients(basePackages = "id.payu.transaction.adapter.client")
-@org.springframework.boot.autoconfigure.domain.EntityScan(basePackages = "id.payu.transaction")
-@org.springframework.data.jpa.repository.config.EnableJpaRepositories(basePackages = "id.payu.transaction")
 @EnableScheduling
 public class TransactionServiceApplication {
 

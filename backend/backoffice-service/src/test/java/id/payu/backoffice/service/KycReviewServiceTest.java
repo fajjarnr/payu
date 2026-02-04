@@ -3,11 +3,12 @@ package id.payu.backoffice.service;
 import id.payu.backoffice.domain.KycReview;
 import id.payu.backoffice.dto.KycReviewDecisionRequest;
 import id.payu.backoffice.dto.KycReviewRequest;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,10 +16,12 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class KycReviewServiceTest {
 
-    @Inject
+    @Autowired
     KycReviewService kycReviewService;
 
     private String testUserId;

@@ -2,11 +2,13 @@ package id.payu.backoffice.service;
 
 import id.payu.backoffice.domain.FraudCase;
 import id.payu.backoffice.dto.FraudCaseDecisionRequest;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import id.payu.backoffice.dto.FraudCaseDecisionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,10 +17,12 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class FraudCaseServiceTest {
 
-    @Inject
+    @Autowired
     FraudCaseService fraudCaseService;
 
     private UUID testTransactionId;

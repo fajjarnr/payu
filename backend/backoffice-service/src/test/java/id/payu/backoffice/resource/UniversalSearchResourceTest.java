@@ -3,11 +3,19 @@ package id.payu.backoffice.resource;
 import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.domain.FraudCase;
 import id.payu.backoffice.domain.KycReview;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.transaction.Transactional;
+import id.payu.backoffice.repository.CustomerCaseRepository;
+import id.payu.backoffice.repository.FraudCaseRepository;
+import id.payu.backoffice.repository.KycReviewRepository;
+import id.payu.backoffice.testutil.IntegrationTest;
+import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,9 +24,23 @@ import java.util.UUID;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@QuarkusTest
-@Disabled("Resource tests require Docker/Testcontainers - disabled when Docker not available")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("integrationtest")
+@IntegrationTest
+@Disabled("Resource tests require Docker + full dependencies")
 class UniversalSearchResourceTest {
+
+    @LocalServerPort
+    private int port;
+
+    @Autowired
+    KycReviewRepository kycReviewRepository;
+
+    @Autowired
+    FraudCaseRepository fraudCaseRepository;
+
+    @Autowired
+    CustomerCaseRepository customerCaseRepository;
 
     private UUID kycReviewId;
     private UUID fraudCaseId;
@@ -27,6 +49,7 @@ class UniversalSearchResourceTest {
     @BeforeEach
     @Transactional
     void setUp() {
+        RestAssured.port = port;
         KycReview kycReview = new KycReview();
         kycReview.userId = "searchUser123";
         kycReview.accountNumber = "SEARCHACC123";
@@ -37,8 +60,8 @@ class UniversalSearchResourceTest {
         kycReview.phoneNumber = "08987654321";
         kycReview.status = KycReview.KycStatus.PENDING;
         kycReview.createdAt = LocalDateTime.now();
-        kycReview.persist();
-        kycReviewId = kycReview.id;
+        kycReviewRepository.save(kycReview);
+        kycReviewId = kycReview.getId();
 
         FraudCase fraudCase = new FraudCase();
         fraudCase.userId = "searchUser123";
@@ -51,8 +74,8 @@ class UniversalSearchResourceTest {
         fraudCase.status = FraudCase.CaseStatus.OPEN;
         fraudCase.description = "Suspicious transaction pattern";
         fraudCase.createdAt = LocalDateTime.now();
-        fraudCase.persist();
-        fraudCaseId = fraudCase.id;
+        fraudCaseRepository.save(fraudCase);
+        fraudCaseId = fraudCase.getId();
 
         CustomerCase customerCase = new CustomerCase();
         customerCase.userId = "searchUser456";
@@ -64,8 +87,8 @@ class UniversalSearchResourceTest {
         customerCase.description = "Unable to access account";
         customerCase.status = CustomerCase.CaseStatus.OPEN;
         customerCase.createdAt = LocalDateTime.now();
-        customerCase.persist();
-        customerCaseId = customerCase.id;
+        customerCaseRepository.save(customerCase);
+        customerCaseId = customerCase.getId();
     }
 
     @Test

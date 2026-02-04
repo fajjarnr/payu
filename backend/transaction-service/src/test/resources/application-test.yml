@@ -6,10 +6,11 @@ spring:
     name: transaction-service
   datasource:
     primary:
-      url: ${TEST_DATABASE_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
-      username: ${TEST_DATABASE_USERNAME:sa}
-      password: ${TEST_DATABASE_PASSWORD:}
-      driver-class-name: ${TEST_DATABASE_DRIVER:org.h2.Driver}
+      hikari:
+        jdbc-url: ${TEST_DATABASE_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+        username: ${TEST_DATABASE_USERNAME:sa}
+        password: ${TEST_DATABASE_PASSWORD:}
+        driver-class-name: ${TEST_DATABASE_DRIVER:org.h2.Driver}
     read-replica:
       enabled: false
   jpa:

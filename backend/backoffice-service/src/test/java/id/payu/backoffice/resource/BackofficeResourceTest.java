@@ -4,24 +4,32 @@ import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.domain.FraudCase;
 import id.payu.backoffice.domain.KycReview;
 import id.payu.backoffice.dto.*;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
+import id.payu.backoffice.testutil.IntegrationTest;
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@QuarkusTest
-@EnabledIfSystemProperty(named = "docker.enabled", matches = "true")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("integrationtest")
+@IntegrationTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BackofficeResourceTest {
+
+    @LocalServerPort
+    private int port;
+
+    @BeforeEach
+    public void setup() {
+        RestAssured.port = port;
+    }
 
     @Test
     @Order(1)

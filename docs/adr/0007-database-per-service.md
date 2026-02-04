@@ -151,4 +151,4 @@ Use data warehouse for reporting:
 
 ---
 
-*Created via @docs-engineer*
+*Created via @principal-architect*

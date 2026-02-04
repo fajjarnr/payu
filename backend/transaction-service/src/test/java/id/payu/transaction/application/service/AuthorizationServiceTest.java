@@ -159,7 +159,8 @@ class AuthorizationServiceTest {
         @DisplayName("Should handle null transaction ID gracefully")
         void shouldHandleNullTransactionIdGracefully() {
             assertThatThrownBy(() -> authorizationService.verifyTransactionAccess(null, userId))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Transaction not found");
         }
 
         @Test

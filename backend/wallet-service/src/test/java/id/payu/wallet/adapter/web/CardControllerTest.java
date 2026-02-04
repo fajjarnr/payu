@@ -1,5 +1,6 @@
 package id.payu.wallet.adapter.web;
 
+import id.payu.api.common.response.ApiResponse;
 import id.payu.wallet.domain.model.Card;
 import id.payu.wallet.domain.port.in.CardUseCase;
 import id.payu.wallet.dto.CardResponse;
@@ -59,12 +60,12 @@ class CardControllerTest {
         when(cardUseCase.createVirtualCard("ACC-001", "John Doe", new BigDecimal("5000000")))
                 .thenReturn(testCard);
 
-        ResponseEntity<CardResponse> response = cardController.createCard(request);
+        ResponseEntity<ApiResponse<CardResponse>> response = cardController.createCard(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCardNumber()).isEqualTo(testCard.getCardNumber());
-        assertThat(response.getBody().getStatus()).isEqualTo(Card.CardStatus.ACTIVE.name());
+        assertThat(response.getBody().getData().getCardNumber()).isEqualTo(testCard.getCardNumber());
+        assertThat(response.getBody().getData().getStatus()).isEqualTo(Card.CardStatus.ACTIVE.name());
         verify(cardUseCase).createVirtualCard("ACC-001", "John Doe", new BigDecimal("5000000"));
     }
 
@@ -73,11 +74,11 @@ class CardControllerTest {
     void shouldGetCardsByAccountId() {
         when(cardUseCase.getCardsByAccountId("ACC-001")).thenReturn(List.of(testCard));
 
-        ResponseEntity<List<CardResponse>> response = cardController.getCards("ACC-001");
+        ResponseEntity<ApiResponse<List<CardResponse>>> response = cardController.getCards("ACC-001");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).hasSize(1);
-        assertThat(response.getBody().get(0).getCardNumber()).isEqualTo(testCard.getCardNumber());
+        assertThat(response.getBody().getData()).hasSize(1);
+        assertThat(response.getBody().getData().get(0).getCardNumber()).isEqualTo(testCard.getCardNumber());
         verify(cardUseCase).getCardsByAccountId("ACC-001");
     }
 
@@ -86,7 +87,7 @@ class CardControllerTest {
     void shouldFreezeCard() {
         String cardId = testCard.getId().toString();
 
-        ResponseEntity<Void> response = cardController.freezeCard(cardId);
+        ResponseEntity<ApiResponse<Void>> response = cardController.freezeCard(cardId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(cardUseCase).freezeCard(cardId);
@@ -97,7 +98,7 @@ class CardControllerTest {
     void shouldUnfreezeCard() {
         String cardId = testCard.getId().toString();
 
-        ResponseEntity<Void> response = cardController.unfreezeCard(cardId);
+        ResponseEntity<ApiResponse<Void>> response = cardController.unfreezeCard(cardId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(cardUseCase).unfreezeCard(cardId);
@@ -109,11 +110,11 @@ class CardControllerTest {
         String cardId = testCard.getId().toString();
         when(cardUseCase.getCardById(cardId)).thenReturn(Optional.of(testCard));
 
-        ResponseEntity<CardResponse> response = cardController.getCardById(cardId);
+        ResponseEntity<ApiResponse<CardResponse>> response = cardController.getCardById(cardId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCardNumber()).isEqualTo(testCard.getCardNumber());
+        assertThat(response.getBody().getData().getCardNumber()).isEqualTo(testCard.getCardNumber());
         verify(cardUseCase).getCardById(cardId);
     }
 
@@ -123,7 +124,7 @@ class CardControllerTest {
         String cardId = UUID.randomUUID().toString();
         when(cardUseCase.getCardById(cardId)).thenReturn(Optional.empty());
 
-        ResponseEntity<CardResponse> response = cardController.getCardById(cardId);
+        ResponseEntity<ApiResponse<CardResponse>> response = cardController.getCardById(cardId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }

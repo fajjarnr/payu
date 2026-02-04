@@ -36,7 +36,7 @@ public class ArchitectureTest {
             classes().that().resideInAPackage("..adapter.web..")
                     .should().onlyDependOnClassesThat()
                     // Allowed domain.model because controller returns Transaction object currently
-                    .resideInAnyPackage("id.payu.transaction.domain.port.in..", "id.payu.transaction.domain.model..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "jakarta..", "lombok..", "org.slf4j..", "io.swagger.v3.oas.annotations..");
+                    .resideInAnyPackage("id.payu.transaction.domain.port.in..", "id.payu.transaction.application.cqrs..", "id.payu.transaction.domain.model..", "id.payu.transaction.dto..", "id.payu.transaction.config..", "java..", "org.springframework..", "jakarta..", "lombok..", "org.slf4j..", "io.swagger.v3.oas.annotations..");
 
     @ArchTest
     static final ArchRule adapters_should_have_suffixed_names =

@@ -1,10 +1,15 @@
 package id.payu.transaction.unit;
 
-import id.payu.transaction.application.service.TransactionService;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandHandler;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
+import id.payu.transaction.application.service.AuthorizationService;
+import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.*;
 import id.payu.transaction.dto.InitiateTransferRequest;
-import id.payu.transaction.dto.InitiateTransferResponse;
+import id.payu.transaction.dto.ReserveBalanceResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,23 +42,55 @@ class IdempotencyTest {
     private QrisServicePort qrisServicePort;
     @Mock
     private TransactionEventPublisherPort eventPublisherPort;
+    @Mock
+    private AuthorizationService authorizationService;
 
     @InjectMocks
-    private TransactionService transactionService;
+    private InitiateTransferCommandHandler handler;
+
+    private String userId;
+    private UUID senderAccountId;
+
+    @BeforeEach
+    void setUp() {
+        userId = UUID.randomUUID().toString();
+        senderAccountId = UUID.fromString(userId); // Simplified for extractAccountIdFromUserId logic
+    }
+
+    private InitiateTransferCommand createCommand(String idempotencyKey) {
+        return new InitiateTransferCommand(
+                senderAccountId,
+                "1234567890",
+                Money.idr(new BigDecimal("50000")),
+                "Transaction description",
+                InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER,
+                "123456",
+                "device-123",
+                idempotencyKey,
+                userId
+        );
+    }
+
+    private InitiateTransferCommand createBifastCommand(String idempotencyKey) {
+        return new InitiateTransferCommand(
+                senderAccountId,
+                "1234567890",
+                Money.idr(new BigDecimal("50000")),
+                "BI-FAST description",
+                InitiateTransferRequest.TransactionType.BIFAST_TRANSFER,
+                "123456",
+                "device-123",
+                idempotencyKey,
+                userId
+        );
+    }
 
     @Test
     @DisplayName("should return existing transaction when idempotency key exists")
     void shouldReturnExistingTransaction_WhenIdempotencyKeyExists() {
         // Given
         String idempotencyKey = "key-123";
-        InitiateTransferRequest request = InitiateTransferRequest.builder()
-                .senderAccountId(UUID.randomUUID())
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("Test")
-                .type(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
-                .idempotencyKey(idempotencyKey)
-                .build();
+        InitiateTransferCommand command = createCommand(idempotencyKey);
 
         Transaction existingTransaction = Transaction.builder()
                 .id(UUID.randomUUID())
@@ -61,18 +98,17 @@ class IdempotencyTest {
                 .idempotencyKey(idempotencyKey)
                 .status(Transaction.TransactionStatus.PENDING)
                 .type(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .amount(new BigDecimal("50000"))
-                .currency("IDR")
+                .amount(Money.idr(new BigDecimal("50000")))
                 .build();
 
         when(transactionPersistencePort.findByIdempotencyKey(idempotencyKey))
                 .thenReturn(Optional.of(existingTransaction));
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+        InitiateTransferCommandResult response = handler.handle(command);
 
         // Then
-        assertThat(response.getReferenceNumber()).isEqualTo("TXN-EXISTING");
+        assertThat(response.referenceNumber()).isEqualTo("TXN-EXISTING");
         verify(walletServicePort, never()).reserveBalance(any(), any(), any());
         verify(transactionPersistencePort, never()).save(any());
     }
@@ -82,29 +118,20 @@ class IdempotencyTest {
     void shouldCreateNewTransaction_WhenIdempotencyKeyDoesNotExist() {
         // Given
         String idempotencyKey = "key-new-123";
-        UUID accountId = UUID.randomUUID();
-
-        InitiateTransferRequest request = InitiateTransferRequest.builder()
-                .senderAccountId(accountId)
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("New transaction with idempotency")
-                .type(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
-                .idempotencyKey(idempotencyKey)
-                .build();
+        InitiateTransferCommand command = createCommand(idempotencyKey);
 
         when(transactionPersistencePort.findByIdempotencyKey(idempotencyKey))
                 .thenReturn(Optional.empty());
         when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
-                id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                ReserveBalanceResponse.builder()
                         .reservationId("res-123")
                         .status("RESERVED")
                         .build()
         );
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+        InitiateTransferCommandResult response = handler.handle(command);
 
         // Then
         assertThat(response).isNotNull();
@@ -117,15 +144,7 @@ class IdempotencyTest {
     void shouldReturnFailedTransaction_WhenIdempotencyKeyExistsForFailedTransaction() {
         // Given
         String idempotencyKey = "key-failed-123";
-
-        InitiateTransferRequest request = InitiateTransferRequest.builder()
-                .senderAccountId(UUID.randomUUID())
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("Retry failed transaction")
-                .type(InitiateTransferRequest.TransactionType.BIFAST_TRANSFER)
-                .idempotencyKey(idempotencyKey)
-                .build();
+        InitiateTransferCommand command = createBifastCommand(idempotencyKey);
 
         Transaction failedTransaction = Transaction.builder()
                 .id(UUID.randomUUID())
@@ -133,8 +152,7 @@ class IdempotencyTest {
                 .idempotencyKey(idempotencyKey)
                 .status(Transaction.TransactionStatus.FAILED)
                 .type(Transaction.TransactionType.BIFAST_TRANSFER)
-                .amount(new BigDecimal("50000"))
-                .currency("IDR")
+                .amount(Money.idr(new BigDecimal("50000")))
                 .failureReason("BI-FAST Timeout")
                 .build();
 
@@ -142,11 +160,11 @@ class IdempotencyTest {
                 .thenReturn(Optional.of(failedTransaction));
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+        InitiateTransferCommandResult response = handler.handle(command);
 
         // Then
-        assertThat(response.getReferenceNumber()).isEqualTo("TXN-FAILED");
-        assertThat(response.getStatus()).isEqualTo("FAILED");
+        assertThat(response.referenceNumber()).isEqualTo("TXN-FAILED");
+        assertThat(response.status()).isEqualTo("FAILED");
         verify(walletServicePort, never()).reserveBalance(any(), any(), any());
     }
 
@@ -154,43 +172,25 @@ class IdempotencyTest {
     @DisplayName("should allow retry for different idempotency key with same parameters")
     void shouldAllowRetry_WithDifferentIdempotencyKey() {
         // Given
-        UUID accountId = UUID.randomUUID();
         String firstKey = "key-first-123";
         String secondKey = "key-second-456";
 
-        InitiateTransferRequest firstRequest = InitiateTransferRequest.builder()
-                .senderAccountId(accountId)
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("First attempt")
-                .type(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
-                .idempotencyKey(firstKey)
-                .build();
+        InitiateTransferCommand firstCommand = createCommand(firstKey);
+        InitiateTransferCommand secondCommand = createCommand(secondKey);
 
-        InitiateTransferRequest secondRequest = InitiateTransferRequest.builder()
-                .senderAccountId(accountId)
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("Second attempt with new key")
-                .type(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
-                .idempotencyKey(secondKey)
-                .build();
-
-        when(transactionPersistencePort.findByIdempotencyKey(firstKey))
-                .thenReturn(Optional.empty());
-        when(transactionPersistencePort.findByIdempotencyKey(secondKey))
+        when(transactionPersistencePort.findByIdempotencyKey(anyString()))
                 .thenReturn(Optional.empty());
         when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
-                id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                ReserveBalanceResponse.builder()
                         .reservationId("res-123")
                         .status("RESERVED")
                         .build()
         );
 
         // When
-        transactionService.initiateTransfer(firstRequest);
-        transactionService.initiateTransfer(secondRequest);
+        handler.handle(firstCommand);
+        handler.handle(secondCommand);
 
         // Then
         verify(transactionPersistencePort, times(4)).save(any(Transaction.class));
@@ -202,15 +202,7 @@ class IdempotencyTest {
     void shouldHandleIdempotencyKey_ForBifastTransfer() {
         // Given
         String idempotencyKey = "key-bifast-123";
-
-        InitiateTransferRequest request = InitiateTransferRequest.builder()
-                .senderAccountId(UUID.randomUUID())
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("BI-FAST with idempotency")
-                .type(InitiateTransferRequest.TransactionType.BIFAST_TRANSFER)
-                .idempotencyKey(idempotencyKey)
-                .build();
+        InitiateTransferCommand command = createBifastCommand(idempotencyKey);
 
         Transaction existingBifastTransaction = Transaction.builder()
                 .id(UUID.randomUUID())
@@ -218,8 +210,7 @@ class IdempotencyTest {
                 .idempotencyKey(idempotencyKey)
                 .status(Transaction.TransactionStatus.PENDING)
                 .type(Transaction.TransactionType.BIFAST_TRANSFER)
-                .amount(new BigDecimal("50000"))
-                .currency("IDR")
+                .amount(Money.idr(new BigDecimal("50000")))
                 .description("BI-FAST Transfer")
                 .metadata("{\"externalTransactionId\":\"BIFAST-EXT-123\"}")
                 .build();
@@ -228,11 +219,11 @@ class IdempotencyTest {
                 .thenReturn(Optional.of(existingBifastTransaction));
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+        InitiateTransferCommandResult response = handler.handle(command);
 
         // Then
-        assertThat(response.getReferenceNumber()).isEqualTo("TXN-BIFAST-EXISTING");
-        assertThat(response.getStatus()).isEqualTo("PENDING");
+        assertThat(response.referenceNumber()).isEqualTo("TXN-BIFAST-EXISTING");
+        assertThat(response.status()).isEqualTo("PENDING");
         verify(walletServicePort, never()).reserveBalance(any(), any(), any());
     }
 
@@ -240,27 +231,18 @@ class IdempotencyTest {
     @DisplayName("should handle null idempotency key by always creating new transaction")
     void shouldCreateNewTransaction_WhenIdempotencyKeyIsNull() {
         // Given
-        UUID accountId = UUID.randomUUID();
-
-        InitiateTransferRequest request = InitiateTransferRequest.builder()
-                .senderAccountId(accountId)
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("Transaction without idempotency key")
-                .type(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
-                .idempotencyKey(null)
-                .build();
+        InitiateTransferCommand command = createCommand(null);
 
         when(transactionPersistencePort.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
-                id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                ReserveBalanceResponse.builder()
                         .reservationId("res-123")
                         .status("RESERVED")
                         .build()
         );
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+        InitiateTransferCommandResult response = handler.handle(command);
 
         // Then
         assertThat(response).isNotNull();
@@ -273,15 +255,7 @@ class IdempotencyTest {
     void shouldReturnCompletedTransaction_WhenIdempotencyKeyExistsForCompletedTransaction() {
         // Given
         String idempotencyKey = "key-completed-123";
-
-        InitiateTransferRequest request = InitiateTransferRequest.builder()
-                .senderAccountId(UUID.randomUUID())
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("Check completed transaction")
-                .type(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
-                .idempotencyKey(idempotencyKey)
-                .build();
+        InitiateTransferCommand command = createCommand(idempotencyKey);
 
         Transaction completedTransaction = Transaction.builder()
                 .id(UUID.randomUUID())
@@ -289,19 +263,18 @@ class IdempotencyTest {
                 .idempotencyKey(idempotencyKey)
                 .status(Transaction.TransactionStatus.COMPLETED)
                 .type(Transaction.TransactionType.INTERNAL_TRANSFER)
-                .amount(new BigDecimal("50000"))
-                .currency("IDR")
+                .amount(Money.idr(new BigDecimal("50000")))
                 .build();
 
         when(transactionPersistencePort.findByIdempotencyKey(idempotencyKey))
                 .thenReturn(Optional.of(completedTransaction));
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(request);
+        InitiateTransferCommandResult response = handler.handle(command);
 
         // Then
-        assertThat(response.getReferenceNumber()).isEqualTo("TXN-COMPLETED");
-        assertThat(response.getStatus()).isEqualTo("COMPLETED");
+        assertThat(response.referenceNumber()).isEqualTo("TXN-COMPLETED");
+        assertThat(response.status()).isEqualTo("COMPLETED");
         verify(walletServicePort, never()).reserveBalance(any(), any(), any());
         verify(transactionPersistencePort, never()).save(any());
     }
@@ -311,16 +284,7 @@ class IdempotencyTest {
     void shouldStoreIdempotencyKey_WithNewTransaction() {
         // Given
         String idempotencyKey = "key-store-123";
-        UUID accountId = UUID.randomUUID();
-
-        InitiateTransferRequest request = InitiateTransferRequest.builder()
-                .senderAccountId(accountId)
-                .recipientAccountNumber("123456")
-                .amount(new BigDecimal("50000"))
-                .description("Store idempotency key")
-                .type(InitiateTransferRequest.TransactionType.INTERNAL_TRANSFER)
-                .idempotencyKey(idempotencyKey)
-                .build();
+        InitiateTransferCommand command = createCommand(idempotencyKey);
 
         when(transactionPersistencePort.findByIdempotencyKey(idempotencyKey))
                 .thenReturn(Optional.empty());
@@ -330,14 +294,14 @@ class IdempotencyTest {
             return t;
         });
         when(walletServicePort.reserveBalance(any(), any(), any())).thenReturn(
-                id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                ReserveBalanceResponse.builder()
                         .reservationId("res-123")
                         .status("RESERVED")
                         .build()
         );
 
         // When
-        transactionService.initiateTransfer(request);
+        handler.handle(command);
 
         // Then - idempotency key is stored with the transaction (verified in the stub above)
         verify(transactionPersistencePort, atLeastOnce()).save(any(Transaction.class));

@@ -1,27 +1,36 @@
 # PayU Backend Services Status
 
-> **Last Updated**: January 26, 2026  
+> **Last Updated**: February 4, 2026  
 > **Total Services**: 22 (19 microservices + 3 simulators)  
-> **Lab Status**: ✅ Feature Complete | ⚠️ TDD In Progress
+> **Lab Status**: ✅ Feature Complete | ⚠️ Test & Environment Stabilization In Progress
+>
+> **Note**: Container internal ports are standardized to 8080 in `docker-compose.yml`. Use the compose file for external mappings.
 
 ---
 
-## Quick Test Status
+## Quick Test Status (Last Known)
 
 | Status | Count | Services |
 |--------|-------|----------|
-| ✅ Tests Passing | 6 | account, auth, support, billing*, notification*, transaction* |
-| ⚠️ Docker Required | 5 | transaction-int, billing-int, notification-int, partner, backoffice |
-| ❌ Needs Tests | 8 | wallet, investment, lending, fx, statement, cms, ab-testing, promotion |
-| 🔴 Blocked | 2 | kyc (Python libs), analytics (Python libs) |
+| ✅ Unit Tests Passing | 6 | account, auth, support, billing*, notification*, transaction* |
+| ⚠️ Integration Requires Docker | 5 | transaction-int, billing-int, notification-int, partner, backoffice |
+| ❌ Coverage Needs Expansion | 8 | wallet, investment, lending, fx, statement, cms, ab-testing, promotion |
+| 🔴 Local Setup Blocked | 2 | kyc (Python libs), analytics (Python libs) |
 
 *Unit tests pass, integration tests need Docker
+
+## Known Issues / WIP (Feb 2026)
+
+- Public endpoint `/api/v1/accounts/register` still returns 401 due to OAuth2 resource server filter ordering.
+- Full OpenAPI contract validation, seed data alignment, RBAC checks, error code standardization, and observability verification are pending.
+- E2E pass rate fixes are documented in `docs/test-improvements.md`; re-run full suite to confirm 95%+.
+- Local Python test setup for `kyc-service` and `analytics-service` may require extra native libs.
 
 ---
 
 ## Services Overview
 
-### ✅ Completed Services
+### ✅ Feature-Complete Services (Implementation)
 
 | Service | Language | Framework | Status | Notes |
 |---------|----------|------------|--------|-------|
@@ -147,8 +156,7 @@
 - ✅ Unit Tests (OCR, Liveness, Face, Dukcapil)
 - ✅ UBI9 Dockerfile (multi-stage)
 - ✅ Monitoring: Prometheus + OpenTelemetry + structured logs
-
-- ✅ Monitoring: Prometheus + OpenTelemetry + structured logs
+- ⚠️ Local test setup may require additional Python native libs
 
 #### 11. analytics-service (Port 8008)
 - ✅ Time-series analytics with TimescaleDB
@@ -162,8 +170,7 @@
 - ✅ Unit Tests (recommendation engine, analytics service)
 - ✅ UBI9 Dockerfile (multi-stage)
 - ✅ Monitoring: Prometheus + OpenTelemetry + structured logs
-
-### External Service Simulators (Quarkus)
+- ⚠️ Local test setup may require additional Python native libs
 
 ### External Service Simulators (Quarkus)
 
@@ -178,8 +185,6 @@
 - ✅ Health Checks & Prometheus Metrics
 - ✅ OpenTelemetry Tracing
 
-- ✅ OpenTelemetry Tracing
-
 #### 13. dukcapil-simulator (Port 8091)
 - ✅ NIK Verification endpoint
 - ✅ Face Matching endpoint
@@ -190,8 +195,6 @@
 - ✅ Liveness Detection Simulation
 - ✅ Test Citizens (VALID, BLOCKED, INVALID, DECEASED)
 - ✅ Verification Audit Logging
-- ✅ Health Checks & Prometheus Metrics
-
 - ✅ Health Checks & Prometheus Metrics
 
 #### 14. qris-simulator (Port 8092)
@@ -280,9 +283,10 @@ cd backend/<service> && pytest --cov=src            # With coverage
 - Monitoring (Prometheus + OpenTelemetry)
 
 **Test Status**: ⚠️ **IN PROGRESS**
-- Unit tests: ~60% services passing
-- Integration tests: Blocked by Docker/Testcontainers
-- Shared libraries: Need fixes
+- Unit tests: last known passing for core services; expand coverage for remaining services
+- Integration tests: require Docker/Testcontainers
+- E2E: fixes applied (see `docs/test-improvements.md`), re-run to confirm 95%+ pass rate
+- Env: public endpoint 401 issue pending resolution
 
 **Ready for**: 
 - Docker Compose local development

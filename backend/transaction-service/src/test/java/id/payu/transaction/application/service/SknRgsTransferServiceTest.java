@@ -1,8 +1,14 @@
 package id.payu.transaction.application.service;
 
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandHandler;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
+import id.payu.transaction.application.service.AuthorizationService;
+import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.*;
-import id.payu.transaction.dto.*;
+import id.payu.transaction.dto.InitiateTransferRequest;
+import id.payu.transaction.dto.ReserveBalanceResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,48 +43,56 @@ class SknRgsTransferServiceTest {
     @Mock
     private RgsServicePort rgsServicePort;
     @Mock
-    private QrisServicePort qrisServicePort;
-    @Mock
     private TransactionEventPublisherPort eventPublisherPort;
-
-    private UUID userId;
-    private InitiateTransferRequest sknTransferRequest;
-    private InitiateTransferRequest rgsTransferRequest;
+    @Mock
+    private AuthorizationService authorizationService;
 
     @InjectMocks
-    private TransactionService transactionService;
+    private InitiateTransferCommandHandler handler;
+
+    private String userId;
+    private UUID senderAccountId;
 
     @BeforeEach
     void setUp() {
-        userId = UUID.randomUUID();
-        UUID senderAccountId = UUID.randomUUID();
+        userId = UUID.randomUUID().toString();
+        senderAccountId = UUID.fromString(userId);
+    }
 
-        sknTransferRequest = new InitiateTransferRequest();
-        sknTransferRequest.setSenderAccountId(senderAccountId);
-        sknTransferRequest.setRecipientAccountNumber("1234567890");
-        sknTransferRequest.setAmount(new BigDecimal("100000"));
-        sknTransferRequest.setCurrency("IDR");
-        sknTransferRequest.setDescription("SKN Transfer Test");
-        sknTransferRequest.setType(InitiateTransferRequest.TransactionType.SKN_TRANSFER);
+    private InitiateTransferCommand createSknCommand() {
+        return new InitiateTransferCommand(
+                senderAccountId,
+                "1234567890",
+                Money.idr(new BigDecimal("100000")),
+                "SKN Transfer Test",
+                InitiateTransferRequest.TransactionType.SKN_TRANSFER,
+                "123456",
+                "device-123",
+                null,
+                userId
+        );
+    }
 
-        rgsTransferRequest = new InitiateTransferRequest();
-        rgsTransferRequest.setSenderAccountId(senderAccountId);
-        rgsTransferRequest.setRecipientAccountNumber("0987654321");
-        rgsTransferRequest.setAmount(new BigDecimal("50000000"));
-        rgsTransferRequest.setCurrency("IDR");
-        rgsTransferRequest.setDescription("RTGS Transfer Test");
-        rgsTransferRequest.setType(InitiateTransferRequest.TransactionType.RTGS_TRANSFER);
+    private InitiateTransferCommand createRgsCommand() {
+        return new InitiateTransferCommand(
+                senderAccountId,
+                "0987654321",
+                Money.idr(new BigDecimal("50000000")),
+                "RTGS Transfer Test",
+                InitiateTransferRequest.TransactionType.RTGS_TRANSFER,
+                "123456",
+                "device-123",
+                null,
+                userId
+        );
     }
 
     @Test
     @DisplayName("should initiate SKN transfer successfully")
     void shouldInitiateSknTransferSuccessfully() {
         // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> {
-            Transaction t = invocation.getArgument(0);
-            if (t.getId() == null) t.setId(UUID.randomUUID());
-            return t;
-        });
+        InitiateTransferCommand command = createSknCommand();
+        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
                 ReserveBalanceResponse.builder()
@@ -89,47 +102,23 @@ class SknRgsTransferServiceTest {
         );
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest, userId.toString());
+        InitiateTransferCommandResult result = handler.handle(command);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo("VALIDATING");
-        assertThat(response.getFee()).isEqualTo(new BigDecimal("5000"));
-        assertThat(response.getEstimatedCompletionTime()).isEqualTo("Same day");
+        assertThat(result).isNotNull();
+        assertThat(result.status()).isEqualTo("VALIDATING");
+        assertThat(result.fee()).isEqualByComparingTo(new BigDecimal("5000"));
+        assertThat(result.estimatedCompletionTime()).isEqualTo("Same day");
         verify(transactionPersistencePort, times(2)).save(any(Transaction.class));
-        verify(eventPublisherPort).publishTransactionInitiated(any(Transaction.class));
-        verify(walletServicePort).reserveBalance(eq(sknTransferRequest.getSenderAccountId()), anyString(), eq(sknTransferRequest.getAmount()));
-    }
-
-    @Test
-    @DisplayName("should fail SKN transfer when balance insufficient")
-    void shouldFailSknTransferWhenBalanceInsufficient() {
-        // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
-
-        given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder()
-                        .status("FAILED")
-                        .build()
-        );
-
-        // When/Then
-        assertThatThrownBy(() -> transactionService.initiateTransfer(sknTransferRequest, userId.toString()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Insufficient balance");
-
-        verify(eventPublisherPort).publishTransactionFailed(any(Transaction.class), anyString());
+        verify(walletServicePort).reserveBalance(eq(senderAccountId), anyString(), eq(new BigDecimal("100000.00")));
     }
 
     @Test
     @DisplayName("should initiate RTGS transfer successfully")
     void shouldInitiateRgsTransferSuccessfully() {
         // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> {
-            Transaction t = invocation.getArgument(0);
-            if (t.getId() == null) t.setId(UUID.randomUUID());
-            return t;
-        });
+        InitiateTransferCommand command = createRgsCommand();
+        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
                 ReserveBalanceResponse.builder()
@@ -139,22 +128,22 @@ class SknRgsTransferServiceTest {
         );
 
         // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(rgsTransferRequest);
+        InitiateTransferCommandResult result = handler.handle(command);
 
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo("VALIDATING");
-        assertThat(response.getFee()).isEqualTo(new BigDecimal("25000"));
-        assertThat(response.getEstimatedCompletionTime()).isEqualTo("Real-time");
+        assertThat(result).isNotNull();
+        assertThat(result.status()).isEqualTo("VALIDATING");
+        assertThat(result.fee()).isEqualByComparingTo(new BigDecimal("25000"));
+        assertThat(result.estimatedCompletionTime()).isEqualTo("Real-time");
         verify(transactionPersistencePort, times(2)).save(any(Transaction.class));
-        verify(eventPublisherPort).publishTransactionInitiated(any(Transaction.class));
-        verify(walletServicePort).reserveBalance(eq(rgsTransferRequest.getSenderAccountId()), anyString(), eq(rgsTransferRequest.getAmount()));
+        verify(walletServicePort).reserveBalance(eq(senderAccountId), anyString(), eq(new BigDecimal("50000000.00")));
     }
 
     @Test
-    @DisplayName("should fail RTGS transfer when balance insufficient")
-    void shouldFailRgsTransferWhenBalanceInsufficient() {
+    @DisplayName("should fail transfer when balance insufficient")
+    void shouldFailTransferWhenBalanceInsufficient() {
         // Given
+        InitiateTransferCommand command = createSknCommand();
         given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
@@ -164,74 +153,10 @@ class SknRgsTransferServiceTest {
         );
 
         // When/Then
-        assertThatThrownBy(() -> transactionService.initiateTransfer(rgsTransferRequest))
+        assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Insufficient balance");
 
         verify(eventPublisherPort).publishTransactionFailed(any(Transaction.class), anyString());
-    }
-
-    @Test
-    @DisplayName("should calculate correct SKN fee")
-    void shouldCalculateCorrectSknFee() {
-        // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
-        given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder().status("RESERVED").build()
-        );
-
-        // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest, userId.toString());
-
-        // Then
-        assertThat(response.getFee()).isEqualTo(new BigDecimal("5000"));
-    }
-
-    @Test
-    @DisplayName("should calculate correct RTGS fee")
-    void shouldCalculateCorrectRgsFee() {
-        // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
-        given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder().status("RESERVED").build()
-        );
-
-        // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(rgsTransferRequest);
-
-        // Then
-        assertThat(response.getFee()).isEqualTo(new BigDecimal("25000"));
-    }
-
-    @Test
-    @DisplayName("should set correct estimated completion time for SKN")
-    void shouldSetCorrectEstimatedCompletionTimeForSkn() {
-        // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
-        given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder().status("RESERVED").build()
-        );
-
-        // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(sknTransferRequest, userId.toString());
-
-        // Then
-        assertThat(response.getEstimatedCompletionTime()).isEqualTo("Same day");
-    }
-
-    @Test
-    @DisplayName("should set correct estimated completion time for RTGS")
-    void shouldSetCorrectEstimatedCompletionTimeForRgs() {
-        // Given
-        given(transactionPersistencePort.save(any(Transaction.class))).willAnswer(invocation -> invocation.getArgument(0));
-        given(walletServicePort.reserveBalance(any(), anyString(), any())).willReturn(
-                ReserveBalanceResponse.builder().status("RESERVED").build()
-        );
-
-        // When
-        InitiateTransferResponse response = transactionService.initiateTransfer(rgsTransferRequest);
-
-        // Then
-        assertThat(response.getEstimatedCompletionTime()).isEqualTo("Real-time");
     }
 }

@@ -10,15 +10,14 @@ import id.payu.backoffice.dto.KycReviewRequest;
 import id.payu.backoffice.service.CustomerCaseService;
 import id.payu.backoffice.service.FraudCaseService;
 import id.payu.backoffice.service.KycReviewService;
-import id.payu.backoffice.testutil.PostgreSQLResourceTestLifecycleManager;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+import id.payu.backoffice.testutil.IntegrationTest;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -45,19 +44,20 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author PayU Backend Team
  */
-@QuarkusTest
-@EnabledIfSystemProperty(named = "docker.enabled", matches = "true")
+@SpringBootTest
+@ActiveProfiles("integrationtest")
+@IntegrationTest
 @DisplayName("Backoffice Service Integration Tests")
 @Tag("integration")
 class BackofficeIntegrationTest {
 
-    @Inject
+    @Autowired
     KycReviewService kycReviewService;
 
-    @Inject
+    @Autowired
     FraudCaseService fraudCaseService;
 
-    @Inject
+    @Autowired
     CustomerCaseService customerCaseService;
 
     // ===== KYC Review Integration Tests =====
@@ -84,19 +84,19 @@ class BackofficeIntegrationTest {
 
         // When
         KycReview createdReview = kycReviewService.create(request);
-        Optional<KycReview> retrievedReview = kycReviewService.getById(createdReview.id);
+        Optional<KycReview> retrievedReview = kycReviewService.getById(createdReview.getId());
 
         // Then
         assertTrue(retrievedReview.isPresent());
-        assertEquals(createdReview.id, retrievedReview.get().id);
-        assertEquals(testUserId, retrievedReview.get().userId);
-        assertEquals(testAccountNumber, retrievedReview.get().accountNumber);
-        assertEquals("PASSPORT", retrievedReview.get().documentType);
-        assertEquals(KycReview.KycStatus.PENDING, retrievedReview.get().status);
-        assertNotNull(retrievedReview.get().createdAt);
+        assertEquals(createdReview.getId(), retrievedReview.get().getId());
+        assertEquals(testUserId, retrievedReview.get().getUserId());
+        assertEquals(testAccountNumber, retrievedReview.get().getAccountNumber());
+        assertEquals("PASSPORT", retrievedReview.get().getDocumentType());
+        assertEquals(KycReview.KycStatus.PENDING, retrievedReview.get().getStatus());
+        assertNotNull(retrievedReview.get().getCreatedAt());
 
         // Cleanup
-        kycReviewService.delete(createdReview.id);
+        kycReviewService.delete(createdReview.getId());
     }
 
     @Test
@@ -126,17 +126,17 @@ class BackofficeIntegrationTest {
         );
 
         // When
-        KycReview result = kycReviewService.review(review.id, decisionRequest, "admin1");
+        KycReview result = kycReviewService.review(review.getId(), decisionRequest, "admin1");
 
         // Then
-        assertEquals(KycReview.KycStatus.APPROVED, result.status);
-        assertEquals("Documents verified, identity confirmed", result.notes);
-        assertEquals("admin1", result.reviewedBy);
-        assertNotNull(result.reviewedAt);
-        assertNotNull(result.createdAt);
+        assertEquals(KycReview.KycStatus.APPROVED, result.getStatus());
+        assertEquals("Documents verified, identity confirmed", result.getNotes());
+        assertEquals("admin1", result.getReviewedBy());
+        assertNotNull(result.getReviewedAt());
+        assertNotNull(result.getCreatedAt());
 
         // Cleanup
-        kycReviewService.delete(review.id);
+        kycReviewService.delete(review.getId());
     }
 
     @Test
@@ -166,15 +166,15 @@ class BackofficeIntegrationTest {
         );
 
         // When
-        KycReview result = kycReviewService.review(review.id, decisionRequest, "admin2");
+        KycReview result = kycReviewService.review(review.getId(), decisionRequest, "admin2");
 
         // Then
-        assertEquals(KycReview.KycStatus.REJECTED, result.status);
-        assertTrue(result.notes.contains("expired"));
-        assertEquals("admin2", result.reviewedBy);
+        assertEquals(KycReview.KycStatus.REJECTED, result.getStatus());
+        assertTrue(result.getNotes().contains("expired"));
+        assertEquals("admin2", result.getReviewedBy());
 
         // Cleanup
-        kycReviewService.delete(review.id);
+        kycReviewService.delete(review.getId());
     }
 
     @Test
@@ -197,13 +197,13 @@ class BackofficeIntegrationTest {
 
         // Then
         assertNotNull(pendingReviews);
-        assertTrue(pendingReviews.stream().anyMatch(r -> r.userId.startsWith(testUserId)));
-        assertTrue(pendingReviews.stream().allMatch(r -> r.status == KycReview.KycStatus.PENDING));
+        assertTrue(pendingReviews.stream().anyMatch(r -> r.getUserId().startsWith(testUserId)));
+        assertTrue(pendingReviews.stream().allMatch(r -> r.getStatus() == KycReview.KycStatus.PENDING));
 
         // Cleanup
         pendingReviews.stream()
-            .filter(r -> r.userId.startsWith(testUserId))
-            .forEach(r -> kycReviewService.delete(r.id));
+            .filter(r -> r.getUserId().startsWith(testUserId))
+            .forEach(r -> kycReviewService.delete(r.getId()));
     }
 
     // ===== Fraud Case Integration Tests =====
@@ -231,20 +231,20 @@ class BackofficeIntegrationTest {
             "{\"ip\": \"192.168.1.100\", \"device\": \"unknown\"}"
         );
 
-        Optional<FraudCase> retrievedCase = fraudCaseService.getById(createdCase.id);
+        Optional<FraudCase> retrievedCase = fraudCaseService.getById(createdCase.getId());
 
         // Then
         assertTrue(retrievedCase.isPresent());
-        assertEquals(createdCase.id, retrievedCase.get().id);
-        assertEquals(testUserId, retrievedCase.get().userId);
-        assertEquals(transactionId, retrievedCase.get().transactionId);
-        assertEquals("TRANSFER", retrievedCase.get().transactionType);
-        assertEquals(amount, retrievedCase.get().amount);
-        assertEquals(FraudCase.RiskLevel.HIGH, retrievedCase.get().riskLevel);
-        assertEquals(FraudCase.CaseStatus.OPEN, retrievedCase.get().status);
+        assertEquals(createdCase.getId(), retrievedCase.get().getId());
+        assertEquals(testUserId, retrievedCase.get().getUserId());
+        assertEquals(transactionId, retrievedCase.get().getTransactionId());
+        assertEquals("TRANSFER", retrievedCase.get().getTransactionType());
+        assertEquals(amount, retrievedCase.get().getAmount());
+        assertEquals(FraudCase.RiskLevel.HIGH, retrievedCase.get().getRiskLevel());
+        assertEquals(FraudCase.CaseStatus.OPEN, retrievedCase.get().getStatus());
 
         // Cleanup
-        fraudCaseService.delete(createdCase.id);
+        fraudCaseService.delete(createdCase.getId());
     }
 
     @Test
@@ -268,14 +268,14 @@ class BackofficeIntegrationTest {
         );
 
         // When
-        FraudCase assignedCase = fraudCaseService.assign(fraudCase.id, "investigator1");
+        FraudCase assignedCase = fraudCaseService.assign(fraudCase.getId(), "investigator1");
 
         // Then
-        assertEquals("investigator1", assignedCase.assignedTo);
-        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, assignedCase.status);
+        assertEquals("investigator1", assignedCase.getAssignedTo());
+        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, assignedCase.getStatus());
 
         // Cleanup
-        fraudCaseService.delete(fraudCase.id);
+        fraudCaseService.delete(fraudCase.getId());
     }
 
     @Test
@@ -298,7 +298,7 @@ class BackofficeIntegrationTest {
             "{\"email\": \"scam@fake.com\"}"
         );
 
-        fraudCaseService.assign(fraudCase.id, "investigator2");
+        fraudCaseService.assign(fraudCase.getId(), "investigator2");
 
         FraudCaseDecisionRequest decisionRequest = new FraudCaseDecisionRequest(
             FraudCaseDecisionRequest.FraudCaseStatus.RESOLVED,
@@ -306,15 +306,15 @@ class BackofficeIntegrationTest {
         );
 
         // When
-        FraudCase resolvedCase = fraudCaseService.resolve(fraudCase.id, decisionRequest, "investigator2");
+        FraudCase resolvedCase = fraudCaseService.resolve(fraudCase.getId(), decisionRequest, "investigator2");
 
         // Then
-        assertEquals(FraudCase.CaseStatus.RESOLVED, resolvedCase.status);
-        assertEquals("investigator2", resolvedCase.resolvedBy);
-        assertNotNull(resolvedCase.resolvedAt);
+        assertEquals(FraudCase.CaseStatus.RESOLVED, resolvedCase.getStatus());
+        assertEquals("investigator2", resolvedCase.getResolvedBy());
+        assertNotNull(resolvedCase.getResolvedAt());
 
         // Cleanup
-        fraudCaseService.delete(fraudCase.id);
+        fraudCaseService.delete(fraudCase.getId());
     }
 
     @Test
@@ -342,14 +342,14 @@ class BackofficeIntegrationTest {
 
         // Then
         assertNotNull(highRiskCases);
-        assertTrue(highRiskCases.stream().anyMatch(c -> c.userId.startsWith(testUserId)));
-        assertTrue(highRiskCases.stream().filter(c -> c.userId.startsWith(testUserId))
-            .allMatch(c -> c.riskLevel == FraudCase.RiskLevel.HIGH));
+        assertTrue(highRiskCases.stream().anyMatch(c -> c.getUserId().startsWith(testUserId)));
+        assertTrue(highRiskCases.stream().filter(c -> c.getUserId().startsWith(testUserId))
+            .allMatch(c -> c.getRiskLevel() == FraudCase.RiskLevel.HIGH));
 
         // Cleanup
         highRiskCases.stream()
-            .filter(c -> c.userId.startsWith(testUserId))
-            .forEach(c -> fraudCaseService.delete(c.id));
+            .filter(c -> c.getUserId().startsWith(testUserId))
+            .forEach(c -> fraudCaseService.delete(c.getId()));
     }
 
     // ===== Customer Case Integration Tests =====
@@ -374,19 +374,19 @@ class BackofficeIntegrationTest {
 
         // When
         CustomerCase createdCase = customerCaseService.create(request);
-        Optional<CustomerCase> retrievedCase = customerCaseService.getById(createdCase.id);
+        Optional<CustomerCase> retrievedCase = customerCaseService.getById(createdCase.getId());
 
         // Then
         assertTrue(retrievedCase.isPresent());
-        assertEquals(createdCase.id, retrievedCase.get().id);
-        assertEquals(testUserId, retrievedCase.get().userId);
-        assertEquals(CustomerCase.CaseType.TRANSACTION_DISPUTE, retrievedCase.get().caseType);
-        assertEquals(CustomerCase.Priority.HIGH, retrievedCase.get().priority);
-        assertEquals(CustomerCase.CaseStatus.OPEN, retrievedCase.get().status);
-        assertNotNull(retrievedCase.get().caseNumber);
+        assertEquals(createdCase.getId(), retrievedCase.get().getId());
+        assertEquals(testUserId, retrievedCase.get().getUserId());
+        assertEquals(CustomerCase.CaseType.TRANSACTION_DISPUTE, retrievedCase.get().getCaseType());
+        assertEquals(CustomerCase.Priority.HIGH, retrievedCase.get().getPriority());
+        assertEquals(CustomerCase.CaseStatus.OPEN, retrievedCase.get().getStatus());
+        assertNotNull(retrievedCase.get().getCaseNumber());
 
         // Cleanup
-        customerCaseService.delete(createdCase.id);
+        customerCaseService.delete(createdCase.getId());
     }
 
     @Test
@@ -410,14 +410,14 @@ class BackofficeIntegrationTest {
         CustomerCase customerCase = customerCaseService.create(request);
 
         // When
-        CustomerCase assignedCase = customerCaseService.assign(customerCase.id, "agent1");
+        CustomerCase assignedCase = customerCaseService.assign(customerCase.getId(), "agent1");
 
         // Then
-        assertEquals("agent1", assignedCase.assignedTo);
-        assertEquals(CustomerCase.CaseStatus.IN_PROGRESS, assignedCase.status);
+        assertEquals("agent1", assignedCase.getAssignedTo());
+        assertEquals(CustomerCase.CaseStatus.IN_PROGRESS, assignedCase.getStatus());
 
         // Cleanup
-        customerCaseService.delete(customerCase.id);
+        customerCaseService.delete(customerCase.getId());
     }
 
     @Test
@@ -439,11 +439,11 @@ class BackofficeIntegrationTest {
         );
 
         CustomerCase customerCase = customerCaseService.create(request);
-        customerCaseService.assign(customerCase.id, "support1");
+        customerCaseService.assign(customerCase.getId(), "support1");
 
         // When
         CustomerCase updatedCase = customerCaseService.update(
-            customerCase.id,
+            customerCase.getId(),
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
                 CustomerCase.CaseStatus.RESOLVED,
                 "Fixed in version 2.1. Please update app"
@@ -452,13 +452,13 @@ class BackofficeIntegrationTest {
         );
 
         // Then
-        assertEquals(CustomerCase.CaseStatus.RESOLVED, updatedCase.status);
-        assertEquals("support1", updatedCase.resolvedBy);
-        assertNotNull(updatedCase.resolvedAt);
-        assertTrue(updatedCase.notes.contains("version 2.1"));
+        assertEquals(CustomerCase.CaseStatus.RESOLVED, updatedCase.getStatus());
+        assertEquals("support1", updatedCase.getResolvedBy());
+        assertNotNull(updatedCase.getResolvedAt());
+        assertTrue(updatedCase.getNotes().contains("version 2.1"));
 
         // Cleanup
-        customerCaseService.delete(customerCase.id);
+        customerCaseService.delete(customerCase.getId());
     }
 
     @Test
@@ -486,14 +486,14 @@ class BackofficeIntegrationTest {
 
         // Then
         assertNotNull(urgentCases);
-        assertTrue(urgentCases.stream().anyMatch(c -> c.userId.startsWith(testUserId)));
-        assertTrue(urgentCases.stream().filter(c -> c.userId.startsWith(testUserId))
-            .allMatch(c -> c.priority == CustomerCase.Priority.URGENT));
+        assertTrue(urgentCases.stream().anyMatch(c -> c.getUserId().startsWith(testUserId)));
+        assertTrue(urgentCases.stream().filter(c -> c.getUserId().startsWith(testUserId))
+            .allMatch(c -> c.getPriority() == CustomerCase.Priority.URGENT));
 
         // Cleanup
         urgentCases.stream()
-            .filter(c -> c.userId.startsWith(testUserId))
-            .forEach(c -> customerCaseService.delete(c.id));
+            .filter(c -> c.getUserId().startsWith(testUserId))
+            .forEach(c -> customerCaseService.delete(c.getId()));
     }
 
     // ===== Audit Trail Tests =====
@@ -517,15 +517,15 @@ class BackofficeIntegrationTest {
             KycReviewDecisionRequest.KycReviewStatus.APPROVED,
             "Approved after verification"
         );
-        KycReview updatedReview = kycReviewService.review(review.id, decisionRequest, "admin_audit");
+        KycReview updatedReview = kycReviewService.review(review.getId(), decisionRequest, "admin_audit");
 
         // Then - Verify audit trail is maintained
-        assertNotNull(updatedReview.createdAt);
-        assertNotNull(updatedReview.reviewedAt);
-        assertEquals("admin_audit", updatedReview.reviewedBy);
+        assertNotNull(updatedReview.getCreatedAt());
+        assertNotNull(updatedReview.getReviewedAt());
+        assertEquals("admin_audit", updatedReview.getReviewedBy());
 
         // Cleanup
-        kycReviewService.delete(review.id);
+        kycReviewService.delete(review.getId());
     }
 
     @Test
@@ -543,22 +543,22 @@ class BackofficeIntegrationTest {
         );
 
         // When
-        fraudCaseService.assign(fraudCase.id, "investigator_audit");
+        fraudCaseService.assign(fraudCase.getId(), "investigator_audit");
 
         FraudCaseDecisionRequest decisionRequest = new FraudCaseDecisionRequest(
             FraudCaseDecisionRequest.FraudCaseStatus.CLOSED,
             "Case closed after investigation"
         );
-        FraudCase resolvedCase = fraudCaseService.resolve(fraudCase.id, decisionRequest, "investigator_audit");
+        FraudCase resolvedCase = fraudCaseService.resolve(fraudCase.getId(), decisionRequest, "investigator_audit");
 
         // Then - Verify audit trail
-        assertNotNull(resolvedCase.createdAt);
-        assertEquals("investigator_audit", resolvedCase.assignedTo);
-        assertEquals("investigator_audit", resolvedCase.resolvedBy);
-        assertNotNull(resolvedCase.resolvedAt);
+        assertNotNull(resolvedCase.getCreatedAt());
+        assertEquals("investigator_audit", resolvedCase.getAssignedTo());
+        assertEquals("investigator_audit", resolvedCase.getResolvedBy());
+        assertNotNull(resolvedCase.getResolvedAt());
 
         // Cleanup
-        fraudCaseService.delete(fraudCase.id);
+        fraudCaseService.delete(fraudCase.getId());
     }
 
     @Test
@@ -577,9 +577,9 @@ class BackofficeIntegrationTest {
         CustomerCase customerCase = customerCaseService.create(request);
 
         // When
-        customerCaseService.assign(customerCase.id, "agent_audit");
+        customerCaseService.assign(customerCase.getId(), "agent_audit");
         CustomerCase updatedCase = customerCaseService.update(
-            customerCase.id,
+            customerCase.getId(),
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
                 CustomerCase.CaseStatus.RESOLVED,
                 "Issue resolved"
@@ -588,13 +588,13 @@ class BackofficeIntegrationTest {
         );
 
         // Then - Verify audit trail
-        assertNotNull(updatedCase.createdAt);
-        assertEquals("agent_audit", updatedCase.assignedTo);
-        assertEquals("agent_audit", updatedCase.resolvedBy);
-        assertNotNull(updatedCase.resolvedAt);
+        assertNotNull(updatedCase.getCreatedAt());
+        assertEquals("agent_audit", updatedCase.getAssignedTo());
+        assertEquals("agent_audit", updatedCase.getResolvedBy());
+        assertNotNull(updatedCase.getResolvedAt());
 
         // Cleanup
-        customerCaseService.delete(customerCase.id);
+        customerCaseService.delete(customerCase.getId());
     }
 
     // ===== Error Handling Tests =====
@@ -657,30 +657,30 @@ class BackofficeIntegrationTest {
 
         // When - Create review
         KycReview review = kycReviewService.create(request);
-        assertEquals(KycReview.KycStatus.PENDING, review.status);
+        assertEquals(KycReview.KycStatus.PENDING, review.getStatus());
 
         // When - Request additional info
         KycReviewDecisionRequest infoRequest = new KycReviewDecisionRequest(
             KycReviewDecisionRequest.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
             "Please provide proof of address"
         );
-        review = kycReviewService.review(review.id, infoRequest, "admin1");
-        assertEquals(KycReview.KycStatus.REQUIRES_ADDITIONAL_INFO, review.status);
+        review = kycReviewService.review(review.getId(), infoRequest, "admin1");
+        assertEquals(KycReview.KycStatus.REQUIRES_ADDITIONAL_INFO, review.getStatus());
 
         // When - Final approval
         KycReviewDecisionRequest approvalRequest = new KycReviewDecisionRequest(
             KycReviewDecisionRequest.KycReviewStatus.APPROVED,
             "All documents verified and approved"
         );
-        review = kycReviewService.review(review.id, approvalRequest, "admin2");
+        review = kycReviewService.review(review.getId(), approvalRequest, "admin2");
 
         // Then - Verify final state
-        assertEquals(KycReview.KycStatus.APPROVED, review.status);
-        assertEquals("admin2", review.reviewedBy);
-        assertNotNull(review.reviewedAt);
+        assertEquals(KycReview.KycStatus.APPROVED, review.getStatus());
+        assertEquals("admin2", review.getReviewedBy());
+        assertNotNull(review.getReviewedAt());
 
         // Cleanup
-        kycReviewService.delete(review.id);
+        kycReviewService.delete(review.getId());
     }
 
     @Test
@@ -699,34 +699,34 @@ class BackofficeIntegrationTest {
             "{\"pattern\": \"layering\", \"alerts\": 5}"
         );
 
-        assertEquals(FraudCase.CaseStatus.OPEN, fraudCase.status);
+        assertEquals(FraudCase.CaseStatus.OPEN, fraudCase.getStatus());
 
         // When - Assign to investigator
-        fraudCase = fraudCaseService.assign(fraudCase.id, "senior_investigator");
-        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, fraudCase.status);
+        fraudCase = fraudCaseService.assign(fraudCase.getId(), "senior_investigator");
+        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, fraudCase.getStatus());
 
         // When - Escalate for further review
         FraudCaseDecisionRequest escalateRequest = new FraudCaseDecisionRequest(
             FraudCaseDecisionRequest.FraudCaseStatus.ESCALATED,
             "Complex case requiring compliance team review"
         );
-        fraudCase = fraudCaseService.resolve(fraudCase.id, escalateRequest, "senior_investigator");
-        assertEquals(FraudCase.CaseStatus.ESCALATED, fraudCase.status);
+        fraudCase = fraudCaseService.resolve(fraudCase.getId(), escalateRequest, "senior_investigator");
+        assertEquals(FraudCase.CaseStatus.ESCALATED, fraudCase.getStatus());
 
         // When - Final resolution
         FraudCaseDecisionRequest resolveRequest = new FraudCaseDecisionRequest(
             FraudCaseDecisionRequest.FraudCaseStatus.CLOSED,
             "Case reviewed and closed. SAR filed."
         );
-        fraudCase = fraudCaseService.resolve(fraudCase.id, resolveRequest, "compliance_officer");
+        fraudCase = fraudCaseService.resolve(fraudCase.getId(), resolveRequest, "compliance_officer");
 
         // Then - Verify final state
-        assertEquals(FraudCase.CaseStatus.CLOSED, fraudCase.status);
-        assertEquals("compliance_officer", fraudCase.resolvedBy);
-        assertNotNull(fraudCase.resolvedAt);
+        assertEquals(FraudCase.CaseStatus.CLOSED, fraudCase.getStatus());
+        assertEquals("compliance_officer", fraudCase.getResolvedBy());
+        assertNotNull(fraudCase.getResolvedAt());
 
         // Cleanup
-        fraudCaseService.delete(fraudCase.id);
+        fraudCaseService.delete(fraudCase.getId());
     }
 
     @Test
@@ -746,16 +746,16 @@ class BackofficeIntegrationTest {
         );
 
         CustomerCase customerCase = customerCaseService.create(request);
-        assertEquals(CustomerCase.CaseStatus.OPEN, customerCase.status);
-        assertEquals(CustomerCase.Priority.URGENT, customerCase.priority);
+        assertEquals(CustomerCase.CaseStatus.OPEN, customerCase.getStatus());
+        assertEquals(CustomerCase.Priority.URGENT, customerCase.getPriority());
 
         // When - Assign to agent
-        customerCase = customerCaseService.assign(customerCase.id, "senior_agent");
-        assertEquals(CustomerCase.CaseStatus.IN_PROGRESS, customerCase.status);
+        customerCase = customerCaseService.assign(customerCase.getId(), "senior_agent");
+        assertEquals(CustomerCase.CaseStatus.IN_PROGRESS, customerCase.getStatus());
 
         // When - Update with findings
         customerCase = customerCaseService.update(
-            customerCase.id,
+            customerCase.getId(),
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
                 CustomerCase.CaseStatus.IN_PROGRESS,
                 "Investigating with payment processor. Evidence gathered."
@@ -765,7 +765,7 @@ class BackofficeIntegrationTest {
 
         // When - Resolve case
         customerCase = customerCaseService.update(
-            customerCase.id,
+            customerCase.getId(),
             new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
                 CustomerCase.CaseStatus.RESOLVED,
                 "Confirmed unauthorized. Refund processed. Case closed."
@@ -774,12 +774,12 @@ class BackofficeIntegrationTest {
         );
 
         // Then - Verify final state
-        assertEquals(CustomerCase.CaseStatus.RESOLVED, customerCase.status);
-        assertEquals("senior_agent", customerCase.resolvedBy);
-        assertNotNull(customerCase.resolvedAt);
+        assertEquals(CustomerCase.CaseStatus.RESOLVED, customerCase.getStatus());
+        assertEquals("senior_agent", customerCase.getResolvedBy());
+        assertNotNull(customerCase.getResolvedAt());
 
         // Cleanup
-        customerCaseService.delete(customerCase.id);
+        customerCaseService.delete(customerCase.getId());
     }
 
     // ===== Dashboard Data Tests =====
@@ -805,12 +805,12 @@ class BackofficeIntegrationTest {
 
         // Then
         assertNotNull(page1);
-        assertTrue(page1.stream().anyMatch(r -> r.userId.startsWith(testUserId)));
+        assertTrue(page1.stream().anyMatch(r -> r.getUserId().startsWith(testUserId)));
 
         // Cleanup
         page1.stream()
-            .filter(r -> r.userId.startsWith(testUserId))
-            .forEach(r -> kycReviewService.delete(r.id));
+            .filter(r -> r.getUserId().startsWith(testUserId))
+            .forEach(r -> kycReviewService.delete(r.getId()));
     }
 
     @Test
@@ -840,12 +840,12 @@ class BackofficeIntegrationTest {
 
         // Then
         assertNotNull(page1);
-        assertTrue(page1.stream().anyMatch(c -> c.userId.startsWith(testUserId)));
+        assertTrue(page1.stream().anyMatch(c -> c.getUserId().startsWith(testUserId)));
 
         // Cleanup
         page1.stream()
-            .filter(c -> c.userId.startsWith(testUserId))
-            .forEach(c -> fraudCaseService.delete(c.id));
+            .filter(c -> c.getUserId().startsWith(testUserId))
+            .forEach(c -> fraudCaseService.delete(c.getId()));
     }
 
     @Test
@@ -873,11 +873,11 @@ class BackofficeIntegrationTest {
 
         // Then
         assertNotNull(page1);
-        assertTrue(page1.stream().anyMatch(c -> c.userId.startsWith(testUserId)));
+        assertTrue(page1.stream().anyMatch(c -> c.getUserId().startsWith(testUserId)));
 
         // Cleanup
         page1.stream()
-            .filter(c -> c.userId.startsWith(testUserId))
-            .forEach(c -> customerCaseService.delete(c.id));
+            .filter(c -> c.getUserId().startsWith(testUserId))
+            .forEach(c -> customerCaseService.delete(c.getId()));
     }
 }

@@ -150,4 +150,4 @@ Follow Hexagonal Architecture:
 
 ---
 
-*Created via @docs-engineer*
+*Created via @principal-architect*

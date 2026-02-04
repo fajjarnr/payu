@@ -70,6 +70,18 @@ fi
 print_success "POM files validated"
 
 ###############################################################################
+# 1.5 Validate AI skills registry
+###############################################################################
+print_header "Validating AI skills registry..."
+
+if [ -f "$PROJECT_ROOT/scripts/validate-skills.sh" ]; then
+    bash "$PROJECT_ROOT/scripts/validate-skills.sh"
+    print_success "Skills registry validated"
+else
+    print_warning "Skill validator not found (scripts/validate-skills.sh)"
+fi
+
+###############################################################################
 # 2. Compilation check
 ###############################################################################
 print_header "Checking compilation..."

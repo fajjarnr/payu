@@ -1,5 +1,7 @@
 package id.payu.transaction.application.service;
 
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
+import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.domain.model.ScheduledTransfer;
 import id.payu.transaction.domain.port.in.ScheduledTransferUseCase;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
@@ -164,9 +166,8 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                     .type(InitiateTransferRequest.TransactionType.valueOf(scheduledTransfer.getTransferType().name()))
                     .build();
 
-            var response = transactionUseCase.initiateTransfer(
-                    request,
-                    scheduledTransfer.getSenderAccountId().toString());
+            InitiateTransferCommand command = InitiateTransferCommand.from(request, scheduledTransfer.getSenderAccountId().toString());
+            InitiateTransferCommandResult response = transactionUseCase.initiateTransfer(command);
 
             scheduledTransfer.setExecutedCount(scheduledTransfer.getExecutedCount() + 1);
             scheduledTransfer.setLastTransactionId(response.transactionId());

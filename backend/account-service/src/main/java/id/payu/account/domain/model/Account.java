@@ -34,6 +34,7 @@ public class Account {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private long version;
 
     // Balance limits by account type
     private static final BigDecimal MINIMUM_SAVINGS_BALANCE = new BigDecimal("10000");
@@ -47,7 +48,7 @@ public class Account {
 
     public Account(UUID id, String externalId, UUID userId, String accountNumber,
                    String accountType, AccountStatus status, BigDecimal balance,
-                   String currency, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   String currency, LocalDateTime createdAt, LocalDateTime updatedAt, long version) {
         this.id = id;
         this.externalId = externalId;
         this.userId = userId;
@@ -58,6 +59,7 @@ public class Account {
         this.currency = currency;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.version = version;
     }
 
     // ==================== DOMAIN BEHAVIORS ====================
@@ -389,6 +391,14 @@ public class Account {
         this.updatedAt = updatedAt;
     }
 
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
+    }
+
     // Builder
     public static Builder builder() {
         return new Builder();
@@ -405,6 +415,7 @@ public class Account {
         private String currency;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private long version;
 
         public Builder id(UUID id) {
             this.id = id;
@@ -456,9 +467,14 @@ public class Account {
             return this;
         }
 
+        public Builder version(long version) {
+            this.version = version;
+            return this;
+        }
+
         public Account build() {
             return new Account(id, externalId, userId, accountNumber, accountType,
-                    status, balance, currency, createdAt, updatedAt);
+                    status, balance, currency, createdAt, updatedAt, version);
         }
     }
 

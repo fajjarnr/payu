@@ -281,7 +281,7 @@ install_nodejs() {
     esac
 
     # Install global npm packages
-    sudo npm install -g pnpm yarn @subosito/pact-js-cli @slidev/cli
+    sudo npm install -g pnpm yarn @pact-foundation/pact-cli @slidev/cli
 
     print_success "Node.js $NODE_VERSION installed"
 }
@@ -357,9 +357,11 @@ install_additional_tools() {
         echo "Installing k6..."
         case $OS in
             ubuntu|debian|pop)
-                sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-                echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/bin/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-                sudo apt update && sudo apt install k6
+                echo "Downloading k6 binary..."
+                wget -q https://github.com/grafana/k6/releases/download/v0.56.0/k6-v0.56.0-linux-amd64.tar.gz -O /tmp/k6.tar.gz
+                tar -xzf /tmp/k6.tar.gz -C /tmp
+                sudo mv /tmp/k6-v0.56.0-linux-amd64/k6 /usr/local/bin/
+                rm -rf /tmp/k6.tar.gz /tmp/k6-v0.56.0-linux-amd64
                 ;;
             fedora|rhel|centos|rocky|almalinux)
                 sudo dnf install k6
@@ -375,9 +377,10 @@ install_additional_tools() {
         echo "Installing Trivy..."
         case $OS in
             ubuntu|debian|pop)
-                wget -qO - https://aquasecurity.github.io/trivy-repo/dab/gpg.key | sudo apt-key add -
-                echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-                sudo apt update && sudo apt install trivy
+                sudo mkdir -p /etc/apt/keyrings
+                wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /etc/apt/keyrings/trivy.gpg --yes
+                echo "deb [signed-by=/etc/apt/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+                sudo apt update && sudo apt install -y trivy
                 ;;
             fedora|rhel|centos|rocky|almalinux)
                 sudo dnf install -y trivy

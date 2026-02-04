@@ -528,6 +528,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
+      PAYU_CACHE_REDIS_HOST: redis
       JAVA_OPTS: >-
         -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
@@ -539,7 +540,7 @@ services:
         condition: service_healthy
     healthcheck:
       test:
-        ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+        ["CMD", "curl", "-f", "http://localhost:8080/compliance-service/actuator/health/liveness"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -730,7 +731,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      QUARKUS_REDIS_HOSTS: redis:6379
+      QUARKUS_REDIS_HOSTS: redis://redis:6379
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_URL: http://keycloak:8080
       OTEL_ENDPOINT: http://jaeger:4317
@@ -821,7 +822,7 @@ services:
       dockerfile: Dockerfile
     container_name: payu-partner-service
     ports:
-      - "8012:8080"
+      - "8010:8080"
     environment:
       SPRING_PROFILES_ACTIVE: container
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_partner
@@ -830,8 +831,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
+      PAYU_CACHE_REDIS_HOST: redis
       JAVA_OPTS: >-
-        -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+        -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
     depends_on:
       postgres:
         condition: service_healthy
@@ -841,7 +843,7 @@ services:
         condition: service_healthy
     healthcheck:
       test:
-        ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+        ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -850,10 +852,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 512M
+          memory: 768M
         reservations:
           cpus: "0.1"
-          memory: 128M
+          memory: 256M
     networks:
       - payu-network
   promotion-service:

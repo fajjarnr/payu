@@ -40,7 +40,6 @@ public class InitiateTransferRequest {
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
-    @Pattern(regexp = "^\\d{1,12}(\\.\\d{1,2})?$", message = "Amount must have maximum 12 digits and 2 decimal places")
     @Sensitive
     private BigDecimal amount;
 
@@ -49,7 +48,7 @@ public class InitiateTransferRequest {
 
     @NotBlank(message = "Description is required")
     @Size(min = 1, max = 100, message = "Description must be between 1 and 100 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9\\s\\-.,]+$", message = "Description contains invalid characters")
+    @Pattern(regexp = "^[a-zA-Z0-9\\s\\-.,#()]+$", message = "Description contains invalid characters")
     private String description;
 
     private TransactionType type;

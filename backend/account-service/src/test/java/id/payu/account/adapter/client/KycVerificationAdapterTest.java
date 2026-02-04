@@ -198,13 +198,16 @@ class KycVerificationAdapterTest {
             );
 
             given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
-                .willReturn(new id.payu.account.dto.DukcapilResponse(
+                .willReturn(VerifyNikResponse.success(
                     "req-123",
                     "3201234567890001",
                     true,
-                    "ACTIVE",
-                    "00",
-                    "Success"
+                    "John Doe",
+                    "Jakarta",
+                    LocalDate.of(1990, 1, 15),
+                    "MALE",
+                    "Jl. Test No. 123",
+                    "ACTIVE"
                 ));
 
             // When

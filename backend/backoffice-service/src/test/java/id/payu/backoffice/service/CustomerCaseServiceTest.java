@@ -3,11 +3,13 @@ package id.payu.backoffice.service;
 import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.dto.CustomerCaseRequest;
 import id.payu.backoffice.dto.CustomerCaseUpdateRequest;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import id.payu.backoffice.dto.CustomerCaseUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,10 +17,12 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class CustomerCaseServiceTest {
 
-    @Inject
+    @Autowired
     CustomerCaseService customerCaseService;
 
     private String testUserId;

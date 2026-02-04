@@ -111,6 +111,12 @@ public interface GatewayConfig {
      */
     IdempotencyConfig idempotency();
 
+    /**
+     * Authorization configuration.
+     */
+    @WithName("authorization")
+    AuthorizationConfig authorization();
+
     interface ServiceConfig {
         String url();
 
@@ -463,5 +469,14 @@ public interface GatewayConfig {
         @WithName("applicable-methods")
         @WithDefault("POST,PUT,PATCH,DELETE")
         List<String> applicableMethods();
+    }
+
+    interface AuthorizationConfig {
+        @WithDefault("true")
+        boolean enabled();
+
+        @WithName("jwt-secret")
+        @WithDefault("dGVzdC1qd3Qtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC0xMjM0NTY3ODkw")
+        String jwtSecret();
     }
 }

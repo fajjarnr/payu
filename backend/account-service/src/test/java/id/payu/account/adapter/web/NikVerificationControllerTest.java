@@ -62,9 +62,7 @@ class NikVerificationControllerTest {
             LocalDate.of(1990, 1, 15),
             "MALE",
             "Jl. Test No. 123",
-            "ACTIVE",
-            "00",
-            "Verification successful"
+            "ACTIVE"
         );
 
         notFoundResponse = VerifyNikResponse.notFound(

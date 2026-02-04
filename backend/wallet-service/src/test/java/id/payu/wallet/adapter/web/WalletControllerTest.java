@@ -1,5 +1,6 @@
 package id.payu.wallet.adapter.web;
 
+import id.payu.api.common.response.ApiResponse;
 import id.payu.wallet.application.exception.WalletNotFoundException;
 import id.payu.wallet.domain.model.LedgerEntry;
 import id.payu.wallet.domain.model.Wallet;
@@ -90,13 +91,13 @@ class WalletControllerTest {
     void shouldGetBalance() {
         when(walletUseCase.getWalletByAccountId(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
 
-        ResponseEntity<BalanceResponse> response = walletController.getBalance(testWallet.getAccountId());
+        ResponseEntity<ApiResponse<BalanceResponse>> response = walletController.getBalance(testWallet.getAccountId());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getAccountId()).isEqualTo(testWallet.getAccountId());
-        assertThat(response.getBody().getBalance()).isEqualByComparingTo(new BigDecimal("10000000"));
-        assertThat(response.getBody().getAvailableBalance()).isEqualByComparingTo(new BigDecimal("5000000"));
+        assertThat(response.getBody().getData().getAccountId()).isEqualTo(testWallet.getAccountId());
+        assertThat(response.getBody().getData().getBalance()).isEqualByComparingTo(new BigDecimal("10000000"));
+        assertThat(response.getBody().getData().getAvailableBalance()).isEqualByComparingTo(new BigDecimal("5000000"));
     }
 
     @Test
@@ -117,12 +118,12 @@ class WalletControllerTest {
         when(walletUseCase.reserveBalance(testWallet.getAccountId(), new BigDecimal("5000000"), "REF-001"))
                 .thenReturn(UUID.randomUUID().toString());
 
-        ResponseEntity<ReserveBalanceResponse> response = walletController.reserveBalance(testWallet.getAccountId(), request);
+        ResponseEntity<ApiResponse<ReserveBalanceResponse>> response = walletController.reserveBalance(testWallet.getAccountId(), request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getStatus()).isEqualTo("RESERVED");
-        assertThat(response.getBody().getReferenceId()).isEqualTo("REF-001");
+        assertThat(response.getBody().getData().getStatus()).isEqualTo("RESERVED");
+        assertThat(response.getBody().getData().getReferenceId()).isEqualTo("REF-001");
     }
 
     @Test
@@ -130,12 +131,12 @@ class WalletControllerTest {
     void shouldCommitReservation() {
         String reservationId = UUID.randomUUID().toString();
 
-        ResponseEntity<Map<String, String>> response = walletController.commitReservation(reservationId);
+        ResponseEntity<ApiResponse<Map<String, String>>> response = walletController.commitReservation(reservationId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().get("status")).isEqualTo("COMMITTED");
-        assertThat(response.getBody().get("reservationId")).isEqualTo(reservationId);
+        assertThat(response.getBody().getData().get("status")).isEqualTo("COMMITTED");
+        assertThat(response.getBody().getData().get("reservationId")).isEqualTo(reservationId);
         verify(walletUseCase).commitReservation(reservationId);
     }
 
@@ -144,12 +145,12 @@ class WalletControllerTest {
     void shouldReleaseReservation() {
         String reservationId = UUID.randomUUID().toString();
 
-        ResponseEntity<Map<String, String>> response = walletController.releaseReservation(reservationId);
+        ResponseEntity<ApiResponse<Map<String, String>>> response = walletController.releaseReservation(reservationId);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().get("status")).isEqualTo("RELEASED");
-        assertThat(response.getBody().get("reservationId")).isEqualTo(reservationId);
+        assertThat(response.getBody().getData().get("status")).isEqualTo("RELEASED");
+        assertThat(response.getBody().getData().get("reservationId")).isEqualTo(reservationId);
         verify(walletUseCase).releaseReservation(reservationId);
     }
 
@@ -158,12 +159,12 @@ class WalletControllerTest {
     void shouldCreditAmountToWallet() {
         CreditRequest request = new CreditRequest(new BigDecimal("5000000"), "REF-001", "Test credit");
 
-        ResponseEntity<Map<String, String>> response = walletController.credit(testWallet.getAccountId(), request);
+        ResponseEntity<ApiResponse<Map<String, String>>> response = walletController.credit(testWallet.getAccountId(), request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().get("status")).isEqualTo("CREDITED");
-        assertThat(response.getBody().get("accountId")).isEqualTo(testWallet.getAccountId());
+        assertThat(response.getBody().getData().get("status")).isEqualTo("CREDITED");
+        assertThat(response.getBody().getData().get("accountId")).isEqualTo(testWallet.getAccountId());
         verify(walletUseCase).credit(testWallet.getAccountId(), new BigDecimal("5000000"), "REF-001", "Test credit");
     }
 
@@ -172,11 +173,11 @@ class WalletControllerTest {
     void shouldGetTransactionHistory() {
         when(walletUseCase.getTransactionHistory(testWallet.getAccountId(), 0, 20)).thenReturn(List.of(testTransaction));
 
-        ResponseEntity<List<WalletTransaction>> response = walletController.getTransactionHistory(testWallet.getAccountId(), 0, 20);
+        ResponseEntity<ApiResponse<List<WalletTransaction>>> response = walletController.getTransactionHistory(testWallet.getAccountId(), 0, 20);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).hasSize(1);
-        assertThat(response.getBody().get(0).getType()).isEqualTo(WalletTransaction.TransactionType.CREDIT);
+        assertThat(response.getBody().getData()).hasSize(1);
+        assertThat(response.getBody().getData().get(0).getType()).isEqualTo(WalletTransaction.TransactionType.CREDIT);
     }
 
     @Test
@@ -186,10 +187,10 @@ class WalletControllerTest {
         when(walletUseCase.getLedgerEntriesByTransactionId(transactionId))
                 .thenReturn(List.of(testLedgerEntry));
 
-        ResponseEntity<List<LedgerEntry>> response = walletController.getLedgerEntriesByTransaction(
+        ResponseEntity<ApiResponse<List<LedgerEntry>>> response = walletController.getLedgerEntriesByTransaction(
                 testWallet.getAccountId(), transactionId.toString());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).hasSize(1);
+        assertThat(response.getBody().getData()).hasSize(1);
     }
 }

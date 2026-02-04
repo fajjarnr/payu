@@ -12,12 +12,11 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Billing Service (Quarkus).
+ * Architecture Tests for Billing Service (Spring Boot).
  * 
  * Enforces:
  * - Layered architecture boundaries
  * - Naming conventions
- * - No field injection (follows Quarkus CDI best practices)
  * - Domain isolation
  */
 @DisplayName("Architecture Rules - Billing Service")
@@ -73,7 +72,7 @@ class ArchitectureTest {
                     .resideInAnyPackage(
                             "..resource..",
                             "..client..",
-                            "org.eclipse.microprofile.."
+                            "org.springframework.."
                     )
                     .because("Domain layer must be independent of infrastructure concerns")
                     .check(importedClasses);
@@ -136,28 +135,28 @@ class ArchitectureTest {
     class DependencyInjectionRules {
 
         @Test
-        @DisplayName("should use constructor or field injection with @Inject")
-        void shouldUseProperInjection() {
-            // In Quarkus, @Inject on fields is acceptable for CDI
-            // This test ensures @Autowired (Spring) is not used
+        @DisplayName("should use constructor injection (Spring best practice)")
+        void shouldPreferConstructorInjection() {
+            // This is a relaxed check, but encourages constructor injection
+            // We'll just check that @jakarta.inject.Inject is NOT used (Quarkus/CDI)
             noFields()
-                    .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
-                    .because("This is a Quarkus service - use @Inject instead of @Autowired")
+                    .should().beAnnotatedWith("jakarta.inject.Inject")
+                    .because("This is a Spring Boot service - avoid using Quarkus @Inject")
                     .check(importedClasses);
         }
     }
 
     @Nested
-    @DisplayName("Panache Entity Rules")
-    class PanacheEntityRules {
-
+    @DisplayName("Persistence Rules")
+    class PersistenceRules {
+ 
         @Test
-        @DisplayName("Panache entities should be in domain package")
-        void panacheEntitiesShouldBeInDomainPackage() {
+        @DisplayName("Repositories should be in repository package")
+        void repositoriesShouldBeInRepositoryPackage() {
             classes()
-                    .that().areAssignableTo(io.quarkus.hibernate.orm.panache.PanacheEntityBase.class)
-                    .should().resideInAPackage("..domain..")
-                    .because("Panache entities are domain objects in this architecture")
+                    .that().areAssignableTo(org.springframework.data.repository.Repository.class)
+                    .should().resideInAPackage("..repository..")
+                    .because("Repositories are infrastructure concerns for data access")
                     .check(importedClasses);
         }
     }

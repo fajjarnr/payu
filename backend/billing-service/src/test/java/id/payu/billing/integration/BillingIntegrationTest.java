@@ -1,22 +1,20 @@
 package id.payu.billing.integration;
 
 import id.payu.billing.client.WalletClient;
-import id.payu.billing.domain.BillPayment;
 import id.payu.billing.dto.CreatePaymentRequest;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.smallrye.reactive.messaging.memory.InMemoryConnector;
-import io.smallrye.reactive.messaging.memory.InMemorySink;
-import jakarta.enterprise.inject.Any;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -33,23 +31,24 @@ import static org.hamcrest.Matchers.notNullValue;
  * To run these tests: mvn test -Dtest=BillingIntegrationTest -Ddocker.enabled=true
  * To skip these tests: mvn test (they will be skipped by default)
  */
-@QuarkusTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Docker not available")
 public class BillingIntegrationTest {
 
-    @InjectMock
-    @RestClient
+    @LocalServerPort
+    int port;
+
+    @MockBean
     WalletClient walletClient;
 
-    @Inject
-    @Any
-    InMemoryConnector connector;
+    @MockBean
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     @BeforeEach
     void setup() {
+        RestAssured.port = port;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        // Clear sink to ensure test isolation
-        connector.sink("payment-events").clear();
     }
 
     @Test
@@ -88,13 +87,11 @@ public class BillingIntegrationTest {
                 .body("status", equalTo("COMPLETED"))
                 .body("id", equalTo(paymentId));
 
-        // 3. Verify Kafka Event (In-Memory Sink)
-        // With 'smallrye-in-memory' connector configured in application.yml, this should work without XA errors
-        InMemorySink<Map<String, Object>> eventsSink = connector.sink("payment-events");
-
-        await().until(() -> eventsSink.received().size() > 0);
-
-        Map<String, Object> event = eventsSink.received().get(0).getPayload();
+        // 3. Verify Kafka Event
+        ArgumentCaptor<Map<String, Object>> eventCaptor = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(kafkaTemplate, Mockito.timeout(5000)).send(Mockito.eq("payment-events"), Mockito.eq("ACC-001"), eventCaptor.capture());
+ 
+        Map<String, Object> event = eventCaptor.getValue();
         Assertions.assertEquals("PLN", event.get("billerCode"));
         Assertions.assertEquals("COMPLETED", event.get("status"));
         Assertions.assertEquals("ACC-001", event.get("accountId"));

@@ -148,4 +148,4 @@ public class WalletRepositoryJpa implements WalletRepository {
 
 ---
 
-*Created via @docs-engineer*
+*Created via @principal-architect*
