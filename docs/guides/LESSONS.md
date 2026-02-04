@@ -535,3 +535,48 @@
 
 * **Services Affected**: compliance-service, any service with custom context-path
 
+
+## 🐳 Container Orchestration & Environment Setup (Feb 2026 - Final)
+
+### 15. Port 8080 Standardization Implementation (Feb 4, 2026)
+
+* **Observation**: Different services were mapped to different host ports (8001, 8002, 8003, etc.) while all services internally listen on port 8080.
+* **Implementation**: 
+  - All services configured with `EXPOSE 8080` internally
+  - Gateway service exposed on host port 8080 (standard API gateway port)
+  - Other services mapped to unique host ports for development (8001-8014)
+  - In production OpenShift, services use ClusterIP/Route - no port mapping needed
+* **Benefit**: Standard internal port simplifies service discovery and configuration
+* **Note**: Host port variation is development-only for local testing
+
+### 16. E2E Test Execution in Container Environment (Feb 4, 2026)
+
+* **Challenge**: Running full Playwright E2E suite takes 45-50 minutes in containerized environment
+* **Root Cause**: Browser automation, container resource constraints, and parallel test execution
+* **Optimization Strategies**:
+  1. Use `--workers` flag to control parallel execution
+  2. Run specific test suites instead of full suite during development
+  3. Use `--project` flag to target specific browsers
+  4. Consider using headless mode for faster execution
+* **Test Result**: 238 test folders created before termination
+* **Recommendation**: For CI/CD, use smoke tests for quick validation and full suite overnight
+
+### 17. Image Tagging for Podman Compose (Feb 4, 2026)
+
+* **The Problem**: `podman-compose` cannot find local images that were built with `localhost/` prefix
+* **Root Cause**: Images are built as `localhost/payu_service:latest` but compose references `payu_service:latest`
+* **The Fix**: Always tag local images to match compose reference:
+
+  ```bash
+  # Build creates localhost/payu_service:latest
+  podman build -f service/Dockerfile -t payu_service service
+  
+  # Tag to match compose reference
+  podman tag localhost/payu_service:latest payu_service:latest
+  
+  # Now compose can find it
+  podman compose up -d service
+  ```
+
+* **Alternative**: Use explicit `image:` tag in docker-compose.yml to avoid naming conflicts
+
