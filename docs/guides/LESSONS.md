@@ -410,3 +410,62 @@
 
 * **Why This Works**: Wildcard matchers ensure all subpaths are covered, and explicitly disabling OAuth2 resource server prevents JWT validation on public endpoints.
 * **Note**: The JWT filter chain should have `@Order(2)` and should only match paths that require authentication.
+
+### 8. Quarkus Redis Connection Format (Feb 4, 2026)
+
+* **The Problem**: Quarkus gateway service fails to start with `NullPointerException: Cannot invoke "String.length()" because "ip" is null` when connecting to Redis.
+* **Root Cause**: Vert.x Redis client (used by Quarkus) expects a specific URI format. Using `redis:6379` or `redis://redis:6379` can cause parsing issues.
+* **The Fix**: Use the `redis://host:port` format in environment variables:
+
+  ```yaml
+  # docker-compose.yml
+  environment:
+    QUARKUS_REDIS_HOSTS: redis://redis:6379  # Include redis:// prefix
+  ```
+
+* **Why This Works**: The Vert.x Redis client URI parser expects the `redis://` scheme to properly parse the connection string. Without it, the client attempts to parse the string incorrectly and fails with NPE.
+
+### 9. Gateway Authorization Configuration Mapping (Feb 4, 2026)
+
+* **The Problem**: Quarkus configuration validation fails with "does not map to any root" error for `gateway.authorization.jwt-secret` even though the property is defined in `application.yaml`.
+* **Root Cause**: SmallRye Config (used by Quarkus) requires all configuration properties to be mapped to a root interface in `@ConfigMapping` classes. The `AuthorizationFilter` was using `@ConfigProperty` directly, but the config mapping was rejecting unmapped properties.
+* **The Fix**: Add the `AuthorizationConfig` interface to `GatewayConfig.java`:
+
+  ```java
+  @ConfigMapping(prefix = "gateway")
+  public interface GatewayConfig {
+      // ... other configs
+
+      @WithName("authorization")
+      AuthorizationConfig authorization();
+
+      interface AuthorizationConfig {
+          @WithDefault("true")
+          boolean enabled();
+
+          @WithName("jwt-secret")
+          @WithDefault("dGVzdC1qd3Qtc2VjcmV0...")
+          String jwtSecret();
+      }
+  }
+  ```
+
+* **Why This Works**: Adding the interface to the config mapping tells SmallRye Config that these properties are valid and expected, preventing validation failures.
+
+## 🧪 E2E Testing (Feb 2026 Updates)
+
+### 10. Playwright Installation for E2E Tests (Feb 4, 2026)
+
+* **The Problem**: Running `npx playwright test` fails with "Cannot find module '@playwright/test'" even though Playwright is listed in `package.json`.
+* **Root Cause**: The `@playwright/test` package needs to be installed locally in the project, and browsers need to be downloaded separately.
+* **The Fix**: Install dependencies and browsers before running tests:
+
+  ```bash
+  # Install all npm dependencies including @playwright/test
+  npm ci
+
+  # Install Playwright browsers with system dependencies
+  npx playwright install --with-deps
+  ```
+
+* **Note**: The `--with-deps` flag installs system-level dependencies (like libraries for Chromium, Firefox, WebKit) which are required for headless browser operation in Linux environments.
