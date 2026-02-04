@@ -13,7 +13,7 @@ RUN microdnf install -y maven && microdnf clean all
 COPY . .
 
 # Build the Quarkus application
-RUN mvn package -DskipTests -Dquarkus.package.jar.type=fast-jar -pl :api-portal-service -am
+RUN mvn package -DskipTests -Dquarkus.package.jar.type=fast-jar
 
 ####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
@@ -35,10 +35,10 @@ USER 185
 WORKDIR /deployments
 
 # Copy built artifact from build stage
-COPY --from=build --chown=185 /build/api-portal-service/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build --chown=185 /build/api-portal-service/target/quarkus-app/*.jar /deployments/
-COPY --from=build --chown=185 /build/api-portal-service/target/quarkus-app/app/ /deployments/app/
-COPY --from=build --chown=185 /build/api-portal-service/target/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build --chown=185 /build/target/quarkus-app/*.jar /deployments/
+COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
+COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Expose the service port
 EXPOSE 8099
