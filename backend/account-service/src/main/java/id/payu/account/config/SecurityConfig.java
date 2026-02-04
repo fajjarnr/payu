@@ -32,12 +32,13 @@ public class SecurityConfig {
     /**
      * Public endpoints that bypass JWT authentication entirely.
      * This filter chain is evaluated first (Order 1) and handles requests without OAuth2 Resource Server.
+     * Uses wildcard matchers to ensure all subpaths are also public.
      */
     @Bean
     @Order(1)
     public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/api/v1/accounts/register", "/api/v1/auth/login")
+            .securityMatcher("/api/v1/accounts/**", "/api/v1/auth/**")
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -45,13 +46,14 @@ public class SecurityConfig {
             // Explicitly disable OAuth2 Resource Server for public endpoints
             .oauth2ResourceServer(oauth2 -> oauth2.disable());
 
-        log.info("Public security filter chain configured for: /api/v1/accounts/register, /api/v1/auth/login");
+        log.info("Public security filter chain configured for: /api/v1/accounts/**, /api/v1/auth/**");
         return http.build();
     }
 
     /**
      * JWT-authenticated endpoints for all other requests.
      * This filter chain is evaluated second (Order 2) and requires valid JWT tokens.
+     * Explicitly excludes public paths that are handled by the first filter chain.
      */
     @Bean
     @Order(2)
@@ -60,7 +62,14 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+            .authorizeHttpRequests(auth -> auth
+                // All actuator endpoints are public (handled by WebSecurityCustomizer)
+                .requestMatchers("/actuator/**", "/account-service/actuator/**").permitAll()
+                // Swagger/OpenAPI docs are public
+                .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // All other requests require authentication
+                .anyRequest().authenticated()
+            )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
                     .jwtAuthenticationConverter(jwtAuthenticationConverter())

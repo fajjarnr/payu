@@ -84,6 +84,17 @@
 * **Context Path Traps**: When writing support scripts (Python/Bash) for a monorepo, do not rely solely on the `build context` path from `compose.yml` to check for file existence (like `pom.xml`).
   * **Better Approach**: Resolve paths based on the `Dockerfile` location or explicitly handle the subdirectory structure.
 
+### 3. Pact CLI Installation
+* **Correct Package Name**: Use `@pact-foundation/pact-cli` instead of the legacy `@subosito/pact-js-cli` to avoid "Package not found" errors during setup.
+
+### 4. GPG Keyring Practices (Ubuntu 24.04+)
+* **Avoid `apt-key`**: The `apt-key` command is deprecated. Use `/etc/apt/keyrings` and `gpg --dearmor` for better security and compatibility.
+* **Example (Trivy/k6)**: 
+    ```bash
+    wget -qO - https://.../public.key | sudo gpg --dearmor -o /etc/apt/keyrings/tool.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/tool.gpg] https://..." | sudo tee /etc/apt/sources.list.d/tool.list
+    ```
+
 ## ☕ Java & Spring Boot
 
 ### 1. Naming Consistency (Entity vs Repo vs Test)
@@ -121,6 +132,41 @@
 ### 5. JPA Boolean Naming
 
 * **The Issue**: Derived Query Methods (like `findByActiveTrue`) expect a field named `active`. If the field is `isActive`, the method must be `findByIsActiveTrue`.
+
+## 🔄 CQRS & Architectural Refactoring (Feb 2026)
+
+### 1. Mockito Mutation Trap (Capture-by-Reference)
+
+*   **The Problem**: When testing services that mutate the same object across multiple repository `save()` calls (common in Saga flows), `verify(...).save(argThat(...))` or `ArgumentCaptor` will only show the **final state** of the object for all invocations.
+*   **The Symptom**: A test checking if a transaction was saved as `PENDING` then `VALIDATING` fails because Mockito reports it was `VALIDATING` both times.
+*   **The Fix**: Use a custom `Answer` to collect the object's state at the exact moment of invocation.
+
+    ```java
+    List<Status> capturedStatuses = new ArrayList<>();
+    when(repository.save(any())).thenAnswer(inv -> {
+        Transaction t = inv.getArgument(0);
+        capturedStatuses.add(t.getStatus()); // Hand-copy state here
+        return t;
+    });
+    // ... execution ...
+    assertThat(capturedStatuses).containsExactly(Status.PENDING, Status.VALIDATING);
+    ```
+
+### 2. Controller Slice Test Isolation (JPA Interference)
+
+*   **The Problem**: `@WebMvcTest` (slice test) attempts to load the full `@SpringBootApplication` context. If JPA annotations (`@EnableJpaRepositories`, `@EntityScan`) are on the main application class, the slice test will fail because it lacks `DataSource` and `EntityManager` beans.
+*   **The Fix**: Move JPA-related annotations to a separate `@Configuration` class (e.g., `JpaConfig.java`). This allows `@WebMvcTest` to ignore JPA infra while still scanning your controller.
+*   **Alternative**: Use `excludeAutoConfiguration` in the test annotation, but separating config is cleaner for monorepos.
+
+### 3. Financial Precision in Assertions
+
+*   **The Issue**: `BigDecimal` assertions with `isEqualTo()` fail if the scale is different (e.g., `100.0` vs `100.00`), even if the value is numerically identical.
+*   **The Fix**: Always use `isEqualByComparingTo()` for `BigDecimal` comparisons in tests, especially when testing `Money` value objects.
+
+### 4. Validation Regex & Special Characters
+
+*   **The Issue**: Strict regex patterns for transaction descriptions (e.g., `^[a-zA-Z0-9 ]*$`) often block valid banking use cases like reference numbers containing `#` or `()`.
+*   **Correction**: Update DTO validation patterns to include common symbols: `^[a-zA-Z0-9 #().]*$`.
 
 ## 🗄️ Database Management
 
@@ -223,6 +269,18 @@
     test: ["CMD-SHELL", "VAULT_ADDR=http://127.0.0.1:8200 vault status || exit 1"]
   ```
 
+### 7. Quarkus Uber-JAR Augmentation
+* **The Problem**: Duplicate files in dependencies (e.g., `META-INF/beans.xml` or custom resource files) can cause Quarkus build failures during the `buildUberJar` step.
+* **The Fix**: Exclude problematic duplicates or check for dependency conflicts. In most cases, ensuring the project structure follows standard Maven naming prevents resource collisions.
+
+### 8. ArchUnit DSL Modernization
+* **The Problem**: Older ArchUnit syntax like `.or()` or `.and()` in `ClassesShould` chains may result in `cannot find symbol` errors in newer versions.
+* **The Fix**: Use the more explicit `.orShould()` and `.andShould()` methods to properly continue the rule chain. Use `shouldNot().dependOnClassesThat()` instead of `should().notDependOnClassesThat()`.
+
+### 9. Financial Integrity & Optimistic Locking
+* **The Problem**: Concurrent financial operations (credits/debits) can lead to race conditions without proper locking.
+* **The Fix**: Add a `version` field to core domain entities (like `Account`) and use `@Version` (JPA) or manual checks in domain logic to enforce optimistic locking, as verified by P0 integrity tests.
+
 ## 🧪 Systematic Debugging
 
 ### 6. Spring Boot 3.4 Security & Public Endpoints (Feb 2026)
@@ -283,3 +341,72 @@
 
 * **The Problem**: "Zig-zag" or staggered grid layouts that look dynamic on Desktop often break flow on Mobile, leading to overlapping or confusing content.
 * **The Fix**: Switch to `flex-col` to stack elements vertically on mobile. Crucially, add significant vertical padding (`py-16` or `py-20`) to containers to prevent content from being occluded by fixed headers or bottom navigation bars.
+
+## 🐳 Containerization & Environment Setup (Feb 2026 Updates)
+
+### 4. Podman Registry Configuration (Feb 4, 2026)
+
+* **The Problem**: Podman cannot pull images from Docker Hub, showing errors like "short-name 'postgres:16-alpine' did not resolve to an alias and no unqualified-search registries are defined".
+* **Root Cause**: `/etc/containers/registries.conf` has all registry configurations commented out by default for security reasons.
+* **The Fix**: Add Docker Hub to unqualified search registries:
+
+  ```bash
+  sudo bash -c 'echo "unqualified-search-registries = [\"docker.io\"]" >> /etc/containers/registries.conf.d/short-name.conf'
+  ```
+
+* **Validation**: Run `podman pull postgres:16-alpine` to confirm images can now be pulled.
+
+### 5. Maven JAR Build Before Container Image (Feb 4, 2026)
+
+* **The Problem**: Docker build fails with "COPY target/*.jar /deployments/app.jar: no such file or directory" even though the service has a Dockerfile with build stages.
+* **Root Cause**: The Dockerfile expects JAR files to exist in `target/` but Maven hasn't built them yet. Multi-stage builds that run `mvn package` inside the container may fail if the local target directory is empty.
+* **The Fix**: Build the JAR file first using Maven on the host, then build the container image:
+
+  ```bash
+  # Step 1: Build JAR with Maven
+  mvn -f backend/account-service/pom.xml clean package -DskipTests
+
+  # Step 2: Build container image
+  podman build -f backend/account-service/Dockerfile -t payu_account-service backend/account-service
+  ```
+
+* **Note**: This two-step approach is more reliable than trying to run Maven inside the container build, especially for monorepo setups with shared dependencies.
+
+### 6. Local Image Tagging for Podman Compose (Feb 4, 2026)
+
+* **The Problem**: `podman-compose up` fails with "no such file or directory" even though images exist locally.
+* **Root Cause**: Images are built as `localhost/payu_service:latest` but `podman-compose` references them as `payu_service:latest` (without the `localhost/` prefix).
+* **The Fix**: Tag the local image to match the compose reference:
+
+  ```bash
+  podman tag localhost/payu_account-service:latest payu_account-service:latest
+  podman compose up -d account-service
+  ```
+
+* **Best Practice**: When using `build:` directive in docker-compose.yml, always specify an explicit `image:` tag to avoid naming mismatches between `localhost/` prefixed images and compose references.
+
+## ☕ Java & Spring Boot (Feb 2026 Updates)
+
+### 7. Spring Security Wildcard Matchers for Public Endpoints (Feb 4, 2026)
+
+* **The Problem**: Spring Security OAuth2 resource server configuration returns 401 for public endpoints even with `permitAll()` configuration and `WebSecurityCustomizer`.
+* **Root Cause**: Exact path matchers in `securityMatcher()` may not match due to path normalization issues. Using `/api/v1/accounts/register` might not match while `/api/v1/accounts/**` will.
+* **The Fix**: Use wildcard matchers for public filter chains with `@Order(1)`:
+
+  ```java
+  @Bean
+  @Order(1)
+  public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
+      http
+          .securityMatcher("/api/v1/accounts/**", "/api/v1/auth/**")  // Use wildcards!
+          .csrf(csrf -> csrf.disable())
+          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+          .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+          .oauth2ResourceServer(oauth2 -> oauth2.disable());  // Explicitly disable for public endpoints
+      return http.build();
+  }
+  ```
+
+* **Why This Works**: Wildcard matchers ensure all subpaths are covered, and explicitly disabling OAuth2 resource server prevents JWT validation on public endpoints.
+* **Note**: The JWT filter chain should have `@Order(2)` and should only match paths that require authentication.

@@ -5,6 +5,11 @@ import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.dto.RegisterUserRequest;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
+@Tag(name = "Account Onboarding", description = "User registration and account creation APIs")
 @RequiredArgsConstructor
 public class OnboardingController {
 
@@ -29,6 +35,11 @@ public class OnboardingController {
             maskData = true,
             level = AuditLevel.INFO
     )
+    @Operation(summary = "Register new user", description = "Create a new user account with email and password")
+    @ApiResponse(responseCode = "200", description = "User registered successfully",
+            content = @Content(schema = @Schema(implementation = User.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request data")
+    @ApiResponse(responseCode = "409", description = "User already exists")
     public CompletableFuture<ResponseEntity<User>> register(@Valid @RequestBody RegisterUserRequest request) {
         return registerUserUseCase.registerUser(request)
                 .thenApply(ResponseEntity::ok);
