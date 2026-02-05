@@ -691,7 +691,18 @@
   ```
 * **Note**: This is especially important for DTOs that map to third-party API responses (Keycloak, OAuth2 providers) where you don't control the response schema.
 
-### 21. The "Startup Protocol" for Design (Feb 2026)
+### 21. Environment Variable Naming Consistency (Feb 5, 2026)
+* **The Problem**: Auth-service login fails with `IllegalArgumentException: Not enough variable values available to expand 'KEYCLOAK_URL'`.
+* **Root Cause**: `application.yaml` referenced `${KEYCLOAK_URL}` but `docker-compose.yml` set `KEYCLOAK_SERVER_URL`. The WebClient received the literal string `${KEYCLOAK_URL}` and tried to expand it as a URI template.
+* **The Fix**: Align environment variable names between `application.yaml` and `docker-compose.yml`:
+  ```yaml
+  # application.yaml
+  keycloak:
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+  ```
+* **Best Practice**: Use consistent variable naming across all configuration files. Prefer specific names like `KEYCLOAK_SERVER_URL` over generic `KEYCLOAK_URL`.
+
+### 22. The "Startup Protocol" for Design (Feb 2026)
 * **The Shift**: Moving from ad-hoc design improvements to a strict "Steve Jobs" persona protocol.
 * **The Rule**: No design opinions are valid without first auditing: 1) Existing Design System, 2) PRD, and 3) Live App Responsiveness.
 * **The Impact**: Prevents "design drift" where new features don't match the established "Premium Emerald" aesthetic.

@@ -1,5 +1,7 @@
 package id.payu.auth.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.auth.config.KeycloakConfig;
 import id.payu.auth.dto.LoginContext;
 import id.payu.auth.dto.LoginResponse;
@@ -35,6 +37,7 @@ public class KeycloakService {
     private final WebClient.Builder webClientBuilder;
     private final RiskEvaluationService riskEvaluationService;
     private final MFATokenService mfaTokenService;
+    private final ObjectMapper objectMapper;
 
     private final Map<String, FailedAttempt> failedAttempts = new ConcurrentHashMap<>();
 
@@ -77,16 +80,31 @@ public class KeycloakService {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
                 .retrieve()
-                .bodyToMono(LoginResponse.class)
+                .bodyToMono(String.class)
+                .map(jsonResponse -> {
+                    try {
+                        log.info("Keycloak response for user {}: {}", username, jsonResponse);
+                        JsonNode root = objectMapper.readTree(jsonResponse);
+                        String accessToken = root.get("access_token").asText();
+                        String refreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
+                        long expiresIn = root.get("expires_in").asLong();
+                        String tokenType = root.get("token_type").asText();
+                        return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
+                    } catch (Exception e) {
+                        log.error("Failed to deserialize Keycloak response for user {}: {} - JSON: {}",
+                                username, e.getMessage(), jsonResponse, e);
+                        throw new IllegalArgumentException("Failed to parse login response: " + e.getMessage(), e);
+                    }
+                })
                 .doOnSuccess(response -> {
                     clearFailedAttempts(username);
                     log.info("Successful login for user: {}", username);
                 })
                 .doOnError(error -> {
                     recordFailedAttemptInternal(username);
-                    log.error("Login failed for user {}: {}", username, error.getMessage());
+                    log.error("Login failed for user {}: {}", username, error.getMessage(), error);
                 })
-                .onErrorMap(error -> new IllegalArgumentException("Invalid credentials or login failed"));
+                .onErrorMap(error -> new IllegalArgumentException("Invalid credentials or login failed: " + error.getClass().getSimpleName() + " - " + error.getMessage()));
     }
 
     public Mono<Boolean> validateCredentials(String username, String password) {
@@ -105,7 +123,7 @@ public class KeycloakService {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
                 .retrieve()
-                .bodyToMono(LoginResponse.class)
+                .bodyToMono(String.class)
                 .map(response -> true)
                 .onErrorResume(error -> {
                     recordFailedAttemptInternal(username);
@@ -125,7 +143,21 @@ public class KeycloakService {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(buildRefreshForm(refreshToken)))
                 .retrieve()
-                .bodyToMono(LoginResponse.class)
+                .bodyToMono(String.class)
+                .map(jsonResponse -> {
+                    try {
+                        JsonNode root = objectMapper.readTree(jsonResponse);
+                        String accessToken = root.get("access_token").asText();
+                        String newRefreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
+                        long expiresIn = root.get("expires_in").asLong();
+                        String tokenType = root.get("token_type").asText();
+                        return new LoginResponse(accessToken, newRefreshToken, expiresIn, tokenType);
+                    } catch (Exception e) {
+                        log.error("Failed to deserialize refresh token response: {} - JSON: {}",
+                                e.getMessage(), jsonResponse, e);
+                        throw new IllegalArgumentException("Failed to parse refresh response: " + e.getMessage(), e);
+                    }
+                })
                 .doOnSuccess(response -> log.info("Token refreshed successfully"))
                 .doOnError(error -> log.error("Token refresh failed: {}", error.getMessage()))
                 .onErrorMap(error -> new IllegalArgumentException("Failed to refresh token"));
@@ -229,7 +261,21 @@ public class KeycloakService {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(buildLoginForm(username, password)))
                 .retrieve()
-                .bodyToMono(LoginResponse.class)
+                .bodyToMono(String.class)
+                .map(jsonResponse -> {
+                    try {
+                        JsonNode root = objectMapper.readTree(jsonResponse);
+                        String accessToken = root.get("access_token").asText();
+                        String refreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
+                        long expiresIn = root.get("expires_in").asLong();
+                        String tokenType = root.get("token_type").asText();
+                        return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
+                    } catch (Exception e) {
+                        log.error("Failed to deserialize Keycloak response for user {}: {} - JSON: {}",
+                                username, e.getMessage(), jsonResponse, e);
+                        throw new IllegalArgumentException("Failed to parse login response: " + e.getMessage(), e);
+                    }
+                })
                 .doOnSuccess(response -> {
                     clearFailedAttempts(username);
                     log.info("Successful login for user: {}", username);
