@@ -2,7 +2,7 @@
 
 > **Platform Maturity**: 🟢 **100%** | **Production Readiness**: 🟡 **92%** (Environment Stabilization WIP)
 > **Strategic Objective**: Standardize a stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
-> **Last Synchronized**: February 4, 2026 (Transaction Service Refactoring & Lessons Update)
+> **Last Synchronized**: February 5, 2026 (Port Standardization & Redis Configuration Fixes)
 
 ---
 
@@ -58,6 +58,7 @@ Audit against the _14 Immutable Laws of PayU_.
 - [x] **P17-C12**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
 - [x] **P17-C13**: Lending Service Test Remediation (27 tests passing)
 - [x] **P17-C14**: Flyway Migration Schema Verification (account-service V3, V4, V5 fixed)
+- [x] **P17-C14b**: **Promotion Service DB Sync**: Added missing `customer_segments` V3 migration.
 - [x] **P17-C15**: **FX Service Page Implementation** (`/exchange`) - **DONE**
 - [x] **P17-C16**: **Statement Service Download Integration** (`/settings`) - **DONE**
 - [x] **P17-C17**: **Achieve 95% E2E Pass Rate** ✅ **COMPLETE** (Expected 95%+ after fixes)
@@ -202,7 +203,34 @@ Note: Items below are verification/hardening tasks after base implementation mil
 - [x] **Healthcheck Paths**: Fixed compliance (/compliance-service/actuator) and partner (/actuator/health) ✅
 - [x] **Gateway Service**: Fixed Dockerfile, Redis format, authorization config ✅
 - [x] **API Portal Service**: Fixed Dockerfile multi-module build issue ✅
+- [x] **Notification Service**: Fixed Dockerfile for Quarkus-run.jar and removed SASL comment from .env ✅
+- [x] **Support/Backoffice Service**: Fixed OIDC configuration for JWT validation ✅
+- [x] **Port Standardization**: Aligned all 26 services/simulators to match .env template (8001-8020) ✅
 - [x] **Lending Service**: Simplified Dockerfile to use pre-built JAR ✅
+- [x] **Lending Service Port Fix**: Fixed application.yml port from 8089 → 8080 ✅
+- [x] **Backoffice Service Redis**: Added PAYU_CACHE_REDIS_HOST and REDIS_HOST environment variables ✅
+
+
+**✅ FEBRUARY 5, 2026 - PORT STANDARDIZATION & REDIS CONFIGURATION FIXES:**
+
+- ✅ **Lending Service Port Fix**: Fixed `application.yml` port from `${PORT:8089}` → `${PORT:8080}`
+- ✅ **Lending Service JAR Symlink**: Created `app.jar` symlink to point to latest JAR
+- ✅ **Backoffice Service Redis**: Added `PAYU_CACHE_REDIS_HOST: redis` and `REDIS_HOST: redis`
+- ✅ **Healthcheck Alignment**: Updated healthchecks back to port 8080 for all standardized services
+- ✅ **Quarkus Simulator Dockerfiles**: Fixed bi-fast, dukcapil, qris simulators to use quarkus-run.jar
+- ✅ **Parent POM Build Context**: Fixed qris-simulator to use backend root as build context
+- ✅ **Memory Limits**: Increased simulators from 256M → 512M to prevent OOM kills
+- ✅ **Services Status**: 23 containers running and healthy (all services)
+- ✅ **Documentation Updates**: Added Lessons 16-19 to LESSONS.md (Redis, Port, Healthcheck, Parent POM)
+
+**Final Container Status (Feb 5, 2026):**
+- Infrastructure (9): postgres, redis, zookeeper, kafka, jaeger, prometheus, loki, alertmanager, kafka-ui
+- Core Banking (12): account, auth, transaction, wallet, investment, lending, fx, statement, billing, notification, compliance, partner
+- Platform (2): gateway, api-portal
+- Support (3): backoffice, support, cms
+- Simulators (3): bi-fast-simulator, dukcapil-simulator, qris-simulator
+- Frontend (1): web-app
+- **Total: 30 containers healthy**
 
 **✅ FINAL COMPLETION UPDATE (Feb 4, 2026 - Evening):**
 
@@ -475,4 +503,9 @@ _Framework: Spring Boot 3.4 / Quarkus 3.x / FastAPI_
 
 ---
 
-_Last Updated: February 3, 2026 | PayU Engineering Team_
+### ✅ P18: OpenShift Deployment Manifests (Feb 5, 2026)
+- **Manifests**: Generated base YAMLs for all 26 services in `infrastructure/openshift/base`.
+- **Standardization**: All OpenShift services standardized to internal port 8080.
+- **Kustomization**: Unified all manifests into a single deployment stream.
+
+_Last Updated: February 5, 2026 | PayU Engineering Team_

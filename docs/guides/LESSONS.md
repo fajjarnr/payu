@@ -52,53 +52,53 @@
 
 ### 6. Port Standardization (Feb 2026 Mass Update)
 
-* **The Problem**: Managing 22 different internal ports (8001-8099) caused constant "unhealthy" statuses and broken gateways because of mismatches between `application.yml`, Dockerfiles, and `docker-compose` healthchecks.
-* **The Standard**: All 22 microservices (Java, Python, Quarkus) MUST listen on internal port **8080**.
-* **Why?**:
-  * **Convention over Configuration**: DNS-based service discovery (e.g., `http://service-name:8080`) is more reliable than remembering unique ports.
-  * **Cloud-Native Compliance**: Standard port for non-root containers in OpenShift/K8s.
-  * **Unified Monitoring**: Simple, consistent healthcheck and Prometheus scrape configs.
-* **The Implementation**:
-  * **Dockerfile**: Universal `EXPOSE 8080`.
-  * **Application**: Enforce `server.port=8080` or use `PORT` env var default.
-  * **Compose**: Use unique host ports (e.g., `8001:8080`) but always point healthcheck to `localhost:8080`.
-  * **Gateway**: Standardize all backend URLs to port 8080.
+*   **The Problem**: Managing 22 different internal ports (8001-8099) caused constant "unhealthy" statuses and broken gateways because of mismatches between `application.yml`, Dockerfiles, and `docker-compose` healthchecks.
+*   **The Standard**: All 22 microservices (Java, Python, Quarkus) MUST listen on internal port **8080**.
+*   **Why?**:
+    *   **Convention over Configuration**: DNS-based service discovery (e.g., `http://service-name:8080`) is more reliable than remembering unique ports.
+    *   **Cloud-Native Compliance**: Standard port for non-root containers in OpenShift/K8s.
+    *   **Unified Monitoring**: Simple, consistent healthcheck and Prometheus scrape configs.
+*   **The Implementation**:
+    *   **Dockerfile**: Universal `EXPOSE 8080`.
+    *   **Application**: Enforce `server.port=8080` or use `PORT` env var default.
+    *   **Compose**: Use unique host ports (e.g., `8001:8080`) but always point healthcheck to `localhost:8080`.
+    *   **Gateway**: Standardize all backend URLs to port 8080.
 
 ### 7. Environment vs. Persistence Mismatches
 
-* **The Problem**: Changing a password in `.env` (e.g., `POSTGRES_PASSWORD`) does **not** update the password of an existing, persistent database volume. The container starts, but applications fail to connect with "Password authentication failed".
-* **The Fix**:
-  1. **Reset**: Delete the volume (`podman volume rm ...`) to let it recreate with the new password (DATA LOSS WARNING).
-  2. **Sync**: Update `.env` to match the *actual* password currently used by the database (Safe).
-  3. **SQL**: Manually change the password via `ALTER USER` inside the database.
+*   **The Problem**: Changing a password in `.env` (e.g., `POSTGRES_PASSWORD`) does **not** update the password of an existing, persistent database volume. The container starts, but applications fail to connect with "Password authentication failed".
+*   **The Fix**:
+    1.  **Reset**: Delete the volume (`podman volume rm ...`) to let it recreate with the new password (DATA LOSS WARNING).
+    2.  **Sync**: Update `.env` to match the *actual* password currently used by the database (Safe).
+    3.  **SQL**: Manually change the password via `ALTER USER` inside the database.
 
 ### 8. Python ML Containerization Strategy (Feb 4, 2026)
-* **The Problem**: Red Hat UBI9 Minimal images are excellent for security but lack system libraries required for ML/CV tasks (like OpenCV's dependency on `libGL.so.1` and `libgomp.so.1`).
-* **The Fix**: For services requiring heavy C-extensions (OpenCV, PyTorch, PaddleOCR), use `python:3.12-slim` (Debian-based) instead of UBI9. It simplifies installing system dependencies:
+*   **The Problem**: Red Hat UBI9 Minimal images are excellent for security but lack system libraries required for ML/CV tasks (like OpenCV's dependency on `libGL.so.1` and `libgomp.so.1`).
+*   **The Fix**: For services requiring heavy C-extensions (OpenCV, PyTorch, PaddleOCR), use `python:3.12-slim` (Debian-based) instead of UBI9. It simplifies installing system dependencies:
     ```dockerfile
     RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 libgomp1 curl
     ```
-* **Performance Boost**: Switch from `pip` to `uv` (Astral) for package installation. Reduces build time for heavy ML libraries (PyTorch, Pandas) from 10m to 1.5m.
+*   **Performance Boost**: Switch from `pip` to `uv` (Astral) for package installation. Reduces build time for heavy ML libraries (PyTorch, Pandas) from 10m to 1.5m.
     ```dockerfile
     COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv
     RUN /uv pip install --system --no-cache -r requirements.txt
     ```
 
 ### 9. Spring Boot Monorepo Build Pattern (Feb 4, 2026)
-* **The Problem**: Docker builds for services relying on local shared modules (`backend/shared/`) fail because the build context is often restricted to the service directory.
-* **The Fix**: "Decoupled Build" strategy.
+*   **The Problem**: Docker builds for services relying on local shared modules (`backend/shared/`) fail because the build context is often restricted to the service directory.
+*   **The Fix**: "Decoupled Build" strategy.
     1.  **Build Artifacts on Host** (using root POM): `mvn -pl :service-name -am package`
     2.  **Copy Artifacts to Context**: `cp target/app.jar backend/service/target/`
     3.  **Simple Dockerfile**: `COPY target/app.jar /deployments/`
-This avoids complex Docker context juggling and leverages local Maven cache.
+    This avoids complex Docker context juggling and leverages local Maven cache.
 
 ### 10. Pydantic Model Field Conflicts (Feb 4, 2026)
-* **The Problem**: Defining a class method named `success()` on a Pydantic model that has a field named `success` causes `AttributeError` at runtime. Pydantic v2 internals conflict with the method name.
-* **The Fix**: Rename factory methods to avoid colliding with field names. Use `create_success()` or `build_success()` instead of just `success()`.
+*   **The Problem**: Defining a class method named `success()` on a Pydantic model that has a field named `success` causes `AttributeError` at runtime. Pydantic v2 internals conflict with the method name.
+*   **The Fix**: Rename factory methods to avoid colliding with field names. Use `create_success()` or `build_success()` instead of just `success()`.
 
 ### 11. ML Service Memory Limits (Feb 5, 2026)
-* **The Problem**: ML Services (KYC, Analytics) using PyTorch/PaddleOCR crash with "Killed" or Exit 137 immediately upon loading models if memory limit is too low (e.g., 512MB).
-* **The Fix**: Increase memory limits for ML containers.
+*   **The Problem**: ML Services (KYC, Analytics) using PyTorch/PaddleOCR crash with "Killed" or Exit 137 immediately upon loading models if memory limit is too low (e.g., 512MB).
+*   **The Fix**: Increase memory limits for ML containers.
     ```yaml
     resources:
       limits:
@@ -112,20 +112,20 @@ This avoids complex Docker context juggling and leverages local Maven cache.
 
 ### 1. Multi-Module Project Dependencies
 
-* **GroupId Consistency**: In a multi-module Maven project where submodules are grouped (e.g., `backend/shared/`), ensure dependency references use the correct `groupId`.
-  * **Example**: `id.payu:api-commons` vs `id.payu.shared:api-commons`. An incorrect GroupId leads to build failures finding the artifact, even if the ArtifactId is correct.
+*   **GroupId Consistency**: In a multi-module Maven project where submodules are grouped (e.g., `backend/shared/`), ensure dependency references use the correct `groupId`.
+    *   **Example**: `id.payu:api-commons` vs `id.payu.shared:api-commons`. An incorrect GroupId leads to build failures finding the artifact, even if the ArtifactId is correct.
 
 ### 2. Monorepo Scripting
 
-* **Context Path Traps**: When writing support scripts (Python/Bash) for a monorepo, do not rely solely on the `build context` path from `compose.yml` to check for file existence (like `pom.xml`).
-  * **Better Approach**: Resolve paths based on the `Dockerfile` location or explicitly handle the subdirectory structure.
+*   **Context Path Traps**: When writing support scripts (Python/Bash) for a monorepo, do not rely solely on the `build context` path from `compose.yml` to check for file existence (like `pom.xml`).
+    *   **Better Approach**: Resolve paths based on the `Dockerfile` location or explicitly handle the subdirectory structure.
 
 ### 3. Pact CLI Installation
-* **Correct Package Name**: Use `@pact-foundation/pact-cli` instead of the legacy `@subosito/pact-js-cli` to avoid "Package not found" errors during setup.
+*   **Correct Package Name**: Use `@pact-foundation/pact-cli` instead of the legacy `@subosito/pact-js-cli` to avoid "Package not found" errors during setup.
 
 ### 4. GPG Keyring Practices (Ubuntu 24.04+)
-* **Avoid `apt-key`**: The `apt-key` command is deprecated. Use `/etc/apt/keyrings` and `gpg --dearmor` for better security and compatibility.
-* **Example (Trivy/k6)**: 
+*   **Avoid `apt-key`**: The `apt-key` command is deprecated. Use `/etc/apt/keyrings` and `gpg --dearmor` for better security and compatibility.
+*   **Example (Trivy/k6)**:
     ```bash
     wget -qO - https://.../public.key | sudo gpg --dearmor -o /etc/apt/keyrings/tool.gpg
     echo "deb [signed-by=/etc/apt/keyrings/tool.gpg] https://..." | sudo tee /etc/apt/sources.list.d/tool.list
@@ -135,39 +135,39 @@ This avoids complex Docker context juggling and leverages local Maven cache.
 
 ### 1. Naming Consistency (Entity vs Repo vs Test)
 
-* **The Issue**: Discrepancies between `userId` and `customerId` often lead to `cannot find symbol` or `BeanCreationException` during Flyway/JPA initialization.
-* **Lesson**: Standardize on `customerId` for all external-facing IDs across the platform.
+*   **The Issue**: Discrepancies between `userId` and `customerId` often lead to `cannot find symbol` or `BeanCreationException` during Flyway/JPA initialization.
+*   **Lesson**: Standardize on `customerId` for all external-facing IDs across the platform.
 
 ### 2. Custom Annotations & Enums
 
-* **Inner Class Resolution**: When using custom annotations with inner enums (like `@Audited(level = AuditLevel.INFO)`), Java may fail to resolve the enum if not fully qualified or correctly imported.
-* **Correction**: Use `Audited.AuditLevel.INFO` to guarantee resolution.
+*   **Inner Class Resolution**: When using custom annotations with inner enums (like `@Audited(level = AuditLevel.INFO)`), Java may fail to resolve the enum if not fully qualified or correctly imported.
+*   **Correction**: Use `Audited.AuditLevel.INFO` to guarantee resolution.
 
 ### 4. Ambiguous Enum References (Swagger vs Security Starter)
 
-* **The Problem**: Importing `id.payu.security.annotation.Audited.Operation` can conflict with `io.swagger.v3.oas.annotations.Operation`, leading to `reference to Operation is ambiguous` compilation errors.
-* **The Fix**: Use semi-qualified names in annotations: `@Audited(operation = Audited.Operation.CREATE, ...)` instead of importing the inner enum directly.
+*   **The Problem**: Importing `id.payu.security.annotation.Audited.Operation` can conflict with `io.swagger.v3.oas.annotations.Operation`, leading to `reference to Operation is ambiguous` compilation errors.
+*   **The Fix**: Use semi-qualified names in annotations: `@Audited(operation = Audited.Operation.CREATE, ...)` instead of importing the inner enum directly.
 
 ### 5. Abstract Exception Instantiation in Tests
 
-* **The Problem**: Making a base domain exception `abstract` prevents direct instantiation in unit tests, leading to compilation errors.
-* **The Fix**: Either make the base exception concrete with a generic error code (e.g., `COMPLIANCE_GENERIC_ERROR`) or ensure tests always use a concrete subclass.
+*   **The Problem**: Making a base domain exception `abstract` prevents direct instantiation in unit tests, leading to compilation errors.
+*   **The Fix**: Either make the base exception concrete with a generic error code (e.g., `COMPLIANCE_GENERIC_ERROR`) or ensure tests always use a concrete subclass.
 
 ### 3. JPA Entity Architecture (Pragmatic Hexagonal)
 
-* **The Problem**: In a Hexagonal Architecture, repositories were extending `JpaRepository` using standard Domain Models (`ScheduledTransfer`, `Transaction`) that lacked `@Entity` annotations.
-* **The Symptom**: `UnsatisfiedDependencyException`: Not a managed type.
-* **The Fix**: Annotate the Domain Model class with `@Entity`, `@Table`, and `@Id`.
-* **Best Practice**: Ensure ALL classes used in `JpaRepository<T, ID>` are properly annotated entities.
+*   **The Problem**: In a Hexagonal Architecture, repositories were extending `JpaRepository` using standard Domain Models (`ScheduledTransfer`, `Transaction`) that lacked `@Entity` annotations.
+*   **The Symptom**: `UnsatisfiedDependencyException`: Not a managed type.
+*   **The Fix**: Annotate the Domain Model class with `@Entity`, `@Table`, and `@Id`.
+*   **Best Practice**: Ensure ALL classes used in `JpaRepository<T, ID>` are properly annotated entities.
 
 ### 4. Value Object Mapping
 
-* **The Problem**: `Money` Value Object (containing `amount` and `currency`) cannot be persisted directly without `@Embedded` or `AttributeConverter`.
-* **The Legacy Fix**: Using deprecated `amountValue` and `currencyCode` fields mapped with `@Column`, while marking the main `Money` object as `@Transient`.
+*   **The Problem**: `Money` Value Object (containing `amount` and `currency`) cannot be persisted directly without `@Embedded` or `AttributeConverter`.
+*   **The Legacy Fix**: Using deprecated `amountValue` and `currencyCode` fields mapped with `@Column`, while marking the main `Money` object as `@Transient`.
 
 ### 5. JPA Boolean Naming
 
-* **The Issue**: Derived Query Methods (like `findByActiveTrue`) expect a field named `active`. If the field is `isActive`, the method must be `findByIsActiveTrue`.
+*   **The Issue**: Derived Query Methods (like `findByActiveTrue`) expect a field named `active`. If the field is `isActive`, the method must be `findByIsActiveTrue`.
 
 ## 🔄 CQRS & Architectural Refactoring (Feb 2026)
 
@@ -208,199 +208,192 @@ This avoids complex Docker context juggling and leverages local Maven cache.
 
 ### 1. Initialization Order
 
-* **Postgres Healthchecks**: A healthy Postgres container doesn't mean the databases in `init-db.sql` are ready.
-* **The Fix**: Update healthchecks to check a specific database: `pg_isready -U payu -d payu_account`.
+*   **Postgres Healthchecks**: A healthy Postgres container doesn't mean the databases in `init-db.sql` are ready.
+*   **The Fix**: Update healthchecks to check a specific database: `pg_isready -U payu -d payu_account`.
 
 ### 2. Partitioning Limitations
 
-* **Hash Partitioning Defaults**: PostgreSQL (as of v16) does **not** support a `DEFAULT` partition for `HASH` partitioning strategies. Attempting to create one causes a migration failure.
-  * **The Fix**: Do not create a default partition for HASH strategies. Ensure the modulus/remainder coverage is complete (which it naturally is).
-* **Unique Constraints**: A unique constraint on a partitioned table **must include** all partitioning columns. Attempting to create a unique index on just the ID when partitioned by `account_id` will fail.
-  * **The Fix**: Add the partition key to the unique index definition: `CREATE UNIQUE INDEX ... ON table (id, partition_key)`.
+*   **Hash Partitioning Defaults**: PostgreSQL (as of v16) does **not** support a `DEFAULT` partition for `HASH` partitioning strategies. Attempting to create one causes a migration failure.
+    *   **The Fix**: Do not create a default partition for HASH strategies. Ensure the modulus/remainder coverage is complete (which it naturally is).
+*   **Unique Constraints**: A unique constraint on a partitioned table **must include** all partitioning columns. Attempting to create a unique index on just the ID when partitioned by `account_id` will fail.
+    *   **The Fix**: Add the partition key to the unique index definition: `CREATE UNIQUE INDEX ... ON table (id, partition_key)`.
 
 ### 3. Index Predicates & Immutability
 
-* **Mutable Functions in Indexes**: You cannot use `CURRENT_DATE`, `NOW()`, or `CURRENT_TIMESTAMP` in a `WHERE` clause of an index (partial index) because these functions are not IMMUTABLE.
-  * **The Fix**: Remove time-based filtering from the index definition or use a mechanism that doesn't rely on dynamic dates.
+*   **Mutable Functions in Indexes**: You cannot use `CURRENT_DATE`, `NOW()`, or `CURRENT_TIMESTAMP` in a `WHERE` clause of an index (partial index) because these functions are not IMMUTABLE.
+    *   **The Fix**: Remove time-based filtering from the index definition or use a mechanism that doesn't rely on dynamic dates.
 
 ### 4. Podman Build Caching
 
-* **Stale Maven Layers**: Podman's layer caching is aggressive. If you update source code but the `mvn package` step is cached, old logic persists.
-  * **The Fix**: Use `podman build --no-cache` when debugging cryptic logic errors.
-* **Context Contamination**: Without a `.dockerignore` file, `COPY . .` copies `target/` directories from the host. If the host has stale compiled classes, they can contaminate the build.
-  * **The Fix**: Create `.dockerignore` excluding `**/target`. Clean host target (`rm -rf backend/*/target`) before critical builds.
-* **Compose Service Naming**: `podman-compose` can sometimes fail to map service names correctly or reuse existing containers.
-  * **Fallback**: Use `podman run` with explicit environment variables (`-e`) for reliable debugging.
+*   **Stale Maven Layers**: Podman's layer caching is aggressive. If you update source code but the `mvn package` step is cached, old logic persists.
+    *   **The Fix**: Use `podman build --no-cache` when debugging cryptic logic errors.
+*   **Context Contamination**: Without a `.dockerignore` file, `COPY . .` copies `target/` directories from the host. If the host has stale compiled classes, they can contaminate the build.
+    *   **The Fix**: Create `.dockerignore` excluding `**/target`. Clean host target (`rm -rf backend/*/target`) before critical builds.
+*   **Compose Service Naming**: `podman-compose` can sometimes fail to map service names correctly or reuse existing containers.
+    *   **Fallback**: Use `podman run` with explicit environment variables (`-e`) for reliable debugging.
 
 ### 5. Flyway Development
 
-* **Checksum Mismatches**: Changing a migration script after it has run locally causes checksum errors.
-* **The Strategy**: In dev/local environment, it is often faster to `DROP DATABASE` and let Flyway recreate it from scratch than to manually patch the `flyway_schema_history` table.
+*   **Checksum Mismatches**: Changing a migration script after it has run locally causes checksum errors.
+*   **The Strategy**: In dev/local environment, it is often faster to `DROP DATABASE` and let Flyway recreate it from scratch than to manually patch the `flyway_schema_history` table.
 
 ## 🛡️ Security & Configuration
 
 ### 1. Spring Bean Instantiation
 
-* **No-Args Constructor**: Beans instantiated by Spring (especially Filters or Interceptors that might be proxied) **must** have a no-args constructor available, even if they have final fields.
-  * **The Fix**: Remove `final` from fields and provide a protected/public no-args constructor to avoid `BeanInstantiationException`.
+*   **No-Args Constructor**: Beans instantiated by Spring (especially Filters or Interceptors that might be proxied) **must** have a no-args constructor available, even if they have final fields.
+    *   **The Fix**: Remove `final` from fields and provide a protected/public no-args constructor to avoid `BeanInstantiationException`.
 
 ### 2. OAuth2 Configuration
 
-* **Silent Failures**: Missing `JwtDecoder` beans often manifest as `UnsatisfiedDependencyException` deep in the security chain.
-  * **The Fix**: Ensure `issuer-uri` or `jwk-set-uri` is explicitly defined in `application.yml` or a `JwtDecoder` bean is manually supplied.
+*   **Silent Failures**: Missing `JwtDecoder` beans often manifest as `UnsatisfiedDependencyException` deep in the security chain.
+    *   **The Fix**: Ensure `issuer-uri` or `jwk-set-uri` is explicitly defined in `application.yml` or a `JwtDecoder` bean is manually supplied.
 
 ### 3. Quarkus Startup Validation
 
-* **Mandatory Properties**: Quarkus performs strict validation on `@ConfigProperty`. If a property is defined but resolved to an empty string (e.g., via `${ENV:}`), it may fail with `NoSuchElementException`.
-  * **The Fix**: Always provide a non-empty fallback in `podman-compose.yml` for mandatory secrets or config keys:
+*   **Mandatory Properties**: Quarkus performs strict validation on `@ConfigProperty`. If a property is defined but resolved to an empty string (e.g., via `${ENV:}`), it may fail with `NoSuchElementException`.
+    *   **The Fix**: Always provide a non-empty fallback in `podman-compose.yml` for mandatory secrets or config keys:
 
-      ```yaml
-      WEBHOOK_PARTNER_1_SECRET: ${WEBHOOK_PARTNER_1_SECRET:-dummy_secret}
-      ```
+        ```yaml
+        WEBHOOK_PARTNER_1_SECRET: ${WEBHOOK_PARTNER_1_SECRET:-dummy_secret}
+        ```
 
 ## 🏗️ Monorepo Infrastructure
 
 ### 1. Shared Library Env Var Mapping
 
-* **Custom Starters**: When using custom Spring Boot starters (like `cache-starter`), they often use specific property prefixes (e.g., `payu.cache.*`). Standard environment variables like `REDIS_HOST` might not be enough if the starter doesn't map them explicitly.
-  * **The Fix**: Double-check the `@ConfigurationProperties` prefix in the starter and provide matching env vars in `podman-compose.yml`:
+*   **Custom Starters**: When using custom Spring Boot starters (like `cache-starter`), they often use specific property prefixes (e.g., `payu.cache.*`). Standard environment variables like `REDIS_HOST` might not be enough if the starter doesn't map them explicitly.
+    *   **The Fix**: Double-check the `@ConfigurationProperties` prefix in the starter and provide matching env vars in `podman-compose.yml`:
 
-      ```yaml
-      PAYU_CACHE_REDIS_HOST: redis
-      ```
+        ```yaml
+        PAYU_CACHE_REDIS_HOST: redis
+        ```
 
 ### 2. Selective Maven Builds (Resource Optimization)
 
-* **The Problem**: Attempting to build the entire monorepo root in every service Dockerfile leads to "Too many open files" and extreme memory usage.
-  * **The Fix**: Use selective builds and project selection:
+*   **The Problem**: Attempting to build the entire monorepo root in every service Dockerfile leads to "Too many open files" and extreme memory usage.
+    *   **The Fix**: Use selective builds and project selection:
 
-      ```dockerfile
-      RUN mvn package -DskipTests -pl :service-name -am
-      ```
+        ```dockerfile
+        RUN mvn package -DskipTests -pl :service-name -am
+        ```
 
 ### 4. Healthcheck Authentication (401 Unauthorized)
 
-* **The Problem**: Health endpoints (`/q/health` for Quarkus, `/actuator/health` for Spring Boot) may return `401 Unauthorized` if global security filters are too aggressive.
-* **The Fix (Quarkus)**: Ensure `quarkus.health.security.enabled=false` or explicitly permit the health path in your security configuration/filter.
-* **The Fix (Spring Boot)**: Ensure `management.endpoints.web.exposure.include=health` and that the security filter chain permits `/actuator/**`.
-* **Liveness Probes & Context Paths**:
-  * **Probes missing**: By default, Spring Boot does not expose `/actuator/health/liveness` unless `management.endpoint.health.probes.enabled=true`.
-  * **Context Path**: If `server.servlet.context-path` is set (e.g., `/compliance-service`), the healthcheck URL in `podman-compose.yml` MUST include it: `http://localhost:8087/compliance-service/actuator/health/liveness`.
-  * **401 in Spring Boot**: If `/actuator/health/liveness` returns 401 even if `/actuator/health` is permitted, ensure the `requestMatchers` use wildcards (`/actuator/**`) to cover sub-paths.
+*   **The Problem**: Health endpoints (`/q/health` for Quarkus, `/actuator/health` for Spring Boot) may return `401 Unauthorized` if global security filters are too aggressive.
+*   **The Fix (Quarkus)**: Ensure `quarkus.health.security.enabled=false` or explicitly permit the health path in your security configuration/filter.
+*   **The Fix (Spring Boot)**: Ensure `management.endpoints.web.exposure.include=health` and that the security filter chain permits `/actuator/**`.
+*   **Liveness Probes & Context Paths**:
+    *   **Probes missing**: By default, Spring Boot does not expose `/actuator/health/liveness` unless `management.endpoint.health.probes.enabled=true`.
+    *   **Context Path**: If `server.servlet.context-path` is set (e.g., `/compliance-service`), the healthcheck URL in `podman-compose.yml` MUST include it: `http://localhost:8087/compliance-service/actuator/health/liveness`.
+    *   **401 in Spring Boot**: If `/actuator/health/liveness` returns 401 even if `/actuator/health` is permitted, ensure the `requestMatchers` use wildcards (`/actuator/**`) to cover sub-paths.
 
 ### 5. Misconfigured Service Labels (Spring Boot vs Quarkus)
 
-* **The Problem**: A service built with Spring Boot but configured in `docker-compose.yml` using Quarkus environment variables (e.g., `QUARKUS_DATASOURCE_JDBC_URL`) and healthchecks (`/q/health`) will fail to start or report as unhealthy.
-* **The Fix**: Ensure the configuration matches the framework:
-  * **Spring**: `SPRING_DATASOURCE_URL`, `actuator/health/liveness`.
-  * **Quarkus**: `QUARKUS_DATASOURCE_JDBC_URL`, `q/health`.
+*   **The Problem**: A service built with Spring Boot but configured in `docker-compose.yml` using Quarkus environment variables (e.g., `QUARKUS_DATASOURCE_JDBC_URL`) and healthchecks (`/q/health`) will fail to start or report as unhealthy.
+*   **The Fix**: Ensure the configuration matches the framework:
+    *   **Spring**: `SPRING_DATASOURCE_URL`, `actuator/health/liveness`.
+    *   **Quarkus**: `QUARKUS_DATASOURCE_JDBC_URL`, `q/health`.
 
 ### 6. Vault Dev Mode Healthcheck
 
-* **The Problem**: `vault status` inside a container defaults to HTTPS, causing 401/error when Vault is running in `-dev` mode (HTTP).
-* **The Fix**: Explicitly set `VAULT_ADDR` in the healthcheck command:
+*   **The Problem**: `vault status` inside a container defaults to HTTPS, causing 401/error when Vault is running in `-dev` mode (HTTP).
+*   **The Fix**: Explicitly set `VAULT_ADDR` in the healthcheck command:
 
-  ```yaml
-  healthcheck:
-    test: ["CMD-SHELL", "VAULT_ADDR=http://127.0.0.1:8200 vault status || exit 1"]
-  ```
+    ```yaml
+    healthcheck:
+      test: ["CMD-SHELL", "VAULT_ADDR=http://127.0.0.1:8200 vault status || exit 1"]
+    ```
 
 ### 7. Quarkus Uber-JAR Augmentation
-* **The Problem**: Duplicate files in dependencies (e.g., `META-INF/beans.xml` or custom resource files) can cause Quarkus build failures during the `buildUberJar` step.
-* **The Fix**: Exclude problematic duplicates or check for dependency conflicts. In most cases, ensuring the project structure follows standard Maven naming prevents resource collisions.
+*   **The Problem**: Duplicate files in dependencies (e.g., `META-INF/beans.xml` or custom resource files) can cause Quarkus build failures during the `buildUberJar` step.
+*   **The Fix**: Exclude problematic duplicates or check for dependency conflicts. In most cases, ensuring the project structure follows standard Maven naming prevents resource collisions.
 
 ### 8. ArchUnit DSL Modernization
-* **The Problem**: Older ArchUnit syntax like `.or()` or `.and()` in `ClassesShould` chains may result in `cannot find symbol` errors in newer versions.
-* **The Fix**: Use the more explicit `.orShould()` and `.andShould()` methods to properly continue the rule chain. Use `shouldNot().dependOnClassesThat()` instead of `should().notDependOnClassesThat()`.
+*   **The Problem**: Older ArchUnit syntax like `.or()` or `.and()` in `ClassesShould` chains may result in `cannot find symbol` errors in newer versions.
+*   **The Fix**: Use the more explicit `.orShould()` and `.andShould()` methods to properly continue the rule chain. Use `shouldNot().dependOnClassesThat()` instead of `should().notDependOnClassesThat()`.
 
 ### 9. Financial Integrity & Optimistic Locking
-* **The Problem**: Concurrent financial operations (credits/debits) can lead to race conditions without proper locking.
-* **The Fix**: Add a `version` field to core domain entities (like `Account`) and use `@Version` (JPA) or manual checks in domain logic to enforce optimistic locking, as verified by P0 integrity tests.
+*   **The Problem**: Concurrent financial operations (credits/debits) can lead to race conditions without proper locking.
+*   **The Fix**: Add a `version` field to core domain entities (like `Account`) and use `@Version` (JPA) or manual checks in domain logic to enforce optimistic locking, as verified by P0 integrity tests.
 
 ## 🧪 Systematic Debugging
 
 ### 6. Spring Boot 3.4 Security & Public Endpoints (Feb 2026)
 
-* **The Problem**: Spring Security OAuth2 resource server configuration can intercept requests before permitAll() rules are evaluated, causing 401 errors even on public endpoints like `/actuator/health` and `/api/v1/accounts/register`.
-* **Root Cause**: When using `oauth2ResourceServer().jwt()`, Spring creates a filter chain that validates JWT tokens BEFORE the authorization rules (`permitAll()`) are checked.
-* **The Fix**: Use `WebSecurityCustomizer` bean to completely bypass Spring Security for specific paths:
+*   **The Problem**: Spring Security OAuth2 resource server configuration can intercept requests before permitAll() rules are evaluated, causing 401 errors even on public endpoints like `/actuator/health` and `/api/v1/accounts/register`.
+*   **Root Cause**: When using `oauth2ResourceServer().jwt()`, Spring creates a filter chain that validates JWT tokens BEFORE the authorization rules (`permitAll()`) are checked.
+*   **The Fix**: Use `WebSecurityCustomizer` bean to completely bypass Spring Security for specific paths:
 
-  ```java
-  @Bean
-  public WebSecurityCustomizer webSecurityCustomizer() {
-      return (web) -> web.ignoring()
-              .requestMatchers("/actuator/**")
-              .requestMatchers("/api/v1/accounts/register")
-              .requestMatchers("/api/v1/auth/login");
-  }
-  ```
+    ```java
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers("/actuator/**")
+                .requestMatchers("/api/v1/accounts/register")
+                .requestMatchers("/api/v1/auth/login");
+    }
+    ```
 
-* **Note**: Spring will warn "This is not recommended" but this is necessary when OAuth2 resource server is enabled globally.
-* **Alternative**: Disable OAuth2 for specific paths using `securityMatcher()`.
+*   **Note**: Spring will warn "This is not recommended" but this is necessary when OAuth2 resource server is enabled globally.
+*   **Alternative**: Disable OAuth2 for specific paths using `securityMatcher()`.
 
 ### 7. Gateway Service URL Configuration (Feb 2026)
 
-* **The Problem**: Gateway proxying fails with "Connection refused: localhost/127.0.0.1:8081" even though service is running.
-* **Root Cause**: Default service URLs in `application.yaml` use `localhost:PORT` which doesn't resolve in container networks.
-* **The Fix**: Update default URLs to use service names from container network:
+*   **The Problem**: Gateway proxying fails with "Connection refused: localhost/127.0.0.1:8081" even though service is running.
+*   **Root Cause**: Default service URLs in `application.yaml` use `localhost:PORT` which doesn't resolve in container networks.
+*   **The Fix**: Update default URLs to use service names from container network:
 
-  ```yaml
-  services:
-    account-service:
-      url: ${ACCOUNT_SERVICE_URL:http://account-service:8001}  # NOT localhost:8081
-  ```
+    ```yaml
+    services:
+      account-service:
+        url: ${ACCOUNT_SERVICE_URL:http://account-service:8001}  # NOT localhost:8081
+    ```
 
-* **Environment Variable Mismatch**: podman-compose.yml may set different variable names (e.g., `ROUTES_ACCOUNT_URL` vs `ACCOUNT_SERVICE_URL`). Ensure ENV variable names match config property names.
+*   **Environment Variable Mismatch**: podman-compose.yml may set different variable names (e.g., `ROUTES_ACCOUNT_URL` vs `ACCOUNT_SERVICE_URL`). Ensure ENV variable names match config property names.
 
 ### 8. API Key vs JWT Authorization Layering (Feb 2026)
 
-* **The Problem**: Requests return "MISSING_API_KEY" even after JWT token is provided.
-* **Root Cause**: Multiple security filters are chained (ApiKeyValidationFilter → AuthorizationFilter). If API key validation is enabled, it blocks requests before JWT validation.
-* **The Fix**: Either:
-  1. Disable API key validation for dev: `gateway.api-keys.enabled=false`
-  2. Add public endpoints to API key bypass paths: `gateway.api-keys.bypass-paths=/api/v1/accounts/register`
+*   **The Problem**: Requests return "MISSING_API_KEY" even after JWT token is provided.
+*   **Root Cause**: Multiple security filters are chained (ApiKeyValidationFilter → AuthorizationFilter). If API key validation is enabled, it blocks requests before JWT validation.
+*   **The Fix**: Either:
+    1.  Disable API key validation for dev: `gateway.api-keys.enabled=false`
+    2.  Add public endpoints to API key bypass paths: `gateway.api-keys.bypass-paths=/api/v1/accounts/register`
 
 ## 🎨 Frontend & Design System
 
 ### 1. Cultural vs. Professional Aesthetics
 
-* **Observation**: Attempting to force cultural themes (e.g., "Wayang", "Javanese Philosophy") into a Fintech UI can clash with user expectations for "Premium" and "Trust".
-* **Lesson**: Users prefer standard international banking aesthetics (Clean, White, Sans-serif, Glassmorphism) for financial products. Use cultural elements very subtly or not at all if the goal is "Premium Global Standard".
+*   **Observation**: Attempting to force cultural themes (e.g., "Wayang", "Javanese Philosophy") into a Fintech UI can clash with user expectations for "Premium" and "Trust".
+*   **Lesson**: Users prefer standard international banking aesthetics (Clean, White, Sans-serif, Glassmorphism) for financial products. Use cultural elements very subtly or not at all if the goal is "Premium Global Standard".
 
 ### 2. Responsive Card Design (The "Golden Ratio" Fix)
 
-* **The Problem**: Fixed pixel widths (e.g., `w-[350px]`) for Credit Card components break on small mobile screens (iPhone SE) or look tiny on large desktops.
-* **The Fix**: Use `vw` (viewport width) units combined with `aspect-ratio` to maintain the ISO/IEC 7810 ID-1 standard.
-  * **Snippet**: `w-[85vw] max-w-[340px] aspect-[1.586]` ensures the card scales perfectly while maintaining the correct physical ratio. Update text sizes to be relative (`text-[3vw]`) to scale with the card.
+*   **The Problem**: Fixed pixel widths (e.g., `w-[350px]`) for Credit Card components break on small mobile screens (iPhone SE) or look tiny on large desktops.
+*   **The Fix**: Use `vw` (viewport width) units combined with `aspect-ratio` to maintain the ISO/IEC 7810 ID-1 standard.
+    *   **Snippet**: `w-[85vw] max-w-[340px] aspect-[1.586]` ensures the card scales perfectly while maintaining the correct physical ratio. Update text sizes to be relative (`text-[3vw]`) to scale with the card.
 
 ### 3. Mobile Layout Stacking
 
-* **The Problem**: "Zig-zag" or staggered grid layouts that look dynamic on Desktop often break flow on Mobile, leading to overlapping or confusing content.
-* **The Fix**: Switch to `flex-col` to stack elements vertically on mobile. Crucially, add significant vertical padding (`py-16` or `py-20`) to containers to prevent content from being occluded by fixed headers or bottom navigation bars.
+*   **The Problem**: "Zig-zag" or staggered grid layouts that look dynamic on Desktop often break flow on Mobile, leading to overlapping or confusing content.
+*   **The Fix**: Switch to `flex-col` to stack elements vertically on mobile. Crucially, add significant vertical padding (`py-16` or `py-20`) to containers to prevent content from being occluded by fixed headers or bottom navigation bars.
 
 ## 🐳 Containerization & Environment Setup (Feb 2026 Updates)
 
 ### 4. Podman Registry Configuration (Feb 4, 2026)
 
-* **The Problem**: Podman cannot pull images from Docker Hub, showing errors like "short-name 'postgres:16-alpine' did not resolve to an alias and no unqualified-search registries are defined".
-* **Root Cause**: `/etc/containers/registries.conf` has all registry configurations commented out by default for security reasons.
-* **The Fix**: Add Docker Hub to unqualified search registries:
+*   **The Problem**: Podman cannot pull images from Docker Hub, showing errors like "short-name 'postgres:16-alpine' did not resolve to an alias and no unqualified-search registries are defined".
+*   **Root Cause**: `/etc/containers/registries.conf` has all registry configurations commented out by default for security reasons.
+*   **The Fix**: Add Docker Hub to unqualified search registries:
 
-  ```bash
-  sudo bash -c 'echo "unqualified-search-registries = [\"docker.io\"]" >> /etc/containers/registries.conf.d/short-name.conf'
-  ```
+    ```bash
+    sudo bash -c 'echo "unqualified-search-registries = [\"docker.io\"]" >> /etc/containers/registries.conf.d/short-name.conf'
+    ```
 
-* **Validation**: Run `podman pull postgres:16-alpine` to confirm images can now be pulled.
+*   **Validation**: Run `podman pull postgres:16-alpine` to confirm images can now be pulled.
 
 ### 5. Maven JAR Build Before Container Image (Feb 4, 2026)
 
-* **The Problem**: Docker build fails with "COPY target/*.jar /deployments/app.jar: no such file or directory" even though the service has a Dockerfile with build stages.
-* **Root Cause**: The Dockerfile expects JAR files to exist in `target/` but Maven hasn't built them yet. Multi-stage builds that run `mvn package` inside the container may fail if the local target directory is empty.
-* **The Fix**: Build the JAR file first using Maven on the host, then build the container image:
-
-  ```bash
-  # Step 1: Build JAR with Maven
-  mvn -f backend/account-service/pom.xml clean package -DskipTests
 
   # Step 2: Build container image
   podman build -f backend/account-service/Dockerfile -t payu_account-service backend/account-service
@@ -616,3 +609,67 @@ This avoids complex Docker context juggling and leverages local Maven cache.
 
 * **Alternative**: Use explicit `image:` tag in docker-compose.yml to avoid naming conflicts
 
+### 11. Port Collision Management (Feb 5, 2026)
+* **The Problem**: Multiple services (Lending, Partner, KYC) were competing for host port 8010, causing container creation to fail silently or with "port already in use" errors during `podman compose up`.
+* **The Fix**: Audited all services and aligned them strictly with the `.env` configuration template. Standardized host port mapping to avoid any overlap.
+* **The Lesson**: In complex microservice environments, rely on central `.env` templates rather than hardcoded ports in `docker-compose.yml`.
+
+### 12. Quarkus Fast-JAR Dockerfile Pattern (Feb 5, 2026)
+* **The Problem**: Simulators and Notification services were failing with "no main manifest attribute" or failing to find `app.jar` because the Dockerfile was trying to run a standard JAR instead of the Quarkus specialized `quarkus-run.jar`.
+* **The Fix**: Updated Dockerfiles to use multi-stage builds, copying the entire `target/quarkus-app/` directory and setting the entry point to `-jar /deployments/quarkus-run.jar`.
+* **The Lesson**: Quarkus `fast-jar` (default) requires copying the entire `quarkus-app` structure, not just a single JAR.
+
+### 13. Spring Boot OIDC Configuration (Feb 5, 2026)
+* **The Problem**: Services like `support-service` and `backoffice-service` failed to start with `JwtDecoder` bean errors (`BeanCreationException`).
+* **The Fix**: Explicitly added Keycloak OIDC issuer URLs to the `environment` section in `docker-compose.yml` to resolve JWT validation beans at startup.
+
+### 14. Flyway Migration Synchronization (Feb 5, 2026)
+* **The Problem**: `promotion-service` crashed because the `customer_segments` table was missing, even though the entity existed in the code.
+* **The Fix**: Created the missing `V3__add_customer_segments.sql` migration script to reconcile the database schema with the JPA domain model.
+
+### 15. Gateway Service Resource Limits (Feb 5, 2026)
+* **The Problem**: `gateway-service` (Quarkus) experienced OOM (Exit 137) during high load or complex routing initialization with default 256MB limit.
+* **The Fix**: Increased memory limits to 768MB (and 256MB reservation) to provide enough headroom for the Vert.x reactive stack.
+
+### 16. Redis Configuration for Spring Services (Feb 5, 2026)
+* **The Problem**: Spring Boot services using `cache-starter` fail to connect to Redis in container environments, showing "Connection refused: localhost:6379" errors even though Redis is running.
+* **Root Cause**: Services using `payu.cache.redis.host` property don't automatically map standard `REDIS_HOST` environment variable. The custom cache-starter uses `PAYU_CACHE_REDIS_HOST` prefix.
+* **The Fix**: Add `PAYU_CACHE_REDIS_HOST: redis` (or service DNS name) to docker-compose.yml for services using cache-starter:
+  ```yaml
+  lending-service:
+    environment:
+      PAYU_CACHE_REDIS_HOST: redis  # Maps to payu.cache.redis.host
+  ```
+* **Note**: Some services also need `spring.data.redis.host` or `REDIS_HOST` depending on configuration pattern.
+
+### 17. Port Standardization Enforcement (Feb 5, 2026)
+* **The Problem**: Services hardcoded to non-standard ports (e.g., `server.port=${PORT:8089}`) break standardization and cause healthcheck failures.
+* **Root Cause**: Historical port assignments weren't cleaned up when standardizing to port 8080 across all services.
+* **The Fix**: Audit `application.yml` for all services and ensure:
+  ```yaml
+  server:
+    port: ${PORT:8080}  # ALL services must default to 8080
+  ```
+* **Impact**: Non-standard ports cause gateway routing failures and healthcheck mismatches.
+
+### 18. Healthcheck Path Alignment (Feb 5, 2026)
+* **The Problem**: Healthchecks in docker-compose.yml pointing to wrong ports (8089, 8090) fail even when services are healthy.
+* **Root Cause**: Healthcheck URLs weren't updated when port standardization changed service ports.
+* **The Fix**: After fixing source port in `application.yml`, update all healthcheck URLs to match:
+  ```yaml
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+  ```
+* **Best Practice**: Healthcheck should always check `localhost:8080` for internal container port, regardless of external host port mapping.
+
+### 19. Quarkus Parent POM Build Context (Feb 5, 2026)
+* **The Problem**: Quarkus simulators in monorepo fail with "Parent POM not found" when building from service subdirectory context.
+* **Root Cause**: Docker build context is service directory, but parent POM is at backend root.
+* **The Fix**: Use backend root as build context and update COPY paths:
+  ```dockerfile
+  # Build from backend root to access parent POM
+  COPY backend/pom.xml .
+  COPY backend/simulators/qris-simulator/pom.xml simulators/qris-simulator/
+  RUN mvn package -f simulators/qris-simulator/pom.xml -DskipTests
+  ```
+* **Alternative**: Pre-build JAR locally and use simplified Dockerfile (see Lesson 9).
