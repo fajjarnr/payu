@@ -673,3 +673,26 @@
   RUN mvn package -f simulators/qris-simulator/pom.xml -DskipTests
   ```
 * **Alternative**: Pre-build JAR locally and use simplified Dockerfile (see Lesson 9).
+
+## 🎨 Product Design Protocol (Feb 2026)
+
+### 20. Jackson Deserialization with Keycloak Responses (Feb 5, 2026)
+* **The Problem**: Auth-service login fails with `IllegalArgumentException` when deserializing Keycloak token response.
+* **Root Cause**: Keycloak returns extra fields (`not-before-policy`, `refresh_expires_in`, `session_state`, `scope`) that aren't mapped in the `LoginResponse` record. Jackson fails on unknown properties in records by default.
+* **The Fix**: Add `@JsonIgnoreProperties(ignoreUnknown = true)` to DTOs that deserialize external OAuth2/OIDC responses:
+  ```java
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public record LoginResponse(
+      @JsonProperty("access_token") String accessToken,
+      @JsonProperty("refresh_token") String refreshToken,
+      @JsonProperty("expires_in") long expiresIn,
+      @JsonProperty("token_type") String tokenType
+  ) {}
+  ```
+* **Note**: This is especially important for DTOs that map to third-party API responses (Keycloak, OAuth2 providers) where you don't control the response schema.
+
+### 21. The "Startup Protocol" for Design (Feb 2026)
+* **The Shift**: Moving from ad-hoc design improvements to a strict "Steve Jobs" persona protocol.
+* **The Rule**: No design opinions are valid without first auditing: 1) Existing Design System, 2) PRD, and 3) Live App Responsiveness.
+* **The Impact**: Prevents "design drift" where new features don't match the established "Premium Emerald" aesthetic.
+* **Key Check**: "If an element can be removed without losing meaning, it must be removed."
