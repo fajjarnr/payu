@@ -9,13 +9,16 @@ WORKDIR /app
 # Install build dependencies
 RUN dnf install -y gcc g++ glibc-devel && dnf clean all
 
-# Copy entire project
-COPY . .
+# Copy requirements first for caching
+COPY requirements.txt .
 
 # Create virtual environment and install dependencies
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install --no-cache-dir -r kyc-service/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY src ./src
 
 ####
 # Runtime stage - UBI9 Python 3.11
@@ -26,7 +29,7 @@ WORKDIR /app
 
 # Copy virtual environment and source
 COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /app/kyc-service/src /app/src
+COPY --from=builder /app/src /app/src
 
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1

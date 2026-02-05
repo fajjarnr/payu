@@ -50,17 +50,17 @@ class CustomerCaseServiceTest {
         CustomerCase result = customerCaseService.create(request);
 
         assertNotNull(result);
-        assertNotNull(result.id);
-        assertEquals(testUserId, result.userId);
-        assertEquals("ACC-001", result.accountNumber);
-        assertEquals(CustomerCase.CaseType.TRANSACTION_DISPUTE, result.caseType);
-        assertEquals(CustomerCase.Priority.HIGH, result.priority);
-        assertEquals("Unauthorized transaction", result.subject);
-        assertEquals("I did not make this transaction", result.description);
-        assertEquals("Please investigate", result.notes);
-        assertEquals(CustomerCase.CaseStatus.OPEN, result.status);
-        assertNotNull(result.caseNumber);
-        assertNotNull(result.createdAt);
+        assertNotNull(result.getId());
+        assertEquals(testUserId, result.getUserId());
+        assertEquals("ACC-001", result.getAccountNumber());
+        assertEquals(CustomerCase.CaseType.TRANSACTION_DISPUTE, result.getCaseType());
+        assertEquals(CustomerCase.Priority.HIGH, result.getPriority());
+        assertEquals("Unauthorized transaction", result.getSubject());
+        assertEquals("I did not make this transaction", result.getDescription());
+        assertEquals("Please investigate", result.getNotes());
+        assertEquals(CustomerCase.CaseStatus.OPEN, result.getStatus());
+        assertNotNull(result.getCaseNumber());
+        assertNotNull(result.getCreatedAt());
     }
 
     @Test
@@ -79,7 +79,7 @@ class CustomerCaseServiceTest {
         CustomerCase result = customerCaseService.create(request);
 
         assertNotNull(result);
-        assertEquals(CustomerCase.Priority.MEDIUM, result.priority);
+        assertEquals(CustomerCase.Priority.MEDIUM, result.getPriority());
     }
 
     @Test
@@ -115,7 +115,7 @@ class CustomerCaseServiceTest {
         CustomerCase result1 = customerCaseService.create(request1);
         CustomerCase result2 = customerCaseService.create(request2);
 
-        assertNotEquals(result1.caseNumber, result2.caseNumber);
+        assertNotEquals(result1.getCaseNumber(), result2.getCaseNumber());
     }
 
     // Query Customer Case Tests
@@ -135,10 +135,10 @@ class CustomerCaseServiceTest {
 
         CustomerCase customerCase = customerCaseService.create(request);
 
-        Optional<CustomerCase> result = customerCaseService.getById(customerCase.id);
+        Optional<CustomerCase> result = customerCaseService.getById(customerCase.getId());
 
         assertTrue(result.isPresent());
-        assertEquals(customerCase.id, result.get().id);
+        assertEquals(customerCase.getId(), result.get().getId());
     }
 
     @Test
@@ -163,10 +163,10 @@ class CustomerCaseServiceTest {
 
         CustomerCase customerCase = customerCaseService.create(request);
 
-        Optional<CustomerCase> result = customerCaseService.getByCaseNumber(customerCase.caseNumber);
+        Optional<CustomerCase> result = customerCaseService.getByCaseNumber(customerCase.getCaseNumber());
 
         assertTrue(result.isPresent());
-        assertEquals(customerCase.caseNumber, result.get().caseNumber);
+        assertEquals(customerCase.getCaseNumber(), result.get().getCaseNumber());
     }
 
     @Test
@@ -195,7 +195,7 @@ class CustomerCaseServiceTest {
 
         assertNotNull(results);
         assertFalse(results.isEmpty());
-        assertTrue(results.stream().anyMatch(cc -> cc.userId.equals(testUserId)));
+        assertTrue(results.stream().anyMatch(cc -> cc.getUserId().equals(testUserId)));
     }
 
     @Test
@@ -216,7 +216,7 @@ class CustomerCaseServiceTest {
         List<CustomerCase> results = customerCaseService.listByStatus(CustomerCase.CaseStatus.OPEN, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(cc -> cc.status == CustomerCase.CaseStatus.OPEN));
+        assertTrue(results.stream().allMatch(cc -> cc.getStatus() == CustomerCase.CaseStatus.OPEN));
     }
 
     @Test
@@ -237,7 +237,7 @@ class CustomerCaseServiceTest {
         List<CustomerCase> results = customerCaseService.listByPriority(CustomerCase.Priority.URGENT, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(cc -> cc.priority == CustomerCase.Priority.URGENT));
+        assertTrue(results.stream().allMatch(cc -> cc.getPriority() == CustomerCase.Priority.URGENT));
     }
 
     @Test
@@ -278,11 +278,11 @@ class CustomerCaseServiceTest {
 
         CustomerCase customerCase = customerCaseService.create(request);
 
-        CustomerCase result = customerCaseService.assign(customerCase.id, "agent1");
+        CustomerCase result = customerCaseService.assign(customerCase.getId(), "agent1");
 
         assertNotNull(result);
-        assertEquals("agent1", result.assignedTo);
-        assertEquals(CustomerCase.CaseStatus.IN_PROGRESS, result.status);
+        assertEquals("agent1", result.getAssignedTo());
+        assertEquals(CustomerCase.CaseStatus.IN_PROGRESS, result.getStatus());
     }
 
     @Test
@@ -315,13 +315,13 @@ class CustomerCaseServiceTest {
                 "Issue resolved successfully"
         );
 
-        CustomerCase result = customerCaseService.update(customerCase.id, updateRequest, "agent2");
+        CustomerCase result = customerCaseService.update(customerCase.getId(), updateRequest, "agent2");
 
         assertNotNull(result);
-        assertEquals(CustomerCase.CaseStatus.RESOLVED, result.status);
-        assertEquals("Issue resolved successfully", result.notes);
-        assertEquals("agent2", result.resolvedBy);
-        assertNotNull(result.resolvedAt);
+        assertEquals(CustomerCase.CaseStatus.RESOLVED, result.getStatus());
+        assertEquals("Issue resolved successfully", result.getNotes());
+        assertEquals("agent2", result.getResolvedBy());
+        assertNotNull(result.getResolvedAt());
     }
 
     @Test
@@ -344,12 +344,12 @@ class CustomerCaseServiceTest {
                 "Case closed - customer satisfied"
         );
 
-        CustomerCase result = customerCaseService.update(customerCase.id, updateRequest, "agent3");
+        CustomerCase result = customerCaseService.update(customerCase.getId(), updateRequest, "agent3");
 
-        assertEquals(CustomerCase.CaseStatus.CLOSED, result.status);
-        assertEquals("Case closed - customer satisfied", result.notes);
-        assertEquals("agent3", result.resolvedBy);
-        assertNotNull(result.resolvedAt);
+        assertEquals(CustomerCase.CaseStatus.CLOSED, result.getStatus());
+        assertEquals("Case closed - customer satisfied", result.getNotes());
+        assertEquals("agent3", result.getResolvedBy());
+        assertNotNull(result.getResolvedAt());
     }
 
     @Test
@@ -372,12 +372,12 @@ class CustomerCaseServiceTest {
                 "Working on this issue"
         );
 
-        CustomerCase result = customerCaseService.update(customerCase.id, updateRequest, "agent4");
+        CustomerCase result = customerCaseService.update(customerCase.getId(), updateRequest, "agent4");
 
-        assertEquals(CustomerCase.CaseStatus.IN_PROGRESS, result.status);
-        assertEquals("Working on this issue", result.notes);
-        assertNull(result.resolvedBy);
-        assertNull(result.resolvedAt);
+        assertEquals(CustomerCase.CaseStatus.IN_PROGRESS, result.getStatus());
+        assertEquals("Working on this issue", result.getNotes());
+        assertNull(result.getResolvedBy());
+        assertNull(result.getResolvedAt());
     }
 
     @Test
@@ -409,7 +409,7 @@ class CustomerCaseServiceTest {
         );
 
         CustomerCase customerCase = customerCaseService.create(request);
-        UUID caseId = customerCase.id;
+        UUID caseId = customerCase.getId();
 
         customerCaseService.delete(caseId);
 

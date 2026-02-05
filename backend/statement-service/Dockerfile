@@ -1,23 +1,5 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy entire project (needed for parent pom/shared dependencies)
-COPY . .
-
-# Build the application
-RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true -pl :statement-service -am && \
-    mv statement-service/target/*.jar statement-service/target/app.jar
-
-####
-# Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+# Runtime image - Using Red Hat UBI9 OpenJDK 21 runtime
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
@@ -36,8 +18,8 @@ USER 185
 
 WORKDIR /deployments
 
-# Copy the built artifact from build stage
-COPY --from=build --chown=185 /build/statement-service/target/app.jar /deployments/app.jar
+# Copy the pre-built artifact
+COPY target/*.jar /deployments/app.jar
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]

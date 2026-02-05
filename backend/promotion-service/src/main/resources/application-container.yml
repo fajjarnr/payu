@@ -76,4 +76,4 @@ payu:
     audit-enabled: false
 
 server:
-  port: 8017
+  port: 8080

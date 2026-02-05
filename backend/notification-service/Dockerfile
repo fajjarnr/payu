@@ -13,8 +13,7 @@ RUN microdnf install -y maven && microdnf clean all
 COPY . .
 
 # Build the application
-RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true -pl :notification-service -am && \
-    mv notification-service/target/*.jar notification-service/target/app.jar
+RUN mvn package -DskipTests -Dquarkus.package.jar.type=fast-jar
 
 ####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
@@ -36,8 +35,11 @@ USER 185
 
 WORKDIR /deployments
 
-# Copy the built artifact from build stage
-COPY --from=build --chown=185 /build/notification-service/target/app.jar /deployments/app.jar
+# Copy Quarkus fast-jar structure
+COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build --chown=185 /build/target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
+COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
+COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]
@@ -57,7 +59,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
 
 # Health check (Actuator)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health || exit 1
+    CMD curl -f http://localhost:8080/q/health || exit 1
 
 # Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

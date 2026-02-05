@@ -76,7 +76,7 @@ payu:
     audit-enabled: false
 
 server:
-  port: 8016
+  port: 8080
   cache:
     invalidation:
       enabled: false

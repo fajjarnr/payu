@@ -6,10 +6,16 @@ spring:
     name: support-service
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost:5432}/${DB_NAME:support_service}
-    username: ${DB_USERNAME:payu}
-    password: ${DB_PASSWORD:payu}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost:5432}/${DB_NAME:support_service}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:payu}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:payu}}
     driver-class-name: org.postgresql.Driver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
 
   jpa:
     hibernate:

@@ -52,18 +52,18 @@ class FraudCaseServiceTest {
         );
 
         assertNotNull(fraudCase);
-        assertNotNull(fraudCase.id);
-        assertEquals(testUserId, fraudCase.userId);
-        assertEquals("ACC-001", fraudCase.accountNumber);
-        assertEquals(testTransactionId, fraudCase.transactionId);
-        assertEquals("TRANSFER", fraudCase.transactionType);
-        assertEquals(new BigDecimal("1000.00"), fraudCase.amount);
-        assertEquals("PHISHING", fraudCase.fraudType);
-        assertEquals(FraudCase.RiskLevel.HIGH, fraudCase.riskLevel);
-        assertEquals(FraudCase.CaseStatus.OPEN, fraudCase.status);
-        assertEquals("Suspicious activity detected", fraudCase.description);
-        assertEquals("{\"file\": \"logs.txt\"}", fraudCase.evidence);
-        assertNotNull(fraudCase.createdAt);
+        assertNotNull(fraudCase.getId());
+        assertEquals(testUserId, fraudCase.getUserId());
+        assertEquals("ACC-001", fraudCase.getAccountNumber());
+        assertEquals(testTransactionId, fraudCase.getTransactionId());
+        assertEquals("TRANSFER", fraudCase.getTransactionType());
+        assertEquals(new BigDecimal("1000.00"), fraudCase.getAmount());
+        assertEquals("PHISHING", fraudCase.getFraudType());
+        assertEquals(FraudCase.RiskLevel.HIGH, fraudCase.getRiskLevel());
+        assertEquals(FraudCase.CaseStatus.OPEN, fraudCase.getStatus());
+        assertEquals("Suspicious activity detected", fraudCase.getDescription());
+        assertEquals("{\"file\": \"logs.txt\"}", fraudCase.getEvidence());
+        assertNotNull(fraudCase.getCreatedAt());
     }
 
     @Test
@@ -82,7 +82,7 @@ class FraudCaseServiceTest {
         );
 
         assertNotNull(fraudCase);
-        assertEquals(FraudCase.RiskLevel.MEDIUM, fraudCase.riskLevel);
+        assertEquals(FraudCase.RiskLevel.MEDIUM, fraudCase.getRiskLevel());
     }
 
     // Query Fraud Case Tests
@@ -102,10 +102,10 @@ class FraudCaseServiceTest {
                 null
         );
 
-        Optional<FraudCase> result = fraudCaseService.getById(fraudCase.id);
+        Optional<FraudCase> result = fraudCaseService.getById(fraudCase.getId());
 
         assertTrue(result.isPresent());
-        assertEquals(fraudCase.id, result.get().id);
+        assertEquals(fraudCase.getId(), result.get().getId());
     }
 
     @Test
@@ -133,7 +133,7 @@ class FraudCaseServiceTest {
         List<FraudCase> results = fraudCaseService.getByUserId(testUserId);
 
         assertFalse(results.isEmpty());
-        assertTrue(results.stream().anyMatch(fc -> fc.userId.equals(testUserId)));
+        assertTrue(results.stream().anyMatch(fc -> fc.getUserId().equals(testUserId)));
     }
 
     @Test
@@ -154,7 +154,7 @@ class FraudCaseServiceTest {
         List<FraudCase> results = fraudCaseService.listByStatus(FraudCase.CaseStatus.OPEN, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(fc -> fc.status == FraudCase.CaseStatus.OPEN));
+        assertTrue(results.stream().allMatch(fc -> fc.getStatus() == FraudCase.CaseStatus.OPEN));
     }
 
     @Test
@@ -175,7 +175,7 @@ class FraudCaseServiceTest {
         List<FraudCase> results = fraudCaseService.listByRiskLevel(FraudCase.RiskLevel.CRITICAL, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(fc -> fc.riskLevel == FraudCase.RiskLevel.CRITICAL));
+        assertTrue(results.stream().allMatch(fc -> fc.getRiskLevel() == FraudCase.RiskLevel.CRITICAL));
     }
 
     @Test
@@ -216,11 +216,11 @@ class FraudCaseServiceTest {
                 null
         );
 
-        FraudCase result = fraudCaseService.assign(fraudCase.id, "admin1");
+        FraudCase result = fraudCaseService.assign(fraudCase.getId(), "admin1");
 
         assertNotNull(result);
-        assertEquals("admin1", result.assignedTo);
-        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, result.status);
+        assertEquals("admin1", result.getAssignedTo());
+        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, result.getStatus());
     }
 
     @Test
@@ -253,13 +253,13 @@ class FraudCaseServiceTest {
                 "Case resolved - confirmed fraud"
         );
 
-        FraudCase result = fraudCaseService.resolve(fraudCase.id, request, "admin2");
+        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
         assertNotNull(result);
-        assertEquals(FraudCase.CaseStatus.RESOLVED, result.status);
-        assertEquals("Case resolved - confirmed fraud", result.notes);
-        assertEquals("admin2", result.resolvedBy);
-        assertNotNull(result.resolvedAt);
+        assertEquals(FraudCase.CaseStatus.RESOLVED, result.getStatus());
+        assertEquals("Case resolved - confirmed fraud", result.getNotes());
+        assertEquals("admin2", result.getResolvedBy());
+        assertNotNull(result.getResolvedAt());
     }
 
     @Test
@@ -282,10 +282,10 @@ class FraudCaseServiceTest {
                 "False positive"
         );
 
-        FraudCase result = fraudCaseService.resolve(fraudCase.id, request, "admin2");
+        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
-        assertEquals(FraudCase.CaseStatus.CLOSED, result.status);
-        assertEquals("False positive", result.notes);
+        assertEquals(FraudCase.CaseStatus.CLOSED, result.getStatus());
+        assertEquals("False positive", result.getNotes());
     }
 
     @Test
@@ -308,10 +308,10 @@ class FraudCaseServiceTest {
                 "Escalating to legal team"
         );
 
-        FraudCase result = fraudCaseService.resolve(fraudCase.id, request, "admin2");
+        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
-        assertEquals(FraudCase.CaseStatus.ESCALATED, result.status);
-        assertEquals("Escalating to legal team", result.notes);
+        assertEquals(FraudCase.CaseStatus.ESCALATED, result.getStatus());
+        assertEquals("Escalating to legal team", result.getNotes());
     }
 
     @Test
@@ -334,9 +334,9 @@ class FraudCaseServiceTest {
                 "Need more evidence"
         );
 
-        FraudCase result = fraudCaseService.resolve(fraudCase.id, request, "admin2");
+        FraudCase result = fraudCaseService.resolve(fraudCase.getId(), request, "admin2");
 
-        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, result.status);
+        assertEquals(FraudCase.CaseStatus.UNDER_INVESTIGATION, result.getStatus());
     }
 
     @Test
@@ -369,7 +369,7 @@ class FraudCaseServiceTest {
                 null
         );
 
-        UUID fraudCaseId = fraudCase.id;
+        UUID fraudCaseId = fraudCase.getId();
         fraudCaseService.delete(fraudCaseId);
 
         Optional<FraudCase> result = fraudCaseService.getById(fraudCaseId);

@@ -1,0 +1,41 @@
+####
+# Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+####
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
+
+# Metadata labels
+LABEL maintainer="backend-team@payu.id"
+LABEL description="PayU bi-fast-simulator"
+LABEL version="1.0.0"
+
+# Install curl
+USER root
+RUN microdnf install -y curl-minimal && microdnf clean all
+
+# Use non-root user
+USER 185
+WORKDIR /deployments
+
+# Copy pre-built Quarkus fast-jar from host
+COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
+COPY --chown=185 target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
+
+# Expose port
+EXPOSE 8080
+
+# JVM configuration
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=100 \
+    -Dquarkus.http.host=0.0.0.0 \
+    -Dquarkus.http.port=8080 \
+    -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/q/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

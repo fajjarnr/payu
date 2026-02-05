@@ -1,30 +1,52 @@
 package id.payu.promotion.resource;
 
 import id.payu.promotion.dto.*;
-import io.quarkus.test.common.http.TestHTTPEndpoint;
-import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import id.payu.promotion.repository.*;
+import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@QuarkusTest
-@Disabled("Resource tests require Docker/Testcontainers - disabled when Docker not available")
-@TestHTTPEndpoint(GamificationResource.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+@Transactional
 class GamificationResourceTest {
+
+    @org.springframework.boot.test.web.server.LocalServerPort
+    int port;
+
+    @Autowired
+    DailyCheckinRepository dailyCheckinRepository;
+
+    @Autowired
+    XpTransactionRepository xpTransactionRepository;
+
+    @Autowired
+    UserLevelRepository userLevelRepository;
+
+    @Autowired
+    UserBadgeRepository userBadgeRepository;
 
     private static final String TEST_ACCOUNT_ID = "acc-integration-123";
 
     @BeforeEach
     void setUp() {
+        RestAssured.port = port;
+        RestAssured.basePath = "/api/v1/gamification";
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        dailyCheckinRepository.deleteAll();
+        xpTransactionRepository.deleteAll();
+        userLevelRepository.deleteAll();
+        userBadgeRepository.deleteAll();
     }
 
     @Test

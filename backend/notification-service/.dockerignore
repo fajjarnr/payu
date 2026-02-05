@@ -9,6 +9,7 @@ Dockerfile
 .dockerignore
 
 # Build artifacts
+target/
 
 # Dependencies
 node_modules/

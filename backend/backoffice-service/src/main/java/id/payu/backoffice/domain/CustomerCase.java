@@ -63,6 +63,37 @@ public class CustomerCase {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    // Manual accessors for stability
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+    public String getCaseNumber() { return caseNumber; }
+    public void setCaseNumber(String caseNumber) { this.caseNumber = caseNumber; }
+    public CaseType getCaseType() { return caseType; }
+    public void setCaseType(CaseType caseType) { this.caseType = caseType; }
+    public Priority getPriority() { return priority; }
+    public void setPriority(Priority priority) { this.priority = priority; }
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public CaseStatus getStatus() { return status; }
+    public void setStatus(CaseStatus status) { this.status = status; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+    public String getAssignedTo() { return assignedTo; }
+    public void setAssignedTo(String assignedTo) { this.assignedTo = assignedTo; }
+    public String getResolvedBy() { return resolvedBy; }
+    public void setResolvedBy(String resolvedBy) { this.resolvedBy = resolvedBy; }
+    public LocalDateTime getResolvedAt() { return resolvedAt; }
+    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();

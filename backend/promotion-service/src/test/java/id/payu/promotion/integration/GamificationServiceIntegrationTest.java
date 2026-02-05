@@ -3,13 +3,12 @@ package id.payu.promotion.integration;
 import id.payu.promotion.domain.*;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.service.GamificationService;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import id.payu.promotion.repository.*;
+import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,23 +23,44 @@ import java.util.List;
  * To run these tests: mvn test -Dtest=GamificationServiceIntegrationTest -Ddocker.enabled=true
  * To skip these tests: mvn test (they will be skipped by default)
  */
-@QuarkusTest
-@EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Docker not available")
-@QuarkusTestResource(value = id.payu.promotion.test.resource.PostgresTestResource.class)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class GamificationServiceIntegrationTest {
 
-    @Inject
+    @Autowired
     GamificationService gamificationService;
+
+    @Autowired
+    UserBadgeRepository userBadgeRepository;
+
+    @Autowired
+    BadgeRepository badgeRepository;
+
+    @Autowired
+    DailyCheckinRepository dailyCheckinRepository;
+
+    @Autowired
+    UserLevelRepository userLevelRepository;
+
+    @Autowired
+    XpTransactionRepository xpTransactionRepository;
+
+    @Autowired
+    LoyaltyPointsRepository loyaltyPointsRepository;
+
+    @Autowired
+    LevelRewardRepository levelRewardRepository;
 
     @BeforeEach
     void setup() {
         // Clean up database before each test
-        UserBadge.deleteAll();
-        Badge.deleteAll();
-        DailyCheckin.deleteAll();
-        UserLevel.deleteAll();
-        XpTransaction.deleteAll();
-        LoyaltyPoints.deleteAll();
+        userBadgeRepository.deleteAll();
+        badgeRepository.deleteAll();
+        dailyCheckinRepository.deleteAll();
+        userLevelRepository.deleteAll();
+        xpTransactionRepository.deleteAll();
+        loyaltyPointsRepository.deleteAll();
     }
 
     // ==================== DAILY CHECKIN TESTS ====================
@@ -59,11 +79,10 @@ class GamificationServiceIntegrationTest {
         Assertions.assertNotNull(response.createdAt());
 
         // Verify persistence
-        DailyCheckin checkin = DailyCheckin.<DailyCheckin>find(
-            "accountId = ?1 and checkinDate = ?2", accountId, LocalDate.now())
-            .firstResult();
+        DailyCheckin checkin = dailyCheckinRepository.findByAccountIdAndCheckinDate(accountId, LocalDate.now())
+            .orElse(null);
         Assertions.assertNotNull(checkin);
-        Assertions.assertEquals(1, checkin.streakCount);
+        Assertions.assertEquals(1, checkin.getStreakCount());
     }
 
     @Test
@@ -73,11 +92,11 @@ class GamificationServiceIntegrationTest {
         // First checkin (yesterday)
         LocalDate yesterday = LocalDate.now().minusDays(1);
         DailyCheckin yesterdayCheckin = new DailyCheckin();
-        yesterdayCheckin.accountId = accountId;
-        yesterdayCheckin.checkinDate = yesterday;
-        yesterdayCheckin.streakCount = 3;
-        yesterdayCheckin.pointsEarned = 15;
-        yesterdayCheckin.persist();
+        yesterdayCheckin.setAccountId(accountId);
+        yesterdayCheckin.setCheckinDate(yesterday);
+        yesterdayCheckin.setStreakCount(3);
+        yesterdayCheckin.setPointsEarned(15);
+        dailyCheckinRepository.save(yesterdayCheckin);
 
         // Checkin today
         DailyCheckinResponse response = gamificationService.performDailyCheckin(accountId);
@@ -86,11 +105,10 @@ class GamificationServiceIntegrationTest {
         Assertions.assertTrue(response.pointsEarned() > 15); // More points for longer streak
 
         // Verify in database
-        DailyCheckin todayCheckin = DailyCheckin.<DailyCheckin>find(
-            "accountId = ?1 and checkinDate = ?2", accountId, LocalDate.now())
-            .firstResult();
+        DailyCheckin todayCheckin = dailyCheckinRepository.findByAccountIdAndCheckinDate(accountId, LocalDate.now())
+            .orElse(null);
         Assertions.assertNotNull(todayCheckin);
-        Assertions.assertEquals(4, todayCheckin.streakCount);
+        Assertions.assertEquals(4, todayCheckin.getStreakCount());
     }
 
     @Test
@@ -100,11 +118,11 @@ class GamificationServiceIntegrationTest {
         // Checkin 3 days ago
         LocalDate threeDaysAgo = LocalDate.now().minusDays(3);
         DailyCheckin oldCheckin = new DailyCheckin();
-        oldCheckin.accountId = accountId;
-        oldCheckin.checkinDate = threeDaysAgo;
-        oldCheckin.streakCount = 5;
-        oldCheckin.pointsEarned = 25;
-        oldCheckin.persist();
+        oldCheckin.setAccountId(accountId);
+        oldCheckin.setCheckinDate(threeDaysAgo);
+        oldCheckin.setStreakCount(5);
+        oldCheckin.setPointsEarned(25);
+        dailyCheckinRepository.save(oldCheckin);
 
         // Checkin today (streak broken)
         DailyCheckinResponse response = gamificationService.performDailyCheckin(accountId);
@@ -157,11 +175,11 @@ class GamificationServiceIntegrationTest {
         // Create checkin from yesterday with streak of 5
         LocalDate yesterday = LocalDate.now().minusDays(1);
         DailyCheckin checkin = new DailyCheckin();
-        checkin.accountId = accountId;
-        checkin.checkinDate = yesterday;
-        checkin.streakCount = 5;
-        checkin.pointsEarned = 25;
-        checkin.persist();
+        checkin.setAccountId(accountId);
+        checkin.setCheckinDate(yesterday);
+        checkin.setStreakCount(5);
+        checkin.setPointsEarned(25);
+        dailyCheckinRepository.save(checkin);
 
         Integer streak = gamificationService.getCurrentStreak(accountId);
 
@@ -175,11 +193,11 @@ class GamificationServiceIntegrationTest {
         // Create checkin from 3 days ago
         LocalDate threeDaysAgo = LocalDate.now().minusDays(3);
         DailyCheckin checkin = new DailyCheckin();
-        checkin.accountId = accountId;
-        checkin.checkinDate = threeDaysAgo;
-        checkin.streakCount = 5;
-        checkin.pointsEarned = 25;
-        checkin.persist();
+        checkin.setAccountId(accountId);
+        checkin.setCheckinDate(threeDaysAgo);
+        checkin.setStreakCount(5);
+        checkin.setPointsEarned(25);
+        dailyCheckinRepository.save(checkin);
 
         Integer streak = gamificationService.getCurrentStreak(accountId);
 
@@ -200,11 +218,11 @@ class GamificationServiceIntegrationTest {
         // Create multiple checkins
         for (int i = 0; i < 5; i++) {
             DailyCheckin checkin = new DailyCheckin();
-            checkin.accountId = accountId;
-            checkin.checkinDate = LocalDate.now().minusDays(i);
-            checkin.streakCount = i + 1;
-            checkin.pointsEarned = 5 * (i + 1);
-            checkin.persist();
+            checkin.setAccountId(accountId);
+            checkin.setCheckinDate(LocalDate.now().minusDays(i));
+            checkin.setStreakCount(i + 1);
+            checkin.setPointsEarned(5 * (i + 1));
+            dailyCheckinRepository.save(checkin);
         }
 
         Long total = gamificationService.getTotalCheckins(accountId);
@@ -230,11 +248,11 @@ class GamificationServiceIntegrationTest {
         Assertions.assertNotNull(response);
         Assertions.assertTrue(response.xpEarned() > 0);
 
-        UserLevel userLevel = UserLevel.<UserLevel>find("accountId", accountId).firstResult();
+        UserLevel userLevel = userLevelRepository.findByAccountId(accountId).orElse(null);
         Assertions.assertNotNull(userLevel);
-        Assertions.assertEquals(1, userLevel.level);
-        Assertions.assertTrue(userLevel.xp > 0);
-        Assertions.assertEquals("Pemula", userLevel.levelName);
+        Assertions.assertEquals(1, userLevel.getLevel());
+        Assertions.assertTrue(userLevel.getXp() > 0);
+        Assertions.assertEquals("Pemula", userLevel.getLevelName());
     }
 
     @Test
@@ -243,11 +261,11 @@ class GamificationServiceIntegrationTest {
 
         // Create initial level with XP close to level 2 threshold
         UserLevel userLevel = new UserLevel();
-        userLevel.accountId = accountId;
-        userLevel.level = 1;
-        userLevel.xp = 50; // Need 100 for level 2
-        userLevel.levelName = "Pemula";
-        userLevel.persist();
+        userLevel.setAccountId(accountId);
+        userLevel.setLevel(1);
+        userLevel.setXp(50); // Need 100 for level 2
+        userLevel.setLevelName("Pemula");
+        userLevelRepository.save(userLevel);
 
         // Process large transaction to earn enough XP
         ProcessTransactionRequest request = new ProcessTransactionRequest(
@@ -264,8 +282,8 @@ class GamificationServiceIntegrationTest {
         Assertions.assertTrue(response.levelUp().level() >= 2);
 
         // Verify database
-        UserLevel updated = UserLevel.<UserLevel>find("accountId", accountId).firstResult();
-        Assertions.assertTrue(updated.level >= 2);
+        UserLevel updated = userLevelRepository.findByAccountId(accountId).orElse(null);
+        Assertions.assertTrue(updated.getLevel() >= 2);
     }
 
     @Test
@@ -274,12 +292,12 @@ class GamificationServiceIntegrationTest {
 
         // Create existing XP transaction
         XpTransaction existingTx = new XpTransaction();
-        existingTx.accountId = accountId;
-        existingTx.transactionId = "txn-duplicate";
-        existingTx.sourceType = XpTransaction.SourceType.TRANSACTION;
-        existingTx.xpEarned = 10;
-        existingTx.xpAfter = 10;
-        existingTx.persist();
+        existingTx.setAccountId(accountId);
+        existingTx.setTransactionId("txn-duplicate");
+        existingTx.setSourceType(XpTransaction.SourceType.TRANSACTION);
+        existingTx.setXpEarned(10);
+        existingTx.setXpAfter(10);
+        xpTransactionRepository.save(existingTx);
 
         // Try to process same transaction again
         ProcessTransactionRequest request = new ProcessTransactionRequest(
@@ -302,11 +320,11 @@ class GamificationServiceIntegrationTest {
         String accountId = "acc-get-level";
 
         UserLevel userLevel = new UserLevel();
-        userLevel.accountId = accountId;
-        userLevel.level = 3;
-        userLevel.xp = 450;
-        userLevel.levelName = "Pengguna";
-        userLevel.persist();
+        userLevel.setAccountId(accountId);
+        userLevel.setLevel(3);
+        userLevel.setXp(450);
+        userLevel.setLevelName("Pengguna");
+        userLevelRepository.save(userLevel);
 
         UserLevelResponse response = gamificationService.getUserLevel(accountId);
 
@@ -332,14 +350,14 @@ class GamificationServiceIntegrationTest {
 
         // Create a badge for transaction count
         Badge badge = new Badge();
-        badge.name = "First Transaction";
-        badge.description = "Complete your first transaction";
-        badge.requirementType = Badge.RequirementType.TRANSACTION_COUNT;
-        badge.requirementValue = new BigDecimal("1");
-        badge.pointsReward = 50;
-        badge.category = "MILESTONE";
-        badge.isActive = true;
-        badge.persist();
+        badge.setName("First Transaction");
+        badge.setDescription("Complete your first transaction");
+        badge.setRequirementType(Badge.RequirementType.TRANSACTION_COUNT);
+        badge.setRequirementValue(new BigDecimal("1"));
+        badge.setPointsReward(50);
+        badge.setCategory("MILESTONE");
+        badge.setIsActive(true);
+        badgeRepository.save(badge);
 
         // Process transaction
         ProcessTransactionRequest request = new ProcessTransactionRequest(
@@ -363,20 +381,20 @@ class GamificationServiceIntegrationTest {
 
         // Create badge
         Badge badge = new Badge();
-        badge.name = "Test Badge";
-        badge.description = "Test description";
-        badge.requirementType = Badge.RequirementType.LEVEL_REACHED;
-        badge.requirementValue = new BigDecimal("1");
-        badge.pointsReward = 10;
-        badge.category = "TEST";
-        badge.isActive = true;
-        badge.persist();
+        badge.setName("Test Badge");
+        badge.setDescription("Test description");
+        badge.setRequirementType(Badge.RequirementType.LEVEL_REACHED);
+        badge.setRequirementValue(new BigDecimal("1"));
+        badge.setPointsReward(10);
+        badge.setCategory("TEST");
+        badge.setIsActive(true);
+        badgeRepository.save(badge);
 
         // Award badge to user
         UserBadge userBadge = new UserBadge();
-        userBadge.accountId = accountId;
-        userBadge.badgeId = badge.id;
-        userBadge.persist();
+        userBadge.setAccountId(accountId);
+        userBadge.setBadgeId(badge.getId());
+        userBadgeRepository.save(userBadge);
 
         List<EarnedBadgeResponse> badges = gamificationService.getUserBadges(accountId);
 
@@ -397,24 +415,24 @@ class GamificationServiceIntegrationTest {
 
         // Create badges
         Badge badge1 = new Badge();
-        badge1.name = "Novice Shopper";
-        badge1.description = "Complete 5 transactions";
-        badge1.requirementType = Badge.RequirementType.TRANSACTION_COUNT;
-        badge1.requirementValue = new BigDecimal("5");
-        badge1.pointsReward = 100;
-        badge1.category = "SHOPPING";
-        badge1.isActive = true;
-        badge1.persist();
+        badge1.setName("Novice Shopper");
+        badge1.setDescription("Complete 5 transactions");
+        badge1.setRequirementType(Badge.RequirementType.TRANSACTION_COUNT);
+        badge1.setRequirementValue(new BigDecimal("5"));
+        badge1.setPointsReward(100);
+        badge1.setCategory("SHOPPING");
+        badge1.setIsActive(true);
+        badgeRepository.save(badge1);
 
         Badge badge2 = new Badge();
-        badge2.name = "Big Spender";
-        badge2.description = "Spend 1,000,000 total";
-        badge2.requirementType = Badge.RequirementType.TOTAL_AMOUNT;
-        badge2.requirementValue = new BigDecimal("1000000");
-        badge2.pointsReward = 500;
-        badge2.category = "SPENDING";
-        badge2.isActive = true;
-        badge2.persist();
+        badge2.setName("Big Spender");
+        badge2.setDescription("Spend 1,000,000 total");
+        badge2.setRequirementType(Badge.RequirementType.TOTAL_AMOUNT);
+        badge2.setRequirementValue(new BigDecimal("1000000"));
+        badge2.setPointsReward(500);
+        badge2.setCategory("SPENDING");
+        badge2.setIsActive(true);
+        badgeRepository.save(badge2);
 
         List<BadgeProgressResponse> progress = gamificationService.getBadgeProgress(accountId);
 
@@ -431,19 +449,19 @@ class GamificationServiceIntegrationTest {
 
         // Create user level
         UserLevel userLevel = new UserLevel();
-        userLevel.accountId = accountId;
-        userLevel.level = 2;
-        userLevel.xp = 150;
-        userLevel.levelName = "Pengunjung";
-        userLevel.persist();
+        userLevel.setAccountId(accountId);
+        userLevel.setLevel(2);
+        userLevel.setXp(150);
+        userLevel.setLevelName("Pengunjung");
+        userLevelRepository.save(userLevel);
 
         // Create checkin
         DailyCheckin checkin = new DailyCheckin();
-        checkin.accountId = accountId;
-        checkin.checkinDate = LocalDate.now();
-        checkin.streakCount = 3;
-        checkin.pointsEarned = 15;
-        checkin.persist();
+        checkin.setAccountId(accountId);
+        checkin.setCheckinDate(LocalDate.now());
+        checkin.setStreakCount(3);
+        checkin.setPointsEarned(15);
+        dailyCheckinRepository.save(checkin);
 
         GamificationSummaryResponse summary = gamificationService.getSummary(accountId);
 
@@ -515,18 +533,18 @@ class GamificationServiceIntegrationTest {
 
         // Create level reward
         LevelReward reward = new LevelReward();
-        reward.level = 2;
-        reward.pointsReward = 100;
-        reward.bonusDescription = "Level 2 Bonus";
-        reward.persist();
+        reward.setLevel(2);
+        reward.setPointsReward(100);
+        reward.setBonusDescription("Level 2 Bonus");
+        levelRewardRepository.save(reward);
 
         // Create user at level 1
         UserLevel userLevel = new UserLevel();
-        userLevel.accountId = accountId;
-        userLevel.level = 1;
-        userLevel.xp = 90;
-        userLevel.levelName = "Pemula";
-        userLevel.persist();
+        userLevel.setAccountId(accountId);
+        userLevel.setLevel(1);
+        userLevel.setXp(90);
+        userLevel.setLevelName("Pemula");
+        userLevelRepository.save(userLevel);
 
         // Process transaction to trigger level up
         ProcessTransactionRequest request = new ProcessTransactionRequest(
@@ -543,9 +561,9 @@ class GamificationServiceIntegrationTest {
         Assertions.assertEquals(2, response.levelUp().level());
 
         // Verify points were awarded
-        List<LoyaltyPoints> points = LoyaltyPoints.list("accountId", accountId);
+        List<LoyaltyPoints> points = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
         Assertions.assertTrue(points.stream().anyMatch(p ->
-            p.transactionType == LoyaltyPoints.TransactionType.EARNED && p.points >= 100));
+            p.getTransactionType() == LoyaltyPoints.TransactionType.EARNED && p.getPoints() >= 100));
     }
 
     // ==================== STREAK-BASED BADGE TESTS ====================
@@ -556,24 +574,24 @@ class GamificationServiceIntegrationTest {
 
         // Create streak badge
         Badge badge = new Badge();
-        badge.name = "3-Day Streak";
-        badge.description = "Check in for 3 consecutive days";
-        badge.requirementType = Badge.RequirementType.STREAK_DAYS;
-        badge.requirementValue = new BigDecimal("3");
-        badge.pointsReward = 50;
-        badge.category = "STREAK";
-        badge.isActive = true;
-        badge.persist();
+        badge.setName("3-Day Streak");
+        badge.setDescription("Check in for 3 consecutive days");
+        badge.setRequirementType(Badge.RequirementType.STREAK_DAYS);
+        badge.setRequirementValue(new BigDecimal("3"));
+        badge.setPointsReward(50);
+        badge.setCategory("STREAK");
+        badge.setIsActive(true);
+        badgeRepository.save(badge);
 
         // Check in for 3 days
         LocalDate today = LocalDate.now();
         for (int i = 2; i >= 0; i--) {
             DailyCheckin checkin = new DailyCheckin();
-            checkin.accountId = accountId;
-            checkin.checkinDate = today.minusDays(i);
-            checkin.streakCount = 3 - i;
-            checkin.pointsEarned = 5 * (3 - i);
-            checkin.persist();
+            checkin.setAccountId(accountId);
+            checkin.setCheckinDate(today.minusDays(i));
+            checkin.setStreakCount(3 - i);
+            checkin.setPointsEarned(5 * (3 - i));
+            dailyCheckinRepository.save(checkin);
         }
 
         // 4th checkin should award badge
@@ -592,22 +610,22 @@ class GamificationServiceIntegrationTest {
 
         // Create level badge
         Badge badge = new Badge();
-        badge.name = "Level 3 Achiever";
-        badge.description = "Reach level 3";
-        badge.requirementType = Badge.RequirementType.LEVEL_REACHED;
-        badge.requirementValue = new BigDecimal("3");
-        badge.pointsReward = 100;
-        badge.category = "LEVEL";
-        badge.isActive = true;
-        badge.persist();
+        badge.setName("Level 3 Achiever");
+        badge.setDescription("Reach level 3");
+        badge.setRequirementType(Badge.RequirementType.LEVEL_REACHED);
+        badge.setRequirementValue(new BigDecimal("3"));
+        badge.setPointsReward(100);
+        badge.setCategory("LEVEL");
+        badge.setIsActive(true);
+        badgeRepository.save(badge);
 
         // Create user at level 2 with high XP
         UserLevel userLevel = new UserLevel();
-        userLevel.accountId = accountId;
-        userLevel.level = 2;
-        userLevel.xp = 250;
-        userLevel.levelName = "Pengunjung";
-        userLevel.persist();
+        userLevel.setAccountId(accountId);
+        userLevel.setLevel(2);
+        userLevel.setXp(250);
+        userLevel.setLevelName("Pengunjung");
+        userLevelRepository.save(userLevel);
 
         // Add more XP to reach level 3
         ProcessTransactionRequest request = new ProcessTransactionRequest(

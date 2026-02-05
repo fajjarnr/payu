@@ -4,13 +4,12 @@ import id.payu.promotion.domain.Cashback;
 import id.payu.promotion.dto.CashbackSummaryResponse;
 import id.payu.promotion.dto.CreateCashbackRequest;
 import id.payu.promotion.service.CashbackService;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import id.payu.promotion.repository.CashbackRepository;
+import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,18 +25,21 @@ import java.util.UUID;
  * To run these tests: mvn test -Dtest=CashbackServiceIntegrationTest -Ddocker.enabled=true
  * To skip these tests: mvn test (they will be skipped by default)
  */
-@QuarkusTest
-@EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Docker not available")
-@QuarkusTestResource(value = id.payu.promotion.test.resource.PostgresTestResource.class)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class CashbackServiceIntegrationTest {
 
-    @Inject
+    @Autowired
     CashbackService cashbackService;
+
+    @Autowired
+    CashbackRepository cashbackRepository;
 
     @BeforeEach
     void setup() {
         // Clean up database before each test
-        Cashback.deleteAll();
+        cashbackRepository.deleteAll();
     }
 
     // ==================== CREATE CASHBACK TESTS ====================
@@ -55,23 +57,23 @@ class CashbackServiceIntegrationTest {
 
         Cashback cashback = cashbackService.createCashback(request);
 
-        Assertions.assertNotNull(cashback.id);
-        Assertions.assertEquals("acc-cashback-001", cashback.accountId);
-        Assertions.assertEquals("txn-cashback-001", cashback.transactionId);
-        Assertions.assertEquals(new BigDecimal("100000"), cashback.transactionAmount);
-        Assertions.assertEquals(new BigDecimal("3000"), cashback.cashbackAmount); // 3% of 100000
-        Assertions.assertEquals(new BigDecimal("3.0000"), cashback.percentage);
-        Assertions.assertEquals("MERCHANT-DINING", cashback.merchantCode);
-        Assertions.assertEquals("DINING", cashback.categoryCode);
-        Assertions.assertEquals("CASHBACK-DINING-001", cashback.cashbackCode);
-        Assertions.assertEquals(Cashback.Status.CREDITED, cashback.status);
-        Assertions.assertNotNull(cashback.creditedAt);
-        Assertions.assertNotNull(cashback.createdAt);
+        Assertions.assertNotNull(cashback.getId());
+        Assertions.assertEquals("acc-cashback-001", cashback.getAccountId());
+        Assertions.assertEquals("txn-cashback-001", cashback.getTransactionId());
+        Assertions.assertEquals(new BigDecimal("100000"), cashback.getTransactionAmount());
+        Assertions.assertEquals(new BigDecimal("3000"), cashback.getCashbackAmount()); // 3% of 100000
+        Assertions.assertEquals(new BigDecimal("3.0000"), cashback.getPercentage());
+        Assertions.assertEquals("MERCHANT-DINING", cashback.getMerchantCode());
+        Assertions.assertEquals("DINING", cashback.getCategoryCode());
+        Assertions.assertEquals("CASHBACK-DINING-001", cashback.getCashbackCode());
+        Assertions.assertEquals(Cashback.Status.CREDITED, cashback.getStatus());
+        Assertions.assertNotNull(cashback.getCreditedAt());
+        Assertions.assertNotNull(cashback.getCreatedAt());
 
         // Verify persistence by fetching from database
-        Optional<Cashback> fetched = cashbackService.getCashback(cashback.id);
+        Optional<Cashback> fetched = cashbackService.getCashback(cashback.getId());
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals("acc-cashback-001", fetched.get().accountId);
+        Assertions.assertEquals("acc-cashback-001", fetched.get().getAccountId());
     }
 
     @Test
@@ -87,9 +89,9 @@ class CashbackServiceIntegrationTest {
 
         Cashback cashback = cashbackService.createCashback(request);
 
-        Assertions.assertEquals(new BigDecimal("1000"), cashback.cashbackAmount); // 2% of 50000
-        Assertions.assertEquals(new BigDecimal("2.0000"), cashback.percentage);
-        Assertions.assertEquals("GROCERY", cashback.categoryCode);
+        Assertions.assertEquals(new BigDecimal("1000"), cashback.getCashbackAmount()); // 2% of 50000
+        Assertions.assertEquals(new BigDecimal("2.0000"), cashback.getPercentage());
+        Assertions.assertEquals("GROCERY", cashback.getCategoryCode());
     }
 
     @Test
@@ -105,8 +107,8 @@ class CashbackServiceIntegrationTest {
 
         Cashback cashback = cashbackService.createCashback(request);
 
-        Assertions.assertEquals(new BigDecimal("3000"), cashback.cashbackAmount); // 1.5% of 200000
-        Assertions.assertEquals(new BigDecimal("1.5000"), cashback.percentage);
+        Assertions.assertEquals(new BigDecimal("3000"), cashback.getCashbackAmount()); // 1.5% of 200000
+        Assertions.assertEquals(new BigDecimal("1.5000"), cashback.getPercentage());
     }
 
     @Test
@@ -122,8 +124,8 @@ class CashbackServiceIntegrationTest {
 
         Cashback cashback = cashbackService.createCashback(request);
 
-        Assertions.assertEquals(new BigDecimal("750"), cashback.cashbackAmount); // 1% of 75000
-        Assertions.assertEquals(new BigDecimal("1.0000"), cashback.percentage);
+        Assertions.assertEquals(new BigDecimal("750"), cashback.getCashbackAmount()); // 1% of 75000
+        Assertions.assertEquals(new BigDecimal("1.0000"), cashback.getPercentage());
     }
 
     @Test
@@ -139,7 +141,7 @@ class CashbackServiceIntegrationTest {
 
         Cashback cashback = cashbackService.createCashback(request);
 
-        Assertions.assertEquals(new BigDecimal("1000"), cashback.cashbackAmount); // 1% default
+        Assertions.assertEquals(new BigDecimal("1000"), cashback.getCashbackAmount()); // 1% default
     }
 
     @Test
@@ -155,8 +157,8 @@ class CashbackServiceIntegrationTest {
 
         Cashback cashback = cashbackService.createCashback(request);
 
-        Assertions.assertEquals(BigDecimal.ZERO, cashback.cashbackAmount);
-        Assertions.assertEquals(BigDecimal.ZERO, cashback.percentage);
+        Assertions.assertEquals(BigDecimal.ZERO, cashback.getCashbackAmount());
+        Assertions.assertEquals(BigDecimal.ZERO, cashback.getPercentage());
     }
 
     @Test
@@ -174,7 +176,7 @@ class CashbackServiceIntegrationTest {
         Cashback cashback = cashbackService.createCashback(request);
 
         // 3% of 99999 = 2999.97
-        Assertions.assertEquals(new BigDecimal("2999.97"), cashback.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("2999.97"), cashback.getCashbackAmount());
     }
 
     // ==================== GET CASHBACK TESTS ====================
@@ -192,11 +194,11 @@ class CashbackServiceIntegrationTest {
 
         Cashback created = cashbackService.createCashback(request);
 
-        Optional<Cashback> fetched = cashbackService.getCashback(created.id);
+        Optional<Cashback> fetched = cashbackService.getCashback(created.getId());
 
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals("acc-cashback-008", fetched.get().accountId);
-        Assertions.assertEquals("txn-cashback-008", fetched.get().transactionId);
+        Assertions.assertEquals("acc-cashback-008", fetched.get().getAccountId());
+        Assertions.assertEquals("txn-cashback-008", fetched.get().getTransactionId());
     }
 
     @Test
@@ -224,7 +226,7 @@ class CashbackServiceIntegrationTest {
         List<Cashback> cashbacks = cashbackService.getCashbacksByAccount(accountId);
 
         Assertions.assertEquals(3, cashbacks.size());
-        Assertions.assertTrue(cashbacks.stream().allMatch(c -> c.accountId.equals(accountId)));
+        Assertions.assertTrue(cashbacks.stream().allMatch(c -> c.getAccountId().equals(accountId)));
     }
 
     @Test
@@ -298,22 +300,22 @@ class CashbackServiceIntegrationTest {
         Cashback dining = cashbackService.createCashback(new CreateCashbackRequest(
             "acc-cat-1", "txn-dining", new BigDecimal("100000"), null, "DINING", null
         ));
-        Assertions.assertEquals(new BigDecimal("3000"), dining.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("3000"), dining.getCashbackAmount());
 
         Cashback grocery = cashbackService.createCashback(new CreateCashbackRequest(
             "acc-cat-2", "txn-grocery", new BigDecimal("100000"), null, "GROCERY", null
         ));
-        Assertions.assertEquals(new BigDecimal("2000"), grocery.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("2000"), grocery.getCashbackAmount());
 
         Cashback shopping = cashbackService.createCashback(new CreateCashbackRequest(
             "acc-cat-3", "txn-shopping", new BigDecimal("100000"), null, "SHOPPING", null
         ));
-        Assertions.assertEquals(new BigDecimal("1500"), shopping.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("1500"), shopping.getCashbackAmount());
 
         Cashback other = cashbackService.createCashback(new CreateCashbackRequest(
             "acc-cat-4", "txn-other", new BigDecimal("100000"), null, "OTHER", null
         ));
-        Assertions.assertEquals(new BigDecimal("1000"), other.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("1000"), other.getCashbackAmount());
     }
 
     @Test
@@ -322,13 +324,13 @@ class CashbackServiceIntegrationTest {
         Cashback lower = cashbackService.createCashback(new CreateCashbackRequest(
             "acc-case-1", "txn-lower", new BigDecimal("100000"), null, "dining", null
         ));
-        Assertions.assertEquals(new BigDecimal("3000"), lower.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("3000"), lower.getCashbackAmount());
 
         // Test mixed case category
         Cashback mixed = cashbackService.createCashback(new CreateCashbackRequest(
             "acc-case-2", "txn-mixed", new BigDecimal("100000"), null, "GrOcErY", null
         ));
-        Assertions.assertEquals(new BigDecimal("2000"), mixed.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("2000"), mixed.getCashbackAmount());
     }
 
     // ==================== MERCHANT-SPECIFIC CASHBACK TESTS ====================
@@ -346,14 +348,14 @@ class CashbackServiceIntegrationTest {
 
         Cashback cashback = cashbackService.createCashback(request);
 
-        Assertions.assertEquals("MERCHANT-ABC-123", cashback.merchantCode);
-        Assertions.assertEquals("PROMO-MERCHANT", cashback.cashbackCode);
+        Assertions.assertEquals("MERCHANT-ABC-123", cashback.getMerchantCode());
+        Assertions.assertEquals("PROMO-MERCHANT", cashback.getCashbackCode());
 
         // Verify persistence
-        Optional<Cashback> fetched = cashbackService.getCashback(cashback.id);
+        Optional<Cashback> fetched = cashbackService.getCashback(cashback.getId());
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals("MERCHANT-ABC-123", fetched.get().merchantCode);
-        Assertions.assertEquals("PROMO-MERCHANT", fetched.get().cashbackCode);
+        Assertions.assertEquals("MERCHANT-ABC-123", fetched.get().getMerchantCode());
+        Assertions.assertEquals("PROMO-MERCHANT", fetched.get().getCashbackCode());
     }
 
     // ==================== HIGH VOLUME TRANSACTION TESTS ====================
@@ -372,7 +374,7 @@ class CashbackServiceIntegrationTest {
         Cashback cashback = cashbackService.createCashback(request);
 
         // 3% of 999,999,999 = 29,999,999.97
-        Assertions.assertEquals(new BigDecimal("29999999.97"), cashback.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("29999999.97"), cashback.getCashbackAmount());
     }
 
     @Test
@@ -389,7 +391,7 @@ class CashbackServiceIntegrationTest {
         Cashback cashback = cashbackService.createCashback(request);
 
         // 2% of 1,000 = 20
-        Assertions.assertEquals(new BigDecimal("20"), cashback.cashbackAmount);
+        Assertions.assertEquals(new BigDecimal("20"), cashback.getCashbackAmount());
     }
 
     // ==================== MULTIPLE CASHBACK ACCUMULATION TESTS ====================

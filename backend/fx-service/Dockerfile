@@ -1,29 +1,7 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy pom.xml first for dependency caching
-COPY pom.xml ./
-
-# Download dependencies (cached layer)
-RUN mvn dependency:go-offline -B
-
-# Copy source code
-COPY src ./src
-
-# Build the application
-RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true && \
-    mv target/*.jar target/app.jar
-
-####
 # Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+# Note: JAR must be built locally first with:
+# mvn -f backend/fx-service/pom.xml clean package -DskipTests
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
@@ -38,23 +16,24 @@ LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL id.payu.service.tier="financial"
 LABEL id.payu.compliance.pci-dss="required"
 
-# Install curl for health checks
+# Install curl for health checks (use curl-minimal to avoid conflicts with UBI micro image)
 USER root
-RUN microdnf install -y curl && microdnf clean all
+RUN microdnf install -y curl-minimal && microdnf clean all
 
 # Use non-root user
 USER 185
 
 WORKDIR /deployments
 
-# Copy the built artifact from build stage
-COPY --from=build --chown=185 /build/target/app.jar /deployments/app.jar
+# Copy the built artifact from host
+COPY target/*.jar /deployments/app.jar
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
-EXPOSE 8088
+# Expose the service port
+EXPOSE 8080
 
 # JVM configuration for containers
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
@@ -67,7 +46,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8088/actuator/health || exit 1
+    CMD curl -f http://localhost:8080/fx-api/actuator/health || exit 1
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]

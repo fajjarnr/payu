@@ -2,32 +2,42 @@ package id.payu.promotion.resource;
 
 import id.payu.promotion.dto.CompleteReferralRequest;
 import id.payu.promotion.dto.CreateReferralRequest;
-import io.quarkus.test.common.http.TestHTTPEndpoint;
-import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import id.payu.promotion.repository.ReferralRepository;
+import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@QuarkusTest
-@Disabled("Resource tests require Docker/Testcontainers - disabled when Docker not available")
-@TestHTTPEndpoint(ReferralResource.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+@Transactional
 class ReferralResourceTest {
+
+    @org.springframework.boot.test.web.server.LocalServerPort
+    int port;
+
+    @Autowired
+    ReferralRepository referralRepository;
 
     private static final String REFERRER_ACCOUNT_ID = "acc-referrer";
     private static final String REFEREE_ACCOUNT_ID = "acc-referee";
 
     @BeforeEach
     void setUp() {
+        RestAssured.port = port;
+        RestAssured.basePath = "/api/v1/referrals";
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        referralRepository.deleteAll();
     }
 
     @Test

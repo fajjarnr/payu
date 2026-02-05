@@ -5,9 +5,9 @@ spring:
   application:
     name: backoffice-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payu_backoffice}
-    username: ${DB_USER:payu}
-    password: ${DB_PASSWORD:payu123}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:payu_backoffice}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:payu}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:payu123}}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

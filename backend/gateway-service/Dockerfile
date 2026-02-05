@@ -45,7 +45,7 @@ WORKDIR /deployments
 
 # Copy Quarkus fast-jar structure for better layer caching
 COPY --from=build --chown=185 /build/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build --chown=185 /build/target/quarkus-app/*.jar /deployments/
+COPY --from=build --chown=185 /build/target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
 COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
 COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
 

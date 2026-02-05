@@ -4,13 +4,13 @@ import id.payu.promotion.domain.Promotion;
 import id.payu.promotion.domain.Reward;
 import id.payu.promotion.dto.*;
 import id.payu.promotion.service.PromotionService;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import id.payu.promotion.repository.PromotionRepository;
+import id.payu.promotion.repository.RewardRepository;
+import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,19 +25,25 @@ import java.util.UUID;
  * To run these tests: mvn test -Dtest=PromotionServiceIntegrationTest -Ddocker.enabled=true
  * To skip these tests: mvn test (they will be skipped by default)
  */
-@QuarkusTest
-@EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Docker not available")
-@QuarkusTestResource(value = id.payu.promotion.test.resource.PostgresTestResource.class)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class PromotionServiceIntegrationTest {
 
-    @Inject
+    @Autowired
     PromotionService promotionService;
+
+    @Autowired
+    PromotionRepository promotionRepository;
+
+    @Autowired
+    RewardRepository rewardRepository;
 
     @BeforeEach
     void setup() {
         // Clean up database before each test
-        Reward.deleteAll();
-        Promotion.deleteAll();
+        rewardRepository.deleteAll();
+        promotionRepository.deleteAll();
     }
 
     // ==================== CREATE PROMOTION TESTS ====================
@@ -60,7 +66,7 @@ class PromotionServiceIntegrationTest {
 
         Promotion promotion = promotionService.createPromotion(request);
 
-        Assertions.assertNotNull(promotion.id);
+        Assertions.assertNotNull(promotion.getId());
         Assertions.assertEquals("TEST-CASHBACK-001", promotion.code);
         Assertions.assertEquals("Test Cashback Promotion", promotion.name);
         Assertions.assertEquals(Promotion.PromotionType.CASHBACK, promotion.promotionType);
@@ -69,14 +75,14 @@ class PromotionServiceIntegrationTest {
         Assertions.assertEquals(1000, promotion.maxRedemptions);
         Assertions.assertEquals(new BigDecimal("50000"), promotion.minTransactionAmount);
         Assertions.assertEquals(Promotion.Status.DRAFT, promotion.status);
-        Assertions.assertEquals(0, promotion.redemptionCount);
-        Assertions.assertNotNull(promotion.createdAt);
-        Assertions.assertNotNull(promotion.updatedAt);
+        Assertions.assertEquals(0, promotion.getRedemptionCount());
+        Assertions.assertNotNull(promotion.getCreatedAt());
+        Assertions.assertNotNull(promotion.getUpdatedAt());
 
         // Verify persistence by fetching from database
-        Optional<Promotion> fetched = promotionService.getPromotion(promotion.id);
+        Optional<Promotion> fetched = promotionService.getPromotion(promotion.getId());
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals("TEST-CASHBACK-001", fetched.get().code);
+        Assertions.assertEquals("TEST-CASHBACK-001", fetched.get().getCode());
     }
 
     @Test
@@ -150,17 +156,17 @@ class PromotionServiceIntegrationTest {
             null
         );
 
-        Promotion updated = promotionService.updatePromotion(created.id, updateRequest);
+        Promotion updated = promotionService.updatePromotion(created.getId(), updateRequest);
 
-        Assertions.assertEquals("Updated Name", updated.name);
-        Assertions.assertEquals("Updated description", updated.description);
-        Assertions.assertEquals(Promotion.Status.ACTIVE, updated.status);
+        Assertions.assertEquals("Updated Name", updated.getName());
+        Assertions.assertEquals("Updated description", updated.getDescription());
+        Assertions.assertEquals(Promotion.Status.ACTIVE, updated.getStatus());
 
         // Verify persistence
-        Optional<Promotion> fetched = promotionService.getPromotion(created.id);
+        Optional<Promotion> fetched = promotionService.getPromotion(created.getId());
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals("Updated Name", fetched.get().name);
-        Assertions.assertEquals(Promotion.Status.ACTIVE, fetched.get().status);
+        Assertions.assertEquals("Updated Name", fetched.get().getName());
+        Assertions.assertEquals(Promotion.Status.ACTIVE, fetched.get().getStatus());
     }
 
     @Test
@@ -208,7 +214,7 @@ class PromotionServiceIntegrationTest {
         );
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            promotionService.updatePromotion(created.id, updateRequest);
+            promotionService.updatePromotion(created.getId(), updateRequest);
         });
     }
 
@@ -231,16 +237,16 @@ class PromotionServiceIntegrationTest {
         );
 
         Promotion created = promotionService.createPromotion(request);
-        Assertions.assertEquals(Promotion.Status.DRAFT, created.status);
+        Assertions.assertEquals(Promotion.Status.DRAFT, created.getStatus());
 
-        Promotion activated = promotionService.activatePromotion(created.id);
+        Promotion activated = promotionService.activatePromotion(created.getId());
 
-        Assertions.assertEquals(Promotion.Status.ACTIVE, activated.status);
+        Assertions.assertEquals(Promotion.Status.ACTIVE, activated.getStatus());
 
         // Verify persistence
-        Optional<Promotion> fetched = promotionService.getPromotion(created.id);
+        Optional<Promotion> fetched = promotionService.getPromotion(created.getId());
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals(Promotion.Status.ACTIVE, fetched.get().status);
+        Assertions.assertEquals(Promotion.Status.ACTIVE, fetched.get().getStatus());
     }
 
     @Test
@@ -262,7 +268,7 @@ class PromotionServiceIntegrationTest {
         Promotion created = promotionService.createPromotion(request);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            promotionService.activatePromotion(created.id);
+            promotionService.activatePromotion(created.getId());
         });
     }
 
@@ -294,7 +300,7 @@ class PromotionServiceIntegrationTest {
         );
 
         Promotion promotion = promotionService.createPromotion(request);
-        promotionService.activatePromotion(promotion.id);
+        promotionService.activatePromotion(promotion.getId());
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
             "acc-test-claim-1",
@@ -306,19 +312,19 @@ class PromotionServiceIntegrationTest {
 
         Reward reward = promotionService.claimPromotion("TEST-CLAIM-PCT-001", claimRequest);
 
-        Assertions.assertNotNull(reward.id);
-        Assertions.assertEquals("acc-test-claim-1", reward.accountId);
-        Assertions.assertEquals("txn-claim-001", reward.transactionId);
-        Assertions.assertEquals("TEST-CLAIM-PCT-001", reward.promotionCode);
-        Assertions.assertEquals(Reward.RewardType.PROMOTION_REWARD, reward.type);
-        Assertions.assertEquals(new BigDecimal("5000"), reward.amount); // 10% of 50000
-        Assertions.assertEquals(new BigDecimal("50000"), reward.transactionAmount);
-        Assertions.assertEquals(Reward.Status.AWARDED, reward.status);
+        Assertions.assertNotNull(reward.getId());
+        Assertions.assertEquals("acc-test-claim-1", reward.getAccountId());
+        Assertions.assertEquals("txn-claim-001", reward.getTransactionId());
+        Assertions.assertEquals("TEST-CLAIM-PCT-001", reward.getPromotionCode());
+        Assertions.assertEquals(Reward.RewardType.PROMOTION_REWARD, reward.getType());
+        Assertions.assertEquals(new BigDecimal("5000"), reward.getAmount()); // 10% of 50000
+        Assertions.assertEquals(new BigDecimal("50000"), reward.getTransactionAmount());
+        Assertions.assertEquals(Reward.Status.AWARDED, reward.getStatus());
 
         // Verify redemption count incremented
-        Optional<Promotion> updatedPromo = promotionService.getPromotion(promotion.id);
+        Optional<Promotion> updatedPromo = promotionService.getPromotion(promotion.getId());
         Assertions.assertTrue(updatedPromo.isPresent());
-        Assertions.assertEquals(1, updatedPromo.get().redemptionCount);
+        Assertions.assertEquals(1, updatedPromo.get().getRedemptionCount());
     }
 
     @Test
@@ -338,7 +344,7 @@ class PromotionServiceIntegrationTest {
         );
 
         Promotion promotion = promotionService.createPromotion(request);
-        promotionService.activatePromotion(promotion.id);
+        promotionService.activatePromotion(promotion.getId());
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
             "acc-test-claim-2",
@@ -351,7 +357,7 @@ class PromotionServiceIntegrationTest {
         Reward reward = promotionService.claimPromotion("TEST-CLAIM-FIX-001", claimRequest);
 
         // Fixed amount should be awarded regardless of transaction amount
-        Assertions.assertEquals(new BigDecimal("5000"), reward.amount);
+        Assertions.assertEquals(new BigDecimal("5000"), reward.getAmount());
     }
 
     @Test
@@ -371,7 +377,7 @@ class PromotionServiceIntegrationTest {
         );
 
         Promotion promotion = promotionService.createPromotion(request);
-        promotionService.activatePromotion(promotion.id);
+        promotionService.activatePromotion(promotion.getId());
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
             "acc-test-claim-3",
@@ -383,8 +389,8 @@ class PromotionServiceIntegrationTest {
 
         Reward reward = promotionService.claimPromotion("TEST-CLAIM-PTS-001", claimRequest);
 
-        Assertions.assertEquals(new BigDecimal("100"), reward.amount);
-        Assertions.assertEquals(100, reward.pointsEarned);
+        Assertions.assertEquals(new BigDecimal("100"), reward.getAmount());
+        Assertions.assertEquals(100, reward.getPointsEarned());
     }
 
     @Test
@@ -435,8 +441,8 @@ class PromotionServiceIntegrationTest {
         );
 
         Promotion promotion = promotionService.createPromotion(request);
-        promotion.status = Promotion.Status.ACTIVE;
-        promotion.persist();
+        promotion.setStatus(Promotion.Status.ACTIVE);
+        promotionRepository.save(promotion);
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
             "acc-test-claim-5",
@@ -468,7 +474,7 @@ class PromotionServiceIntegrationTest {
         );
 
         Promotion promotion = promotionService.createPromotion(request);
-        promotionService.activatePromotion(promotion.id);
+        promotionService.activatePromotion(promotion.getId());
 
         // First claim - should succeed
         ClaimPromotionRequest claim1 = new ClaimPromotionRequest(
@@ -521,7 +527,7 @@ class PromotionServiceIntegrationTest {
         );
 
         Promotion promotion = promotionService.createPromotion(request);
-        promotionService.activatePromotion(promotion.id);
+        promotionService.activatePromotion(promotion.getId());
 
         ClaimPromotionRequest claimRequest = new ClaimPromotionRequest(
             "acc-test-claim-7",
@@ -571,10 +577,10 @@ class PromotionServiceIntegrationTest {
 
         Promotion created = promotionService.createPromotion(request);
 
-        Optional<Promotion> fetched = promotionService.getPromotion(created.id);
+        Optional<Promotion> fetched = promotionService.getPromotion(created.getId());
 
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals("TEST-GET-001", fetched.get().code);
+        Assertions.assertEquals("TEST-GET-001", fetched.get().getCode());
     }
 
     @Test
@@ -605,7 +611,7 @@ class PromotionServiceIntegrationTest {
         Optional<Promotion> fetched = promotionService.getPromotionByCode("TEST-GET-CODE-001");
 
         Assertions.assertTrue(fetched.isPresent());
-        Assertions.assertEquals("TEST-GET-CODE-001", fetched.get().code);
+        Assertions.assertEquals("TEST-GET-CODE-001", fetched.get().getCode());
     }
 
     @Test
@@ -636,11 +642,11 @@ class PromotionServiceIntegrationTest {
         );
 
         Promotion campaign = promotionService.createPromotion(request);
-        Assertions.assertEquals(Promotion.Status.DRAFT, campaign.status);
+        Assertions.assertEquals(Promotion.Status.DRAFT, campaign.getStatus());
 
         // Activate
-        campaign = promotionService.activatePromotion(campaign.id);
-        Assertions.assertEquals(Promotion.Status.ACTIVE, campaign.status);
+        campaign = promotionService.activatePromotion(campaign.getId());
+        Assertions.assertEquals(Promotion.Status.ACTIVE, campaign.getStatus());
 
         // Simulate claims
         for (int i = 0; i < 3; i++) {
@@ -655,9 +661,9 @@ class PromotionServiceIntegrationTest {
         }
 
         // Verify claims
-        Optional<Promotion> finalCampaign = promotionService.getPromotion(campaign.id);
+        Optional<Promotion> finalCampaign = promotionService.getPromotion(campaign.getId());
         Assertions.assertTrue(finalCampaign.isPresent());
-        Assertions.assertEquals(3, finalCampaign.get().redemptionCount);
+        Assertions.assertEquals(3, finalCampaign.get().getRedemptionCount());
     }
 
     @Test
@@ -695,8 +701,8 @@ class PromotionServiceIntegrationTest {
         Promotion promo1 = promotionService.createPromotion(request1);
         Promotion promo2 = promotionService.createPromotion(request2);
 
-        promotionService.activatePromotion(promo1.id);
-        promotionService.activatePromotion(promo2.id);
+        promotionService.activatePromotion(promo1.getId());
+        promotionService.activatePromotion(promo2.getId());
 
         // Claim first promotion twice
         ClaimPromotionRequest claim1 = new ClaimPromotionRequest(
@@ -728,12 +734,12 @@ class PromotionServiceIntegrationTest {
         promotionService.claimPromotion("TEST-MULTI-002", claim3);
 
         // Verify independent counts
-        Optional<Promotion> fetched1 = promotionService.getPromotion(promo1.id);
-        Optional<Promotion> fetched2 = promotionService.getPromotion(promo2.id);
+        Optional<Promotion> fetched1 = promotionService.getPromotion(promo1.getId());
+        Optional<Promotion> fetched2 = promotionService.getPromotion(promo2.getId());
 
         Assertions.assertTrue(fetched1.isPresent());
         Assertions.assertTrue(fetched2.isPresent());
-        Assertions.assertEquals(2, fetched1.get().redemptionCount);
-        Assertions.assertEquals(1, fetched2.get().redemptionCount);
+        Assertions.assertEquals(2, fetched1.get().getRedemptionCount());
+        Assertions.assertEquals(1, fetched2.get().getRedemptionCount());
     }
 }

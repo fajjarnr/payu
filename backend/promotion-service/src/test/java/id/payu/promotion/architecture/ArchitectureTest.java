@@ -12,12 +12,12 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Promotion Service (Quarkus).
+ * Architecture Tests for Promotion Service (Spring Boot).
  *
  * Enforces:
  * - Layered architecture boundaries
  * - Naming conventions
- * - No field injection (follows Quarkus CDI best practices)
+ * - Spring dependency injection best practices
  * - Domain isolation
  */
 @DisplayName("Architecture Rules - Promotion Service")
@@ -43,6 +43,7 @@ class ArchitectureTest {
                     .consideringAllDependencies()
                     .layer("Resource").definedBy("..resource..")
                     .layer("Service").definedBy("..service..")
+                    .layer("Repository").definedBy("..repository..")
                     .layer("Domain").definedBy("..domain..")
                     .layer("DTO").definedBy("..dto..")
 
@@ -50,8 +51,10 @@ class ArchitectureTest {
                     .whereLayer("Resource").mayNotBeAccessedByAnyLayer()
                     // Service layer accessed by Resource
                     .whereLayer("Service").mayOnlyBeAccessedByLayers("Resource")
+                    // Repository layer accessed by Service
+                    .whereLayer("Repository").mayOnlyBeAccessedByLayers("Service")
                     // Domain layer can be accessed by all business layers
-                    .whereLayer("Domain").mayOnlyBeAccessedByLayers("Service", "Resource", "DTO")
+                    .whereLayer("Domain").mayOnlyBeAccessedByLayers("Service", "Resource", "DTO", "Repository")
                     // DTOs can be accessed by Resource and Service
                     .whereLayer("DTO").mayOnlyBeAccessedByLayers("Resource", "Service")
 
@@ -71,7 +74,7 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAnyPackage(
                             "..resource..",
-                            "org.eclipse.microprofile..",
+                            "org.springframework.web..",
                             "jakarta.ws.rs.."
                     )
                     .because("Domain layer must be independent of infrastructure concerns")
@@ -113,7 +116,7 @@ class ArchitectureTest {
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Resource")
-                    .because("JAX-RS resource classes should follow naming convention")
+                    .because("Spring controller resource classes should follow naming convention")
                     .check(importedClasses);
         }
 
@@ -138,9 +141,9 @@ class ArchitectureTest {
         @DisplayName("controllers should only be in resource package")
         void controllersShouldOnlyBeInResourcePackage() {
             classes()
-                    .that().areAnnotatedWith("jakarta.ws.rs.Path")
+                    .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
                     .should().resideInAPackage("..resource..")
-                    .because("JAX-RS resources should be in the resource package")
+                    .because("Spring controllers should be in the resource package")
                     .check(importedClasses);
         }
 
@@ -152,8 +155,8 @@ class ArchitectureTest {
                     .should().dependOnClassesThat()
                     .resideInAPackage("jakarta.persistence..")
                     .orShould().dependOnClassesThat()
-                    .areAssignableTo(io.quarkus.hibernate.orm.panache.PanacheEntityBase.class)
-                    .because("Resources should use services for data access, not direct database access")
+                    .resideInAPackage("..repository..")
+                    .because("Resources should use services for data access, not direct database or repository access")
                     .check(importedClasses);
         }
     }
@@ -163,36 +166,26 @@ class ArchitectureTest {
     class DependencyInjectionRules {
 
         @Test
-        @DisplayName("should not use Spring annotations")
-        void shouldNotUseSpringAnnotations() {
+        @DisplayName("should not use Inject annotations")
+        void shouldNotUseInjectAnnotations() {
             noFields()
-                    .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
-                    .because("This is a Quarkus service - use @Inject instead of @Autowired")
+                    .should().beAnnotatedWith("jakarta.inject.Inject")
+                    .because("This is a Spring Boot service - use @Autowired instead of @Inject")
                     .check(importedClasses);
         }
     }
 
     @Nested
-    @DisplayName("Panache Entity Rules")
-    class PanacheEntityRules {
+    @DisplayName("Repository Rules")
+    class RepositoryRules {
 
         @Test
-        @DisplayName("Panache entities should be in domain package")
-        void panacheEntitiesShouldBeInDomainPackage() {
+        @DisplayName("Repositories should be in repository package")
+        void repositoriesShouldBeInRepositoryPackage() {
             classes()
-                    .that().areAssignableTo(io.quarkus.hibernate.orm.panache.PanacheEntityBase.class)
-                    .should().resideInAPackage("..domain..")
-                    .because("Panache entities are domain objects in this architecture")
-                    .check(importedClasses);
-        }
-
-        @Test
-        @DisplayName("Panache entities should not be in resource or service packages")
-        void panacheEntitiesShouldNotBeInResourceOrService() {
-            noClasses()
-                    .that().areAssignableTo(io.quarkus.hibernate.orm.panache.PanacheEntityBase.class)
-                    .should().resideInAnyPackage("..resource..", "..service..")
-                    .because("Panache entities belong in the domain layer")
+                    .that().areAssignableTo(org.springframework.data.repository.Repository.class)
+                    .should().resideInAPackage("..repository..")
+                    .because("Repositories belong in the repository layer")
                     .check(importedClasses);
         }
     }

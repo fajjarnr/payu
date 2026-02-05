@@ -3,50 +3,47 @@ package id.payu.promotion.service;
 import id.payu.promotion.domain.LoyaltyPoints;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
-import id.payu.promotion.test.resource.PostgresTestResource;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.TestTransaction;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import jakarta.inject.Inject;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import id.payu.promotion.repository.LoyaltyPointsRepository;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.*;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
-@Disabled("Service tests require PostgreSQL Testcontainers - disabled when Docker not available")
-@QuarkusTestResource(value = PostgresTestResource.class)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class LoyaltyPointsServiceTest {
 
-    @Inject
+    @Autowired
     LoyaltyPointsService loyaltyPointsService;
 
-    @Inject
+    @Autowired
     EntityManager entityManager;
 
-    @InjectMock
-    @SuppressWarnings("unused")
-    Emitter<Map<String, Object>> promotionEvents;
+    @Autowired
+    LoyaltyPointsRepository loyaltyPointsRepository;
+
+    @MockBean
+    @SuppressWarnings("rawtypes")
+    id.payu.promotion.service.EmitterPlaceholder promotionEvents;
 
     private static final String TEST_ACCOUNT_ID = "acc-123";
     private static final String TEST_TRANSACTION_ID = "txn-456";
 
     @BeforeEach
     void setUp() {
-        LoyaltyPoints.deleteAll();
+        loyaltyPointsRepository.deleteAll();
     }
 
     @Test
-    @TestTransaction
     void testAddPoints_Success() {
         CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -58,17 +55,16 @@ class LoyaltyPointsServiceTest {
 
         LoyaltyPoints result = loyaltyPointsService.addPoints(request);
 
-        assertNotNull(result.id);
-        assertEquals(TEST_ACCOUNT_ID, result.accountId);
-        assertEquals(TEST_TRANSACTION_ID, result.transactionId);
-        assertEquals(LoyaltyPoints.TransactionType.EARNED, result.transactionType);
-        assertEquals(100, result.points);
-        assertEquals(100, result.balanceAfter);
-        assertNotNull(result.createdAt);
+        assertNotNull(result.getId());
+        assertEquals(TEST_ACCOUNT_ID, result.getAccountId());
+        assertEquals(TEST_TRANSACTION_ID, result.getTransactionId());
+        assertEquals(LoyaltyPoints.TransactionType.EARNED, result.getTransactionType());
+        assertEquals(100, result.getPoints());
+        assertEquals(100, result.getBalanceAfter());
+        assertNotNull(result.getCreatedAt());
     }
 
     @Test
-    @TestTransaction
     void testAddPoints_MultipleTransactions_BalanceIncrements() {
         CreateLoyaltyPointsRequest request1 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -87,14 +83,13 @@ class LoyaltyPointsServiceTest {
         );
 
         LoyaltyPoints result1 = loyaltyPointsService.addPoints(request1);
-        assertEquals(100, result1.balanceAfter);
+        assertEquals(100, result1.getBalanceAfter());
 
         LoyaltyPoints result2 = loyaltyPointsService.addPoints(request2);
-        assertEquals(150, result2.balanceAfter);
+        assertEquals(150, result2.getBalanceAfter());
     }
 
     @Test
-    @TestTransaction
     void testRedeemPoints_Success() {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -114,16 +109,15 @@ class LoyaltyPointsServiceTest {
 
         LoyaltyPoints result = loyaltyPointsService.redeemPoints(redeemRequest);
 
-        assertNotNull(result.id);
-        assertEquals(TEST_ACCOUNT_ID, result.accountId);
-        assertEquals(LoyaltyPoints.TransactionType.REDEEMED, result.transactionType);
-        assertEquals(-50, result.points);
-        assertEquals(50, result.balanceAfter);
-        assertNotNull(result.redeemedAt);
+        assertNotNull(result.getId());
+        assertEquals(TEST_ACCOUNT_ID, result.getAccountId());
+        assertEquals(LoyaltyPoints.TransactionType.REDEEMED, result.getTransactionType());
+        assertEquals(-50, result.getPoints());
+        assertEquals(50, result.getBalanceAfter());
+        assertNotNull(result.getRedeemedAt());
     }
 
     @Test
-    @TestTransaction
     void testRedeemPoints_InsufficientBalance_ThrowsException() {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -150,7 +144,6 @@ class LoyaltyPointsServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetLoyaltyPoints_Success() {
         CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -162,11 +155,11 @@ class LoyaltyPointsServiceTest {
 
         LoyaltyPoints created = loyaltyPointsService.addPoints(request);
 
-        var result = loyaltyPointsService.getLoyaltyPoints(created.id);
+        var result = loyaltyPointsService.getLoyaltyPoints(created.getId());
 
         assertTrue(result.isPresent());
-        assertEquals(created.id, result.get().id);
-        assertEquals(TEST_ACCOUNT_ID, result.get().accountId);
+        assertEquals(created.getId(), result.get().getId());
+        assertEquals(TEST_ACCOUNT_ID, result.get().getAccountId());
     }
 
     @Test
@@ -179,7 +172,6 @@ class LoyaltyPointsServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetLoyaltyPointsByAccount() {
         CreateLoyaltyPointsRequest request1 = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -203,12 +195,11 @@ class LoyaltyPointsServiceTest {
         var results = loyaltyPointsService.getLoyaltyPointsByAccount(TEST_ACCOUNT_ID);
 
         assertEquals(2, results.size());
-        assertEquals(TEST_ACCOUNT_ID, results.get(0).accountId);
-        assertEquals(TEST_ACCOUNT_ID, results.get(1).accountId);
+        assertEquals(TEST_ACCOUNT_ID, results.get(0).getAccountId());
+        assertEquals(TEST_ACCOUNT_ID, results.get(1).getAccountId());
     }
 
     @Test
-    @TestTransaction
     void testGetBalance() {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -238,7 +229,6 @@ class LoyaltyPointsServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetBalance_WithRedeemedPoints() {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -267,7 +257,6 @@ class LoyaltyPointsServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testCalculateCurrentBalance() {
         CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
             TEST_ACCOUNT_ID,
@@ -279,14 +268,14 @@ class LoyaltyPointsServiceTest {
 
         loyaltyPointsService.addPoints(request);
 
-        Integer balance = id.payu.promotion.service.LoyaltyPointsService.calculateCurrentBalance(TEST_ACCOUNT_ID);
+        Integer balance = loyaltyPointsService.calculateCurrentBalance(TEST_ACCOUNT_ID);
 
         assertEquals(100, balance);
     }
 
     @Test
     void testCalculateCurrentBalance_NoTransactions_ReturnsZero() {
-        Integer balance = id.payu.promotion.service.LoyaltyPointsService.calculateCurrentBalance("non-existent-account");
+        Integer balance = loyaltyPointsService.calculateCurrentBalance("non-existent-account");
 
         assertEquals(0, balance);
     }

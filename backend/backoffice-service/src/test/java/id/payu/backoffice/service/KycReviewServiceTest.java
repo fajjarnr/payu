@@ -51,18 +51,18 @@ class KycReviewServiceTest {
         KycReview result = kycReviewService.create(request);
 
         assertNotNull(result);
-        assertNotNull(result.id);
-        assertEquals(testUserId, result.userId);
-        assertEquals("ACC-001", result.accountNumber);
-        assertEquals("PASSPORT", result.documentType);
-        assertEquals("A1234567", result.documentNumber);
-        assertEquals("http://example.com/doc.jpg", result.documentUrl);
-        assertEquals("John Doe", result.fullName);
-        assertEquals("123 Main St, Jakarta", result.address);
-        assertEquals("+628123456789", result.phoneNumber);
-        assertEquals("Initial KYC submission", result.notes);
-        assertEquals(KycReview.KycStatus.PENDING, result.status);
-        assertNotNull(result.createdAt);
+        assertNotNull(result.getId());
+        assertEquals(testUserId, result.getUserId());
+        assertEquals("ACC-001", result.getAccountNumber());
+        assertEquals("PASSPORT", result.getDocumentType());
+        assertEquals("A1234567", result.getDocumentNumber());
+        assertEquals("http://example.com/doc.jpg", result.getDocumentUrl());
+        assertEquals("John Doe", result.getFullName());
+        assertEquals("123 Main St, Jakarta", result.getAddress());
+        assertEquals("+628123456789", result.getPhoneNumber());
+        assertEquals("Initial KYC submission", result.getNotes());
+        assertEquals(KycReview.KycStatus.PENDING, result.getStatus());
+        assertNotNull(result.getCreatedAt());
     }
 
     @Test
@@ -83,9 +83,9 @@ class KycReviewServiceTest {
         KycReview result = kycReviewService.create(request);
 
         assertNotNull(result);
-        assertEquals(testUserId, result.userId);
-        assertEquals("ACC-002", result.accountNumber);
-        assertEquals("Minimal submission", result.notes);
+        assertEquals(testUserId, result.getUserId());
+        assertEquals("ACC-002", result.getAccountNumber());
+        assertEquals("Minimal submission", result.getNotes());
     }
 
     // Query KYC Review Tests
@@ -107,10 +107,10 @@ class KycReviewServiceTest {
 
         KycReview review = kycReviewService.create(request);
 
-        Optional<KycReview> result = kycReviewService.getById(review.id);
+        Optional<KycReview> result = kycReviewService.getById(review.getId());
 
         assertTrue(result.isPresent());
-        assertEquals(review.id, result.get().id);
+        assertEquals(review.getId(), result.get().getId());
     }
 
     @Test
@@ -140,7 +140,7 @@ class KycReviewServiceTest {
         Optional<KycReview> result = kycReviewService.getByUserId(testUserId);
 
         assertTrue(result.isPresent());
-        assertEquals(testUserId, result.get().userId);
+        assertEquals(testUserId, result.get().getUserId());
     }
 
     @Test
@@ -170,7 +170,7 @@ class KycReviewServiceTest {
         List<KycReview> results = kycReviewService.listByStatus(KycReview.KycStatus.PENDING, 0, 10);
 
         assertNotNull(results);
-        assertTrue(results.stream().allMatch(r -> r.status == KycReview.KycStatus.PENDING));
+        assertTrue(results.stream().allMatch(r -> r.getStatus() == KycReview.KycStatus.PENDING));
     }
 
     @Test
@@ -220,13 +220,13 @@ class KycReviewServiceTest {
                 "Documents verified, KYC approved"
         );
 
-        KycReview result = kycReviewService.review(review.id, decisionRequest, "admin1");
+        KycReview result = kycReviewService.review(review.getId(), decisionRequest, "admin1");
 
         assertNotNull(result);
-        assertEquals(KycReview.KycStatus.APPROVED, result.status);
-        assertEquals("Documents verified, KYC approved", result.notes);
-        assertEquals("admin1", result.reviewedBy);
-        assertNotNull(result.reviewedAt);
+        assertEquals(KycReview.KycStatus.APPROVED, result.getStatus());
+        assertEquals("Documents verified, KYC approved", result.getNotes());
+        assertEquals("admin1", result.getReviewedBy());
+        assertNotNull(result.getReviewedAt());
     }
 
     @Test
@@ -251,11 +251,11 @@ class KycReviewServiceTest {
                 "Document blurry, please resubmit"
         );
 
-        KycReview result = kycReviewService.review(review.id, decisionRequest, "admin2");
+        KycReview result = kycReviewService.review(review.getId(), decisionRequest, "admin2");
 
-        assertEquals(KycReview.KycStatus.REJECTED, result.status);
-        assertEquals("Document blurry, please resubmit", result.notes);
-        assertEquals("admin2", result.reviewedBy);
+        assertEquals(KycReview.KycStatus.REJECTED, result.getStatus());
+        assertEquals("Document blurry, please resubmit", result.getNotes());
+        assertEquals("admin2", result.getReviewedBy());
     }
 
     @Test
@@ -280,10 +280,10 @@ class KycReviewServiceTest {
                 "Please provide proof of address"
         );
 
-        KycReview result = kycReviewService.review(review.id, decisionRequest, "admin3");
+        KycReview result = kycReviewService.review(review.getId(), decisionRequest, "admin3");
 
-        assertEquals(KycReview.KycStatus.REQUIRES_ADDITIONAL_INFO, result.status);
-        assertEquals("Please provide proof of address", result.notes);
+        assertEquals(KycReview.KycStatus.REQUIRES_ADDITIONAL_INFO, result.getStatus());
+        assertEquals("Please provide proof of address", result.getNotes());
     }
 
     @Test
@@ -317,7 +317,7 @@ class KycReviewServiceTest {
         );
 
         KycReview review = kycReviewService.create(request);
-        UUID reviewId = review.id;
+        UUID reviewId = review.getId();
 
         kycReviewService.delete(reviewId);
 
@@ -370,7 +370,7 @@ class KycReviewServiceTest {
         Optional<KycReview> result = kycReviewService.getByUserId(uniqueUserId);
 
         assertTrue(result.isPresent());
-        assertEquals(uniqueUserId, result.get().userId);
-        assertEquals("ACC-002", result.get().accountNumber);
+        assertEquals(uniqueUserId, result.get().getUserId());
+        assertEquals("ACC-002", result.get().getAccountNumber());
     }
 }

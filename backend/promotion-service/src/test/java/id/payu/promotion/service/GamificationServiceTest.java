@@ -2,16 +2,13 @@ package id.payu.promotion.service;
 
 import id.payu.promotion.domain.*;
 import id.payu.promotion.dto.*;
-import id.payu.promotion.test.resource.PostgresTestResource;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.TestTransaction;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
-import jakarta.inject.Inject;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import id.payu.promotion.repository.*;
+import org.junit.jupiter.api.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,32 +17,44 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@QuarkusTest
-@Disabled("Service tests require PostgreSQL Testcontainers - disabled when Docker not available")
-@QuarkusTestResource(value = PostgresTestResource.class)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class GamificationServiceTest {
 
-    @Inject
+    @Autowired
     GamificationService gamificationService;
 
-    @InjectMock
-    @SuppressWarnings("unused")
+    @MockBean
     LoyaltyPointsService loyaltyPointsService;
+
+    @Autowired
+    DailyCheckinRepository dailyCheckinRepository;
+
+    @Autowired
+    UserBadgeRepository userBadgeRepository;
+
+    @Autowired
+    UserLevelRepository userLevelRepository;
+
+    @Autowired
+    XpTransactionRepository xpTransactionRepository;
+
+    @Autowired
+    BadgeRepository badgeRepository;
 
     private static final String TEST_ACCOUNT_ID = "acc-test-123";
 
     @BeforeEach
-    @TestTransaction
     void setUp() {
-        DailyCheckin.deleteAll();
-        UserBadge.deleteAll();
-        UserLevel.deleteAll();
-        XpTransaction.deleteAll();
-        Badge.deleteAll();
+        dailyCheckinRepository.deleteAll();
+        userBadgeRepository.deleteAll();
+        userLevelRepository.deleteAll();
+        xpTransactionRepository.deleteAll();
+        badgeRepository.deleteAll();
     }
 
     @Test
-    @TestTransaction
     void testPerformDailyCheckin_Success() {
         DailyCheckinResponse response = gamificationService.performDailyCheckin(TEST_ACCOUNT_ID);
 
@@ -57,7 +66,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testPerformDailyCheckin_AlreadyCheckedIn_ThrowsException() {
         gamificationService.performDailyCheckin(TEST_ACCOUNT_ID);
 
@@ -66,16 +74,15 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testPerformDailyCheckin_WithStreak() {
         LocalDate yesterday = LocalDate.now().minusDays(1);
 
         DailyCheckin previousCheckin = new DailyCheckin();
-        previousCheckin.accountId = TEST_ACCOUNT_ID;
-        previousCheckin.checkinDate = yesterday;
-        previousCheckin.streakCount = 3;
-        previousCheckin.pointsEarned = 15;
-        previousCheckin.persist();
+        previousCheckin.setAccountId(TEST_ACCOUNT_ID);
+        previousCheckin.setCheckinDate(yesterday);
+        previousCheckin.setStreakCount(3);
+        previousCheckin.setPointsEarned(15);
+        dailyCheckinRepository.save(previousCheckin);
 
         DailyCheckinResponse response = gamificationService.performDailyCheckin(TEST_ACCOUNT_ID);
 
@@ -84,7 +91,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetTodayCheckin_CheckedIn() {
         gamificationService.performDailyCheckin(TEST_ACCOUNT_ID);
 
@@ -103,7 +109,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetCurrentStreak_NoCheckins() {
         Integer streak = gamificationService.getCurrentStreak(TEST_ACCOUNT_ID);
 
@@ -111,7 +116,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetCurrentStreak_Today() {
         gamificationService.performDailyCheckin(TEST_ACCOUNT_ID);
 
@@ -121,16 +125,15 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetCurrentStreak_Broken() {
         LocalDate twoDaysAgo = LocalDate.now().minusDays(2);
 
         DailyCheckin oldCheckin = new DailyCheckin();
-        oldCheckin.accountId = TEST_ACCOUNT_ID;
-        oldCheckin.checkinDate = twoDaysAgo;
-        oldCheckin.streakCount = 5;
-        oldCheckin.pointsEarned = 40;
-        oldCheckin.persist();
+        oldCheckin.setAccountId(TEST_ACCOUNT_ID);
+        oldCheckin.setCheckinDate(twoDaysAgo);
+        oldCheckin.setStreakCount(5);
+        oldCheckin.setPointsEarned(40);
+        dailyCheckinRepository.save(oldCheckin);
 
         Integer streak = gamificationService.getCurrentStreak(TEST_ACCOUNT_ID);
 
@@ -138,7 +141,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetTotalCheckins() {
         gamificationService.performDailyCheckin(TEST_ACCOUNT_ID);
 
@@ -148,7 +150,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testProcessTransaction_Success() {
         ProcessTransactionRequest request = new ProcessTransactionRequest(
             TEST_ACCOUNT_ID,
@@ -169,7 +170,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testProcessTransaction_Duplicate_IgnoresDuplicate() {
         ProcessTransactionRequest request = new ProcessTransactionRequest(
             TEST_ACCOUNT_ID,
@@ -186,7 +186,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testProcessTransaction_LevelUp() {
         ProcessTransactionRequest request1 = new ProcessTransactionRequest(
             TEST_ACCOUNT_ID,
@@ -211,7 +210,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetUserLevel_NotExists_ReturnsNull() {
         UserLevelResponse level = gamificationService.getUserLevel(TEST_ACCOUNT_ID);
 
@@ -219,7 +217,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetUserLevel_Exists() {
         ProcessTransactionRequest request = new ProcessTransactionRequest(
             TEST_ACCOUNT_ID,
@@ -240,7 +237,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetUserBadges_NoneEarned() {
         List<EarnedBadgeResponse> badges = gamificationService.getUserBadges(TEST_ACCOUNT_ID);
 
@@ -249,18 +245,17 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetUserBadges_WithBadges() {
-        Badge badge = new Badge();
-        badge.name = "First Transaction";
-        badge.description = "Complete your first transaction";
-        badge.iconUrl = "https://example.com/badge1.png";
-        badge.requirementType = Badge.RequirementType.TRANSACTION_COUNT;
-        badge.requirementValue = BigDecimal.ONE;
-        badge.pointsReward = 50;
-        badge.category = "Transactions";
-        badge.isActive = true;
-        badge.persist();
+        id.payu.promotion.domain.Badge badge = new id.payu.promotion.domain.Badge();
+        badge.setName("First Transaction");
+        badge.setDescription("Complete your first transaction");
+        badge.setIconUrl("https://example.com/badge1.png");
+        badge.setRequirementType(id.payu.promotion.domain.Badge.RequirementType.TRANSACTION_COUNT);
+        badge.setRequirementValue(BigDecimal.ONE);
+        badge.setPointsReward(50);
+        badge.setCategory("Transactions");
+        badge.setIsActive(true);
+        badgeRepository.save(badge);
 
         ProcessTransactionRequest request = new ProcessTransactionRequest(
             TEST_ACCOUNT_ID,
@@ -278,7 +273,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetBadgeProgress_NoBadges() {
         List<BadgeProgressResponse> progress = gamificationService.getBadgeProgress(TEST_ACCOUNT_ID);
 
@@ -287,18 +281,17 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetBadgeProgress_WithBadges() {
-        Badge badge = new Badge();
-        badge.name = "Level 5 Master";
-        badge.description = "Reach level 5";
-        badge.iconUrl = "https://example.com/badge2.png";
-        badge.requirementType = Badge.RequirementType.LEVEL_REACHED;
-        badge.requirementValue = BigDecimal.valueOf(5);
-        badge.pointsReward = 500;
-        badge.category = "Levels";
-        badge.isActive = true;
-        badge.persist();
+        id.payu.promotion.domain.Badge badge = new id.payu.promotion.domain.Badge();
+        badge.setName("Level 5 Master");
+        badge.setDescription("Reach level 5");
+        badge.setIconUrl("https://example.com/badge2.png");
+        badge.setRequirementType(id.payu.promotion.domain.Badge.RequirementType.LEVEL_REACHED);
+        badge.setRequirementValue(BigDecimal.valueOf(5));
+        badge.setPointsReward(500);
+        badge.setCategory("Levels");
+        badge.setIsActive(true);
+        badgeRepository.save(badge);
 
         List<BadgeProgressResponse> progress = gamificationService.getBadgeProgress(TEST_ACCOUNT_ID);
 
@@ -308,7 +301,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetSummary() {
         gamificationService.performDailyCheckin(TEST_ACCOUNT_ID);
         ProcessTransactionRequest request = new ProcessTransactionRequest(
@@ -329,7 +321,6 @@ class GamificationServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testCheckinAwardsLoyaltyPoints() {
         gamificationService.performDailyCheckin(TEST_ACCOUNT_ID);
 

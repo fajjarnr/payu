@@ -6,18 +6,14 @@ import id.payu.promotion.domain.Promotion;
 import id.payu.promotion.domain.Referral;
 import id.payu.promotion.domain.Reward;
 import id.payu.promotion.dto.*;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import id.payu.promotion.repository.*;
+import org.junit.jupiter.api.*;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.smallrye.reactive.messaging.memory.InMemoryConnector;
-import io.smallrye.reactive.messaging.memory.InMemorySink;
-import jakarta.enterprise.inject.Any;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,14 +37,28 @@ import static org.hamcrest.Matchers.*;
  * To run these tests: mvn test -Dtest=PromotionIntegrationTest -Ddocker.enabled=true
  * To skip these tests: mvn test (they will be skipped by default)
  */
-@QuarkusTest
-@EnabledIfSystemProperty(named = "docker.enabled", matches = "true", disabledReason = "Docker not available")
-@QuarkusTestResource(value = id.payu.promotion.test.resource.PostgresTestResource.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+@Transactional
 class PromotionIntegrationTest {
 
-    @Inject
-    @Any
-    InMemoryConnector connector;
+    @org.springframework.boot.test.web.server.LocalServerPort
+    int port;
+
+    @Autowired
+    PromotionRepository promotionRepository;
+
+    @Autowired
+    LoyaltyPointsRepository loyaltyPointsRepository;
+
+    @Autowired
+    CashbackRepository cashbackRepository;
+
+    @Autowired
+    ReferralRepository referralRepository;
+
+    @Autowired
+    RewardRepository rewardRepository;
 
     private static final String TEST_ACCOUNT_ID = "acc-integration-test";
     private static final String TEST_REFERRER_ID = "acc-referrer-test";
@@ -56,20 +66,15 @@ class PromotionIntegrationTest {
 
     @BeforeEach
     void setup() {
+        RestAssured.port = port;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        // Clear all sinks to ensure test isolation
-        try {
-            connector.sink("promotion-events").clear();
-        } catch (Exception e) {
-            // Sink might not be configured for all tests
-        }
 
         // Clean up database
-        LoyaltyPoints.deleteAll();
-        Cashback.deleteAll();
-        Referral.deleteAll();
-        Reward.deleteAll();
-        Promotion.deleteAll();
+        loyaltyPointsRepository.deleteAll();
+        cashbackRepository.deleteAll();
+        referralRepository.deleteAll();
+        rewardRepository.deleteAll();
+        promotionRepository.deleteAll();
     }
 
     // ==================== LOYALTY POINTS TESTS ====================
@@ -310,16 +315,16 @@ class PromotionIntegrationTest {
                 .body("completedAt", notNullValue());
 
         // 3. Verify referrer reward was granted
-        List<Reward> referrerRewards = Reward.list("accountId", TEST_REFERRER_ID);
+        List<Reward> referrerRewards = rewardRepository.findByAccountId(TEST_REFERRER_ID);
         Assertions.assertTrue(referrerRewards.stream()
-            .anyMatch(r -> r.type == Reward.RewardType.REFERRAL_BONUS
-                && r.amount.compareTo(new BigDecimal("50000")) == 0));
+            .anyMatch(r -> r.getType() == Reward.RewardType.REFERRAL_BONUS
+                && r.getAmount().compareTo(new BigDecimal("50000")) == 0));
 
         // 4. Verify referee reward was granted
-        List<Reward> refereeRewards = Reward.list("accountId", TEST_REFEREE_ID);
+        List<Reward> refereeRewards = rewardRepository.findByAccountId(TEST_REFEREE_ID);
         Assertions.assertTrue(refereeRewards.stream()
-            .anyMatch(r -> r.type == Reward.RewardType.REFERRAL_BONUS
-                && r.amount.compareTo(new BigDecimal("25000")) == 0));
+            .anyMatch(r -> r.getType() == Reward.RewardType.REFERRAL_BONUS
+                && r.getAmount().compareTo(new BigDecimal("25000")) == 0));
 
         // 5. Verify referral summary
         given()
@@ -366,16 +371,16 @@ class PromotionIntegrationTest {
                 .body("status", equalTo("COMPLETED"));
 
         // Verify points were awarded to referrer
-        List<LoyaltyPoints> referrerPoints = LoyaltyPoints.list("accountId", TEST_REFERRER_ID + "-points");
+        List<LoyaltyPoints> referrerPoints = loyaltyPointsRepository.findByAccountId(TEST_REFERRER_ID + "-points");
         Assertions.assertTrue(referrerPoints.stream()
-            .anyMatch(p -> p.transactionType == LoyaltyPoints.TransactionType.REFERRAL_BONUS
-                && p.points == 100));
+            .anyMatch(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.REFERRAL_BONUS
+                && p.getPoints() == 100));
 
         // Verify points were awarded to referee
-        List<LoyaltyPoints> refereePoints = LoyaltyPoints.list("accountId", TEST_REFEREE_ID + "-points");
+        List<LoyaltyPoints> refereePoints = loyaltyPointsRepository.findByAccountId(TEST_REFEREE_ID + "-points");
         Assertions.assertTrue(refereePoints.stream()
-            .anyMatch(p -> p.transactionType == LoyaltyPoints.TransactionType.REFERRAL_BONUS
-                && p.points == 50));
+            .anyMatch(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.REFERRAL_BONUS
+                && p.getPoints() == 50));
     }
 
     // ==================== PROMOTION VOUCHER TESTS ====================
@@ -450,7 +455,7 @@ class PromotionIntegrationTest {
                 .statusCode(400); // Bad Request - already claimed
 
         // 5. Verify only one reward was created
-        long rewardCount = Reward.count("accountId", TEST_ACCOUNT_ID);
+        long rewardCount = rewardRepository.countByAccountId(TEST_ACCOUNT_ID);
         Assertions.assertEquals(1, rewardCount);
     }
 
@@ -556,7 +561,7 @@ class PromotionIntegrationTest {
                 .statusCode(400);
 
         // Verify only 3 rewards were created
-        long rewardCount = Reward.count("promotionCode", "PROMO-LIMITED-001");
+        long rewardCount = rewardRepository.countByPromotionCode("PROMO-LIMITED-001");
         Assertions.assertEquals(3, rewardCount);
     }
 
@@ -742,7 +747,7 @@ class PromotionIntegrationTest {
             "Expected exactly 5 failed claims");
 
         // Verify in database
-        long rewardCount = Reward.count("promotionCode", "PROMO-CONCURRENT-001");
+        long rewardCount = rewardRepository.countByPromotionCode("PROMO-CONCURRENT-001");
         Assertions.assertEquals(5, rewardCount,
             "Expected exactly 5 rewards in database");
     }

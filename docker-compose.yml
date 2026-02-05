@@ -232,8 +232,8 @@ services:
   # ============================================
   bi-fast-simulator:
     build:
-      context: ./backend/simulators/bi-fast-simulator
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: simulators/bi-fast-simulator/Dockerfile
     container_name: payu-bifast-simulator
     ports:
       - "8090:8080"
@@ -256,16 +256,16 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 256M
+          memory: 512M
         reservations:
           cpus: "0.1"
-          memory: 64M
+          memory: 128M
     networks:
       - payu-network
   dukcapil-simulator:
     build:
-      context: ./backend/simulators/dukcapil-simulator
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: simulators/dukcapil-simulator/Dockerfile
     container_name: payu-dukcapil-simulator
     ports:
       - "8091:8080"
@@ -296,8 +296,8 @@ services:
       - payu-network
   qris-simulator:
     build:
-      context: ./backend/simulators/qris-simulator
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: simulators/qris-simulator/Dockerfile
     container_name: payu-qris-simulator
     ports:
       - "8092:8080"
@@ -320,10 +320,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 256M
+          memory: 512M
         reservations:
           cpus: "0.1"
-          memory: 64M
+          memory: 128M
     networks:
       - payu-network
   # ============================================
@@ -518,7 +518,7 @@ services:
       dockerfile: Dockerfile
     container_name: payu-compliance-service
     ports:
-      - "8087:8080"
+      - "8017:8080"
     environment:
       SPRING_PROFILES_ACTIVE: container
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_compliance
@@ -561,7 +561,7 @@ services:
       dockerfile: Dockerfile
     container_name: payu-investment-service
     ports:
-      - "8009:8080"
+      - "8007:8080"
     environment:
       SPRING_PROFILES_ACTIVE: container
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_investment
@@ -604,8 +604,9 @@ services:
       dockerfile: Dockerfile
     container_name: payu-lending-service
     ports:
-      - "8010:8080"
+      - "8008:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: container
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_lending
       SPRING_DATASOURCE_USERNAME: payu
       # REQUIRED: Set in .env file
@@ -613,6 +614,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
+      PAYU_CACHE_REDIS_HOST: redis
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
         -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -680,10 +682,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 256M
+          memory: 768M
         reservations:
           cpus: "0.1"
-          memory: 64M
+          memory: 256M
     networks:
       - payu-network
   notification-service:
@@ -717,10 +719,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 256M
+          memory: 768M
         reservations:
           cpus: "0.1"
-          memory: 64M
+          memory: 256M
     networks:
       - payu-network
   gateway-service:
@@ -768,10 +770,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 256M
+          memory: 768M
         reservations:
           cpus: "0.25"
-          memory: 128M
+          memory: 256M
     networks:
       - payu-network
   backoffice-service:
@@ -780,15 +782,17 @@ services:
       dockerfile: Dockerfile
     container_name: payu-backoffice-service
     ports:
-      - "8011:8080"
+      - "8013:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: container
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_backoffice
       SPRING_DATASOURCE_USERNAME: payu
-      # REQUIRED: Set in .env file
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_KYC_URL: http://kyc-service:8080
       SERVICES_WALLET_URL: http://wallet-service:8080
+      REDIS_HOST: redis
+      PAYU_CACHE_REDIS_HOST: redis
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
         -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -810,10 +814,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 512M
+          memory: 768M
         reservations:
           cpus: "0.1"
-          memory: 128M
+          memory: 256M
     networks:
       - payu-network
   partner-service:
@@ -822,7 +826,7 @@ services:
       dockerfile: Dockerfile
     container_name: payu-partner-service
     ports:
-      - "8010:8080"
+      - "8014:8080"
     environment:
       SPRING_PROFILES_ACTIVE: container
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_partner
@@ -864,11 +868,11 @@ services:
       dockerfile: Dockerfile
     container_name: payu-promotion-service
     ports:
-      - "8013:8080"
+      - "8015:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: container
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_promotion
       SPRING_DATASOURCE_USERNAME: payu
-      # REQUIRED: Set in .env file
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
@@ -892,10 +896,70 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 512M
+          memory: 768M
         reservations:
           cpus: "0.1"
-          memory: 128M
+          memory: 256M
+    networks:
+      - payu-network
+  cms-service:
+    build:
+      context: ./backend/cms-service
+      dockerfile: Dockerfile
+    container_name: payu-cms-service
+    ports:
+      - "8018:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_cms
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    networks:
+      - payu-network
+  ab-testing-service:
+    build:
+      context: ./backend/ab-testing-service
+      dockerfile: Dockerfile
+    container_name: payu-ab-testing-service
+    ports:
+      - "8019:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_abtesting
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 768M
     networks:
       - payu-network
   support-service:
@@ -904,12 +968,15 @@ services:
       dockerfile: Dockerfile
     container_name: payu-support-service
     ports:
-      - "8014:8080"
+      - "8016:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: container
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_support
+      SPRING_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_support # Fallback
       SPRING_DATASOURCE_USERNAME: payu
-      # REQUIRED: Set in .env file
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      OIDC_ISSUER: http://keycloak:8080/realms/payu
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
@@ -932,10 +999,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 256M
+          memory: 768M
         reservations:
           cpus: "0.1"
-          memory: 64M
+          memory: 256M
     networks:
       - payu-network
   api-portal-service:
@@ -1003,10 +1070,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 256M
+          memory: 512M
         reservations:
           cpus: "0.1"
-          memory: 64M
+          memory: 128M
     networks:
       - payu-network
   # ============================================
@@ -1018,7 +1085,7 @@ services:
       dockerfile: Dockerfile
     container_name: payu-fx-service
     ports:
-      - "8016:8080"
+      - "8009:8080"
     environment:
       SPRING_PROFILES_ACTIVE: container
       DB_URL: jdbc:postgresql://postgres:5432/payu_fx
@@ -1049,10 +1116,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 512M
+          memory: 768M
         reservations:
           cpus: "0.1"
-          memory: 128M
+          memory: 256M
     networks:
       - payu-network
   statement-service:
@@ -1061,11 +1128,12 @@ services:
       dockerfile: Dockerfile
     container_name: payu-statement-service
     ports:
-      - "8015:8080"
+      - "8012:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: container
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_statement
+      SPRING_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/payu_statement # Fix for Flyway
       SPRING_DATASOURCE_USERNAME: payu
-      # REQUIRED: Set in .env file
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_WALLET_URL: http://wallet-service:8080
@@ -1108,7 +1176,7 @@ services:
     container_name: payu-kyc-service
     working_dir: /app/src
     ports:
-      - "8007:8080"
+      - "8010:8080"
     environment:
       # REQUIRED: Set in .env file
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-payu}:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_kyc
@@ -1147,7 +1215,7 @@ services:
     container_name: payu-analytics-service
     working_dir: /app/src
     ports:
-      - "8008:8080"
+      - "8011:8080"
     environment:
       # REQUIRED: Set in .env file
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-payu}:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_analytics

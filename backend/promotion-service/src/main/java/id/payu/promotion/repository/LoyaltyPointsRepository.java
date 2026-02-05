@@ -12,5 +12,7 @@ public interface LoyaltyPointsRepository extends JpaRepository<LoyaltyPoints, UU
 
     List<LoyaltyPoints> findByAccountIdOrderByCreatedAtDesc(String accountId);
 
+    List<LoyaltyPoints> findByAccountId(String accountId);
+
     List<LoyaltyPoints> findByAccountIdAndTransactionId(String accountId, String transactionId);
 }

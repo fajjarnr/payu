@@ -1,5 +1,5 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
+# Build stage
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
 
@@ -9,14 +9,16 @@ WORKDIR /build
 # Install Maven
 RUN microdnf install -y maven && microdnf clean all
 
-# Copy entire project (needed for parent pom/shared dependencies)
-COPY . .
+# Copy backend parent POM and simulator source
+COPY pom.xml .
+COPY simulators/qris-simulator/pom.xml simulators/qris-simulator/
+COPY simulators/qris-simulator/src simulators/qris-simulator/src
 
 # Build the Quarkus application
-RUN mvn package -DskipTests -Dquarkus.package.jar.type=uber-jar -pl :qris-simulator -am
+RUN mvn package -DskipTests -Dquarkus.package.jar.type=fast-jar -f simulators/qris-simulator/pom.xml
 
 ####
-# Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+# Runtime stage
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
@@ -25,20 +27,22 @@ LABEL maintainer="backend-team@payu.id"
 LABEL description="PayU qris-simulator"
 LABEL version="1.0.0"
 
-# Install curl for health checks (MUST BE ROOT)
+# Install curl
 USER root
 RUN microdnf install -y curl-minimal && microdnf clean all
 
-# Use non-root user (185 is the default jboss user in UBI images)
+# Use non-root user
 USER 185
-
 WORKDIR /deployments
 
-# Copy built artifact from build stage
-COPY --from=build --chown=185 /build/simulators/qris-simulator/target/*-runner.jar /deployments/app.jar
+# Copy Quarkus fast-jar structure
+COPY --from=build --chown=185 /build/simulators/qris-simulator/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build --chown=185 /build/simulators/qris-simulator/target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
+COPY --from=build --chown=185 /build/simulators/qris-simulator/target/quarkus-app/app/ /deployments/app/
+COPY --from=build --chown=185 /build/simulators/qris-simulator/target/quarkus-app/quarkus/ /deployments/quarkus/
 
-# Expose the service port
-EXPOSE 8092
+# Expose port
+EXPOSE 8080
 
 # JVM configuration
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
@@ -46,14 +50,11 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:+UseG1GC \
     -XX:MaxGCPauseMillis=100 \
     -Dquarkus.http.host=0.0.0.0 \
+    -Dquarkus.http.port=8080 \
     -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8092/q/health || exit 1
+    CMD curl -f http://localhost:8080/q/health || exit 1
 
-# Volume mounts for temporary files and logs
-VOLUME ["/deployments/tmp", "/deployments/logs"]
-
-# Run the Quarkus application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

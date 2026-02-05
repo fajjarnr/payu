@@ -4,19 +4,14 @@ import id.payu.promotion.domain.Referral;
 import id.payu.promotion.domain.Reward;
 import id.payu.promotion.dto.CompleteReferralRequest;
 import id.payu.promotion.dto.CreateReferralRequest;
-import id.payu.promotion.test.resource.PostgresTestResource;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.TestTransaction;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import jakarta.inject.Inject;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import id.payu.promotion.repository.*;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,32 +20,37 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
-@Disabled("Service tests require PostgreSQL Testcontainers - disabled when Docker not available")
-@QuarkusTestResource(value = PostgresTestResource.class)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class ReferralServiceTest {
 
-    @Inject
+    @Autowired
     ReferralService referralService;
 
-    @Inject
+    @Autowired
     EntityManager entityManager;
 
-    @InjectMock
-    @SuppressWarnings("unused")
-    Emitter<Map<String, Object>> promotionEvents;
+    @Autowired
+    ReferralRepository referralRepository;
+
+    @Autowired
+    RewardRepository rewardRepository;
+
+    @MockBean
+    @SuppressWarnings("rawtypes")
+    id.payu.promotion.service.EmitterPlaceholder promotionEvents;
 
     private static final String REFERRER_ACCOUNT_ID = "acc-referrer";
     private static final String REFEREE_ACCOUNT_ID = "acc-referee";
 
     @BeforeEach
     void setUp() {
-        Referral.deleteAll();
-        Reward.deleteAll();
+        referralRepository.deleteAll();
+        rewardRepository.deleteAll();
     }
 
     @Test
-    @TestTransaction
     void testCreateReferral_Success() {
         CreateReferralRequest request = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -62,19 +62,18 @@ class ReferralServiceTest {
 
         Referral result = referralService.createReferral(request);
 
-        assertNotNull(result.id);
-        assertEquals(REFERRER_ACCOUNT_ID, result.referrerAccountId);
-        assertNotNull(result.referralCode);
-        assertEquals(new BigDecimal("50.00"), result.referrerReward);
-        assertEquals(new BigDecimal("25.00"), result.refereeReward);
-        assertEquals(Referral.RewardType.CASHBACK, result.rewardType);
-        assertEquals(Referral.Status.PENDING, result.status);
-        assertNotNull(result.createdAt);
-        assertEquals(8, result.referralCode.length());
+        assertNotNull(result.getId());
+        assertEquals(REFERRER_ACCOUNT_ID, result.getReferrerAccountId());
+        assertNotNull(result.getReferralCode());
+        assertEquals(new BigDecimal("50.00"), result.getReferrerReward());
+        assertEquals(new BigDecimal("25.00"), result.getRefereeReward());
+        assertEquals(Referral.RewardType.CASHBACK, result.getRewardType());
+        assertEquals(Referral.Status.PENDING, result.getStatus());
+        assertNotNull(result.getCreatedAt());
+        assertEquals(8, result.getReferralCode().length());
     }
 
     @Test
-    @TestTransaction
     void testCreateReferral_WithPointsRewardType() {
         CreateReferralRequest request = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -86,12 +85,11 @@ class ReferralServiceTest {
 
         Referral result = referralService.createReferral(request);
 
-        assertEquals(Referral.RewardType.POINTS, result.rewardType);
-        assertNotNull(result.referralCode);
+        assertEquals(Referral.RewardType.POINTS, result.getRewardType());
+        assertNotNull(result.getReferralCode());
     }
 
     @Test
-    @TestTransaction
     void testCompleteReferral_Success() {
         CreateReferralRequest createRequest = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -104,20 +102,19 @@ class ReferralServiceTest {
         Referral created = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
-            created.referralCode,
+            created.getReferralCode(),
             REFEREE_ACCOUNT_ID
         );
 
         Referral result = referralService.completeReferral(completeRequest);
 
-        assertEquals(created.id, result.id);
-        assertEquals(REFEREE_ACCOUNT_ID, result.refereeAccountId);
-        assertEquals(Referral.Status.COMPLETED, result.status);
-        assertNotNull(result.completedAt);
+        assertEquals(created.getId(), result.getId());
+        assertEquals(REFEREE_ACCOUNT_ID, result.getRefereeAccountId());
+        assertEquals(Referral.Status.COMPLETED, result.getStatus());
+        assertNotNull(result.getCompletedAt());
     }
 
     @Test
-    @TestTransaction
     void testCompleteReferral_WithPointsReward_GrantsPoints() {
         CreateReferralRequest createRequest = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -130,22 +127,21 @@ class ReferralServiceTest {
         Referral created = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
-            created.referralCode,
+            created.getReferralCode(),
             REFEREE_ACCOUNT_ID
         );
 
         Referral result = referralService.completeReferral(completeRequest);
 
-        assertEquals(Referral.Status.COMPLETED, result.status);
+        assertEquals(Referral.Status.COMPLETED, result.getStatus());
 
-        var referrerRewards = Reward.list("accountId = ?1", REFERRER_ACCOUNT_ID);
-        var refereeRewards = Reward.list("accountId = ?1", REFEREE_ACCOUNT_ID);
+        var referrerRewards = rewardRepository.findByAccountId(REFERRER_ACCOUNT_ID);
+        var refereeRewards = rewardRepository.findByAccountId(REFEREE_ACCOUNT_ID);
 
         assertTrue(referrerRewards.size() > 0 || refereeRewards.size() > 0);
     }
 
     @Test
-    @TestTransaction
     void testCompleteReferral_InvalidCode_ThrowsException() {
         CompleteReferralRequest request = new CompleteReferralRequest(
             "INVALID_CODE",
@@ -161,7 +157,6 @@ class ReferralServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testCompleteReferral_AlreadyCompleted_ThrowsException() {
         CreateReferralRequest createRequest = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -174,7 +169,7 @@ class ReferralServiceTest {
         Referral created = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
-            created.referralCode,
+            created.getReferralCode(),
             REFEREE_ACCOUNT_ID
         );
 
@@ -189,7 +184,6 @@ class ReferralServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testCompleteReferral_ExpiredCode_ThrowsException() {
         CreateReferralRequest createRequest = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -202,7 +196,7 @@ class ReferralServiceTest {
         Referral created = referralService.createReferral(createRequest);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
-            created.referralCode,
+            created.getReferralCode(),
             REFEREE_ACCOUNT_ID
         );
 
@@ -213,13 +207,12 @@ class ReferralServiceTest {
 
         assertEquals("Referral code has expired", exception.getMessage());
 
-        var expiredReferral = referralService.getReferral(created.id);
+        var expiredReferral = referralService.getReferral(created.getId());
         assertTrue(expiredReferral.isPresent());
-        assertEquals(Referral.Status.EXPIRED, expiredReferral.get().status);
+        assertEquals(Referral.Status.EXPIRED, expiredReferral.get().getStatus());
     }
 
     @Test
-    @TestTransaction
     void testGetReferral_Success() {
         CreateReferralRequest request = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -231,11 +224,11 @@ class ReferralServiceTest {
 
         Referral created = referralService.createReferral(request);
 
-        var result = referralService.getReferral(created.id);
+        var result = referralService.getReferral(created.getId());
 
         assertTrue(result.isPresent());
-        assertEquals(created.id, result.get().id);
-        assertEquals(REFERRER_ACCOUNT_ID, result.get().referrerAccountId);
+        assertEquals(created.getId(), result.get().getId());
+        assertEquals(REFERRER_ACCOUNT_ID, result.get().getReferrerAccountId());
     }
 
     @Test
@@ -248,7 +241,6 @@ class ReferralServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetReferralByCode_Success() {
         CreateReferralRequest request = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -260,11 +252,11 @@ class ReferralServiceTest {
 
         Referral created = referralService.createReferral(request);
 
-        var result = referralService.getReferralByCode(created.referralCode);
+        var result = referralService.getReferralByCode(created.getReferralCode());
 
         assertTrue(result.isPresent());
-        assertEquals(created.id, result.get().id);
-        assertEquals(created.referralCode, result.get().referralCode);
+        assertEquals(created.getId(), result.get().getId());
+        assertEquals(created.getReferralCode(), result.get().getReferralCode());
     }
 
     @Test
@@ -275,7 +267,6 @@ class ReferralServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGetReferralsByReferrer() {
         CreateReferralRequest request1 = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -299,11 +290,10 @@ class ReferralServiceTest {
         List<Referral> results = referralService.getReferralsByReferrer(REFERRER_ACCOUNT_ID);
 
         assertEquals(2, results.size());
-        assertTrue(results.stream().allMatch(r -> REFERRER_ACCOUNT_ID.equals(r.referrerAccountId)));
+        assertTrue(results.stream().allMatch(r -> REFERRER_ACCOUNT_ID.equals(r.getReferrerAccountId())));
     }
 
     @Test
-    @TestTransaction
     void testGetReferralSummary() {
         CreateReferralRequest request1 = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -325,7 +315,7 @@ class ReferralServiceTest {
         referralService.createReferral(request2);
 
         CompleteReferralRequest completeRequest = new CompleteReferralRequest(
-            created.referralCode,
+            created.getReferralCode(),
             REFEREE_ACCOUNT_ID
         );
 
@@ -340,7 +330,6 @@ class ReferralServiceTest {
     }
 
     @Test
-    @TestTransaction
     void testGenerateReferralCode_Uniqueness() {
         CreateReferralRequest request1 = new CreateReferralRequest(
             REFERRER_ACCOUNT_ID,
@@ -361,8 +350,8 @@ class ReferralServiceTest {
         Referral result1 = referralService.createReferral(request1);
         Referral result2 = referralService.createReferral(request2);
 
-        assertNotEquals(result1.referralCode, result2.referralCode);
-        assertEquals(8, result1.referralCode.length());
-        assertEquals(8, result2.referralCode.length());
+        assertNotEquals(result1.getReferralCode(), result2.getReferralCode());
+        assertEquals(8, result1.getReferralCode().length());
+        assertEquals(8, result2.getReferralCode().length());
     }
 }
