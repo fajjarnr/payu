@@ -9,10 +9,13 @@ Thumbs.db
 
 # --- Logs & Temp ---
 *.log
+*_log*.txt
 logs/
 tmp/
 temp/
 crash-reports/
+test_output.txt
+test-results/
 
 # --- Secrets & Environment ---
 .env
