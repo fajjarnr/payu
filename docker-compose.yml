@@ -1012,6 +1012,49 @@ services:
   # ============================================
   # BUSINESS & OPERATIONS SERVICES (Spring Boot)
   # ============================================
+  fx-service:
+    build:
+      context: ./backend/fx-service
+      dockerfile: Dockerfile
+    container_name: payu-fx-service
+    ports:
+      - "8016:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      DB_URL: jdbc:postgresql://postgres:5432/payu_fx
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_fx
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+      JAVA_OPTS: >-
+        -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8080/fx-api/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    networks:
+      - payu-network
   statement-service:
     build:
       context: ./backend/statement-service
@@ -1061,8 +1104,9 @@ services:
   kyc-service:
     build:
       context: ./backend/kyc-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-kyc-service
+    working_dir: /app/src
     ports:
       - "8007:8080"
     environment:
@@ -1090,17 +1134,18 @@ services:
       resources:
         limits:
           cpus: "2.0"
-          memory: 512M
+          memory: 2G
         reservations:
           cpus: "0.5"
-          memory: 256M
+          memory: 1G
     networks:
       - payu-network
   analytics-service:
     build:
       context: ./backend/analytics-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-analytics-service
+    working_dir: /app/src
     ports:
       - "8008:8080"
     environment:

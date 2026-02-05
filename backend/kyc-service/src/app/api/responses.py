@@ -52,7 +52,7 @@ class ApiResponse(BaseModel):
     meta: Optional[MetaData] = Field(default=None, description="Response metadata")
 
     @classmethod
-    def success(
+    def create_success(
         cls,
         data: Any = None,
         meta: Optional[MetaData] = None,
@@ -64,7 +64,7 @@ class ApiResponse(BaseModel):
         return cls(success=True, data=data, meta=meta)
 
     @classmethod
-    def error(
+    def create_error(
         cls,
         code: str,
         message: str,
@@ -100,4 +100,4 @@ class ApiResponse(BaseModel):
             total_pages=total_pages,
             request_id=request_id,
         )
-        return cls.success(data=data, meta=meta, request_id=request_id)
+        return cls.create_success(data=data, meta=meta, request_id=request_id)

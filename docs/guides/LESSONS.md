@@ -72,6 +72,42 @@
   2. **Sync**: Update `.env` to match the *actual* password currently used by the database (Safe).
   3. **SQL**: Manually change the password via `ALTER USER` inside the database.
 
+### 8. Python ML Containerization Strategy (Feb 4, 2026)
+* **The Problem**: Red Hat UBI9 Minimal images are excellent for security but lack system libraries required for ML/CV tasks (like OpenCV's dependency on `libGL.so.1` and `libgomp.so.1`).
+* **The Fix**: For services requiring heavy C-extensions (OpenCV, PyTorch, PaddleOCR), use `python:3.12-slim` (Debian-based) instead of UBI9. It simplifies installing system dependencies:
+    ```dockerfile
+    RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 libgomp1 curl
+    ```
+* **Performance Boost**: Switch from `pip` to `uv` (Astral) for package installation. Reduces build time for heavy ML libraries (PyTorch, Pandas) from 10m to 1.5m.
+    ```dockerfile
+    COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv
+    RUN /uv pip install --system --no-cache -r requirements.txt
+    ```
+
+### 9. Spring Boot Monorepo Build Pattern (Feb 4, 2026)
+* **The Problem**: Docker builds for services relying on local shared modules (`backend/shared/`) fail because the build context is often restricted to the service directory.
+* **The Fix**: "Decoupled Build" strategy.
+    1.  **Build Artifacts on Host** (using root POM): `mvn -pl :service-name -am package`
+    2.  **Copy Artifacts to Context**: `cp target/app.jar backend/service/target/`
+    3.  **Simple Dockerfile**: `COPY target/app.jar /deployments/`
+This avoids complex Docker context juggling and leverages local Maven cache.
+
+### 10. Pydantic Model Field Conflicts (Feb 4, 2026)
+* **The Problem**: Defining a class method named `success()` on a Pydantic model that has a field named `success` causes `AttributeError` at runtime. Pydantic v2 internals conflict with the method name.
+* **The Fix**: Rename factory methods to avoid colliding with field names. Use `create_success()` or `build_success()` instead of just `success()`.
+
+### 11. ML Service Memory Limits (Feb 5, 2026)
+* **The Problem**: ML Services (KYC, Analytics) using PyTorch/PaddleOCR crash with "Killed" or Exit 137 immediately upon loading models if memory limit is too low (e.g., 512MB).
+* **The Fix**: Increase memory limits for ML containers.
+    ```yaml
+    resources:
+      limits:
+        memory: 2G  # Increased from 512M
+      reservations:
+        memory: 1G
+    ```
+
+
 ## 🛠️ Build & Dependency Management
 
 ### 1. Multi-Module Project Dependencies

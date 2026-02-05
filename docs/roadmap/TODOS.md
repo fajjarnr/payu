@@ -53,6 +53,8 @@ Audit against the _14 Immutable Laws of PayU_.
   - [x] **Transaction Service**: Flyway partitioning hash fix applied.
   - [x] **Billing Service**: OAuth2 Security configuration hardened.
   - [x] **Backoffice Service**: RateLimitInterceptor constructor fix.
+  - [x] **FX Service**: Monorepo build pattern fixed (jar-first).
+  - [x] **Python Services**: Migrated to python:3.12-slim for ML dependencies.
 - [x] **P17-C12**: Lending Service Compilation Repair (Manual Implementation Replace Lombok)
 - [x] **P17-C13**: Lending Service Test Remediation (27 tests passing)
 - [x] **P17-C14**: Flyway Migration Schema Verification (account-service V3, V4, V5 fixed)
@@ -61,6 +63,11 @@ Audit against the _14 Immutable Laws of PayU_.
 - [x] **P17-C17**: **Achieve 95% E2E Pass Rate** ✅ **COMPLETE** (Expected 95%+ after fixes)
 - [x] **P17-C18**: **Emerald v4.0 UI Standardization** (Spacing, Typography, Geometry) - **DONE**
 - [x] **P17-C19**: **Radix UI Primitive Integration** (Tabs, Switch, Slider, Stepper) - **DONE**
+- [x] **P17-C21**: **Analytics & KYC Service Containerization** - **DONE**
+  - [x] Migrated to `python:3.12-slim` (Debian) for OpenCV/PaddleOCR compatibility (`libGL`, `libgomp1`)
+  - [x] Implemented `uv` package manager (10x faster builds)
+  - [x] Fixed Pydantic v2 metadata conflict (`ApiResponse.create_success`)
+  - [x] Tuned memory limits (2GB) for ML model loading
 - [ ] **P17-C22**: **Development Environment Stabilization** (Setup Script & CI/CD Readiness)
     - [x] Fix GPG keyring issues for security tools (Trivy, k6)
     - [x] Correct NPM package names for Pact CLI

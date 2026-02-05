@@ -110,7 +110,7 @@ def create_app() -> FastAPI:
     @app.get("/health")
     @limiter.limit("60/minute")
     async def health_check(request: Request):
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data={
                 "status": "healthy",
                 "service": settings.application_name,
@@ -122,7 +122,7 @@ def create_app() -> FastAPI:
     @app.get("/ready")
     @limiter.limit("60/minute")
     async def readiness_check(request: Request):
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data={"status": "ready", "service": settings.application_name},
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
@@ -139,7 +139,7 @@ def create_app() -> FastAPI:
         )
         return JSONResponse(
             status_code=429,
-            content=ApiResponse.error(
+            content=ApiResponse.create_error(
                 code="KYC_RAT_001",
                 message="Rate limit exceeded. Please try again later.",
                 request_id=request_id,
@@ -158,7 +158,7 @@ def create_app() -> FastAPI:
         )
         return JSONResponse(
             status_code=500,
-            content=ApiResponse.error(
+            content=ApiResponse.create_error(
                 code="KYC_SYS_001",
                 message="An unexpected error occurred. Please try again later.",
                 request_id=request_id,
