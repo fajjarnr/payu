@@ -2,7 +2,7 @@
 
 > **Platform Maturity**: 🟢 **100%** | **Production Readiness**: 🟡 **92%** (Environment Stabilization WIP)
 > **Strategic Objective**: Standardize a stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
-> **Last Synchronized**: February 5, 2026 (Port Standardization & Redis Configuration Fixes)
+> **Last Synchronized**: February 5, 2026 (Auth Service Login Issue - Workaround Available)
 
 ---
 
@@ -194,7 +194,20 @@ Note: Items below are verification/hardening tasks after base implementation mil
   - Built 9 service images (account, auth, transaction, wallet, investment, compliance, partner, dukcapil-simulator, web-app)
   - Started 11 healthy services (postgres, redis, zookeeper, kafka, jaeger, dukcapil-simulator, auth, transaction, wallet, investment, account)
 
-**Known Issues:** ✅ **ALL RESOLVED**
+**Known Issues:** ⚠️ **1 REMAINING**
+
+- [ ] **Auth Service Login Issue** (Feb 5, 2026) 🔄 **IN PROGRESS**
+  - **Symptom**: Login via `/api/v1/auth/login` returns `INTERNAL_ERROR` (IllegalArgumentException)
+  - **Root Cause**: LoginResponse Jackson deserialization failing - extra fields from Keycloak response (`not-before-policy`, `refresh_expires_in`, `session_state`, `scope`)
+  - **Fix Applied**: Added `@JsonIgnoreProperties(ignoreUnknown = true)` to LoginResponse.java
+  - **Status**: Fix pending rebuild & redeploy (JAR needs to be rebuilt with fix)
+  - **Workaround**: Use Keycloak directly for token:
+    ```bash
+    curl -X POST "http://localhost:8099/realms/payu/protocol/openid-connect/token" \
+      -d "username=customer1&password=Password123@&grant_type=password&client_id=payu-web-app"
+    ```
+  - **Credentials**: username=`customer1`, password=`Password123@`
+  - **Dependencies**: User exists in Keycloak + account DB + risk profile table
 
 - [x] **Compliance Service Port Mismatch**: Fixed port 8012 → 8080 in application-container.yml ✅
 - [x] **Partner Service OOM**: Increased heap 384M → 512M, container 512M → 768M ✅
