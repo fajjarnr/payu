@@ -40,10 +40,10 @@ Untuk manajemen user, realm, dan client:
 |:-------|:-------|
 | URL | http://localhost:8099 |
 | **Username** | `admin` |
-| **Password** | `your_secure_keycloak_admin_password_here_minimum_32_chars` |
+| **Password** | `admin` (default development) |
 | Realm | `master` |
 
-> ⚠️ **PRODUCTION**: Ganti password Keycloak admin segera!
+> ⚠️ **PRODUCTION**: Ganti password Keycloak admin segera! Password ini tersimpan di `docker-compose.yml` sebagai `KEYCLOAK_ADMIN_PASSWORD`.
 
 ---
 
@@ -56,8 +56,10 @@ Gunakan akun berikut untuk login ke aplikasi PayU:
 | Field | Value |
 |:-------|:-------|
 | **Username/Phone** | `customer1` |
-| **Password** | `password123` |
+| **Password** | `Password123@` |
 | **Email** | `customer1@payu.id` |
+
+> **Note**: Password harus mengandung huruf kapital, angka, dan karakter khusus sesuai kebijakan password.
 
 #### **Admin Backend (Opsional)**
 
@@ -88,7 +90,7 @@ Gunakan akun berikut untuk login ke aplikasi PayU:
 1. Buka http://localhost:3001
 2. Masukkan kredensial:
    - Username: `customer1`
-   - Password: `password123`
+   - Password: `Password123@`
 3. Klik **"Login"**
 
 ### **Setelah Login: Fitur Utama**
@@ -209,10 +211,15 @@ mvn -f backend/account-service/pom.xml test
 ### **Keycloak API**
 
 ```bash
-# Get token untuk API testing
+# Get token untuk customer1 via Keycloak
 curl -X POST "http://localhost:8099/realms/payu/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=customer1&password=password123&grant_type=password&client_id=payu-web-app"
+  -d "username=customer1&password=Password123@&grant_type=password&client_id=payu-backend&client_secret=payu-backend-secret-2026"
+
+# Atau via auth-service (recommended)
+curl -X POST "http://localhost:8002/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"customer1","password":"Password123@"}'
 ```
 
 ---
