@@ -64,44 +64,44 @@ export default function OnboardingPage() {
 
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-3 w-fit hover:opacity-80 transition-opacity" aria-label={t('back')}>
-            <ArrowLeft className="w-5 h-5 text-white/70" />
-            <span className="font-medium text-white/90">{t('back')}</span>
+            <ArrowLeft className="w-5 h-5 text-white/80" />
+            <span className="font-medium text-white">{t('back')}</span>
           </Link>
         </div>
 
         <div className="relative z-10 max-w-lg space-y-8">
             <div className="space-y-4">
-                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-lg shadow-emerald-500/10" aria-hidden="true">
-                    <ScanFace className="w-8 h-8 text-emerald-400" />
+                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-400/30 shadow-lg shadow-emerald-500/10" aria-hidden="true">
+                    <ScanFace className="w-8 h-8 text-emerald-300" />
                 </div>
                 <h1 className="text-4xl font-bold leading-tight tracking-tight">
                     {t('branding.title')}
                 </h1>
-                <p className="text-zinc-400 leading-relaxed text-lg">
+                <p className="text-zinc-200 leading-relaxed text-lg">
                     {t('branding.desc')}
                 </p>
             </div>
 
             <div className="space-y-6 pt-4">
                 <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                    <Fingerprint className="w-6 h-6 text-emerald-400 shrink-0 mt-1" aria-hidden="true" />
+                    <Fingerprint className="w-6 h-6 text-emerald-300 shrink-0 mt-1" aria-hidden="true" />
                     <div>
                         <h3 className="font-bold text-white mb-1">{t('branding.features.ekyc.title')}</h3>
-                        <p className="text-sm text-zinc-400">{t('branding.features.ekyc.desc')}</p>
+                        <p className="text-sm text-zinc-200">{t('branding.features.ekyc.desc')}</p>
                     </div>
                 </div>
                 <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                    <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0 mt-1" aria-hidden="true" />
+                    <ShieldCheck className="w-6 h-6 text-emerald-300 shrink-0 mt-1" aria-hidden="true" />
                     <div>
                         <h3 className="font-bold text-white mb-1">{t('branding.features.data.title')}</h3>
-                        <p className="text-sm text-zinc-400">{t('branding.features.data.desc')}</p>
+                        <p className="text-sm text-zinc-300">{t('branding.features.data.desc')}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className="relative z-10 flex items-center gap-2 text-zinc-500 text-xs font-mono">
-           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+        <div className="relative z-10 flex items-center gap-2 text-zinc-300 text-xs font-mono">
+           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
            {t('branding.system')} • v2.4.0
         </div>
       </aside>

@@ -38,11 +38,12 @@
 }
 
 :root {
-  /* Emerald Green Theme - Fixed to #10b981 (Emerald-500) */
+  /* Emerald Green Theme - WCAG AA Compliant */
   --background: 160 20% 98%;
   --foreground: 160 20% 8%;
 
-  --primary: 160 84.3% 39.4%;
+  /* Darker emerald for 4.5:1 contrast with white text (hsl 160 84% 26% = #0a6b48) */
+  --primary: 160 84% 26%;
   --primary-foreground: 0 0% 100%;
 
   --card: 0 0% 100%;
@@ -52,7 +53,7 @@
   --accent-foreground: 160 84% 25%;
 
   --muted: 160 15% 94%;
-  --muted-foreground: 160 10% 45%;
+  --muted-foreground: 160 10% 35%;
 
   --destructive: 0 84% 60%;
   --success-light: 160 84% 95%;
@@ -67,6 +68,10 @@
   --chart-green2: 160 70% 50%;
   --chart-green3: 160 60% 65%;
   --chart-green4: 160 50% 80%;
+
+  /* Semantic Color Aliases for Accessibility */
+  --success: 160 84% 39%;
+  --success-foreground: 0 0% 100%;
 }
 
 .dark {
@@ -80,9 +85,26 @@
   --accent-foreground: 160 84% 90%;
 
   --muted: 160 20% 8%;
-  --muted-foreground: 160 10% 60%;
+  --muted-foreground: 160 10% 75%;
 
   --border: 160 20% 12%;
+
+  /* Accessible Success Colors for Dark Mode */
+  --success: 160 84% 55%;
+  --success-foreground: 160 20% 3%;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --muted-foreground: 160 10% 25%;
+    --border: 160 15% 70%;
+  }
+
+  .dark {
+    --muted-foreground: 160 10% 85%;
+    --border: 160 20% 25%;
+  }
 }
 
 @layer base {

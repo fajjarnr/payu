@@ -64,14 +64,14 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 max-w-lg space-y-6 mx-auto lg:mx-0 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/30 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-widest uppercase mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/30 border border-emerald-400/30 text-emerald-300 text-xs font-bold tracking-widest uppercase mb-4">
                 <ShieldCheck className="w-4 h-4" />
                 <span>{t('branding.tag')}</span>
             </div>
             <h1 className="text-5xl font-bold leading-tight tracking-tight">
                {t('branding.title')}
             </h1>
-            <p className="text-lg text-zinc-400 leading-relaxed">
+            <p className="text-lg text-zinc-200 leading-relaxed">
                 {t('branding.desc')}
             </p>
 
@@ -81,15 +81,15 @@ export default function LoginPage() {
                     t('branding.features.monitoring'),
                     t('branding.features.qris')
                 ].map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3 text-zinc-300">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    <div key={i} className="flex items-center gap-3 text-zinc-100">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                         <span className="font-medium">{feature}</span>
                     </div>
                 ))}
             </div>
         </div>
 
-        <div className="relative z-10 text-zinc-500 text-xs font-mono text-center lg:text-left">
+        <div className="relative z-10 text-zinc-300 text-xs font-mono text-center lg:text-left">
             {t('branding.footer')}
         </div>
       </aside>
@@ -120,7 +120,7 @@ export default function LoginPage() {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="password">Password</Label>
-                            <Link href="#" data-testid="forgot-password-link" className="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline">
+                            <Link href="#" data-testid="forgot-password-link" className="text-xs font-bold text-emerald-800 hover:text-emerald-900 hover:underline">
                                 {t('forgotPassword')}
                             </Link>
                         </div>
@@ -141,7 +141,7 @@ export default function LoginPage() {
                 <Button
                     type="submit"
                     data-testid="login-submit-button"
-                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                    className="w-full h-12 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-base shadow-lg shadow-emerald-800/20 transition-all active:scale-[0.98]"
                     disabled={mutation.isPending}
                 >
                     {mutation.isPending ? (
@@ -165,7 +165,7 @@ export default function LoginPage() {
 
             <div className="text-center text-sm">
                 <span className="text-muted-foreground">{t('noAccount')}</span>{" "}
-                <Link href="/onboarding" data-testid="register-link" className="font-bold text-emerald-700 hover:text-emerald-800 hover:underline inline-flex items-center">
+                <Link href="/onboarding" data-testid="register-link" className="font-bold text-emerald-800 hover:text-emerald-900 hover:underline inline-flex items-center">
                     {t('registerLink')} <ArrowRight className="ml-1 w-3 h-3" />
                 </Link>
             </div>

@@ -89,11 +89,11 @@ function CalendarDayButton({
       variant="ghost"
       className={cn(
         "h-[calc(var(--cell-size)-0.75rem)] w-[calc(var(--cell-size)-0.75rem)] p-0 font-bold text-base transition-all active:scale-90 rounded-2xl relative",
-        "text-foreground/80 hover:bg-emerald-500/10 hover:text-emerald-600",
+        "text-foreground/80 hover:bg-emerald-800/10 hover:text-emerald-700",
         // Today
-        modifiers.today && !modifiers.selected && "border-2 border-emerald-500/30 text-emerald-600 bg-emerald-500/5",
+        modifiers.today && !modifiers.selected && "border-2 border-emerald-700/30 text-emerald-700 bg-emerald-800/5",
         // Selected
-        modifiers.selected && "bg-emerald-500 text-white hover:bg-emerald-600 hover:text-white shadow-xl shadow-emerald-500/30 ring-4 ring-emerald-500/10 scale-105 z-10",
+        modifiers.selected && "bg-emerald-700 text-white hover:bg-emerald-800 hover:text-white shadow-xl shadow-emerald-800/30 ring-4 ring-emerald-800/10 scale-105 z-10",
         className
       )}
       {...props}

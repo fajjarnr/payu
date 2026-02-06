@@ -80,10 +80,11 @@ test.describe('Accessibility Audit - @a11y', () => {
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withRules([
-          'keyboard',
           'focus-order-semantics',
           'tabindex',
-          'region'
+          'region',
+          'aria-hidden-focus',
+          'scrollable-region-focusable'
         ])
         .analyze();
 
