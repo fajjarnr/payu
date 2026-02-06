@@ -120,7 +120,7 @@ export default function LoginPage() {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="password">Password</Label>
-                            <Link href="#" data-testid="forgot-password-link" className="text-xs font-bold text-emerald-800 hover:text-emerald-900 hover:underline">
+                            <Link href="#" data-testid="forgot-password-link" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
                                 {t('forgotPassword')}
                             </Link>
                         </div>
@@ -165,7 +165,7 @@ export default function LoginPage() {
 
             <div className="text-center text-sm">
                 <span className="text-muted-foreground">{t('noAccount')}</span>{" "}
-                <Link href="/onboarding" data-testid="register-link" className="font-bold text-emerald-800 hover:text-emerald-900 hover:underline inline-flex items-center">
+                <Link href="/onboarding" data-testid="register-link" className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center">
                     {t('registerLink')} <ArrowRight className="ml-1 w-3 h-3" />
                 </Link>
             </div>
