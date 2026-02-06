@@ -125,7 +125,7 @@ Audit against the *14 Immutable Laws of PayU*.
 
 | Component | Ready | Total | Percentage |
 | :--- | :--- | :--- | :--- |
-| **Backend Services** | 23 | 22 | ✅ 100% |
+| **Backend Services** | 22 | 22 | ✅ 100% |
 | **Frontend Apps** | 1 | 1 | 100% |
 | **Infrastructure** | 26 | 28 | 93% |
 | **Security** | 8 | 10 | 80% |

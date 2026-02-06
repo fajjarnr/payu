@@ -893,3 +893,75 @@
   ./scripts/seed-data.sh --verify
   ```
 * **Best Practice**: Store seed data in version control alongside migrations. Use V99 or similar high version number to ensure seed data runs after all schema migrations.
+
+### 29. Flyway Seed Data Idempotency (Feb 6, 2026)
+* **The Problem**: `V99__seed_test_data.sql` often fails on subsequent restarts in development environments due to unique constraint violations (e.g., duplicate usernames or IDs).
+* **The Cause**: Even with `ON CONFLICT DO NOTHING`, standard seed data can fail if multiple unique constraints exist (e.g., both ID and Username) and only one is targeted.
+* **The Fix**: Use a `DELETE` approach for deterministic seed data in development:
+  ```sql
+  DELETE FROM profiles WHERE user_id IN (SELECT id FROM users WHERE username IN ('customer1', 'admin'));
+  DELETE FROM users WHERE username IN ('customer1', 'admin');
+  -- Then run standard inserts
+  ```
+* **Lesson**: Deterministic `DELETE` then `INSERT` is more robust for dev-mode seed scripts than complex `ON CONFLICT` logic when multiple unique keys are involved.
+
+### 30. Sequential Startup for Persistent Message Brokers (Feb 6, 2026)
+* **The Problem**: Kafka fails to start with `KeeperErrorCode = NodeExists` if Zookeeper state is inconsistent or if both are restarted simultaneously after an abrupt shutdown.
+* **The Symptom**: Kafka container exits with error during registration.
+* **The Fix**: Perform a sequential reset:
+  1. `podman stop kafka zookeeper`
+  2. `podman start zookeeper`
+  3. Wait for Zookeeper health (approx 5-10s)
+  4. `podman start kafka`
+* **Lesson**: Infrastructure dependencies in containerized environments sometimes require manual sequence synchronization during recovery from hard crashes.
+
+### 31. Dockerfile COPY Pattern for Multi-Version JARs (Feb 6, 2026)
+* **The Problem**: Maven builds create versioned JARs (e.g., `service-1.0.0-SNAPSHOT.jar`) but Dockerfiles expect consistent filenames like `target/app.jar`.
+* **The Symptom**: Docker build fails with "COPY target/app.jar: no such file or directory" even though Maven build succeeded.
+* **The Fix**: Use wildcard pattern in Dockerfile COPY instruction:
+  ```dockerfile
+  # Before (fails with versioned JARs):
+  COPY target/app.jar /deployments/app.jar
+
+  # After (works with any version):
+  COPY target/*.jar /deployments/app.jar
+  ```
+* **Alternative**: Rename JAR after Maven build:
+  ```bash
+  cp target/service-1.0.0-SNAPSHOT.jar target/app.jar
+  ```
+* **Services Affected**: lending-service, ab-testing-service
+
+### 32. Pre-Built JAR Pattern for Resource-Constrained Builds (Feb 6, 2026)
+* **The Problem**: Building Maven projects inside Docker containers fails with "Too many open files" or extreme memory usage in resource-constrained environments.
+* **The Symptom**: `mvn package` inside Dockerfile fails during dependency resolution or compilation with system errors.
+* **The Fix**: Use "Decoupled Build" strategy:
+  1. **Build JAR on Host**: `mvn -f backend/service/pom.xml clean package -DskipTests`
+  2. **Use Simplified Dockerfile** that only copies the pre-built JAR
+  3. **Temporarily Modify .dockerignore** to allow `target/` directory during build
+* **Why This Works**: Avoids running Maven inside container, eliminates "Too many open files" errors, and leverages host Maven cache.
+* **Services Affected**: notification-service (Quarkus), api-portal-service (Quarkus), lending-service (Spring Boot)
+
+### 33. Quarkus Fast-JAR Directory Structure (Feb 6, 2026)
+* **The Problem**: Quarkus services fail to start with ClassNotFoundException or "no main manifest attribute" when using incorrect COPY paths in Dockerfile.
+* **Root Cause**: Quarkus `fast-jar` (default) creates a directory structure in `target/quarkus-app/`, not a single JAR file.
+* **The Fix**: Copy the entire quarkus-app directory structure:
+  ```dockerfile
+  COPY target/quarkus-app/lib/ /deployments/lib/
+  COPY target/quarkus-app/*.jar /deployments/
+  COPY target/quarkus-app/app/ /deployments/app/
+  ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]
+  ```
+* **Wrong Pattern**: `COPY target/*.jar /deployments/app.jar` (only works for Spring Boot uber-jars)
+* **Services Affected**: notification-service, api-portal-service, gateway-service
+
+### 34. Port Conflict Detection in Docker Compose (Feb 6, 2026)
+* **The Problem**: Multiple services competing for the same host port causes container startup failures.
+* **The Symptom**: `podman-compose up` fails with "port already in use" or service unreachable.
+* **The Fix**:
+  - Audit all ports: `grep -E "^\s+- \"\d+:" docker-compose.yml | sort`
+  - Check for lingering processes: `sudo lsof -i :8019`
+  - Kill conflicting processes: `sudo kill -9 <PID>`
+* **Best Practice**: Use central `.env` template for all service ports.
+* **Services Affected**: lending-service, ab-testing-service (both initially tried to use 8019)
+

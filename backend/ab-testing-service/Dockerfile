@@ -23,7 +23,7 @@ USER 185
 WORKDIR /deployments
 
 # Copy the pre-built artifact
-COPY target/app.jar /deployments/app.jar
+COPY target/*.jar /deployments/app.jar
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]

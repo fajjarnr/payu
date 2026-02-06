@@ -358,6 +358,48 @@ public class ApiGatewayResource {
         return proxy("support-service", "/api/v1/support", "POST", body, headers);
     }
 
+    // ==================== CMS Service ====================
+    @GET @Path("/contents/{path: .*}")
+    public Uni<Response> contentGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "GET", body, headers);
+    }
+    @POST @Path("/contents/{path: .*}")
+    public Uni<Response> contentPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/contents/{path: .*}")
+    public Uni<Response> contentPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "PUT", body, headers);
+    }
+    @DELETE @Path("/contents/{path: .*}")
+    public Uni<Response> contentDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "DELETE", body, headers);
+    }
+    @PATCH @Path("/contents/{path: .*}")
+    public Uni<Response> contentPatch(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents/" + path, "PATCH", body, headers);
+    }
+
+    @GET @Path("/contents")
+    public Uni<Response> contentRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents", "GET", body, headers);
+    }
+    @POST @Path("/contents")
+    public Uni<Response> contentRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/contents", "POST", body, headers);
+    }
+
+    // Public CMS endpoints (no auth required)
+    @GET @Path("/public/contents/{path: .*}")
+    public Uni<Response> publicContentGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/public/contents/" + path, "GET", body, headers);
+    }
+
+    @GET @Path("/public/contents")
+    public Uni<Response> publicContentRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("cms-service", "/api/v1/public/contents", "GET", body, headers);
+    }
+
     // ==================== Proxy Logic ====================
     private Uni<Response> proxy(String serviceName, String path, String method,
                                  String body, HttpHeaders headers) {
