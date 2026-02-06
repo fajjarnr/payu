@@ -183,9 +183,17 @@ Note: Items below are verification/hardening tasks after base implementation mil
   - Updated account-service SecurityConfig with wildcard matchers: `/api/v1/accounts/**`, `/api/v1/auth/**`
   - Explicitly disabled OAuth2 resource server for public filter chain
   - Added OpenAPI annotations to OnboardingController and NikVerificationController
-- [x] **OpenAPI Contract Validation**:
-  - Created `scripts/validate-openapi-contracts.py` for automated validation
-  - Fixed missing @Tag annotations in key controllers
+- [x] **OpenAPI Contract Validation** (Feb 6, 2026):
+  - Created `scripts/validate-openapi.py` - Automated validation script
+  - **Validation Results**:
+    - **Total Services**: 13
+    - **Total Endpoints**: 154
+    - **Documented**: 24 (15.6%)
+    - **Undocumented**: 130 (84.4%)
+  - **Services with 0% Coverage**: auth-service, fx-service, partner-service, account-service
+  - **Best Coverage**: billing-service (100% documented)
+  - **JSON Report**: `openapi-validation-report.json` for CI/CD
+  - **Usage**: `./scripts/validate-openapi.py [--service NAME] [--json]`
 - [x] **Backend Test Coverage Improvements**:
   - Added ArchitectureTest for lending-service, fx-service, statement-service, cms-service
   - Added archunit-junit5 dependency (1.2.1) to cms-service pom.xml

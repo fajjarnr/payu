@@ -1,0 +1,881 @@
+{
+  "timestamp": "/home/ubuntu/payu",
+  "summary": {
+    "total_services": 13,
+    "total_endpoints": 154,
+    "documented_endpoints": 24,
+    "undocumented_endpoints": 130
+  },
+  "services": {
+    "account-service": {
+      "coverage_percent": 0.0,
+      "total_endpoints": 1,
+      "documented_endpoints": 0,
+      "undocumented_endpoints": [
+        {
+          "controller": "OnboardingController",
+          "method": "POST",
+          "path": "/api/v1/accounts/register",
+          "line_number": 31
+        }
+      ]
+    },
+    "auth-service": {
+      "coverage_percent": 0.0,
+      "total_endpoints": 9,
+      "documented_endpoints": 0,
+      "undocumented_endpoints": [
+        {
+          "controller": "BiometricController",
+          "method": "GET",
+          "path": "/api/v1/biometric/challenge",
+          "line_number": 21
+        },
+        {
+          "controller": "BiometricController",
+          "method": "POST",
+          "path": "/api/v1/biometric/register",
+          "line_number": 35
+        },
+        {
+          "controller": "BiometricController",
+          "method": "POST",
+          "path": "/api/v1/biometric/authenticate",
+          "line_number": 48
+        },
+        {
+          "controller": "BiometricController",
+          "method": "GET",
+          "path": "/api/v1/biometric/registrations/{username}",
+          "line_number": 67
+        },
+        {
+          "controller": "BiometricController",
+          "method": "DELETE",
+          "path": "/api/v1/biometric/registrations/{registrationId}",
+          "line_number": 76
+        },
+        {
+          "controller": "AuthController",
+          "method": "POST",
+          "path": "/api/v1/auth/login",
+          "line_number": 65
+        },
+        {
+          "controller": "AuthController",
+          "method": "POST",
+          "path": "/api/v1/auth/mfa/verify",
+          "line_number": 165
+        },
+        {
+          "controller": "AuthController",
+          "method": "POST",
+          "path": "/api/v1/auth/refresh",
+          "line_number": 292
+        },
+        {
+          "controller": "AuthController",
+          "method": "GET",
+          "path": "/api/v1/auth/validate",
+          "line_number": 421
+        }
+      ]
+    },
+    "backoffice-service": {
+      "coverage_percent": 12.5,
+      "total_endpoints": 16,
+      "documented_endpoints": 2,
+      "undocumented_endpoints": [
+        {
+          "controller": "BackofficeController",
+          "method": "POST",
+          "path": "/api/v1/backoffice/kyc-reviews",
+          "line_number": 49
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "GET",
+          "path": "/api/v1/backoffice/kyc-reviews/{id}",
+          "line_number": 101
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "GET",
+          "path": "/api/v1/backoffice/kyc-reviews",
+          "line_number": 141
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "POST",
+          "path": "/api/v1/backoffice/kyc-reviews/{id}/review",
+          "line_number": 188
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "DELETE",
+          "path": "/api/v1/backoffice/kyc-reviews/{id}",
+          "line_number": 232
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "GET",
+          "path": "/api/v1/backoffice/fraud-cases/{id}",
+          "line_number": 306
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "GET",
+          "path": "/api/v1/backoffice/fraud-cases",
+          "line_number": 319
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "POST",
+          "path": "/api/v1/backoffice/fraud-cases/{id}/resolve",
+          "line_number": 354
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "POST",
+          "path": "/api/v1/backoffice/customer-cases",
+          "line_number": 384
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "GET",
+          "path": "/api/v1/backoffice/customer-cases/{id}",
+          "line_number": 396
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "GET",
+          "path": "/api/v1/backoffice/customer-cases",
+          "line_number": 409
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "PUT",
+          "path": "/api/v1/backoffice/customer-cases/{id}",
+          "line_number": 444
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "POST",
+          "path": "/api/v1/backoffice/search",
+          "line_number": 474
+        },
+        {
+          "controller": "BackofficeController",
+          "method": "GET",
+          "path": "/api/v1/backoffice/search",
+          "line_number": 492
+        }
+      ]
+    },
+    "billing-service": {
+      "coverage_percent": 100.0,
+      "total_endpoints": 7,
+      "documented_endpoints": 7,
+      "undocumented_endpoints": []
+    },
+    "compliance-service": {
+      "coverage_percent": 23.1,
+      "total_endpoints": 13,
+      "documented_endpoints": 3,
+      "undocumented_endpoints": [
+        {
+          "controller": "GdprAuditController",
+          "method": "GET",
+          "path": "/api/v1/gdpr-audit/{auditId}",
+          "line_number": 74
+        },
+        {
+          "controller": "GdprAuditController",
+          "method": "GET",
+          "path": "/api/v1/gdpr-audit/users/{userId}",
+          "line_number": 88
+        },
+        {
+          "controller": "GdprAuditController",
+          "method": "GET",
+          "path": "/api/v1/gdpr-audit/users/{userId}/date-range",
+          "line_number": 105
+        },
+        {
+          "controller": "GdprAuditController",
+          "method": "GET",
+          "path": "/api/v1/gdpr-audit/services/{serviceName}",
+          "line_number": 157
+        },
+        {
+          "controller": "GdprAuditController",
+          "method": "GET",
+          "path": "/api/v1/gdpr-audit/failed-access",
+          "line_number": 187
+        },
+        {
+          "controller": "GdprAuditController",
+          "method": "POST",
+          "path": "/api/v1/gdpr-audit/search",
+          "line_number": 201
+        },
+        {
+          "controller": "GdprAuditController",
+          "method": "DELETE",
+          "path": "/api/v1/gdpr-audit/{auditId}",
+          "line_number": 228
+        },
+        {
+          "controller": "ComplianceAuditController",
+          "method": "POST",
+          "path": "/api/v1/compliance/audit-report",
+          "line_number": 48
+        },
+        {
+          "controller": "ComplianceAuditController",
+          "method": "GET",
+          "path": "/api/v1/compliance/audit-report/{id}",
+          "line_number": 75
+        },
+        {
+          "controller": "ComplianceAuditController",
+          "method": "GET",
+          "path": "/api/v1/compliance/audit-report",
+          "line_number": 92
+        }
+      ]
+    },
+    "fx-service": {
+      "coverage_percent": 0.0,
+      "total_endpoints": 7,
+      "documented_endpoints": 0,
+      "undocumented_endpoints": [
+        {
+          "controller": "FxController",
+          "method": "GET",
+          "path": "/fx-api/v1/rates/{fromCurrency}/{toCurrency}",
+          "line_number": 64
+        },
+        {
+          "controller": "FxController",
+          "method": "GET",
+          "path": "/fx-api/v1/rates",
+          "line_number": 79
+        },
+        {
+          "controller": "FxController",
+          "method": "POST",
+          "path": "/fx-api/v1/conversions/estimate",
+          "line_number": 92
+        },
+        {
+          "controller": "FxController",
+          "method": "POST",
+          "path": "/fx-api/v1/conversions",
+          "line_number": 115
+        },
+        {
+          "controller": "FxController",
+          "method": "GET",
+          "path": "/fx-api/v1/conversions/{conversionId}",
+          "line_number": 158
+        },
+        {
+          "controller": "FxController",
+          "method": "GET",
+          "path": "/fx-api/v1/conversions",
+          "line_number": 171
+        },
+        {
+          "controller": "FxController",
+          "method": "POST",
+          "path": "/fx-api/v1/conversions/{conversionId}/reverse",
+          "line_number": 189
+        }
+      ]
+    },
+    "investment-service": {
+      "coverage_percent": 57.1,
+      "total_endpoints": 7,
+      "documented_endpoints": 4,
+      "undocumented_endpoints": [
+        {
+          "controller": "InvestmentController",
+          "method": "POST",
+          "path": "/api/v1/investments/accounts",
+          "line_number": 41
+        },
+        {
+          "controller": "InvestmentController",
+          "method": "POST",
+          "path": "/api/v1/investments/deposits",
+          "line_number": 52
+        },
+        {
+          "controller": "InvestmentController",
+          "method": "GET",
+          "path": "/api/v1/investments/gold/{userId}",
+          "line_number": 147
+        }
+      ]
+    },
+    "lending-service": {
+      "coverage_percent": 18.8,
+      "total_endpoints": 16,
+      "documented_endpoints": 3,
+      "undocumented_endpoints": [
+        {
+          "controller": "LendingController",
+          "method": "POST",
+          "path": "/api/v1/lending/loans",
+          "line_number": 55
+        },
+        {
+          "controller": "LendingController",
+          "method": "GET",
+          "path": "/api/v1/lending/loans/{loanId}",
+          "line_number": 85
+        },
+        {
+          "controller": "LendingController",
+          "method": "GET",
+          "path": "/api/v1/lending/loans/{loanId}/repayment-schedule",
+          "line_number": 119
+        },
+        {
+          "controller": "LendingController",
+          "method": "GET",
+          "path": "/api/v1/lending/repayment-schedules/{scheduleId}",
+          "line_number": 130
+        },
+        {
+          "controller": "LendingController",
+          "method": "POST",
+          "path": "/api/v1/lending/repayment-schedules/{scheduleId}/pay",
+          "line_number": 144
+        },
+        {
+          "controller": "LendingController",
+          "method": "POST",
+          "path": "/api/v1/lending/paylater/activate",
+          "line_number": 158
+        },
+        {
+          "controller": "LendingController",
+          "method": "GET",
+          "path": "/api/v1/lending/paylater/{userId}",
+          "line_number": 179
+        },
+        {
+          "controller": "LendingController",
+          "method": "POST",
+          "path": "/api/v1/lending/paylater/{userId}/payment",
+          "line_number": 225
+        },
+        {
+          "controller": "LendingController",
+          "method": "GET",
+          "path": "/api/v1/lending/paylater/{userId}/transactions",
+          "line_number": 247
+        },
+        {
+          "controller": "LendingController",
+          "method": "POST",
+          "path": "/api/v1/lending/credit-score/calculate",
+          "line_number": 260
+        },
+        {
+          "controller": "LendingController",
+          "method": "GET",
+          "path": "/api/v1/lending/credit-score/{userId}",
+          "line_number": 271
+        },
+        {
+          "controller": "LendingController",
+          "method": "GET",
+          "path": "/api/v1/lending/pre-approval/{preApprovalId}",
+          "line_number": 307
+        },
+        {
+          "controller": "LendingController",
+          "method": "GET",
+          "path": "/api/v1/lending/pre-approval/user/{userId}/active",
+          "line_number": 321
+        }
+      ]
+    },
+    "partner-service": {
+      "coverage_percent": 0.0,
+      "total_endpoints": 17,
+      "documented_endpoints": 0,
+      "undocumented_endpoints": [
+        {
+          "controller": "PartnerController",
+          "method": "GET",
+          "path": "/partners/{id}",
+          "line_number": 65
+        },
+        {
+          "controller": "PartnerController",
+          "method": "PUT",
+          "path": "/partners/{id}",
+          "line_number": 149
+        },
+        {
+          "controller": "PartnerController",
+          "method": "POST",
+          "path": "/partners/{id}/keys/regenerate",
+          "line_number": 192
+        },
+        {
+          "controller": "PartnerController",
+          "method": "DELETE",
+          "path": "/partners/{id}",
+          "line_number": 234
+        },
+        {
+          "controller": "SnapBiController",
+          "method": "POST",
+          "path": "/v1/partner/auth/token",
+          "line_number": 43
+        },
+        {
+          "controller": "SnapBiController",
+          "method": "POST",
+          "path": "/v1/partner/payments",
+          "line_number": 104
+        },
+        {
+          "controller": "SnapBiController",
+          "method": "GET",
+          "path": "/v1/partner/payments/{id}",
+          "line_number": 162
+        },
+        {
+          "controller": "SnapBiController",
+          "method": "POST",
+          "path": "/v1/partner/payments/{id}/refund",
+          "line_number": 208
+        },
+        {
+          "controller": "CertificateController",
+          "method": "GET",
+          "path": "/partners/{partnerId}/certificates/active",
+          "line_number": 59
+        },
+        {
+          "controller": "CertificateController",
+          "method": "GET",
+          "path": "/partners/{partnerId}/certificates/valid",
+          "line_number": 71
+        },
+        {
+          "controller": "CertificateController",
+          "method": "GET",
+          "path": "/partners/{partnerId}/certificates/expiring",
+          "line_number": 83
+        },
+        {
+          "controller": "CertificateController",
+          "method": "POST",
+          "path": "/partners/{partnerId}/certificates/generate",
+          "line_number": 115
+        },
+        {
+          "controller": "CertificateController",
+          "method": "GET",
+          "path": "/partners/{partnerId}/certificates/{certificateId}/validate",
+          "line_number": 132
+        },
+        {
+          "controller": "CertificateController",
+          "method": "PUT",
+          "path": "/partners/{partnerId}/certificates/{certificateId}/rotate",
+          "line_number": 144
+        },
+        {
+          "controller": "CertificateController",
+          "method": "PUT",
+          "path": "/partners/{partnerId}/certificates/rotate-all",
+          "line_number": 165
+        },
+        {
+          "controller": "CertificateController",
+          "method": "DELETE",
+          "path": "/partners/{partnerId}/certificates/{certificateId}",
+          "line_number": 183
+        },
+        {
+          "controller": "CertificateController",
+          "method": "PUT",
+          "path": "/partners/{partnerId}/certificates/{certificateId}/deactivate",
+          "line_number": 195
+        }
+      ]
+    },
+    "statement-service": {
+      "coverage_percent": 20.0,
+      "total_endpoints": 5,
+      "documented_endpoints": 1,
+      "undocumented_endpoints": [
+        {
+          "controller": "StatementController",
+          "method": "POST",
+          "path": "/api/v1/statements/generate",
+          "line_number": 44
+        },
+        {
+          "controller": "StatementController",
+          "method": "GET",
+          "path": "/api/v1/statements/{id}",
+          "line_number": 68
+        },
+        {
+          "controller": "StatementController",
+          "method": "GET",
+          "path": "/api/v1/statements/latest",
+          "line_number": 104
+        },
+        {
+          "controller": "StatementController",
+          "method": "POST",
+          "path": "/api/v1/statements/{id}/regenerate",
+          "line_number": 146
+        }
+      ]
+    },
+    "support-service": {
+      "coverage_percent": 5.9,
+      "total_endpoints": 17,
+      "documented_endpoints": 1,
+      "undocumented_endpoints": [
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/training-status",
+          "line_number": 33
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/agents",
+          "line_number": 52
+        },
+        {
+          "controller": "SupportController",
+          "method": "POST",
+          "path": "/api/v1/support/agents",
+          "line_number": 64
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/agents/{id}",
+          "line_number": 79
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/agents/employee/{employeeId}",
+          "line_number": 97
+        },
+        {
+          "controller": "SupportController",
+          "method": "PATCH",
+          "path": "/api/v1/support/agents/{id}/status",
+          "line_number": 115
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/modules",
+          "line_number": 135
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/modules/mandatory",
+          "line_number": 147
+        },
+        {
+          "controller": "SupportController",
+          "method": "POST",
+          "path": "/api/v1/support/modules",
+          "line_number": 159
+        },
+        {
+          "controller": "SupportController",
+          "method": "PATCH",
+          "path": "/api/v1/support/modules/{id}/status",
+          "line_number": 193
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/trainings",
+          "line_number": 214
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/trainings/agent/{agentId}",
+          "line_number": 226
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/trainings/module/{moduleId}",
+          "line_number": 240
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/trainings/agent/{agentId}/module/{moduleId}",
+          "line_number": 254
+        },
+        {
+          "controller": "SupportController",
+          "method": "POST",
+          "path": "/api/v1/support/trainings/assign",
+          "line_number": 273
+        },
+        {
+          "controller": "SupportController",
+          "method": "GET",
+          "path": "/api/v1/support/trainings/agent/{agentId}/status",
+          "line_number": 291
+        }
+      ]
+    },
+    "transaction-service": {
+      "coverage_percent": 5.0,
+      "total_endpoints": 20,
+      "documented_endpoints": 1,
+      "undocumented_endpoints": [
+        {
+          "controller": "TransactionController",
+          "method": "POST",
+          "path": "/api/v1/transactions/transfer",
+          "line_number": 79
+        },
+        {
+          "controller": "TransactionController",
+          "method": "GET",
+          "path": "/api/v1/transactions/{transactionId}",
+          "line_number": 150
+        },
+        {
+          "controller": "TransactionController",
+          "method": "GET",
+          "path": "/api/v1/transactions/accounts/{accountId}",
+          "line_number": 190
+        },
+        {
+          "controller": "TransactionController",
+          "method": "POST",
+          "path": "/api/v1/transactions/qris/pay",
+          "line_number": 268
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "GET",
+          "path": "/api/v1/split-bills/{id}",
+          "line_number": 44
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "GET",
+          "path": "/api/v1/split-bills/account/{accountId}",
+          "line_number": 57
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "PUT",
+          "path": "/api/v1/split-bills/{id}",
+          "line_number": 69
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "POST",
+          "path": "/api/v1/split-bills/{id}/cancel",
+          "line_number": 84
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "POST",
+          "path": "/api/v1/split-bills/{id}/activate",
+          "line_number": 97
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "POST",
+          "path": "/api/v1/split-bills/{id}/participants",
+          "line_number": 110
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "POST",
+          "path": "/api/v1/split-bills/{id}/participants/{participantId}/accept",
+          "line_number": 125
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "POST",
+          "path": "/api/v1/split-bills/{id}/participants/{participantId}/decline",
+          "line_number": 140
+        },
+        {
+          "controller": "SplitBillController",
+          "method": "POST",
+          "path": "/api/v1/split-bills/{id}/participants/{participantId}/payment",
+          "line_number": 155
+        },
+        {
+          "controller": "ScheduledTransferController",
+          "method": "GET",
+          "path": "/v1/scheduled-transfers/{id}",
+          "line_number": 30
+        },
+        {
+          "controller": "ScheduledTransferController",
+          "method": "GET",
+          "path": "/v1/scheduled-transfers/accounts/{accountId}",
+          "line_number": 36
+        },
+        {
+          "controller": "ScheduledTransferController",
+          "method": "PUT",
+          "path": "/v1/scheduled-transfers/{id}",
+          "line_number": 43
+        },
+        {
+          "controller": "ScheduledTransferController",
+          "method": "POST",
+          "path": "/v1/scheduled-transfers/{id}/cancel",
+          "line_number": 51
+        },
+        {
+          "controller": "ScheduledTransferController",
+          "method": "POST",
+          "path": "/v1/scheduled-transfers/{id}/pause",
+          "line_number": 57
+        },
+        {
+          "controller": "ScheduledTransferController",
+          "method": "POST",
+          "path": "/v1/scheduled-transfers/{id}/resume",
+          "line_number": 63
+        }
+      ]
+    },
+    "wallet-service": {
+      "coverage_percent": 10.5,
+      "total_endpoints": 19,
+      "documented_endpoints": 2,
+      "undocumented_endpoints": [
+        {
+          "controller": "WalletController",
+          "method": "GET",
+          "path": "/api/v1/wallets/{accountId}/balance",
+          "line_number": 46
+        },
+        {
+          "controller": "WalletController",
+          "method": "POST",
+          "path": "/api/v1/wallets/{accountId}/reserve",
+          "line_number": 72
+        },
+        {
+          "controller": "WalletController",
+          "method": "POST",
+          "path": "/api/v1/wallets/reservations/{reservationId}/commit",
+          "line_number": 103
+        },
+        {
+          "controller": "WalletController",
+          "method": "POST",
+          "path": "/api/v1/wallets/reservations/{reservationId}/release",
+          "line_number": 116
+        },
+        {
+          "controller": "WalletController",
+          "method": "POST",
+          "path": "/api/v1/wallets/{accountId}/credit",
+          "line_number": 129
+        },
+        {
+          "controller": "WalletController",
+          "method": "GET",
+          "path": "/api/v1/wallets/{accountId}/ledger",
+          "line_number": 159
+        },
+        {
+          "controller": "WalletController",
+          "method": "GET",
+          "path": "/api/v1/wallets/{accountId}/ledger/transaction/{transactionId}",
+          "line_number": 173
+        },
+        {
+          "controller": "WalletController",
+          "method": "GET",
+          "path": "/api/v1/wallets/{accountId}/transactions",
+          "line_number": 188
+        },
+        {
+          "controller": "PocketController",
+          "method": "GET",
+          "path": "/wallet-api/v1/pockets/{pocketId}",
+          "line_number": 64
+        },
+        {
+          "controller": "PocketController",
+          "method": "GET",
+          "path": "/wallet-api/v1/pockets/currency/{currency}",
+          "line_number": 93
+        },
+        {
+          "controller": "PocketController",
+          "method": "POST",
+          "path": "/wallet-api/v1/pockets/{pocketId}/credit",
+          "line_number": 111
+        },
+        {
+          "controller": "PocketController",
+          "method": "POST",
+          "path": "/wallet-api/v1/pockets/{pocketId}/unfreeze",
+          "line_number": 162
+        },
+        {
+          "controller": "PocketController",
+          "method": "POST",
+          "path": "/wallet-api/v1/pockets/{pocketId}/close",
+          "line_number": 172
+        },
+        {
+          "controller": "PocketController",
+          "method": "GET",
+          "path": "/wallet-api/v1/pockets/total-balance/{targetCurrency}",
+          "line_number": 183
+        },
+        {
+          "controller": "CardController",
+          "method": "GET",
+          "path": "/api/v1/cards/{cardId}",
+          "line_number": 61
+        },
+        {
+          "controller": "CardController",
+          "method": "POST",
+          "path": "/api/v1/cards/{cardId}/freeze",
+          "line_number": 73
+        },
+        {
+          "controller": "CardController",
+          "method": "POST",
+          "path": "/api/v1/cards/{cardId}/unfreeze",
+          "line_number": 83
+        }
+      ]
+    }
+  }
+}

@@ -770,3 +770,44 @@
   ```
 * **Important**: After updating the database, restart Keycloak container to apply changes.
 * **Best Practice**: Store the generated passwords securely and document the salt used for future reference.
+
+### 26. OpenAPI Documentation Coverage Gap (Feb 6, 2026)
+* **The Problem**: API documentation at `/api-docs` was incomplete, with only 15.6% of endpoints having `@Operation` annotations.
+* **Root Cause**: Developers implemented REST endpoints without adding OpenAPI annotations, causing a gap between implemented and documented APIs.
+* **Discovery Method**: Created `scripts/validate-openapi.py` to scan all controllers and compare `@RequestMapping` derivatives with `@Operation` annotations.
+* **Findings**:
+  - Total endpoints: 154 across 13 services
+  - Documented: 24 (15.6%)
+  - Undocumented: 130 (84.4%)
+  - Services with 0% documentation: auth-service, fx-service, partner-service, account-service
+  - Only billing-service had 100% coverage
+* **The Fix**: Add `@Operation` annotations to all undocumented endpoints:
+  ```java
+  @Operation(
+      summary = "Transfer funds between accounts",
+      description = "Executes a transfer from source to destination account with idempotency support",
+      tags = {"Transactions"},
+      responses = {
+          @ApiResponse(responseCode = "200", description = "Transfer successful"),
+          @ApiResponse(responseCode = "400", description = "Invalid request"),
+          @ApiResponse(responseCode = "409", description = "Insufficient funds")
+      }
+  )
+  @PostMapping("/transfer")
+  public ResponseEntity<TransferResponse> transfer(@RequestBody TransferRequest request) {
+      // ...
+  }
+  ```
+* **Validation Script Usage**:
+  ```bash
+  # Run full validation
+  ./scripts/validate-openapi.py
+
+  # Validate single service
+  ./scripts/validate-openapi.py --service transaction-service
+
+  # Generate JSON report for CI/CD
+  ./scripts/validate-openapi.py --json
+  ```
+* **CI/CD Integration**: Add validation to build pipeline to enforce documentation coverage threshold (e.g., minimum 80%).
+* **Best Practice**: Require `@Operation` annotation in code review checklist for all new REST endpoints.
