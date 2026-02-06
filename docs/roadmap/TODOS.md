@@ -69,13 +69,18 @@ Audit against the _14 Immutable Laws of PayU_.
   - [x] Implemented `uv` package manager (10x faster builds)
   - [x] Fixed Pydantic v2 metadata conflict (`ApiResponse.create_success`)
   - [x] Tuned memory limits (2GB) for ML model loading
-- [ ] **P17-C22**: **Development Environment Stabilization** (Setup Script & CI/CD Readiness)
+- [x] **P17-C22**: **Development Environment Stabilization** (Setup Script & CI/CD Readiness) ✅ **COMPLETE**
     - [x] Fix GPG keyring issues for security tools (Trivy, k6)
     - [x] Correct NPM package names for Pact CLI
     - [x] Standardize ArchUnit tests for Hexagonal compliance
     - [x] Resolve Quarkus build failures in `notification-service`
     - [x] Stabilize `transaction-service` unit tests (CQRS & Money Object Integration)
     - [x] Achieve successful full-stack build via `setup.sh`
+    - [x] **NEW**: Created `scripts/setup-dev.sh` - Quick start script for developers
+    - [x] **NEW**: Created `scripts/verify-env.sh` - Comprehensive health verification
+    - [x] **NEW**: Created `docs/DEVELOPER_ONBOARDING.md` - Developer onboarding guide
+    - [x] **NEW**: Created `docs/TROUBLESHOOTING.md` - Common issues and solutions
+    - [x] **NEW**: Updated `frontend/web-app/README.md` - PayU-specific documentation
 
 ## 🔍 Review Findings (Backend & Web App)
 
@@ -83,8 +88,8 @@ Audit against the _14 Immutable Laws of PayU_.
 - [x] **Backoffice integration sanity**: Align integration/resource tests with `@IntegrationTest` gating and Spring profiles.
 - [ ] **Transaction service stray artifacts**: Remove or gitignore `backend/transaction-service/test_output.txt`.
 - [ ] **Transaction service new config**: Confirm `backend/transaction-service/src/main/java/id/payu/transaction/config/JpaConfig.java` is intentional; wire and commit it or remove.
-- [ ] **Web app README**: Replace default Next.js README with PayU-specific setup, scripts, and troubleshooting.
-- [ ] **Web app env docs**: Document `NEXT_PUBLIC_WS_URL` (and any other required envs) and add a `frontend/web-app/.env.example` (or extend root `.env.example`) for web app usage.
+- [x] **Web app README**: Replace default Next.js README with PayU-specific setup, scripts, and troubleshooting ✅ **DONE**
+- [x] **Web app env docs**: Document `NEXT_PUBLIC_WS_URL` (and any other required envs) and add a `frontend/web-app/.env.example` (or extend root `.env.example`) for web app usage ✅ **DONE** (documented in README.md)
 - [ ] **Web app E2E runbook**: Add `npx playwright install` prerequisite and document `playwright.podman.config.ts` usage (or add `test:e2e:podman` npm script).
 
 ### 🧩 Detailed Execution Breakdown (Remaining + Post-Implementation Verification)
