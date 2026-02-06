@@ -49,6 +49,10 @@ target/
 build/
 .gradle/
 bin/
+*.class
+*.jar
+*.war
+*.ear
 !gradle-wrapper.jar
 !gradle-wrapper.properties
 !mvnw
@@ -127,3 +131,14 @@ ios/build/
 !.claude/workflows
 !.agent/
 *.tar
+
+# --- Spring Boot & JVM Crash Logs ---
+BOOT-INF/
+/META-INF/
+/org/
+/com/
+oom
+hs_err_pid*
+replay_pid*
+java_pid*.hprof
+*.dump
