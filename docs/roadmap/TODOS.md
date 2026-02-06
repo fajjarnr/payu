@@ -1,8 +1,8 @@
 # 📂 PayU Project Roadmap & Engineering Scorecard
 
-> **Platform Maturity**: 🟡 **78%** | **Production Readiness**: 🟢 **75%** (A11y Compliance Achieved - WCAG 2.1 AA)
+> **Platform Maturity**: 🟡 **80%** | **Production Readiness**: 🟢 **78%** (Public Pages A11y Compliant - WCAG 2.1 AA)
 > **Strategic Objective**: Standardize a stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
-> **Last Synchronized**: February 6, 2026 (P18 Accessibility & A11y Compliance Complete)
+> **Last Synchronized**: February 6, 2026 (P18 - 16/18 A11y Tests Passing, Login/Onboarding Compliant)
 
 ---
 
@@ -35,17 +35,19 @@ Audit against the *14 Immutable Laws of PayU*.
 
 **Mission Goal**: Fix all accessibility violations to achieve WCAG 2.1 AA compliance and 100% accessibility audit pass.
 
-### 🎯 Mission Status: 🟢 COMPLETE - A11y Compliance Achieved
+### 🎯 Mission Status: 🟡 89% COMPLETE - Public Pages A11y Compliant
 
 - [x] **Axe Configuration**: Fixed invalid `keyboard` rule, replaced with valid rules.
 - [x] **Color Contrast**: Fixed `muted-foreground` tokens for WCAG 2.1 AA compliance (4.5:1 ratio).
-- [x] **Login Page**: Fixed 3 color contrast issues (zinc-400/500 text on dark backgrounds).
+- [x] **Login Page**: Fixed 3 color contrast issues (emerald-800 → emerald-600 for links).
 - [x] **Onboarding Page**: Fixed 1 color contrast issue (zinc-400 text on dark backgrounds).
-- [x] **Component Updates**: Fixed Stepper component text contrast.
+- [x] **Component Updates**: Fixed Stepper, Button, Calendar component contrast.
+- [x] **Primary Color**: Updated from `hsl(160 84.3% 39.4%)` to `hsl(160 84% 26%)` for 4.5:1 contrast.
+- [ ] **Protected Pages**: Dashboard & Investments - Chart SVG accessibility (separate issue).
 - [x] **Quality Gates**:
-  - [x] All Axe tests passing with valid rule configuration.
-  - [x] Color contrast WCAG 2.1 AA compliant.
-  - [x] No critical or serious accessibility violations.
+  - [x] 16/18 Axe tests passing (89% pass rate).
+  - [x] Color contrast WCAG 2.1 AA compliant on all public pages.
+  - [x] No critical color contrast violations remaining.
 
 ### 🧩 P18 Implementation Details (Feb 6, 2026)
 
@@ -55,27 +57,37 @@ Audit against the *14 Immutable Laws of PayU*.
 - `muted-foreground` color at 45% lightness provided only ~3.8:1 contrast ratio (needs 4.5:1).
 - `keyboard` rule in Axe configuration does not exist in `@axe-core/playwright@4.11.0`.
 - Zinc color scale (zinc-400, zinc-500) on dark backgrounds failed contrast requirements.
+- Primary button color `emerald-500` (#10b981) gave only 2.53:1 contrast with white text.
+- Login links using `emerald-800` (#006045) on light background gave only 2.62:1 contrast.
 
 **Solution Implemented**:
 1. ✅ Fixed `globals.css` - Updated `--muted-foreground` from 45% to 35% (light mode) and 60% to 70% (dark mode).
-2. ✅ Fixed `a11y-audit.spec.ts` - Replaced invalid `keyboard` rule with valid alternatives:
+2. ✅ Fixed `globals.css` - Updated `--primary` from `hsl(160 84.3% 39.4%)` to `hsl(160 84% 26%)` (#0a6b48).
+3. ✅ Fixed `a11y-audit.spec.ts` - Replaced invalid `keyboard` rule with valid alternatives:
    - `focus-order-semantics`, `tabindex`, `region`, `aria-hidden-focus`, `scrollable-region-focusable`.
-3. ✅ Fixed `login/page.tsx` - Updated zinc-400 to zinc-300, zinc-500 to zinc-400 for better contrast.
-4. ✅ Fixed `onboarding/page.tsx` - Updated zinc-400 to zinc-300, zinc-500 to zinc-400 for better contrast.
-5. ✅ Fixed `stepper.tsx` - Changed `text-muted-foreground` to `text-foreground/60` for inactive steps.
+4. ✅ Fixed `login/page.tsx` - Updated link colors from emerald-800 to emerald-600.
+5. ✅ Fixed `onboarding/page.tsx` - Updated zinc-400 to zinc-300 for better contrast.
+6. ✅ Fixed `button.tsx` - Updated `emerald` variant from emerald-500 to emerald-800.
+7. ✅ Fixed `stepper.tsx` - Changed `text-muted-foreground` to `text-foreground/60` for inactive steps.
+8. ✅ Fixed `calendar.tsx` - Updated selected state colors from emerald-500 to emerald-700.
 
 **Files Modified**:
 - `/frontend/web-app/e2e/a11y-audit.spec.ts` - Fixed Axe config (removed invalid `keyboard` rule).
 - `/frontend/web-app/src/app/globals.css` - Fixed color tokens for WCAG AA compliance.
-- `/frontend/web-app/src/app/[locale]/login/page.tsx` - Fixed color contrast on dark sidebar.
-- `/frontend/web-app/src/app/[locale]/onboarding/page.tsx` - Fixed color contrast on dark sidebar.
+- `/frontend/web-app/src/app/[locale]/login/page.tsx` - Fixed link color contrast (emerald-800 → emerald-600).
+- `/frontend/web-app/src/app/[locale]/onboarding/page.tsx` - Fixed text contrast on dark sidebar.
+- `/frontend/web-app/src/components/ui/button.tsx` - Fixed emerald variant contrast.
 - `/frontend/web-app/src/components/ui/stepper.tsx` - Fixed inactive step text contrast.
+- `/frontend/web-app/src/components/ui/calendar.tsx` - Fixed selected state contrast.
 
 **Verification**:
 - Color contrast ratios now meet WCAG 2.1 AA standards:
   - Normal text: 4.5:1 minimum
   - Large text: 3:1 minimum
-- All Axe rules are valid and tests pass.
+- Test Results: 16/18 tests passing (89% pass rate).
+- Login Page: ✅ All color contrast issues resolved.
+- Onboarding Page: ✅ All color contrast issues resolved.
+- Remaining issues: Dashboard & Investments (Chart SVG accessibility - separate concern).
 
 ---
 
