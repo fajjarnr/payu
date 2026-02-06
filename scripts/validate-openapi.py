@@ -172,8 +172,8 @@ class OpenAPIValidator:
         return endpoints
 
     def _check_operation_annotation(self, lines: List[str], start_idx: int) -> tuple[bool, str, List[str]]:
-        """Check for @Operation annotation before the mapping."""
-        # Look back up to 10 lines for @Operation
+        """Check for @Operation annotation before or after the mapping."""
+        # Pattern 1: Look back up to 15 lines for @Operation (standard Java annotation order)
         for i in range(max(0, start_idx - 15), start_idx):
             line = lines[i - 1]  # Adjust for 0-based indexing
 
@@ -194,6 +194,38 @@ class OpenAPIValidator:
 
             # Stop if we hit another method annotation
             if '@' in line and 'Mapping' in line:
+                break
+
+        # Pattern 2: Look forward up to 20 lines for @Operation (reverse annotation order)
+        # Handle multi-line @Operation annotations that span multiple lines
+        for i in range(start_idx, min(len(lines), start_idx + 20)):
+            line = lines[i]
+
+            # Check for @Operation
+            if '@Operation' in line:
+                # Extract summary - might be on same line or next lines
+                summary_match = re.search(r'summary\s*=\s*["\']([^"\']+)["\']', line)
+                summary = summary_match.group(1) if summary_match else ""
+
+                # If not on same line, check next few lines
+                if not summary:
+                    for j in range(i + 1, min(i + 5, len(lines))):
+                        summary_match = re.search(r'summary\s*=\s*["\']([^"\']+)["\']', lines[j])
+                        if summary_match:
+                            summary = summary_match.group(1)
+                            break
+
+                # Extract tags
+                tags = []
+                tags_match = re.search(r'tags\s*=\s*{([^}]+)}', line)
+                if tags_match:
+                    tags_str = tags_match.group(1)
+                    tags = [t.strip().strip('"\'') for t in tags_str.split(',')]
+
+                return True, summary, tags
+
+            # Stop if we hit the method declaration (public/private/protected)
+            if line.strip().startswith('public') or line.strip().startswith('private') or line.strip().startswith('protected'):
                 break
 
         return False, "", []

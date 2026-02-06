@@ -811,3 +811,29 @@
   ```
 * **CI/CD Integration**: Add validation to build pipeline to enforce documentation coverage threshold (e.g., minimum 80%).
 * **Best Practice**: Require `@Operation` annotation in code review checklist for all new REST endpoints.
+* **Achievement**: After fixing detection script and adding missing annotations, reached 100% coverage (154/154 endpoints).
+
+### 27. Java Annotation Order Matters for OpenAPI Detection (Feb 6, 2026)
+* **The Problem**: Validation script initially reported 15.6% coverage, but actual coverage was much higher.
+* **Root Cause**: Java annotation order can vary between codebases. Two patterns exist:
+  1. **Standard**: `@Operation` before `@GetMapping` (operation annotation first)
+  2. **Reverse**: `@GetMapping` before `@Operation` (mapping annotation first)
+* **The Fix**: Updated validation script to check both patterns - look back 15 lines AND look forward 20 lines for `@Operation` annotation.
+* **Detection Logic**:
+  ```python
+  # Pattern 1: Look back (standard annotation order)
+  for i in range(max(0, start_idx - 15), start_idx):
+      if '@Operation' in lines[i]:
+          return True, summary, tags
+
+  # Pattern 2: Look forward (reverse annotation order)
+  for i in range(start_idx, min(len(lines), start_idx + 20)):
+      if '@Operation' in lines[i]:
+          return True, summary, tags
+
+  # Stop at method declaration
+  if line.strip().startswith('public'):
+      break
+  ```
+* **Result**: After fixing detection, coverage jumped from 15.6% to 96.1%. Only needed to add annotations to `ScheduledTransferController` (6 endpoints) to reach 100%.
+* **Best Practice**: When writing validation scripts, account for different code style patterns within the same language. Always verify false positives by manual inspection.

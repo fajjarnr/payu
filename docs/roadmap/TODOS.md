@@ -98,7 +98,11 @@ Note: Items below are verification/hardening tasks after base implementation mil
 
 ### **P17-C11b: Full-Stack Integration Verification (Post-Implementation)**
 
-- [ ] **Contract validation**: OpenAPI checks vs implemented endpoints (15 services).
+- [x] **Contract validation**: OpenAPI checks vs implemented endpoints (15 services) ✅ **100% COVERAGE**
+  - Fixed validation script to detect both annotation order patterns
+  - Added @Operation annotations to BiometricController (5 endpoints)
+  - Added @Operation annotations to ScheduledTransferController (7 endpoints)
+  - Result: 154/154 endpoints documented (100%)
 - [x] **Happy-path smoke tests**: Basic service startup and health checks verfied (18/22).
 - [ ] **Seed data alignment**: Validate default fixtures and idempotency keys.
 - [ ] **Auth/permission checks**: Role-based access on admin vs user flows.
