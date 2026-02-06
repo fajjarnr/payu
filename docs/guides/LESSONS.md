@@ -707,3 +707,13 @@
 * **The Rule**: No design opinions are valid without first auditing: 1) Existing Design System, 2) PRD, and 3) Live App Responsiveness.
 * **The Impact**: Prevents "design drift" where new features don't match the established "Premium Emerald" aesthetic.
 * **Key Check**: "If an element can be removed without losing meaning, it must be removed."
+
+### 23. Keycloak Admin Password Persistence (Feb 6, 2026)
+* **The Problem**: Changing `KEYCLOAK_ADMIN_PASSWORD` in `docker-compose.yml` doesn't update existing Keycloak admin password.
+* **Root Cause**: Keycloak stores admin credentials in PostgreSQL database. The `KEYCLOAK_ADMIN_PASSWORD` environment variable only sets the initial password on first startup. Once the database exists, changing the env var has no effect.
+* **The Fix**: To reset admin password on existing installation:
+  1. Access Keycloak Admin Console at http://localhost:8099
+  2. Navigate to Users → admin → Credentials → Set password
+  3. OR use kc.sh CLI: `podman exec payu-keycloak /opt/keycloak/bin/kc.sh import users` (requires restart)
+* **Best Practice**: Document admin passwords securely and consider using external secret management (Vault, Sealed Secrets) for production.
+* **Note**: For fresh installations, set `KEYCLOAK_ADMIN_PASSWORD` in docker-compose.yml before first startup.

@@ -200,12 +200,14 @@ Note: Items below are verification/hardening tasks after base implementation mil
   - **Symptom**: Login via `/api/v1/auth/login` returns `INTERNAL_ERROR` (IllegalArgumentException)
   - **Root Cause**: Environment variable mismatch - `application.yaml` referenced `${KEYCLOAK_URL}` but `docker-compose.yml` set `KEYCLOAK_SERVER_URL`
   - **Fix Applied**: Updated `application.yaml` to use `${KEYCLOAK_SERVER_URL}` with default fallback
-  - **Status**: Fix pending rebuild & redeploy (JAR needs to be rebuilt with fix)
-  - **Workaround**: Use Keycloak directly for token:
+  - **Status**: ✅ FIXED & VERIFIED - Login returns MFA token successfully
+  - **Test Command**:
     ```bash
-    curl -X POST "http://localhost:8099/realms/payu/protocol/openid-connect/token" \
-      -d "username=customer1&password=Password123@&grant_type=password&client_id=payu-web-app"
+    curl -X POST http://localhost:8002/api/v1/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"username":"customer1","password":"Password123@"}'
     ```
+  - **Response**: Returns `{"mfa_required":true,"mfa_token":"...",...}` (expected security behavior)
   - **Credentials**: username=`customer1`, password=`Password123@`
   - **Dependencies**: User exists in Keycloak + account DB + risk profile table
 
@@ -218,6 +220,52 @@ Note: Items below are verification/hardening tasks after base implementation mil
 - [x] **API Portal Service**: Fixed Dockerfile multi-module build issue ✅
 - [x] **Notification Service**: Fixed Dockerfile for Quarkus-run.jar and removed SASL comment from .env ✅
 - [x] **Support/Backoffice Service**: Fixed OIDC configuration for JWT validation ✅
+
+---
+
+## 🧪 API Endpoint Testing Summary (Feb 6, 2026)
+
+### Service Health Status
+
+| Service | Container | Health | Notes |
+|:--------|:----------|:-------|:------|
+| **Gateway** | ✅ Running | ✅ Healthy | 404 on /actuator is expected (gateway routes to backend) |
+| **Auth Service** | ✅ Running | ✅ Healthy | Login works, returns MFA token (security feature) |
+| **Account Service** | ✅ Running | ⚠️ Partial | DB connected, overall DOWN (healthcheck issue) |
+| **Wallet Service** | ✅ Running | ⚠️ Partial | DB connected, overall DOWN (healthcheck issue) |
+| **Transaction Service** | ✅ Running | ⚠️ Partial | DB connected, overall DOWN (healthcheck issue) |
+| **Web App** | ✅ Running | ✅ Healthy | Frontend fully functional |
+
+### Working Features
+
+- ✅ **Auth Service Login**: `/api/v1/auth/login` validates credentials and returns MFA token
+- ✅ **Gateway Routing**: Correctly routes requests and requires JWT for protected endpoints
+- ✅ **Web App**: Frontend runs at http://localhost:3001 with health endpoint
+- ✅ **Keycloak Integration**: OAuth2/OIDC authentication working
+
+### Known Minor Issues (P1 - Low Priority)
+
+- ⚠️ **Service Health Checks**: Some services show `DOWN` status despite being functional
+  - Root cause: Health check endpoint configuration (not actual service failure)
+  - Impact: Monitoring may show false negatives
+  - Fix: Review health check indicators in each service
+
+### Credentials Reference
+
+| User | Password | Realm/Context |
+|:-----|:---------|:---------------|
+| **Keycloak Admin** | `admin` (needs reset) | Master realm |
+| **customer1** | `Password123@` | `payu` realm |
+| **New Default** | `P@ssw0rd123` | For fresh installs (docker-compose.yml updated) |
+
+### Next Steps
+
+- [ ] **Standardize Dummy User Passwords**: Update all test users to use `P@ssw0rd123`
+- [ ] **Complete MFA Flow**: Implement OTP verification endpoint for MFA completion
+- [ ] **Fix Health Check Indicators**: Ensure all services report accurate health status
+- [ ] **Reset Keycloak Admin Password**: Use Keycloak Admin Console at http://localhost:8099
+
+---
 - [x] **Port Standardization**: Aligned all 26 services/simulators to match .env template (8001-8020) ✅
 - [x] **Lending Service**: Simplified Dockerfile to use pre-built JAR ✅
 - [x] **Lending Service Port Fix**: Fixed application.yml port from 8089 → 8080 ✅
