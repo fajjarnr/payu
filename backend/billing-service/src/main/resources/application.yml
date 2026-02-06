@@ -7,9 +7,9 @@ spring:
 
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/billingdb
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/billingdb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

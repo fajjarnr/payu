@@ -2,7 +2,9 @@ package id.payu.partner.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
@@ -17,18 +19,27 @@ import org.slf4j.LoggerFactory;
 public class SnapBiTokenService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SnapBiTokenService.class);
-    
-    private static final long EXPIRATION_TIME_MS = 15 * 60 * 1000;
-    private static final String TOKEN_SECRET = "payu-snap-bi-secret-key-for-jwt-token-generation-validation-2024-payu-payu";
-    
-    private static final byte[] SECRET_BYTES = TOKEN_SECRET.getBytes(StandardCharsets.UTF_8);
-    private static final SecretKey SIGNING_KEY = new SecretKeySpec(SECRET_BYTES, "HmacSHA256");
+
+    @Value("${partner.jwt.expiration-ms:900000}")
+    private long expirationTimeMs;
+
+    @Value("${partner.jwt.secret}")
+    private String tokenSecret;
+
+    private SecretKey signingKey;
 
     private final Map<String, TokenInfo> tokenStore = new ConcurrentHashMap<>();
 
+    @PostConstruct
+    public void init() {
+        byte[] secretBytes = tokenSecret.getBytes(StandardCharsets.UTF_8);
+        this.signingKey = new SecretKeySpec(secretBytes, "HmacSHA256");
+        LOG.info("SnapBiTokenService initialized with JWT expiration={}ms", expirationTimeMs);
+    }
+
     public String generateAccessToken(String clientId, String partnerId, String partnerName) {
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + EXPIRATION_TIME_MS);
+        Date expiration = new Date(now.getTime() + expirationTimeMs);
         String tokenId = java.util.UUID.randomUUID().toString();
 
         Map<String, Object> claims = new HashMap<>();
@@ -42,7 +53,7 @@ public class SnapBiTokenService {
                 .setSubject(clientId)
                 .setIssuedAt(now)
                 .setExpiration(expiration)
-                .signWith(SIGNING_KEY)
+                .signWith(signingKey)
                 .compact();
 
         TokenInfo tokenInfo = new TokenInfo(tokenId, clientId, partnerId, expiration);
@@ -56,7 +67,7 @@ public class SnapBiTokenService {
     public Claims validateToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(SIGNING_KEY)
+                    .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();

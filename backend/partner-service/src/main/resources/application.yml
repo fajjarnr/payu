@@ -5,9 +5,9 @@ spring:
   application:
     name: partner-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/payu_partner
-    username: payu
-    password: payu
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_partner}
+    username: ${DB_USERNAME:payu}
+    password: ${DB_PASSWORD:payu}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -30,7 +30,7 @@ springdoc:
 # Custom properties
 partner:
   jwt:
-    secret: "payu-snap-bi-secret-key-for-jwt-token-generation-validation-2024-payu-payu"
+    secret: ${JWT_SECRET:change-me-in-production}
     expiration-ms: 900000 # 15 minutes
 
 logging:

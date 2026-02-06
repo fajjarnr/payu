@@ -17,10 +17,10 @@ quarkus:
     path: banner.txt
   datasource:
     db-kind: postgresql
-    username: postgres
-    password: postgres # pragma: allowlist secret
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     jdbc:
-      url: jdbc:postgresql://localhost:5432/notificationdb
+      url: ${DB_URL:jdbc:postgresql://localhost:5432/notificationdb}
   hibernate-orm:
     packages: id.payu.notification.domain
     database:

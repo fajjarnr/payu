@@ -6,9 +6,9 @@ spring:
     name: promotion-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/promotiondb
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/promotiondb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   jpa:

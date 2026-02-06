@@ -46,6 +46,11 @@ management:
     kafka:
       enabled: true
 
+partner:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: 900000 # 15 minutes
+
 payu:
   security:
     encryption-enabled: false

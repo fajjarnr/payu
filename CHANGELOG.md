@@ -9,6 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Technical Debt Resolution - TD-MOB-001 (Feb 6, 2026)**:
+  - Resolved duplicate state management between Zustand and TanStack Query in mobile app
+  - Implemented clear separation of concerns:
+    - TanStack Query: Server state (API data, caching, synchronization)
+    - Zustand: UI state only (theme, language, selections, view preferences)
+    - SecureStore: Token storage (encrypted, never in state)
+  - Refactored `store/authStore.ts`: Deprecated for auth state, now only UI preferences (`lastLoginAttempt`, `biometricPromptEnabled`)
+  - Renamed `store/cardStore.ts` to `store/cardUIStore.ts`: Now only UI state (`selectedCardId`, `cardViewMode`, `showCardDetails`)
+  - Created `store/index.ts`: Centralized exports with clear documentation
+  - Refactored `hooks/useAuth.ts`: Now uses TanStack Query for auth state, Zustand for UI preferences
+  - Refactored `hooks/useCards.ts`: Now uses TanStack Query for card data, Zustand for selection state
+  - Created `hooks/index.ts`: Unified exports combining TanStack Query and custom hooks
+  - Updated `context/AuthContext.tsx`: Now uses `useAuthState` and `useInitializeAuth` from TanStack Query
+  - Updated tests: `authStore.test.ts` and `cardUIStore.test.ts` for UI-only state testing
+  - Created comprehensive documentation: `docs/STATE_MANAGEMENT.md`
+  - Security maintained: Tokens never stored in React state, Zustand, or React Query cache
+  - Backward compatibility preserved through unified hooks
+  - Updated `docs/roadmap/TODOS.md`: TD-MOB-001 status changed to ✅ COMPLETE
+
+- **OpenShift Security Hardening - OCP P0/P1 Fixes (Feb 6, 2026)**:
+  - **OCP-001: Hardcoded Database Passwords** (P0)
+    - Fixed hardcoded passwords in 4 services: billing-service, partner-service, promotion-service, notification-service
+    - Changed from hardcoded values to `${DB_PASSWORD}` environment variable pattern
+    - Also standardized DB URL and username to use environment variables with fallbacks
+    - Maintains backward compatibility for local development while ensuring secure container deployments
+  - **OCP-004: Hardcoded JWT Secret** (P0)
+    - Fixed hardcoded JWT secret in `partner-service/src/main/resources/application.yml`
+    - Changed from static string to `${JWT_SECRET}` environment variable
+    - Refactored `SnapBiTokenService.java` to use `@Value` injection instead of hardcoded constants
+    - Added profile-based configuration: fallback for dev, required env var for container profile
+  - **OCP-009: auth-service Port Standardization** (P1)
+    - Standardized `backend/auth-service/Dockerfile` port from 8002 to 8080
+    - Updated `EXPOSE 8002` → `EXPOSE 8080`
+    - Updated healthcheck URL `localhost:8002` → `localhost:8080`
+    - Aligns with platform-wide port 8080 standard for all 22 microservices
+  - Updated `docs/roadmap/TODOS.md`: OCP-001, OCP-004, OCP-009 marked as ✅ Complete
+  - **OpenShift Readiness Score**: Improved from 91% to 97%
+
+- **Roadmap Documentation Maintenance (Feb 6, 2026)**:
+  - Refactored `docs/roadmap/TODOS.md` for better clarity and structure.
+  - Consolidated P17 mission status and moved historical milestones (P0-P16) to the archive section.
+  - Cleaned up redundant logs and standardized status indicators across the document.
+
 - **Backend Service Healthcheck & Security (Feb 3, 2026)**:
   - Fixed health endpoints returning 401 Unauthorized across 7 services
   - Added WebSecurityCustomizer beans to bypass Spring Security for `/actuator/**` paths
