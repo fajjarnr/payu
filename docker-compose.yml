@@ -675,6 +675,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_WALLET_URL: http://wallet-service:8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PAYU_CACHE_REDIS_HOST: redis
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
         -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -1024,6 +1027,9 @@ services:
       OIDC_ISSUER: http://keycloak:8080/realms/payu
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/payu/protocol/openid-connect/certs
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PAYU_CACHE_REDIS_HOST: redis
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
         -Xmx384M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -1031,6 +1037,8 @@ services:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       jaeger:
         condition: service_healthy
@@ -1184,6 +1192,9 @@ services:
       SERVICES_WALLET_URL: http://wallet-service:8080
       SERVICES_TRANSACTION_URL: http://transaction-service:8080
       KEYCLOAK_SERVER_URL: http://keycloak:8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PAYU_CACHE_REDIS_HOST: redis
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
         -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -1191,6 +1202,8 @@ services:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       jaeger:
         condition: service_healthy
