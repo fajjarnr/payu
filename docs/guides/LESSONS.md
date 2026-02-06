@@ -837,3 +837,59 @@
   ```
 * **Result**: After fixing detection, coverage jumped from 15.6% to 96.1%. Only needed to add annotations to `ScheduledTransferController` (6 endpoints) to reach 100%.
 * **Best Practice**: When writing validation scripts, account for different code style patterns within the same language. Always verify false positives by manual inspection.
+
+### 28. Seed Data Alignment for Development (Feb 6, 2026)
+* **The Problem**: Tests and documentation referenced test users (customer1, admin) but no automated seed data existed to create these users.
+* **Root Cause**:
+  - Keycloak realm was created manually, not via export/import
+  - Database migrations only created schemas, not seed data
+  - Tests used Faker to generate random users instead of deterministic fixtures
+* **The Fix**: Created comprehensive seed data infrastructure:
+  1. **Keycloak Realm Export** (`infrastructure/keycloak/payu-realm-export.json`):
+     - Defines realm: `payu`
+     - Roles: USER, ADMIN, BACKOFFICE, KYC_VERIFIED, PREMIUM
+     - Users: customer1, customer2, admin, backoffice (all with password `P@ssw0rd123`)
+     - Clients: payu-web-app, payu-backend, payu-mobile
+  2. **Database Seed Migrations** (`V99__seed_test_data.sql`):
+     - account-service: Users, profiles, accounts with initial balances
+     - wallet-service: Wallets and ledger entries for test accounts
+  3. **Seed Data Script** (`scripts/seed-data.sh`):
+     - Initializes Keycloak realm via admin API
+     - Runs database seed migrations
+     - Verifies seed data was created
+  4. **Idempotency Validation Test**:
+     - Tests idempotency key reuse detection
+     - Tests in-progress request detection
+     - Tests fingerprint consistency
+* **Test Credentials**:
+  ```bash
+  # Customer 1 (KYC verified, premium user)
+  Username: customer1
+  Password: P@ssw0rd123
+  Email: customer1@payu.id
+  NIK: 3201234567890001
+  Initial Balance: Rp 10,000,000
+
+  # Customer 2 (Basic user)
+  Username: customer2
+  Password: P@ssw0rd123
+
+  # Admin
+  Username: admin
+  Password: P@ssw0rd123
+  ```
+* **Usage**:
+  ```bash
+  # Initialize all seed data
+  ./scripts/seed-data.sh
+
+  # Initialize only Keycloak
+  ./scripts/seed-data.sh --keycloak
+
+  # Initialize only database
+  ./scripts/seed-data.sh --db
+
+  # Verify seed data
+  ./scripts/seed-data.sh --verify
+  ```
+* **Best Practice**: Store seed data in version control alongside migrations. Use V99 or similar high version number to ensure seed data runs after all schema migrations.

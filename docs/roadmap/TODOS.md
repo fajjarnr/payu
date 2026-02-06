@@ -104,7 +104,12 @@ Note: Items below are verification/hardening tasks after base implementation mil
   - Added @Operation annotations to ScheduledTransferController (7 endpoints)
   - Result: 154/154 endpoints documented (100%)
 - [x] **Happy-path smoke tests**: Basic service startup and health checks verfied (18/22).
-- [ ] **Seed data alignment**: Validate default fixtures and idempotency keys.
+- [x] **Seed data alignment**: Validate default fixtures and idempotency keys ✅ **COMPLETE**
+  - Created Keycloak realm export (infrastructure/keycloak/payu-realm-export.json)
+  - Created database seed migrations (V99__seed_test_data.sql for account-service, wallet-service)
+  - Created seed-data.sh initialization script
+  - Created IdempotencyValidationTest
+  - **Test Users**: customer1 (Rp 10M), customer2 (Rp 5M), admin (all with P@ssw0rd123)
 - [ ] **Auth/permission checks**: Role-based access on admin vs user flows.
 - [ ] **Error handling**: Standardize error codes and response shapes.
 - [ ] **Observability**: Ensure logs, metrics, and traces for each service endpoint.
