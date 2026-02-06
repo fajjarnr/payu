@@ -1,21 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { waitForPageStable, waitForAnimations } from './utils';
 
 test.describe('Bill Pay Flow', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/bills');
     await waitForPageStable(page);
   });
 
-  test('should display bill payment page correctly', async ({ page }) => {
+  test('should display bill payment page correctly', async ({ authPage: page }) => {
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.getByText('Tagihan & Top-up')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Bayar tagihan utilitas dan top up dompet digital Anda secara instan')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display all biller categories', async ({ page }) => {
+  test('should display all biller categories', async ({ authPage: page }) => {
     await expect(page.getByText('Pulsa')).toBeVisible();
     await expect(page.getByText('Listrik (PLN)')).toBeVisible();
     await expect(page.getByText('Air (PDAM)')).toBeVisible();
@@ -26,11 +24,11 @@ test.describe('Bill Pay Flow', () => {
     await expect(page.getByText('Game Voucher')).toBeVisible();
   });
 
-  test('should show real-time processing badge', async ({ page }) => {
+  test('should show real-time processing badge', async ({ authPage: page }) => {
     await expect(page.getByText('Penyelesaian Real-time 24/7')).toBeVisible();
   });
 
-  test('should navigate to biller payment page', async ({ page }) => {
+  test('should navigate to biller payment page', async ({ authPage: page }) => {
     await page.click('text=Listrik (PLN)');
     await waitForAnimations(page);
 
@@ -38,7 +36,7 @@ test.describe('Bill Pay Flow', () => {
     await expect(page.getByText('Penyedia Layanan')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display biller specific fields', async ({ page }) => {
+  test('should display biller specific fields', async ({ authPage: page }) => {
     await page.click('text=Pulsa');
     await waitForAnimations(page);
 
@@ -46,7 +44,7 @@ test.describe('Bill Pay Flow', () => {
     await expect(page.getByText('Jumlah Pembayaran (IDR)')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should validate required fields for payment', async ({ page }) => {
+  test('should validate required fields for payment', async ({ authPage: page }) => {
     await page.click('text=Listrik (PLN)');
     await waitForAnimations(page);
     await page.click('button:has-text("Konfirmasi & Bayar Sekarang")');
@@ -56,7 +54,7 @@ test.describe('Bill Pay Flow', () => {
     await expect(page.getByText('Bayar Listrik (PLN)')).toBeVisible();
   });
 
-  test('should show currency prefix in amount field', async ({ page }) => {
+  test('should show currency prefix in amount field', async ({ authPage: page }) => {
     await page.click('text=Air (PDAM)');
     await waitForAnimations(page);
 
@@ -64,7 +62,7 @@ test.describe('Bill Pay Flow', () => {
     await expect(page.getByText('Rp').first()).toBeVisible();
   });
 
-  test('should allow navigation back from biller page', async ({ page }) => {
+  test('should allow navigation back from biller page', async ({ authPage: page }) => {
     await page.click('text=Listrik (PLN)');
     await waitForAnimations(page);
 
@@ -75,14 +73,14 @@ test.describe('Bill Pay Flow', () => {
     await expect(page.getByText('Tagihan & Top-up')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display security message', async ({ page }) => {
+  test('should display security message', async ({ authPage: page }) => {
     await page.click('text=BPJS');
     await waitForAnimations(page);
 
     await expect(page.getByText('Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should show processing state during payment', async ({ page }) => {
+  test('should show processing state during payment', async ({ authPage: page }) => {
     await page.click('text=Pulsa');
     await waitForAnimations(page);
     await page.fill('input[placeholder="Masukkan ID unik Anda"]', '08123456789');
@@ -100,17 +98,17 @@ test.describe('Bill Pay Flow', () => {
     }
   });
 
-  test('should display empty state for recent bills', async ({ page }) => {
+  test('should display empty state for recent bills', async ({ authPage: page }) => {
     await expect(page.getByText('Aktivitas Terakhir')).toBeVisible();
     await expect(page.getByText('Pembayaran tagihan terakhir Anda akan muncul di sini')).toBeVisible();
   });
 
-  test('should have add more option for billers', async ({ page }) => {
+  test('should have add more option for billers', async ({ authPage: page }) => {
     await expect(page.getByText('Lainnya')).toBeVisible();
     await expect(page.getByRole('button', { name: /Lainnya/ })).toBeVisible();
   });
 
-  test('should show partner badge for billers', async ({ page }) => {
+  test('should show partner badge for billers', async ({ authPage: page }) => {
     await page.click('text=Listrik (PLN)');
     await waitForAnimations(page);
 

@@ -1,11 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test.describe('Onboarding Flow - Complete Journey', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
+  });
 
   test('should complete full onboarding journey', async ({ page }) => {
-    await page.goto('/onboarding');
-
     // Step 1: KYC Upload - use English translations
     await expect(page.getByText('Upload e-ID')).toBeVisible();
     await expect(page.getByText('Photo of your original ID')).toBeVisible();
@@ -31,8 +32,6 @@ test.describe('Onboarding Flow - Complete Journey', () => {
   });
 
   test('should show progress through all steps', async ({ page }) => {
-    await page.goto('/onboarding');
-
     // Initially step 1 is active - look for active step indicator
     await expect(page.getByText('Identity')).toBeVisible();
 
@@ -61,10 +60,9 @@ test.describe('Onboarding Flow - Complete Journey', () => {
 });
 
 test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
   });
 
   test('should display KYC upload page', async ({ page }) => {
@@ -135,6 +133,7 @@ test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
   test('should be responsive on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('Unggah e-KTP')).toBeVisible();
     await expect(page.locator('.border-2.border-dashed')).toBeVisible();
@@ -147,10 +146,9 @@ test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
 });
 
 test.describe('Onboarding Flow - Step 2: Profile Form', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
     await page.click('button:has-text("Lanjut ke Profil Data")');
   });
 
@@ -298,10 +296,9 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
 });
 
 test.describe('Onboarding Flow - Step 3: Success', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     // Fill form with valid data
@@ -360,10 +357,12 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
 });
 
 test.describe('Onboarding Flow - Error Handling', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
+  });
 
   test('should handle registration error gracefully', async ({ page }) => {
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     // Use data that might cause error (existing username)
@@ -378,7 +377,6 @@ test.describe('Onboarding Flow - Error Handling', () => {
   });
 
   test('should handle network error gracefully', async ({ page }) => {
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     // Fill form
@@ -395,7 +393,6 @@ test.describe('Onboarding Flow - Error Handling', () => {
   });
 
   test('should show inline validation errors', async ({ page }) => {
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     // Submit empty form
@@ -409,19 +406,18 @@ test.describe('Onboarding Flow - Error Handling', () => {
 });
 
 test.describe('Onboarding Flow - Accessibility', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
+  });
 
   test('should have proper heading hierarchy', async ({ page }) => {
-    await page.goto('/onboarding');
-
     const h2 = page.locator('h2');
     await expect(h2).toBeVisible();
     await expect(h2).toContainText('Unggah e-KTP');
   });
 
   test('should support keyboard navigation', async ({ page }) => {
-    await page.goto('/onboarding');
-
     // Tab through page
     await page.keyboard.press('Tab');
     const focused = await page.locator(':focus').getAttribute('href');
@@ -433,7 +429,6 @@ test.describe('Onboarding Flow - Accessibility', () => {
   });
 
   test('should submit form with Enter key', async ({ page }) => {
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     // Fill form
@@ -452,7 +447,6 @@ test.describe('Onboarding Flow - Accessibility', () => {
   });
 
   test('should have accessible form labels', async ({ page }) => {
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     const labels = page.locator('label');
@@ -460,19 +454,19 @@ test.describe('Onboarding Flow - Accessibility', () => {
   });
 
   test('should have accessible buttons', async ({ page }) => {
-    await page.goto('/onboarding');
-
     const buttons = page.locator('button');
     await expect(buttons.first()).toBeVisible();
   });
 });
 
 test.describe('Onboarding Flow - Visual Regression', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
+  });
 
   test('should match screenshots on desktop - Step 1', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto('/onboarding');
 
     await page.screenshot({
       path: 'e2e/screenshots/onboarding-step1-desktop.png',
@@ -482,7 +476,6 @@ test.describe('Onboarding Flow - Visual Regression', () => {
 
   test('should match screenshots on tablet - Step 1', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.goto('/onboarding');
 
     await page.screenshot({
       path: 'e2e/screenshots/onboarding-step1-tablet.png',
@@ -492,7 +485,6 @@ test.describe('Onboarding Flow - Visual Regression', () => {
 
   test('should match screenshots on desktop - Step 2', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     await page.screenshot({
@@ -503,7 +495,6 @@ test.describe('Onboarding Flow - Visual Regression', () => {
 
   test('should match screenshots on desktop - Step 3', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
@@ -522,26 +513,23 @@ test.describe('Onboarding Flow - Visual Regression', () => {
 });
 
 test.describe('Onboarding Flow - Security Features', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
+  });
 
   test('should display security features in branding panel', async ({ page }) => {
-    await page.goto('/onboarding');
-
     await expect(page.getByText('e-KYC Instant Liveness')).toBeVisible();
     await expect(page.getByText('Kedaulatan Data')).toBeVisible();
   });
 
   test('should have security icons', async ({ page }) => {
-    await page.goto('/onboarding');
-
     // Check for ScanFace and ShieldCheck icons
     const securityIcons = page.locator('aside svg');
     await expect(securityIcons.first()).toBeVisible();
   });
 
   test('should have system version badge', async ({ page }) => {
-    await page.goto('/onboarding');
-
     await expect(page.getByText('Sistem Operasional')).toBeVisible();
     await expect(page.getByText('v2.4.0')).toBeVisible();
   });

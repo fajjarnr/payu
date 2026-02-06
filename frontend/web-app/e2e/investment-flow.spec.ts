@@ -1,33 +1,36 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 test.describe('Investment Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to investments page (assumes user is logged in)
+  test.beforeEach(async ({ authPage: page }) => {
+    // Navigate to investments page with authentication
+    // authPage fixture automatically sets up session cookies
     await page.goto('/investments');
+    // Wait for page to fully load
+    await page.waitForLoadState('networkidle');
   });
 
-  test('should display investments page correctly', async ({ page }) => {
+  test('should display investments page correctly', async ({ authPage: page }) => {
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.getByText('Manajemen Kekayaan')).toBeVisible();
     await expect(page.getByText('Tumbuhkan aset Anda dengan produk investasi kelas institusi.')).toBeVisible();
   });
 
-  test('should display portfolio overview', async ({ page }) => {
+  test('should display portfolio overview', async ({ authPage: page }) => {
     await expect(page.getByText('Total Portofolio Bersih')).toBeVisible();
     await expect(page.getByText('Rp 152.800.000')).toBeVisible();
   });
 
-  test('should display portfolio growth indicator', async ({ page }) => {
+  test('should display portfolio growth indicator', async ({ authPage: page }) => {
     await expect(page.getByText(/\+Rp 12,4 Jt \(8\.2%\)/)).toBeVisible();
     await expect(page.getByText('TrendingUp')).toBeVisible();
   });
 
-  test('should display LPS guarantee badge', async ({ page }) => {
+  test('should display LPS guarantee badge', async ({ authPage: page }) => {
     await expect(page.getByText('Terjamin LPS')).toBeVisible();
     await expect(page.locator('.text-muted-foreground').filter({ hasText: /ShieldCheck/i })).toBeVisible();
   });
 
-  test('should display portfolio allocation chart', async ({ page }) => {
+  test('should display portfolio allocation chart', async ({ authPage: page }) => {
     await expect(page.getByText('Pasar Uang')).toBeVisible();
     await expect(page.getByText('Saham')).toBeVisible();
     await expect(page.getByText('Komoditas')).toBeVisible();
@@ -37,75 +40,76 @@ test.describe('Investment Flow', () => {
     await expect(page.getByText('25%')).toBeVisible();
   });
 
-  test('should display risk profile card', async ({ page }) => {
+  test('should display risk profile card', async ({ authPage: page }) => {
     await expect(page.getByText('Profil Risiko')).toBeVisible();
     await expect(page.getByText('Moderat-Agresif')).toBeVisible();
     await expect(page.getByText('ROI 15% / Thn')).toBeVisible();
   });
 
-  test('should have risk profile slider', async ({ page }) => {
+  test('should have risk profile slider', async ({ authPage: page }) => {
     await expect(page.getByText('Konservatif')).toBeVisible();
     await expect(page.getByText('Agresif')).toBeVisible();
 
     // Check for progress bar - use a more flexible selector
-    const progressBar = page.locator('.bg-white\\/10.h-2.rounded-full, .h-2.rounded-full');
+    const progressBar = page.locator('.bg-white\/10.h-2.rounded-full, .h-2.rounded-full');
     await expect(progressBar.first()).toBeVisible();
   });
 
-  test('should display investment products catalog', async ({ page }) => {
+  test('should display investment products catalog', async ({ authPage: page }) => {
     await expect(page.getByText('Katalog Produk Terpilih')).toBeVisible();
   });
 
-  test('should display all investment product types', async ({ page }) => {
+  test('should display all investment product types', async ({ authPage: page }) => {
     await expect(page.getByText('Suku Bunga Tetap Plus')).toBeVisible();
     await expect(page.getByText('Equity Growth Fund')).toBeVisible();
     await expect(page.getByText('Emas Digital (XAU)')).toBeVisible();
   });
 
-  test('should display product risk levels', async ({ page }) => {
+  test('should display product risk levels', async ({ authPage: page }) => {
     await expect(page.getByText('Risiko Rendah')).toBeVisible();
     await expect(page.getByText('Risiko Tinggi')).toBeVisible();
     await expect(page.getByText('Stabil')).toBeVisible();
   });
 
-  test('should display product returns', async ({ page }) => {
+  test('should display product returns', async ({ authPage: page }) => {
     await expect(page.getByText('5.5% p.a')).toBeVisible();
     await expect(page.getByText('18.2% p.a')).toBeVisible();
     await expect(page.getByText('Harga Pasar')).toBeVisible();
   });
 
-  test('should have filter buttons for product types', async ({ page }) => {
+  test('should have filter buttons for product types', async ({ authPage: page }) => {
     await expect(page.getByText('Semua')).toBeVisible();
     await expect(page.getByText('Pasar Uang')).toBeVisible();
     await expect(page.getByText('Emas')).toBeVisible();
   });
 
-  test('should have new investment button', async ({ page }) => {
+  test('should have new investment button', async ({ authPage: page }) => {
     const newInvestButton = page.locator('button:has-text("Investasi Baru")');
     await expect(newInvestButton).toBeVisible();
     await expect(newInvestButton).toBeEnabled();
   });
 
-  test('should display smart advice section', async ({ page }) => {
+  test('should display smart advice section', async ({ authPage: page }) => {
     // Wait for page to fully load including animated elements
     await page.waitForTimeout(500);
     await expect(page.getByText('Target Portofolio Hampir Tercapai.')).toBeVisible();
   });
 
-  test('should have optimize portfolio button', async ({ page }) => {
+  test('should have optimize portfolio button', async ({ authPage: page }) => {
     const optimizeButton = page.locator('button:has-text("Optimasi Portofolio")');
     await expect(optimizeButton).toBeVisible();
   });
 
-  test('should display review strategy button in advice section', async ({ page }) => {
+  test('should display review strategy button in advice section', async ({ authPage: page }) => {
     const reviewButton = page.locator('button:has-text("Tinjau Strategi")');
     await expect(reviewButton).toBeVisible();
     await expect(reviewButton).toBeEnabled();
   });
 
-  test('should be responsive on mobile viewport', async ({ page }) => {
+  test('should be responsive on mobile viewport', async ({ authPage: page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/investments');
+    await page.waitForLoadState('networkidle');
 
     // Check that key elements are visible
     await expect(page.getByText('Manajemen Kekayaan')).toBeVisible();
@@ -118,13 +122,13 @@ test.describe('Investment Flow', () => {
     });
   });
 
-  test('should display growth indicators with proper styling', async ({ page }) => {
+  test('should display growth indicators with proper styling', async ({ authPage: page }) => {
     const growthBadge = page.locator('.bg-success-light');
     await expect(growthBadge).toBeVisible();
     await expect(growthBadge).toContainText('TrendingUp');
   });
 
-  test('should have interactive product cards', async ({ page }) => {
+  test('should have interactive product cards', async ({ authPage: page }) => {
     const productCards = page.locator('.bg-card.p-8.rounded-xl');
 
     // Should have at least 3 product cards
@@ -135,36 +139,37 @@ test.describe('Investment Flow', () => {
     await expect(productCards.first()).toHaveClass(/hover:-translate-y-1/);
   });
 
-  test('should have add buttons on product cards', async ({ page }) => {
+  test('should have add buttons on product cards', async ({ authPage: page }) => {
     const addButtons = page.locator('button').filter({ hasText: '+' });
     await expect(addButtons).toHaveCount(3);
   });
 });
 
 test.describe('Investment Flow - Product Catalog', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/investments');
+    await page.waitForLoadState('networkidle');
   });
 
-  test('should display fixed rate product details', async ({ page }) => {
+  test('should display fixed rate product details', async ({ authPage: page }) => {
     await expect(page.getByText('Suku Bunga Tetap Plus')).toBeVisible();
     await expect(page.getByText('5.5% p.a')).toBeVisible();
     await expect(page.getByText('Risiko Rendah')).toBeVisible();
   });
 
-  test('should display equity fund details', async ({ page }) => {
+  test('should display equity fund details', async ({ authPage: page }) => {
     await expect(page.getByText('Equity Growth Fund')).toBeVisible();
     await expect(page.getByText('18.2% p.a')).toBeVisible();
     await expect(page.getByText('Risiko Tinggi')).toBeVisible();
   });
 
-  test('should display gold product details', async ({ page }) => {
+  test('should display gold product details', async ({ authPage: page }) => {
     await expect(page.getByText('Emas Digital (XAU)')).toBeVisible();
     await expect(page.getByText('Harga Pasar')).toBeVisible();
     await expect(page.getByText('Stabil')).toBeVisible();
   });
 
-  test('should click on product card', async ({ page }) => {
+  test('should click on product card', async ({ authPage: page }) => {
     const firstProduct = page.locator('.bg-card.p-8.rounded-xl').first();
     await firstProduct.click();
 
@@ -172,14 +177,14 @@ test.describe('Investment Flow - Product Catalog', () => {
     await expect(firstProduct).toBeVisible();
   });
 
-  test('should have product icons', async ({ page }) => {
+  test('should have product icons', async ({ authPage: page }) => {
     // Check for product icons (Landmark, TrendingUp, Coins)
     const icons = page.locator('svg');
     const iconsCount = await icons.count();
     expect(iconsCount).toBeGreaterThanOrEqual(3);
   });
 
-  test('should filter products by type', async ({ page }) => {
+  test('should filter products by type', async ({ authPage: page }) => {
     // Click on "Pasar Uang" filter
     await page.click('button:has-text("Pasar Uang")');
 
@@ -188,7 +193,7 @@ test.describe('Investment Flow - Product Catalog', () => {
     await expect(activeFilter).toContainText('Pasar Uang');
   });
 
-  test('should have proper color coding for product types', async ({ page }) => {
+  test('should have proper color coding for product types', async ({ authPage: page }) => {
     // Check for color-coded product icons
     const blueIcon = page.locator('.text-blue-500');
     const greenIcon = page.locator('.text-primary');
@@ -204,11 +209,12 @@ test.describe('Investment Flow - Product Catalog', () => {
 });
 
 test.describe('Investment Flow - Buy Mutual Fund', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/investments');
+    await page.waitForLoadState('networkidle');
   });
 
-  test('should click add button on product', async ({ page }) => {
+  test('should click add button on product', async ({ authPage: page }) => {
     const addButton = page.locator('button').filter({ hasText: '+' }).first();
     await addButton.click();
 
@@ -216,7 +222,7 @@ test.describe('Investment Flow - Buy Mutual Fund', () => {
     await expect(addButton).toBeVisible();
   });
 
-  test('should have new investment button in header', async ({ page }) => {
+  test('should have new investment button in header', async ({ authPage: page }) => {
     const newInvestButton = page.locator('button:has-text("Investasi Baru")');
     await expect(newInvestButton).toBeEnabled();
 
@@ -227,7 +233,7 @@ test.describe('Investment Flow - Buy Mutual Fund', () => {
     await expect(newInvestButton).toBeVisible();
   });
 
-  test('should display investment amount in readable format', async ({ page }) => {
+  test('should display investment amount in readable format', async ({ authPage: page }) => {
     const portfolioValue = page.getByText('Rp 152.800.000');
     await expect(portfolioValue).toBeVisible();
 
@@ -235,35 +241,36 @@ test.describe('Investment Flow - Buy Mutual Fund', () => {
     await expect(portfolioValue).toContainText('Rp');
   });
 
-  test('should show portfolio growth percentage', async ({ page }) => {
+  test('should show portfolio growth percentage', async ({ authPage: page }) => {
     await expect(page.getByText(/8\.2%/)).toBeVisible();
   });
 });
 
 test.describe('Investment Flow - Risk Profile', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/investments');
+    await page.waitForLoadState('networkidle');
   });
 
-  test('should display risk profile card', async ({ page }) => {
+  test('should display risk profile card', async ({ authPage: page }) => {
     await expect(page.getByText('Profil Risiko')).toBeVisible();
     await expect(page.getByText('Moderat-Agresif')).toBeVisible();
   });
 
-  test('should display risk score', async ({ page }) => {
+  test('should display risk score', async ({ authPage: page }) => {
     await expect(page.getByText('Grade')).toBeVisible();
     await expect(page.getByText('ROI 15% / Thn')).toBeVisible();
   });
 
-  test('should have risk slider visualization', async ({ page }) => {
-    const sliderContainer = page.locator('.w-full.bg-white\\/10.h-2.rounded-full');
+  test('should have risk slider visualization', async ({ authPage: page }) => {
+    const sliderContainer = page.locator('.w-full.bg-white\/10.h-2.rounded-full');
     await expect(sliderContainer).toBeVisible();
 
     const sliderFill = page.locator('.bg-bank-green.h-full.rounded-full');
     await expect(sliderFill).toBeVisible();
   });
 
-  test('should have optimize portfolio button', async ({ page }) => {
+  test('should have optimize portfolio button', async ({ authPage: page }) => {
     const optimizeButton = page.locator('button:has-text("Optimasi Portofolio")');
     await expect(optimizeButton).toBeVisible();
     await expect(optimizeButton).toBeEnabled();
@@ -275,31 +282,32 @@ test.describe('Investment Flow - Risk Profile', () => {
     await expect(optimizeButton).toBeVisible();
   });
 
-  test('should display risk factors', async ({ page }) => {
+  test('should display risk factors', async ({ authPage: page }) => {
     // Check for risk factor icons and text
-    const riskCount = await page.locator('.text-success-light\\/20').count();
+    const riskCount = await page.locator('.text-success-light\/20').count();
     expect(riskCount).toBeGreaterThanOrEqual(1);
   });
 });
 
 test.describe('Investment Flow - Smart Advice', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/investments');
+    await page.waitForLoadState('networkidle');
   });
 
-  test('should display smart advice banner', async ({ page }) => {
+  test('should display smart advice banner', async ({ authPage: page }) => {
     await expect(page.getByText('Target Portofolio Hampir Tercapai.')).toBeVisible();
 
-    const adviceBanner = page.locator('.bg-primary\\/5');
+    const adviceBanner = page.locator('.bg-primary\/5');
     await expect(adviceBanner).toBeVisible();
   });
 
-  test('should display advice content', async ({ page }) => {
+  test('should display advice content', async ({ authPage: page }) => {
     await expect(page.getByText(/Dana Pensiun/)).toBeVisible();
     await expect(page.getByText(/14 bulan lebih cepat/)).toBeVisible();
   });
 
-  test('should have review strategy button', async ({ page }) => {
+  test('should have review strategy button', async ({ authPage: page }) => {
     const reviewButton = page.locator('button:has-text("Tinjau Strategi")');
     await expect(reviewButton).toBeEnabled();
 
@@ -310,7 +318,7 @@ test.describe('Investment Flow - Smart Advice', () => {
     await expect(reviewButton).toBeVisible();
   });
 
-  test('should have target icon in advice section', async ({ page }) => {
+  test('should have target icon in advice section', async ({ authPage: page }) => {
     // Check for Target icon with animation
     const targetIcon = page.locator('.animate-pulse');
     await expect(targetIcon).toBeVisible();
@@ -318,17 +326,18 @@ test.describe('Investment Flow - Smart Advice', () => {
 });
 
 test.describe('Investment Flow - Accessibility', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/investments');
+    await page.waitForLoadState('networkidle');
   });
 
-  test('should have proper heading hierarchy', async ({ page }) => {
+  test('should have proper heading hierarchy', async ({ authPage: page }) => {
     const h2 = page.locator('h2');
     await expect(h2.first()).toBeVisible();
     await expect(h2.first()).toContainText('Manajemen Kekayaan');
   });
 
-  test('should support keyboard navigation', async ({ page }) => {
+  test('should support keyboard navigation', async ({ authPage: page }) => {
     // Tab through page
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
@@ -338,12 +347,12 @@ test.describe('Investment Flow - Accessibility', () => {
     await expect(focused).toBeVisible();
   });
 
-  test('should have accessible button labels', async ({ page }) => {
+  test('should have accessible button labels', async ({ authPage: page }) => {
     const buttons = page.locator('button');
     await expect(buttons.first()).toBeVisible();
   });
 
-  test('should have proper contrast ratios', async ({ page }) => {
+  test('should have proper contrast ratios', async ({ authPage: page }) => {
     // Check for text elements
     const headings = page.locator('h2, h3, h4');
     await expect(headings.first()).toBeVisible();
@@ -351,9 +360,13 @@ test.describe('Investment Flow - Accessibility', () => {
 });
 
 test.describe('Investment Flow - Visual Regression', () => {
-  test('should match screenshots on desktop', async ({ page }) => {
-    await page.setViewportSize({ width: 1920, height: 1080 });
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/investments');
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('should match screenshots on desktop', async ({ authPage: page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
 
     await page.screenshot({
       path: 'e2e/screenshots/investments-desktop.png',
@@ -361,9 +374,8 @@ test.describe('Investment Flow - Visual Regression', () => {
     });
   });
 
-  test('should match screenshots on tablet', async ({ page }) => {
+  test('should match screenshots on tablet', async ({ authPage: page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.goto('/investments');
 
     await page.screenshot({
       path: 'e2e/screenshots/investments-tablet.png',
@@ -371,9 +383,8 @@ test.describe('Investment Flow - Visual Regression', () => {
     });
   });
 
-  test('should match screenshots on mobile', async ({ page }) => {
+  test('should match screenshots on mobile', async ({ authPage: page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/investments');
 
     await page.screenshot({
       path: 'e2e/screenshots/investments-mobile.png',
@@ -383,9 +394,12 @@ test.describe('Investment Flow - Visual Regression', () => {
 });
 
 test.describe('Investment Flow - Error Handling', () => {
-  test('should handle investment purchase error', async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/investments');
+    await page.waitForLoadState('networkidle');
+  });
 
+  test('should handle investment purchase error', async ({ authPage: page }) => {
     // Click add button (would fail if insufficient balance)
     const addButton = page.locator('button').filter({ hasText: '+' }).first();
     await addButton.click();
@@ -394,9 +408,7 @@ test.describe('Investment Flow - Error Handling', () => {
     await expect(addButton).toBeVisible();
   });
 
-  test('should handle filter error gracefully', async ({ page }) => {
-    await page.goto('/investments');
-
+  test('should handle filter error gracefully', async ({ authPage: page }) => {
     // Click filter button
     await page.click('button:has-text("Pasar Uang")');
 

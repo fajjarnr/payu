@@ -1005,3 +1005,122 @@
 * **Verification**: Endpoints accessible at `/fx-api/v1/*` (single prefix)
 * **Services Affected**: fx-service
 
+---
+
+## 🎭 Frontend Testing & E2E
+
+### 1. Playwright E2E Authentication Fixtures (Feb 6, 2026)
+
+* **The Problem**: All E2E tests failing with "element not found" errors. Tests expected "PayU" page title but got "Grafana" or were redirected to `/login`.
+* **Root Cause**: `middleware.ts` requires authentication cookies (`accessToken`, `payu_session`) for protected routes (`/investments`, `/dashboard`, etc.). Tests navigated directly to protected pages without setting session cookies, causing redirects to login.
+* **The Fix**: Create extended test fixtures with automatic authentication:
+  ```typescript
+  // e2e/fixtures/index.ts
+  import { test as base, expect } from '@playwright/test';
+
+  export const test = base.extend({
+    authPage: async ({ page, context }, use) => {
+      // Set mock session cookies before navigation
+      await context.addCookies([
+        {
+          name: 'accessToken',
+          value: 'mock-token-for-e2e',
+          domain: 'localhost',
+          path: '/',
+          httpOnly: true,
+          secure: false,
+          sameSite: 'Lax',
+        },
+        {
+          name: 'payu_session',
+          value: 'mock-session-for-e2e',
+          domain: 'localhost',
+          path: '/',
+          httpOnly: true,
+          secure: false,
+          sameSite: 'Lax',
+        },
+      ]);
+      await use(page);
+    },
+  });
+  export { expect };
+  ```
+* **Usage in Tests**:
+  ```typescript
+  import { test, expect } from './fixtures';
+
+  test.describe('Investment Flow', () => {
+    test.beforeEach(async ({ authPage: page }) => {
+      await page.goto('/investments');
+      await page.waitForLoadState('networkidle');
+    });
+    // Tests now have authenticated access!
+  });
+  ```
+* **Key Insight**: When testing protected routes in apps with authentication middleware, always provide a way to bypass or mock authentication in E2E tests. Don't test the auth flow on every test - use fixtures for efficiency.
+* **Files Affected**: All 12 E2E test files in `frontend/web-app/e2e/`
+
+### 2. Playwright Port Configuration for Containerized Apps (Feb 6, 2026)
+
+* **The Problem**: Playwright tests configured for `localhost:3000` but containerized web-app runs on `localhost:3001`. Tests fail with connection refused or wrong page content.
+* **Root Cause**: `playwright.config.ts` had `webServer` command starting its own dev server on port 3000, conflicting with the already-running containerized app on port 3001.
+* **The Fix**: Update `playwright.config.ts` to use containerized app:
+  ```typescript
+  export default defineConfig({
+    use: {
+      // Use containerized app port
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001',
+      locale: 'id', // Set default locale for i18n
+    },
+    // Disable webServer - use existing containerized app
+    // webServer: {
+    //   command: 'npm run dev',
+    //   url: 'http://localhost:3000',
+    // },
+  });
+  ```
+* **Best Practice**: For containerized environments, disable Playwright's `webServer` and point `baseURL` to the running container. Use environment variables for flexibility.
+* **Files Affected**: `frontend/web-app/playwright.config.ts`
+
+### 3. E2E Test Stability with Network Idle (Feb 6, 2026)
+
+* **The Problem**: Tests intermittently fail because assertions run before page is fully loaded (especially with client-side hydration).
+* **Root Cause**: `page.goto()` returns when the initial HTML is loaded, but React/Next.js hydration and API calls may still be in progress.
+* **The Fix**: Always wait for network idle after navigation:
+  ```typescript
+  test.beforeEach(async ({ authPage: page }) => {
+    await page.goto('/investments');
+    await page.waitForLoadState('networkidle'); // Wait for all network activity to settle
+  });
+  ```
+* **Alternative Strategies**:
+  - Wait for specific elements: `await page.waitForSelector('[data-testid="portfolio-value"]')`
+  - Wait for API responses: `await page.waitForResponse('**/api/portfolio')`
+* **Files Affected**: All E2E test files
+
+### 4. Accessibility Testing with Axe - Color Contrast (Feb 6, 2026)
+
+* **The Problem**: Axe accessibility scans failing with `color-contrast` violations on login and onboarding pages.
+* **Root Cause**: UI design using subtle text colors that don't meet WCAG 2.1 AA contrast ratios (4.5:1 for normal text).
+* **The Fix**: Update design tokens or accept known violations with justification:
+  ```typescript
+  const results = await axeBuilder()
+    .options({
+      rules: {
+        'color-contrast': { enabled: false }, // Only if brand colors are non-negotiable
+      },
+    })
+    .analyze();
+  ```
+* **Better Fix**: Update Tailwind config to ensure accessible color combinations:
+  ```css
+  /* Ensure minimum contrast ratios */
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+    /* Must have 4.5:1 contrast against background */
+  }
+  ```
+* **Lesson**: Accessibility should be considered from design phase, not as an afterthought in testing.
+* **Files Affected**: `frontend/web-app/e2e/a11y-audit.spec.ts`
+

@@ -1,79 +1,80 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { waitForPageStable, waitForAnimations } from './utils';
 
 test.describe('QRIS Payment Flow', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     // Navigate to QRIS page (assumes user is logged in)
     await page.goto('/qris');
     await waitForPageStable(page);
   });
 
-  test('should display QRIS page correctly', async ({ page }) => {
+  test('should display QRIS page correctly', async ({ authPage: page }) => {
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.getByText('Pembayaran QRIS')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Pindai kode QRIS merchant atau P2P untuk membayar secara instan')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display QR scanner area', async ({ page }) => {
+  test('should display QR scanner area', async ({ authPage: page }) => {
     const scannerArea = page.locator('.border-2.border-dashed').first();
     await expect(scannerArea).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have camera icon in scanner area', async ({ page }) => {
+  test('should have camera icon in scanner area', async ({ authPage: page }) => {
     await expect(page.locator('text=Buka Kamera')).toBeVisible();
   });
 
-  test('should have scanning instruction text', async ({ page }) => {
+  test('should have scanning instruction text', async ({ authPage: page }) => {
     await expect(page.getByText('Scanning for QRIS Codes')).toBeVisible();
   });
 
-  test('should have open camera button', async ({ page }) => {
+  test('should have open camera button', async ({ authPage: page }) => {
     const cameraButton = page.locator('button:has-text("Buka Kamera")');
     await expect(cameraButton).toBeVisible();
     await expect(cameraButton).toBeEnabled();
   });
 
-  test('should have upload photo button', async ({ page }) => {
+  test('should have upload photo button', async ({ authPage: page }) => {
     const uploadButton = page.locator('button:has-text("Unggah Foto")');
     await expect(uploadButton).toBeVisible();
     await expect(uploadButton).toBeEnabled();
   });
 
-  test('should display security information', async ({ page }) => {
+  test('should display security information', async ({ authPage: page }) => {
     await expect(page.getByText('Protokol Keamanan')).toBeVisible();
     await expect(page.getByText('Enkripsi RESP-V3')).toBeVisible();
     await expect(page.getByText('Lisensi ASPI/BI')).toBeVisible();
   });
 
-  test('should display my QRIS code section', async ({ page }) => {
+  test('should display my QRIS code section', async ({ authPage: page }) => {
     await expect(page.getByText('QRIS Personal')).toBeVisible();
     await expect(page.getByText('E-Wallet Access')).toBeVisible();
   });
 
-  test('should have show my code button', async ({ page }) => {
+  test('should have show my code button', async ({ authPage: page }) => {
     const showCodeButton = page.locator('button:has-text("Tampilkan Kode Saya")');
     await expect(showCodeButton).toBeVisible();
     await expect(showCodeButton).toBeEnabled();
   });
 
-  test('should display recent QR payments section', async ({ page }) => {
+  test('should display recent QR payments section', async ({ authPage: page }) => {
     await expect(page.getByText('Aktivitas Terakhir')).toBeVisible();
     await expect(page.getByText('Lihat Semua')).toBeVisible();
   });
 
-  test('should show empty state for recent transactions', async ({ page }) => {
+  test('should show empty state for recent transactions', async ({ authPage: page }) => {
     await expect(page.getByText('Belum ada riwayat transaksi QRIS')).toBeVisible();
   });
 
-  test('should display daily limit information', async ({ page }) => {
+  test('should display daily limit information', async ({ authPage: page }) => {
     await expect(page.getByText('Limit Harian QRIS')).toBeVisible();
     await expect(page.getByText('Rp 10.000.000')).toBeVisible();
     await expect(page.getByText('0% Terpakai')).toBeVisible();
   });
 
-  test('should be responsive on mobile viewport', async ({ page }) => {
+  test('should be responsive on mobile viewport', async ({ authPage: page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/qris');
+    await waitForPageStable(page);
 
     // Check that key elements are visible
     await expect(page.getByText('Pembayaran QRIS')).toBeVisible();
@@ -86,7 +87,7 @@ test.describe('QRIS Payment Flow', () => {
     });
   });
 
-  test('should have interactive buttons with proper styling', async ({ page }) => {
+  test('should have interactive buttons with proper styling', async ({ authPage: page }) => {
     const cameraButton = page.locator('button:has-text("Buka Kamera")');
     const uploadButton = page.locator('button:has-text("Unggah Foto")');
 
@@ -95,19 +96,19 @@ test.describe('QRIS Payment Flow', () => {
     await expect(uploadButton).toBeVisible();
   });
 
-  test('should have History icon in recent transactions', async ({ page }) => {
+  test('should have History icon in recent transactions', async ({ authPage: page }) => {
     // Check for History section
     await expect(page.getByText('Aktivitas Terakhir')).toBeVisible();
   });
 });
 
 test.describe('QRIS Flow - Scanner Interaction', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/qris');
     await waitForPageStable(page);
   });
 
-  test('should highlight scanner area on hover', async ({ page }) => {
+  test('should highlight scanner area on hover', async ({ authPage: page }) => {
     const scannerArea = page.locator('.border-2.border-dashed').first();
 
     // Hover over scanner area
@@ -117,7 +118,7 @@ test.describe('QRIS Flow - Scanner Interaction', () => {
     await expect(scannerArea).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have click handler for camera button', async ({ page }) => {
+  test('should have click handler for camera button', async ({ authPage: page }) => {
     const cameraButton = page.locator('button:has-text("Buka Kamera")');
 
     // Button should be clickable
@@ -131,7 +132,7 @@ test.describe('QRIS Flow - Scanner Interaction', () => {
     await expect(cameraButton).toBeVisible();
   });
 
-  test('should have click handler for upload button', async ({ page }) => {
+  test('should have click handler for upload button', async ({ authPage: page }) => {
     const uploadButton = page.locator('button:has-text("Unggah Foto")');
 
     // Button should be clickable
@@ -147,17 +148,17 @@ test.describe('QRIS Flow - Scanner Interaction', () => {
 });
 
 test.describe('QRIS Flow - My QR Code', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/qris');
     await waitForPageStable(page);
   });
 
-  test('should display my QR code card with gradient background', async ({ page }) => {
+  test('should display my QR code card with gradient background', async ({ authPage: page }) => {
     const myQrCard = page.locator('.bg-gray-900').first();
     await expect(myQrCard).toBeVisible({ timeout: 10000 });
   });
 
-  test('should have show code button with hover effect', async ({ page }) => {
+  test('should have show code button with hover effect', async ({ authPage: page }) => {
     const showCodeButton = page.locator('button:has-text("Tampilkan Kode Saya")');
 
     // Check for button
@@ -171,48 +172,48 @@ test.describe('QRIS Flow - My QR Code', () => {
     await expect(showCodeButton).toBeVisible();
   });
 
-  test('should display my QR code text correctly', async ({ page }) => {
+  test('should display my QR code text correctly', async ({ authPage: page }) => {
     await expect(page.getByText('QRIS Personal')).toBeVisible();
     await expect(page.getByText('E-Wallet Access')).toBeVisible();
   });
 });
 
 test.describe('QRIS Flow - Security Information', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/qris');
     await waitForPageStable(page);
   });
 
-  test('should display encryption security info', async ({ page }) => {
+  test('should display encryption security info', async ({ authPage: page }) => {
     await expect(page.getByText('Enkripsi RESP-V3')).toBeVisible();
     await expect(page.getByText('Token dinamik di-hash per transaksi untuk keamanan maksimal')).toBeVisible();
   });
 
-  test('should display ASPI/BI compliance info', async ({ page }) => {
+  test('should display ASPI/BI compliance info', async ({ authPage: page }) => {
     await expect(page.getByText('Lisensi ASPI/BI')).toBeVisible();
     await expect(page.getByText('Sistem pembayaran tunduk pada regulasi QRIS Nasional')).toBeVisible();
   });
 
-  test('should display security protocol header', async ({ page }) => {
+  test('should display security protocol header', async ({ authPage: page }) => {
     await expect(page.getByText('Protokol Keamanan')).toBeVisible();
   });
 });
 
 test.describe('QRIS Flow - Recent Transactions', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/qris');
     await waitForPageStable(page);
   });
 
-  test('should display recent transactions section', async ({ page }) => {
+  test('should display recent transactions section', async ({ authPage: page }) => {
     await expect(page.getByText('Aktivitas Terakhir')).toBeVisible();
   });
 
-  test('should show empty state when no transactions', async ({ page }) => {
+  test('should show empty state when no transactions', async ({ authPage: page }) => {
     await expect(page.getByText('Belum ada riwayat transaksi QRIS')).toBeVisible();
   });
 
-  test('should have view all history button', async ({ page }) => {
+  test('should have view all history button', async ({ authPage: page }) => {
     const viewAllButton = page.getByText('Lihat Semua');
     await expect(viewAllButton).toBeVisible({ timeout: 10000 });
     // Check if button has the emerald color class (more flexible check)
@@ -221,18 +222,18 @@ test.describe('QRIS Flow - Recent Transactions', () => {
 });
 
 test.describe('QRIS Flow - Accessibility', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/qris');
     await waitForPageStable(page);
   });
 
-  test('should have proper heading hierarchy', async ({ page }) => {
+  test('should have proper heading hierarchy', async ({ authPage: page }) => {
     const h2 = page.locator('h2').first();
     await expect(h2).toBeVisible({ timeout: 10000 });
     await expect(h2).toContainText('Pembayaran QRIS', { timeout: 5000 });
   });
 
-  test('should support keyboard navigation', async ({ page }) => {
+  test('should support keyboard navigation', async ({ authPage: page }) => {
     // Tab to first button
     await page.keyboard.press('Tab');
     await page.waitForTimeout(100);
@@ -244,7 +245,7 @@ test.describe('QRIS Flow - Accessibility', () => {
     await expect(focused).toBeVisible();
   });
 
-  test('should have accessible button labels', async ({ page }) => {
+  test('should have accessible button labels', async ({ authPage: page }) => {
     const cameraButton = page.locator('button:has-text("Buka Kamera")');
     const uploadButton = page.locator('button:has-text("Unggah Foto")');
 
@@ -254,9 +255,13 @@ test.describe('QRIS Flow - Accessibility', () => {
 });
 
 test.describe('QRIS Flow - Visual Regression', () => {
-  test('should match screenshots on desktop', async ({ page }) => {
-    await page.setViewportSize({ width: 1920, height: 1080 });
+  test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/qris');
+    await waitForPageStable(page);
+  });
+
+  test('should match screenshots on desktop', async ({ authPage: page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
 
     await page.screenshot({
       path: 'e2e/screenshots/qris-desktop.png',
@@ -264,9 +269,8 @@ test.describe('QRIS Flow - Visual Regression', () => {
     });
   });
 
-  test('should match screenshots on tablet', async ({ page }) => {
+  test('should match screenshots on tablet', async ({ authPage: page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.goto('/qris');
 
     await page.screenshot({
       path: 'e2e/screenshots/qris-tablet.png',
@@ -274,9 +278,8 @@ test.describe('QRIS Flow - Visual Regression', () => {
     });
   });
 
-  test('should match screenshots on mobile', async ({ page }) => {
+  test('should match screenshots on mobile', async ({ authPage: page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/qris');
 
     await page.screenshot({
       path: 'e2e/screenshots/qris-mobile.png',

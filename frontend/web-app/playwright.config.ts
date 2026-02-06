@@ -1,5 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/**
+ * PayU Digital Banking - Playwright E2E Configuration
+ *
+ * IMPORTANT: This configuration assumes the web app is already running
+ * on localhost:3000 (via podman-compose or npm run dev).
+ *
+ * The webServer is disabled to avoid port conflicts with the containerized
+ * environment. Tests will reuse the existing server.
+ */
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false, // Run tests sequentially for better stability
@@ -12,18 +22,28 @@ export default defineConfig({
     timeout: 10000, // Increase expect timeout to 10 seconds
   },
   use: {
-    baseURL: 'http://localhost:3000',
+    // Use port 3001 for tests (containerized web-app)
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     actionTimeout: 15000, // Increase action timeout
     navigationTimeout: 30000, // Increase navigation timeout
+    // Set default locale for i18n routing
+    locale: 'id',
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Ensure consistent viewport
+        viewport: { width: 1280, height: 720 },
+      },
     },
+    // Temporarily disable other browsers to focus on Chromium first
+    // Uncomment after Chromium tests pass
+    /*
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
@@ -40,11 +60,13 @@ export default defineConfig({
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
     },
+    */
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000, // Increase web server timeout
-  },
+  // Disable webServer - we use the containerized app
+  // webServer: {
+  //   command: 'npm run dev',
+  //   url: 'http://localhost:3000',
+  //   reuseExistingServer: !process.env.CI,
+  //   timeout: 120000,
+  // },
 });

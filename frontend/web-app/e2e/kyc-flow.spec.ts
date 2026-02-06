@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { waitForPageStable, waitForAnimations } from './utils';
 
 test.describe('KYC Onboarding Flow', () => {
@@ -102,12 +102,12 @@ test.describe('KYC Onboarding Flow', () => {
 });
 
 test.describe('KYC Flow - Step Navigation', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
-  test('should move from step 1 to step 2', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
     await waitForPageStable(page);
+  });
 
+  test('should move from step 1 to step 2', async ({ page }) => {
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
 
@@ -119,9 +119,6 @@ test.describe('KYC Flow - Step Navigation', () => {
   });
 
   test('should move back from step 2 to step 1', async ({ page }) => {
-    await page.goto('/onboarding');
-    await waitForPageStable(page);
-
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await waitForAnimations(page);
 
@@ -134,8 +131,6 @@ test.describe('KYC Flow - Step Navigation', () => {
 });
 
 test.describe('KYC Flow - Form Validation', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
     await waitForPageStable(page);
@@ -181,8 +176,6 @@ test.describe('KYC Flow - Form Validation', () => {
 });
 
 test.describe('KYC Flow - Success State', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
     await waitForPageStable(page);
@@ -220,21 +213,18 @@ test.describe('KYC Flow - Success State', () => {
 });
 
 test.describe('KYC Flow - Accessibility', () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
-
-  test('should have proper heading hierarchy', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
     await waitForPageStable(page);
+  });
 
+  test('should have proper heading hierarchy', async ({ page }) => {
     const h2 = page.locator('h2').first();
     await expect(h2).toBeVisible({ timeout: 10000 });
     await expect(h2).toContainText('Unggah e-KTP', { timeout: 5000 });
   });
 
   test('should support keyboard navigation', async ({ page }) => {
-    await page.goto('/onboarding');
-    await waitForPageStable(page);
-
     await page.keyboard.press('Tab');
     await page.waitForTimeout(100);
     const focused = page.locator(':focus');
@@ -242,7 +232,6 @@ test.describe('KYC Flow - Accessibility', () => {
   });
 
   test('should have accessible form labels', async ({ page }) => {
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     const labels = page.locator('label');
@@ -251,9 +240,13 @@ test.describe('KYC Flow - Accessibility', () => {
 });
 
 test.describe('KYC Flow - Visual Regression', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/onboarding');
+    await waitForPageStable(page);
+  });
+
   test('should match screenshots on desktop - Step 1', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto('/onboarding');
 
     await page.screenshot({
       path: 'e2e/screenshots/kyc-step1-desktop.png',
@@ -263,7 +256,6 @@ test.describe('KYC Flow - Visual Regression', () => {
 
   test('should match screenshots on mobile - Step 1', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/onboarding');
 
     await page.screenshot({
       path: 'e2e/screenshots/kyc-step1-mobile.png',
@@ -273,7 +265,6 @@ test.describe('KYC Flow - Visual Regression', () => {
 
   test('should match screenshots on desktop - Step 2', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto('/onboarding');
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
     await page.screenshot({
