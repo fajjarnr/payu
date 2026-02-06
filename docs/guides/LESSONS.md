@@ -717,3 +717,56 @@
   3. OR use kc.sh CLI: `podman exec payu-keycloak /opt/keycloak/bin/kc.sh import users` (requires restart)
 * **Best Practice**: Document admin passwords securely and consider using external secret management (Vault, Sealed Secrets) for production.
 * **Note**: For fresh installations, set `KEYCLOAK_ADMIN_PASSWORD` in docker-compose.yml before first startup.
+
+### 24. Redis Environment Variables for Spring Boot Services (Feb 6, 2026)
+* **The Problem**: Spring Boot services showing `DOWN` status in health checks despite all containers running healthy.
+* **Symptoms**:
+  - Health endpoint returns: `{"status":"DOWN","components":{"redis":{"status":"DOWN","details":{"error":"RedisConnectionFailureException"}}}}`
+  - DeepHealthIndicator logs: "Redis health check failed: Unable to connect to Redis"
+  - Redis container is healthy and responding to PING
+* **Root Cause**: Services were missing `REDIS_HOST` and `PAYU_CACHE_REDIS_HOST` environment variables in `docker-compose.yml`. Without these, Spring Data Redis defaults to `localhost:6379` instead of the container network hostname `redis:6379`.
+* **The Fix**: Add missing Redis environment variables to docker-compose.yml:
+  ```yaml
+  environment:
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    PAYU_CACHE_REDIS_HOST: redis
+  ```
+* **Verification**: After restarting services:
+  ```bash
+  curl -s http://localhost:8001/actuator/health/deepHealth | jq '.details.redis'
+  # Returns: {"latency": "1ms", "response": "PONG"}
+  ```
+* **Best Practice**: Always explicitly define Redis connection parameters in container environments, even if application.yml has defaults. The `localhost` default only works for local development, not container networking.
+
+### 25. Reset Keycloak Passwords Directly in Database (Feb 6, 2026)
+* **The Problem**: Need to reset Keycloak admin or user passwords but don't have access to the Admin Console or current password is unknown.
+* **Root Cause**: Keycloak stores passwords as PBKDF2-SHA256 hashes in the `credential` table. The `KEYCLOAK_ADMIN_PASSWORD` env var only works on first startup.
+* **The Solution**: Generate PBKDF2-SHA256 hash and update database directly.
+* **Python Script to Generate Hash**:
+  ```python
+  import hashlib
+  import binascii
+  import json
+
+  password = "P@ssw0rd123"
+  salt = "payusaltkey2024".encode('utf-8')
+  iterations = 27500
+
+  hashed = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, iterations)
+  hash_b64 = binascii.b2a_base64(hashed).decode('utf-8').strip()
+  salt_b64 = binascii.b2a_base64(salt).decode('utf-8').strip()
+
+  secret_data = json.dumps({"value": hash_b64, "salt": salt_b64, "additionalParameters": {}})
+  credential_data = json.dumps({"hashIterations": iterations, "algorithm": "pbkdf2-sha256", "additionalParameters": {}})
+  ```
+* **SQL Update Command**:
+  ```sql
+  UPDATE credential
+  SET SECRET_DATA = '<secret_data_json>',
+      CREDENTIAL_DATA = '<credential_data_json>',
+      TYPE = 'password'
+  WHERE user_id = (SELECT id FROM user_entity WHERE username = 'admin');
+  ```
+* **Important**: After updating the database, restart Keycloak container to apply changes.
+* **Best Practice**: Store the generated passwords securely and document the salt used for future reference.

@@ -347,6 +347,9 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_DUKCAPIL_URL: http://dukcapil-simulator:8080
       SERVICES_AUTH_URL: http://auth-service:8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PAYU_CACHE_REDIS_HOST: redis
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
         -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
@@ -394,6 +397,9 @@ services:
       KEYCLOAK_CLIENT_ID: payu-backend
       # REQUIRED: Set in .env file
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-secret}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PAYU_CACHE_REDIS_HOST: redis
       OTEL_ENDPOINT: http://jaeger:4317
       JAVA_OPTS: >-
         -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom

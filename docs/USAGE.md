@@ -40,10 +40,10 @@ Untuk manajemen user, realm, dan client:
 |:-------|:-------|
 | URL | http://localhost:8099 |
 | **Username** | `admin` |
-| **Password** | `admin` (default development) |
+| **Password** | `P@ssw0rd123` ✅ (Updated Feb 6, 2026) |
 | Realm | `master` |
 
-> ⚠️ **PRODUCTION**: Ganti password Keycloak admin segera! Password ini tersimpan di `docker-compose.yml` sebagai `KEYCLOAK_ADMIN_PASSWORD`.
+> ⚠️ **PRODUCTION**: Ganti password Keycloak admin untuk production! Password ini tersimpan di database Keycloak.
 
 ---
 
@@ -56,17 +56,17 @@ Gunakan akun berikut untuk login ke aplikasi PayU:
 | Field | Value |
 |:-------|:-------|
 | **Username/Phone** | `customer1` |
-| **Password** | `Password123@` |
+| **Password** | `P@ssw0rd123` ✅ (Updated Feb 6, 2026) |
 | **Email** | `customer1@payu.id` |
 
-> **Note**: Password harus mengandung huruf kapital, angka, dan karakter khusus sesuai kebijakan password.
+> **Note**: Password standar untuk semua dummy user adalah `P@ssw0rd123`.
 
 #### **Admin Backend (Opsional)**
 
 | Field | Value |
 |:-------|:-------|
 | **Username** | `admin` |
-| **Password** | `admin` |
+| **Password** | `P@ssw0rd123` ✅ |
 | **Role** | Administrator |
 
 ---
@@ -90,7 +90,7 @@ Gunakan akun berikut untuk login ke aplikasi PayU:
 1. Buka http://localhost:3001
 2. Masukkan kredensial:
    - Username: `customer1`
-   - Password: `Password123@`
+   - Password: `P@ssw0rd123` ✅
 3. Klik **"Login"**
 
 ### **Setelah Login: Fitur Utama**
@@ -214,12 +214,12 @@ mvn -f backend/account-service/pom.xml test
 # Get token untuk customer1 via Keycloak
 curl -X POST "http://localhost:8099/realms/payu/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=customer1&password=Password123@&grant_type=password&client_id=payu-backend&client_secret=payu-backend-secret-2026"
+  -d "username=customer1&password=P@ssw0rd123&grant_type=password&client_id=payu-backend&client_secret=payu-backend-secret-2026"
 
 # Atau via auth-service (recommended)
 curl -X POST "http://localhost:8002/api/v1/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"customer1","password":"Password123@"}'
+  -d '{"username":"customer1","password":"P@ssw0rd123"}'
 ```
 
 ---
