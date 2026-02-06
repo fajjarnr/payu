@@ -86,8 +86,8 @@ Audit against the _14 Immutable Laws of PayU_.
 
 - [x] **Backoffice test docs mismatch**: Update `backend/backoffice-service/README_TESTS.md`, `TESTING.md`, and `DOCKER_FIX_SUMMARY.md` to reflect removal of `PostgresResource` / `PostgreSQLResourceTestLifecycleManager`, or restore classes if still required.
 - [x] **Backoffice integration sanity**: Align integration/resource tests with `@IntegrationTest` gating and Spring profiles.
-- [ ] **Transaction service stray artifacts**: Remove or gitignore `backend/transaction-service/test_output.txt`.
-- [ ] **Transaction service new config**: Confirm `backend/transaction-service/src/main/java/id/payu/transaction/config/JpaConfig.java` is intentional; wire and commit it or remove.
+- [x] **Transaction service stray artifacts**: Remove or gitignore `backend/transaction-service/test_output.txt` ✅ **RESOLVED** (no file found, already in .gitignore)
+- [x] **Transaction service new config**: Removed `backend/transaction-service/src/main/java/id/payu/transaction/config/JpaConfig.java` ✅ **REMOVED** (redundant - Spring Boot auto-configures JPA, verified compilation successful)
 - [x] **Web app README**: Replace default Next.js README with PayU-specific setup, scripts, and troubleshooting ✅ **DONE**
 - [x] **Web app env docs**: Document `NEXT_PUBLIC_WS_URL` (and any other required envs) and add a `frontend/web-app/.env.example` (or extend root `.env.example`) for web app usage ✅ **DONE** (documented in README.md)
 - [ ] **Web app E2E runbook**: Add `npx playwright install` prerequisite and document `playwright.podman.config.ts` usage (or add `test:e2e:podman` npm script).
