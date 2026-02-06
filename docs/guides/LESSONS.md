@@ -965,3 +965,43 @@
 * **Best Practice**: Use central `.env` template for all service ports.
 * **Services Affected**: lending-service, ab-testing-service (both initially tried to use 8019)
 
+### 35. Redis Environment Variables for Spring Boot Services (Feb 6, 2026)
+* **The Problem**: Spring Boot services using `cache-starter` fail health checks with Redis DOWN status even though Redis container is running.
+* **Root Cause**: Missing `REDIS_HOST`, `REDIS_PORT`, and `PAYU_CACHE_REDIS_HOST` environment variables in docker-compose.yml. Services default to `localhost:6379` which doesn't work in container networks.
+* **The Fix**: Explicitly add Redis connection env vars to docker-compose.yml:
+  ```yaml
+  billing-service:
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PAYU_CACHE_REDIS_HOST: redis
+  ```
+* **Verification**: After restart, health endpoint shows `"redis": { "status": "UP" }`
+* **Services Affected**: billing-service, support-service, statement-service
+
+### 36. Container Not Running - Missing Deployment (Feb 6, 2026)
+* **The Problem**: Service shows "Connection refused" and container doesn't appear in `podman ps`. JAR file exists but container was never built/started.
+* **Root Cause**: Service was configured in docker-compose.yml but container was never deployed (possibly skipped during initial startup).
+* **The Fix**:
+  1. Verify JAR exists: `ls backend/service/target/*.jar`
+  2. Build and start: `podman-compose up -d service-name`
+  3. Verify: `podman ps | grep service-name`
+* **Lesson**: Always verify containers are actually running, not just configured.
+* **Services Affected**: fx-service
+
+### 37. Double Context Path in Spring Controllers (Feb 6, 2026)
+* **The Problem**: All API endpoints return 404 even though service is running and healthy.
+* **Root Cause**: Double context path prefix - `application.yml` sets `server.servlet.context-path: /fx-api` AND controller has `@RequestMapping("/fx-api/v1")`, resulting in `/fx-api/fx-api/v1` paths.
+* **The Fix**: Remove duplicate context path from controller:
+  ```java
+  // Before (wrong):
+  @RequestMapping("/fx-api/v1")
+  public class FxController { }
+
+  // After (correct):
+  @RequestMapping("/v1")
+  public class FxController { }
+  ```
+* **Verification**: Endpoints accessible at `/fx-api/v1/*` (single prefix)
+* **Services Affected**: fx-service
+

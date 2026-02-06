@@ -57,6 +57,11 @@ COPY . .
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Build-time arguments for environment variables
+# NEXT_PUBLIC_* must be available at build time
+ARG NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Build Next.js application with standalone output for minimal container size
 RUN npm run build
 

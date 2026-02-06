@@ -1,19 +1,16 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useRouter, useSegments } from 'expo-router';
-import { useAuthStore } from '@/store/authStore';
-import { storage } from '@/utils/storage';
-import { Logger } from '@/utils/logger';
-import { AUTH_CONFIG } from '@/constants/config';
-import { User } from '@/types';
-
 /**
  * AuthContext - Authentication Context for PayU Mobile App
  *
+ * STATE MANAGEMENT ARCHITECTURE:
+ * ==============================
+ * This context uses a unified state management approach:
+ * - Server State: TanStack Query (useAuthState, useInitializeAuth)
+ * - UI State: Zustand (useAuthStore - minimal UI preferences only)
+ * - Token Storage: SecureStore (encrypted) - ONLY location for tokens
+ *
  * SECURITY POLICY P2-C2: Token Storage
  * =====================================
- *
- * This context manages authentication state and routing protection.
- * CRITICAL: Tokens are NEVER stored in this context or React state.
+ * CRITICAL: Tokens are NEVER stored in this context, React state, or React Query cache.
  *
  * Token Storage Locations:
  * ------------------------
@@ -22,28 +19,40 @@ import { User } from '@/types';
  *    - Refresh token
  *    - Token expiry
  *
- * 2. Memory (Zustand store) - Non-sensitive data only
+ * 2. TanStack Query Cache - Non-sensitive data only
  *    - User profile (public info)
  *    - isAuthenticated flag (boolean)
- *    - isLoading flag
+ *    - Session state
  *
- * 3. NEVER stored:
- *    - React Query cache (excluded via SENSITIVE_QUERY_KEYS)
- *    - AsyncStorage (excluded via noOpStorage in authStore)
+ * 3. Zustand Store - UI preferences only
+ *    - lastLoginAttempt (for rate limiting UI)
+ *    - biometricPromptEnabled (UI preference)
+ *
+ * 4. NEVER stored:
+ *    - AsyncStorage (excluded)
  *    - Context state (this file)
+ *    - React state
  *
  * Initialization Flow:
  * --------------------
  * 1. App starts, AuthProvider initializes
- * 2. checkAuthStatus() reads tokens from SecureStore
- * 3. If tokens exist, set isAuthenticated = true
+ * 2. useInitializeAuth reads tokens from SecureStore
+ * 3. If tokens exist, set isAuthenticated = true in React Query cache
  * 4. If no tokens, redirect to login
  *
- * Logging P2-C3: All operations use sanitized logger to prevent token leakage
+ * MIGRATION NOTE:
+ * ---------------
+ * Previously used Zustand for auth state (user, isAuthenticated).
+ * Now uses TanStack Query for server state, Zustand for UI state only.
  *
  * @module AuthContext
- * @version 2.1.0 - Sanitized logging
+ * @version 3.0.0 - Unified State Management
  */
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useRouter, useSegments } from 'expo-router';
+import { useAuthState, useInitializeAuth } from '@/src/hooks/useAuthQuery';
+import { Logger } from '@/utils/logger';
+import { User } from '@/types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -62,8 +71,14 @@ export const useAuthContext = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const router = useRouter();
   const segments = useSegments();
-  const { user, isAuthenticated, checkAuthStatus } = useAuthStore();
+  const { getUser, getSession } = useAuthState();
+  const { initialize } = useInitializeAuth();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Get auth state from React Query cache
+  const user = getUser();
+  const session = getSession();
+  const isAuthenticated = session?.isAuthenticated ?? false;
 
   /**
    * Initialize authentication state
@@ -76,9 +91,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check if valid tokens exist in SecureStore
-        // This updates the Zustand store's isAuthenticated flag
-        await checkAuthStatus();
+        // Initialize auth state from SecureStore
+        // This populates the React Query cache
+        await initialize();
       } catch (error) {
         // Sanitized logging - no tokens in logs
         Logger.error('AuthContext', 'Auth initialization error', error);
@@ -88,7 +103,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     initializeAuth();
-  }, [checkAuthStatus]);
+  }, [initialize]);
 
   /**
    * Route protection based on authentication state

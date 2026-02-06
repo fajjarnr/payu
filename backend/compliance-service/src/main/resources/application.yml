@@ -1,6 +1,9 @@
 server:
   port: ${PORT:8080}
   shutdown: graceful
+  servlet:
+    context-path: /compliance-service
+
 
 spring:
   application:
@@ -63,7 +66,7 @@ payu:
   cache:
     enabled: true
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:redis}
       port: ${REDIS_PORT:6379}
       pool-size: 20
       timeout: 5s

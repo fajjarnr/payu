@@ -1,261 +1,89 @@
+/**
+ * Auth Store - Zustand
+ *
+ * DEPRECATED: This file is deprecated and will be removed in a future version.
+ * Use TanStack Query hooks from '@/src/hooks/useAuthQuery' instead.
+ *
+ * MIGRATION GUIDE:
+ * - For auth operations (login, logout, register): Use useLogin, useLogout, useRegister from '@/src/hooks/useAuthQuery'
+ * - For auth state: Use useAuthState from '@/src/hooks/useAuthQuery'
+ * - For token management: Tokens are automatically handled by the API layer
+ *
+ * SECURITY NOTE: Tokens are NEVER stored in Zustand or React Query cache.
+ * They are stored ONLY in SecureStore (encrypted) by the auth service layer.
+ *
+ * This file is kept for backward compatibility only.
+ */
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, AuthTokens } from '@/types';
-import { storage } from '@/utils/storage';
-import { authService } from '@/services/auth.service';
-import { Logger } from '@/utils/logger';
-import { AUTH_CONFIG } from '@/constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { User } from '@/types';
 
 /**
- * No-op storage for Zustand persistence
+ * AuthUIState Interface
  *
- * SECURITY P2-C2: We use a no-op storage to prevent Zustand from persisting
- * any auth state to AsyncStorage. All sensitive data (tokens, user)
- * is stored ONLY in SecureStore (encrypted).
+ * This store now only manages UI-related auth state:
+ * - lastLoginAttempt: timestamp for rate limiting UI feedback
+ * - biometricPromptEnabled: UI preference for biometric prompt
  *
- * This ensures:
- * - Tokens are never in AsyncStorage (unencrypted)
- * - Tokens are never in React Query cache
- * - Tokens are never in Zustand persistence layer
- *
- * Logging: All operations use sanitized logger to prevent token leakage
+ * SERVER STATE (user, isAuthenticated) should be fetched via React Query:
+ * - useAuthState() from '@/src/hooks/useAuthQuery'
+ * - useInitializeAuth() for initialization
  */
-const noOpStorage = {
-  getItem: async (_name: string): Promise<string | null> => {
-    return null;
-  },
-  setItem: async (_name: string, _value: string): Promise<void> => {
-    // No-op: We don't persist auth state to AsyncStorage
-  },
-  removeItem: async (_name: string): Promise<void> => {
-    // No-op
-  },
-};
-
-/**
- * AuthState Interface
- *
- * SECURITY P2-C2: Tokens are NOT stored in Zustand state.
- * Tokens are stored ONLY in SecureStore (encrypted storage).
- * This prevents token exposure in:
- * - Zustand state snapshots
- * - React Query cache
- * - Memory dumps
- * - Redux DevTools (if enabled)
- *
- * The `isAuthenticated` flag is computed based on token existence
- * in SecureStore during initialization and login/logout operations.
- *
- * Logging P2-C3: All operations use sanitized logger to prevent token leakage
- */
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+interface AuthUIState {
+  // UI State only
+  lastLoginAttempt: number | null;
+  biometricPromptEnabled: boolean;
 
   // Actions
-  login: (identifier: string, password: string) => Promise<void>;
-  register: (data: {
-    email: string;
-    phoneNumber: string;
-    fullName: string;
-    password: string;
-    confirmPassword?: string;
-  }) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshToken: () => Promise<void>;
-  clearError: () => void;
-  updateUser: (user: User) => void;
-  getTokens: () => Promise<AuthTokens | null>;
-  checkAuthStatus: () => Promise<boolean>;
+  setLastLoginAttempt: (timestamp: number | null) => void;
+  setBiometricPromptEnabled: (enabled: boolean) => void;
+  resetAuthUI: () => void;
 }
 
-/**
- * Secure Token Storage Helper Functions
- *
- * These functions ensure tokens are ONLY stored in SecureStore
- * and never in Zustand state or any other storage mechanism.
- */
-const tokenStorage = {
-  async saveTokens(tokens: AuthTokens): Promise<void> {
-    await storage.set(AUTH_CONFIG.TOKEN_KEY, tokens);
-  },
-
-  async getTokens(): Promise<AuthTokens | null> {
-    return await storage.get<AuthTokens>(AUTH_CONFIG.TOKEN_KEY);
-  },
-
-  async removeTokens(): Promise<void> {
-    await storage.remove(AUTH_CONFIG.TOKEN_KEY);
-  },
-
-  async saveUser(user: User): Promise<void> {
-    await storage.set(AUTH_CONFIG.USER_KEY, user);
-  },
-
-  async getUser(): Promise<User | null> {
-    return await storage.get<User>(AUTH_CONFIG.USER_KEY);
-  },
-
-  async removeUser(): Promise<void> {
-    await storage.remove(AUTH_CONFIG.USER_KEY);
-  },
+const defaults = {
+  lastLoginAttempt: null,
+  biometricPromptEnabled: true,
 };
 
-export const useAuthStore = create<AuthState>()(
+/**
+ * useAuthStore - UI State Only
+ *
+ * This store only persists UI preferences related to auth.
+ * For actual auth state (user, session), use TanStack Query hooks.
+ *
+ * @deprecated Use hooks from '@/src/hooks/useAuthQuery' instead
+ */
+export const useAuthStore = create<AuthUIState>()(
   persist(
-    (set, get) => ({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
+    (set) => ({
+      // Initial state - UI only
+      lastLoginAttempt: defaults.lastLoginAttempt,
+      biometricPromptEnabled: defaults.biometricPromptEnabled,
 
-      /**
-       * Get tokens from SecureStore
-       * SECURITY: Tokens are never stored in Zustand state
-       */
-      getTokens: async () => {
-        return await tokenStorage.getTokens();
+      setLastLoginAttempt: (timestamp) => {
+        set({ lastLoginAttempt: timestamp });
       },
 
-      /**
-       * Check authentication status
-       * Returns true if valid tokens exist in SecureStore
-       */
-      checkAuthStatus: async () => {
-        const tokens = await tokenStorage.getTokens();
-        const user = await tokenStorage.getUser();
-        const isAuthenticated = !!tokens?.accessToken && !!user;
-
-        set({ isAuthenticated, user });
-        return isAuthenticated;
+      setBiometricPromptEnabled: (enabled) => {
+        set({ biometricPromptEnabled: enabled });
       },
 
-      login: async (identifier: string, password: string) => {
-        set({ isLoading: true, error: null });
-
-        try {
-          const response = await authService.login({
-            identifier,
-            password,
-          });
-
-          // SECURITY: Store tokens ONLY in SecureStore (encrypted)
-          // Never store tokens in Zustand state
-          await tokenStorage.saveTokens(response.tokens);
-          await tokenStorage.saveUser(response.user);
-
-          set({
-            user: response.user,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } catch (error: any) {
-          set({
-            error: error.response?.data?.message || 'Login failed',
-            isLoading: false,
-            isAuthenticated: false,
-          });
-          throw error;
-        }
-      },
-
-      register: async (data) => {
-        set({ isLoading: true, error: null });
-
-        try {
-          // Ensure confirmPassword is present for RegisterData type
-          const registerData = {
-            ...data,
-            confirmPassword: data.confirmPassword || data.password,
-          };
-
-          const response = await authService.register(registerData);
-
-          // SECURITY: Store tokens ONLY in SecureStore (encrypted)
-          await tokenStorage.saveTokens(response.tokens);
-          await tokenStorage.saveUser(response.user);
-
-          set({
-            user: response.user,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } catch (error: any) {
-          set({
-            error: error.response?.data?.message || 'Registration failed',
-            isLoading: false,
-            isAuthenticated: false,
-          });
-          throw error;
-        }
-      },
-
-      logout: async () => {
-        try {
-          await authService.logout();
-        } catch (error) {
-          // Sanitized logging - error details are logged but tokens are not
-          Logger.error('AuthStore', 'Logout API call failed', error);
-        } finally {
-          // SECURITY P2-C2: Remove tokens from SecureStore only
-          // Execute sequentially to ensure both operations complete
-          await tokenStorage.removeTokens();
-          await tokenStorage.removeUser();
-
-          set({
-            user: null,
-            isAuthenticated: false,
-          });
-        }
-      },
-
-      refreshToken: async () => {
-        const tokens = await tokenStorage.getTokens();
-
-        if (!tokens?.refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        try {
-          const response = await authService.refreshToken(tokens.refreshToken);
-
-          // SECURITY: Store refreshed tokens ONLY in SecureStore
-          await tokenStorage.saveTokens(response.tokens);
-
-          // Note: We don't update Zustand state with tokens
-          // Tokens remain only in SecureStore
-        } catch (error) {
-          await get().logout();
-          throw error;
-        }
-      },
-
-      clearError: () => set({ error: null }),
-
-      updateUser: (user: User) => {
-        set({ user });
-        // Also update user in SecureStore for persistence
-        // This is a fire-and-forget operation, but we log errors appropriately
-        tokenStorage.saveUser(user).catch((error) => {
-          // Sanitized logging - user data is NOT logged (may contain PII)
-          Logger.error('AuthStore', 'Failed to update user in SecureStore', error);
+      resetAuthUI: () => {
+        set({
+          lastLoginAttempt: defaults.lastLoginAttempt,
+          biometricPromptEnabled: defaults.biometricPromptEnabled,
         });
       },
     }),
     {
-      name: 'auth-storage',
-      // SECURITY: Use no-op storage to prevent any persistence to AsyncStorage
-      // All auth data (tokens, user) is stored ONLY in SecureStore (encrypted)
-      storage: createJSONStorage(() => noOpStorage),
-      partialize: (_state) => ({
-        // SECURITY: We don't persist anything through Zustand
-        // All sensitive data stays in SecureStore only
-        // This prevents tokens from appearing in:
-        // - AsyncStorage (unencrypted)
-        // - React Query cache
-        // - Zustand persistence layer
+      name: 'auth-ui-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      // Only persist UI state (no sensitive data)
+      partialize: (state) => ({
+        lastLoginAttempt: state.lastLoginAttempt,
+        biometricPromptEnabled: state.biometricPromptEnabled,
       }),
     }
   )

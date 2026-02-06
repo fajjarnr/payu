@@ -2,19 +2,22 @@
 -- This migration creates test users and accounts for development/testing
 -- Run this manually after all V* migrations are complete
 
+-- Clean up existing test data to avoid conflicts
+DELETE FROM profiles WHERE user_id IN (SELECT id FROM users WHERE username IN ('customer1', 'customer2', 'admin'));
+DELETE FROM accounts WHERE user_id IN (SELECT id FROM users WHERE username IN ('customer1', 'customer2', 'admin'));
+DELETE FROM users WHERE username IN ('customer1', 'customer2', 'admin');
+
 -- Insert test users
 INSERT INTO users (id, external_id, username, email, phone_number, status, kyc_status, created_at, updated_at) VALUES
     ('550e8400-e29b-41d4-a716-446655440001', 'EXT-CUST-001', 'customer1', 'customer1@payu.id', '+6281234567890', 'ACTIVE', 'VERIFIED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('550e8400-e29b-41d4-a716-446655440002', 'EXT-CUST-002', 'customer2', 'customer2@payu.id', '+6281234567891', 'ACTIVE', 'PENDING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('550e8400-e29b-41d4-a716-446655440003', 'EXT-ADMIN-001', 'admin', 'admin@payu.id', '+628111111111', 'ACTIVE', 'VERIFIED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-ON CONFLICT (external_id) DO NOTHING;
+    ('550e8400-e29b-41d4-a716-446655440003', 'EXT-ADMIN-001', 'admin', 'admin@payu.id', '+628111111111', 'ACTIVE', 'VERIFIED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert profiles for test users
 INSERT INTO profiles (id, user_id, full_name, nik, date_of_birth, address, created_at, updated_at) VALUES
     ('650e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'Customer One', '3201234567890001', '1990-01-15', 'Jl. Sudirman No. 123, Jakarta', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('650e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440002', 'Customer Two', '3201234567890002', '1992-05-20', 'Jl. Braga No. 456, Bandung', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('650e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440003', 'System Administrator', '3201234567890003', '1985-03-25', 'Jakarta, Indonesia', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-ON CONFLICT (user_id) DO NOTHING;
+    ('650e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440003', 'System Administrator', '3201234567890003', '1985-03-25', 'Jakarta, Indonesia', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert accounts for test users (Main account + Pocket accounts)
 INSERT INTO accounts (id, user_id, account_number, type, status, currency, balance, created_at, updated_at) VALUES
@@ -25,8 +28,7 @@ INSERT INTO accounts (id, user_id, account_number, type, status, currency, balan
     -- Customer 2 accounts
     ('750e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440002', '1001002001', 'MAIN', 'ACTIVE', 'IDR', 5000000.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     -- Admin accounts
-    ('750e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440003', '1009999001', 'MAIN', 'ACTIVE', 'IDR', 0.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-ON CONFLICT (account_number) DO NOTHING;
+    ('750e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440003', '1009999001', 'MAIN', 'ACTIVE', 'IDR', 0.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Display seed data summary
 DO $$

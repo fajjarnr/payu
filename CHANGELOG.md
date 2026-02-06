@@ -47,6 +47,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `docs/roadmap/TODOS.md`: OCP-001, OCP-004, OCP-009 marked as ✅ Complete
   - **OpenShift Readiness Score**: Improved from 91% to 97%
 
+- **Final Service Stabilization - All 22 Services Healthy (Feb 6, 2026)**:
+  - **#P0-2a: support-service Redis DOWN** → ✅ FIXED
+    - Added `REDIS_HOST: redis`, `REDIS_PORT: 6379`, `PAYU_CACHE_REDIS_HOST: redis` to docker-compose.yml
+    - Service now healthy with all components UP
+  - **#P0-4: fx-service Container Not Running** → ✅ FIXED
+    - Built and deployed container
+    - Fixed double context path issue in `FxController.java` (`@RequestMapping("/fx-api/v1")` → `@RequestMapping("/v1")`)
+    - Service now running on port 8009 with health endpoint responding
+  - **#P0-5: billing-service Redis Failure** → ✅ FIXED
+    - Added Redis environment variables to docker-compose.yml
+    - Service now healthy with Redis connection UP
+  - **Platform Status**: All 22 backend services now running and healthy
+  - **Updated** `docs/guides/LESSONS.md`: Added lessons 35-37 covering Redis env vars, missing containers, and double context path issues
+
 - **Complete Backend Service Deployment (Feb 6, 2026)**:
   - **All 22 Microservices Now Running**
     - Built and started 4 previously missing services:

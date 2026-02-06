@@ -34,7 +34,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/fx-api/v1")
+@RequestMapping("/v1")
 @Tag(name = "Foreign Exchange", description = "FX rate queries and currency conversion APIs")
 @SecurityRequirement(name = "bearerAuth")
 public class FxController extends BaseController {

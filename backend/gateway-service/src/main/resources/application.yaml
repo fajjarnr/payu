@@ -120,7 +120,7 @@ gateway:
       url: ${SUPPORT_SERVICE_URL:http://localhost:8080}
       timeout: 30s
     cms-service:
-      url: ${CMS_SERVICE_URL:http://localhost:8080}
+      url: ${CMS_SERVICE_URL:http://cms-service:8080}
       timeout: 30s
   # Simulators
   simulators:
