@@ -6,6 +6,19 @@ description: Advanced AI Orchestration, Task Management, and Core Engineering Pr
 
 This protocol defines how AI agents should operate to ensure high quality, reliability, and autonomy.
 
+## 0. Context Loading (ALWAYS FIRST)
+
+**Before ANY non-trivial task, load the platform truth:**
+
+1. Read `.agent/context/P19-AUDIT-STATUS.md` — Current platform scores, P0 blockers, service scoreboard
+2. Reference `docs/roadmap/TODOS.md` for full roadmap and P0/P1/P2 priorities
+3. Reference `docs/guides/REMEDIATION_PLAYBOOK.md` for step-by-step fix instructions (R-001 through R-016)
+4. Reference `docs/guides/LESSONS.md` for implementation patterns and anti-patterns
+
+**Production Readiness: 48/100** — There are 5 P0 blockers. All work should either:
+- Directly fix a P0/P1 issue, OR
+- Not introduce new issues that contradict the remediation plan
+
 ## 1. Workflow Orchestration
 - **Plan Mode Default**: Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions).
 - **Graceful Halt**: If something goes sideways, STOP and re-plan immediately – don't keep pushing.

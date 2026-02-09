@@ -662,4 +662,79 @@ rate(kafka_consumer_fetch_manager_records_consumed_total[5m])
 - [Temporal Documentation](https://docs.temporal.io/)
 
 ---
-*Last Updated: January 2026*
+
+## 🚨 P19 Audit Status — Integration Gaps (Feb 2026)
+
+> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.
+> **Event-First Architecture: ⚠️ PARTIAL** — Shared starters exist but are dead code.
+
+### Dead Code Alert: Shared Starters NOT Integrated
+
+| Starter | Status | Built | Consumers | Impact |
+|:--------|:-------|:------|:----------|:-------|
+| **events-starter** (CloudEvents) | 🔴 Dead | ✅ | 0 services | Services publish raw Kafka, not CloudEvents |
+| **outbox-starter** (Transactional Outbox) | 🔴 Dead | ✅ | 0 services | Financial txns can lose events during failures |
+| **saga-starter** (Saga Orchestration) | 🔴 Dead | ✅ | 0 services | transaction-service has raw saga logic instead |
+
+### What Services Actually Do (vs What Starters Provide)
+
+**Current Reality**:
+- `transaction-service`: Publishes Kafka events directly (no outbox, no CloudEvents envelope)
+- `wallet-service`: Publishes Kafka events directly (same issue)
+- `lending-service`: No event publishing at all
+- `saga-starter`: Full saga orchestration engine built but unused — transaction-service has inline saga logic
+
+**What SHOULD Happen (Target State)**:
+1. `transaction-service` → Use `outbox-starter` for atomic event publishing
+2. `wallet-service` → Use `outbox-starter` for balance change events
+3. `lending-service` → Use `saga-starter` for loan disbursement workflow
+4. ALL events → Use `events-starter` CloudEvents envelope format
+
+### Integration Patterns to Apply
+
+When asked to implement any event publishing:
+
+```java
+// ❌ WRONG — Current state (direct Kafka, no atomicity)
+@Transactional
+public Transfer execute(TransferCommand cmd) {
+    Transfer t = processTransfer(cmd);
+    transferRepo.save(t);
+    kafkaTemplate.send("transfers", t); // NOT atomic! Can lose events
+    return t;
+}
+
+// ✅ CORRECT — Use outbox-starter (atomic with DB transaction)
+@Transactional
+public Transfer execute(TransferCommand cmd) {
+    Transfer t = processTransfer(cmd);
+    transferRepo.save(t);
+    outboxRepository.save(OutboxEvent.of("Transfer", t.getId(), "TransferCompleted", t));
+    return t;
+    // Debezium CDC picks up outbox entry and publishes to Kafka
+}
+```
+
+### Outbox Starter Integration Steps
+
+See `docs/guides/LESSONS.md` § "Transactional Outbox Pattern Integration" for full guide:
+
+1. Add `outbox-starter` dependency to service `pom.xml`
+2. Include Flyway migration for `outbox_events` table
+3. Inject `OutboxRepository` into application services
+4. Replace direct `kafkaTemplate.send()` with `outboxRepository.save()`
+5. Configure Debezium CDC connector for the service's database
+6. Write integration test with Testcontainers (PostgreSQL + Kafka + Debezium)
+
+### Saga Starter Integration Steps
+
+See `docs/guides/LESSONS.md` § "Saga Orchestration Pattern Integration":
+
+1. Add `saga-starter` dependency
+2. Define saga steps as `SagaStep<>` implementations
+3. Use `SagaOrchestrator` to execute the saga
+4. Implement compensation logic for each step
+5. Replace inline saga logic in transaction-service
+
+---
+*Last Updated: February 2026 (P19 Audit)*

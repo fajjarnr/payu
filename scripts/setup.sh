@@ -433,6 +433,10 @@ setup_project() {
             cd "$PROJECT_ROOT/backend/shared/cache-starter" && mvn clean install -DskipTests -q
             cd "$PROJECT_ROOT/backend/shared/resilience-starter" && mvn clean install -DskipTests -q
             cd "$PROJECT_ROOT/backend/shared/security-starter" && mvn clean install -DskipTests -q
+            cd "$PROJECT_ROOT/backend/shared/outbox-starter" && mvn clean install -DskipTests -q
+            cd "$PROJECT_ROOT/backend/shared/saga-starter" && mvn clean install -DskipTests -q
+            cd "$PROJECT_ROOT/backend/shared/events-starter" && mvn clean install -DskipTests -q
+            cd "$PROJECT_ROOT/backend/shared/archunit-starter" && mvn clean install -DskipTests -q
             cd "$PROJECT_ROOT"
         }
     fi
@@ -509,8 +513,24 @@ setup_project() {
         print_success "Pre-commit hooks installed"
     fi
 
-    # Create soft link for AI skills
-    if [ -d ".agent/skills" ]; then
+    # Create soft link for AI skills and agent configuration
+    if [ -d ".agent" ]; then
+        echo "Setting up AI agent configuration..."
+        mkdir -p .claude
+        # Link skills directory
+        rm -f .claude/skills
+        ln -s ../.agent/skills .claude/skills
+        # Link agents directory
+        rm -f .claude/agents
+        ln -s ../.agent/agents .claude/agents
+        # Link workflows directory
+        rm -f .claude/workflows
+        ln -s ../.agent/workflows .claude/workflows
+        # Link context directory
+        rm -f .claude/context
+        ln -s ../.agent/context .claude/context
+        print_success "AI agent configuration linked (.claude/ -> .agent/)"
+    elif [ -d ".agent/skills" ]; then
         echo "Creating soft link for AI skills..."
         mkdir -p .claude
         rm -f .claude/skills
@@ -645,7 +665,7 @@ main() {
     echo ""
     echo -e "${GREEN}╔═══════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║         PayU Development Environment Setup Script             ║${NC}"
-    echo -e "${GREEN}║                    Version 1.0.0                               ║${NC}"
+    echo -e "${GREEN}║                    Version 2.0.0                               ║${NC}"
     echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
@@ -675,6 +695,22 @@ main() {
         --project|-p)
             setup_project
             ;;
+        --infra|-i)
+            echo "Starting Podman infrastructure..."
+            PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+            cd "$PROJECT_ROOT/infrastructure/local-podman"
+            if command -v podman-compose > /dev/null 2>&1; then
+                podman-compose up -d
+            else
+                podman compose up -d
+            fi
+            echo ""
+            print_success "Infrastructure started. Checking health..."
+            sleep 10
+            if [ -f "$PROJECT_ROOT/scripts/test-health-check.sh" ]; then
+                "$PROJECT_ROOT/scripts/test-health-check.sh" || true
+            fi
+            ;;
         --help|-h)
             echo "Usage: ./setup.sh [OPTION]"
             echo ""
@@ -683,6 +719,7 @@ main() {
             echo "  --backend    Install backend tools (Java, Maven, Python)"
             echo "  --frontend   Install frontend tools (Node.js, npm)"
             echo "  --podman     Install Podman only"
+            echo "  --infra      Start Podman infrastructure (postgres, redis, kafka, etc.)"
             echo "  --project    Setup project dependencies (npm install, etc)"
             echo "  --check      Check installed versions"
             echo "  --help       Show this help message"
@@ -705,8 +742,16 @@ main() {
             print_section "Installation Complete!"
             echo ""
             echo "Next steps:"
-            echo "  1. Run: podman-compose up -d"
-            echo "  2. Run: cd frontend/web-app && npm run dev"
+            echo "  1. Start infrastructure:"
+            echo "     cd infrastructure/local-podman && podman compose up -d"
+            echo "  2. Start frontend:"
+            echo "     cd frontend/web-app && npm run dev"
+            echo "  3. Check health:"
+            echo "     ./scripts/test-health-check.sh"
+            echo ""
+            echo "Compose files:"
+            echo "  Dev:  infrastructure/local-podman/podman-compose.yml"
+            echo "  Test: infrastructure/local-podman/podman-compose.test.yml"
             echo ""
             echo "For help: ./setup.sh --help"
             echo ""

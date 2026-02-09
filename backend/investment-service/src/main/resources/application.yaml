@@ -5,8 +5,8 @@ spring:
     active: ${ENV:dev}
   datasource:
     url: jdbc:postgresql://localhost:5432/payu_investment
-    username: payu
-    password: payu_password
+    username: ${DB_USERNAME:payu}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

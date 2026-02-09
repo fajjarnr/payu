@@ -41,7 +41,7 @@ COPY --from=build --chown=185 /build/target/quarkus-app/app/ /deployments/app/
 COPY --from=build --chown=185 /build/target/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Expose the service port
-EXPOSE 8099
+EXPOSE 8021
 
 # JVM configuration
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
@@ -53,7 +53,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8099/q/health || exit 1
+    CMD curl -f http://localhost:8021/q/health || exit 1
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]

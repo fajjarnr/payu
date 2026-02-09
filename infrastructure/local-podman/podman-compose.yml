@@ -1051,7 +1051,7 @@ services:
     podman_networks:
     - name: payu-network
     ports:
-    - 8099:8099
+    - 8021:8021
     environment:
       ACCOUNT_SERVICE_URL: http://account-service:8001
       AUTH_SERVICE_URL: http://auth-service:8002
@@ -1073,8 +1073,8 @@ services:
       QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DB_URL: jdbc:postgresql://postgres:5432/payu_api_portal
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_api_portal
-      SERVER_PORT: '8099'
-      PORT: '8099'
+      SERVER_PORT: '8021'
+      PORT: '8021'
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
       REDIS_PORT: '6379'
@@ -1109,7 +1109,7 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8099/q/health
+      - http://localhost:8021/q/health
       interval: 10s
       timeout: 5s
       retries: 3

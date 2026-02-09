@@ -48,10 +48,10 @@ This will run 140+ tests and achieve ~86% code coverage without requiring Docker
 
 To run infrastructure tests, you must:
 
-1. **Start required services** using Docker Compose:
+1. **Start required services** using Podman Compose:
    ```bash
    cd /home/ubuntu/payu
-   docker-compose up -d kafka postgres
+   cd infrastructure/local-podman && podman compose up -d kafka postgres
    ```
 
 2. **Enable infrastructure tests**:
@@ -121,7 +121,7 @@ In CI/CD pipelines (GitHub Actions, GitLab CI, Jenkins):
   run: pytest -v -m "not infrastructure"
 
 - name: Start infrastructure
-  run: docker-compose up -d kafka postgres
+  run: cd infrastructure/local-podman && podman compose up -d kafka postgres
 
 - name: Run all tests including infrastructure
   run: |
@@ -136,7 +136,7 @@ In CI/CD pipelines (GitHub Actions, GitLab CI, Jenkins):
 aiokafka.errors.KafkaConnectionError: Unable to bootstrap from [('localhost', 9092)]
 ```
 
-**Solution**: Start Kafka with Docker Compose or skip infrastructure tests.
+**Solution**: Start Kafka with Podman Compose or skip infrastructure tests.
 
 ### Issue: Tests Skipped Unexpectedly
 ```

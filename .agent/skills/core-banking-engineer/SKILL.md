@@ -476,4 +476,48 @@ public class RequestLoggingAspect {
 - [ ] **Observability**: Is OpenTelemetry tracing active?
 
 ---
-*Last Updated: January 2026*
+
+## 🚨 P19 Audit Status — Current Platform Reality (Feb 2026)
+
+> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.  
+> **Production Readiness: 48/100** — NOT ready for deployment.
+
+### Service Compliance Matrix (What You MUST Know)
+
+| Service | Hex Arch | Shared Starters | Action Required |
+|:--------|:---------|:-----------------|:----------------|
+| wallet-service | ✅ Full | ✅ All 4 | Integrate `outbox-starter` (R-002) |
+| transaction-service | ✅ Full | ✅ All 4 | Integrate `outbox-starter` + `saga-starter` (R-002) |
+| account-service | ✅ Full | ✅ All 4 | — |
+| auth-service | ✅ Full | ✅ All 4 | — |
+| kyc-service | ✅ Full | ✅ All 4 | — |
+| lending-service | ⚠️ Partial | ✅ | Write integration tests (R-004), complete hex refactor |
+| fx-service | ⚠️ Partial | ✅ | Write integration tests (R-004), complete hex refactor |
+| cms-service | 🔴 Flat | 🔴 ZERO starters | Add ALL starters (R-006), refactor to hexagonal |
+| ab-testing-service | 🔴 Flat | 🔴 Only api-commons | Add security+resilience+cache (R-006) |
+| statement-service | 🔴 Thin | 🔴 ZERO starters | Add ALL starters (R-006), write tests |
+| support-service | 🔴 Flat | ✅ | Refactor to hexagonal (R-008) |
+| promotion-service | 🔴 Flat | ✅ | Refactor to hexagonal (R-008) |
+| backoffice-service | 🔴 Flat | ✅ | Refactor to hexagonal (R-008) |
+
+### P0 Blockers Relevant to This Skill
+
+1. **P0-ARCH-001**: `outbox-starter` and `saga-starter` exist in `backend/shared/` but **ZERO services use them**. When implementing any financial transaction, you MUST integrate `outbox-starter` for atomic event publishing. See `docs/guides/LESSONS.md` § "Transactional Outbox Pattern Integration".
+
+2. **P0-TEST-001**: `lending-service` and `fx-service` have **ZERO integration tests**. Any new feature in these services MUST include Testcontainers integration tests.
+
+### Hexagonal Refactoring Checklist (for flat-package services)
+
+When asked to work on cms, ab-testing, statement, support, promotion, or backoffice services:
+
+1. Create `domain/model/`, `domain/port/in/`, `domain/port/out/` packages
+2. Move entities to domain (remove `@Entity` from domain — keep in adapter)
+3. Create `application/` package with use case interfaces
+4. Create `infrastructure/persistence/` adapter implementing domain ports
+5. Create `interfaces/rest/` with DTOs separate from domain models
+6. Add `ArchitectureTest.java` using `archunit-starter`
+7. Add `security-starter`, `resilience-starter`, `cache-starter` dependencies
+8. Run `mvn test` to verify ArchUnit rules pass
+
+---
+*Last Updated: February 2026 (P19 Audit)*

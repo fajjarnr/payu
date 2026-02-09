@@ -111,8 +111,10 @@ PASSED_TESTS=0
 OVERALL_SUCCESS=true
 
 # Determine which compose command to use
-if docker-compose --version > /dev/null 2>&1; then
-    COMPOSE_CMD="docker-compose"
+if command -v podman-compose > /dev/null 2>&1; then
+    COMPOSE_CMD="podman-compose"
+elif podman compose version > /dev/null 2>&1; then
+    COMPOSE_CMD="podman compose"
 else
     COMPOSE_CMD="docker compose"
 fi
@@ -131,7 +133,7 @@ if [ "$SKIP_BUILD" = false ] && [ "$SKIP_BACKEND" = false ]; then
     print_info "Building and installing shared libraries..."
 
     # Build shared starters
-    SHARED_STARTERS=("cache-starter" "resilience-starter" "security-starter")
+    SHARED_STARTERS=("cache-starter" "resilience-starter" "security-starter" "outbox-starter" "saga-starter" "events-starter" "archunit-starter")
 
     for starter in "${SHARED_STARTERS[@]}"; do
         print_info "Building $starter..."
@@ -161,7 +163,7 @@ print_section "Step 1: Starting test environment"
 
 if [ "$SKIP_BUILD" = false ] && [ "$SKIP_INTEGRATION" = false ] || [ "$SKIP_E2E" = false ]; then
     print_info "Starting Docker test environment..."
-    $COMPOSE_CMD -f "$PROJECT_ROOT/docker-compose.test.yml" up -d postgres-test redis-test kafka-test zookeeper-test > /dev/null 2>&1 || true
+    $COMPOSE_CMD -f "$PROJECT_ROOT/infrastructure/local-podman/podman-compose.test.yml" up -d postgres-test redis-test kafka-test zookeeper-test > /dev/null 2>&1 || true
     print_info "Waiting for services to be healthy..."
     sleep 15
 

@@ -586,4 +586,60 @@ Data yang wajib tersedia saat audit OJK:
 - [Red Hat SSO (Keycloak)](https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/)
 
 ---
-*Last Updated: January 2026*
+
+## 🚨 P19 Audit Status — Security Gaps (Feb 2026)
+
+> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.
+> **Security Score: 40/100** — Multiple PCI-DSS violations found.
+
+### P0 Security Blockers
+
+#### P0-SEC-001: JWT Tokens in localStorage (XSS Vulnerability)
+- **File**: `frontend/web-app/src/lib/api.ts` (line 15, 61)
+- **Issue**: Tokens stored in `localStorage` — any XSS attack can steal all user tokens
+- **Contradiction**: `frontend/web-app/src/stores/authStore.ts` documentation SAYS "tokens ONLY in httpOnly cookies" but implementation uses localStorage
+- **PCI-DSS**: Violates Requirement 6.5.7 (Cross-Site Scripting)
+- **Fix**: Migrate to BFF (Backend-for-Frontend) pattern with httpOnly cookies
+- **Implementation guide**: `docs/guides/LESSONS.md` § "JWT Token Storage: The BFF Pattern"
+- **Remediation code**: R-001 (8 SP)
+
+#### P0-SEC-002: Hardcoded Credentials in VCS
+- `infrastructure/keycloak/payu-realm-export.json`: `P@ssw0rd123` for ALL test users
+- `infrastructure/keycloak/payu-realm-export.json`: Client secrets in plain text
+- `docker-compose.yml`: Default passwords (`payu_secret`, Grafana `admin/admin`)
+- Hardcoded IP `13.212.248.122` in docker-compose and CORS
+- **Fix**: Vault references, `${ENV_VAR}` substitution, .env files in .gitignore
+- **Remediation code**: R-003 (3 SP)
+
+### Services WITHOUT Security Starter (Unauthenticated Endpoints!)
+
+| Service | Framework | Issue | Fix |
+|:--------|:----------|:------|:----|
+| **cms-service** | Spring Boot | 🔴 Zero starters, unauthenticated CMS endpoints | Add security-starter |
+| **ab-testing-service** | Spring Boot | 🔴 Missing security-starter | Add security-starter |
+| **statement-service** | Spring Boot | 🔴 Zero starters, handles financial data! | Add security-starter |
+| **gateway-service** | Quarkus | ⚠️ Cannot use Spring starters | Create Quarkus equivalent or migrate |
+| **notification-service** | Quarkus | ⚠️ Cannot use Spring starters | Create Quarkus equivalent or migrate |
+| **api-portal-service** | Quarkus | ⚠️ Cannot use Spring starters | Create Quarkus equivalent or migrate |
+
+### Frontend Security Issues
+
+| Issue | Severity | Fix |
+|:------|:---------|:----|
+| JWT in localStorage | 🔴 P0 | BFF pattern (R-001) |
+| `next.config.ts` allows ALL remote image domains | 🟠 P1 | Whitelist specific CDN domains (R-010) |
+| No CSP headers configured | 🟠 P1 | Add Content-Security-Policy in next.config.ts |
+| OAuth callback passes token in URL query string | 🟠 P1 | Use authorization code flow with PKCE |
+
+### Security Audit Checklist (Updated for P19)
+
+When auditing ANY PayU service, check these P19-specific items FIRST:
+
+- [ ] Does the service use `security-starter`? (5 services DON'T)
+- [ ] Are there hardcoded credentials in config files?
+- [ ] Is JWT stored in httpOnly cookies (not localStorage)?
+- [ ] Are Keycloak client secrets using Vault references?
+- [ ] Is the service accessible without authentication?
+
+---
+*Last Updated: February 2026 (P19 Audit)*

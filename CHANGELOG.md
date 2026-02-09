@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **P19: Podman Standardization & Infrastructure Cleanup (Feb 9, 2026)**:
+  - **FIXED P0-INFRA-001**: Port conflict resolved — api-portal-service changed from 8099 to 8021 (keycloak keeps 8099:8080)
+  - Updated Containerfile and Dockerfile for api-portal-service (EXPOSE 8021, healthcheck on 8021)
+  - **Archived 6 Docker-only files** to `docs/archive/deprecated-docker/`:
+    - `docker-compose.yml`, `docker-compose.test.yml` (root-level, redundant with podman-compose)
+    - `tests/performance/docker-compose.yml` (Gatling Docker)
+    - `scripts/verify_docker_compose.sh`, `scripts/run_e2e_docker.sh` (Docker-only scripts)
+    - `tests/infrastructure/test_docker_compose_verification.py` (Docker-only test)
+  - **Makefile**: Updated `docker-test-up/down` and `clean` targets to use `podman compose -f infrastructure/local-podman/podman-compose.test.yml`
+  - **Makefile**: `build-test-deps` now builds all 8 shared starters (was missing outbox, saga, events, archunit)
+  - **scripts/run-all-tests.sh**: Compose detection now prefers `podman-compose`/`podman compose`; compose path updated; shared starters list expanded
+  - **scripts/restore_postgres.sh**: All `docker-compose stop` replaced with `podman compose` commands
+  - **scripts/run_python_tests.sh**: Docker-compose references replaced with podman compose
+  - **scripts/setup.sh v2.0.0**: Added `--infra` option, fixed AI agent symlinks (full .agent/ structure), expanded shared starters fallback, updated "Next steps" with correct paths
+  - **README.md** and service READMEs updated from `docker-compose` to `podman compose` references
+
 - **P18: Accessibility & A11y Compliance - WCAG 2.1 AA (Feb 6, 2026)**:
   - Fixed Axe configuration error: Removed invalid `keyboard` rule from `a11y-audit.spec.ts`
   - Replaced with valid Axe rules: `focus-order-semantics`, `tabindex`, `region`, `aria-hidden-focus`, `scrollable-region-focusable`

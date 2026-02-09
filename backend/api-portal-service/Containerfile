@@ -27,7 +27,7 @@ COPY --chown=185 target/*.jar /deployments/app.jar
 VOLUME ["/deployments/tmp", "/deployments/logs"]
 
 # Expose the service port
-EXPOSE 8099
+EXPOSE 8021
 
 # JVM configuration for containers
 ENV JAVA_OPTS="-XX:+UseContainerSupport     -XX:MaxRAMPercentage=75.0     -XX:InitialRAMPercentage=50.0     -XX:+UseG1GC     -XX:MaxGCPauseMillis=200     -Djava.security.egd=file:/dev/./urandom"

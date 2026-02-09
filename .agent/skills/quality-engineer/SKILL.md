@@ -702,4 +702,66 @@ void shouldProcessOnlyOneTransactionForSameIdempotencyKey() {
 - [ ] Lombok `@Data` verified (public field access removed)
 
 ---
-*Last Updated: January 2026*
+
+## 🚨 P19 Audit Status — Testing Gaps (Feb 2026)
+
+> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.
+> **E2E Pass Rate: <15%** | **Services with ZERO integration tests: 7**
+
+### Services Requiring Immediate Test Coverage
+
+| Service | Unit Tests | Integration Tests | Priority | Remediation |
+|:--------|:-----------|:-----------------|:---------|:------------|
+| **outbox-starter** | 🔴 ZERO | 🔴 ZERO | P0 | R-004 |
+| **saga-starter** | 🔴 ZERO | 🔴 ZERO | P0 | R-004 |
+| **lending-service** | ⚠️ Unit only | 🔴 ZERO | P0 | R-004 |
+| **fx-service** | ⚠️ Unit only | 🔴 ZERO | P0 | R-004 |
+| **cms-service** | ⚠️ 2 files | 🔴 ZERO | P1 | R-006 |
+| **ab-testing-service** | ⚠️ Minimal | 🔴 ZERO | P1 | R-006 |
+| **statement-service** | 🔴 2 files | 🔴 ZERO | P1 | R-006 |
+| **support-service** | ⚠️ Minimal | 🔴 ZERO | P1 | R-008 |
+| **promotion-service** | ⚠️ Minimal | 🔴 ZERO | P1 | R-008 |
+
+### E2E Playwright Status
+
+- 12 spec files, ~424 tests, **<15% passing**
+- Root causes: auth middleware redirects, missing UI features, selector mismatches
+- Investment module: tests exist but features NOT implemented
+- Lending, KYC, Bill Pay: major implementation gaps
+- **Fix strategy**: Skip unimplemented tests, fix auth fixture, align selectors (R-009)
+
+### Missing Test Patterns to Implement
+
+1. **Outbox Starter Integration Test** (See `docs/guides/LESSONS.md`):
+   ```java
+   @SpringBootTest
+   @Testcontainers
+   class OutboxStarterIntegrationTest {
+       @Container static PostgreSQLContainer<?> pg = ...;
+       @Container static KafkaContainer kafka = ...;
+       // Test: save entity → outbox entry created → Debezium publishes → consumer receives
+   }
+   ```
+
+2. **Contract Testing with Pact** (See `docs/guides/LESSONS.md`):
+   ```java
+   @ExtendWith(PactConsumerTestExt.class)
+   class WalletConsumerPactTest {
+       @Pact(consumer = "transaction-service", provider = "wallet-service")
+       V4Pact walletBalancePact(PactDslWithProvider builder) { ... }
+   }
+   ```
+
+3. **Financial Integrity Invariants**:
+   - Total debits == Total credits (double-entry ledger)
+   - Account balance >= 0 (no overdraft without authorization)
+   - Idempotency: duplicate requests yield same result
+
+### Load Testing Gap
+
+- `tests/load-tests/src/` is an **empty scaffold** (no Gatling simulations)
+- Real Gatling sims exist in `tests/performance/` (separate folder)
+- Action: Consolidate to `tests/load-tests/` or document the structure (R-013)
+
+---
+*Last Updated: February 2026 (P19 Audit)*

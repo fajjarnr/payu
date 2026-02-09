@@ -3,6 +3,10 @@
 Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestrasi **Agents** (Dedicated execution units) untuk mencapai efisiensi maksimal dalam siklus pengembangan PayU.
 
 > **Note**: Setelah konsolidasi Januari 2026, PayU memiliki **17 Skills** yang terintegrasi.
+> 
+> **🚨 P19 AUDIT (Feb 2026)**: Production Readiness **48/100** — 5 P0 blockers.
+> **ALWAYS read `.agent/context/P19-AUDIT-STATUS.md` FIRST** before any development work.
+> Fix instructions: `docs/guides/REMEDIATION_PLAYBOOK.md` | Remediation workflow: `.agent/workflows/p19-remediation.md`
 
 ## 🏗️ Core Mapping Strategy
 
@@ -85,4 +89,26 @@ Untuk mencapai kecepatan ekstrim, asisten AI harus menjalankan agen secara paral
 3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama.
 
 ---
-*Last Updated: January 2026 (v3.0.0 - 17 Skills)*
+
+## 🔧 P19 Remediation Orchestration (Feb 2026 Priority)
+
+Untuk membawa platform dari 48% → 80%, gunakan alur ini:
+
+| Phase | Remedy | Agents | SP |
+|:------|:-------|:-------|:---|
+| **P0 Sprint 1** | R-001: JWT BFF | `@frontend-architect` + `@cybersecurity-architect` | 8 |
+| **P0 Sprint 1** | R-002: Outbox integration | `@integration-architect` + `@core-banking-engineer` | 5 |
+| **P0 Sprint 1** | R-003: Credential cleanup | `@cybersecurity-architect` + `@platform-engineer` | 3 |
+| **P0 Sprint 1** | R-004: Starter tests | `@tester` | 5 |
+| **P0 Sprint 1** | R-005: Port conflict | `@platform-engineer` | 1 |
+| **P0 Sprint 1** | R-006: Starter integration | `@core-banking-engineer` | 3 |
+| **P1 Sprint 2-3** | R-007: Quarkus security | `@core-banking-engineer` + `@cybersecurity-architect` | 8 |
+| **P1 Sprint 2-3** | R-008: Hexagonal refactor | `@core-banking-engineer` + `@scaffolding-expert` | 13 |
+| **P1 Sprint 2-3** | R-009: Fix E2E tests | `@tester` + `@frontend-architect` | 8 |
+| **P2 Sprint 4** | R-013: Load tests | `@tester` | 8 |
+| **P2 Sprint 4** | R-014: Contract tests | `@tester` | 5 |
+
+**Full workflow**: See `.agent/workflows/p19-remediation.md`
+
+---
+*Last Updated: February 2026 (v3.1.0 - P19 Audit Integration)*

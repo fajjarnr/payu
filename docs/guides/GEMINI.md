@@ -4,7 +4,20 @@
 
 ---
 
-## 📋 Project Overview
+## � P19 Audit Status (Feb 2026) — READ FIRST
+
+> **Production Readiness: 🔴 48/100** | **Platform Maturity: 🟡 62%**
+>
+> There are **5 P0 blockers** that MUST be fixed before deployment.
+> - **Full status**: `.agent/context/P19-AUDIT-STATUS.md`
+> - **Fix instructions**: `docs/guides/REMEDIATION_PLAYBOOK.md`
+> - **Implementation patterns**: `docs/guides/LESSONS.md`
+> - **Remediation workflow**: `.agent/workflows/p19-remediation.md`
+> - **Full roadmap**: `docs/roadmap/TODOS.md`
+
+---
+
+## �📋 Project Overview
 
 **PayU** adalah platform digital banking standalone yang dibangun dengan arsitektur microservices di atas **Red Hat OpenShift 4.20+** ecosystem. Platform ini dirancang sebagai payment infrastructure berskala enterprise yang dapat digunakan oleh multiple projects.
 

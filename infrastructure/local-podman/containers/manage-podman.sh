@@ -41,31 +41,35 @@ check_podman() {
 create_env_file() {
     if [ ! -f "$PROJECT_ROOT/.env" ]; then
         print_warning ".env file not found. Creating template..."
-        cat > "$PROJECT_ROOT/.env" << EOF
+        cat > "$PROJECT_ROOT/.env" << 'EOF'
+# PayU Local Development Environment
+# ⚠️  IMPORTANT: Replace ALL placeholder values before starting services!
+# ⚠️  NEVER commit this file to version control!
+
 # PostgreSQL
 POSTGRES_USER=payu
-POSTGRES_PASSWORD=payu_secret
+POSTGRES_PASSWORD=CHANGE_ME_postgres_password
 POSTGRES_DB=payu_account
 
 # Keycloak
 KEYCLOAK_ADMIN=admin
-KEYCLOAK_ADMIN_PASSWORD=admin
-KEYCLOAK_DB_PASSWORD=payu_secret
+KEYCLOAK_ADMIN_PASSWORD=CHANGE_ME_keycloak_admin
+KEYCLOAK_DB_PASSWORD=CHANGE_ME_keycloak_db
 
 # Test Environment
 TEST_POSTGRES_USER=payu_test
-TEST_POSTGRES_PASSWORD=test_secret
+TEST_POSTGRES_PASSWORD=CHANGE_ME_test_postgres
 TEST_POSTGRES_DB=payu_test_account
-TEST_KEYCLOAK_DB_PASSWORD=test_secret
+TEST_KEYCLOAK_DB_PASSWORD=CHANGE_ME_test_keycloak
 
 # Monitoring
 GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
+GRAFANA_ADMIN_PASSWORD=CHANGE_ME_grafana_admin
 
 # Vault
-VAULT_DEV_ROOT_TOKEN_ID=dev-only-token
+VAULT_DEV_ROOT_TOKEN_ID=CHANGE_ME_vault_token
 EOF
-        print_info "Created .env template. Please review and update with your values."
+        print_info "Created .env template. ⚠️  Please update ALL 'CHANGE_ME_*' values before starting services."
     fi
 }
 

@@ -110,8 +110,12 @@ payu/
 git clone <repository-url>
 cd payu
 
-# Local Infrastructure (Docker Compose)
-docker-compose up -d
+# Local Infrastructure (Podman Compose)
+cd infrastructure/local-podman && podman compose up -d
+cd ../..
+
+# Or use setup script
+./scripts/setup.sh --infra
 
 # Build Backend
 mvn clean package -DskipTests -T 1C

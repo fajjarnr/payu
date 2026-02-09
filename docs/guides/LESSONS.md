@@ -1124,3 +1124,568 @@
 * **Lesson**: Accessibility should be considered from design phase, not as an afterthought in testing.
 * **Files Affected**: `frontend/web-app/e2e/a11y-audit.spec.ts`
 
+---
+
+## 🔒 Security Architecture Patterns (Feb 2026 Audit)
+
+### 1. JWT Token Storage: localStorage vs httpOnly Cookies
+
+* **The Problem**: `frontend/web-app/src/lib/api.ts` stores JWT tokens in `localStorage` (lines 15, 61) while `stores/authStore.ts` documentation explicitly states tokens must ONLY be in httpOnly cookies. The implementation contradicts its own security architecture.
+* **Why localStorage is Dangerous**:
+    * Any XSS attack can read `localStorage.getItem('token')` — stealing all user sessions
+    * PCI-DSS Section 6.5.7 explicitly prohibits storing sensitive auth tokens in client-accessible storage
+    * Unlike httpOnly cookies, JavaScript has full read/write access to localStorage
+* **The Correct Pattern — BFF (Backend-for-Frontend)**:
+    ```
+    Browser → Next.js API Route (BFF) → Backend Service
+                    ↕
+           httpOnly cookie (token)
+    ```
+    1. Login request goes to Next.js API route (`/api/auth/login`)
+    2. API route calls auth-service, receives JWT tokens
+    3. API route sets httpOnly, Secure, SameSite=Strict cookie
+    4. Browser NEVER sees the raw JWT token
+    5. All subsequent API calls go through Next.js API routes which attach the token
+
+* **Implementation Steps**:
+    ```typescript
+    // src/app/api/auth/login/route.ts (Next.js BFF)
+    import { cookies } from 'next/headers';
+
+    export async function POST(request: Request) {
+      const body = await request.json();
+      const authResponse = await fetch(`${process.env.AUTH_SERVICE_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await authResponse.json();
+
+      if (authResponse.ok) {
+        const cookieStore = await cookies();
+        cookieStore.set('accessToken', data.accessToken, {
+          httpOnly: true,       // JavaScript cannot read this
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',   // CSRF protection
+          maxAge: 900,          // 15 minutes
+          path: '/',
+        });
+        cookieStore.set('refreshToken', data.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 604800,       // 7 days
+          path: '/api/auth',    // Only sent to auth endpoints
+        });
+        return Response.json({ success: true });
+      }
+      return Response.json(data, { status: authResponse.status });
+    }
+    ```
+
+    ```typescript
+    // src/app/api/proxy/[...path]/route.ts (API Proxy)
+    import { cookies } from 'next/headers';
+
+    export async function GET(request: Request, { params }: { params: { path: string[] } }) {
+      const cookieStore = await cookies();
+      const token = cookieStore.get('accessToken')?.value;
+      if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+      const backendUrl = `${process.env.GATEWAY_URL}/${params.path.join('/')}`;
+      const response = await fetch(backendUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return Response.json(await response.json(), { status: response.status });
+    }
+    ```
+
+    ```typescript
+    // src/lib/api.ts (CORRECTED — No more localStorage)
+    class ApiClient {
+      private baseUrl = '/api/proxy'; // All calls go through Next.js BFF
+
+      async get<T>(path: string): Promise<T> {
+        const res = await fetch(`${this.baseUrl}${path}`, { credentials: 'include' });
+        if (res.status === 401) {
+          // Try refresh via BFF
+          const refreshed = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+          if (refreshed.ok) return this.get<T>(path); // Retry
+          window.location.href = '/login';
+          throw new Error('Session expired');
+        }
+        return res.json();
+      }
+    }
+    ```
+
+* **Migration Checklist**:
+    - [ ] Create `/api/auth/login`, `/api/auth/logout`, `/api/auth/refresh` API routes
+    - [ ] Create `/api/proxy/[...path]` catch-all API route
+    - [ ] Remove ALL `localStorage.getItem('token')` / `localStorage.setItem('token')` calls
+    - [ ] Update `src/lib/api.ts` to use BFF proxy
+    - [ ] Update `src/stores/authStore.ts` to remove token state
+    - [ ] Update `middleware.ts` to read from cookies (already partially done)
+    - [ ] Update E2E test fixtures to set httpOnly cookies
+
+### 2. Encryption Key Derivation: SHA-256 vs PBKDF2
+
+* **The Problem**: `security-starter`'s `EncryptionService` uses `MessageDigest.getInstance("SHA-256")` for key derivation. SHA-256 is a hash, not a KDF — it provides no protection against brute-force/dictionary attacks on weak keys.
+* **Why This Matters**: A single SHA-256 computation takes microseconds. An attacker with the encrypted data can try billions of key guesses per second.
+* **The Correct Pattern**:
+    ```java
+    // BEFORE (Weak — single SHA-256 hash)
+    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    byte[] keyBytes = digest.digest(masterKey.getBytes(StandardCharsets.UTF_8));
+
+    // AFTER (Strong — PBKDF2 with 600,000 iterations)
+    SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+    byte[] salt = getSaltFromVault(); // Must be unique per deployment
+    KeySpec spec = new PBEKeySpec(masterKey.toCharArray(), salt, 600_000, 256);
+    SecretKey key = factory.generateSecret(spec);
+    byte[] keyBytes = key.getEncoded();
+    ```
+* **Key Rotation Pattern**:
+    ```java
+    public class RotatingEncryptionService {
+        private final Map<String, SecretKey> keyVersions;
+        private final String currentVersion;
+
+        public String encrypt(String plaintext) {
+            byte[] encrypted = doEncrypt(plaintext, keyVersions.get(currentVersion));
+            return currentVersion + ":" + Base64.encode(encrypted); // Prefix with version
+        }
+
+        public String decrypt(String ciphertext) {
+            String[] parts = ciphertext.split(":", 2);
+            String version = parts[0];
+            SecretKey key = keyVersions.get(version);
+            return doDecrypt(Base64.decode(parts[1]), key);
+        }
+    }
+    ```
+* **Best Practice**: Store encryption keys in HashiCorp Vault Transit backend, not in environment variables.
+
+### 3. Shared Starter Integration Checklist
+
+* **The Problem**: 4 Spring Boot services don't use shared starters (cms-service: 0/4, ab-testing-service: 1/4, investment-service: 2/4, statement-service: 1/4). This creates security and resilience blind spots.
+* **Correct Integration Pattern**:
+    ```xml
+    <!-- service pom.xml — Add ALL 4 starters -->
+    <dependencies>
+        <!-- Security: JWT auth, PII encryption, audit logging -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>security-starter</artifactId>
+        </dependency>
+        <!-- Resilience: Circuit breaker, retry, bulkhead, rate limit -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>resilience-starter</artifactId>
+        </dependency>
+        <!-- Cache: Multi-layer L1 Caffeine + L2 Redis -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>cache-starter</artifactId>
+        </dependency>
+        <!-- Commons: ApiResponse, Money VO, GlobalExceptionHandler -->
+        <dependency>
+            <groupId>id.payu</groupId>
+            <artifactId>api-commons</artifactId>
+        </dependency>
+    </dependencies>
+    ```
+* **Verification After Adding**:
+    1. Service starts without `BeanCreationException` → Check auto-configuration
+    2. `GET /actuator/health` shows `security`, `resilience`, `cache` components
+    3. Unauth request to protected endpoint → 401 (security-starter working)
+    4. Hit rate limit → 429 (resilience-starter working)
+    5. Second identical request faster → Cache hit (cache-starter working)
+
+### 4. Transactional Outbox Pattern Integration
+
+* **The Problem**: `outbox-starter` is fully built (90% quality) but 0 services use it. Financial transactions publish Kafka events without transactional guarantees — if Kafka is down during a transaction, the event is lost silently.
+* **Why This Is Critical for Banking**: A transfer that succeeds in the database but fails to publish a Kafka event means the wallet balance updates but the notification/audit trail is lost.
+* **Correct Integration**:
+    ```java
+    // transaction-service: TransferService.java
+    @Service
+    @RequiredArgsConstructor
+    public class TransferService {
+        private final TransactionRepository transactionRepository;
+        private final OutboxService outboxService; // From outbox-starter
+
+        @Transactional // CRITICAL: Same transaction for DB write + outbox event
+        public TransferResult execute(TransferCommand command) {
+            Transaction tx = Transaction.create(command);
+            transactionRepository.save(tx);
+
+            // Event saved in same DB transaction — guaranteed delivery
+            outboxService.createEvent(
+                "transaction",                        // aggregate type
+                tx.getId().toString(),                // aggregate ID
+                "TransferCompleted",                  // event type
+                "payu.transactions.completed",        // Kafka topic
+                Map.of(                               // payload
+                    "transactionId", tx.getId(),
+                    "amount", tx.getAmount(),
+                    "sourceAccount", tx.getSourceAccountId(),
+                    "destAccount", tx.getDestAccountId()
+                )
+            );
+
+            return TransferResult.success(tx);
+        }
+    }
+    ```
+    The `OutboxPublisher` (scheduled task from outbox-starter) polls `outbox_events` table and publishes to Kafka with retry. If Kafka is down, events accumulate in the table and are published when Kafka recovers — **zero event loss**.
+
+* **Services That MUST Use Outbox**:
+    - `transaction-service` — transfers, payments, QRIS
+    - `wallet-service` — balance updates, ledger entries
+    - `lending-service` — loan disbursements, repayments
+    - `billing-service` — bill payments
+
+### 5. Saga Orchestration Pattern Integration
+
+* **The Problem**: `saga-starter` is fully built (85% quality) with orchestrator, compensation, recovery, and monitoring — but 0 services use it. `transaction-service` has handcrafted saga logic that doesn't leverage the shared implementation.
+* **Correct Integration**:
+    ```java
+    // transaction-service: TransferSaga.java
+    @Component
+    @RequiredArgsConstructor
+    public class TransferSaga {
+        private final SagaOrchestrator orchestrator;
+
+        public TransferResult execute(TransferCommand cmd) {
+            SagaDefinition<TransferContext> saga = SagaDefinition.<TransferContext>builder()
+                .step("validate")
+                    .action(ctx -> validateAccounts(ctx))
+                    .compensation(ctx -> {}) // No-op, validation is read-only
+                .step("debit-source")
+                    .action(ctx -> debitSourceWallet(ctx))
+                    .compensation(ctx -> creditSourceWallet(ctx)) // Reverse debit
+                .step("credit-destination")
+                    .action(ctx -> creditDestinationWallet(ctx))
+                    .compensation(ctx -> debitDestinationWallet(ctx)) // Reverse credit
+                .step("notify")
+                    .action(ctx -> sendNotification(ctx))
+                    .compensation(ctx -> {}) // Non-critical, no compensation needed
+                    .continueOnFailure(true) // Don't fail saga if notification fails
+                .build();
+
+            return orchestrator.execute(saga, new TransferContext(cmd));
+            // If "credit-destination" fails, orchestrator automatically:
+            // 1. Calls creditSourceWallet() to reverse the debit
+            // 2. Logs the saga as COMPENSATED
+            // 3. Returns failure result
+        }
+    }
+    ```
+
+### 6. Quarkus Services: Security Without Shared Starters
+
+* **The Problem**: 3 Quarkus services (notification, gateway, api-portal) can't use Spring Boot starters. They currently have NO JWT validation and NO circuit breakers.
+* **Option A — Quarkus-Native Equivalent**:
+    ```java
+    // gateway-service: SecurityFilter.java (Quarkus)
+    @Provider
+    @Priority(Priorities.AUTHENTICATION)
+    public class JwtValidationFilter implements ContainerRequestFilter {
+        @ConfigProperty(name = "mp.jwt.verify.publickey.location")
+        String jwksUri;
+
+        @Override
+        public void filter(ContainerRequestContext ctx) {
+            String authHeader = ctx.getHeaderString("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                ctx.abortWith(Response.status(401).entity(
+                    Map.of("error", "MISSING_TOKEN")).build());
+                return;
+            }
+            try {
+                JsonWebToken jwt = validateToken(authHeader.substring(7));
+                ctx.setProperty("jwt", jwt);
+            } catch (Exception e) {
+                ctx.abortWith(Response.status(401).entity(
+                    Map.of("error", "INVALID_TOKEN")).build());
+            }
+        }
+    }
+    ```
+    ```properties
+    # application.properties (Quarkus MicroProfile JWT)
+    mp.jwt.verify.publickey.location=${KEYCLOAK_JWKS_URL:http://keycloak:8080/realms/payu/protocol/openid-connect/certs}
+    mp.jwt.verify.issuer=${KEYCLOAK_ISSUER:http://keycloak:8080/realms/payu}
+    quarkus.smallrye-jwt.enabled=true
+    ```
+* **Option B — Migrate to Spring Boot** (recommended for long-term consistency):
+    ```xml
+    <!-- Change parent POM from Quarkus to Spring Boot parent -->
+    <parent>
+        <groupId>id.payu</groupId>
+        <artifactId>payu-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    ```
+    Benefits: Unified starters, same security model, consistent monitoring.
+    Cost: Rewrite ~500 lines per service (JAX-RS → Spring MVC, CDI → Spring DI).
+
+## 🏗️ Architecture Patterns (Feb 2026 Audit)
+
+### 1. Hexagonal Architecture Enforcement
+
+* **The Problem**: 8/19 Java services use flat packages (`controller/`, `service/`, `repository/`) instead of hexagonal (`adapter/web/`, `domain/port/in/`, `domain/port/out/`, `application/service/`). This violates the architectural standard documented in ADRs.
+* **Why Hexagonal Matters for Banking**:
+    * Domain logic is testable without Spring/DB/Kafka infrastructure
+    * Swapping a payment provider (e.g., BI-FAST → SNAP) only changes adapter, not domain
+    * ArchUnit rules in `archunit-starter` enforce this — but only if packages follow the convention
+* **Standard Package Structure**:
+    ```
+    com.payu.{service}/
+    ├── adapter/
+    │   ├── web/            # REST Controllers (inbound)
+    │   │   └── dto/        # Request/Response DTOs
+    │   ├── persistence/    # JPA Repositories, Entities (outbound)
+    │   │   ├── entity/     # JPA @Entity classes
+    │   │   └── mapper/     # Entity ↔ Domain mappers
+    │   ├── messaging/      # Kafka producers/consumers
+    │   └── client/         # HTTP clients to other services
+    ├── domain/
+    │   ├── model/          # Domain objects (NO annotations)
+    │   ├── port/
+    │   │   ├── in/         # Use case interfaces (e.g., TransferUseCase)
+    │   │   └── out/        # Repository port interfaces (e.g., TransactionPort)
+    │   └── exception/      # Domain exceptions
+    ├── application/
+    │   ├── service/        # Use case implementations
+    │   └── mapper/         # DTO ↔ Domain mappers
+    └── infrastructure/
+        └── config/         # Spring @Configuration, Security, etc.
+    ```
+* **Migration Strategy for Existing Services**:
+    1. Create new packages following hexagonal convention
+    2. Move classes one layer at a time (start with domain → then ports → then adapters)
+    3. Run ArchUnit tests after each move to validate no violations
+    4. Don't refactor logic — only move files and fix imports
+
+### 2. Dual Config File Trap (application.yaml + application.yml)
+
+* **The Problem**: 5 services have BOTH `application.yaml` and `application.yml`. Spring Boot loads both — **last one wins**, which depends on filesystem ordering. This creates silent, unpredictable configuration bugs.
+* **The Fix**: Standardize to ONE file per service:
+    ```bash
+    # Audit: Find services with dual configs
+    find backend -name "application.yaml" -exec dirname {} \; | while read dir; do
+      if [ -f "$dir/application.yml" ]; then
+        echo "DUAL CONFIG: $dir"
+      fi
+    done
+
+    # Fix: Merge into application.yml and delete application.yaml
+    # For each affected service:
+    # 1. Compare both files: diff application.yaml application.yml
+    # 2. Merge unique properties into application.yml
+    # 3. Delete application.yaml
+    # 4. Verify: mvn spring-boot:run (no config errors)
+    ```
+* **Services Affected**: investment-service, lending-service, compliance-service, cms-service, ab-testing-service
+
+### 3. Docker Compose Port Conflict Detection
+
+* **The Problem**: `api-portal-service` (8099:8080) and `keycloak` (8099:8080) both map to host port 8099 — they cannot run simultaneously.
+* **Prevention Script**:
+    ```bash
+    # scripts/check-port-conflicts.sh
+    #!/bin/bash
+    echo "Checking for port conflicts in docker-compose.yml..."
+    grep -oP '"\K\d+(?=:\d+")' docker-compose.yml | sort | uniq -d | while read port; do
+      echo "🔴 CONFLICT: Host port $port is used by multiple services:"
+      grep -n "\"$port:" docker-compose.yml
+    done
+    ```
+* **The Fix**: Change api-portal-service to 8100:8080 in docker-compose.yml.
+
+### 4. next.config.ts Remote Pattern Security
+
+* **The Problem**: `remotePatterns: [{ hostname: '**' }]` allows loading images from ANY domain — potential SSRF vector.
+* **The Correct Pattern**:
+    ```typescript
+    // next.config.ts
+    const nextConfig: NextConfig = {
+      images: {
+        remotePatterns: [
+          { protocol: 'https', hostname: 'cdn.payu.id' },
+          { protocol: 'https', hostname: 'assets.payu.id' },
+          { protocol: 'https', hostname: '*.payu.id' },
+          // Dev only — remove in production:
+          ...(process.env.NODE_ENV === 'development'
+            ? [{ protocol: 'http' as const, hostname: 'localhost' }]
+            : []),
+        ],
+      },
+    };
+    ```
+
+## 🧪 Testing Patterns (Feb 2026 Audit)
+
+### 1. Missing Integration Tests for Financial Services
+
+* **The Problem**: `lending-service` and `fx-service` have ZERO integration tests. These are financial services where bugs mean money loss.
+* **Minimum Integration Test Template**:
+    ```java
+    // lending-service: LoanDisbursementIntegrationTest.java
+    @SpringBootTest
+    @Testcontainers
+    @ActiveProfiles("test")
+    class LoanDisbursementIntegrationTest {
+
+        @Container
+        static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("payu_lending_test");
+
+        @DynamicPropertySource
+        static void configureProperties(DynamicPropertyRegistry registry) {
+            registry.add("spring.datasource.url", postgres::getJdbcUrl);
+            registry.add("spring.datasource.username", postgres::getUsername);
+            registry.add("spring.datasource.password", postgres::getPassword);
+        }
+
+        @Autowired private LendingController controller;
+        @Autowired private LoanRepository loanRepository;
+
+        @Test
+        void shouldDisburseLoanAndCreateRepaymentSchedule() {
+            // Given
+            var request = new LoanApplicationRequest(
+                "CUST-001", BigDecimal.valueOf(10_000_000), 12, "PERSONAL"
+            );
+
+            // When
+            var response = controller.applyForLoan(request);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            var loan = loanRepository.findById(response.getBody().getLoanId());
+            assertThat(loan).isPresent();
+            assertThat(loan.get().getStatus()).isEqualTo(LoanStatus.PENDING_APPROVAL);
+            assertThat(loan.get().getRepaymentSchedule()).hasSize(12); // Monthly installments
+        }
+
+        @Test
+        void shouldRejectLoanExceedingCreditLimit() {
+            var request = new LoanApplicationRequest(
+                "CUST-001", BigDecimal.valueOf(999_999_999), 12, "PERSONAL"
+            );
+
+            assertThatThrownBy(() -> controller.applyForLoan(request))
+                .isInstanceOf(LendingDomainException.class)
+                .hasMessageContaining("exceeds credit limit");
+        }
+    }
+    ```
+
+### 2. Shared Starter Testing Pattern
+
+* **The Problem**: `outbox-starter` (10 source files, 0 tests) and `saga-starter` (20 source files, 0 tests) are critical financial components with zero test coverage.
+* **Outbox Starter Test Template**:
+    ```java
+    @SpringBootTest
+    @Testcontainers
+    class OutboxPublisherIntegrationTest {
+
+        @Container
+        static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+
+        @Container
+        static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
+
+        @Autowired private OutboxService outboxService;
+        @Autowired private OutboxRepository outboxRepository;
+
+        @Test
+        void shouldPublishEventToKafkaAfterDatabaseCommit() {
+            // Given: Create an outbox event within a transaction
+            outboxService.createEvent("transaction", "TX-001", "TransferCompleted",
+                "payu.transactions.completed", Map.of("amount", 100000));
+
+            // Then: Event exists in outbox table
+            var events = outboxRepository.findUnpublishedEvents(100);
+            assertThat(events).hasSize(1);
+            assertThat(events.get(0).getAggregateType()).isEqualTo("transaction");
+
+            // When: Publisher runs (triggered by scheduler or manually)
+            outboxPublisher.publishPendingEvents();
+
+            // Then: Event marked as published
+            var published = outboxRepository.findById(events.get(0).getId());
+            assertThat(published.get().getPublishedAt()).isNotNull();
+        }
+
+        @Test
+        void shouldRetryFailedEventsUpToMaxAttempts() {
+            // ... test retry behavior
+        }
+
+        @Test
+        void shouldNotPublishDuplicateEvents() {
+            // ... test idempotency
+        }
+    }
+    ```
+
+### 3. Contract Testing Between Services
+
+* **The Problem**: 22 microservices communicate without contract tests. API changes break consumers silently.
+* **Recommended Pattern (Pact)**:
+    ```java
+    // wallet-service (provider) verifies contract with transaction-service (consumer)
+    @Provider("wallet-service")
+    @PactBroker(url = "${PACT_BROKER_URL}")
+    @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    class WalletServicePactVerificationTest {
+
+        @TestTemplate
+        @ExtendWith(PactVerificationInvocationContextProvider.class)
+        void pactVerificationTestTemplate(PactVerificationContext context) {
+            context.verifyInteraction();
+        }
+    }
+    ```
+    ```java
+    // transaction-service (consumer) defines expected contract
+    @ExtendWith(PactConsumerTestExt.class)
+    class WalletServiceConsumerPactTest {
+
+        @Pact(provider = "wallet-service", consumer = "transaction-service")
+        V4Pact debitWalletPact(PactDslWithProvider builder) {
+            return builder
+                .given("wallet WALLET-001 exists with balance 10000000")
+                .uponReceiving("a debit request")
+                .method("POST")
+                .path("/api/v1/wallets/WALLET-001/debit")
+                .body(new PactDslJsonBody()
+                    .decimalType("amount", 100000.00)
+                    .stringType("currency", "IDR")
+                    .stringType("referenceId", "TX-001"))
+                .willRespondWith()
+                .status(200)
+                .body(new PactDslJsonBody()
+                    .stringType("walletId", "WALLET-001")
+                    .decimalType("balance", 9900000.00))
+                .toPact(V4Pact.class);
+        }
+    }
+    ```
+* **Critical Pairs to Test First**:
+    1. transaction-service ↔ wallet-service (money movement)
+    2. transaction-service ↔ account-service (account validation)
+    3. lending-service ↔ wallet-service (loan disbursement)
+    4. billing-service ↔ wallet-service (bill payment)
+
+---
+
+_See also: [REMEDIATION_PLAYBOOK.md](REMEDIATION_PLAYBOOK.md) for prioritized step-by-step action plans._
+

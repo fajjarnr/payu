@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     allowed_extensions: set = {".jpg", ".jpeg", ".png"}
 
     # Security
-    secret_key: str = os.getenv("SECRET_KEY", "change-me-in-production")
+    secret_key: str = os.getenv("SECRET_KEY", "")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
@@ -63,4 +63,7 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    return Settings()
+    settings = Settings()
+    if not settings.secret_key:
+        raise ValueError("SECRET_KEY environment variable must be set. Never run without it.")
+    return settings

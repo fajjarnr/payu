@@ -12,7 +12,7 @@ quarkus:
     auth-server-url: ${OIDC_AUTH_SERVER_URL:http://localhost:8080/realms/payu}
     client-id: ${OIDC_CLIENT_ID:gateway-service}
     credentials:
-      secret: ${OIDC_CLIENT_SECRET:secret} # pragma: allowlist secret
+      secret: ${OIDC_CLIENT_SECRET} # pragma: allowlist secret
     tls:
       verification: none # pragma: allowlist secret
     token:
@@ -71,7 +71,7 @@ gateway:
   # Authorization Configuration
   authorization:
     enabled: true
-    jwt-secret: ${JWT_SECRET:dGVzdC1qd3Qtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC0xMjM0NTY3ODkw}
+    jwt-secret: ${JWT_SECRET}
   # Backend Services
   services:
     account-service:
@@ -335,7 +335,7 @@ gateway:
       # Partner ID: Secret Key (base64 encoded)
       # In production, these should be stored securely (e.g., Vault)
       # For local development, a default test key is provided
-      partner-1: ${WEBHOOK_PARTNER_1_SECRET:dGVzdC1wYXJ0bmVyLWtleS0xMjM0NTY3ODkw}
+      partner-1: ${WEBHOOK_PARTNER_1_SECRET}
   # IP Whitelisting
   ip-whitelist:
     enabled: true

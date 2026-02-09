@@ -9,7 +9,7 @@
 | `architecture/` | Technical design & C4 diagrams | ARCHITECTURE.md, SERVICE_CATALOG.md, EVENT_CATALOG.md, CICD-MONITORING-GUIDE.md |
 | `product/` | Product requirements & features | PRD.md |
 | `api/` | API documentation | API_STANDARDS.md |
-| `guides/` | Development guides & AI skills | GEMINI.md, CONTRIBUTING.md, AGENT_SKILLS_GUIDE.md, ONBOARDING.md, TDD_QUICK_REFERENCE.md |
+| `guides/` | Development guides & AI skills | GEMINI.md, CONTRIBUTING.md, AGENT_SKILLS_GUIDE.md, ONBOARDING.md, TDD_QUICK_REFERENCE.md, REMEDIATION_PLAYBOOK.md |
 | `operations/` | Runbooks & disaster recovery | DISASTER_RECOVERY.md, LOKISTACK.md, runbooks/ |
 | `security/` | Security policies & runbooks | SECURITY_RUNBOOK.md, PENTEST_REPORT.md |
 | `compliance/` | Regulatory compliance | OJK_BI_REGULATORY_AUDIT.md |
@@ -31,6 +31,8 @@
 - **[CONTRIBUTING.md](guides/CONTRIBUTING.md)** - Git workflow, commit conventions, PR process
 - **[ONBOARDING.md](guides/ONBOARDING.md)** - Developer onboarding guide
 - **[GEMINI.md](guides/GEMINI.md)** - AI Assistant guidelines (mirrored in `CLAUDE.md`)
+- **[REMEDIATION_PLAYBOOK.md](guides/REMEDIATION_PLAYBOOK.md)** - Production readiness remediation plan with code examples
+- **[LESSONS.md](guides/LESSONS.md)** - Lessons learned & implementation patterns
 - **[QA_STRATEGY.md](qa/QA_STRATEGY.md)** - Testing standards, TDD workflow, coverage thresholds
 
 ### For Product Managers

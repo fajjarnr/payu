@@ -957,4 +957,69 @@ const [items, setItems] = useState(() => calculateInitialItems())
 - [SWR Documentation](https://swr.vercel.app)
 
 ---
-*Last Updated: January 2026*
+
+## 🚨 P19 Audit Status — Frontend Gaps (Feb 2026)
+
+> **CRITICAL**: Read `.agent/context/P19-AUDIT-STATUS.md` for full details.
+> **Web-App Score: 72/100** | **Mobile Score: 58/100**
+
+### P0 Security Blocker: JWT in localStorage
+
+**THIS IS THE #1 PRIORITY FIX FOR FRONTEND.**
+
+- **File**: `frontend/web-app/src/lib/api.ts` (line 15, 61) uses `localStorage.setItem('token', ...)`
+- **File**: `frontend/web-app/src/stores/authStore.ts` says "tokens ONLY in httpOnly cookies" — **LIE**
+- **Impact**: Any XSS attack steals all tokens. PCI-DSS violation.
+- **Fix**: BFF (Backend-for-Frontend) pattern using Next.js API routes as a proxy
+
+#### BFF Implementation (from `docs/guides/LESSONS.md`):
+
+```typescript
+// app/api/auth/login/route.ts — Token stays server-side
+export async function POST(req: NextRequest) {
+  const { username, password } = await req.json();
+  const res = await fetch(`${BACKEND_URL}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  const data = await res.json();
+  
+  const response = NextResponse.json({ success: true });
+  response.cookies.set('access_token', data.accessToken, {
+    httpOnly: true, secure: true, sameSite: 'strict',
+    path: '/', maxAge: 900, // 15 min
+  });
+  return response;
+}
+```
+
+- After fixing, **remove ALL `localStorage.getItem('token')` / `setItem('token')` calls**
+- Update `api.ts` to use `credentials: 'include'` instead of `Authorization` header
+- **Remediation code**: R-001 (8 SP)
+
+### P1 Issues
+
+| Issue | File | Fix |
+|:------|:-----|:----|
+| All remote images allowed | `next.config.ts` | Whitelist specific CDN domains (R-010) |
+| No CSP headers | `next.config.ts` | Add `Content-Security-Policy` headers |
+| OAuth token in URL | Auth callback | Use auth code flow with PKCE |
+
+### E2E Testing Status
+
+- 12 Playwright spec files, ~424 tests, **<15% passing**
+- Auth fixture broken (middleware redirects not handled)
+- Investment module: tests written but features NOT implemented
+- Lending, KYC, Bill Pay: major implementation gaps
+- **Fix approach**: Create proper auth fixture, skip unimplemented tests, fix selectors (R-009)
+
+### Mobile App Gaps
+
+- Score: **58/100** — Incomplete feature implementations
+- No biometric authentication
+- Missing offline-first patterns
+- Several screens are placeholder/skeleton only
+
+---
+*Last Updated: February 2026 (P19 Audit)*

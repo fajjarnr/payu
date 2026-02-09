@@ -47,8 +47,8 @@ help: ## Show this help message
 	@echo ""
 	@echo "Test Infrastructure:"
 	@echo "  make test-health-check      - Check test environment health"
-	@echo "  make docker-test-up         - Start Docker test environment"
-	@echo "  make docker-test-down       - Stop Docker test environment"
+	@echo "  make docker-test-up         - Start Podman test environment"
+	@echo "  make docker-test-down       - Stop Podman test environment"
 	@echo "  make seed-test-data         - Seed test databases"
 	@echo "  make cleanup-test-db        - Reset test databases"
 	@echo ""
@@ -136,14 +136,14 @@ test-analytics: ## Test analytics-service
 test-health-check: ## Check test environment health
 	@./scripts/test-health-check.sh
 
-docker-test-up: ## Start Docker test environment
-	@docker compose -f docker-compose.test.yml up -d
+docker-test-up: ## Start Podman test environment
+	@podman compose -f infrastructure/local-podman/podman-compose.test.yml up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 15
 	@./scripts/test-health-check.sh
 
-docker-test-down: ## Stop Docker test environment
-	@docker compose -f docker-compose.test.yml down -v
+docker-test-down: ## Stop Podman test environment
+	@podman compose -f infrastructure/local-podman/podman-compose.test.yml down -v
 
 seed-test-data: ## Seed test databases with test data
 	@./scripts/seed-test-data.sh
@@ -161,6 +161,10 @@ build-test-deps: ## Install shared dependencies
 	@cd backend/shared/cache-starter && mvn clean install -DskipTests -q
 	@cd backend/shared/resilience-starter && mvn clean install -DskipTests -q
 	@cd backend/shared/security-starter && mvn clean install -DskipTests -q
+	@cd backend/shared/outbox-starter && mvn clean install -DskipTests -q
+	@cd backend/shared/saga-starter && mvn clean install -DskipTests -q
+	@cd backend/shared/events-starter && mvn clean install -DskipTests -q
+	@cd backend/shared/archunit-starter && mvn clean install -DskipTests -q
 	@echo "Shared dependencies installed"
 
 # ============================================
@@ -180,5 +184,5 @@ clean-test: ## Clean test artifacts
 clean: ## Clean all artifacts
 	@$(MAKE) clean-test
 	@echo "Cleaning build artifacts..."
-	@docker compose -f docker-compose.test.yml down -v 2>/dev/null || true
+	@podman compose -f infrastructure/local-podman/podman-compose.test.yml down -v 2>/dev/null || true
 	@echo "All artifacts cleaned"

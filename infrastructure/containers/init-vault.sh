@@ -6,7 +6,16 @@
 set -e
 
 VAULT_ADDR="http://localhost:8200"
-VAULT_TOKEN="${VAULT_TOKEN:-dev-only-token}"
+VAULT_TOKEN="${VAULT_TOKEN:?ERROR: VAULT_TOKEN must be set}"
+
+# Read credentials from environment (fail if not set)
+DB_PASSWORD="${DB_PASSWORD:?ERROR: DB_PASSWORD must be set}"
+DB_USERNAME="${DB_USERNAME:-payu}"
+KEYCLOAK_CLIENT_SECRET="${KEYCLOAK_CLIENT_SECRET:?ERROR: KEYCLOAK_CLIENT_SECRET must be set}"
+KEYCLOAK_ADMIN_USER="${KEYCLOAK_ADMIN_USER:?ERROR: KEYCLOAK_ADMIN_USER must be set}"
+KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:?ERROR: KEYCLOAK_ADMIN_PASSWORD must be set}"
+GRAFANA_ADMIN_USER="${GRAFANA_ADMIN_USER:-admin}"
+GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:?ERROR: GRAFANA_ADMIN_PASSWORD must be set}"
 
 export VAULT_ADDR
 export VAULT_TOKEN
@@ -20,23 +29,23 @@ vault secrets enable -path=secret kv-v2 2>/dev/null || echo "KV v2 already enabl
 echo "Writing database secrets..."
 vault kv put secret/account-service/db \
     url="jdbc:postgresql://postgres:5432/payu_account" \
-    username="payu" \
-    password="payu_secret"
+    username="$DB_USERNAME" \
+    password="$DB_PASSWORD"
 
 vault kv put secret/auth-service/db \
     url="jdbc:postgresql://postgres:5432/payu_auth" \
-    username="payu" \
-    password="payu_secret"
+    username="$DB_USERNAME" \
+    password="$DB_PASSWORD"
 
 vault kv put secret/transaction-service/db \
     url="jdbc:postgresql://postgres:5432/payu_transaction" \
-    username="payu" \
-    password="payu_secret"
+    username="$DB_USERNAME" \
+    password="$DB_PASSWORD"
 
 vault kv put secret/wallet-service/db \
     url="jdbc:postgresql://postgres:5432/payu_wallet" \
-    username="payu" \
-    password="payu_secret"
+    username="$DB_USERNAME" \
+    password="$DB_PASSWORD"
 
 # Keycloak secrets
 echo "Writing Keycloak secrets..."
@@ -44,9 +53,9 @@ vault kv put secret/auth-service/keycloak \
     server-url="http://keycloak:8080" \
     realm="payu" \
     client-id="auth-service" \
-    client-secret="secret" \
-    admin-username="admin" \
-    admin-password="admin"
+    client-secret="$KEYCLOAK_CLIENT_SECRET" \
+    admin-username="$KEYCLOAK_ADMIN_USER" \
+    admin-password="$KEYCLOAK_ADMIN_PASSWORD"
 
 # Kafka secrets
 echo "Writing Kafka secrets..."
@@ -62,8 +71,8 @@ vault kv put secret/gateway-service/redis \
 # Grafana secrets
 echo "Writing Grafana secrets..."
 vault kv put secret/common/grafana \
-    admin-user="admin" \
-    admin-password="admin"
+    admin-user="$GRAFANA_ADMIN_USER" \
+    admin-password="$GRAFANA_ADMIN_PASSWORD"
 
 echo "Vault initialization complete!"
 echo ""

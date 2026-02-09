@@ -26,7 +26,7 @@ KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:8099}"
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 POSTGRES_USER="${POSTGRES_USER:-payu}"
-POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-payu_secret}"
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:?ERROR: POSTGRES_PASSWORD must be set}"
 
 print_header() {
     echo ""
@@ -54,11 +54,12 @@ seed_keycloak() {
 
     # Get admin token
     print_info "Getting Keycloak admin token..."
+    KEYCLOAK_ADMIN_PWD="${KEYCLOAK_ADMIN_PASSWORD:?ERROR: KEYCLOAK_ADMIN_PASSWORD must be set}"
     ADMIN_TOKEN=$(curl -s -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=admin-cli" \
         -d "username=admin" \
-        -d "password=P@ssw0rd123" \
+        -d "password=$KEYCLOAK_ADMIN_PWD" \
         -d "grant_type=password" | jq -r '.access_token')
 
     if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
@@ -148,7 +149,7 @@ verify_seed_data() {
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=admin-cli" \
         -d "username=admin" \
-        -d "password=P@ssw0rd123" \
+        -d "password=$KEYCLOAK_ADMIN_PWD" \
         -d "grant_type=password" | jq -r '.access_token')
 
     KEYCLOAK_USERS=$(curl -s -X GET "$KEYCLOAK_URL/admin/realms/payu/users?max=10" \
@@ -176,9 +177,10 @@ verify_seed_data() {
     print_info "Testing API access..."
 
     # Test login with customer1
+    TEST_USER_PWD="${KEYCLOAK_TEST_USER_PASSWORD:-P@ssw0rd123}"
     LOGIN_RESPONSE=$(curl -s -X POST "$GATEWAY_URL/api/v1/auth/login" \
         -H "Content-Type: application/json" \
-        -d '{"username":"customer1","password":"P@ssw0rd123"}')
+        -d "{\"username\":\"customer1\",\"password\":\"$TEST_USER_PWD\"}")
 
     if echo "$LOGIN_RESPONSE" | jq -e '.access_token' > /dev/null 2>&1; then
         print_success "customer1 login: WORKING"
