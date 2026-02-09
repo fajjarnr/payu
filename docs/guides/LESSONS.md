@@ -1687,5 +1687,301 @@
 
 ---
 
+## 🔑 Encryption & Key Management (Feb 2026 - P3 Audit)
+
+### 1. Key Rotation Pattern for AES-GCM EncryptionService (Feb 9, 2026)
+
+* **The Problem**: `security-starter`'s `EncryptionService` used a single static encryption key with no rotation mechanism. Key compromise meant all historical data was permanently exposed with no migration path.
+* **The Fix**: Added multi-key decryption with fallback chain:
+    ```java
+    // Constructor accepts current key + ordered list of previous keys
+    public EncryptionService(String currentKey, List<String> previousKeys) {
+        this.currentKeyVersion = previousKeys.size() + 1;
+        this.secretKey = deriveKey(currentKey);
+        this.previousKeys = previousKeys.stream().map(this::deriveKey).toList();
+    }
+    ```
+* **Decrypt Strategy**: Try current key first → on failure, iterate previous keys → log which version succeeded → throw if none match.
+* **Re-encryption Helper**: `reEncrypt(ciphertext)` decrypts with any known key, re-encrypts with current key. Use in batch migration jobs.
+* **Backward Compatibility**: Original single-key constructor delegates to `this(key, Collections.emptyList())` — zero breaking changes.
+* **Key Lesson**: Don't embed key version bytes in ciphertext format. AES-GCM authentication tag naturally rejects wrong keys, so trial decryption is both simpler and backward-compatible with existing encrypted data.
+* **Testing**: 6 dedicated rotation tests (multi-key decrypt, re-encrypt, database round-trip, unknown key failure).
+
+### 2. PBKDF2 Key Derivation — Already Fixed, Document the Why (Feb 9, 2026)
+
+* **Context**: P1 fix upgraded `EncryptionService` from SHA-256 to PBKDF2WithHmacSHA256 (600k iterations per OWASP 2024).
+* **Key Lesson**: When changing key derivation, ALL existing encrypted data becomes unreadable unless you maintain backward compatibility. The key rotation pattern (Lesson 1 above) solves this — put the old SHA-256-derived key as a `previousKey` during migration.
+* **Migration Path**:
+    1. Deploy with `new EncryptionService(newPBKDF2Key, List.of(oldSHA256Key))`
+    2. Run batch `reEncrypt()` on all encrypted columns
+    3. Remove old key from config after migration complete
+
+---
+
+## 🧪 Testing Infrastructure (Feb 2026 - P2/P3 Audit)
+
+### 4. Spring Boot AutoConfiguration Testing with ApplicationContextRunner (Feb 9, 2026)
+
+* **The Problem**: Testing `@Configuration` and `@ConditionalOnProperty` classes requires a Spring context but full `@SpringBootTest` is slow and brittle.
+* **The Fix**: Use `ApplicationContextRunner` for isolated, fast auto-configuration tests:
+    ```java
+    @Test
+    void autoConfigurationEnabledByDefault() {
+        new ApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(EventsAutoConfiguration.class))
+            .run(context -> {
+                assertThat(context).hasSingleBean(CloudEventBuilder.class);
+                assertThat(context).hasSingleBean(EventsProperties.class);
+            });
+    }
+
+    @Test
+    void autoConfigurationDisabledWhenPropertyFalse() {
+        new ApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(EventsAutoConfiguration.class))
+            .withPropertyValues("payu.events.enabled=false")
+            .run(context -> {
+                assertThat(context).doesNotHaveBean(CloudEventBuilder.class);
+            });
+    }
+    ```
+* **Key Lesson**: `ApplicationContextRunner` boots in ~200ms vs ~5s for `@SpringBootTest`. Use it for ALL starter auto-configuration tests. No need for `@SpringBootApplication` test class.
+* **Applies To**: events-starter, outbox-starter, saga-starter, cache-starter, resilience-starter, security-starter.
+
+### 5. Spring Cloud Contract — Groovy DSL for Provider-Driven Contracts (Feb 9, 2026)
+
+* **The Problem**: 22 microservices communicating via REST with no contract tests. API changes (renamed fields, changed status codes) break consumers silently.
+* **The Pattern**: Provider-driven contracts using Groovy DSL:
+    ```groovy
+    Contract.make {
+        description "Transfer funds between wallets"
+        request {
+            method POST()
+            url '/api/v1/transactions/transfer'
+            headers {
+                contentType applicationJson()
+                header 'Authorization': $(consumer(regex('Bearer .+')))
+                header 'X-Idempotency-Key': $(consumer(regex('[a-f0-9-]+')))
+            }
+            body([
+                sourceWalletId: $(consumer(regex('[a-f0-9-]+')), producer('wallet-src-uuid')),
+                amount: $(consumer(regex('[0-9]+')), producer(100000))
+            ])
+        }
+        response {
+            status 201
+            body([
+                transactionId: $(producer(regex('[a-f0-9-]+')))
+            ])
+        }
+    }
+    ```
+* **Directory Convention**: `tests/contract/<provider-service>/<contractName>.groovy`
+* **Key Lesson**: Start with the 4 critical financial pairs (transaction↔wallet, transaction↔account, lending↔wallet, billing↔wallet). Groovy DSL is more readable than Pact JSON for banking contracts.
+
+### 6. OWASP ZAP DAST — Podman-Based Security Scanning (Feb 9, 2026)
+
+* **The Problem**: Security tests were static-only (config file checks, report existence). No actual HTTP-based vulnerability scanning.
+* **The Fix**: OWASP ZAP via podman with Automation Framework:
+    ```bash
+    podman run --rm -v $(pwd)/reports:/zap/wrk:rw \
+      --network host \
+      ghcr.io/zaproxy/zaproxy:stable \
+      zap.sh -cmd -autorun /zap/wrk/zap-automation.yaml
+    ```
+* **Three Scan Modes**:
+    1. `baseline` — passive scan only (5 min, safe for CI)
+    2. `api` — OpenAPI spec import + passive (10 min)
+    3. `full` — active scan with injection tests (30+ min, staging only)
+* **CI Gate**: Parse JSON report, exit 1 if any High/Critical alerts found:
+    ```bash
+    HIGH_ALERTS=$(jq '[.site[].alerts[] | select(.riskcode >= "3")] | length' report.json)
+    [[ "$HIGH_ALERTS" -gt 0 ]] && exit 1
+    ```
+* **Key Lesson**: Never run active scan against production. Use `--network host` to reach services on localhost. Suppress known false positives (CSP on API endpoints, anti-CSRF on stateless APIs).
+
+### 7. PITest Mutation Testing Configuration (Feb 9, 2026)
+
+* **The Problem**: Tests pass but may have weak assertions (e.g., `assertNotNull` instead of value checks). No way to measure test quality beyond line coverage.
+* **The Fix**: Added PITest 1.15.0 to parent POM `pluginManagement`:
+    ```xml
+    <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.15.0</version>
+        <dependencies>
+            <dependency>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-junit5-plugin</artifactId>
+                <version>1.2.1</version>
+            </dependency>
+        </dependencies>
+        <configuration>
+            <mutationThreshold>60</mutationThreshold>
+            <coverageThreshold>70</coverageThreshold>
+            <threads>4</threads>
+            <excludedClasses>
+                <param>id.payu.*.config.*</param>
+                <param>id.payu.*Application</param>
+            </excludedClasses>
+        </configuration>
+    </plugin>
+    ```
+* **Usage**: `mvn org.pitest:pitest-maven:mutationCoverage -pl :service-name`
+* **Key Lesson**: Exclude `*config.*` and `*Application` classes — they're infrastructure, not business logic. Set initial thresholds low (60% mutation, 70% coverage) and ratchet up over sprints. 4 threads balances speed vs memory for monorepo builds.
+
+### 8. Load Test Consolidation — Symlink Strategy (Feb 9, 2026)
+
+* **The Problem**: `tests/load-tests/` had an empty scaffold (pom.xml, config), while real Gatling simulations lived in `tests/performance/`. Contributors didn't know which to use.
+* **The Fix**: Symlinks instead of moving files (preserves git history):
+    ```bash
+    ln -s ../../performance/src/test/scala tests/load-tests/src/gatling/scala
+    ln -s ../../performance/src/test/resources/data tests/load-tests/src/gatling/resources/data
+    ```
+* **Key Lesson**: When consolidating duplicated test directories, symlinks are better than file moves. Git tracks the link, both paths work, and no git history is lost. Document the consolidation in a README at the symlink root.
+
+### 9. Verifying Issues Before Fixing — False Positive Detection (Feb 9, 2026)
+
+* **The Problem**: TODOS.md listed "P3-ARCH-001: No GlobalExceptionHandler in api-commons" as an issue. Investigation revealed it already existed with 12 `@ExceptionHandler` methods.
+* **The Lesson**: Always `grep` or search the codebase before implementing a fix for a reported issue. Audit findings can become stale as the codebase evolves. In this session, 3 of 19 P2/P3 items were false positives or already-deprecated:
+    1. P3-ARCH-001 — GlobalExceptionHandler already existed
+    2. P2-INFRA-002 — Traefik insecure only in deprecated archive
+    3. P2-INFRA-003 — Kafka Zookeeper only in deprecated archive
+* **Best Practice**: Before marking an issue on a roadmap, include the exact file path and line number. Stale issues without references waste engineering time.
+
+---
+
+## 🎨 Frontend Engineering (Feb 2026 - P2/P3 Audit)
+
+### 5. Zustand Store Design for Banking Apps (Feb 9, 2026)
+
+* **The Problem**: Only 2 Zustand stores (`authStore`, `uiStore`) for a 22-route banking app. Server state was handled by TanStack Query hooks, but client-only state (UI filters, optimistic updates, notification drawer) had no home.
+* **The Pattern**: Separate concerns between TanStack Query (server state) and Zustand (client state):
+    ```
+    TanStack Query: useWallet(), useAuth(), useTransactions()  → server data + cache
+    Zustand:        walletStore, transactionStore               → UI state + optimistic updates
+    ```
+* **Stores Added**:
+    1. `notificationStore` — unread count, drawer open/close, mark-as-read (client-only UI state)
+    2. `walletStore` — cached balance for instant display, optimistic debit on transfer initiation
+    3. `transactionStore` — filter state (type, status, date range, search), selected transaction for detail panel
+* **Key Lesson**: Don't duplicate server state in Zustand. Use Zustand for: UI state (drawers, filters, selections), optimistic updates (show balance change before API confirms), and derived state (unread notification count).
+
+### 6. Jest to Vitest Migration — Deprecation Strategy (Feb 9, 2026)
+
+* **The Problem**: Both `vitest.config.ts` and `jest.config.js` existed. New contributors ran the wrong runner. CI used Vitest but Jest config confused people.
+* **The Fix**: Rename, don't delete:
+    ```bash
+    mv jest.config.js jest.config.js.deprecated
+    mv jest.setup.js jest.setup.js.deprecated
+    ```
+* **Why Rename Instead of Delete**:
+    1. Git history preserved — `git log --follow jest.config.js.deprecated` still works
+    2. Any CI scripts referencing old config fail loudly (file not found) instead of silently running stale tests
+    3. `.deprecated` suffix is self-documenting — no need for a migration guide
+* **Key Lesson**: Verify the new runner already covers everything before deprecating. In our case, `vitest.setup.ts` already had `IntersectionObserver` mock and `jest-dom` matchers that were in `jest.setup.js`. No functionality lost.
+
+### 7. Next.js Loading Skeletons for LCP Optimization (Feb 9, 2026)
+
+* **The Problem**: Lighthouse LCP at 9.3s on key routes. Users see blank screen while page data loads.
+* **The Fix**: Add `loading.tsx` to each route directory. Next.js automatically shows it during navigation:
+    ```tsx
+    // app/[locale]/dashboard/loading.tsx
+    export default function DashboardLoading() {
+      return (
+        <div className="animate-pulse">
+          {/* Balance card skeleton */}
+          <div className="p-6 rounded-3xl border bg-card mb-8">
+            <div className="h-10 w-56 bg-muted rounded-xl mb-4" />
+            <div className="flex gap-3">
+              <div className="h-10 w-28 bg-muted rounded-full" />
+            </div>
+          </div>
+          {/* Transaction list skeleton */}
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-muted rounded-full" />
+              <div className="h-4 w-32 bg-muted rounded" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    ```
+* **Routes Covered**: dashboard, transfer, investments, lending, bills (the 5 highest-traffic routes).
+* **Key Lesson**: Skeleton shapes should match the actual UI layout — users perceive faster load when the skeleton resembles the final page. Use `animate-pulse` (Tailwind) for subtle shimmer. Don't skeleton everything — focus on above-the-fold content.
+
+### 8. Client-Side Search Component for Documentation (Feb 9, 2026)
+
+* **The Problem**: Developer docs portal had no search. Developers had to manually navigate through guides.
+* **The Fix**: Client-side search with static index (no external service needed):
+    ```tsx
+    const SEARCH_INDEX: SearchResult[] = [
+      { title: 'Authentication', description: 'OAuth2, JWT...', path: '/getting-started/auth', category: 'Getting Started' },
+      // ... all pages
+    ];
+    ```
+* **UX Pattern**: Cmd/Ctrl+K modal (matches VS Code, GitHub, Stripe docs convention):
+    - Arrow key navigation with visual highlight
+    - Category badges for result grouping
+    - Escape to close, Enter to navigate
+* **Key Lesson**: For small doc sites (<50 pages), a static search index is simpler and faster than Algolia/Meilisearch. Maintain the index alongside page creation. Consider moving to a dynamic index (crawl pages at build time) when docs exceed 100 pages.
+
+---
+
+## 🏗️ Infrastructure & CI/CD (Feb 2026 - P2/P3 Audit)
+
+### 8. OpenShift Image Pinning — Registry + Semver (Feb 9, 2026)
+
+* **The Problem**: All 25 OpenShift manifests used `image: <service>:latest`. In production, `:latest` means:
+    - No rollback capability (which version was "latest"?)
+    - No audit trail for deployments
+    - Pods may pull different versions during rolling updates
+* **The Fix**: Pin to internal registry with semver:
+    ```yaml
+    # Before
+    image: account-service:latest
+
+    # After
+    image: image-registry.openshift-image-registry.svc:5000/payu/account-service:1.0.0
+    ```
+* **Bulk Update Command**:
+    ```bash
+    for f in infrastructure/openshift/base/*.yaml; do
+      service=$(basename "$f" .yaml)
+      sed -i "s|image: ${service}:latest|image: image-registry.openshift-image-registry.svc:5000/payu/${service}:1.0.0|" "$f"
+    done
+    ```
+* **Key Lesson**: In CI/CD pipelines, the build step should update the image tag in the manifest (via Kustomize overlay or sed) before ArgoCD syncs. Never rely on `:latest` in any environment beyond local development.
+
+### 9. Tekton Task Definitions — Complete CI/CD Task Set (Feb 9, 2026)
+
+* **The Problem**: Tekton pipelines referenced 5 tasks (maven, buildah, deploy, trivy, pytest) but only `security-scan-task.yaml` existed. Pipelines were non-functional.
+* **The Fix**: Created all 5 task definitions:
+    1. `maven-task.yaml` — UBI9 OpenJDK 21, extracts version from POM, produces JAR
+    2. `buildah-task.yaml` — Rootless build with VFS storage driver (required for OpenShift), outputs image digest
+    3. `deploy-task.yaml` — 3-step: patch manifest → rollout wait → health check (10 retries, 10s interval)
+    4. `trivy-task.yaml` — Severity gate (CRITICAL,HIGH by default), configurable via params
+    5. `pytest-task.yaml` — Python 3.12, markers support, JUnit XML output
+* **Key Pattern for Tekton Tasks**:
+    ```yaml
+    # Always include resource limits for OpenShift quota compliance
+    stepTemplate:
+      resources:
+        requests: { cpu: 500m, memory: 1Gi }
+        limits: { cpu: 2, memory: 2Gi }
+
+    # Use workspaces for sharing between tasks in a pipeline
+    workspaces:
+      - name: source
+        description: Source code workspace
+      - name: dockerconfig
+        description: Docker registry credentials
+        optional: true
+    ```
+* **Key Lesson**: Tekton tasks should be reusable across pipelines. Use `params` for service-specific values (service name, image tag) and `results` to pass outputs between tasks (image digest, version string). Always set resource limits — OpenShift rejects pods without them.
+
+---
+
 _See also: [REMEDIATION_PLAYBOOK.md](REMEDIATION_PLAYBOOK.md) for prioritized step-by-step action plans._
 
