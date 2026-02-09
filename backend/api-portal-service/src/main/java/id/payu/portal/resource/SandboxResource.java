@@ -7,6 +7,7 @@ import id.payu.portal.dto.SandboxRefundRequest;
 import id.payu.portal.dto.SandboxRefundResponse;
 import id.payu.portal.service.SandboxService;
 import io.quarkus.logging.Log;
+import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -19,6 +20,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Partner Sandbox", description = "Partner Sandbox Environment for testing with mock data and simulated latencies")
+@Authenticated
 public class SandboxResource {
 
     @Inject

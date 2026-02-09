@@ -1,0 +1,262 @@
+# PayU Banking Platform - Default Values
+# Override per environment using values-dev.yaml, values-prod.yaml
+
+global:
+  imageRegistry: "registry.payu.id"
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: payu-registry-secret
+  storageClass: "gp3-csi"
+
+# ============================================
+# Service Defaults
+# ============================================
+defaults:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 3
+  podAnnotations:
+    sidecar.istio.io/inject: "true"
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+# ============================================
+# Core Banking Services
+# ============================================
+services:
+  gateway:
+    enabled: true
+    replicaCount: 3
+    image:
+      repository: gateway-service
+      tag: latest
+    port: 8080
+    resources:
+      requests:
+        cpu: 500m
+        memory: 768Mi
+      limits:
+        cpu: "2"
+        memory: 1536Mi
+    route:
+      enabled: true
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+
+  account:
+    enabled: true
+    image:
+      repository: account-service
+      tag: latest
+    port: 8080
+
+  auth:
+    enabled: true
+    image:
+      repository: auth-service
+      tag: latest
+    port: 8080
+
+  transaction:
+    enabled: true
+    image:
+      repository: transaction-service
+      tag: latest
+    port: 8080
+    resources:
+      requests:
+        cpu: 500m
+        memory: 768Mi
+
+  wallet:
+    enabled: true
+    image:
+      repository: wallet-service
+      tag: latest
+    port: 8080
+    resources:
+      requests:
+        cpu: 500m
+        memory: 768Mi
+
+  lending:
+    enabled: true
+    image:
+      repository: lending-service
+      tag: latest
+    port: 8080
+
+  billing:
+    enabled: true
+    image:
+      repository: billing-service
+      tag: latest
+    port: 8080
+
+  notification:
+    enabled: true
+    image:
+      repository: notification-service
+      tag: latest
+    port: 8080
+
+  kyc:
+    enabled: true
+    image:
+      repository: kyc-service
+      tag: latest
+    port: 8080
+
+  compliance:
+    enabled: true
+    image:
+      repository: compliance-service
+      tag: latest
+    port: 8080
+
+  fx:
+    enabled: true
+    image:
+      repository: fx-service
+      tag: latest
+    port: 8080
+
+  investment:
+    enabled: true
+    image:
+      repository: investment-service
+      tag: latest
+    port: 8080
+
+  statement:
+    enabled: true
+    image:
+      repository: statement-service
+      tag: latest
+    port: 8080
+
+  cms:
+    enabled: true
+    image:
+      repository: cms-service
+      tag: latest
+    port: 8080
+
+  partner:
+    enabled: true
+    image:
+      repository: partner-service
+      tag: latest
+    port: 8080
+
+  support:
+    enabled: true
+    image:
+      repository: support-service
+      tag: latest
+    port: 8080
+
+  analytics:
+    enabled: true
+    image:
+      repository: analytics-service
+      tag: latest
+    port: 8080
+
+  backoffice:
+    enabled: true
+    image:
+      repository: backoffice-service
+      tag: latest
+    port: 8080
+
+  promotion:
+    enabled: true
+    image:
+      repository: promotion-service
+      tag: latest
+    port: 8080
+
+  abTesting:
+    enabled: true
+    image:
+      repository: ab-testing-service
+      tag: latest
+    port: 8080
+
+  apiPortal:
+    enabled: true
+    image:
+      repository: api-portal-service
+      tag: latest
+    port: 8080
+
+  webApp:
+    enabled: true
+    image:
+      repository: web-app
+      tag: latest
+    port: 3000
+    route:
+      enabled: true
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+
+# ============================================
+# Infrastructure
+# ============================================
+postgresql:
+  enabled: false  # Use external managed PostgreSQL in production
+  host: "${DB_HOST}"
+  port: 5432
+
+redis:
+  enabled: false  # Use external managed Redis in production
+  host: "${REDIS_HOST}"
+  port: 6379
+
+kafka:
+  enabled: false  # Use external managed Kafka in production
+  bootstrapServers: "${KAFKA_BROKERS}"
+
+keycloak:
+  enabled: false  # Use external managed Keycloak in production
+  issuerUri: "${OIDC_ISSUER}"
+
+# ============================================
+# Observability
+# ============================================
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: false  # Use OpenShift built-in
+  loki:
+    enabled: false  # Use OpenShift Logging
+
+networkPolicies:
+  enabled: true

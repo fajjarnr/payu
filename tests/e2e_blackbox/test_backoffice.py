@@ -8,6 +8,7 @@ fake = Faker()
 def api():
     return PayUClient(gateway_url="http://localhost:8080")
 
+@pytest.mark.backoffice
 def test_backoffice_flow(api):
     # 1. KYC Review Flow
     # Create a KYC review

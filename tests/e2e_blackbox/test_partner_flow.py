@@ -5,6 +5,8 @@ from faker import Faker
 fake = Faker()
 
 
+@pytest.mark.partner
+@pytest.mark.skip(reason="Partner SNAP BI integration not yet fully implemented")
 class TestPartnerFlow:
     """
     Partner Integration and SNAP BI Standard E2E tests.

@@ -7,12 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.codec.Hex;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.security.spec.KeySpec;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.Map;
@@ -212,15 +214,23 @@ public class EncryptionService {
         }
     }
 
+    private static final int PBKDF2_ITERATIONS = 600_000;
+    private static final byte[] PBKDF2_SALT = "PayU-AES-Key-Derivation-Salt-v1".getBytes(StandardCharsets.UTF_8);
+
     /**
-     * Derive a 256-bit key from the provided key string
+     * Derive a 256-bit key from the provided key string using PBKDF2.
+     * Uses PBKDF2WithHmacSHA256 with 600k iterations per OWASP 2024 guidance.
      */
     private SecretKeySpec deriveKey(String keyString) {
         try {
-            byte[] keyBytes = keyString.getBytes(StandardCharsets.UTF_8);
-            MessageDigest sha = MessageDigest.getInstance("SHA-256");
-            keyBytes = sha.digest(keyBytes);
-            keyBytes = java.util.Arrays.copyOf(keyBytes, KEY_LENGTH / 8);
+            KeySpec spec = new PBEKeySpec(
+                    keyString.toCharArray(),
+                    PBKDF2_SALT,
+                    PBKDF2_ITERATIONS,
+                    KEY_LENGTH
+            );
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] keyBytes = factory.generateSecret(spec).getEncoded();
             return new SecretKeySpec(keyBytes, "AES");
         } catch (Exception e) {
             log.error("Failed to derive encryption key", e);

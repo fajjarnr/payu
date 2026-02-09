@@ -2,6 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  # Services
   - ab-testing-service.yaml
   - account-service.yaml
   - analytics-service.yaml
@@ -27,6 +28,9 @@ resources:
   - transaction-service.yaml
   - wallet-service.yaml
   - web-app.yaml
+  # Security & Networking
+  - network-policies.yaml
+  - tls-certificates.yaml
 
 # Add ConfigMapGenerator for shared config if needed, but current manifests use inline configs or placeholders.
 # Secrets should be managed securely (e.g. sealed secrets or external secrets), 

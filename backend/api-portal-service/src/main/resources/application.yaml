@@ -4,6 +4,16 @@ quarkus:
     version: 1.0.0
   http:
     port: 8080
+  oidc:
+    auth-server-url: ${KEYCLOAK_URL:http://localhost:9080}/realms/${KEYCLOAK_REALM:payu}
+    client-id: ${OIDC_CLIENT_ID:api-portal-service}
+    tls:
+      verification: none
+    token:
+      issuer: any
+  security:
+    jaxrs:
+      deny-unauthenticated-by-default: true
   smallrye-openapi:
     info-title: PayU API Portal
     info-version: 1.0.0

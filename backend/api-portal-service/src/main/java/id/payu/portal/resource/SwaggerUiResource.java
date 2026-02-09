@@ -3,6 +3,7 @@ package id.payu.portal.resource;
 import id.payu.portal.dto.ServiceInfo;
 import id.payu.portal.dto.ServiceListResponse;
 import id.payu.portal.service.ApiPortalService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -12,6 +13,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 @Path("/")
+@PermitAll
 public class SwaggerUiResource {
 
     @Inject

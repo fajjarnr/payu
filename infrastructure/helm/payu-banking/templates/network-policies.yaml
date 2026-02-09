@@ -1,0 +1,120 @@
+{{- if .Values.networkPolicies.enabled }}
+# Default deny all ingress traffic
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  labels:
+    app.kubernetes.io/part-of: payu-banking
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+# Allow ingress from gateway to all backend services
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-gateway
+  labels:
+    app.kubernetes.io/part-of: payu-banking
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu-banking
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gateway-service
+
+# Allow ingress from OpenShift Router to gateway and web-app
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-router
+  labels:
+    app.kubernetes.io/part-of: payu-banking
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - gateway-service
+          - webApp-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+
+# Allow inter-service communication within the namespace
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-intra-namespace
+  labels:
+    app.kubernetes.io/part-of: payu-banking
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu-banking
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: payu-banking
+
+# Allow Prometheus scraping from monitoring namespace
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape
+  labels:
+    app.kubernetes.io/part-of: payu-banking
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu-banking
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: openshift-monitoring
+      ports:
+        - protocol: TCP
+          port: http
+
+# Allow health check probes from kubelet
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kubelet-probes
+  labels:
+    app.kubernetes.io/part-of: payu-banking
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu-banking
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: http
+{{- end }}

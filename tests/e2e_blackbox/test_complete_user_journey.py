@@ -6,6 +6,8 @@ from faker import Faker
 fake = Faker()
 
 
+@pytest.mark.e2e
+@pytest.mark.critical
 class TestFullUserJourney:
     """
     Holistic End-to-End test suite covering full user onboarding journey.

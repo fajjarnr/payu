@@ -23,6 +23,8 @@ def test_user_data():
         "nik": nik
     }
 
+@pytest.mark.smoke
+@pytest.mark.critical
 def test_health_check(api):
     """Verify Gateway and Services are reachable"""
     # Simply check if gateway is up (it should be if we are running tests)
@@ -31,6 +33,8 @@ def test_health_check(api):
     # Gateway usually exposes health check.
     pass 
 
+@pytest.mark.smoke
+@pytest.mark.critical
 def test_user_registration(api, test_user_data):
     """Step 1: Register a new user"""
     response = api.post("/api/v1/accounts/register", json={
@@ -46,6 +50,8 @@ def test_user_registration(api, test_user_data):
     data = response.json()
     assert data["username"] == test_user_data["username"]
 
+@pytest.mark.smoke
+@pytest.mark.critical
 def test_user_login(api, test_user_data):
     """Step 2: Login and get token"""
     # Auth service might use a specific login endpoint or OAuth2 flow
@@ -63,6 +69,8 @@ def test_user_login(api, test_user_data):
     assert "access_token" in data
     api.set_token(data["access_token"])
 
+@pytest.mark.smoke
+@pytest.mark.critical
 def test_wallet_creation(api):
     """Step 3: Verify wallet was created automatically or create it"""
     # Wallet usually created on registration event. Let's check balance.
@@ -90,6 +98,8 @@ def test_wallet_creation(api):
     # If 404 persists, the event might not have propagated or endpoint is wrong.
     assert response.status_code == 200, f"Could not fetch wallet: {response.text}"
 
+@pytest.mark.smoke
+@pytest.mark.critical
 def test_topup_balance(api):
     """Step 4: Topup balance via Billing/Simulator"""
     # Usually TopUp is done via Virtual Account or direct injection for testing.

@@ -1,0 +1,25 @@
+{{- range $name, $svc := .Values.services }}
+{{- if and $svc.enabled (hasKey $svc "route") }}
+{{- if $svc.route.enabled }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ $name }}-service
+  labels:
+    app.kubernetes.io/name: {{ $name }}-service
+    app.kubernetes.io/part-of: payu-banking
+spec:
+  to:
+    kind: Service
+    name: {{ $name }}-service
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: {{ $svc.route.tls.termination | default "edge" }}
+    insecureEdgeTerminationPolicy: {{ $svc.route.tls.insecureEdgeTerminationPolicy | default "Redirect" }}
+  wildcardPolicy: None
+{{- end }}
+{{- end }}
+{{- end }}

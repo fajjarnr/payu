@@ -10,3 +10,10 @@ export { default as ABTestingService, type Experiment, type Variant, type Varian
 export { default as SegmentationService, type CustomerSegment, type SegmentMembership, type SegmentedOffer, type UserSegmentsResponse, type SegmentedOffersResponse, type SegmentTier, type SegmentStatus } from './SegmentationService';
 export { default as StatementService, type Statement, type StatementGenerationRequest, type StatementsListResponse, type StatementStatus, type PeriodType, type StatementFormat } from './StatementService';
 export { default as FxService, type FxRate, type FxConversion, type FxRateResponse, type FxConversionResponse, type ConvertCurrencyRequest, type FxConversionRequest, type CurrencyInfo, SUPPORTED_CURRENCIES } from './FxService';
+export { default as NotificationService, type Notification, type NotificationType, type NotificationChannel, type NotificationPreferences } from './NotificationService';
+export { default as InvestmentService, type InvestmentProduct, type Portfolio, type Holding, type InvestmentOrder, type InvestmentType, type RiskLevel } from './InvestmentService';
+export { default as ComplianceService, type ComplianceCheck, type SanctionsScreening, type RiskAssessment, type ComplianceCheckType, type ComplianceStatus } from './ComplianceService';
+export { default as AnalyticsService, type SpendingAnalytics, type CategoryBreakdown, type TrendData, type FinancialInsight, type InsightType } from './AnalyticsService';
+export { default as KYCService, type KycSubmission, type KycDocument, type IdentityVerification, type KycLevel, type DocumentType } from './KYCService';
+export { default as SupportService, type SupportTicket, type TicketMessage, type CreateTicketRequest, type FAQ, type TicketCategory, type TicketPriority, type TicketStatus } from './SupportService';
+export { default as BillingService, type BillPayment, type BillerInfo, type TopUpRequest, type CreatePaymentRequest, type PaymentStatus, type BillerCategory } from './BillingService';

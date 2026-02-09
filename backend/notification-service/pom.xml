@@ -34,6 +34,12 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- Security (OIDC JWT validation) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-oidc</artifactId>
+        </dependency>
+
         <!-- REST API -->
         <dependency>
             <groupId>io.quarkus</groupId>

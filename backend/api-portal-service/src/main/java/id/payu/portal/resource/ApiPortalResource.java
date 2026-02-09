@@ -5,6 +5,7 @@ import id.payu.portal.dto.OpenApiSpec;
 import id.payu.portal.dto.ServiceListResponse;
 import id.payu.portal.service.ApiPortalService;
 import io.quarkus.logging.Log;
+import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -17,6 +18,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "API Portal", description = "Centralized API documentation portal")
+@Authenticated
 public class ApiPortalResource {
 
     @Inject

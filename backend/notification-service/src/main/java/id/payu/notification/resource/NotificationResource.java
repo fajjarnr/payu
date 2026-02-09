@@ -4,6 +4,7 @@ import id.payu.notification.domain.Notification;
 import id.payu.notification.dto.NotificationResponse;
 import id.payu.notification.dto.SendNotificationRequest;
 import id.payu.notification.service.NotificationService;
+import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -36,6 +37,7 @@ import java.util.UUID;
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Notifications", description = "Notification management APIs for sending and tracking notifications via Push, SMS, Email, and In-App channels")
 @SecurityRequirement(name = "bearerAuth")
+@Authenticated
 public class NotificationResource {
 
     private static final Logger LOG = Logger.getLogger(NotificationResource.class);
