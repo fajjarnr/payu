@@ -57,15 +57,20 @@ Audit against the *14 Immutable Laws of PayU*.
 
 ## 🔴 P0 — PRODUCTION BLOCKERS (Must Fix Before Deploy)
 
-### P0-SEC-001: JWT Token Stored in localStorage (XSS Vulnerability)
+### ~~P0-SEC-001: JWT Token Stored in localStorage (XSS Vulnerability)~~ ✅ FIXED (Feb 9, 2026)
 
-**Severity**: 🔴 CRITICAL — PCI-DSS Non-Compliant
+**Severity**: ~~🔴 CRITICAL~~ → ✅ RESOLVED
 
-- `frontend/web-app/src/lib/api.ts` stores JWT tokens in `localStorage` (line 15, 61)
-- `frontend/web-app/src/stores/authStore.ts` documentation says "tokens ONLY in httpOnly cookies"
-- **The implementation contradicts its own security architecture**
-- This is an XSS attack vector — any injected script can steal all user tokens
-- **Remediation**: Migrate to httpOnly cookie flow via BFF (Backend-for-Frontend) pattern
+- Implemented BFF (Backend-for-Frontend) pattern with httpOnly cookies
+- Created `/api/auth/login`, `/api/auth/logout`, `/api/auth/refresh` server-side routes
+- Created `/api/v1/[...path]` catch-all proxy that converts cookie → Bearer header
+- Rewrote `src/lib/api.ts` — removed ALL localStorage token operations (was 6 refs)
+- Updated login page to use BFF route instead of direct API call
+- Updated `AuthService.ts` to use fetch→BFF, removed static `api` import
+- Updated `useAuth.ts` logout to call BFF `/api/auth/logout`
+- Removed `next.config.ts` gateway rewrite (proxy handles forwarding)
+- Verified: `grep -r "localStorage.*token" src/` returns 0 matches
+- PCI-DSS 8.2.4 compliant: tokens never accessible to client JavaScript
 
 ### P0-ARCH-001: Shared Starters Are Dead Code (0 Consumers)
 
@@ -871,7 +876,7 @@ Error: frame.evaluate: Error: unknown rule `keyboard` in options.runOnly
 | **Backend Services** | 22 | 22 | ✅ 100% | All build & containerize |
 | **Frontend Apps** | 1 | 1 | 100% | Container exists |
 | **Infrastructure** | 20 | 28 | 71% | No Helm, No TLS, No NetworkPolicy |
-| **Security** | 5 | 10 | 50% | localStorage tokens, missing starters, no DAST |
+| **Security** | 5 | 10 | 50% | ~~localStorage tokens~~✅, missing starters, no DAST |
 | **Testing** | 4 | 10 | 40% | No load tests, E2E <15%, 0 contract tests |
 | **Overall** | - | - | **🔴 58%** |
 
@@ -881,7 +886,7 @@ Error: frame.evaluate: Error: unknown rule `keyboard` in options.runOnly
 
 | ID | Description | Priority | Status |
 | :--- | :--- | :--- | :--- |
-| **TD-SEC-001** | JWT tokens in localStorage (XSS vuln) | **P0** | 🔴 OPEN |
+| **TD-SEC-001** | JWT tokens in localStorage (XSS vuln) | **P0** | ✅ FIXED |
 | **TD-ARCH-001** | events/outbox/saga starters dead code | **P0** | 🔴 OPEN |
 | **TD-SEC-002** | Hardcoded credentials in VCS | **P0** | ✅ FIXED |
 | **TD-TEST-001** | 0 tests on outbox-starter, saga-starter | **P0** | 🔴 OPEN |

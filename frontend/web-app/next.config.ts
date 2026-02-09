@@ -5,14 +5,8 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.GATEWAY_URL || 'http://gateway-service:8080'}/api/:path*`,
-      },
-    ];
-  },
+  // Gateway rewrite REMOVED — BFF proxy at /api/v1/[...path] handles forwarding
+  // with httpOnly cookie → Bearer token conversion (P0-SEC-001)
   images: {
     remotePatterns: [
       {

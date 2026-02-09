@@ -1,37 +1,44 @@
 import axios, { isAxiosError } from 'axios';
 
+/**
+ * PayU API Client — Secure BFF Proxy
+ *
+ * All requests go through the Next.js BFF proxy at /api/v1/[...path],
+ * which reads the httpOnly cookie and attaches the Authorization header
+ * server-side.  JWT tokens are NEVER accessible to client JavaScript.
+ *
+ * Auth flow (login/logout/refresh) uses separate BFF routes at /api/auth/*.
+ */
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
+  baseURL: '/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // include httpOnly cookies in every request
 });
 
 // Export isAxiosError for type checking
 export { isAxiosError };
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
+// ── No request interceptor ──────────────────────────────────────────
+// Cookies are sent automatically by the browser; the BFF proxy converts
+// the httpOnly cookie to a Bearer header on the server side.
 
+// ── 401 interceptor: transparent token refresh via BFF ──────────────
 let isRefreshing = false;
-let failedQueue: Array<{ resolve: (token: string | null) => void; reject: (error: unknown) => void }> = [];
+let failedQueue: Array<{
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
 
-const processQueue = (error: unknown, token: string | null = null) => {
+const processQueue = (error: unknown) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(undefined);
     }
   });
-
   failedQueue = [];
 };
 
@@ -41,56 +48,32 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Queue concurrent requests while a refresh is in-flight
       if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers['Authorization'] = 'Bearer ' + token;
-            return api(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
+        }).then(() => api(originalRequest));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      if (!refreshToken) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('accountId');
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
       try {
-        const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
-          refresh_token: refreshToken
+        // Ask BFF to rotate tokens (cookie → cookie, no JS exposure)
+        const refreshRes = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          credentials: 'include',
         });
 
-        const { access_token, refresh_token: newRefreshToken } = response.data;
+        if (!refreshRes.ok) throw new Error('Refresh failed');
 
-        localStorage.setItem('token', access_token);
-        if (newRefreshToken) {
-          localStorage.setItem('refreshToken', newRefreshToken);
-        }
-
-        api.defaults.headers.common['Authorization'] = 'Bearer ' + access_token;
-        originalRequest.headers['Authorization'] = 'Bearer ' + access_token;
-
-        processQueue(null, access_token);
-        return api(originalRequest);
+        processQueue(null);
+        return api(originalRequest); // retry with fresh cookie
       } catch (refreshError) {
-        processQueue(refreshError, null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        localStorage.removeItem('accountId');
-        window.location.href = '/login';
+        processQueue(refreshError);
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -98,7 +81,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

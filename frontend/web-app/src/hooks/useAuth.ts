@@ -39,16 +39,18 @@ export const useLogout = () => {
   const logout = useAuthStore((state) => state.logout);
 
   return useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
+      // Clear httpOnly cookies via BFF
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+        .catch(() => { /* best-effort */ });
       logout();
-      return Promise.resolve();
     },
     onSuccess: () => {
       queryClient.clear();
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
-    }
+    },
   });
 };
 

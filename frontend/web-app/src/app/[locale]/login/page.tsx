@@ -4,7 +4,6 @@ import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginRequest } from '@/types';
-import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -27,16 +26,29 @@ export default function LoginPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: LoginRequest) => api.post('/auth/login', data),
+    mutationFn: async (data: LoginRequest) => {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Login failed' }));
+        throw new Error(err.message || 'Login gagal');
+      }
+      return res.json();
+    },
     onSuccess: (response) => {
-      const { user } = response.data;
+      const user = response.data?.user;
       if (user) setAuth(user, user.id);
       router.push('/');
     },
     onError: (error) => {
       console.error('Login failed:', error);
-      alert('Login gagal. Silakan periksa kembali kredensial Anda.');
-    }
+      const msg = error instanceof Error ? error.message : 'Login gagal';
+      alert(msg);
+    },
   });
 
   useEffect(() => {

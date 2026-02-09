@@ -1,4 +1,3 @@
-import api from '@/lib/api';
 import type { User } from '@/types';
 
 export interface LoginRequest {
@@ -6,11 +5,12 @@ export interface LoginRequest {
   password: string;
 }
 
+/**
+ * BFF login response — tokens are in httpOnly cookies, never in the payload.
+ */
 export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
+  success: boolean;
+  data: { user: User };
 }
 
 interface UserSession {
@@ -66,22 +66,32 @@ export class AuthService {
    * @returns Login response with token metadata (tokens are in cookies)
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await api.post<LoginResponse>('/auth/login', credentials);
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(credentials),
+    });
 
-    // Mark as authenticated - actual tokens are in httpOnly cookies
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Login failed');
+    }
+
+    const data: LoginResponse = await res.json();
     this.authenticated = true;
-
-    return response.data;
+    return data;
   }
 
   /**
    * Logs out the user by clearing the session.
    * Backend will clear httpOnly cookies.
    */
-  logout(): void {
+  async logout(): Promise<void> {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+      .catch(() => { /* best-effort */ });
     this.authenticated = false;
     this.userSession = null;
-    // Note: Backend clears the httpOnly cookies
   }
 
   /**
@@ -137,9 +147,11 @@ export class AuthService {
    * @returns Promise resolving when refresh is complete
    */
   async refreshToken(): Promise<void> {
-    // Backend automatically handles token refresh via cookies
-    await api.post('/auth/refresh', {});
-    // New tokens are set in httpOnly cookies by the backend
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Token refresh failed');
   }
 
   /**
@@ -149,6 +161,7 @@ export class AuthService {
    */
   async validateSession(): Promise<boolean> {
     try {
+      const { default: api } = await import('@/lib/api');
       await api.get('/auth/validate');
       return true;
     } catch {
