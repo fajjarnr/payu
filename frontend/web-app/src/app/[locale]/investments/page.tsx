@@ -2,12 +2,22 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { TrendingUp, PieChart, Landmark, ArrowUpRight, ShieldCheck, Briefcase, Plus, Coins, BarChart3, Target } from 'lucide-react';
+import { TrendingUp, PieChart, Landmark, ArrowUpRight, ShieldCheck, Briefcase, Plus, Coins, BarChart3, Target, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
+import { useInvestmentAccount, useGoldHoldings } from '@/hooks';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function InvestmentsPage() {
+  const { user } = useAuthStore();
+  const userId = user?.id ?? '';
+  const { data: account, isLoading: loadingAccount } = useInvestmentAccount(userId);
+  const { data: goldHoldings } = useGoldHoldings(userId);
+
+  const portfolioBalance = account?.balance ?? 152800000;
+  const formatRp = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+
   const investmentProducts = [
     { name: 'Suku Bunga Tetap Plus', type: 'Risiko Rendah', return: '5.5% p.a', icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
     { name: 'Equity Growth Fund', type: 'Risiko Tinggi', return: '18.2% p.a', icon: TrendingUp, color: 'text-primary', bg: 'bg-success-light' },
@@ -45,7 +55,7 @@ export default function InvestmentsPage() {
                       <div className="space-y-6">
                         <div>
                           <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Total Portofolio Bersih</p>
-                          <h3 className="text-4xl sm:text-4xl lg:text-5xl font-bold text-foreground">Rp 152.800.000</h3>
+                          <h3 className="text-4xl sm:text-4xl lg:text-5xl font-bold text-foreground">{loadingAccount ? '...' : formatRp(portfolioBalance)}</h3>
                         </div>
                         <div className="flex flex-wrap gap-3">
                           <div className="bg-success-light px-4 py-2 rounded-xl flex items-center gap-2 border border-primary/10">

@@ -1,5 +1,7 @@
 import api from '@/lib/api';
 
+// --- Interfaces matching backend NotificationResource (Quarkus JAX-RS) ---
+
 export interface Notification {
   id: string;
   userId: string;
@@ -13,9 +15,19 @@ export interface Notification {
   readAt?: string;
 }
 
+export interface SendNotificationRequest {
+  userId: string;
+  type: NotificationType;
+  channel: NotificationChannel;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+}
+
 export type NotificationType = 'TRANSACTION' | 'SECURITY' | 'PROMOTION' | 'SYSTEM' | 'REMINDER';
 export type NotificationChannel = 'PUSH' | 'EMAIL' | 'SMS' | 'IN_APP';
 
+// Kept for future backend implementation
 export interface NotificationPreferences {
   pushEnabled: boolean;
   emailEnabled: boolean;
@@ -35,32 +47,27 @@ class NotificationService {
     return NotificationService.instance;
   }
 
-  async getNotifications(page = 0, size = 20): Promise<{ content: Notification[]; totalElements: number }> {
-    const response = await api.get('/notifications', { params: { page, size } });
+  /** POST /notifications — Send a notification */
+  async sendNotification(request: SendNotificationRequest): Promise<Notification> {
+    const response = await api.post('/notifications', request);
     return response.data;
   }
 
-  async getUnreadCount(): Promise<number> {
-    const response = await api.get('/notifications/unread-count');
-    return response.data.count;
+  /** GET /notifications/{id} — Get a specific notification */
+  async getNotification(id: string): Promise<Notification> {
+    const response = await api.get(`/notifications/${id}`);
+    return response.data;
   }
 
+  /** GET /notifications/user/{userId} — Get user notifications */
+  async getUserNotifications(userId: string, page = 0, size = 20): Promise<{ content: Notification[]; totalElements: number }> {
+    const response = await api.get(`/notifications/user/${userId}`, { params: { page, size } });
+    return response.data;
+  }
+
+  /** POST /notifications/{id}/read — Mark notification as read */
   async markAsRead(notificationId: string): Promise<void> {
-    await api.put(`/notifications/${notificationId}/read`);
-  }
-
-  async markAllAsRead(): Promise<void> {
-    await api.put('/notifications/read-all');
-  }
-
-  async getPreferences(): Promise<NotificationPreferences> {
-    const response = await api.get('/notifications/preferences');
-    return response.data;
-  }
-
-  async updatePreferences(preferences: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
-    const response = await api.put('/notifications/preferences', preferences);
-    return response.data;
+    await api.post(`/notifications/${notificationId}/read`);
   }
 }
 

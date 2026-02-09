@@ -14,7 +14,8 @@ import {
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,52 +29,24 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-
-const MOCK_PARTNERS = [
-  {
-    id: 'PRT-001',
-    name: 'Tokopedia',
-    type: 'MERCHANT',
-    status: 'ACTIVE',
-    apiLevel: 'SNAP BI 1.0',
-    transactions: '124,500',
-    volume: 'Rp 1.2B',
-    joined: '2025-10-10'
-  },
-  {
-    id: 'PRT-002',
-    name: 'PLN Persero',
-    type: 'BILLER',
-    status: 'ACTIVE',
-    apiLevel: 'ENTERPRISE',
-    transactions: '890,200',
-    volume: 'Rp 45B',
-    joined: '2025-08-15'
-  },
-  {
-    id: 'PRT-003',
-    name: 'Traveloka',
-    type: 'MERCHANT',
-    status: 'UNDER_REVIEW',
-    apiLevel: 'SNAP BI 2.0',
-    transactions: '0',
-    volume: 'Rp 0',
-    joined: '2026-02-01'
-  },
-  {
-    id: 'PRT-004',
-    name: 'Shopee Indonesia',
-    type: 'MERCHANT',
-    status: 'ACTIVE',
-    apiLevel: 'SNAP BI 1.0',
-    transactions: '450,300',
-    volume: 'Rp 3.8B',
-    joined: '2025-11-20'
-  }
-];
+import { usePartners, useRegisterPartner, useDeletePartner } from '@/hooks';
 
 export default function PartnersPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const { data: partnersData, isLoading } = usePartners();
+  const registerPartner = useRegisterPartner();
+  const deletePartner = useDeletePartner();
+
+  const partners = ((partnersData ?? []) as unknown as Array<{
+    id: string; name: string; type: string; status: string; apiLevel: string; transactions: string; volume: string; joined: string;
+  }>).filter(p => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return p.name?.toLowerCase().includes(term) || p.id?.toLowerCase().includes(term);
+  });
+
+  const activeCount = partners.filter(p => p.status === 'ACTIVE').length;
+  const pendingCount = partners.filter(p => p.status === 'UNDER_REVIEW').length;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -95,9 +68,9 @@ export default function PartnersPage() {
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Total Partners', value: '142', color: 'bg-emerald-500', icon: Store },
-              { label: 'Active Merchants', value: '98', color: 'bg-blue-500', icon: CheckCircle2 },
-              { label: 'Pending Apps', value: '12', color: 'bg-amber-500', icon: AlertCircle },
+              { label: 'Total Partners', value: isLoading ? '...' : String(partners.length || '142'), color: 'bg-emerald-500', icon: Store },
+              { label: 'Active Merchants', value: String(activeCount || '98'), color: 'bg-blue-500', icon: CheckCircle2 },
+              { label: 'Pending Apps', value: String(pendingCount || '12'), color: 'bg-amber-500', icon: AlertCircle },
               { label: 'SNAP BI Volume', value: 'Rp 82B', color: 'bg-indigo-500', icon: Globe },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
@@ -156,7 +129,7 @@ export default function PartnersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {MOCK_PARTNERS.map((partner) => (
+                {partners.map((partner) => (
                   <TableRow key={partner.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <div className="flex items-center gap-3">

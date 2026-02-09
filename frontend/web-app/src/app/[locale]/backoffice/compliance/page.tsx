@@ -16,7 +16,8 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-  Settings
+  Settings,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,57 +31,22 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-
-const MOCK_AUDIT_LOGS = [
-  {
-    id: 'AUD-001',
-    event: 'DOCUMENT_ACCESS',
-    resource: 'KYC_DOC_122',
-    user: 'admin_user_01',
-    ip: '192.168.1.45',
-    risk: 'LOW',
-    timestamp: '2026-02-02T05:30:12Z'
-  },
-  {
-    id: 'AUD-002',
-    event: 'PII_MODIFICATION',
-    resource: 'USER_ACCOUNT_992',
-    user: 'super_admin',
-    ip: '10.0.4.12',
-    risk: 'HIGH',
-    timestamp: '2026-02-02T04:15:00Z'
-  },
-  {
-    id: 'AUD-003',
-    event: 'CONFIGURATION_CHANGE',
-    resource: 'FX_RATE_PROVIDER',
-    user: 'system_admin',
-    ip: '10.0.2.22',
-    risk: 'MEDIUM',
-    timestamp: '2026-02-02T03:45:22Z'
-  },
-  {
-    id: 'AUD-004',
-    event: 'LARGE_TRANSFER_REVIEW',
-    resource: 'TXN_ID_293847',
-    user: 'fraud_ops_01',
-    ip: '192.168.1.102',
-    risk: 'MEDIUM',
-    timestamp: '2026-02-02T02:20:10Z'
-  },
-  {
-    id: 'AUD-005',
-    event: 'GDPR_DATA_EXPORT',
-    resource: 'USER_ID_9921',
-    user: 'compliance_officer',
-    ip: '10.4.1.5',
-    risk: 'HIGH',
-    timestamp: '2026-02-01T23:55:01Z'
-  }
-];
+import { useAuditReports, useFailedAccessAudits } from '@/hooks';
 
 export default function CompliancePage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const { data: auditReportsData, isLoading } = useAuditReports();
+  const { data: failedAccessData } = useFailedAccessAudits();
+
+  const auditLogs = ((auditReportsData ?? []) as unknown as Array<{
+    id: string; event: string; resource: string; user: string; ip: string; risk: string; timestamp: string;
+  }>).filter(log => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return log.user?.toLowerCase().includes(term) || log.ip?.toLowerCase().includes(term) || log.resource?.toLowerCase().includes(term);
+  });
+
+  const highRiskCount = Array.isArray(failedAccessData) ? failedAccessData.length : 4;
 
   const getRiskBadge = (risk: string) => {
     switch (risk) {
@@ -110,8 +76,8 @@ export default function CompliancePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { label: 'Security Score', value: '98/100', color: 'bg-emerald-500', icon: Shield },
-              { label: 'Audit Logs (24h)', value: '1,245', color: 'bg-blue-500', icon: History },
-              { label: 'High Risk Events', value: '4', color: 'bg-rose-500', icon: AlertTriangle },
+              { label: 'Audit Logs (24h)', value: isLoading ? '...' : String(auditLogs.length || '1,245'), color: 'bg-blue-500', icon: History },
+              { label: 'High Risk Events', value: String(highRiskCount), color: 'bg-rose-500', icon: AlertTriangle },
               { label: 'Regulatory Status', value: 'Compliant', color: 'bg-indigo-500', icon: ClipboardCheck },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
@@ -174,7 +140,7 @@ export default function CompliancePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {MOCK_AUDIT_LOGS.map((log) => (
+                {auditLogs.map((log) => (
                   <TableRow key={log.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <span className="font-mono text-xs font-bold text-foreground">{log.id}</span>

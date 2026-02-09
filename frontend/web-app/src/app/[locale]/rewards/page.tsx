@@ -2,24 +2,37 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { Gift, Coins, DollarSign, Share2, TrendingUp, Copy, ArrowRight, Star, Trophy, CheckCircle, Award, Calendar, Zap, History, Clock } from 'lucide-react';
+import { Gift, Coins, DollarSign, Share2, TrendingUp, Copy, ArrowRight, Star, Trophy, CheckCircle, Award, Calendar, Zap, History, Clock, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useLoyaltyBalance, useLoyaltyPoints, useCashbacks, useReferrals, useReferralSummary, useActivePromotions, useRewardsSummary } from '@/hooks';
+import { useGamificationSummary, useGamificationStreak, useCheckin } from '@/hooks';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function RewardsPage() {
   const [activeTab, setActiveTab] = useState<'points' | 'cashback' | 'referral'>('points');
+  const { user, accountId } = useAuthStore();
+  const acctId = accountId ?? '';
+  const userId = user?.id ?? '';
+  const { data: loyaltyData } = useLoyaltyPoints(acctId);
+  const { data: cashbackData } = useCashbacks(acctId);
+  const { data: referralData } = useReferralSummary(acctId);
+  const { data: promotionsData } = useActivePromotions();
+  const { data: gamificationData } = useGamificationSummary(userId);
+  const { data: streakData } = useGamificationStreak(userId);
+  const checkinMutation = useCheckin();
 
   const loyaltyStats = {
-    totalEarned: 12500,
-    totalRedeemed: 3200,
-    currentBalance: 9300,
-    pointsExpiring: 800,
-    expiryDate: '31 Jan 2026'
+    totalEarned: (loyaltyData as any)?.totalEarned ?? 12500,
+    totalRedeemed: (loyaltyData as any)?.totalRedeemed ?? 3200,
+    currentBalance: (loyaltyData as any)?.currentBalance ?? 9300,
+    pointsExpiring: (loyaltyData as any)?.pointsExpiring ?? 800,
+    expiryDate: (loyaltyData as any)?.expiryDate ?? '31 Jan 2026'
   };
 
-  const recentPoints = [
+  const recentPoints: Array<{ id: number; type: string; points: number; description: string; date: string }> = (loyaltyData as any)?.history ?? [
     { id: 1, type: 'EARNED', points: 500, description: 'Transaksi pembelian di Shopee', date: '20 Jan 2026' },
     { id: 2, type: 'REDEEMED', points: -200, description: 'Tukar diskon belanja', date: '18 Jan 2026' },
     { id: 3, type: 'EARNED', points: 300, description: 'Login harian', date: '17 Jan 2026' },
@@ -27,7 +40,7 @@ export default function RewardsPage() {
     { id: 5, type: 'EARNED', points: 200, description: 'Transaksi QRIS', date: '12 Jan 2026' }
   ];
 
-  const cashbackHistory = [
+  const cashbackHistory: Array<{ id: number; merchant: string; amount: number; status: string; date: string; description: string }> = (cashbackData as any) ?? [
     { id: 1, merchant: 'TokoBapak', amount: 25000, status: 'credited', date: '20 Jan 2026', description: '10% cashback' },
     { id: 2, merchant: 'Traveloka', amount: 150000, status: 'pending', date: '18 Jan 2026', description: '15% cashback' },
     { id: 3, merchant: 'Shopee', amount: 10000, status: 'credited', date: '15 Jan 2026', description: '5% cashback' },
@@ -35,15 +48,15 @@ export default function RewardsPage() {
   ];
 
   const referralStats = {
-    code: 'PAYU2024',
-    totalReferrals: 8,
-    completedReferrals: 5,
-    pendingReferrals: 3,
-    rewardPerReferral: 1000,
-    totalEarnings: 5000
+    code: (referralData as any)?.code ?? 'PAYU2024',
+    totalReferrals: (referralData as any)?.totalReferrals ?? 8,
+    completedReferrals: (referralData as any)?.completedReferrals ?? 5,
+    pendingReferrals: (referralData as any)?.pendingReferrals ?? 3,
+    rewardPerReferral: (referralData as any)?.rewardPerReferral ?? 1000,
+    totalEarnings: (referralData as any)?.totalEarnings ?? 5000
   };
 
-  const activePromotions = [
+  const activePromotions: Array<{ id: number; name: string; description: string; type: string; value: string; endDate: string; icon: any }> = (promotionsData as any) ?? [
     { id: 1, name: 'Weekend Warrior', description: 'Dapatkan 2x poin untuk semua transaksi QRIS', type: 'LOYALTY_POINTS', value: '2X', endDate: '26 Jan 2026', icon: Zap },
     { id: 2, name: 'Cashback Hari Raya', description: 'Cashback 15% untuk transaksi di mitra pilihan', type: 'CASHBACK', value: '15%', endDate: '31 Jan 2026', icon: DollarSign },
     { id: 3, name: 'Bulanan Penuh', description: 'Bebas biaya transfer untuk 10 transaksi pertama', type: 'VOUCHER', value: 'GRATIS', endDate: '30 Jan 2026', icon: Star }

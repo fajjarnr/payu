@@ -7,8 +7,17 @@ import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { useBiometricRegistrations, useRegisterBiometric, useRevokeBiometric } from '@/hooks';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function SecurityPage() {
+  const { user } = useAuthStore();
+  const username = user?.username ?? '';
+  const { data: biometricRegs } = useBiometricRegistrations(username);
+  const revokeBiometric = useRevokeBiometric();
+
+  const hasBiometric = Array.isArray(biometricRegs) && biometricRegs.length > 0;
+
   const sessions = [
     { device: 'MacBook Pro 16"', location: 'Jakarta, ID', status: 'Sesi Saat Ini', icon: Monitor, active: true },
     { device: 'iPhone 15 Pro', location: 'Surabaya, ID', status: 'Aktif: 2 jam lalu', icon: Smartphone, active: false },
@@ -55,8 +64,8 @@ export default function SecurityPage() {
                       Wajibkan sidik jari atau FaceID untuk setiap transaksi di atas <span className="font-bold text-foreground">Rp 1.000.000</span>.
                     </p>
                     <div className="flex items-center justify-between p-5 bg-muted/20 rounded-xl border border-border group-hover:border-primary/20 transition-all">
-                      <span className="text-xs font-bold text-foreground tracking-widest uppercase">Status Keamanan: Aktif</span>
-                      <Switch defaultChecked />
+                      <span className="text-xs font-bold text-foreground tracking-widest uppercase">Status Keamanan: {hasBiometric ? 'Aktif' : 'Non-aktif'}</span>
+                      <Switch defaultChecked={hasBiometric} />
                     </div>
                   </div>
                 </div>

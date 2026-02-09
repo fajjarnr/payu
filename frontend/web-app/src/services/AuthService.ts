@@ -169,6 +169,79 @@ export class AuthService {
       return false;
     }
   }
+
+  // === Biometric Authentication (FE-GAP-011) ===
+
+  /** GET /biometric/challenge — Get biometric challenge */
+  async getBiometricChallenge(): Promise<BiometricChallenge> {
+    const { default: api } = await import('@/lib/api');
+    const response = await api.get('/biometric/challenge');
+    return response.data;
+  }
+
+  /** POST /biometric/register — Register biometric credential */
+  async registerBiometric(request: BiometricRegistration): Promise<BiometricRegistrationResult> {
+    const { default: api } = await import('@/lib/api');
+    const response = await api.post('/biometric/register', request);
+    return response.data;
+  }
+
+  /** POST /biometric/authenticate — Authenticate with biometric */
+  async authenticateBiometric(request: BiometricAuthRequest): Promise<{ success: boolean }> {
+    const { default: api } = await import('@/lib/api');
+    const response = await api.post('/biometric/authenticate', request);
+    return response.data;
+  }
+
+  /** GET /biometric/registrations/{username} — Get user's biometric registrations */
+  async getBiometricRegistrations(username: string): Promise<BiometricRegistrationInfo[]> {
+    const { default: api } = await import('@/lib/api');
+    const response = await api.get(`/biometric/registrations/${username}`);
+    return response.data;
+  }
+
+  /** DELETE /biometric/registrations/{registrationId} — Revoke biometric registration */
+  async revokeBiometricRegistration(registrationId: string): Promise<void> {
+    const { default: api } = await import('@/lib/api');
+    await api.delete(`/biometric/registrations/${registrationId}`);
+  }
+}
+
+// === Biometric Types ===
+
+export interface BiometricChallenge {
+  challengeId: string;
+  challenge: string;
+  timeout: number;
+  rpId: string;
+}
+
+export interface BiometricRegistration {
+  username: string;
+  challengeId: string;
+  credential: string; // base64 encoded attestation
+  deviceName: string;
+}
+
+export interface BiometricRegistrationResult {
+  registrationId: string;
+  username: string;
+  deviceName: string;
+  createdAt: string;
+}
+
+export interface BiometricAuthRequest {
+  username: string;
+  challengeId: string;
+  credential: string; // base64 encoded assertion
+}
+
+export interface BiometricRegistrationInfo {
+  registrationId: string;
+  username: string;
+  deviceName: string;
+  lastUsedAt: string;
+  createdAt: string;
 }
 
 export default AuthService.getInstance();

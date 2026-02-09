@@ -1,5 +1,61 @@
 import api from '@/lib/api';
 
+// --- Interfaces matching backend ComplianceAuditController + GdprAuditController ---
+
+export interface AuditReport {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  findings: string[];
+  status: 'DRAFT' | 'SUBMITTED' | 'REVIEWED' | 'CLOSED';
+  riskLevel: RiskLevel;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAuditReportRequest {
+  type: string;
+  title: string;
+  description: string;
+  findings: string[];
+}
+
+export interface GdprAudit {
+  auditId: string;
+  userId: string;
+  accessedBy: string;
+  operationType: string;
+  serviceName: string;
+  dataCategory: string;
+  legalBasis: string;
+  success: boolean;
+  timestamp: string;
+  details?: string;
+}
+
+export interface CreateGdprAuditRequest {
+  userId: string;
+  accessedBy: string;
+  operationType: string;
+  serviceName: string;
+  dataCategory: string;
+  legalBasis: string;
+  success: boolean;
+  details?: string;
+}
+
+export interface GdprSearchCriteria {
+  userId?: string;
+  accessedBy?: string;
+  operationType?: string;
+  serviceName?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+// Legacy types preserved for compat
 export interface ComplianceCheck {
   id: string;
   userId: string;
@@ -10,7 +66,6 @@ export interface ComplianceCheck {
   checkedAt: string;
   expiresAt?: string;
 }
-
 export interface SanctionsScreening {
   id: string;
   userId: string;
@@ -18,7 +73,6 @@ export interface SanctionsScreening {
   matchDetails?: string[];
   screenedAt: string;
 }
-
 export interface RiskAssessment {
   userId: string;
   overallRisk: RiskLevel;
@@ -41,24 +95,93 @@ class ComplianceService {
     return ComplianceService.instance;
   }
 
-  async getUserCompliance(userId: string): Promise<ComplianceCheck[]> {
-    const response = await api.get(`/compliance/users/${userId}/checks`);
+  // === Compliance Audit Report ===
+
+  /** POST /compliance/audit-report — Create audit report */
+  async createAuditReport(request: CreateAuditReportRequest): Promise<AuditReport> {
+    const response = await api.post('/compliance/audit-report', request);
     return response.data;
   }
 
-  async getRiskAssessment(userId: string): Promise<RiskAssessment> {
-    const response = await api.get(`/compliance/users/${userId}/risk`);
+  /** GET /compliance/audit-report/{id} — Get audit report by ID */
+  async getAuditReport(id: string): Promise<AuditReport> {
+    const response = await api.get(`/compliance/audit-report/${id}`);
     return response.data;
   }
 
-  async screenForSanctions(userId: string): Promise<SanctionsScreening> {
-    const response = await api.post(`/compliance/users/${userId}/sanctions-screening`);
+  /** GET /compliance/audit-report — List all audit reports */
+  async listAuditReports(): Promise<AuditReport[]> {
+    const response = await api.get('/compliance/audit-report');
     return response.data;
   }
 
-  async getComplianceStatus(): Promise<{ compliant: boolean; pendingChecks: number }> {
-    const response = await api.get('/compliance/status');
+  // === GDPR Audit ===
+
+  /** POST /gdpr-audit — Create GDPR audit entry */
+  async createGdprAudit(request: CreateGdprAuditRequest): Promise<GdprAudit> {
+    const response = await api.post('/gdpr-audit', request);
     return response.data;
+  }
+
+  /** GET /gdpr-audit/{auditId} — Get GDPR audit by ID */
+  async getGdprAudit(auditId: string): Promise<GdprAudit> {
+    const response = await api.get(`/gdpr-audit/${auditId}`);
+    return response.data;
+  }
+
+  /** GET /gdpr-audit/users/{userId} — Get GDPR audits for user */
+  async getUserGdprAudits(userId: string): Promise<GdprAudit[]> {
+    const response = await api.get(`/gdpr-audit/users/${userId}`);
+    return response.data;
+  }
+
+  /** GET /gdpr-audit/users/{userId}/date-range — Query by date range */
+  async getUserGdprAuditsByDateRange(userId: string, startDate: string, endDate: string): Promise<GdprAudit[]> {
+    const response = await api.get(`/gdpr-audit/users/${userId}/date-range`, {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  }
+
+  /** GET /gdpr-audit/accessed-by/{accessedBy} — Get by accessor */
+  async getByAccessedBy(accessedBy: string): Promise<GdprAudit[]> {
+    const response = await api.get(`/gdpr-audit/accessed-by/${accessedBy}`);
+    return response.data;
+  }
+
+  /** GET /gdpr-audit/operations/{operationType} — Get by operation type */
+  async getByOperationType(operationType: string): Promise<GdprAudit[]> {
+    const response = await api.get(`/gdpr-audit/operations/${operationType}`);
+    return response.data;
+  }
+
+  /** GET /gdpr-audit/services/{serviceName} — Get by service name */
+  async getByServiceName(serviceName: string): Promise<GdprAudit[]> {
+    const response = await api.get(`/gdpr-audit/services/${serviceName}`);
+    return response.data;
+  }
+
+  /** GET /gdpr-audit/users/{userId}/count — Get audit count for user */
+  async getUserGdprAuditCount(userId: string): Promise<number> {
+    const response = await api.get(`/gdpr-audit/users/${userId}/count`);
+    return response.data;
+  }
+
+  /** GET /gdpr-audit/failed-access — Get all failed access attempts */
+  async getFailedAccess(): Promise<GdprAudit[]> {
+    const response = await api.get('/gdpr-audit/failed-access');
+    return response.data;
+  }
+
+  /** POST /gdpr-audit/search — Search GDPR audits */
+  async searchGdprAudits(criteria: GdprSearchCriteria): Promise<GdprAudit[]> {
+    const response = await api.post('/gdpr-audit/search', criteria);
+    return response.data;
+  }
+
+  /** DELETE /gdpr-audit/{auditId} — Delete GDPR audit entry */
+  async deleteGdprAudit(auditId: string): Promise<void> {
+    await api.delete(`/gdpr-audit/${auditId}`);
   }
 }
 

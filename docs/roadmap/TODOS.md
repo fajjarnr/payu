@@ -113,27 +113,27 @@ The Next.js BFF route (`src/app/api/v1/[...path]/route.ts`) proxies all `/api/v1
 
 **Grading**: FULL (all endpoints wired & used), PARTIAL (service exists but some endpoints missing), MOCK (service wired but page uses hardcoded data), MISMATCH (frontend calls different paths than backend exposes), MINIMAL (<20% endpoints).
 
-### 🔴 NEW: Tier 4 — Frontend Feature Gap TODOs
+### ✅ COMPLETED: Tier 4 — Frontend Feature Gap TODOs (P24)
 
-| ID | Task | Priority | Affected | Est. Effort |
+| ID | Task | Priority | Affected | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **FE-GAP-001** | Wire investment page to real InvestmentService (replace mock data) | **P1** | /investments | 1d |
-| **FE-GAP-002** | Fix AnalyticsService endpoint paths to match backend (/spending/trends, /cashflow, /robo-advisory, /fraud/*) | **P1** | AnalyticsService.ts | 0.5d |
-| **FE-GAP-003** | Fix KYCService endpoint paths to match backend (/verify/start, /verify/ktp, /verify/selfie) | **P1** | KYCService.ts | 0.5d |
-| **FE-GAP-004** | Fix NotificationService to match backend (remove non-existent endpoints: unread-count, read-all, preferences) | **P1** | NotificationService.ts | 0.5d |
-| **FE-GAP-005** | Fix ComplianceService endpoint paths to match backend (audit-report, gdpr-audit) | **P1** | ComplianceService.ts | 0.5d |
-| **FE-GAP-006** | Fix SupportService — frontend calls ticket/FAQ but backend is agent-training management | **P1** | SupportService.ts, /support page | 1d |
-| **FE-GAP-007** | Add scheduled transfer UI (create, list, pause/resume/cancel) | **P2** | /transfer page | 2d |
-| **FE-GAP-008** | Add split bill UI (create, manage participants, settle) | **P2** | New /split-bill page | 2d |
-| **FE-GAP-009** | Add virtual cards UI (create, list, freeze/unfreeze) | **P2** | /cards page — currently mock | 2d |
-| **FE-GAP-010** | Add wallet pockets full CRUD (create, close, freeze/unfreeze, currency balance) | **P2** | /pockets page | 1d |
-| **FE-GAP-011** | Add biometric auth UI (register, authenticate, manage registrations) | **P2** | /security page | 1d |
-| **FE-GAP-012** | Add gamification UI (checkin, streak, badges, level, summary) | **P2** | /rewards page (new tab) | 1.5d |
-| **FE-GAP-013** | Add lending pre-approval UI (check, get, list) | **P2** | /lending page | 0.5d |
-| **FE-GAP-014** | Wire lending page to real LendingService (replace mock data) | **P2** | /lending page | 1d |
-| **FE-GAP-015** | Wire notifications page to real NotificationService (replace mock data) | **P2** | /notifications page | 0.5d |
-| **FE-GAP-016** | Wire rewards page to real PromotionService (replace mock data) | **P2** | /rewards page | 0.5d |
-| **FE-GAP-017** | Expand partner management UI (certificates, SNAP-BI, API keys) | **P3** | /merchant, /backoffice/partners | 2d |
+| **FE-GAP-001** | Wire investment page to real InvestmentService (replace mock data) | **P1** | /investments | ✅ Done |
+| **FE-GAP-002** | Fix AnalyticsService endpoint paths to match backend (/spending/trends, /cashflow, /robo-advisory, /fraud/*) | **P1** | AnalyticsService.ts | ✅ Done |
+| **FE-GAP-003** | Fix KYCService endpoint paths to match backend (/verify/start, /verify/ktp, /verify/selfie) | **P1** | KYCService.ts | ✅ Done |
+| **FE-GAP-004** | Fix NotificationService to match backend (remove non-existent endpoints: unread-count, read-all, preferences) | **P1** | NotificationService.ts | ✅ Done |
+| **FE-GAP-005** | Fix ComplianceService endpoint paths to match backend (audit-report, gdpr-audit) | **P1** | ComplianceService.ts | ✅ Done |
+| **FE-GAP-006** | Fix SupportService — frontend calls ticket/FAQ but backend is agent-training management | **P1** | SupportService.ts, /support page | ✅ Done |
+| **FE-GAP-007** | Add scheduled transfer UI (create, list, pause/resume/cancel) | **P2** | /transfer page | ✅ Done |
+| **FE-GAP-008** | Add split bill UI (create, manage participants, settle) | **P2** | New /split-bill page | ✅ Done |
+| **FE-GAP-009** | Add virtual cards UI (create, list, freeze/unfreeze) | **P2** | /cards page — currently mock | ✅ Done |
+| **FE-GAP-010** | Add wallet pockets full CRUD (create, close, freeze/unfreeze, currency balance) | **P2** | /pockets page | ✅ Done |
+| **FE-GAP-011** | Add biometric auth UI (register, authenticate, manage registrations) | **P2** | /security page | ✅ Done |
+| **FE-GAP-012** | Add gamification UI (checkin, streak, badges, level, summary) | **P2** | /rewards page (new tab) | ✅ Done |
+| **FE-GAP-013** | Add lending pre-approval UI (check, get, list) | **P2** | /lending page | ✅ Done |
+| **FE-GAP-014** | Wire lending page to real LendingService (replace mock data) | **P2** | /lending page | ✅ Done |
+| **FE-GAP-015** | Wire notifications page to real NotificationService (replace mock data) | **P2** | /notifications page | ✅ Done |
+| **FE-GAP-016** | Wire rewards page to real PromotionService (replace mock data) | **P2** | /rewards page | ✅ Done |
+| **FE-GAP-017** | Expand partner management UI (certificates, SNAP-BI, API keys) | **P3** | /merchant, /backoffice/partners | ✅ Done |
 
 ### 🔴 NEW: E2E Test Fix TODOs
 

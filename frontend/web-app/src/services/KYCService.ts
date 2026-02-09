@@ -1,5 +1,27 @@
 import api from '@/lib/api';
 
+// --- Interfaces matching backend kyc_router (FastAPI) ---
+
+export interface StartKycRequest {
+  userId: string;
+  fullName: string;
+  nik: string;
+  dateOfBirth: string;
+  address: string;
+  phone?: string;
+}
+
+export interface UploadKtpRequest {
+  verificationId: string;
+  ktpImage: string; // base64 encoded
+  nik: string;
+}
+
+export interface UploadSelfieRequest {
+  verificationId: string;
+  selfieImage: string; // base64 encoded
+}
+
 export interface KycSubmission {
   id: string;
   userId: string;
@@ -8,8 +30,28 @@ export interface KycSubmission {
   submittedAt: string;
   reviewedAt?: string;
   rejectionReason?: string;
+  verificationId?: string;
 }
 
+export interface KycVerificationResult {
+  verificationId: string;
+  userId: string;
+  status: KycStatus;
+  ktpVerified: boolean;
+  selfieVerified: boolean;
+  livenessScore?: number;
+  faceMatchScore?: number;
+  ocrData?: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KycHistory {
+  userId: string;
+  verifications: KycVerificationResult[];
+}
+
+// Legacy types preserved for backward compat
 export interface KycDocument {
   id: string;
   type: DocumentType;
@@ -17,7 +59,6 @@ export interface KycDocument {
   status: 'PENDING' | 'VERIFIED' | 'REJECTED';
   uploadedAt: string;
 }
-
 export interface IdentityVerification {
   nik: string;
   fullName: string;
@@ -41,37 +82,33 @@ class KYCService {
     return KYCService.instance;
   }
 
-  async getKycStatus(): Promise<KycSubmission> {
-    const response = await api.get('/kyc/status');
+  /** POST /kyc/verify/start — Start KYC verification process */
+  async startVerification(request: StartKycRequest): Promise<KycVerificationResult> {
+    const response = await api.post('/kyc/verify/start', request);
     return response.data;
   }
 
-  async submitIdentityVerification(data: IdentityVerification): Promise<KycSubmission> {
-    const formData = new FormData();
-    formData.append('nik', data.nik);
-    formData.append('fullName', data.fullName);
-    formData.append('dateOfBirth', data.dateOfBirth);
-    formData.append('address', data.address);
-    formData.append('selfie', data.selfieFile);
-    formData.append('idCard', data.idCardFile);
-    const response = await api.post('/kyc/verify', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+  /** POST /kyc/verify/ktp — Upload and verify KTP document */
+  async uploadKtp(request: UploadKtpRequest): Promise<KycVerificationResult> {
+    const response = await api.post('/kyc/verify/ktp', request);
     return response.data;
   }
 
-  async uploadDocument(type: DocumentType, file: File): Promise<KycDocument> {
-    const formData = new FormData();
-    formData.append('type', type);
-    formData.append('file', file);
-    const response = await api.post('/kyc/documents', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+  /** POST /kyc/verify/selfie — Upload and verify selfie */
+  async uploadSelfie(request: UploadSelfieRequest): Promise<KycVerificationResult> {
+    const response = await api.post('/kyc/verify/selfie', request);
     return response.data;
   }
 
-  async getDocuments(): Promise<KycDocument[]> {
-    const response = await api.get('/kyc/documents');
+  /** GET /kyc/verify/{verificationId} — Get verification status */
+  async getVerificationStatus(verificationId: string): Promise<KycVerificationResult> {
+    const response = await api.get(`/kyc/verify/${verificationId}`);
+    return response.data;
+  }
+
+  /** GET /kyc/user/{userId} — Get user KYC history */
+  async getUserKycHistory(userId: string): Promise<KycHistory> {
+    const response = await api.get(`/kyc/user/${userId}`);
     return response.data;
   }
 }

@@ -157,6 +157,45 @@ export class LendingService {
     const response = await api.get<CreditScore>(`/lending/credit-score/${userId}`);
     return response.data;
   }
+
+  // === Pre-Approval (FE-GAP-013) ===
+
+  /** POST /lending/pre-approval/check — Check pre-approval eligibility */
+  async checkPreApproval(request: PreApprovalCheckRequest): Promise<PreApproval> {
+    const response = await api.post<PreApproval>('/lending/pre-approval/check', request);
+    return response.data;
+  }
+
+  /** GET /lending/pre-approval/{preApprovalId} — Get pre-approval details */
+  async getPreApproval(preApprovalId: string): Promise<PreApproval> {
+    const response = await api.get<PreApproval>(`/lending/pre-approval/${preApprovalId}`);
+    return response.data;
+  }
+
+  /** GET /lending/pre-approval/user/{userId}/active — Get active pre-approvals */
+  async getActivePreApprovals(userId: string): Promise<PreApproval[]> {
+    const response = await api.get<PreApproval[]>(`/lending/pre-approval/user/${userId}/active`);
+    return response.data;
+  }
+}
+
+// === Pre-Approval Types ===
+
+export interface PreApprovalCheckRequest {
+  userId: string;
+  requestedAmount?: number;
+  purpose?: string;
+}
+
+export interface PreApproval {
+  id: string;
+  userId: string;
+  maxAmount: number;
+  interestRate: number;
+  maxTenureMonths: number;
+  status: 'APPROVED' | 'PENDING' | 'REJECTED' | 'EXPIRED';
+  validUntil: string;
+  createdAt: string;
 }
 
 export default LendingService.getInstance();

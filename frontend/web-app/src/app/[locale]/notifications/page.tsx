@@ -13,7 +13,8 @@ import {
   ArrowRight,
   Filter,
   MoreVertical,
-  Inbox
+  Inbox,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,47 +22,23 @@ import { Badge } from '@/components/ui/badge';
 import DashboardLayout from '@/components/DashboardLayout';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import clsx from 'clsx';
-
-const MOCK_NOTIFICATIONS = [
-  {
-    id: '1',
-    title: 'Bonus Deposito Ramadan',
-    content: 'Selamat! Anda berhak mendapatkan cashback 10% untuk deposito hari ini. Promo berlaku hingga pukul 23:59 WIB.',
-    type: 'PROMO',
-    read: false,
-    timestamp: '2026-02-02T05:00:00Z'
-  },
-  {
-    id: '2',
-    title: 'Pemeliharaan BI-FAST',
-    content: 'Layanan BI-FAST akan dihentikan sementara pada tanggal 5 Februari 2026 pukul 01:00 - 05:00 WIB untuk peningkatan kualitas.',
-    type: 'ALERT',
-    read: true,
-    timestamp: '2026-02-01T15:30:00Z'
-  },
-  {
-    id: '3',
-    title: 'Login Baru Terdeteksi',
-    content: 'Akun Anda baru saja login dari perangkat Linux di Jakarta. Jika ini bukan Anda, segera ubah PIN keamanan Anda.',
-    type: 'SECURITY',
-    read: false,
-    timestamp: '2026-02-01T10:15:00Z'
-  },
-  {
-    id: '4',
-    title: 'Update Syarat & Ketentuan',
-    content: 'Kami telah memperbarui kebijakan privasi kami. Silakan tinjau perubahan terbaru untuk terus menggunakan layanan PayU.',
-    type: 'INFO',
-    read: true,
-    timestamp: '2026-01-25T09:00:00Z'
-  }
-];
+import { useNotifications, useMarkNotificationRead } from '@/hooks';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function NotificationsPage() {
+  const { user } = useAuthStore();
+  const userId = user?.id ?? '';
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('ALL');
+  const { data: notificationsData, isLoading } = useNotifications(userId);
+  const markRead = useMarkNotificationRead();
 
-  const filteredNotifs = MOCK_NOTIFICATIONS.filter(n => {
+  const rawNotifications = notificationsData?.content ?? [];
+  const notifications = rawNotifications as unknown as Array<{
+    id: string; title: string; content: string; type: string; read: boolean; timestamp: string;
+  }>;
+
+  const filteredNotifs = notifications.filter(n => {
     const matchesSearch = n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           n.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filter === 'ALL' || n.type === filter || (filter === 'UNREAD' && !n.read);

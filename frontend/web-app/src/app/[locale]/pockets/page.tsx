@@ -10,6 +10,7 @@ import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { SkeletonBalance, SkeletonTransaction } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores';
+import { usePockets, usePocketsTotalBalance, useCreatePocket } from '@/hooks';
 
 interface SharedPocket extends Pocket {
   sharedMembers?: SharedMember[];
@@ -31,6 +32,8 @@ export default function PocketsPage() {
     const [selectedPocket, setSelectedPocket] = useState<string | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_showMemberModal, setShowMemberModal] = useState(false);
+    const { data: pocketsData } = usePockets();
+    const createPocket = useCreatePocket();
 
     const { data: balance, isLoading: balanceLoading } = useQuery({
         queryKey: ['wallet-balance', accountId],

@@ -2,14 +2,22 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText, TrendingUp } from 'lucide-react';
+import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText, TrendingUp, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreApprovals } from '@/hooks';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function LendingPage() {
   const [activeTab, setActiveTab] = useState<'loans' | 'paylater'>('loans');
+  const { user } = useAuthStore();
+  const userId = user?.id ?? '';
+  const { data: creditScoreData } = useCreditScore(userId);
+  const { data: payLaterData } = usePayLater(userId);
+  const { data: payLaterTxns } = usePayLaterTransactions(userId);
+  const { data: preApprovals } = useActivePreApprovals(userId);
 
   const loanProducts = [
     {
@@ -39,24 +47,24 @@ export default function LendingPage() {
   ];
 
   const payLaterStats = {
-    creditLimit: 15000000,
-    usedLimit: 4500000,
-    availableLimit: 10500000,
-    minimumPayment: 250000,
-    dueDate: '25 Jan 2026',
-    transactions: [
+    creditLimit: payLaterData?.creditLimit ?? 15000000,
+    usedLimit: payLaterData?.usedLimit ?? 4500000,
+    availableLimit: payLaterData?.availableLimit ?? 10500000,
+    minimumPayment: payLaterData?.minimumPayment ?? 250000,
+    dueDate: payLaterData?.dueDate ?? '25 Jan 2026',
+    transactions: (payLaterTxns ?? [
       { id: 1, merchant: 'TokoBapak', amount: 850000, date: '20 Jan 2026', status: 'paid' },
       { id: 2, merchant: 'Traveloka', amount: 3200000, date: '18 Jan 2026', status: 'pending' },
       { id: 3, merchant: 'Shopee', amount: 450000, date: '15 Jan 2026', status: 'paid' }
-    ]
+    ]) as Array<{ id: number; merchant: string; amount: number; date: string; status: string }>
   };
 
   const creditScore = {
-    score: 785,
-    grade: 'A',
+    score: creditScoreData?.score ?? 785,
+    grade: creditScoreData?.grade ?? 'A',
     maxScore: 850,
-    lastUpdated: '20 Jan 2026',
-    factors: ['Pembayaran tepat waktu', 'Rasio utang rendah', 'Histori kredit panjang']
+    lastUpdated: creditScoreData?.lastUpdated ?? '20 Jan 2026',
+    factors: creditScoreData?.factors ?? ['Pembayaran tepat waktu', 'Rasio utang rendah', 'Histori kredit panjang']
   };
 
   const formatCurrency = (amount: number) => {

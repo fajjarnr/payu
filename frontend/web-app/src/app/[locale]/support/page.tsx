@@ -6,8 +6,13 @@ import { LifeBuoy, MessageCircle, Mail, Phone, ExternalLink, HelpCircle, FileTex
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
+import { useTickets, useCreateTicket, useTrainingStatus } from '@/hooks';
 
 export default function SupportPage() {
+  const { data: ticketsData } = useTickets();
+  const createTicket = useCreateTicket();
+  const { data: trainingStatus } = useTrainingStatus();
+
   const supportChannels = [
     { label: 'Bantuan Langsung', desc: 'Obrolan real-time dengan agen dukungan kami.', icon: MessageCircle, action: 'Hubungkan Sekarang', color: 'primary' },
     { label: 'Protokol Email', desc: 'Dukungan email asinkron yang aman.', icon: Mail, action: 'Kirim Pesan', color: 'blue-600' },

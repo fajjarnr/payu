@@ -2,14 +2,26 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { CreditCard, Eye, EyeOff, Lock, RefreshCw, Sliders, ShieldCheck, Zap, Plus } from 'lucide-react';
+import { CreditCard, Eye, EyeOff, Lock, RefreshCw, Sliders, ShieldCheck, Zap, Plus, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { useCards, useFreezeCard, useUnfreezeCard, useCreateCard } from '@/hooks';
 
 export default function CardsPage() {
     const [showFullDetails, setShowFullDetails] = useState(false);
+    const { data: cardsData, isLoading: loadingCards } = useCards();
+    const freezeCard = useFreezeCard();
+    const unfreezeCard = useUnfreezeCard();
+    const createCard = useCreateCard();
+
+    const primaryCard = (cardsData as any)?.[0];
+    const cardNumber = primaryCard?.cardNumber ?? '4829 5678 9032 4410';
+    const cardExpiry = primaryCard?.expiryDate ?? '08 / 29';
+    const cardOwner = primaryCard?.cardHolder ?? 'PENGGUNA PAYU';
+    const cardLast4 = cardNumber.slice(-4);
+    const isFrozen = primaryCard?.status === 'FROZEN';
 
     return (
         <DashboardLayout>
@@ -57,16 +69,16 @@ export default function CardsPage() {
 
                                                     <div className="space-y-4">
                                                         <div className="text-2xl sm:text-[1.75rem] font-bold tracking-[0.25em] font-mono leading-none drop-shadow-xl tabular-nums">
-                                                            {showFullDetails ? "4829 5678 9032 4410" : "•••• •••• •••• 4410"}
+                                                            {showFullDetails ? cardNumber : `•••• •••• •••• ${cardLast4}`}
                                                         </div>
                                                         <div className="flex justify-between items-end">
                                                             <div className="space-y-1">
                                                                 <p className="text-xs text-white/50 font-bold tracking-widest uppercase">Owner</p>
-                                                                <p className="text-xs font-bold uppercase tracking-widest truncate max-w-[150px]">PENGGUNA PAYU</p>
+                                                                <p className="text-xs font-bold uppercase tracking-widest truncate max-w-[150px]">{cardOwner}</p>
                                                             </div>
                                                             <div className="text-right space-y-0.5">
                                                                 <p className="text-xs text-white/50 font-bold tracking-widest uppercase">Exp</p>
-                                                                <p className="font-mono font-bold text-xs">08 / 29</p>
+                                                                <p className="font-mono font-bold text-xs">{cardExpiry}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -82,8 +94,10 @@ export default function CardsPage() {
                                                     {showFullDetails ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
                                                     Detail Kartu
                                                 </Button>
-                                                <Button variant="outline" className="flex-1 text-muted-foreground/60 hover:text-white hover:bg-destructive hover:border-destructive">
-                                                    <Lock className="h-4 w-4 mr-2" /> Bekukan
+                                                <Button variant="outline" className="flex-1 text-muted-foreground/60 hover:text-white hover:bg-destructive hover:border-destructive"
+                                                    onClick={() => primaryCard?.id && (isFrozen ? unfreezeCard.mutate(primaryCard.id) : freezeCard.mutate(primaryCard.id))}
+                                                >
+                                                    <Lock className="h-4 w-4 mr-2" /> {isFrozen ? 'Aktifkan' : 'Bekukan'}
                                                 </Button>
                                             </div>
                                         </div>

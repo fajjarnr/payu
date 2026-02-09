@@ -79,6 +79,162 @@ export class TransactionService {
   async processQrisPayment(request: ProcessQrisPaymentRequest): Promise<void> {
     await api.post('/transactions/qris/pay', request);
   }
+
+  // === Scheduled Transfers (FE-GAP-007) ===
+
+  async createScheduledTransfer(request: CreateScheduledTransferRequest): Promise<ScheduledTransfer> {
+    const response = await api.post<ScheduledTransfer>('/scheduled-transfers', request);
+    return response.data;
+  }
+
+  async getScheduledTransfer(id: string): Promise<ScheduledTransfer> {
+    const response = await api.get<ScheduledTransfer>(`/scheduled-transfers/${id}`);
+    return response.data;
+  }
+
+  async getAccountScheduledTransfers(accountId: string): Promise<ScheduledTransfer[]> {
+    const response = await api.get<ScheduledTransfer[]>(`/scheduled-transfers/accounts/${accountId}`);
+    return response.data;
+  }
+
+  async updateScheduledTransfer(id: string, request: Partial<CreateScheduledTransferRequest>): Promise<ScheduledTransfer> {
+    const response = await api.put<ScheduledTransfer>(`/scheduled-transfers/${id}`, request);
+    return response.data;
+  }
+
+  async cancelScheduledTransfer(id: string): Promise<ScheduledTransfer> {
+    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/cancel`);
+    return response.data;
+  }
+
+  async pauseScheduledTransfer(id: string): Promise<ScheduledTransfer> {
+    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/pause`);
+    return response.data;
+  }
+
+  async resumeScheduledTransfer(id: string): Promise<ScheduledTransfer> {
+    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/resume`);
+    return response.data;
+  }
+
+  // === Split Bills (FE-GAP-008) ===
+
+  async createSplitBill(request: CreateSplitBillRequest): Promise<SplitBill> {
+    const response = await api.post<SplitBill>('/split-bills', request);
+    return response.data;
+  }
+
+  async getSplitBill(id: string): Promise<SplitBill> {
+    const response = await api.get<SplitBill>(`/split-bills/${id}`);
+    return response.data;
+  }
+
+  async getAccountSplitBills(accountId: string): Promise<SplitBill[]> {
+    const response = await api.get<SplitBill[]>(`/split-bills/account/${accountId}`);
+    return response.data;
+  }
+
+  async updateSplitBill(id: string, request: Partial<CreateSplitBillRequest>): Promise<SplitBill> {
+    const response = await api.put<SplitBill>(`/split-bills/${id}`, request);
+    return response.data;
+  }
+
+  async cancelSplitBill(id: string): Promise<SplitBill> {
+    const response = await api.post<SplitBill>(`/split-bills/${id}/cancel`);
+    return response.data;
+  }
+
+  async activateSplitBill(id: string): Promise<SplitBill> {
+    const response = await api.post<SplitBill>(`/split-bills/${id}/activate`);
+    return response.data;
+  }
+
+  async addParticipant(splitBillId: string, participant: SplitBillParticipant): Promise<SplitBill> {
+    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants`, participant);
+    return response.data;
+  }
+
+  async acceptParticipation(splitBillId: string, participantId: string): Promise<SplitBill> {
+    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/accept`);
+    return response.data;
+  }
+
+  async declineParticipation(splitBillId: string, participantId: string): Promise<SplitBill> {
+    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/decline`);
+    return response.data;
+  }
+
+  async makeParticipantPayment(splitBillId: string, participantId: string, amount: number): Promise<SplitBill> {
+    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/payment`, { amount });
+    return response.data;
+  }
+
+  async settleSplitBill(id: string): Promise<SplitBill> {
+    const response = await api.post<SplitBill>(`/split-bills/${id}/settle`);
+    return response.data;
+  }
+}
+
+// === Scheduled Transfer Types ===
+
+export interface ScheduledTransfer {
+  id: string;
+  senderAccountId: string;
+  recipientAccountNumber: string;
+  amount: number;
+  currency: string;
+  description: string;
+  frequency: 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  startDate: string;
+  endDate?: string;
+  nextExecutionDate: string;
+  status: 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'COMPLETED';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateScheduledTransferRequest {
+  senderAccountId: string;
+  recipientAccountNumber: string;
+  amount: number;
+  currency?: string;
+  description: string;
+  frequency: 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  startDate: string;
+  endDate?: string;
+}
+
+// === Split Bill Types ===
+
+export interface SplitBill {
+  id: string;
+  creatorAccountId: string;
+  title: string;
+  totalAmount: number;
+  currency: string;
+  splitType: 'EQUAL' | 'CUSTOM' | 'PERCENTAGE';
+  status: 'DRAFT' | 'ACTIVE' | 'SETTLED' | 'CANCELLED';
+  participants: SplitBillParticipant[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SplitBillParticipant {
+  id?: string;
+  accountId: string;
+  name: string;
+  amount: number;
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'PAID';
+  paidAt?: string;
+}
+
+export interface CreateSplitBillRequest {
+  creatorAccountId: string;
+  title: string;
+  totalAmount: number;
+  currency?: string;
+  splitType: 'EQUAL' | 'CUSTOM' | 'PERCENTAGE';
+  participants: Omit<SplitBillParticipant, 'id' | 'status' | 'paidAt'>[];
 }
 
 export default TransactionService.getInstance();
