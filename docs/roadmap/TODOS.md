@@ -72,15 +72,28 @@ Audit against the *14 Immutable Laws of PayU*.
 - Verified: `grep -r "localStorage.*token" src/` returns 0 matches
 - PCI-DSS 8.2.4 compliant: tokens never accessible to client JavaScript
 
-### P0-ARCH-001: Shared Starters Are Dead Code (0 Consumers)
+### ~~P0-ARCH-001: Shared Starters Are Dead Code (0 Consumers)~~ ✅ FIXED (Feb 9, 2026)
 
-**Severity**: 🔴 CRITICAL — Architectural Integrity Violation
+**Severity**: ~~🔴 CRITICAL~~ → ✅ RESOLVED
 
-- `events-starter` (CloudEvents): 0 services use it. Services publish Kafka events directly.
-- `outbox-starter` (Transactional Outbox): 0 services use it. Financial transactions bypass outbox pattern.
-- `saga-starter` (Saga Orchestration): 0 services use it. Transaction-service has raw saga logic.
-- **Impact**: Financial transactions can lose events during failures. No transactional outbox = no at-least-once delivery guarantee.
-- **Remediation**: Integrate outbox-starter into transaction-service, wallet-service, lending-service. Or document as "NOT USED" and remove from architecture claims.
+**Changes Applied** (commit `320f686`):
+- Integrated `outbox-starter` into 4 financial services: transaction-service, wallet-service, lending-service, billing-service
+- Added Maven dependency `outbox-starter` to all 4 service POMs
+- Created Flyway migration `outbox_events` table for each service (V8, V100, V4, V2 respectively)
+- Refactored 5 Kafka publisher adapters from direct `KafkaTemplate.send()` to `OutboxService.createEvent()`:
+  - `TransactionEventPublisherAdapter` (4 event methods) → outbox with topic `payu.transactions.*`
+  - `SplitBillEventPublisherAdapter` (7 event methods) → outbox with topic `payu.split-bills.*`
+  - `WalletEventPublisherAdapter` (5 event methods) → outbox with topic `payu.wallets.*`
+  - `KafkaLoanEventPublisherAdapter` (2 event methods) → outbox with topics `loan.approved/rejected`
+  - `PaymentService.publishPaymentEvent()` → outbox with topic `payment-events`
+- Added `payu.outbox` config section to all 4 service `application.yml` files
+- Updated billing-service test mocks from `KafkaTemplate` to `OutboxService`
+- Port interfaces unchanged (hexagonal architecture preserved)
+- Financial events now written to DB within same transaction → at-least-once delivery guaranteed
+
+**Remaining lower-priority items** (P2):
+- `events-starter` (CloudEvents) still unused — consider integration or removal
+- `saga-starter` still unused — consider integration for distributed transaction flows
 
 ### ~~P0-SEC-002: Hardcoded Credentials in Version Control~~ ✅ FIXED (Feb 9, 2026)
 
