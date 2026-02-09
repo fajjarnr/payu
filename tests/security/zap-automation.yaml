@@ -1,0 +1,99 @@
+# =============================================================================
+# ZAP Automation Framework Configuration for PayU
+# =============================================================================
+# This file defines the automated security scanning pipeline for OWASP ZAP.
+# Used by both CI and manual scans.
+# =============================================================================
+env:
+  contexts:
+    - name: "PayU API Gateway"
+      urls:
+        - "${TARGET_URL:-http://localhost:8080}"
+      includePaths:
+        - "${TARGET_URL:-http://localhost:8080}/api/.*"
+      excludePaths:
+        - ".*\\.js$"
+        - ".*\\.css$"
+        - ".*\\.png$"
+        - ".*\\.jpg$"
+        - ".*\\.ico$"
+      authentication:
+        method: "json"
+        parameters:
+          loginPageUrl: "${TARGET_URL:-http://localhost:8080}/api/v1/auth/login"
+          loginRequestUrl: "${TARGET_URL:-http://localhost:8080}/api/v1/auth/login"
+          loginRequestBody: '{"email":"{%username%}","password":"{%password%}"}'
+        verification:
+          method: "response"
+          loggedInRegex: "accessToken"
+      users:
+        - name: "test-user"
+          credentials:
+            username: "${ZAP_TEST_USER:-test@payu.id}"
+            password: "${ZAP_TEST_PASSWORD}"
+
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+
+  - type: spider
+    parameters:
+      context: "PayU API Gateway"
+      maxDuration: 5
+      maxDepth: 5
+      maxChildren: 10
+
+  - type: openapi
+    parameters:
+      apiUrl: "${TARGET_URL:-http://localhost:8080}/v3/api-docs"
+      context: "PayU API Gateway"
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: activeScan
+    parameters:
+      context: "PayU API Gateway"
+      maxRuleDurationInMins: 5
+      maxScanDurationInMins: 30
+      policy: "Default Policy"
+    policyDefinition:
+      rules:
+        - id: 40012  # Cross Site Scripting (Reflected)
+          strength: "medium"
+          threshold: "medium"
+        - id: 40014  # Cross Site Scripting (Persistent)
+          strength: "medium"
+          threshold: "medium"
+        - id: 40018  # SQL Injection
+          strength: "high"
+          threshold: "low"
+        - id: 90019  # Server Side Code Injection
+          strength: "medium"
+          threshold: "medium"
+        - id: 90020  # Remote OS Command Injection
+          strength: "medium"
+          threshold: "medium"
+        - id: 40003  # CRLF Injection
+          strength: "medium"
+          threshold: "medium"
+        - id: 40008  # Parameter Tampering
+          strength: "medium"
+          threshold: "medium"
+        - id: 40009  # Server Side Include
+          strength: "medium"
+          threshold: "medium"
+
+  - type: report
+    parameters:
+      template: "risk-confidence-html"
+      reportDir: "/zap/wrk"
+      reportTitle: "PayU DAST Security Report"
+      reportDescription: "Automated DAST scan results for PayU Digital Banking Platform"
+    risks:
+      - high
+      - medium
+      - low

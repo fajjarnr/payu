@@ -229,6 +229,41 @@
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>0.8.11</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>1.15.0</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.pitest</groupId>
+                            <artifactId>pitest-junit5-plugin</artifactId>
+                            <version>1.2.1</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <targetClasses>
+                            <param>id.payu.*</param>
+                        </targetClasses>
+                        <targetTests>
+                            <param>id.payu.*</param>
+                        </targetTests>
+                        <mutators>
+                            <mutator>DEFAULTS</mutator>
+                        </mutators>
+                        <outputFormats>
+                            <outputFormat>HTML</outputFormat>
+                            <outputFormat>XML</outputFormat>
+                        </outputFormats>
+                        <timestampedReports>false</timestampedReports>
+                        <mutationThreshold>60</mutationThreshold>
+                        <coverageThreshold>70</coverageThreshold>
+                        <threads>4</threads>
+                        <excludedClasses>
+                            <param>id.payu.*.config.*</param>
+                            <param>id.payu.*Application</param>
+                        </excludedClasses>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -282,6 +317,19 @@
                 <module>ab-testing-service</module>
                 <module>api-portal-service</module>
             </modules>
+        </profile>
+
+        <!-- Profile for mutation testing with PITest -->
+        <profile>
+            <id>mutation-testing</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

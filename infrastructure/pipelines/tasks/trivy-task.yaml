@@ -1,0 +1,66 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: trivy
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Scan container images for vulnerabilities using Trivy"
+  params:
+    - name: IMAGE
+      type: string
+      description: "Image to scan"
+    - name: SEVERITY
+      type: string
+      description: "Severity levels to check"
+      default: "CRITICAL,HIGH"
+    - name: EXIT_CODE
+      type: string
+      description: "Exit code when vulnerabilities found (0=warn, 1=fail)"
+      default: "1"
+  workspaces:
+    - name: output
+      description: Workspace for scan reports
+      optional: true
+  results:
+    - name: VULN_COUNT
+      description: Number of vulnerabilities found
+    - name: SCAN_RESULT
+      description: PASS or FAIL
+  steps:
+    - name: scan
+      image: "aquasec/trivy:0.58.0"
+      script: |
+        #!/bin/sh
+        set -e
+
+        echo "[*] Scanning image: $(params.IMAGE)"
+        echo "[*] Severity filter: $(params.SEVERITY)"
+
+        trivy image \
+          --severity $(params.SEVERITY) \
+          --exit-code 0 \
+          --format json \
+          --output /tmp/trivy-report.json \
+          $(params.IMAGE) 2>/dev/null || true
+
+        # Count vulnerabilities
+        VULN_COUNT=$(cat /tmp/trivy-report.json | grep -o '"VulnerabilityID"' | wc -l || echo "0")
+        echo -n "$VULN_COUNT" | tee $(results.VULN_COUNT.path)
+
+        # Generate human-readable report
+        trivy image \
+          --severity $(params.SEVERITY) \
+          --exit-code $(params.EXIT_CODE) \
+          $(params.IMAGE)
+
+        RESULT=$?
+        if [ $RESULT -eq 0 ]; then
+          echo -n "PASS" | tee $(results.SCAN_RESULT.path)
+          echo "[✓] No $(params.SEVERITY) vulnerabilities found"
+        else
+          echo -n "FAIL" | tee $(results.SCAN_RESULT.path)
+          echo "[✗] Found $VULN_COUNT vulnerabilities at $(params.SEVERITY) level"
+          exit $(params.EXIT_CODE)
+        fi

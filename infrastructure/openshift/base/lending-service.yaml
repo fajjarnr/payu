@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: lending-service
-          image: lending-service:latest
+          image: image-registry.openshift-image-registry.svc:5000/payu/lending-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

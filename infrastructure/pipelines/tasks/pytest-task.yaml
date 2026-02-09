@@ -1,0 +1,77 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: pytest
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Run Python pytest tests for PayU Python services (analytics, kyc)"
+  params:
+    - name: TEST_DIR
+      type: string
+      description: "Directory containing tests"
+      default: "."
+    - name: MARKERS
+      type: string
+      description: "Pytest marker expression (e.g., 'smoke', 'not slow')"
+      default: ""
+    - name: PYTHON_IMAGE
+      type: string
+      description: "Python image to use"
+      default: "registry.redhat.io/ubi9/python-311:9.4"
+    - name: EXTRA_ARGS
+      type: string
+      description: "Additional pytest arguments"
+      default: "-v --tb=short"
+  workspaces:
+    - name: source
+      description: Source code workspace
+  results:
+    - name: TEST_RESULT
+      description: PASS or FAIL
+    - name: TESTS_RUN
+      description: Number of tests run
+  steps:
+    - name: install-deps
+      image: $(params.PYTHON_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.TEST_DIR)
+      script: |
+        #!/bin/bash
+        set -e
+        if [[ -f requirements.txt ]]; then
+          pip install --user -r requirements.txt
+        fi
+        pip install --user pytest pytest-html
+
+    - name: run-tests
+      image: $(params.PYTHON_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.TEST_DIR)
+      script: |
+        #!/bin/bash
+        set -e
+
+        MARKER_ARG=""
+        if [[ -n "$(params.MARKERS)" ]]; then
+          MARKER_ARG="-m '$(params.MARKERS)'"
+        fi
+
+        echo "[*] Running pytest in $(params.TEST_DIR)"
+        python -m pytest $(params.EXTRA_ARGS) \
+          $MARKER_ARG \
+          --junitxml=/tmp/test-results.xml \
+          --html=/tmp/test-report.html \
+          --self-contained-html \
+          2>&1 | tee /tmp/pytest-output.txt
+
+        RESULT=$?
+        TESTS=$(grep -oP '\d+ passed' /tmp/pytest-output.txt | grep -oP '\d+' || echo "0")
+
+        echo -n "$TESTS" | tee $(results.TESTS_RUN.path)
+
+        if [[ $RESULT -eq 0 ]]; then
+          echo -n "PASS" | tee $(results.TEST_RESULT.path)
+        else
+          echo -n "FAIL" | tee $(results.TEST_RESULT.path)
+          exit 1
+        fi

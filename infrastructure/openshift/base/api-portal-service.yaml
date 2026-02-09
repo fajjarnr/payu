@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: api-portal-service
-          image: api-portal-service:latest
+          image: image-registry.openshift-image-registry.svc:5000/payu/api-portal-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

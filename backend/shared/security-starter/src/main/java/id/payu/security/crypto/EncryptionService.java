@@ -15,8 +15,11 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,13 +38,31 @@ public class EncryptionService {
     private static final int KEY_LENGTH = 256;
 
     private final SecretKeySpec secretKey;
+    private final List<SecretKeySpec> previousKeys;
+    private final int currentKeyVersion;
     private final ObjectMapper objectMapper;
 
     public EncryptionService(String encryptionKey) {
-        // Derive a 256-bit key from the provided key string
+        this(encryptionKey, Collections.emptyList());
+    }
+
+    /**
+     * Construct with current key and optional previous keys for rotation.
+     * Previous keys are used only for decryption of data encrypted with older keys.
+     *
+     * @param encryptionKey  Current encryption key (used for encrypt + decrypt)
+     * @param previousKeys   Previous keys in reverse order (most recent first), used only for decryption fallback
+     */
+    public EncryptionService(String encryptionKey, List<String> previousKeys) {
+        this.currentKeyVersion = previousKeys.size() + 1;
         this.secretKey = deriveKey(encryptionKey);
+        this.previousKeys = new ArrayList<>();
+        for (String prevKey : previousKeys) {
+            this.previousKeys.add(deriveKey(prevKey));
+        }
         this.objectMapper = new ObjectMapper();
-        log.info("Encryption Service initialized with AES-GCM");
+        log.info("Encryption Service initialized with AES-GCM (key version: {}, {} previous keys available for rotation)",
+                currentKeyVersion, previousKeys.size());
     }
 
     /**
@@ -80,37 +101,61 @@ public class EncryptionService {
     }
 
     /**
-     * Decrypt a string value
+     * Decrypt a string value.
+     * Tries the current key first, then falls back to previous keys for key rotation support.
      */
     public String decrypt(String encryptedText) {
         if (encryptedText == null || encryptedText.isEmpty()) {
             return encryptedText;
         }
 
+        // Try current key first
         try {
-            // Decode Base64
-            byte[] combined = Base64.getDecoder().decode(encryptedText);
-
-            // Extract IV and encrypted data
-            ByteBuffer buffer = ByteBuffer.wrap(combined);
-            byte[] iv = new byte[GCM_IV_LENGTH];
-            buffer.get(iv);
-            byte[] encryptedData = new byte[buffer.remaining()];
-            buffer.get(encryptedData);
-
-            // Initialize cipher for decryption
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
-
-            // Decrypt the data
-            byte[] decryptedData = cipher.doFinal(encryptedData);
-
-            return new String(decryptedData, StandardCharsets.UTF_8);
+            return decryptWithKey(encryptedText, secretKey);
         } catch (Exception e) {
-            log.error("Decryption failed", e);
-            throw new RuntimeException("Failed to decrypt data", e);
+            // If current key fails and we have previous keys, try them
+            for (int i = 0; i < previousKeys.size(); i++) {
+                try {
+                    String result = decryptWithKey(encryptedText, previousKeys.get(i));
+                    log.info("Decrypted with previous key version {} — consider re-encrypting with current key",
+                            currentKeyVersion - i - 1);
+                    return result;
+                } catch (Exception ignored) {
+                    // Try next key
+                }
+            }
+            log.error("Decryption failed with all available keys");
+            throw new RuntimeException("Failed to decrypt data — no matching key found", e);
         }
+    }
+
+    private String decryptWithKey(String encryptedText, SecretKeySpec key) throws Exception {
+        byte[] combined = Base64.getDecoder().decode(encryptedText);
+
+        ByteBuffer buffer = ByteBuffer.wrap(combined);
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        buffer.get(iv);
+        byte[] encryptedData = new byte[buffer.remaining()];
+        buffer.get(encryptedData);
+
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+        cipher.init(Cipher.DECRYPT_MODE, key, parameterSpec);
+
+        byte[] decryptedData = cipher.doFinal(encryptedData);
+        return new String(decryptedData, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Re-encrypt a value with the current key.
+     * Use this during key rotation to migrate data encrypted with previous keys.
+     *
+     * @param encryptedText  Data encrypted with any known key version
+     * @return Data re-encrypted with the current key
+     */
+    public String reEncrypt(String encryptedText) {
+        String plainText = decrypt(encryptedText);
+        return encrypt(plainText);
     }
 
     /**

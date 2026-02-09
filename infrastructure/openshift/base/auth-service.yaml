@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: auth-service:latest
+          image: image-registry.openshift-image-registry.svc:5000/payu/auth-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

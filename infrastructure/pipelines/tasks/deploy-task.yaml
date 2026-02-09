@@ -1,0 +1,101 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: deploy-openshift
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Deploy a PayU service to OpenShift using oc apply + rollout"
+  params:
+    - name: SERVICE_NAME
+      type: string
+      description: "Name of the service to deploy"
+    - name: IMAGE
+      type: string
+      description: "Full image reference with tag/digest"
+    - name: NAMESPACE
+      type: string
+      description: "Target OpenShift namespace"
+      default: "payu"
+    - name: MANIFEST_DIR
+      type: string
+      description: "Directory containing Kustomize/YAML manifests"
+      default: "infrastructure/openshift/base"
+    - name: ROLLOUT_TIMEOUT
+      type: string
+      description: "Timeout for rollout completion"
+      default: "300s"
+  workspaces:
+    - name: source
+      description: Source code workspace
+  results:
+    - name: DEPLOY_STATUS
+      description: Deployment rollout status
+  steps:
+    - name: patch-image
+      image: "registry.redhat.io/openshift4/ose-cli:v4.20"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+
+        MANIFEST="$(params.MANIFEST_DIR)/$(params.SERVICE_NAME).yaml"
+
+        if [[ ! -f "$MANIFEST" ]]; then
+          echo "ERROR: Manifest not found: $MANIFEST"
+          exit 1
+        fi
+
+        echo "[*] Patching image in $MANIFEST to $(params.IMAGE)"
+        sed -i "s|image:.*$(params.SERVICE_NAME).*|image: $(params.IMAGE)|g" "$MANIFEST"
+
+        echo "[*] Applying manifest to namespace $(params.NAMESPACE)"
+        oc apply -f "$MANIFEST" -n $(params.NAMESPACE)
+
+    - name: rollout-wait
+      image: "registry.redhat.io/openshift4/ose-cli:v4.20"
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+
+        echo "[*] Waiting for rollout: $(params.SERVICE_NAME) in $(params.NAMESPACE)"
+        oc rollout status deployment/$(params.SERVICE_NAME) \
+          -n $(params.NAMESPACE) \
+          --timeout=$(params.ROLLOUT_TIMEOUT)
+
+        STATUS=$?
+        if [[ $STATUS -eq 0 ]]; then
+          echo "DEPLOYED" | tee $(results.DEPLOY_STATUS.path)
+          echo "[✓] $(params.SERVICE_NAME) deployed successfully"
+        else
+          echo "FAILED" | tee $(results.DEPLOY_STATUS.path)
+          echo "[✗] $(params.SERVICE_NAME) rollout failed"
+          oc get pods -n $(params.NAMESPACE) -l app=$(params.SERVICE_NAME)
+          exit 1
+        fi
+
+    - name: health-check
+      image: "registry.redhat.io/ubi9/ubi-minimal:9.4"
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+
+        echo "[*] Running health check for $(params.SERVICE_NAME)"
+
+        HEALTH_URL="http://$(params.SERVICE_NAME).$(params.NAMESPACE).svc:8080/actuator/health"
+        MAX_RETRIES=10
+        RETRY_INTERVAL=5
+
+        for i in $(seq 1 $MAX_RETRIES); do
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
+          if [[ "$HTTP_CODE" == "200" ]]; then
+            echo "[✓] Health check passed (HTTP $HTTP_CODE)"
+            exit 0
+          fi
+          echo "  Attempt $i/$MAX_RETRIES: HTTP $HTTP_CODE — retrying in ${RETRY_INTERVAL}s..."
+          sleep $RETRY_INTERVAL
+        done
+
+        echo "[✗] Health check failed after $MAX_RETRIES attempts"
+        exit 1

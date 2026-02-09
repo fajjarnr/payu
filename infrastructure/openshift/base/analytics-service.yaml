@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: analytics-service
-          image: analytics-service:latest
+          image: image-registry.openshift-image-registry.svc:5000/payu/analytics-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

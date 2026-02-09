@@ -223,4 +223,77 @@ class EncryptionServiceTest {
         assertNotNull(result);
         assertNotEquals(json, result);
     }
+
+    // --- Key Rotation Tests ---
+
+    @Test
+    void testKeyRotationDecryptWithPreviousKey() {
+        // Encrypt with old key
+        EncryptionService oldService = new EncryptionService("old-key-v1");
+        String encrypted = oldService.encrypt("sensitive-data");
+
+        // Create new service with rotated key, providing old key as previous
+        EncryptionService newService = new EncryptionService("new-key-v2", List.of("old-key-v1"));
+        String decrypted = newService.decrypt(encrypted);
+
+        assertEquals("sensitive-data", decrypted);
+    }
+
+    @Test
+    void testKeyRotationEncryptUsesCurrentKey() {
+        EncryptionService rotatedService = new EncryptionService("new-key-v2", List.of("old-key-v1"));
+        String encrypted = rotatedService.encrypt("new-data");
+
+        // New key can decrypt
+        String decrypted = rotatedService.decrypt(encrypted);
+        assertEquals("new-data", decrypted);
+
+        // Standalone new-key service can also decrypt (proves current key was used)
+        EncryptionService newKeyOnly = new EncryptionService("new-key-v2");
+        assertEquals("new-data", newKeyOnly.decrypt(encrypted));
+    }
+
+    @Test
+    void testKeyRotationMultiplePreviousKeys() {
+        EncryptionService v1 = new EncryptionService("key-v1");
+        EncryptionService v2 = new EncryptionService("key-v2");
+        String encV1 = v1.encrypt("data-from-v1");
+        String encV2 = v2.encrypt("data-from-v2");
+
+        // v3 service with two previous keys
+        EncryptionService v3 = new EncryptionService("key-v3", List.of("key-v2", "key-v1"));
+        assertEquals("data-from-v1", v3.decrypt(encV1));
+        assertEquals("data-from-v2", v3.decrypt(encV2));
+    }
+
+    @Test
+    void testKeyRotationReEncrypt() {
+        EncryptionService v1 = new EncryptionService("key-v1");
+        String encV1 = v1.encrypt("rotate-me");
+
+        EncryptionService v2 = new EncryptionService("key-v2", List.of("key-v1"));
+        String reEncrypted = v2.reEncrypt(encV1);
+
+        // Re-encrypted value should be decryptable with v2 key alone
+        EncryptionService v2Only = new EncryptionService("key-v2");
+        assertEquals("rotate-me", v2Only.decrypt(reEncrypted));
+    }
+
+    @Test
+    void testKeyRotationFailsWithUnknownKey() {
+        EncryptionService unknownService = new EncryptionService("unknown-key");
+        String encrypted = unknownService.encrypt("secret");
+
+        EncryptionService rotatedService = new EncryptionService("different-key", List.of("also-different"));
+        assertThrows(RuntimeException.class, () -> rotatedService.decrypt(encrypted));
+    }
+
+    @Test
+    void testKeyRotationDatabaseEncryptDecrypt() {
+        EncryptionService v1 = new EncryptionService("db-key-v1");
+        String dbEncrypted = v1.encryptForDatabase("db-secret");
+
+        EncryptionService v2 = new EncryptionService("db-key-v2", List.of("db-key-v1"));
+        assertEquals("db-secret", v2.decryptFromDatabase(dbEncrypted));
+    }
 }

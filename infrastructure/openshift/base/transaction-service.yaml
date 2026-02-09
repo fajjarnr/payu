@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: transaction-service
-          image: transaction-service:latest
+          image: image-registry.openshift-image-registry.svc:5000/payu/transaction-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
