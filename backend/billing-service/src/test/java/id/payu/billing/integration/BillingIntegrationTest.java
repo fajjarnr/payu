@@ -13,7 +13,7 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -43,7 +43,7 @@ public class BillingIntegrationTest {
     WalletClient walletClient;
 
     @MockBean
-    KafkaTemplate<String, Object> kafkaTemplate;
+    OutboxService outboxService;
 
     @BeforeEach
     void setup() {
@@ -87,13 +87,14 @@ public class BillingIntegrationTest {
                 .body("status", equalTo("COMPLETED"))
                 .body("id", equalTo(paymentId));
 
-        // 3. Verify Kafka Event
-        ArgumentCaptor<Map<String, Object>> eventCaptor = ArgumentCaptor.forClass(Map.class);
-        Mockito.verify(kafkaTemplate, Mockito.timeout(5000)).send(Mockito.eq("payment-events"), Mockito.eq("ACC-001"), eventCaptor.capture());
- 
-        Map<String, Object> event = eventCaptor.getValue();
-        Assertions.assertEquals("PLN", event.get("billerCode"));
-        Assertions.assertEquals("COMPLETED", event.get("status"));
-        Assertions.assertEquals("ACC-001", event.get("accountId"));
+        // 3. Verify Outbox Event Created
+        Mockito.verify(outboxService, Mockito.timeout(5000)).createEvent(
+                Mockito.eq("BillPayment"),
+                Mockito.anyString(),
+                Mockito.eq("PaymentCompleted"),
+                Mockito.any(Map.class),
+                Mockito.isNull(),
+                Mockito.eq("payment-events")
+        );
     }
 }

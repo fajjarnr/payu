@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
+import id.payu.outbox.service.OutboxService;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -38,7 +38,7 @@ class PaymentServiceTest {
     WalletClient walletClient;
 
     @Mock
-    KafkaTemplate<String, Object> kafkaTemplate;
+    OutboxService outboxService;
 
     @BeforeEach
     void setup() {

@@ -167,6 +167,16 @@ resilience4j:
 
 # PayU Configuration
 payu:
+  outbox:
+    enabled: true
+    publisher:
+      batch-size: 100
+      poll-interval-ms: 1000
+      max-retries: 3
+    cleanup:
+      enabled: true
+      retention-days: 30
+      cron: "0 0 2 * * *"
   cache:
     enabled: true
     redis:

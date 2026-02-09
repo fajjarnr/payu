@@ -6,9 +6,9 @@ import id.payu.billing.domain.BillerType;
 import id.payu.billing.dto.CreatePaymentRequest;
 import id.payu.billing.dto.TopUpRequest;
 import id.payu.billing.repository.BillPaymentRepository;
+import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +28,7 @@ public class PaymentService {
 
     private final BillPaymentRepository billPaymentRepository;
     private final WalletClient walletClient;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OutboxService outboxService;
 
     @Transactional
     public BillPayment createPayment(CreatePaymentRequest request) {
@@ -192,20 +192,23 @@ public class PaymentService {
     }
 
     private void publishPaymentEvent(BillPayment payment) {
-        try {
-            Map<String, Object> event = Map.of(
-                    "paymentId", payment.getId().toString(),
-                    "referenceNumber", payment.getReferenceNumber(),
-                    "accountId", payment.getAccountId(),
-                    "billerCode", payment.getBillerType().getCode(),
-                    "amount", payment.getTotalAmount(),
-                    "status", payment.getStatus().name(),
-                    "timestamp", LocalDateTime.now().toString()
-            );
-            kafkaTemplate.send("payment-events", payment.getAccountId(), event);
-            log.debug("Published payment event: {}", event);
-        } catch (Exception e) {
-            log.warn("Failed to publish payment event: {}", e.getMessage());
-        }
+        Map<String, Object> payload = Map.of(
+                "paymentId", payment.getId().toString(),
+                "referenceNumber", payment.getReferenceNumber(),
+                "accountId", payment.getAccountId(),
+                "billerCode", payment.getBillerType().getCode(),
+                "amount", payment.getTotalAmount(),
+                "status", payment.getStatus().name(),
+                "timestamp", LocalDateTime.now().toString()
+        );
+        outboxService.createEvent(
+                "BillPayment",
+                payment.getId().toString(),
+                "PaymentCompleted",
+                payload,
+                null,
+                "payment-events"
+        );
+        log.debug("Outbox event created for payment: {}", payment.getId());
     }
 }

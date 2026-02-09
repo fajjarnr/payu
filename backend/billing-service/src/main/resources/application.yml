@@ -136,6 +136,18 @@ vault:
     - path: secret/billing-service
       key: encryption.key
 
+payu:
+  outbox:
+    enabled: true
+    publisher:
+      batch-size: 100
+      poll-interval-ms: 1000
+      max-retries: 3
+    cleanup:
+      enabled: true
+      retention-days: 30
+      cron: "0 0 2 * * *"
+
 ---
 # Development Profile
 spring:
