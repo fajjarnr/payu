@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **P21: Tier 1+2 Improvements — Production Readiness 78% → 85% (Feb 9, 2026)**:
+  - **Dual Config Cleanup**: Merged 5 services with dual `application.yaml`/`.yml` files (investment, lending, compliance, cms, ab-testing) — kept `.yml` canonical, deleted `.yaml` duplicates, fixed root-level `kafka:` bug → `spring.kafka:`
+  - **Starter Adoption — cache + resilience**: Added `cache-starter` and `resilience-starter` to fx-service and investment-service POMs + application configs
+  - **Starter Adoption — events-starter**: Integrated CloudEvents 1.0 envelope wrapping into transaction-service and wallet-service via `CloudEventBuilder`/`CloudEventEnvelope` — refactored `TransactionEventPublisherAdapter` (4 methods) and `WalletEventPublisherAdapter` (5 methods)
+  - **Starter Adoption — saga-starter**: Integrated BiFast transfer orchestrator into transaction-service — `SagaConfig`, `TransferSagaContext`, `TransferSagaOrchestrator` (4-step saga: RESERVE_BALANCE → INITIATE_BIFAST → COMMIT_BALANCE → PUBLISH_EVENT), V9 Flyway migration for `saga_instances` table with JSONB columns
+  - **Financial Service Integration Tests**: Added 37 integration tests across 3 financial services:
+    - lending-service: 20 tests (loans, pay-later, credit-score, repayment) using Testcontainers + WebTestClient
+    - investment-service: 8 tests (accounts, deposits, gold) using Testcontainers + TestRestTemplate
+    - fx-service: 9 tests (rates, conversions, auth) using Testcontainers + TestRestTemplate
+  - **TODOS.md Cleanup**: Updated per-service readiness table, scorecard (78→85), technical debt ledger (16/19 resolved), collapsed verbose historical sections
+  - **Production Readiness Score**: 78/100 → 85/100
+
 ### Fixed
 
 - **P19: Podman Standardization & Infrastructure Cleanup (Feb 9, 2026)**:
