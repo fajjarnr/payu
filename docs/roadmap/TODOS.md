@@ -36,7 +36,7 @@ Audit against the *14 Immutable Laws of PayU*.
 
 **Mission Goal**: Honest assessment of true production readiness. Identify all critical gaps blocking OpenShift deployment.
 
-### 🎯 Mission Status: ✅ All P0-P3 + Tier 1+2 RESOLVED
+### 🎯 Mission Status: ✅ All P0-P3 + Tier 1-3 RESOLVED
 
 **Production Readiness Score: 88/100**
 
@@ -58,7 +58,111 @@ Audit against the *14 Immutable Laws of PayU*.
 
 ---
 
-## 🔴 P0 — PRODUCTION BLOCKERS (Must Fix Before Deploy)
+## � P23: Backend ↔ Frontend Feature Coverage Audit (Feb 9, 2026)
+
+### Playwright E2E Results (headless, dev server — no backend running)
+
+| Test File | Total | Passed | Failed | Key Issues |
+| :--- | :--- | :--- | :--- | :--- |
+| login-flow.spec.ts | 23 | 21 | 2 | Form label locator, heading hierarchy |
+| transfer-flow.spec.ts | 36 | 29 | 7 | Page title, transfer type visibility, scheduled transfer, keyboard nav |
+| lending-flow.spec.ts | 43 | 43 | 0 | ✅ All passing |
+| kyc-flow.spec.ts | 23 | 19 | 4 | Step navigation, progress tracker |
+| bill-pay-flow.spec.ts | 12 | 9 | 3 | Biller specific fields, back navigation, add more button |
+| investment-flow.spec.ts | 45 | 29 | 16 | Strict mode violations (duplicate locators for buttons/text) |
+| onboarding-flow.spec.ts | 64 | 45 | 19 | Progress tracker, step counts, input attributes, success state |
+| a11y-audit.spec.ts | 20 | 18 | 2 | A11y violations on dashboard + investments (axe-core) |
+| check_ui.spec.ts | 38 | 22 | 16 | Console errors (BFF→gateway), header/main visibility, screenshots |
+| settings-flow.spec.ts | ~60 | — | — | ❌ Stuck (gateway-service DNS timeout on every page load) |
+| **TOTAL (excl. settings)** | **304** | **235** | **69** | **~77% pass rate** |
+
+### 🔴 Critical: BFF Proxy Blocks All API-Dependent Tests
+
+The Next.js BFF route (`src/app/api/v1/[...path]/route.ts`) proxies all `/api/v1/*` calls to `http://gateway-service:8080`. Without the backend running, EVERY API call returns 503. This causes:
+- Console errors on every page load (CMS content fetch via `/api/v1/public/contents/type/ALERT`)
+- Settings-flow tests completely stuck (infinite retry loop on gateway DNS resolution)
+- Dashboard a11y tests failing due to error elements in DOM
+
+**Fix needed**: Add graceful fallback in BFF proxy (return empty data instead of 503) or mock API responses in playwright fixtures.
+
+### Backend ↔ Frontend Service Coverage Matrix
+
+| Backend Service | Frontend Service Client | Frontend Pages | Coverage Level | Gaps |
+| :--- | :--- | :--- | :--- | :--- |
+| account-service | ✅ AccountService | /onboarding | **FULL** | — |
+| auth-service | ✅ AuthService (BFF) | /login | **PARTIAL** | Missing: biometric challenge/register/authenticate/revoke endpoints |
+| transaction-service | ✅ TransactionService | /transfer, /qris, /dashboard | **PARTIAL** | Missing: scheduled transfers CRUD (pause/resume), split bills (full lifecycle) |
+| wallet-service | ✅ WalletService | /pockets, /dashboard | **PARTIAL** | Missing: cards API (create/list/freeze/unfreeze), pockets API (create/close/freeze), ledger entries |
+| billing-service | ✅ BillingService | /bills | **FULL** | — |
+| fx-service | ✅ FxService | /exchange | **FULL** | All 7 endpoints wired |
+| investment-service | ✅ InvestmentService | /investments | **MOCK** | Service wires 4 generic endpoints, but page renders hardcoded mock data. Backend has 7 specific endpoints (create-account, buy-deposit, buy-mutual-fund, buy-gold, sell) |
+| lending-service | ✅ LendingService | /lending | **PARTIAL** | Service wires 12 endpoints ✅ but page mostly mock data. Missing: pre-approval API (check, get, list active) |
+| notification-service | ✅ NotificationService | /notifications | **MISMATCH** | Frontend calls 6 endpoints (unread-count, read-all, preferences) but backend only has 4 (send, get, user list, mark-read). Page uses mock data |
+| kyc-service | ✅ KYCService | /backoffice/kyc | **MISMATCH** | Frontend calls /kyc/status, /kyc/verify, /kyc/documents but backend has /verify/start, /verify/ktp, /verify/selfie, /verify/{id}, /user/{id} |
+| analytics-service | ✅ AnalyticsService | /analytics | **MISMATCH** | Frontend calls /analytics/spending, /categories, /insights, /trends; Backend has /user/{id}/metrics, /spending/trends, /cashflow, /recommendations, /robo-advisory, /fraud/* |
+| promotion-service | ✅ PromotionService | /rewards | **PARTIAL** | 15 endpoints wired. Missing: gamification (checkin, streak, level, badges, summary), rewards (get, by-account, summary) |
+| partner-service | ✅ PartnerService | /merchant | **MINIMAL** | Only 2 of 21 endpoints (register, getProfile). Missing: certificates, SNAP-BI, API keys |
+| statement-service | ✅ StatementService | /settings | **FULL** | 5 endpoints + download orchestration |
+| support-service | ✅ SupportService | /support | **MISMATCH** | Frontend calls ticket/FAQ endpoints; Backend has agent/training management. Different feature space |
+| compliance-service | ✅ ComplianceService | /backoffice/compliance | **MISMATCH** | Frontend calls /users/{id}/checks, /risk, /sanctions; Backend has audit-report + GDPR-audit endpoints |
+| cms-service | ✅ CMSService | /backoffice/cms, dashboard | **FULL** | — |
+| backoffice-service | ✅ BackofficeService | /backoffice/* (11 pages) | **FULL** | 11 endpoints |
+| ab-testing-service | ✅ ABTestingService | /backoffice/ab-testing | **FULL** | 3 API endpoints + hook + components |
+| gateway-service | — (infrastructure) | — | **N/A** | API gateway — not consumer-facing |
+| api-portal-service | — | — | **N/A** | Developer portal, backend-only |
+
+**Grading**: FULL (all endpoints wired & used), PARTIAL (service exists but some endpoints missing), MOCK (service wired but page uses hardcoded data), MISMATCH (frontend calls different paths than backend exposes), MINIMAL (<20% endpoints).
+
+### 🔴 NEW: Tier 4 — Frontend Feature Gap TODOs
+
+| ID | Task | Priority | Affected | Est. Effort |
+| :--- | :--- | :--- | :--- | :--- |
+| **FE-GAP-001** | Wire investment page to real InvestmentService (replace mock data) | **P1** | /investments | 1d |
+| **FE-GAP-002** | Fix AnalyticsService endpoint paths to match backend (/spending/trends, /cashflow, /robo-advisory, /fraud/*) | **P1** | AnalyticsService.ts | 0.5d |
+| **FE-GAP-003** | Fix KYCService endpoint paths to match backend (/verify/start, /verify/ktp, /verify/selfie) | **P1** | KYCService.ts | 0.5d |
+| **FE-GAP-004** | Fix NotificationService to match backend (remove non-existent endpoints: unread-count, read-all, preferences) | **P1** | NotificationService.ts | 0.5d |
+| **FE-GAP-005** | Fix ComplianceService endpoint paths to match backend (audit-report, gdpr-audit) | **P1** | ComplianceService.ts | 0.5d |
+| **FE-GAP-006** | Fix SupportService — frontend calls ticket/FAQ but backend is agent-training management | **P1** | SupportService.ts, /support page | 1d |
+| **FE-GAP-007** | Add scheduled transfer UI (create, list, pause/resume/cancel) | **P2** | /transfer page | 2d |
+| **FE-GAP-008** | Add split bill UI (create, manage participants, settle) | **P2** | New /split-bill page | 2d |
+| **FE-GAP-009** | Add virtual cards UI (create, list, freeze/unfreeze) | **P2** | /cards page — currently mock | 2d |
+| **FE-GAP-010** | Add wallet pockets full CRUD (create, close, freeze/unfreeze, currency balance) | **P2** | /pockets page | 1d |
+| **FE-GAP-011** | Add biometric auth UI (register, authenticate, manage registrations) | **P2** | /security page | 1d |
+| **FE-GAP-012** | Add gamification UI (checkin, streak, badges, level, summary) | **P2** | /rewards page (new tab) | 1.5d |
+| **FE-GAP-013** | Add lending pre-approval UI (check, get, list) | **P2** | /lending page | 0.5d |
+| **FE-GAP-014** | Wire lending page to real LendingService (replace mock data) | **P2** | /lending page | 1d |
+| **FE-GAP-015** | Wire notifications page to real NotificationService (replace mock data) | **P2** | /notifications page | 0.5d |
+| **FE-GAP-016** | Wire rewards page to real PromotionService (replace mock data) | **P2** | /rewards page | 0.5d |
+| **FE-GAP-017** | Expand partner management UI (certificates, SNAP-BI, API keys) | **P3** | /merchant, /backoffice/partners | 2d |
+
+### 🔴 NEW: E2E Test Fix TODOs
+
+| ID | Task | Priority | File | Issue Type |
+| :--- | :--- | :--- | :--- | :--- |
+| **E2E-FIX-001** | Fix investment-flow strict mode violations (16 fails) — use getByTestId instead of ambiguous locators | **P1** | investment-flow.spec.ts | Duplicate locators matching 2+ elements |
+| **E2E-FIX-002** | Fix onboarding-flow progress tracker tests (19 fails) — step count, input attributes, success state | **P1** | onboarding-flow.spec.ts | UI changed, tests not updated |
+| **E2E-FIX-003** | Fix transfer-flow page title + visibility tests (7 fails) | **P1** | transfer-flow.spec.ts | Title mismatch, missing elements |
+| **E2E-FIX-004** | Fix check_ui console error tests — suppress BFF proxy errors in test or add error boundary | **P2** | check_ui.spec.ts | Console errors from gateway-service DNS failure |
+| **E2E-FIX-005** | Fix check_ui screenshot comparison — generate baseline snapshots | **P2** | check_ui.spec.ts | No reference screenshots |
+| **E2E-FIX-006** | Fix check_ui visual elements — update header/main selectors for current UI | **P2** | check_ui.spec.ts | Selectors outdated |
+| **E2E-FIX-007** | Fix settings-flow gateway timeout — add BFF offline fallback or mock API in fixtures | **P1** | settings-flow.spec.ts, BFF route | Tests completely stuck without gateway |
+| **E2E-FIX-008** | Fix a11y dashboard/investments violations (2 fails) | **P2** | a11y-audit.spec.ts | Axe-core violations on protected pages |
+| **E2E-FIX-009** | Fix bill-pay biller selection tests (3 fails) | **P2** | bill-pay-flow.spec.ts | Navigation + element visibility |
+| **E2E-FIX-010** | Fix login-flow form labels + heading tests (2 fails) | **P3** | login-flow.spec.ts | Label/heading locator mismatch |
+
+### 🔴 NEW: Compose / Infrastructure TODOs
+
+| ID | Task | Priority | Details |
+| :--- | :--- | :--- | :--- |
+| **COMPOSE-001** | Add cms-service to podman-compose.yml | **P1** | Backend service exists but not in compose |
+| **COMPOSE-002** | Add fx-service to podman-compose.yml | **P1** | Backend service exists but not in compose |
+| **COMPOSE-003** | Add ab-testing-service to podman-compose.yml | **P1** | Backend service exists but not in compose |
+| **COMPOSE-004** | Add web-app build: directive to compose (currently image-only) | **P2** | web-app has `image:` but no `build:` context |
+| **COMPOSE-005** | Add `GATEWAY_URL=http://localhost:8080` env for standalone dev mode | **P2** | BFF proxy fails when gateway-service not running |
+
+---
+
+## �🔴 P0 — PRODUCTION BLOCKERS (Must Fix Before Deploy)
 
 ### ~~P0-SEC-001: JWT Token Stored in localStorage (XSS Vulnerability)~~ ✅ FIXED (Feb 9, 2026)
 
