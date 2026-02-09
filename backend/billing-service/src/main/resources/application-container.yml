@@ -1,0 +1,80 @@
+# Container Profile — Activated via SPRING_PROFILES_ACTIVE=container
+# Overrides localhost defaults for container/OpenShift deployment
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://postgres:5432/billingdb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: container-pool
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: false
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:kafka:9092}
+    producer:
+      retries: 3
+      acks: all
+    consumer:
+      auto-offset-reset: earliest
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER:http://keycloak:8080/realms/payu}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://keycloak:8080/realms/payu/protocol/openid-connect/certs}
+
+  # Container-resolved wallet service URL
+  web:
+    client:
+      wallet-service:
+        base-url: ${WALLET_SERVICE_URL:http://wallet-service:8080}
+
+  cloud:
+    vault:
+      enabled: false
+
+# Logging — structured JSON for container log aggregation
+logging:
+  level:
+    root: INFO
+    id.payu.billing: INFO
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","service":"billing-service","logger":"%logger{36}","message":"%msg"}%n'
+
+management:
+  health:
+    redis:
+      enabled: true
+    kafka:
+      enabled: true
+    db:
+      enabled: true

@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: payu-staging
+data:
+  POSTGRES_HOST: "postgres-primary.payu-staging.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "payu"
+  POSTGRES_MAX_CONNECTIONS: "50"
+  POSTGRES_CONNECTION_TIMEOUT: "10"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: payu-staging
+data:
+  REDIS_HOST: "redis-master.payu-staging.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_MAX_RETRIES: "3"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config
+  namespace: payu-staging
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-broker-0.kafka-broker.payu-staging.svc.cluster.local:9092"
+  KAFKA_RETRIES: "3"
+  KAFKA_ACKS: "all"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-config
+  namespace: payu-staging
+data:
+  PROMETHEUS_ENDPOINT: "http://prometheus-operated:9090"
+  GRAFANA_ENDPOINT: "http://grafana:3000"
+  LOKI_ENDPOINT: "http://loki:3100"
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "true"
+  LOGGING_ENABLED: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-staging-config
+  namespace: payu-staging
+data:
+  QUARKUS_PROFILE: "prod"
+  QUARKUS_LOG_LEVEL: "DEBUG"
+  QUARKUS_HTTP_CORS_ORIGINS: "https://staging.payu.id,http://localhost:3000"
+  OIDC_AUTH_SERVER_URL: "https://sso-staging.payu.id/realms/payu"
+  OIDC_CLIENT_ID: "payu-gateway"
+  ACCOUNT_SERVICE_URL: "http://account-service:8080"
+  AUTH_SERVICE_URL: "http://auth-service:8080"
+  TRANSACTION_SERVICE_URL: "http://transaction-service:8080"
+  WALLET_SERVICE_URL: "http://wallet-service:8080"
+  BILLING_SERVICE_URL: "http://billing-service:8080"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:8080"
+  KYC_SERVICE_URL: "http://kyc-service:8080"
+  ANALYTICS_SERVICE_URL: "http://analytics-service:8080"
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_REQUESTS_PER_MINUTE: "200"

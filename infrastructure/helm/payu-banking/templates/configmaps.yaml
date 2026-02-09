@@ -1,0 +1,48 @@
+{{- /* Shared ConfigMap for all services */ -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payu-shared-config
+  labels:
+    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/managed-by: helm
+data:
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.defaults.otelEndpoint | default "http://jaeger-collector:4317" | quote }}
+  OTEL_METRICS_EXPORTER: "prometheus"
+  OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
+  OTEL_TRACES_SAMPLER_ARG: "0.1"
+  {{- if .Values.kafka.bootstrapServers }}
+  KAFKA_BROKERS: {{ .Values.kafka.bootstrapServers | quote }}
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.kafka.bootstrapServers | quote }}
+  {{- end }}
+  {{- if .Values.redis.host }}
+  REDIS_HOST: {{ .Values.redis.host | quote }}
+  REDIS_PORT: {{ .Values.redis.port | default "6379" | quote }}
+  {{- end }}
+  {{- if .Values.postgresql.host }}
+  DB_HOST: {{ .Values.postgresql.host | quote }}
+  DB_PORT: {{ .Values.postgresql.port | default "5432" | quote }}
+  {{- end }}
+  {{- if .Values.keycloak.issuerUri }}
+  OIDC_ISSUER: {{ .Values.keycloak.issuerUri | quote }}
+  {{- end }}
+
+{{- /* Per-service ConfigMaps for service-specific env vars */ -}}
+{{- range $name, $svc := .Values.services }}
+{{- if and $svc.enabled (hasKey $svc "configMap") }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}-config
+  labels:
+    app.kubernetes.io/name: {{ $name }}-service
+    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/managed-by: helm
+data:
+  {{- range $key, $value := $svc.configMap }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}
+{{- end }}

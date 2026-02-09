@@ -13,6 +13,8 @@ global:
 # ============================================
 defaults:
   replicaCount: 2
+  sharedConfigMap: "payu-shared-config"
+  otelEndpoint: "http://jaeger-collector:4317"
   resources:
     requests:
       cpu: 250m
@@ -48,6 +50,7 @@ services:
   gateway:
     enabled: true
     replicaCount: 3
+    quarkusProfile: "prod"
     image:
       repository: gateway-service
       tag: latest
@@ -59,14 +62,32 @@ services:
       limits:
         cpu: "2"
         memory: 1536Mi
+    livenessProbe:
+      httpGet:
+        path: /q/health/live
+        port: http
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /q/health/ready
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 3
     route:
       enabled: true
+      host: api.payu.id
+      timeout: "120s"
+      rateLimit: "200"
       tls:
         termination: edge
         insecureEdgeTerminationPolicy: Redirect
 
   account:
     enabled: true
+    springProfile: "container"
     image:
       repository: account-service
       tag: latest
@@ -74,6 +95,7 @@ services:
 
   auth:
     enabled: true
+    springProfile: "container"
     image:
       repository: auth-service
       tag: latest
@@ -81,6 +103,7 @@ services:
 
   transaction:
     enabled: true
+    springProfile: "container"
     image:
       repository: transaction-service
       tag: latest
@@ -92,6 +115,7 @@ services:
 
   wallet:
     enabled: true
+    springProfile: "container"
     image:
       repository: wallet-service
       tag: latest
@@ -103,6 +127,7 @@ services:
 
   lending:
     enabled: true
+    springProfile: "container"
     image:
       repository: lending-service
       tag: latest
@@ -110,6 +135,7 @@ services:
 
   billing:
     enabled: true
+    springProfile: "container"
     image:
       repository: billing-service
       tag: latest
@@ -117,20 +143,60 @@ services:
 
   notification:
     enabled: true
+    quarkusProfile: "prod"
     image:
       repository: notification-service
       tag: latest
     port: 8080
+    configMap:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://postgres:5432/notificationdb"
+      KEYCLOAK_URL: "http://keycloak:8080"
+      KEYCLOAK_REALM: "payu"
+    livenessProbe:
+      httpGet:
+        path: /q/health/live
+        port: http
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /q/health/ready
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 3
 
   kyc:
     enabled: true
+    # Python/FastAPI — env vars via ConfigMap
     image:
       repository: kyc-service
       tag: latest
     port: 8080
+    configMap:
+      DATABASE_URL: "postgresql://postgres:5432/kycdb"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      DUKCAPIL_URL: "http://dukcapil-simulator:8080"
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 3
 
   compliance:
     enabled: true
+    springProfile: "container"
     image:
       repository: compliance-service
       tag: latest
@@ -138,6 +204,7 @@ services:
 
   fx:
     enabled: true
+    springProfile: "container"
     image:
       repository: fx-service
       tag: latest
@@ -145,6 +212,7 @@ services:
 
   investment:
     enabled: true
+    springProfile: "container"
     image:
       repository: investment-service
       tag: latest
@@ -152,6 +220,7 @@ services:
 
   statement:
     enabled: true
+    springProfile: "container"
     image:
       repository: statement-service
       tag: latest
@@ -159,6 +228,7 @@ services:
 
   cms:
     enabled: true
+    springProfile: "container"
     image:
       repository: cms-service
       tag: latest
@@ -166,6 +236,7 @@ services:
 
   partner:
     enabled: true
+    springProfile: "container"
     image:
       repository: partner-service
       tag: latest
@@ -173,6 +244,7 @@ services:
 
   support:
     enabled: true
+    springProfile: "container"
     image:
       repository: support-service
       tag: latest
@@ -180,13 +252,32 @@ services:
 
   analytics:
     enabled: true
+    # Python/FastAPI — env vars via ConfigMap
     image:
       repository: analytics-service
       tag: latest
     port: 8080
+    configMap:
+      DATABASE_URL: "postgresql://postgres:5432/analyticsdb"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 3
 
   backoffice:
     enabled: true
+    springProfile: "container"
     image:
       repository: backoffice-service
       tag: latest
@@ -194,6 +285,7 @@ services:
 
   promotion:
     enabled: true
+    springProfile: "container"
     image:
       repository: promotion-service
       tag: latest
@@ -201,6 +293,7 @@ services:
 
   abTesting:
     enabled: true
+    springProfile: "container"
     image:
       repository: ab-testing-service
       tag: latest
@@ -208,19 +301,69 @@ services:
 
   apiPortal:
     enabled: true
+    quarkusProfile: "prod"
     image:
       repository: api-portal-service
       tag: latest
     port: 8080
+    configMap:
+      KEYCLOAK_URL: "http://keycloak:8080"
+      KEYCLOAK_REALM: "payu"
+      PORTAL_SERVICES_ACCOUNT_SERVICE_URL: "http://account-service:8080"
+      PORTAL_SERVICES_AUTH_SERVICE_URL: "http://auth-service:8080"
+      PORTAL_SERVICES_TRANSACTION_SERVICE_URL: "http://transaction-service:8080"
+      PORTAL_SERVICES_WALLET_SERVICE_URL: "http://wallet-service:8080"
+      PORTAL_SERVICES_BILLING_SERVICE_URL: "http://billing-service:8080"
+      PORTAL_SERVICES_NOTIFICATION_SERVICE_URL: "http://notification-service:8080"
+      PORTAL_SERVICES_KYC_SERVICE_URL: "http://kyc-service:8080"
+      PORTAL_SERVICES_ANALYTICS_SERVICE_URL: "http://analytics-service:8080"
+      PORTAL_SERVICES_INVESTMENT_SERVICE_URL: "http://investment-service:8080"
+      PORTAL_SERVICES_LENDING_SERVICE_URL: "http://lending-service:8080"
+      PORTAL_SERVICES_GATEWAY_SERVICE_URL: "http://gateway-service:8080"
+      PORTAL_SERVICES_COMPLIANCE_SERVICE_URL: "http://compliance-service:8080"
+    livenessProbe:
+      httpGet:
+        path: /q/health/live
+        port: http
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /q/health/ready
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 3
 
   webApp:
     enabled: true
+    # Next.js standalone — env vars via ConfigMap
     image:
       repository: web-app
       tag: latest
     port: 3000
+    configMap:
+      NEXT_PUBLIC_API_URL: "https://api.payu.id"
+      NEXT_PUBLIC_WS_URL: "wss://api.payu.id/ws"
+      NODE_ENV: "production"
+    livenessProbe:
+      httpGet:
+        path: /api/health
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /api/health
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      failureThreshold: 3
     route:
       enabled: true
+      host: app.payu.id
       tls:
         termination: edge
         insecureEdgeTerminationPolicy: Redirect

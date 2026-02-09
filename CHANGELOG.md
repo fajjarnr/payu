@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **P22: Tier 3 — OpenShift Deployment Hardening (Feb 9, 2026)**:
+  - **CRITICAL FIX: Helm `SPRING_PROFILES_ACTIVE` bug** — was hardcoded to `prod` but container profiles are `application-container.yml`. Now configurable per-service via `springProfile`/`quarkusProfile` in values.yaml
+  - **Deployment template enhanced**: Zero-downtime `RollingUpdate` (maxUnavailable: 0), `revisionHistoryLimit: 5`, `terminationGracePeriodSeconds`, per-service liveness/readiness probe overrides, shared ConfigMap injection, OTEL env vars
+  - **New Helm templates**: `configmaps.yaml` (shared + per-service ConfigMaps), `pdb.yaml` (PodDisruptionBudget for all multi-replica services)
+  - **Route template enhanced**: Route hostname support, HAProxy timeout annotations, rate limiting annotations
+  - **values.yaml overhauled**: All 22 services now have correct `springProfile: container` (15 Spring Boot), `quarkusProfile: prod` (3 Quarkus), or no profile (2 Python, 1 Next.js). Quarkus/Python services have correct health probe paths (`/q/health/live`, `/health`). Gateway and webApp Routes have production hostnames (`api.payu.id`, `app.payu.id`)
+  - **ConfigMap values**: notification-service (Kafka, DB, OIDC), api-portal-service (12 service URLs + OIDC), kyc-service (DB, Kafka, Dukcapil), analytics-service (DB, Kafka), webApp (API URL, WS URL, NODE_ENV)
+  - **billing-service `application-container.yml`** created — was the only Spring Boot service missing container profile (overrides Kafka, wallet-service URL, Redis, OIDC)
+  - **Staging overlay** created: `kustomization.yaml` (1 replica, debug logging), `config/configmaps.yaml` (Postgres, Redis, Kafka, gateway staging URLs), `secrets/secrets-template.yaml`
+  - **Prod overlay fixes**: Added missing `kustomization.yaml`, fixed gateway ConfigMap service ports (8081-8088 → 8080 — all services use internal port 8080)
+  - **Production Readiness Score**: 85/100 → 88/100
+
+### Changed
+
 - **P21: Tier 1+2 Improvements — Production Readiness 78% → 85% (Feb 9, 2026)**:
   - **Dual Config Cleanup**: Merged 5 services with dual `application.yaml`/`.yml` files (investment, lending, compliance, cms, ab-testing) — kept `.yml` canonical, deleted `.yaml` duplicates, fixed root-level `kafka:` bug → `spring.kafka:`
   - **Starter Adoption — cache + resilience**: Added `cache-starter` and `resilience-starter` to fx-service and investment-service POMs + application configs
