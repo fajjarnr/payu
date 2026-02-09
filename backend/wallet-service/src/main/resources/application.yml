@@ -167,6 +167,11 @@ resilience4j:
 
 # PayU Configuration
 payu:
+  events:
+    enabled: true
+    kafka:
+      enabled: true
+      default-topic: payu.wallet
   outbox:
     enabled: true
     publisher:

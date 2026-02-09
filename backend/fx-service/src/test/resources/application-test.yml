@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16:///fx_test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://fake-issuer.example.com
+          jwk-set-uri: https://fake-issuer.example.com/.well-known/jwks.json
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=1m
+
+payu:
+  cache:
+    enabled: false
+
+fx:
+  providers:
+    default-provider: MOCK
+    cache-ttl-minutes: 10
+    supported-currencies: IDR,USD,EUR,SGD,JPY,GBP,AUD,CNY
+    base-currency: IDR
+  scheduler:
+    update-rates-cron: "0 0 0 31 12 ?"
+
+logging:
+  level:
+    id.payu.fx: DEBUG

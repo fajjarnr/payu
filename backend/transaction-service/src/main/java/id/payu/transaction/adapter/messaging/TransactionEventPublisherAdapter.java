@@ -1,5 +1,7 @@
 package id.payu.transaction.adapter.messaging;
 
+import id.payu.events.cloudevents.CloudEventBuilder;
+import id.payu.events.cloudevents.CloudEventEnvelope;
 import id.payu.outbox.service.OutboxService;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
@@ -11,11 +13,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Outbox-backed adapter for publishing transaction events.
+ * Outbox-backed adapter for publishing transaction events using CloudEvents 1.0 envelopes.
  * <p>
  * Events are written to the outbox_events table within the same DB transaction
  * as the business operation, guaranteeing at-least-once delivery to Kafka.
  * The OutboxPublisher polls and publishes them asynchronously.
+ * <p>
+ * All events conform to CloudEvents 1.0 spec via the events-starter CloudEventEnvelope.
  */
 @Slf4j
 @Component
@@ -26,11 +30,11 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
 
     private static final String AGGREGATE_TYPE = "Transaction";
     private static final String TOPIC_TRANSACTIONS = "payu.transactions";
+    private static final String SERVICE_NAME = "transaction-service";
 
     @Override
     public void publishTransactionInitiated(Transaction transaction) {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("eventType", "transaction-initiated");
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
         payload.put("senderAccountId", transaction.getSenderAccountId().toString());
@@ -40,41 +44,53 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
         payload.put("status", transaction.getStatus().name());
         payload.put("timestamp", transaction.getCreatedAt());
 
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.transaction.initiated")
+                .subject(transaction.getId().toString())
+                .data(payload)
+                .build();
+
         outboxService.createEvent(
                 AGGREGATE_TYPE,
                 transaction.getId().toString(),
                 "TransactionInitiated",
-                payload,
+                envelopeToMap(envelope),
                 null,
                 TOPIC_TRANSACTIONS + ".initiated"
         );
-        log.info("Created outbox event for transaction-initiated: {}", transaction.getId());
+        log.info("Created CloudEvent outbox event for transaction-initiated: {}", transaction.getId());
     }
 
     @Override
     public void publishTransactionValidated(Transaction transaction) {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("eventType", "transaction-validated");
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
         payload.put("status", transaction.getStatus().name());
         payload.put("timestamp", transaction.getUpdatedAt());
 
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.transaction.validated")
+                .subject(transaction.getId().toString())
+                .data(payload)
+                .build();
+
         outboxService.createEvent(
                 AGGREGATE_TYPE,
                 transaction.getId().toString(),
                 "TransactionValidated",
-                payload,
+                envelopeToMap(envelope),
                 null,
                 TOPIC_TRANSACTIONS + ".validated"
         );
-        log.info("Created outbox event for transaction-validated: {}", transaction.getId());
+        log.info("Created CloudEvent outbox event for transaction-validated: {}", transaction.getId());
     }
 
     @Override
     public void publishTransactionCompleted(Transaction transaction) {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("eventType", "transaction-completed");
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
         payload.put("amount", transaction.getAmount().getAmount());
@@ -84,21 +100,27 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
         payload.put("completedAt", transaction.getCompletedAt());
         payload.put("timestamp", transaction.getUpdatedAt());
 
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.transaction.completed")
+                .subject(transaction.getId().toString())
+                .data(payload)
+                .build();
+
         outboxService.createEvent(
                 AGGREGATE_TYPE,
                 transaction.getId().toString(),
                 "TransactionCompleted",
-                payload,
+                envelopeToMap(envelope),
                 null,
                 TOPIC_TRANSACTIONS + ".completed"
         );
-        log.info("Created outbox event for transaction-completed: {}", transaction.getId());
+        log.info("Created CloudEvent outbox event for transaction-completed: {}", transaction.getId());
     }
 
     @Override
     public void publishTransactionFailed(Transaction transaction, String reason) {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("eventType", "transaction-failed");
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
         payload.put("amount", transaction.getAmount().getAmount());
@@ -108,14 +130,39 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
         payload.put("failureReason", reason);
         payload.put("timestamp", transaction.getUpdatedAt());
 
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.transaction.failed")
+                .subject(transaction.getId().toString())
+                .data(payload)
+                .build();
+
         outboxService.createEvent(
                 AGGREGATE_TYPE,
                 transaction.getId().toString(),
                 "TransactionFailed",
-                payload,
+                envelopeToMap(envelope),
                 null,
                 TOPIC_TRANSACTIONS + ".failed"
         );
-        log.info("Created outbox event for transaction-failed: {} - Reason: {}", transaction.getId(), reason);
+        log.info("Created CloudEvent outbox event for transaction-failed: {} - Reason: {}", transaction.getId(), reason);
+    }
+
+    /**
+     * Convert a CloudEventEnvelope to a Map suitable for outbox JSON serialization.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> envelopeToMap(CloudEventEnvelope<Map<String, Object>> envelope) {
+        Map<String, Object> ceMap = new HashMap<>();
+        ceMap.put("specversion", envelope.getSpecVersion());
+        ceMap.put("id", envelope.getId().toString());
+        ceMap.put("source", envelope.getSource().toString());
+        ceMap.put("type", envelope.getType());
+        ceMap.put("datacontenttype", envelope.getDataContentType());
+        ceMap.put("time", envelope.getTime().toString());
+        if (envelope.getSubject() != null) ceMap.put("subject", envelope.getSubject());
+        if (envelope.getData() != null) ceMap.put("data", envelope.getData());
+        if (envelope.getPayuCorrelationId() != null) ceMap.put("payucorrelationid", envelope.getPayuCorrelationId());
+        return ceMap;
     }
 }

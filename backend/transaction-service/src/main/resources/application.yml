@@ -190,6 +190,21 @@ resilience4j:
           - java.net.ConnectException
 # PayU Configuration
 payu:
+  events:
+    enabled: true
+    kafka:
+      enabled: true
+      default-topic: payu.transactions
+  saga:
+    enabled: true
+    persistent: true
+    compensation-enabled: true
+    monitoring-enabled: true
+    events-enabled: true
+    event-topic: transaction.saga.events
+    default-max-retries: 3
+    default-timeout: PT2M
+    default-step-timeout: PT30S
   outbox:
     enabled: true
     publisher:

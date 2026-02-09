@@ -102,6 +102,21 @@ fx:
   scheduler:
     update-rates-cron: "0 */15 * * * *"
 
+# PayU Cache Starter Configuration
+payu:
+  cache:
+    enabled: true
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      pool-size: 20
+      timeout: 5s
+    default-ttl: 10m
+    local-cache:
+      enabled: true
+      max-size: 1000
+      ttl: 2m
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
