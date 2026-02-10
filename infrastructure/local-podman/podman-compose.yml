@@ -1245,54 +1245,35 @@ services:
     image: localhost/payu-analytics-service
   cms-service:
     build:
-      context: ../../backend/cms-service
-      dockerfile: Containerfile
+      context: ../../backend
+      dockerfile: cms-service/Dockerfile
     container_name: payu-cms-service
     podman_networks:
     - name: payu-network
     ports:
     - "8095:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: local
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: '8080'
+      PORT: '8080'
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+        -Djava.security.egd=file:/dev/./urandom
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_cms
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_cms
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_USERNAME: payu
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OTEL_ENDPOINT: http://jaeger:4317
-    depends_on:
-    - postgres
-    - kafka
-    healthcheck:
-      test:
-      - CMD
-      - curl
-      - -f
-      - http://localhost:8080/actuator/health
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
-    image: localhost/payu-cms-service
-  fx-service:
-    build:
-      context: ../../backend/fx-service
-      dockerfile: Containerfile
-    container_name: payu-fx-service
-    podman_networks:
-    - name: payu-network
-    ports:
-    - "8096:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_fx
-      SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
       SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_PORT: '6379'
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
     - postgres
@@ -1311,24 +1292,83 @@ services:
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry
+    image: localhost/payu-cms-service
+  fx-service:
+    build:
+      context: ../../backend
+      dockerfile: fx-service/Dockerfile
+    container_name: payu-fx-service
+    podman_networks:
+    - name: payu-network
+    ports:
+    - "8096:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+        -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_NAME: payu_fx
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_fx
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: '6379'
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+    - postgres
+    - redis
+    - kafka
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/fx-api/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    cgroupns: host
+    annotation:
+      io.containers.autoupdate: registry
     image: localhost/payu-fx-service
   ab-testing-service:
     build:
-      context: ../../backend/ab-testing-service
-      dockerfile: Containerfile
+      context: ../../backend
+      dockerfile: ab-testing-service/Dockerfile
     container_name: payu-ab-testing-service
     podman_networks:
     - name: payu-network
     ports:
     - "8097:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: local
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: '8080'
+      PORT: '8080'
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+        -Djava.security.egd=file:/dev/./urandom
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_abtesting
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_abtesting
       SPRING_DATASOURCE_USERNAME: payu
-      SPRING_DATASOURCE_PASSWORD: payu_secret
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_USERNAME: payu
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: '6379'
       OTEL_ENDPOINT: http://jaeger:4317
     depends_on:
     - postgres
