@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Docs Cleanup (Feb 10, 2026)**:
+  - **TODOS.md slimmed from 884 → 130 lines** — removed all resolved P0-P3 items, historical bug reports, outdated E2E audit data, verbose implementation details
+  - Archived completed work to CHANGELOG.md (this entry)
+  - **TD-ARCH-005 (gRPC) closed as "Won't Do"** — REST (~24 inter-service calls via RestTemplate/WebClient) + Kafka async (outbox/events/saga starters) + Istio service mesh (mTLS, retries, circuit-breaking) is production-sufficient. No high-frequency trading or streaming use-case to justify gRPC complexity
+  - Technical debt ledger: **19/19 items resolved** (was 18/19)
+  - OpenShift deployment readiness audit added: **92% ready** (only needs real secrets at deploy time)
+  - Pre-production checklist added: load testing, DR test, PCI-DSS audit, zero-downtime test, secrets injection
+
+- **TD-ARCH-004: Hexagonal Architecture 19/19 Services (Feb 10, 2026)**:
+  - **Batch 3**: notification-service, partner-service, promotion-service, support-service, statement-service, backoffice-service, api-portal-service — refactored to hexagonal (adapter.web, adapter.persistence, application.service, domain)
+  - **Batch 2**: billing-service, auth-service, gateway-service — refactored to hexagonal
+  - **Batch 1**: 10 services already compliant (account, transaction, wallet, investment, lending, fx, kyc, analytics, compliance, cms)
+  - ab-testing-service uses equivalent structure (interfaces/infrastructure/application/domain)
+  - ArchUnit governance enforced in 18/19 Java services
+  - Production readiness score: 97% → **98%**
+
 - **P22: Tier 3 — OpenShift Deployment Hardening (Feb 9, 2026)**:
   - **CRITICAL FIX: Helm `SPRING_PROFILES_ACTIVE` bug** — was hardcoded to `prod` but container profiles are `application-container.yml`. Now configurable per-service via `springProfile`/`quarkusProfile` in values.yaml
   - **Deployment template enhanced**: Zero-downtime `RollingUpdate` (maxUnavailable: 0), `revisionHistoryLimit: 5`, `terminationGracePeriodSeconds`, per-service liveness/readiness probe overrides, shared ConfigMap injection, OTEL env vars
