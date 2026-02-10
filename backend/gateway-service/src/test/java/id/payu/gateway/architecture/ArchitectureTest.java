@@ -12,15 +12,15 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Gateway Service (Quarkus).
- * 
+ * Architecture Tests for Gateway Service (Quarkus) — Hexagonal Architecture.
+ *
  * Enforces:
- * - Layered architecture boundaries (Filter -> Resource)
- * - Naming conventions
+ * - Hexagonal layer boundaries (Adapter → Application → Domain)
+ * - Naming conventions per layer
  * - No Spring dependencies (Quarkus only)
  * - Jakarta imports only (no javax)
  */
-@DisplayName("Architecture Rules - Gateway Service")
+@DisplayName("Architecture Rules - Gateway Service (Hexagonal)")
 class ArchitectureTest {
 
     private static JavaClasses importedClasses;
@@ -33,28 +33,29 @@ class ArchitectureTest {
     }
 
     @Nested
-    @DisplayName("Layered Architecture")
-    class LayeredArchitectureRules {
+    @DisplayName("Hexagonal Architecture")
+    class HexagonalArchitectureRules {
 
         @Test
-        @DisplayName("should follow API gateway layered architecture")
-        void shouldFollowLayeredArchitecture() {
+        @DisplayName("should follow hexagonal architecture boundaries")
+        void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
-                    .layer("Filter").definedBy("..filter..")
-                    .layer("Resource").definedBy("..resource..")
-                    .layer("Service").definedBy("..service..")
+                    .layer("Adapter.Web").definedBy("..adapter.web..")
+                    .layer("Adapter.Filter").definedBy("..adapter.filter..")
+                    .layer("Application").definedBy("..application..")
                     .layer("Config").definedBy("..config..")
                     .layer("DTO").definedBy("..dto..")
 
-                    // Filters are request interceptors (outermost layer)
-                    .whereLayer("Filter").mayNotBeAccessedByAnyLayer()
-                    // Resources are API endpoints (outer layer)
-                    .whereLayer("Resource").mayNotBeAccessedByAnyLayer()
-                    // Services contain business logic (inner layer)
-                    .whereLayer("Service").mayOnlyBeAccessedByLayers("Filter", "Resource")
-                    // Config is configuration data (innermost layer)
-                    .whereLayer("Config").mayOnlyBeAccessedByLayers("Filter", "Resource", "Service")
+                    // Adapter layers are outermost — nothing accesses them
+                    .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Adapter.Filter").mayNotBeAccessedByAnyLayer()
+                    // Application layer is accessed by adapters only
+                    .whereLayer("Application").mayOnlyBeAccessedByLayers(
+                            "Adapter.Web", "Adapter.Filter")
+                    // Config is infrastructure — used by all layers
+                    .whereLayer("Config").mayOnlyBeAccessedByLayers(
+                            "Adapter.Web", "Adapter.Filter", "Application")
 
                     .check(importedClasses);
         }
@@ -68,7 +69,7 @@ class ArchitectureTest {
         @DisplayName("filters should have Filter suffix")
         void filtersShouldHaveFilterSuffix() {
             classes()
-                    .that().resideInAPackage("..filter..")
+                    .that().resideInAPackage("..adapter.filter..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Filter")
@@ -77,15 +78,27 @@ class ArchitectureTest {
         }
 
         @Test
-        @DisplayName("resources should have Resource or Handler suffix")
+        @DisplayName("web resources should have Resource or Handler suffix")
         void resourcesShouldHaveResourceSuffix() {
             classes()
-                    .that().resideInAPackage("..resource..")
+                    .that().resideInAPackage("..adapter.web..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Resource")
                         .orShould().haveSimpleNameEndingWith("Handler")
                     .because("JAX-RS resource classes should follow naming convention")
+                    .check(importedClasses);
+        }
+
+        @Test
+        @DisplayName("application services should have Service suffix")
+        void servicesShouldHaveServiceSuffix() {
+            classes()
+                    .that().resideInAPackage("..application.service..")
+                    .and().areNotInterfaces()
+                    .and().areTopLevelClasses()
+                    .should().haveSimpleNameEndingWith("Service")
+                    .because("Application service classes should follow naming convention")
                     .check(importedClasses);
         }
     }
@@ -147,7 +160,7 @@ class ArchitectureTest {
         @DisplayName("filters should be ApplicationScoped or RequestScoped")
         void filtersShouldHaveProperScope() {
             classes()
-                    .that().resideInAPackage("..filter..")
+                    .that().resideInAPackage("..adapter.filter..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().beAnnotatedWith(jakarta.enterprise.context.ApplicationScoped.class)
