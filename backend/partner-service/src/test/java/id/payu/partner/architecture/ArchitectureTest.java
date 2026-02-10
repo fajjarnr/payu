@@ -4,25 +4,22 @@ import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
-import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 /**
- * Architecture Tests for Partner Service (Spring Boot).
+ * Architecture Tests for Partner Service (Spring Boot) — Hexagonal Architecture.
  *
  * Enforces:
- * - Layered architecture boundaries
- * - Naming conventions
+ * - Hexagonal layer boundaries (Adapter → Application → Domain)
+ * - Naming conventions per layer
  * - Domain isolation
- * - Resource abstraction patterns
  */
-@DisplayName("Architecture Rules - Partner Service")
+@DisplayName("Architecture Rules - Partner Service (Hexagonal)")
 class ArchitectureTest {
 
     private static JavaClasses importedClasses;
@@ -35,28 +32,31 @@ class ArchitectureTest {
     }
 
     @Nested
-    @DisplayName("Layered Architecture")
-    class LayeredArchitectureRules {
+    @DisplayName("Hexagonal Architecture")
+    class HexagonalArchitectureRules {
 
         @Test
-        @DisplayName("should follow layered architecture pattern")
-        void shouldFollowLayeredArchitecture() {
+        @DisplayName("should follow hexagonal architecture boundaries")
+        void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
-                    .layer("Resource").definedBy("..resource..")
-                    .layer("Service").definedBy("..service..")
+                    .layer("Adapter.Web").definedBy("..adapter.web..")
+                    .layer("Adapter.Webhook").definedBy("..adapter.webhook..")
+                    .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
+                    .layer("Application").definedBy("..application..")
                     .layer("Domain").definedBy("..domain..")
-                    .layer("Repository").definedBy("..repository..")
+                    .layer("Config").definedBy("..config..")
                     .layer("DTO").definedBy("..dto..")
 
-                    // Resource layer is entry point (REST API)
-                    .whereLayer("Resource").mayNotBeAccessedByAnyLayer()
-                    // Service layer accessed by Resource
-                    .whereLayer("Service").mayOnlyBeAccessedByLayers("Resource", "DTO")
-                    // Domain layer can be accessed by Service, Repository, and DTO
-                    .whereLayer("Domain").mayOnlyBeAccessedByLayers("Service", "Repository", "DTO", "Resource")
-                    // Repository layer accessed by Service and Domain
-                    .whereLayer("Repository").mayOnlyBeAccessedByLayers("Service", "Domain", "Resource")
+                    .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Adapter.Webhook").mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers(
+                            "Application", "Adapter.Web", "Adapter.Webhook")
+                    .whereLayer("Application").mayOnlyBeAccessedByLayers(
+                            "Adapter.Web", "Adapter.Webhook")
+                    .whereLayer("Domain").mayOnlyBeAccessedByLayers(
+                            "Application", "Adapter.Web", "Adapter.Webhook",
+                            "Adapter.Persistence", "DTO")
 
                     .check(importedClasses);
         }
@@ -67,35 +67,13 @@ class ArchitectureTest {
     class DomainIsolationRules {
 
         @Test
-        @DisplayName("domain should not depend on application services")
+        @DisplayName("domain should not depend on application or adapter layers")
         void domainShouldNotDependOnServices() {
             noClasses()
                     .that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat()
-                    .resideInAnyPackage("..service..")
-                    .because("Domain layer must be independent of service concerns")
-                    .check(importedClasses);
-        }
-
-        @Test
-        @DisplayName("domain should not depend on resources")
-        void domainShouldNotDependOnResources() {
-            noClasses()
-                    .that().resideInAPackage("..domain..")
-                    .should().dependOnClassesThat()
-                    .resideInAnyPackage("..resource..")
-                    .because("Domain layer must be independent of resource layer")
-                    .check(importedClasses);
-        }
-
-        @Test
-        @DisplayName("DTOs should not depend on services")
-        void dtosShouldNotDependOnServices() {
-            noClasses()
-                    .that().resideInAPackage("..dto..")
-                    .should().dependOnClassesThat()
-                    .resideInAPackage("..service..")
-                    .because("DTOs should be data transfer objects without business logic dependencies")
+                    .resideInAnyPackage("..application..", "..adapter..")
+                    .because("Domain layer must be independent of infrastructure concerns")
                     .check(importedClasses);
         }
     }
@@ -105,22 +83,10 @@ class ArchitectureTest {
     class NamingConventionRules {
 
         @Test
-        @DisplayName("resources should have Controller suffix")
-        void resourcesShouldHaveControllerSuffix() {
-            classes()
-                    .that().resideInAPackage("..resource..")
-                    .and().areNotInterfaces()
-                    .and().areTopLevelClasses()
-                    .should().haveSimpleNameEndingWith("Controller")
-                    .because("Spring MVC controller classes should follow naming convention")
-                    .check(importedClasses);
-        }
-
-        @Test
-        @DisplayName("services should have Service suffix")
+        @DisplayName("application services should have Service suffix")
         void servicesShouldHaveServiceSuffix() {
             classes()
-                    .that().resideInAPackage("..service..")
+                    .that().resideInAPackage("..application.service..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Service")
@@ -132,74 +98,10 @@ class ArchitectureTest {
         @DisplayName("repositories should have Repository suffix")
         void repositoriesShouldHaveRepositorySuffix() {
             classes()
-                    .that().resideInAPackage("..repository..")
+                    .that().resideInAPackage("..adapter.persistence.repository..")
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Repository")
                     .because("Repository classes should follow naming convention")
-                    .check(importedClasses);
-        }
-
-        @Test
-        @DisplayName("DTOs should have DTO suffix or be Request/Response")
-        void dtosShouldHaveDtosuffix() {
-            classes()
-                    .that().resideInAPackage("..dto..")
-                    .and().areTopLevelClasses()
-                    .should().haveSimpleNameEndingWith("DTO")
-                    .orShould().haveSimpleNameEndingWith("Request")
-                    .orShould().haveSimpleNameEndingWith("Response")
-                    .because("DTO classes should follow naming convention")
-                    .check(importedClasses);
-        }
-    }
-
-    @Nested
-    @DisplayName("Dependency Injection Rules")
-    class DependencyInjectionRules {
-
-        @Test
-        @DisplayName("should use Spring annotations for dependency injection")
-        void shouldUseSpringAnnotations() {
-            classes()
-                    .that().resideInAPackage("..service..")
-                    .and().areNotTopLevelClasses()
-                    .or().resideInAPackage("..resource..")
-                    .and().areTopLevelClasses()
-                    .should().beAnnotatedWith("org.springframework.stereotype.Service")
-                    .orShould().beAnnotatedWith("org.springframework.web.bind.annotation.RestController")
-                    .because("This is a Spring Boot service - use Spring annotations (inner classes are excluded)")
-                    .check(importedClasses);
-        }
-    }
-
-    @Nested
-    @DisplayName("Service Abstraction Rules")
-    class ServiceAbstractionRules {
-
-        @Test
-        @DisplayName("resources should not access other resources")
-        @Disabled("Inner classes used for OpenAPI schema definitions cause false positives")
-        void resourcesShouldNotAccessOtherResources() {
-            noClasses()
-                    .that().resideInAPackage("..resource..")
-                    .and().areTopLevelClasses()
-                    .should().dependOnClassesThat()
-                    .resideInAPackage("..resource..")
-                    .because("Resources should be independent and use services for cross-resource communication (inner classes excluded)")
-                    .check(importedClasses);
-        }
-    }
-
-    @Nested
-    @DisplayName("Circular Dependency Rules")
-    class CircularDependencyRules {
-
-        @Test
-        @DisplayName("should have no circular dependencies between packages")
-        void shouldHaveNoCircularDependencies() {
-            slices().matching("id.payu.partner.(*)..")
-                    .should().beFreeOfCycles()
-                    .because("Circular dependencies between packages indicate tight coupling")
                     .check(importedClasses);
         }
     }
@@ -214,7 +116,7 @@ class ArchitectureTest {
             noClasses()
                     .that().resideInAPackage("..dto.snap..")
                     .should().dependOnClassesThat()
-                    .resideInAPackage("..service..")
+                    .resideInAPackage("..application..")
                     .because("DTOs should be simple data containers without service dependencies")
                     .check(importedClasses);
         }

@@ -3,12 +3,12 @@ package id.payu.promotion.integration;
 import id.payu.promotion.domain.Cashback;
 import id.payu.promotion.dto.CashbackSummaryResponse;
 import id.payu.promotion.dto.CreateCashbackRequest;
-import id.payu.promotion.service.CashbackService;
+import id.payu.promotion.application.service.CashbackService;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import id.payu.promotion.repository.CashbackRepository;
+import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
 import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;

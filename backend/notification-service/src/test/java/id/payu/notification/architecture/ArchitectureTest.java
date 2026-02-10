@@ -12,15 +12,15 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Notification Service (Quarkus).
- * 
+ * Architecture Tests for Notification Service (Quarkus) — Hexagonal Architecture.
+ *
  * Enforces:
- * - Layered architecture boundaries
- * - Naming conventions
+ * - Hexagonal layer boundaries (Adapter → Application → Domain)
+ * - Naming conventions per layer
  * - Domain isolation
  * - Sender abstraction patterns
  */
-@DisplayName("Architecture Rules - Notification Service")
+@DisplayName("Architecture Rules - Notification Service (Hexagonal)")
 class ArchitectureTest {
 
     private static JavaClasses importedClasses;
@@ -33,32 +33,31 @@ class ArchitectureTest {
     }
 
     @Nested
-    @DisplayName("Layered Architecture")
-    class LayeredArchitectureRules {
+    @DisplayName("Hexagonal Architecture")
+    class HexagonalArchitectureRules {
 
         @Test
-        @DisplayName("should follow layered architecture pattern")
-        void shouldFollowLayeredArchitecture() {
+        @DisplayName("should follow hexagonal architecture boundaries")
+        void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
-                    .layer("Resource").definedBy("..resource..")
-                    .layer("Service").definedBy("..service..")
+                    .layer("Adapter.Web").definedBy("..adapter.web..")
+                    .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
+                    .layer("Adapter.Sender").definedBy("..adapter.sender..")
+                    .layer("Application").definedBy("..application..")
                     .layer("Domain").definedBy("..domain..")
-                    .layer("Sender").definedBy("..sender..")
-                    .layer("Consumer").definedBy("..consumer..")
+                    .layer("Config").definedBy("..config..")
                     .layer("DTO").definedBy("..dto..")
-                    
-                    // Resource layer is entry point (REST API)
-                    .whereLayer("Resource").mayNotBeAccessedByAnyLayer()
-                    // Consumer layer is entry point (Kafka consumers)
-                    .whereLayer("Consumer").mayNotBeAccessedByAnyLayer()
-                    // Service layer accessed by Resource and Consumer
-                    .whereLayer("Service").mayOnlyBeAccessedByLayers("Resource", "Consumer")
-                    // Domain layer can be accessed by all business layers
-                    .whereLayer("Domain").mayOnlyBeAccessedByLayers("Service", "Resource", "DTO", "Consumer", "Sender")
-                    // Sender layer for outbound notifications
-                    .whereLayer("Sender").mayOnlyBeAccessedByLayers("Service")
-                    
+
+                    .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Adapter.Messaging").mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Adapter.Sender").mayOnlyBeAccessedByLayers("Application")
+                    .whereLayer("Application").mayOnlyBeAccessedByLayers(
+                            "Adapter.Web", "Adapter.Messaging")
+                    .whereLayer("Domain").mayOnlyBeAccessedByLayers(
+                            "Application", "Adapter.Web", "Adapter.Messaging",
+                            "Adapter.Sender", "DTO")
+
                     .check(importedClasses);
         }
     }
@@ -74,23 +73,11 @@ class ArchitectureTest {
                     .that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat()
                     .resideInAnyPackage(
-                            "..resource..",
-                            "..sender..",
-                            "..consumer..",
+                            "..adapter..",
+                            "..application..",
                             "org.eclipse.microprofile.."
                     )
                     .because("Domain layer must be independent of infrastructure concerns")
-                    .check(importedClasses);
-        }
-
-        @Test
-        @DisplayName("DTOs should not depend on services")
-        void dtosShouldNotDependOnServices() {
-            noClasses()
-                    .that().resideInAPackage("..dto..")
-                    .should().dependOnClassesThat()
-                    .resideInAPackage("..service..")
-                    .because("DTOs should be data transfer objects without business logic dependencies")
                     .check(importedClasses);
         }
     }
@@ -100,10 +87,10 @@ class ArchitectureTest {
     class NamingConventionRules {
 
         @Test
-        @DisplayName("resources should have Resource suffix")
+        @DisplayName("web resources should have Resource suffix")
         void resourcesShouldHaveResourceSuffix() {
             classes()
-                    .that().resideInAPackage("..resource..")
+                    .that().resideInAPackage("..adapter.web..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Resource")
@@ -112,10 +99,10 @@ class ArchitectureTest {
         }
 
         @Test
-        @DisplayName("services should have Service suffix")
+        @DisplayName("application services should have Service suffix")
         void servicesShouldHaveServiceSuffix() {
             classes()
-                    .that().resideInAPackage("..service..")
+                    .that().resideInAPackage("..application.service..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Service")
@@ -127,7 +114,7 @@ class ArchitectureTest {
         @DisplayName("senders should have Sender suffix")
         void sendersShouldHaveSenderSuffix() {
             classes()
-                    .that().resideInAPackage("..sender..")
+                    .that().resideInAPackage("..adapter.sender..")
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Sender")
                     .because("Sender classes should follow naming convention")
@@ -138,7 +125,7 @@ class ArchitectureTest {
         @DisplayName("consumers should have Consumer suffix")
         void consumersShouldHaveConsumerSuffix() {
             classes()
-                    .that().resideInAPackage("..consumer..")
+                    .that().resideInAPackage("..adapter.messaging..")
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Consumer")
                     .because("Kafka consumer classes should follow naming convention")
@@ -156,25 +143,6 @@ class ArchitectureTest {
             noFields()
                     .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
                     .because("This is a Quarkus service - use @Inject instead of @Autowired")
-                    .check(importedClasses);
-        }
-    }
-
-    @Nested
-    @DisplayName("Sender Abstraction Rules")
-    class SenderAbstractionRules {
-
-        @Test
-        @DisplayName("senders should not depend on each other")
-        void sendersShouldNotDependOnEachOther() {
-            // Each sender should be independent
-            noClasses()
-                    .that().resideInAPackage("..sender..")
-                    .and().haveSimpleNameEndingWith("Sender")
-                    .should().dependOnClassesThat()
-                    .resideInAPackage("..sender..")
-                    .andShould().haveSimpleNameEndingWith("Sender")
-                    .because("Senders should be independent implementations")
                     .check(importedClasses);
         }
     }

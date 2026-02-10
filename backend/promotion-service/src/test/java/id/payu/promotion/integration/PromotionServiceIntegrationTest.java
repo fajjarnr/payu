@@ -3,13 +3,13 @@ package id.payu.promotion.integration;
 import id.payu.promotion.domain.Promotion;
 import id.payu.promotion.domain.Reward;
 import id.payu.promotion.dto.*;
-import id.payu.promotion.service.PromotionService;
+import id.payu.promotion.application.service.PromotionService;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import id.payu.promotion.repository.PromotionRepository;
-import id.payu.promotion.repository.RewardRepository;
+import id.payu.promotion.adapter.persistence.repository.PromotionRepository;
+import id.payu.promotion.adapter.persistence.repository.RewardRepository;
 import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;

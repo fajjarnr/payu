@@ -1,8 +1,8 @@
 package id.payu.partner;
 
 import id.payu.partner.dto.PartnerDTO;
-import id.payu.partner.resource.PartnerController;
-import id.payu.partner.service.PartnerService;
+import id.payu.partner.adapter.web.PartnerController;
+import id.payu.partner.application.service.PartnerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

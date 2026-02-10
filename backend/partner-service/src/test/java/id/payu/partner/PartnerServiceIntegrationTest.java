@@ -1,8 +1,8 @@
 package id.payu.partner;
 
 import id.payu.partner.domain.Partner;
-import id.payu.partner.repository.PartnerRepository;
-import id.payu.partner.service.PartnerService;
+import id.payu.partner.adapter.persistence.repository.PartnerRepository;
+import id.payu.partner.application.service.PartnerService;
 import id.payu.partner.dto.PartnerDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -4,12 +4,12 @@ import id.payu.promotion.domain.LoyaltyPoints;
 import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
 import id.payu.promotion.dto.LoyaltyBalanceResponse;
 import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
-import id.payu.promotion.service.LoyaltyPointsService;
+import id.payu.promotion.application.service.LoyaltyPointsService;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import id.payu.promotion.repository.LoyaltyPointsRepository;
+import id.payu.promotion.adapter.persistence.repository.LoyaltyPointsRepository;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDateTime;
