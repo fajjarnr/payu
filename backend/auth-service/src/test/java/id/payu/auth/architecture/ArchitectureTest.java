@@ -13,10 +13,10 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture tests using ArchUnit
- * Enforces architectural rules for auth-service
+ * Architecture tests using ArchUnit — Hexagonal Architecture.
+ * Enforces ports & adapters rules for auth-service.
  */
-@DisplayName("Architecture Rules")
+@DisplayName("Architecture Rules - Auth Service (Hexagonal)")
 class ArchitectureTest {
 
     private static JavaClasses importedClasses;
@@ -29,22 +29,32 @@ class ArchitectureTest {
     }
 
     @Nested
-    @DisplayName("Layered Architecture")
-    class LayeredArchitectureRules {
+    @DisplayName("Hexagonal Architecture")
+    class HexagonalArchitectureRules {
 
         @Test
-        @DisplayName("should follow layered architecture pattern")
-        void shouldFollowLayeredArchitecture() {
+        @DisplayName("should follow hexagonal architecture pattern")
+        void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
-                    .layer("Controller").definedBy("..controller..")
-                    .layer("Service").definedBy("..service..")
-                    .layer("DTO").definedBy("..dto..")
+                    .layer("Adapter.Web").definedBy("..adapter.web..")
+                    .layer("Adapter.Security").definedBy("..adapter.security..")
+                    .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
+                    .layer("Application").definedBy("..application..")
+                    .layer("Domain").definedBy("..domain..")
                     .layer("Config").definedBy("..config..")
-                    
-                    .whereLayer("Controller").mayNotBeAccessedByAnyLayer()
-                    .whereLayer("Service").mayOnlyBeAccessedByLayers("Controller", "Config")
-                    
+                    .layer("DTO").definedBy("..dto..")
+                    .layer("Exception").definedBy("..exception..")
+
+                    .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Application").mayOnlyBeAccessedByLayers(
+                            "Adapter.Web", "Adapter.Security")
+                    .whereLayer("Domain").mayOnlyBeAccessedByLayers(
+                            "Application",
+                            "Adapter.Web", "Adapter.Security", "Adapter.Persistence",
+                            "DTO", "Exception"
+                    )
+
                     .check(importedClasses);
         }
     }
@@ -54,20 +64,20 @@ class ArchitectureTest {
     class NamingConventions {
 
         @Test
-        @DisplayName("controllers should be suffixed with Controller")
+        @DisplayName("web adapters should be suffixed with Controller")
         void controllersShouldBeSuffixedWithController() {
             classes()
-                    .that().resideInAPackage("..controller..")
+                    .that().resideInAPackage("..adapter.web..")
                     .and().areAnnotatedWith(org.springframework.web.bind.annotation.RestController.class)
                     .should().haveSimpleNameEndingWith("Controller")
                     .check(importedClasses);
         }
 
         @Test
-        @DisplayName("services should be suffixed with Service")
+        @DisplayName("application services should be suffixed with Service")
         void servicesShouldBeSuffixedWithService() {
             classes()
-                    .that().resideInAPackage("..service..")
+                    .that().resideInAPackage("..application.service..")
                     .and().areAnnotatedWith(org.springframework.stereotype.Service.class)
                     .should().haveSimpleNameEndingWith("Service")
                     .check(importedClasses);
@@ -82,6 +92,17 @@ class ArchitectureTest {
                     .should().haveSimpleNameEndingWith("Config")
                     .check(importedClasses);
         }
+
+        @Test
+        @DisplayName("ports should be interfaces")
+        void portsShouldBeInterfaces() {
+            classes()
+                    .that().resideInAPackage("..domain.port..")
+                    .and().areTopLevelClasses()
+                    .should().beInterfaces()
+                    .because("Ports define contracts and must be interfaces")
+                    .check(importedClasses);
+        }
     }
 
     @Nested
@@ -89,20 +110,20 @@ class ArchitectureTest {
     class DependencyRules {
 
         @Test
-        @DisplayName("DTOs should not depend on services")
+        @DisplayName("DTOs should not depend on application services")
         void dtosShouldNotDependOnServices() {
             noClasses()
                     .that().resideInAPackage("..dto..")
-                    .should().dependOnClassesThat().resideInAPackage("..service..")
+                    .should().dependOnClassesThat().resideInAPackage("..application..")
                     .check(importedClasses);
         }
 
         @Test
-        @DisplayName("DTOs should not depend on controllers")
-        void dtosShouldNotDependOnControllers() {
+        @DisplayName("DTOs should not depend on adapters")
+        void dtosShouldNotDependOnAdapters() {
             noClasses()
                     .that().resideInAPackage("..dto..")
-                    .should().dependOnClassesThat().resideInAPackage("..controller..")
+                    .should().dependOnClassesThat().resideInAPackage("..adapter..")
                     .check(importedClasses);
         }
     }
@@ -112,20 +133,20 @@ class ArchitectureTest {
     class SpringAnnotations {
 
         @Test
-        @DisplayName("controllers should be annotated with RestController")
+        @DisplayName("web adapters should be annotated with RestController")
         void controllersShouldBeAnnotatedWithRestController() {
             classes()
-                    .that().resideInAPackage("..controller..")
+                    .that().resideInAPackage("..adapter.web..")
                     .and().haveSimpleNameEndingWith("Controller")
                     .should().beAnnotatedWith(org.springframework.web.bind.annotation.RestController.class)
                     .check(importedClasses);
         }
 
         @Test
-        @DisplayName("services should be annotated with Service")
+        @DisplayName("application services should be annotated with Service")
         void servicesShouldBeAnnotatedWithService() {
             classes()
-                    .that().resideInAPackage("..service..")
+                    .that().resideInAPackage("..application.service..")
                     .and().haveSimpleNameEndingWith("Service")
                     .should().beAnnotatedWith(org.springframework.stereotype.Service.class)
                     .check(importedClasses);
