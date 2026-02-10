@@ -3,6 +3,8 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - config/configmaps.yaml
+  - secrets/secrets-template.yaml
 
 namespace: payu-staging
 

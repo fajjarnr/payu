@@ -3,10 +3,14 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - config/configmaps.yaml
+  - secrets/secrets-template.yaml
 
 namespace: payu-dev
 
+# Dev: single replica, debug logging, relaxed limits
 patches:
+  # Scale down to 1 replica for cost savings
   - patch: |-
       - op: replace
         path: /spec/replicas
@@ -14,3 +18,10 @@ patches:
     target:
       kind: Deployment
       labelSelector: "app.kubernetes.io/part-of=payu"
+
+configMapGenerator:
+  - name: dev-shared-config
+    literals:
+      - SPRING_PROFILES_ACTIVE=container
+      - LOG_LEVEL=DEBUG
+      - OTEL_TRACES_SAMPLER_ARG=1.0
