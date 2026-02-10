@@ -1,8 +1,12 @@
 package id.payu.lending;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
+@EnableJpaRepositories(basePackages = "id.payu.lending.repository")
+@EntityScan(basePackages = "id.payu.lending.entity")
 @SpringBootApplication
 @org.springframework.cloud.openfeign.EnableFeignClients(basePackages = "id.payu.lending")
 public class LendingServiceApplication {

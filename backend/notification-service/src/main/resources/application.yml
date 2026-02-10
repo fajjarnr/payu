@@ -34,7 +34,7 @@ quarkus:
   hibernate-orm:
     packages: id.payu.notification.domain
     database:
-      generation: validate
+      generation: update
     log:
       sql: false
   kafka:

@@ -20,13 +20,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
-    pod:
-      vols:
-      - postgres_data_vol
-      cgroups: host
   redis:
     image: docker.io/library/redis:7-alpine
     container_name: payu-redis
@@ -42,9 +35,6 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   zookeeper:
     image: docker.io/confluentinc/cp-zookeeper:7.5.0
     container_name: payu-zookeeper
@@ -62,9 +52,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   kafka:
     image: docker.io/confluentinc/cp-kafka:7.5.0
     container_name: payu-kafka
@@ -95,9 +82,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   kafka-ui:
     image: docker.io/provectuslabs/kafka-ui:latest
     container_name: payu-kafka-ui
@@ -112,9 +96,6 @@ services:
       JAVA_OPTS: -Xmx512M -Xms256M
     depends_on:
     - kafka
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   vault:
     image: docker.io/hashicorp/vault:1.15
     container_name: payu-vault
@@ -141,9 +122,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: payu-keycloak
@@ -171,13 +149,10 @@ services:
       timeout: 5s
       retries: 5
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   account-service:
     build:
-      context: ../../backend
-      dockerfile: account-service/Dockerfile
+      context: ../../backend/account-service
+      dockerfile: Containerfile
     container_name: payu-account-service
     podman_networks:
     - name: payu-network
@@ -224,14 +199,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-account-service
   auth-service:
     build:
-      context: ../../backend
-      dockerfile: auth-service/Dockerfile
+      context: ../../backend/auth-service
+      dockerfile: Containerfile
     container_name: payu-auth-service
     podman_networks:
     - name: payu-network
@@ -282,14 +254,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-auth-service
   transaction-service:
     build:
-      context: ../../backend
-      dockerfile: transaction-service/Dockerfile
+      context: ../../backend/transaction-service
+      dockerfile: Containerfile
     container_name: payu-transaction-service
     podman_networks:
     - name: payu-network
@@ -336,14 +305,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-transaction-service
   wallet-service:
     build:
-      context: ../../backend
-      dockerfile: wallet-service/Dockerfile
+      context: ../../backend/wallet-service
+      dockerfile: Containerfile
     container_name: payu-wallet-service
     podman_networks:
     - name: payu-network
@@ -387,14 +353,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-wallet-service
   compliance-service:
     build:
-      context: ../../backend
-      dockerfile: compliance-service/Dockerfile
+      context: ../../backend/compliance-service
+      dockerfile: Containerfile
     container_name: payu-compliance-service
     podman_networks:
     - name: payu-network
@@ -438,14 +401,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-compliance-service
   investment-service:
     build:
-      context: ../../backend
-      dockerfile: investment-service/Dockerfile
+      context: ../../backend/investment-service
+      dockerfile: Containerfile
     container_name: payu-investment-service
     podman_networks:
     - name: payu-network
@@ -490,14 +450,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-investment-service
   lending-service:
     build:
-      context: ../../backend
-      dockerfile: lending-service/Dockerfile
+      context: ../../backend/lending-service
+      dockerfile: Containerfile
     container_name: payu-lending-service
     podman_networks:
     - name: payu-network
@@ -542,14 +499,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-lending-service
   bi-fast-simulator:
     build:
-      context: ../../backend
-      dockerfile: simulators/bi-fast-simulator/Dockerfile
+      context: ../../backend/simulators/bi-fast-simulator
+      dockerfile: Containerfile
     container_name: payu-bifast-simulator
     podman_networks:
     - name: payu-network
@@ -588,14 +542,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-bi-fast-simulator
   dukcapil-simulator:
     build:
-      context: ../../backend
-      dockerfile: simulators/dukcapil-simulator/Dockerfile
+      context: ../../backend/simulators/dukcapil-simulator
+      dockerfile: Containerfile
     container_name: payu-dukcapil-simulator
     podman_networks:
     - name: payu-network
@@ -633,14 +584,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-dukcapil-simulator
   qris-simulator:
     build:
-      context: ../../backend
-      dockerfile: simulators/qris-simulator/Dockerfile
+      context: ../../backend/simulators/qris-simulator
+      dockerfile: Containerfile
     container_name: payu-qris-simulator
     podman_networks:
     - name: payu-network
@@ -679,14 +627,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-qris-simulator
   billing-service:
     build:
-      context: ../../backend
-      dockerfile: billing-service/Dockerfile
+      context: ../../backend/billing-service
+      dockerfile: Containerfile
     container_name: payu-billing-service
     podman_networks:
     - name: payu-network
@@ -729,14 +674,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-billing-service
   notification-service:
     build:
-      context: ../../backend
-      dockerfile: notification-service/Dockerfile
+      context: ../../backend/notification-service
+      dockerfile: Containerfile
     container_name: payu-notification-service
     podman_networks:
     - name: payu-network
@@ -779,14 +721,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-notification-service
   gateway-service:
     build:
-      context: ../../backend
-      dockerfile: gateway-service/Dockerfile
+      context: ../../backend/gateway-service
+      dockerfile: Containerfile
     container_name: payu-gateway-service
     podman_networks:
     - name: payu-network
@@ -802,8 +741,8 @@ services:
       ROUTES_WALLET_URL: http://wallet-service:8004
       ROUTES_BILLING_URL: http://billing-service:8080
       ROUTES_NOTIFICATION_URL: http://notification-service:8080
-      ROUTES_KYC_URL: http://kyc-service:8007
-      ROUTES_ANALYTICS_URL: http://analytics-service:8008
+      ROUTES_KYC_URL: http://kyc-service:8080
+      ROUTES_ANALYTICS_URL: http://analytics-service:8080
       ROUTES_COMPLIANCE_URL: http://compliance-service:8087/compliance-service
       ROUTES_INVESTMENT_URL: http://investment-service:8080
       ROUTES_LENDING_URL: http://lending-service:8087
@@ -849,14 +788,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-gateway-service
   backoffice-service:
     build:
-      context: ../../backend
-      dockerfile: backoffice-service/Dockerfile
+      context: ../../backend/backoffice-service
+      dockerfile: Containerfile
     container_name: payu-backoffice-service
     podman_networks:
     - name: payu-network
@@ -864,7 +800,7 @@ services:
     - 8011:8080
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SERVICES_KYC_URL: http://kyc-service:8007
+      SERVICES_KYC_URL: http://kyc-service:8080
       SERVICES_WALLET_URL: http://wallet-service:8004
       OTEL_ENDPOINT: http://jaeger:4317
       DB_URL: jdbc:postgresql://postgres:5432/payu_backoffice
@@ -898,14 +834,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-backoffice-service
   partner-service:
     build:
-      context: ../../backend
-      dockerfile: partner-service/Dockerfile
+      context: ../../backend/partner-service
+      dockerfile: Containerfile
     container_name: payu-partner-service
     podman_networks:
     - name: payu-network
@@ -931,6 +864,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_partner
       SPRING_DATASOURCE_USERNAME: payu
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
     depends_on:
     - postgres
     - kafka
@@ -945,14 +879,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-partner-service
   promotion-service:
     build:
-      context: ../../backend
-      dockerfile: promotion-service/Dockerfile
+      context: ../../backend/promotion-service
+      dockerfile: Containerfile
     container_name: payu-promotion-service
     podman_networks:
     - name: payu-network
@@ -992,14 +923,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-promotion-service
   support-service:
     build:
-      context: ../../backend
-      dockerfile: support-service/Dockerfile
+      context: ../../backend/support-service
+      dockerfile: Containerfile
     container_name: payu-support-service
     podman_networks:
     - name: payu-network
@@ -1039,14 +967,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-support-service
   api-portal-service:
     build:
-      context: ../../backend
-      dockerfile: api-portal-service/Dockerfile
+      context: ../../backend/api-portal-service
+      dockerfile: Containerfile
     container_name: payu-api-portal-service
     podman_networks:
     - name: payu-network
@@ -1059,8 +984,8 @@ services:
       WALLET_SERVICE_URL: http://wallet-service:8004
       BILLING_SERVICE_URL: http://billing-service:8080
       NOTIFICATION_SERVICE_URL: http://notification-service:8080
-      KYC_SERVICE_URL: http://kyc-service:8007
-      ANALYTICS_SERVICE_URL: http://analytics-service:8008
+      KYC_SERVICE_URL: http://kyc-service:8080
+      ANALYTICS_SERVICE_URL: http://analytics-service:8080
       PARTNER_SERVICE_URL: http://partner-service:8080
       PROMOTION_SERVICE_URL: http://promotion-service:8080
       LENDING_SERVICE_URL: http://lending-service:8087
@@ -1114,14 +1039,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-api-portal-service
   statement-service:
     build:
-      context: ../../backend
-      dockerfile: statement-service/Dockerfile
+      context: ../../backend/statement-service
+      dockerfile: Containerfile
     container_name: payu-statement-service
     podman_networks:
     - name: payu-network
@@ -1166,19 +1088,16 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-statement-service
   kyc-service:
     build:
-      context: ../../backend
-      dockerfile: kyc-service/Dockerfile
+      context: ../../backend/kyc-service
+      dockerfile: Containerfile
     container_name: payu-kyc-service
     podman_networks:
     - name: payu-network
     ports:
-    - 8007:8007
+    - 8007:8080
     environment:
       QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DATABASE_URL: postgresql+asyncpg://payu:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_kyc
@@ -1188,7 +1107,8 @@ services:
       PYTHONUNBUFFERED: '1'
       PYTHONDONTWRITEBYTECODE: '1'
       OTEL_ENDPOINT: http://jaeger:4317
-      PORT: '8007'
+      PORT: '8080'
+      SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
     depends_on:
     - postgres
     - kafka
@@ -1198,24 +1118,21 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8007/health
+      - http://localhost:8080/health
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 20s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-kyc-service
   analytics-service:
     build:
-      context: ../../backend
-      dockerfile: analytics-service/Dockerfile
+      context: ../../backend/analytics-service
+      dockerfile: Containerfile
     container_name: payu-analytics-service
     podman_networks:
     - name: payu-network
     ports:
-    - 8008:8008
+    - 8008:8080
     environment:
       QUARKUS_HEALTH_SECURITY_ENABLED: 'false'
       DATABASE_URL: postgresql+asyncpg://payu:${POSTGRES_PASSWORD:-payu_secret}@postgres:5432/payu_analytics
@@ -1224,7 +1141,8 @@ services:
       PYTHONUNBUFFERED: '1'
       PYTHONDONTWRITEBYTECODE: '1'
       OTEL_ENDPOINT: http://jaeger:4317
-      PORT: '8008'
+      PORT: '8080'
+      SECRET_KEY: ${JWT_SECRET:-dev_secret_key_for_local_development_only}
     depends_on:
     - postgres
     - kafka
@@ -1234,19 +1152,16 @@ services:
       - CMD
       - curl
       - -f
-      - http://localhost:8008/health
+      - http://localhost:8080/health
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 20s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-analytics-service
   cms-service:
     build:
-      context: ../../backend
-      dockerfile: cms-service/Dockerfile
+      context: ../../backend/cms-service
+      dockerfile: Containerfile
     container_name: payu-cms-service
     podman_networks:
     - name: payu-network
@@ -1289,14 +1204,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-cms-service
   fx-service:
     build:
-      context: ../../backend
-      dockerfile: fx-service/Dockerfile
+      context: ../../backend/fx-service
+      dockerfile: Containerfile
     container_name: payu-fx-service
     podman_networks:
     - name: payu-network
@@ -1334,14 +1246,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-fx-service
   ab-testing-service:
     build:
-      context: ../../backend
-      dockerfile: ab-testing-service/Dockerfile
+      context: ../../backend/ab-testing-service
+      dockerfile: Containerfile
     container_name: payu-ab-testing-service
     podman_networks:
     - name: payu-network
@@ -1384,14 +1293,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-ab-testing-service
   web-app:
     build:
       context: ../../frontend/web-app
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-web-app
     podman_networks:
     - name: payu-network
@@ -1415,9 +1321,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
     image: localhost/payu-web-app
   jaeger:
     image: docker.io/jaegertracing/all-in-one:1.58
@@ -1451,9 +1354,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   prometheus:
     image: docker.io/prom/prometheus:v2.54.1
     container_name: payu-prometheus
@@ -1484,9 +1384,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   loki:
     image: docker.io/grafana/loki:2.9.10
     container_name: payu-loki
@@ -1510,9 +1407,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   promtail:
     image: docker.io/grafana/promtail:2.9.10
     container_name: payu-promtail
@@ -1525,9 +1419,6 @@ services:
     command: -config.file=/etc/promtail/config.yml
     depends_on:
     - loki
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   grafana:
     image: docker.io/grafana/grafana:11.1.4
     container_name: payu-grafana
@@ -1558,9 +1449,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   alertmanager:
     image: docker.io/prom/alertmanager:v0.27.0
     container_name: payu-alertmanager
@@ -1586,9 +1474,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
 volumes:
   postgres_data:
     driver: local

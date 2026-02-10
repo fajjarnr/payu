@@ -1,7 +1,9 @@
 package id.payu.partner;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Main Spring Boot application class for Partner Service.
@@ -16,6 +18,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * @author PayU Backend Team
  */
+@EnableJpaRepositories(basePackages = "id.payu.partner.adapter.persistence.repository")
+@EntityScan(basePackages = "id.payu.partner.domain")
 @SpringBootApplication
 public class PartnerServiceApplication {
 

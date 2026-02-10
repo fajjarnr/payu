@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * PayU Statement Service Application
@@ -12,6 +13,7 @@ import org.springframework.kafka.annotation.EnableKafka;
  * Service for generating and managing monthly e-statements (PDF) for users.
  * Supports transaction history aggregation, balance snapshots, and secure PDF delivery.
  */
+@EnableJpaRepositories(basePackages = "id.payu.statement.adapter.persistence.repository")
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableScheduling

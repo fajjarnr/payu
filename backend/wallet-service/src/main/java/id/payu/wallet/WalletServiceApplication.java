@@ -1,8 +1,12 @@
 package id.payu.wallet;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
+@EnableJpaRepositories(basePackages = "id.payu.wallet.adapter.persistence.repository")
+@EntityScan(basePackages = "id.payu.wallet.adapter.persistence.entity")
 @SpringBootApplication
 public class WalletServiceApplication {
 

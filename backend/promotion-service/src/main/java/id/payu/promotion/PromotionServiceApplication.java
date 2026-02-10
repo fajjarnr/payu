@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Main Spring Boot application class for PayU Promotion Service.
@@ -17,6 +18,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * - Gamification features (badges, levels, daily check-ins)
  * - Customer segmentation
  */
+@EnableJpaRepositories(basePackages = "id.payu.promotion.adapter.persistence.repository")
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableKafka

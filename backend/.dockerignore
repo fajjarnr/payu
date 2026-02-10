@@ -15,6 +15,7 @@
 *.class
 *.jar
 target/
+!target/*.jar
 **/target/
 *.war
 *.ear

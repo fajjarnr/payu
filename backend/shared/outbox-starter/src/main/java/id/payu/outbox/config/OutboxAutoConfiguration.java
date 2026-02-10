@@ -6,6 +6,7 @@ import id.payu.outbox.service.OutboxService;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,7 +38,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @since 1.0.0
  */
 @Slf4j
-@AutoConfiguration
+@AutoConfiguration(after = org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration.class)
 @ConditionalOnClass({OutboxRepository.class, KafkaTemplate.class})
 @ConditionalOnProperty(prefix = "payu.outbox", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(OutboxProperties.class)
@@ -57,6 +58,7 @@ public class OutboxAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnBean(KafkaTemplate.class)
     public OutboxPublisher outboxPublisher(OutboxRepository outboxRepository,
                                            KafkaTemplate<String, String> kafkaTemplate,
                                            MeterRegistry meterRegistry) {

@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * This service manages support agents, training modules, and training progress tracking.
  */
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "id.payu.support.repository")
+@EnableJpaRepositories(basePackages = "id.payu.support.adapter.persistence.repository")
 public class SupportServiceApplication {
 
     public static void main(String[] args) {
