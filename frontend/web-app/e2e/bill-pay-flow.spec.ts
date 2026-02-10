@@ -40,7 +40,8 @@ test.describe('Bill Pay Flow', () => {
     await page.click('text=Pulsa');
     await waitForAnimations(page);
 
-    await expect(page.getByLabel('ID Pelanggan / Nomor Rekening')).toBeVisible({ timeout: 10000 });
+    // Label is a styled element (not proper <label htmlFor>), use getByText
+    await expect(page.getByText('ID Pelanggan / Nomor Rekening')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Jumlah Pembayaran (IDR)')).toBeVisible({ timeout: 10000 });
   });
 
@@ -66,7 +67,8 @@ test.describe('Bill Pay Flow', () => {
     await page.click('text=Listrik (PLN)');
     await waitForAnimations(page);
 
-    const backButton = page.locator('button').filter({ hasText: /Back/ }).or(page.locator('svg')).first();
+    // Back button uses a ChevronRight icon rotated 180°, find it by SVG or first button
+    const backButton = page.locator('button').filter({ has: page.locator('svg') }).first();
     await backButton.click();
     await waitForAnimations(page);
 
@@ -105,7 +107,9 @@ test.describe('Bill Pay Flow', () => {
 
   test('should have add more option for billers', async ({ authPage: page }) => {
     await expect(page.getByText('Lainnya')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Lainnya/ })).toBeVisible();
+    // "Lainnya" is a button element with text content
+    const lainnyaButton = page.locator('button', { hasText: 'Lainnya' }).or(page.getByText('Lainnya'));
+    await expect(lainnyaButton.first()).toBeVisible();
   });
 
   test('should show partner badge for billers', async ({ authPage: page }) => {

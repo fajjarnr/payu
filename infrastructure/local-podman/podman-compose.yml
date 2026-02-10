@@ -1243,6 +1243,111 @@ services:
     annotation:
       io.containers.autoupdate: registry
     image: localhost/payu-analytics-service
+  cms-service:
+    build:
+      context: ../../backend/cms-service
+      dockerfile: Containerfile
+    container_name: payu-cms-service
+    podman_networks:
+    - name: payu-network
+    ports:
+    - "8095:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_cms
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+    - postgres
+    - kafka
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    cgroupns: host
+    annotation:
+      io.containers.autoupdate: registry
+    image: localhost/payu-cms-service
+  fx-service:
+    build:
+      context: ../../backend/fx-service
+      dockerfile: Containerfile
+    container_name: payu-fx-service
+    podman_networks:
+    - name: payu-network
+    ports:
+    - "8096:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_fx
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+    - postgres
+    - redis
+    - kafka
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    cgroupns: host
+    annotation:
+      io.containers.autoupdate: registry
+    image: localhost/payu-fx-service
+  ab-testing-service:
+    build:
+      context: ../../backend/ab-testing-service
+      dockerfile: Containerfile
+    container_name: payu-ab-testing-service
+    podman_networks:
+    - name: payu-network
+    ports:
+    - "8097:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_abtesting
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: payu_secret
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+    - postgres
+    - redis
+    - kafka
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    cgroupns: host
+    annotation:
+      io.containers.autoupdate: registry
+    image: localhost/payu-ab-testing-service
   web-app:
     build:
       context: ../../frontend/web-app
@@ -1254,7 +1359,7 @@ services:
     - 3001:3000
     environment:
       NEXT_PUBLIC_API_URL: /api/v1
-      GATEWAY_URL: http://gateway-service:8080
+      GATEWAY_URL: ${GATEWAY_URL:-http://gateway-service:8080}
       NODE_ENV: production
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       OTEL_ENDPOINT: http://jaeger:4317

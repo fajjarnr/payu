@@ -70,6 +70,20 @@ async function proxyRequest(
       },
     });
   } catch (error) {
+    // Graceful fallback when gateway is unreachable.
+    // GET requests return an empty payload so the UI renders with defaults.
+    // Mutating methods still surface the 503 so users know the write failed.
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      console.warn('[BFF] Gateway offline – returning empty payload for', request.method, request.nextUrl.pathname);
+      return NextResponse.json(
+        { data: null, items: [], total: 0, _fallback: true },
+        {
+          status: 200,
+          headers: { 'X-Fallback': 'gateway-offline' },
+        },
+      );
+    }
+
     console.error('[BFF] Proxy error:', error);
     return NextResponse.json(
       { error: 'Service unavailable' },

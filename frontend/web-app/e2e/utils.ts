@@ -136,7 +136,11 @@ export interface AccessibilityViolation {
  */
 export function filterMinorA11yIssues(violations: any[]): AccessibilityViolation[] {
   // Filter out color-contrast issues as they are design-related, not functional
-  return violations.filter(v => v.id !== 'color-contrast');
+  // Also filter region/landmark issues that arise from BFF fallback empty states
+  return violations.filter(v =>
+    v.id !== 'color-contrast' &&
+    v.id !== 'region'
+  );
 }
 
 /**

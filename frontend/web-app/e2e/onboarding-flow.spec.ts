@@ -7,25 +7,25 @@ test.describe('Onboarding Flow - Complete Journey', () => {
   });
 
   test('should complete full onboarding journey', async ({ page }) => {
-    // Step 1: KYC Upload - use English translations
-    await expect(page.getByText('Upload e-ID')).toBeVisible();
-    await expect(page.getByText('Photo of your original ID')).toBeVisible();
+    // Step 1: KYC Upload - use Indonesian translations (locale=id)
+    await expect(page.getByText('Unggah e-KTP')).toBeVisible();
+    await expect(page.getByText('Foto KTP asli Anda untuk validasi data otomatis')).toBeVisible();
 
     // Click start verification
-    await page.click('button:has-text("Continue to Profile Data")');
+    await page.click('button:has-text("Lanjut ke Profil Data")');
 
     // Step 2: Profile Form
-    await expect(page.getByText('Complete Profile')).toBeVisible();
-    await expect(page.getByPlaceholder('16 digit number...')).toBeVisible();
+    await expect(page.getByText('Lengkapi Profil')).toBeVisible();
+    await expect(page.getByPlaceholder('16 digit angka...')).toBeVisible();
 
     // Fill in profile details
-    await page.getByPlaceholder('16 digit number...').fill('3201010101010001');
-    await page.getByPlaceholder('As per ID').fill('John Doe');
-    await page.getByPlaceholder('name@email.com').fill('john.doe@example.com');
-    await page.getByPlaceholder('unique & easy to remember').fill('johndoe123');
+    await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
+    await page.getByPlaceholder('Sesuai KTP').fill('John Doe');
+    await page.getByPlaceholder('nama@email.com').fill('john.doe@example.com');
+    await page.getByPlaceholder('unik & mudah diingat').fill('johndoe123');
 
     // Submit form
-    await page.click('button:has-text("Confirm Registration")');
+    await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
     // Wait for response - will likely fail due to backend but check for any UI change
     await page.waitForTimeout(2000);
@@ -33,29 +33,29 @@ test.describe('Onboarding Flow - Complete Journey', () => {
 
   test('should show progress through all steps', async ({ page }) => {
     // Initially step 1 is active - look for active step indicator
-    await expect(page.getByText('Identity')).toBeVisible();
+    await expect(page.getByText('Identitas').first()).toBeVisible();
 
     // Move to step 2
-    await page.click('button:has-text("Continue to Profile Data")');
+    await page.click('button:has-text("Lanjut ke Profil Data")');
 
     // Wait for step transition
     await page.waitForTimeout(500);
 
     // Now step 2 content should be visible
-    await expect(page.getByText('Complete Profile')).toBeVisible();
+    await expect(page.getByText('Lengkapi Profil')).toBeVisible();
 
     // Fill form and submit
-    await page.getByPlaceholder('16 digit number...').fill('3201010101010001');
-    await page.getByPlaceholder('As per ID').fill('Test User');
-    await page.getByPlaceholder('name@email.com').fill('test@example.com');
-    await page.getByPlaceholder('unique & easy to remember').fill('testuser123');
-    await page.click('button:has-text("Confirm Registration")');
+    await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
+    await page.getByPlaceholder('Sesuai KTP').fill('Test User');
+    await page.getByPlaceholder('nama@email.com').fill('test@example.com');
+    await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+    await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
     // Wait for success step - increase timeout as the API call may take time
     await page.waitForTimeout(3000);
 
     // Step 3 should be active now - check for success message
-    await expect(page.getByText('Account Ready!')).toBeVisible();
+    await expect(page.getByText('Akun Siap Digunakan!')).toBeVisible();
   });
 });
 
@@ -67,7 +67,7 @@ test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
 
   test('should display KYC upload page', async ({ page }) => {
     await expect(page).toHaveTitle(/PayU/);
-    await expect(page.getByText('Upload e-ID')).toBeVisible();
+    await expect(page.getByText('Unggah e-KTP')).toBeVisible();
   });
 
   test('should have KTP upload area', async ({ page }) => {
@@ -81,15 +81,15 @@ test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
   });
 
   test('should have upload instruction text', async ({ page }) => {
-    await expect(page.getByText('Click to take photo')).toBeVisible();
+    await expect(page.getByText('Klik untuk ambil foto')).toBeVisible();
   });
 
   test('should have format instruction text', async ({ page }) => {
-    await expect(page.getByText('JPG, PNG max 5MB')).toBeVisible();
+    await expect(page.getByText('JPG, PNG maks 5MB')).toBeVisible();
   });
 
   test('should have start verification button', async ({ page }) => {
-    const button = page.locator('button:has-text("Continue to Profile Data")');
+    const button = page.locator('button:has-text("Lanjut ke Profil Data")');
     await expect(button).toBeVisible();
     await expect(button).toBeEnabled();
   });
@@ -106,16 +106,18 @@ test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
 
   test('should display branding panel', async ({ page }) => {
     await expect(page.getByText('Verifikasi Identitas Digital')).toBeVisible();
-    await expect(page.getByText('Bergabung dengan 2 Juta+ pengguna')).toBeVisible();
+    await expect(page.getByText(/Bergabung dengan 2 Juta\+ pengguna/)).toBeVisible();
   });
 
   test('should display 3-step progress tracker', async ({ page }) => {
-    const steps = page.locator('.w-10.h-10.rounded-full');
+    // Stepper uses h-10 w-10 rounded-xl (not rounded-full)
+    const steps = page.locator('.h-10.w-10.rounded-xl');
     await expect(steps).toHaveCount(3);
   });
 
   test('should have step 1 active initially', async ({ page }) => {
-    const activeStep = page.locator('.w-10.h-10.rounded-full.bg-emerald-600');
+    // Active step uses bg-background border-primary; completed uses bg-primary
+    const activeStep = page.locator('.h-10.w-10.rounded-xl.border-primary');
     await expect(activeStep).toHaveCount(1);
   });
 
@@ -276,8 +278,8 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
   });
 
   test('should update progress indicator', async ({ page }) => {
-    // Step 2 should be active
-    const activeStep = page.locator('.w-10.h-10.rounded-full.bg-emerald-600').nth(1);
+    // Step 2 should be active (border-primary)
+    const activeStep = page.locator('.h-10.w-10.rounded-xl.border-primary');
     await expect(activeStep).toBeVisible();
   });
 
@@ -327,8 +329,9 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
   });
 
   test('should have all 3 steps complete in progress tracker', async ({ page }) => {
-    const activeSteps = page.locator('.w-10.h-10.rounded-full.bg-emerald-600');
-    await expect(activeSteps).toHaveCount(3);
+    // All completed steps use bg-primary + rounded-xl
+    const completedSteps = page.locator('.h-10.w-10.rounded-xl.bg-primary');
+    await expect(completedSteps).toHaveCount(3);
   });
 
   test('should redirect to login after timeout', async ({ page }) => {
