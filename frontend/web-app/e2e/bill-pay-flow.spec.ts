@@ -67,8 +67,8 @@ test.describe('Bill Pay Flow', () => {
     await page.click('text=Listrik (PLN)');
     await waitForAnimations(page);
 
-    // Back button uses a ChevronRight icon rotated 180°, find it by SVG or first button
-    const backButton = page.locator('button').filter({ has: page.locator('svg') }).first();
+    // Back button is the first button inside <main> containing an SVG icon
+    const backButton = page.locator('main button').filter({ has: page.locator('svg') }).first();
     await backButton.click();
     await waitForAnimations(page);
 
@@ -106,10 +106,9 @@ test.describe('Bill Pay Flow', () => {
   });
 
   test('should have add more option for billers', async ({ authPage: page }) => {
-    await expect(page.getByText('Lainnya')).toBeVisible();
-    // "Lainnya" is a button element with text content
-    const lainnyaButton = page.locator('button', { hasText: 'Lainnya' }).or(page.getByText('Lainnya'));
-    await expect(lainnyaButton.first()).toBeVisible();
+    // "Lainnya" appears in both sidebar nav and biller grid — scope to main content area
+    const lainnyaButton = page.getByRole('button', { name: 'Lainnya' });
+    await expect(lainnyaButton).toBeVisible();
   });
 
   test('should show partner badge for billers', async ({ authPage: page }) => {

@@ -101,7 +101,8 @@ test.describe('Login Flow', () => {
 
   test('should have proper form labels', async ({ page }) => {
     await expect(page.getByText('Username')).toBeVisible();
-    await expect(page.getByText('Password')).toBeVisible();
+    // Use exact match to avoid matching 'Lupa password?' link
+    await expect(page.getByText('Password', { exact: true })).toBeVisible();
   });
 
   test('should have accessible form controls', async ({ page }) => {
@@ -204,10 +205,10 @@ test.describe('Login Flow - Accessibility', () => {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
 
-    // Check for main heading
+    // h1 is the branding panel title, h2 is the form title
     const h1 = page.locator('h1');
     await expect(h1).toBeVisible();
-    await expect(h1).toContainText('Selamat Datang');
+    await expect(h1).toContainText('Platform Perbankan');
   });
 
   test('should have keyboard navigation support', async ({ page }) => {
