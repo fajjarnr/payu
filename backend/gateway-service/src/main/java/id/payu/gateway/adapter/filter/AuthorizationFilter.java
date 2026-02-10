@@ -43,7 +43,8 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         "/q/",
         "/api/v1/partners/webhook",
         "/api/v1/bi-fast/callback",
-        "/api/v1/qris/callback"
+        "/api/v1/qris/callback",
+        "/api/v1/public/"             // Public content endpoints (CMS, etc.)
     };
 
     // Exact match public endpoints (must match exactly)
