@@ -29,22 +29,19 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`${locale}/dashboard`, request.url));
   }
 
-  // 2. Protect /dashboard and related financial routes
-  const protectedRoutes = [
-    '/dashboard',
-    '/cards',
-    '/investments',
-    '/pockets',
-    '/transfer',
-    '/qris',
-    '/analytics',
-    '/accounts',
-    '/rewards'
+  // 2. Protect authenticated routes — everything except public pages
+  const publicRoutes = [
+    '/login',
+    '/onboarding',
+    '/legal/privacy',
+    '/legal/terms',
+    '/merchant/register',
   ];
 
-  const isProtectedRoute = protectedRoutes.some(route => pathWithoutLocale.startsWith(route));
+  const isPublicRoute = pathWithoutLocale === '/' || 
+    publicRoutes.some(route => pathWithoutLocale.startsWith(route));
 
-  if (isProtectedRoute && !hasSession) {
+  if (!isPublicRoute && !hasSession) {
     const localeMatch = pathname.match(/^\/(en|id)/);
     const locale = localeMatch ? localeMatch[0] : '';
     // Redirect to login, ensuring user doesn't bypass auth

@@ -138,7 +138,9 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-payu_secret}
       KC_HEALTH_ENABLED: 'true'
       JAVA_OPTS_APPEND: -Xmx1024M -Xms512M
-    command: start-dev
+    volumes:
+    - ../../infrastructure/keycloak/payu-realm-export.json:/opt/keycloak/data/import/payu-realm.json:ro,z
+    command: start-dev --import-realm
     depends_on:
     - postgres
     healthcheck:
@@ -751,6 +753,24 @@ services:
       ROUTES_PROMOTION_URL: http://promotion-service:8080
       ROUTES_SUPPORT_URL: http://support-service:8080
       ROUTES_STATEMENT_URL: http://statement-service:8015
+      # Service URLs for gateway.services.* config mapping
+      ACCOUNT_SERVICE_URL: http://account-service:8001
+      AUTH_SERVICE_URL: http://auth-service:8002
+      TRANSACTION_SERVICE_URL: http://transaction-service:8003
+      WALLET_SERVICE_URL: http://wallet-service:8004
+      BILLING_SERVICE_URL: http://billing-service:8080
+      NOTIFICATION_SERVICE_URL: http://notification-service:8080
+      KYC_SERVICE_URL: http://kyc-service:8080
+      ANALYTICS_SERVICE_URL: http://analytics-service:8080
+      PARTNER_SERVICE_URL: http://partner-service:8080
+      PROMOTION_SERVICE_URL: http://promotion-service:8080
+      LENDING_SERVICE_URL: http://lending-service:8087
+      INVESTMENT_SERVICE_URL: http://investment-service:8080
+      COMPLIANCE_SERVICE_URL: http://compliance-service:8087
+      BACKOFFICE_SERVICE_URL: http://backoffice-service:8080
+      SUPPORT_SERVICE_URL: http://support-service:8080
+      STATEMENT_SERVICE_URL: http://statement-service:8015
+      CMS_SERVICE_URL: http://cms-service:8080
       WEBHOOK_PARTNER_1_SECRET: ${WEBHOOK_PARTNER_1_SECRET:-dummy_secret_for_dev_only}
       GATEWAY_AUTHORIZATION_JWT_SECRET: ${GATEWAY_AUTHORIZATION_JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
       QUARKUS_HEALTH_SECURITY_ENABLED: 'false'

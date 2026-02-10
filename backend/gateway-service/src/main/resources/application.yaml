@@ -75,49 +75,52 @@ gateway:
   # Backend Services
   services:
     account-service:
-      url: ${ACCOUNT_SERVICE_URL:http://account-service:8080}
+      url: ${ACCOUNT_SERVICE_URL:http://account-service:8001}
       timeout: 30s
     auth-service:
-      url: ${AUTH_SERVICE_URL:http://auth-service:8080}
+      url: ${AUTH_SERVICE_URL:http://auth-service:8002}
       timeout: 10s
     transaction-service:
-      url: ${TRANSACTION_SERVICE_URL:http://transaction-service:8080}
+      url: ${TRANSACTION_SERVICE_URL:http://transaction-service:8003}
       timeout: 30s
     wallet-service:
-      url: ${WALLET_SERVICE_URL:http://wallet-service:8080}
+      url: ${WALLET_SERVICE_URL:http://wallet-service:8004}
       timeout: 15s
     billing-service:
       url: ${BILLING_SERVICE_URL:http://billing-service:8080}
       timeout: 30s
     notification-service:
-      url: ${NOTIFICATION_SERVICE_URL:http://localhost:8080}
+      url: ${NOTIFICATION_SERVICE_URL:http://notification-service:8080}
       timeout: 10s
     kyc-service:
-      url: ${KYC_SERVICE_URL:http://localhost:8080}
+      url: ${KYC_SERVICE_URL:http://kyc-service:8080}
       timeout: 60s
     analytics-service:
-      url: ${ANALYTICS_SERVICE_URL:http://localhost:8080}
+      url: ${ANALYTICS_SERVICE_URL:http://analytics-service:8080}
       timeout: 30s
     partner-service:
-      url: ${PARTNER_SERVICE_URL:http://localhost:8080}
+      url: ${PARTNER_SERVICE_URL:http://partner-service:8080}
       timeout: 30s
     promotion-service:
-      url: ${PROMOTION_SERVICE_URL:http://localhost:8080}
+      url: ${PROMOTION_SERVICE_URL:http://promotion-service:8080}
       timeout: 30s
     lending-service:
-      url: ${LENDING_SERVICE_URL:http://localhost:8080}
+      url: ${LENDING_SERVICE_URL:http://lending-service:8087}
       timeout: 30s
     investment-service:
-      url: ${INVESTMENT_SERVICE_URL:http://localhost:8080}
+      url: ${INVESTMENT_SERVICE_URL:http://investment-service:8080}
       timeout: 30s
     compliance-service:
-      url: ${COMPLIANCE_SERVICE_URL:http://localhost:8080}
+      url: ${COMPLIANCE_SERVICE_URL:http://compliance-service:8087}
       timeout: 30s
     backoffice-service:
-      url: ${BACKOFFICE_SERVICE_URL:http://localhost:8080}
+      url: ${BACKOFFICE_SERVICE_URL:http://backoffice-service:8080}
       timeout: 30s
     support-service:
-      url: ${SUPPORT_SERVICE_URL:http://localhost:8080}
+      url: ${SUPPORT_SERVICE_URL:http://support-service:8080}
+      timeout: 30s
+    statement-service:
+      url: ${STATEMENT_SERVICE_URL:http://statement-service:8015}
       timeout: 30s
     cms-service:
       url: ${CMS_SERVICE_URL:http://cms-service:8080}
