@@ -119,6 +119,7 @@ export default function SettingsPage() {
                             <Input
                               type={field.type}
                               defaultValue={field.val}
+                              placeholder={field.val}
                               className="font-bold"
                             />
                           </div>

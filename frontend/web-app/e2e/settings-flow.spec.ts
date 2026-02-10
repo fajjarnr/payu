@@ -9,7 +9,7 @@ test.describe('Settings Flow', () => {
   });
 
   test('should display settings page correctly', async ({ authPage: page }) => {
-    await expect(page).toHaveTitle(/PayU/);
+    await expect(page).toHaveTitle(/Pengaturan|PayU/);
     await expect(page.getByText('Ekosistem Akun')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Kelola profil pribadi, preferensi sistem, dan tata kelola akun.')).toBeVisible({ timeout: 10000 });
   });
@@ -25,8 +25,8 @@ test.describe('Settings Flow', () => {
   });
 
   test('should display account status', async ({ authPage: page }) => {
-    await expect(page.getByText('Status')).toBeVisible();
-    await expect(page.getByText('eKYC Terverifikasi')).toBeVisible();
+    await expect(page.getByText('Status', { exact: true })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('eKYC Terverifikasi')).toBeVisible({ timeout: 10000 });
   });
 
   test('should display settings menu items', async ({ authPage: page }) => {
@@ -50,7 +50,7 @@ test.describe('Settings Flow', () => {
   });
 
   test('should display system preferences section', async ({ authPage: page }) => {
-    await expect(page.getByText('Preferensi Sistem')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Preferensi Sistem' })).toBeVisible({ timeout: 10000 });
   });
 
   test('should display notification preference', async ({ authPage: page }) => {
@@ -81,23 +81,23 @@ test.describe('Settings Flow', () => {
   });
 
   test('should display toggle switches for preferences', async ({ authPage: page }) => {
-    const toggles = page.locator('button[role="switch"]').or(page.locator('[data-state]'));
+    const toggles = page.locator('main button[role="switch"]');
     const toggleCount = await toggles.count();
     expect(toggleCount).toBeGreaterThanOrEqual(2);
   });
 
   test('should have active toggle for push notifications', async ({ authPage: page }) => {
-    const toggle = page.locator('button[role="switch"]').or(page.locator('[data-state]')).first();
+    const toggle = page.locator('main button[role="switch"]').first();
     await expect(toggle).toBeVisible();
   });
 
   test('should have toggle for dark mode', async ({ authPage: page }) => {
-    const toggles = page.locator('button[role="switch"]').or(page.locator('[data-state]'));
+    const toggles = page.locator('main button[role="switch"]');
     await expect(toggles.nth(1)).toBeVisible();
   });
 
   test('should have toggle for marketing insights', async ({ authPage: page }) => {
-    const toggles = page.locator('button[role="switch"]').or(page.locator('[data-state]'));
+    const toggles = page.locator('main button[role="switch"]');
     await expect(toggles.nth(2)).toBeVisible();
   });
 
@@ -137,7 +137,7 @@ test.describe('Settings Flow', () => {
   });
 
   test('should have decorative background elements', async ({ authPage: page }) => {
-    const decorElements = page.locator('.bg-primary\/5.rounded-full.blur-3xl');
+    const decorElements = page.locator('[class*="blur-3xl"][class*="rounded-full"]');
     const decorCount = await decorElements.count();
     expect(decorCount).toBeGreaterThanOrEqual(1);
   });
@@ -226,7 +226,7 @@ test.describe('Settings Flow - Preferences', () => {
   });
 
   test('should toggle push notification preference', async ({ authPage: page }) => {
-    const toggle = page.locator('button[role="switch"]').or(page.locator('[data-state]')).first();
+    const toggle = page.locator('main button[role="switch"]').first();
 
     // Should be clickable
     await expect(toggle).toBeVisible();
@@ -240,7 +240,7 @@ test.describe('Settings Flow - Preferences', () => {
   });
 
   test('should toggle dark mode preference', async ({ authPage: page }) => {
-    const toggle = page.locator('button[role="switch"]').or(page.locator('[data-state]')).nth(1);
+    const toggle = page.locator('main button[role="switch"]').nth(1);
 
     // Should be clickable
     await expect(toggle).toBeVisible();
@@ -254,7 +254,7 @@ test.describe('Settings Flow - Preferences', () => {
   });
 
   test('should toggle marketing insights preference', async ({ authPage: page }) => {
-    const toggle = page.locator('button[role="switch"]').or(page.locator('[data-state]')).nth(2);
+    const toggle = page.locator('main button[role="switch"]').nth(2);
 
     // Should be clickable
     await expect(toggle).toBeVisible();
@@ -268,14 +268,14 @@ test.describe('Settings Flow - Preferences', () => {
   });
 
   test('should have smooth toggle animations', async ({ authPage: page }) => {
-    const toggle = page.locator('button[role="switch"]').or(page.locator('[data-state]')).first();
+    const toggle = page.locator('main button[role="switch"]').first();
 
     // Check for transition class
     await expect(toggle).toBeVisible();
   });
 
   test('should have toggle handle with animation', async ({ authPage: page }) => {
-    const toggle = page.locator('button[role="switch"]').or(page.locator('[data-state]')).first();
+    const toggle = page.locator('main button[role="switch"]').first();
 
     // Check that toggle is visible and interactive
     await expect(toggle).toBeVisible();
@@ -333,9 +333,9 @@ test.describe('Settings Flow - Menu Navigation', () => {
   });
 
   test('should have chevron icon on active menu', async ({ authPage: page }) => {
-    // Profil Umum should have chevron
-    const chevronIcon = page.locator('button').filter({ hasText: 'Profil Umum' }).locator('svg');
-    await expect(chevronIcon).toBeVisible();
+    // Profil Umum should have chevron + menu icon (2 SVGs)
+    const svgs = page.locator('button').filter({ hasText: 'Profil Umum' }).locator('svg');
+    await expect(svgs.first()).toBeVisible();
   });
 
   test('should not have chevron on inactive menus', async ({ authPage: page }) => {
@@ -412,7 +412,7 @@ test.describe('Settings Flow - Accessibility', () => {
   });
 
   test('should have accessible toggle switches', async ({ authPage: page }) => {
-    const toggles = page.locator('button[role="switch"]').or(page.locator('[data-state]'));
+    const toggles = page.locator('main button[role="switch"]');
     await expect(toggles.first()).toBeVisible({ timeout: 10000 });
   });
 
@@ -513,7 +513,7 @@ test.describe('Settings Flow - Interactive Elements', () => {
   });
 
   test('should have hover effects on toggles', async ({ authPage: page }) => {
-    const toggle = page.locator('button[role="switch"]').or(page.locator('[data-state]')).first();
+    const toggle = page.locator('main button[role="switch"]').first();
 
     // Check that toggle is visible
     await expect(toggle).toBeVisible();

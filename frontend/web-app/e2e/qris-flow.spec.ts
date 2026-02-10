@@ -109,13 +109,15 @@ test.describe('QRIS Flow - Scanner Interaction', () => {
   });
 
   test('should highlight scanner area on hover', async ({ authPage: page }) => {
-    const scannerArea = page.locator('.border-2.border-dashed').first();
+    // Hover on the parent scanner container (not the absolute overlay)
+    const scannerContainer = page.locator('.relative.aspect-square').first();
 
     // Hover over scanner area
-    await scannerArea.hover();
+    await scannerContainer.hover();
 
-    // Check that element exists
-    await expect(scannerArea).toBeVisible({ timeout: 10000 });
+    // Check that the dashed border overlay exists
+    const scannerOverlay = page.locator('.border-2.border-dashed').first();
+    await expect(scannerOverlay).toBeVisible({ timeout: 10000 });
   });
 
   test('should have click handler for camera button', async ({ authPage: page }) => {

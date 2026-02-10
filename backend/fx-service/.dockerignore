@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+README.md
+Dockerfile
+.dockerignore
+
+# Build artifacts
+
+# Dependencies
+node_modules/
+
+# Environment & Secrets
+.env
+.env.*
+*.log
+
+# IDEs
+.idea/
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+*.iml
+
+# Tests
+src/test/
