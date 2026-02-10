@@ -1,8 +1,8 @@
 # 📂 PayU Project Roadmap & Engineering Scorecard
 
-> **Platform Maturity**: 🟢 **95%** | **Production Readiness**: 🟢 **95%** (All P0-P3 + Tier 1-4 + E2E & Compose Fixes)
+> **Platform Maturity**: 🟢 **97%** | **Production Readiness**: 🟢 **97%** (All P0-P3 + Tier 1-4 + E2E 12/12 Green + OCP-002)
 > **Strategic Objective**: Standardize a stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
-> **Last Synchronized**: February 10, 2026 (E2E-FIX-008/009/010 + COMPOSE-004/005 — a11y 18/18, bill-pay 13/13, login 23/23, 10/12 suites green)
+> **Last Synchronized**: February 10, 2026 (E2E-FIX-011/012 + OCP-002 — settings 64/64, QRIS 33/33, 12/12 suites green, 4 .dockerignore)
 
 ---
 
@@ -38,7 +38,7 @@ Audit against the *14 Immutable Laws of PayU*.
 
 ### 🎯 Mission Status: ✅ All P0-P3 + Tier 1-4 + E2E/Compose RESOLVED
 
-**Production Readiness Score: 95/100**
+**Production Readiness Score: 97/100**
 
 | Category | Weight | Score | Weighted |
 | :--- | :--- | :--- | :--- |
@@ -47,17 +47,16 @@ Audit against the *14 Immutable Laws of PayU*.
 | **Frontend Web-App** | 15% | 88/100 | 13.2 |
 | **Frontend Mobile** | 5% | 58/100 | 2.9 |
 | **Testing (Unit+Integration)** | 15% | 78/100 | 11.7 |
-| **E2E Tests (Passing)** | 10% | 90/100 | 9.0 |
+| **E2E Tests (Passing)** | 10% | 98/100 | 9.8 |
 | **Security & Compliance** | 10% | 82/100 | 8.2 |
-| **Infrastructure (OpenShift)** | 10% | 97/100 | 9.7 |
-| **TOTAL** | 100% | — | **95.4 → 95%** |
+| **Infrastructure (OpenShift)** | 10% | 99/100 | 9.9 |
+| **TOTAL** | 100% | — | **97.4 → 97%** |
 
-> *Score improved from 48% → 65% → 78% → 85% → 88% → 91% → 94% → **95%** after E2E-FIX-008/009/010 + COMPOSE-004/005:
-> a11y-audit 18/18 (shared filterMinorA11yIssues for button-name, svg-img-alt, nested-interactive design debt),
-> bill-pay 13/13 (back button scoped to main, Lainnya getByRole), login 23/23 (Password exact match, h1 branding fix),
-> investment 49/49, onboarding 55/55, transfer 36/36, check_ui 25/25, kyc 19/19, registration 21/21, lending 43/43.
-> 10/12 suites 100% green. 377/399 E2E tests pass (94.5%). Remaining: settings-flow 21 fails (API-dependent), qris 1 flaky hover.
-> Infrastructure: 38/38 compose services correctly configured.
+> *Score improved from 48% → 65% → 78% → 85% → 88% → 91% → 94% → 95% → **97%** after E2E-FIX-011/012 + OCP-002:
+> settings-flow 64/64 (placeholder attrs, toggle scoping to main, title/heading/status strict mode, CSS selector),
+> qris-flow 33/33 (hover on parent container instead of absolute overlay),
+> .dockerignore added to ab-testing, backoffice, cms, fx services.
+> **12/12 E2E suites 100% green. 399/399 E2E tests pass (100%). 22/22 .dockerignore files present.**
 
 ---
 
@@ -77,13 +76,13 @@ Audit against the *14 Immutable Laws of PayU*.
 | a11y-audit.spec.ts | 18 | 18 | 0 | ✅ All passing — shared filterMinorA11yIssues (5 design-debt rules) |
 | check_ui.spec.ts | 25 | 25 | 0 | ✅ All passing — console filters, screenshots, visual elements |
 | registration-flow.spec.ts | 21 | 21 | 0 | ✅ All passing |
-| qris-flow.spec.ts | 33 | 32 | 1 | 1 flaky hover highlight test |
-| settings-flow.spec.ts | 64 | 43 | 21 | 21 fails = API-dependent (need live backend for form data) |
-| **TOTAL** | **399** | **377** | **22** | **94.5% pass rate — 10/12 files 100% green** |
+| qris-flow.spec.ts | 33 | 33 | 0 | ✅ All passing — hover on parent container |
+| settings-flow.spec.ts | 64 | 64 | 0 | ✅ All passing — placeholder attrs, toggle scoped to main, heading role |
+| **TOTAL** | **399** | **399** | **0** | **100% pass rate — 12/12 files green 🎉** |
 
-> **Improvement History**: 48% → 65% → 78% → 85% → 88% → 91% → 94% → **95%**
-> E2E: 69 failures → 22 failures (68% reduction). 10/12 suites fully green.
-> Remaining 22 = settings-flow API-dep (21) + qris hover flaky (1).
+> **Improvement History**: 48% → 65% → 78% → 85% → 88% → 91% → 94% → 95% → **97%**
+> E2E: 69 failures → 0 failures (100% pass rate). All 12 suites fully green.
+> Remaining gaps: hexagonal architecture (55%), load testing (0%), DR untested.
 
 ### 🔴 ~~Critical: BFF Proxy Blocks All API-Dependent Tests~~ ✅ FIXED (P25)
 
@@ -798,7 +797,7 @@ Axe `keyboard` rule replaced with valid alternatives in `a11y-audit.spec.ts`. WC
 | ID | Gap | Priority | Affected Services | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **OCP-001** | Hardcoded passwords in application.yml | **P0** | billing, partner, promotion, notification | ✅ FIXED |
-| **OCP-002** | Missing `.dockerignore` files | **P2** | ab-testing, backoffice, cms, fx-service | 🟡 Low risk |
+| **OCP-002** | Missing `.dockerignore` files | **P2** | ab-testing, backoffice, cms, fx-service | ✅ FIXED |
 | **OCP-003** | Hardcoded localhost defaults without container profile | **P1** | 10+ services | ✅ FIXED (container profiles) |
 | **OCP-004** | Hardcoded JWT secret in partner-service | **P0** | partner-service | ✅ FIXED |
 | **OCP-005** | Python services missing OpenShift manifests | **P2** | kyc-service, analytics-service | 🟡 Verify |
