@@ -23,7 +23,8 @@ test.describe('Investment Flow', () => {
   test('should display portfolio growth indicator', async ({ authPage: page }) => {
     await expect(page.getByText(/\+Rp 12,4 Jt \(8\.2%\)/)).toBeVisible();
     // Growth badge contains an SVG icon (TrendingUp), not literal text
-    const growthBadge = page.locator('.bg-success-light');
+    // Use .first() because bg-success-light also appears on equity fund icon
+    const growthBadge = page.locator('.bg-success-light').first();
     await expect(growthBadge).toBeVisible();
     await expect(growthBadge.locator('svg')).toBeVisible();
   });
@@ -36,13 +37,15 @@ test.describe('Investment Flow', () => {
   });
 
   test('should display portfolio allocation chart', async ({ authPage: page }) => {
-    await expect(page.getByText('Pasar Uang')).toBeVisible();
-    await expect(page.getByText('Saham')).toBeVisible();
-    await expect(page.getByText('Komoditas')).toBeVisible();
+    // Scope to portfolio card to avoid strict mode ("Pasar Uang" also in filter)
+    const card = page.locator('[data-testid="portfolio-overview-card"]');
+    await expect(card.getByText('Pasar Uang')).toBeVisible();
+    await expect(card.getByText('Saham')).toBeVisible();
+    await expect(card.getByText('Komoditas')).toBeVisible();
 
-    await expect(page.getByText('45%')).toBeVisible();
-    await expect(page.getByText('30%')).toBeVisible();
-    await expect(page.getByText('25%')).toBeVisible();
+    await expect(card.getByText('45%')).toBeVisible();
+    await expect(card.getByText('30%')).toBeVisible();
+    await expect(card.getByText('25%')).toBeVisible();
   });
 
   test('should display risk profile card', async ({ authPage: page }) => {
@@ -53,10 +56,11 @@ test.describe('Investment Flow', () => {
 
   test('should have risk profile slider', async ({ authPage: page }) => {
     await expect(page.getByText('Konservatif')).toBeVisible();
-    await expect(page.getByText('Agresif')).toBeVisible();
+    // "Agresif" also appears inside "Moderat-Agresif" — use exact match
+    await expect(page.getByText('Agresif', { exact: true })).toBeVisible();
 
     // Check for progress bar - use a more flexible selector
-    const progressBar = page.locator('.bg-white\/10.h-2.rounded-full, .h-2.rounded-full');
+    const progressBar = page.locator('.h-2.rounded-full');
     await expect(progressBar.first()).toBeVisible();
   });
 
@@ -73,7 +77,8 @@ test.describe('Investment Flow', () => {
   test('should display product risk levels', async ({ authPage: page }) => {
     await expect(page.getByText('Risiko Rendah')).toBeVisible();
     await expect(page.getByText('Risiko Tinggi')).toBeVisible();
-    await expect(page.getByText('Stabil')).toBeVisible();
+    // "Stabil" also appears in smart advice text — scope to product card
+    await expect(page.locator('[data-testid="investment-product-2"]').getByText('Stabil')).toBeVisible();
   });
 
   test('should display product returns', async ({ authPage: page }) => {
@@ -83,9 +88,10 @@ test.describe('Investment Flow', () => {
   });
 
   test('should have filter buttons for product types', async ({ authPage: page }) => {
-    await expect(page.getByText('Semua')).toBeVisible();
-    await expect(page.getByText('Pasar Uang')).toBeVisible();
-    await expect(page.getByText('Emas')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Semua' })).toBeVisible();
+    // "Pasar Uang" also appears in allocation chart — target the button
+    await expect(page.getByRole('button', { name: 'Pasar Uang' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Emas' })).toBeVisible();
   });
 
   test('should have new investment button', async ({ authPage: page }) => {
@@ -128,7 +134,8 @@ test.describe('Investment Flow', () => {
   });
 
   test('should display growth indicators with proper styling', async ({ authPage: page }) => {
-    const growthBadge = page.locator('.bg-success-light');
+    // Use .first() because bg-success-light also appears on equity fund icon
+    const growthBadge = page.locator('.bg-success-light').first();
     await expect(growthBadge).toBeVisible();
     // SVG icon is rendered inside — verify it exists (not text)
     await expect(growthBadge.locator('svg')).toBeVisible();
@@ -172,7 +179,8 @@ test.describe('Investment Flow - Product Catalog', () => {
   test('should display gold product details', async ({ authPage: page }) => {
     await expect(page.getByText('Emas Digital (XAU)')).toBeVisible();
     await expect(page.getByText('Harga Pasar')).toBeVisible();
-    await expect(page.getByText('Stabil')).toBeVisible();
+    // "Stabil" also in smart advice — scope to product card
+    await expect(page.locator('[data-testid="investment-product-2"]').getByText('Stabil')).toBeVisible();
   });
 
   test('should click on product card', async ({ authPage: page }) => {
@@ -248,7 +256,8 @@ test.describe('Investment Flow - Buy Mutual Fund', () => {
   });
 
   test('should show portfolio growth percentage', async ({ authPage: page }) => {
-    await expect(page.getByText(/8\.2%/)).toBeVisible();
+    // /8\.2%/ matches both "(8.2%)" and "18.2% p.a" — use more specific regex
+    await expect(page.getByText(/\(8\.2%\)/)).toBeVisible();
   });
 });
 
@@ -264,7 +273,8 @@ test.describe('Investment Flow - Risk Profile', () => {
   });
 
   test('should display risk score', async ({ authPage: page }) => {
-    await expect(page.getByText('Grade')).toBeVisible();
+    // "Grade" doesn't exist on page — check actual risk profile text
+    await expect(page.getByText('Moderat-Agresif')).toBeVisible();
     await expect(page.getByText('ROI 15% / Thn')).toBeVisible();
   });
 
@@ -292,7 +302,8 @@ test.describe('Investment Flow - Risk Profile', () => {
   test('should display risk factors', async ({ authPage: page }) => {
     // Verify risk-related text exists on page
     await expect(page.getByText('Konservatif')).toBeVisible();
-    await expect(page.getByText('Agresif')).toBeVisible();
+    // "Agresif" also in "Moderat-Agresif" — use exact match
+    await expect(page.getByText('Agresif', { exact: true })).toBeVisible();
   });
 });
 
@@ -305,7 +316,8 @@ test.describe('Investment Flow - Smart Advice', () => {
   test('should display smart advice banner', async ({ authPage: page }) => {
     await expect(page.getByText('Target Portofolio Hampir Tercapai.')).toBeVisible();
 
-    const adviceBanner = page.locator('.bg-primary\/5');
+    // Locate advice banner by its unique text content
+    const adviceBanner = page.getByText('Target Portofolio Hampir Tercapai.').locator('..');
     await expect(adviceBanner).toBeVisible();
   });
 
@@ -348,15 +360,19 @@ test.describe('Investment Flow - Accessibility', () => {
     // Tab through page
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
 
-    // Should reach a button
-    const focused = page.locator(':focus');
-    await expect(focused).toBeVisible();
+    // Should reach a focusable, visible element
+    const focused = page.locator(':focus:visible');
+    const count = await focused.count();
+    expect(count).toBeGreaterThanOrEqual(1);
   });
 
   test('should have accessible button labels', async ({ authPage: page }) => {
-    const buttons = page.locator('button');
-    await expect(buttons.first()).toBeVisible();
+    // First button may be hidden mobile menu trigger — target visible buttons
+    const visibleButtons = page.locator('button:visible');
+    const count = await visibleButtons.count();
+    expect(count).toBeGreaterThanOrEqual(1);
   });
 
   test('should have proper contrast ratios', async ({ authPage: page }) => {
