@@ -8,6 +8,18 @@ This directory contains the historical record of architectural decisions made fo
 | :--- | :--- | :--- | :--- |
 | [0000](0000-adr-guidelines.md) | ADR Guidelines | Accepted | 2026-01-28 |
 | [0001](0001-template.md) | ADR Template | Accepted | 2026-01-28 |
+| [0002](0002-spring-boot-for-core-banking.md) | Spring Boot for Core Banking | Accepted | 2026-01-30 |
+| [0003](0003-quarkus-for-supporting-services.md) | Quarkus for Supporting Services | Accepted | 2026-01-30 |
+| [0004](0004-hexagonal-architecture.md) | Hexagonal Architecture | Accepted | 2026-01-30 |
+| [0005](0005-kafka-event-streaming.md) | Kafka Event Streaming | Accepted | 2026-01-30 |
+| [0006](0006-postgresql-primary-database.md) | PostgreSQL Primary Database | Accepted | 2026-01-30 |
+| [0007](0007-database-per-service.md) | Database per Service | Accepted | 2026-01-30 |
+| [0008](0008-resilience-patterns.md) | Resilience Patterns | Accepted | 2026-01-30 |
+| [0009](0009-caching-strategy.md) | Caching Strategy | Accepted | 2026-01-30 |
+| [0010](0010-security-standards.md) | Security Standards | Accepted | 2026-01-30 |
+| [0011](0011-frontend-architecture.md) | Frontend Architecture | Accepted | 2026-01-30 |
+| [0012](0012-container-standardization.md) | Container Standardization | Accepted | 2026-01-30 |
+| [0013](0013-testing-strategy.md) | Testing Strategy | Accepted | 2026-01-30 |
 
 ## 🚀 How to Create a New ADR
 

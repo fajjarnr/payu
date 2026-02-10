@@ -13,9 +13,9 @@
 | **ML/Analytics** | kyc (Python), analytics (Python) | 2 |
 | **Simulators** | bi-fast, dukcapil, qris | 3 |
 
-**Total: 24 services (21 microservices + 3 simulators)**
+**Total: 25 services (22 microservices + 3 simulators)**
 
-> **Port Standard**: All services expose port **8080** inside containers. Refer to `docker-compose.yml` / `docker-compose.test.yml` for host mappings.
+> **Port Standard**: All services expose port **8080** inside containers. Refer to `infrastructure/local-podman/podman-compose.yml` for host mappings.
 
 ---
 

@@ -13,7 +13,7 @@ This guide documents the migration from Docker to Podman for the PayU Digital Ba
 | Compose Files | ✅ Complete | podman-compose.yml created |
 | Quadlet Files | ✅ Complete | Systemd integration files created |
 | Documentation | ✅ Complete | Migration guide and READMEs updated |
-| CI/CD Pipeline | 🔄 In Progress | Tekton pipelines need updates |
+| CI/CD Pipeline | ✅ Complete | Tekton pipelines configured (5 tasks: maven, buildah, deploy, trivy, pytest) |
 
 ## Quick Start
 

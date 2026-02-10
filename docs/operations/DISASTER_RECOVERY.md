@@ -124,10 +124,10 @@ All backups are automated via the `scripts/run_backup.sh` script.
 
 ```bash
 # Backup all databases
-docker exec payu-postgres pg_dumpall -U payu | gzip > /backups/postgres/daily/all_databases_$(date +%Y%m%d_%H%M%S).sql.gz
+podman exec payu-postgres pg_dumpall -U payu | gzip > /backups/postgres/daily/all_databases_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # Backup specific database
-docker exec payu-postgres pg_dump -U payu -Fc payu_account | gzip > /backups/postgres/daily/payu_account_$(date +%Y%m%d_%H%M%S).dump.gz
+podman exec payu-postgres pg_dump -U payu -Fc payu_account | gzip > /backups/postgres/daily/payu_account_$(date +%Y%m%d_%H%M%S).dump.gz
 
 # List available backups
 ls -lh /backups/postgres/daily/
@@ -137,20 +137,20 @@ ls -lh /backups/postgres/daily/
 
 ```bash
 # Trigger immediate snapshot
-docker exec payu-redis redis-cli BGSAVE
+podman exec payu-redis redis-cli BGSAVE
 
 # Wait for save to complete
-docker exec payu-redis redis-cli LASTSAVE
+podman exec payu-redis redis-cli LASTSAVE
 
 # Copy RDB file to backup location
-docker cp payu-redis:/data/dump.rdb /backups/redis/snapshots/dump_$(date +%Y%m%d_%H%M%S).rdb
+podman cp payu-redis:/data/dump.rdb /backups/redis/snapshots/dump_$(date +%Y%m%d_%H%M%S).rdb
 ```
 
 ### Kafka Backup (Manual)
 
 ```bash
 # Export topic data to backup directory
-docker exec payu-kafka kafka-console-consumer \
+podman exec payu-kafka kafka-console-consumer \
   --bootstrap-server localhost:9092 \
   --topic transactions \
   --from-beginning \
@@ -185,33 +185,33 @@ docker exec payu-kafka kafka-console-consumer \
 
 ```bash
 # Stop application services to prevent data corruption
-docker-compose stop account-service transaction-service wallet-service
+podman compose stop account-service transaction-service wallet-service
 
 # Drop existing database (CAUTION!)
-docker exec payu-postgres psql -U payu -c "DROP DATABASE IF EXISTS payu_account;"
+podman exec payu-postgres psql -U payu -c "DROP DATABASE IF EXISTS payu_account;"
 
 # Recreate database
-docker exec payu-postgres psql -U payu -c "CREATE DATABASE payu_account;"
+podman exec payu-postgres psql -U payu -c "CREATE DATABASE payu_account;"
 
 # Restore from backup
 gunzip -c /backups/postgres/daily/payu_account_20250122_020000.dump.gz | \
-  docker exec -i payu-postgres pg_restore -U payu -d payu_account -Fc
+  podman exec -i payu-postgres pg_restore -U payu -d payu_account -Fc
 
 # Restart services
-docker-compose start account-service transaction-service wallet-service
+podman compose start account-service transaction-service wallet-service
 ```
 
 #### Option 2: Point-in-Time Recovery (Production)
 
 ```bash
 # Restore base backup
-docker exec payu-postgres pg_restore -U payu -d payu_account -Fc /backups/postgres/weekly/base_backup.dump
+podman exec payu-postgres pg_restore -U payu -d payu_account -Fc /backups/postgres/weekly/base_backup.dump
 
 # Replay WAL logs to desired time
-docker exec payu-postgres pg_ctl promote -D /var/lib/postgresql/data
+podman exec payu-postgres pg_ctl promote -D /var/lib/postgresql/data
 
 # Verify recovery
-docker exec payu-postgres psql -U payu -d payu_account -c "SELECT now();"
+podman exec payu-postgres psql -U payu -d payu_account -c "SELECT now();"
 ```
 
 #### Option 3: Partial Restore (Specific Tables)
@@ -221,30 +221,30 @@ docker exec payu-postgres psql -U payu -d payu_account -c "SELECT now();"
 pg_restore -U payu -Fc -t accounts -f accounts_table.sql /backups/postgres/daily/payu_account_20250122_020000.dump
 
 # Import into database
-docker exec -i payu-postgres psql -U payu -d payu_account < accounts_table.sql
+podman exec -i payu-postgres psql -U payu -d payu_account < accounts_table.sql
 ```
 
 ### Redis Restore
 
 ```bash
 # Stop Redis service
-docker stop payu-redis
+podman stop payu-redis
 
 # Copy backup RDB file to data directory
-cp /backups/redis/snapshots/dump_20250122_100000.rdb /var/lib/docker/volumes/payu_redis_data/_data/dump.rdb
+cp /backups/redis/snapshots/dump_20250122_100000.rdb /var/lib/containers/storage/volumes/payu_redis_data/_data/dump.rdb
 
 # Start Redis service
-docker start payu-redis
+podman start payu-redis
 
 # Verify restore
-docker exec payu-redis redis-cli DBSIZE
+podman exec payu-redis redis-cli DBSIZE
 ```
 
 ### Kafka Restore
 
 ```bash
 # Create new topic or reset existing offsets
-docker exec payu-kafka kafka-topics \
+podman exec payu-kafka kafka-topics \
   --bootstrap-server localhost:9092 \
   --create \
   --topic transactions-restored \
@@ -252,12 +252,12 @@ docker exec payu-kafka kafka-topics \
   --replication-factor 1
 
 # Import messages from backup
-docker exec -i payu-kafka kafka-console-producer \
+podman exec -i payu-kafka kafka-console-producer \
   --bootstrap-server localhost:9092 \
   --topic transactions-restored < /backups/kafka/topics/transactions_20250122_020000.json
 
 # Verify restore
-docker exec payu-kafka kafka-console-consumer \
+podman exec payu-kafka kafka-console-consumer \
   --bootstrap-server localhost:9092 \
   --topic transactions-restored \
   --from-beginning \
@@ -299,14 +299,14 @@ pytest tests/infrastructure/test_backup_restore.py -vv
 ls -lh /backups/postgres/daily/
 
 # 2. Verify backup file is valid
-docker exec payu-postgres pg_restore -l /backups/postgres/daily/payu_account_20250122_020000.dump.gz | head
+podman exec payu-postgres pg_restore -l /backups/postgres/daily/payu_account_20250122_020000.dump.gz | head
 
 # 3. Record count verification
 # Source:
-docker exec payu-postgres psql -U payu -d payu_account -c "SELECT COUNT(*) FROM accounts;"
+podman exec payu-postgres psql -U payu -d payu_account -c "SELECT COUNT(*) FROM accounts;"
 
 # After restore:
-docker exec payu-postgres psql -U payu -d payu_account_restored -c "SELECT COUNT(*) FROM accounts;"
+podman exec payu-postgres psql -U payu -d payu_account_restored -c "SELECT COUNT(*) FROM accounts;"
 ```
 
 #### Redis Verification
@@ -317,10 +317,10 @@ ls -lh /backups/redis/snapshots/
 
 # 2. Key count verification
 # Source:
-docker exec payu-redis redis-cli DBSIZE
+podman exec payu-redis redis-cli DBSIZE
 
 # After restore:
-docker exec payu-redis-restored redis-cli DBSIZE
+podman exec payu-redis-restored redis-cli DBSIZE
 ```
 
 #### Kafka Verification
@@ -331,11 +331,11 @@ ls -lh /backups/kafka/topics/
 
 # 2. Message count verification
 # Source:
-docker exec payu-kafka kafka-run-class kafka.tools.GetOffsetShell \
+podman exec payu-kafka kafka-run-class kafka.tools.GetOffsetShell \
   --broker-list localhost:9092 --topic transactions --time -1
 
 # After restore:
-docker exec payu-kafka kafka-run-class kafka.tools.GetOffsetShell \
+podman exec payu-kafka kafka-run-class kafka.tools.GetOffsetShell \
   --broker-list localhost:9092 --topic transactions-restored --time -1
 ```
 

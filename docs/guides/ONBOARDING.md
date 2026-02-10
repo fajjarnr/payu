@@ -293,8 +293,8 @@ npm -v         # Expected: 10.x.x
 # 4. Verify Python
 python3 --version  # Expected: Python 3.12.x
 
-# 5. Verify Docker
-docker ps       # Should list running containers
+# 5. Verify Podman
+podman ps       # Should list running containers
 
 # 6. Verify Infrastructure
 curl -s http://localhost:5432 > /dev/null && echo "PostgreSQL OK"

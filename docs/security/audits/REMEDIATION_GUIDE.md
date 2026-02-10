@@ -3,6 +3,11 @@
 > Quick reference guide for addressing security audit findings
 >
 > **Last Updated**: 2025-01-30
+> **⚠️ Note (Feb 2026)**: This guide was created from the Jan 2025 audit. Several items have since been addressed:
+> - Hardcoded credentials (items #10-15): ✅ Fixed in P0-SEC-002 (env var patterns)
+> - security-starter now includes field encryption with key rotation and PBKDF2
+> - BFF pattern with httpOnly cookies replaces localStorage JWT
+> - Remaining items (PII encryption, CVV removal, API masking) should be verified against current codebase
 
 ---
 

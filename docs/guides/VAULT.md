@@ -10,7 +10,7 @@ Vault provides secure secret management, allowing applications to retrieve sensi
 
 - **Vault Server**: Stores and manages secrets securely
 - **Spring Cloud Vault**: Enables Spring Boot applications to retrieve secrets from Vault
-- **Docker Compose**: Runs Vault in development environment
+- **Podman Compose**: Runs Vault in development environment
 - **Environment Fallback**: Applications can fallback to environment variables if Vault is unavailable
 
 ## Local Development
@@ -18,7 +18,7 @@ Vault provides secure secret management, allowing applications to retrieve sensi
 ### Starting Vault
 
 ```bash
-docker-compose up -d vault
+podman compose up -d vault
 ```
 
 ### Initializing Vault
@@ -94,7 +94,7 @@ vault kv put secret/<service-name>/<category> \
     key2="value2"
 ```
 
-2. Update the initialization script (`infrastructure/docker/init-vault.sh`) with the new secret
+2. Update the initialization script (`infrastructure/containers/init-vault.sh`) with the new secret
 
 3. Reference the secret in your application:
 
@@ -144,7 +144,7 @@ See `infrastructure/openshift/` for OpenShift-specific configuration.
 
 Check Vault is running:
 ```bash
-docker ps | grep vault
+podman ps | grep vault
 ```
 
 Check Vault status:

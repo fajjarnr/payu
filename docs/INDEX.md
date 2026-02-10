@@ -9,14 +9,14 @@
 | `architecture/` | Technical design & C4 diagrams | ARCHITECTURE.md, SERVICE_CATALOG.md, EVENT_CATALOG.md, CICD-MONITORING-GUIDE.md |
 | `product/` | Product requirements & features | PRD.md |
 | `api/` | API documentation | API_STANDARDS.md |
-| `guides/` | Development guides & AI skills | GEMINI.md, CONTRIBUTING.md, AGENT_SKILLS_GUIDE.md, ONBOARDING.md, TDD_QUICK_REFERENCE.md, REMEDIATION_PLAYBOOK.md |
-| `operations/` | Runbooks & disaster recovery | DISASTER_RECOVERY.md, LOKISTACK.md, runbooks/ |
-| `security/` | Security policies & runbooks | SECURITY_RUNBOOK.md, PENTEST_REPORT.md |
+| `guides/` | Development guides & AI skills | GEMINI.md, CONTRIBUTING.md, AGENT_SKILLS_GUIDE.md, ONBOARDING.md, TDD_QUICK_REFERENCE.md, DATABASE_CACHE_OPTIMIZATION.md, VAULT.md, WEBHOOK_HANDLING.md, JAVA_CONTAINER_STRATEGY.md, LESSONS.md |
+| `operations/` | Runbooks & disaster recovery | DISASTER_RECOVERY.md, LOKISTACK.md, KAFKA_TOPIC_STANDARDS.md, PODMAN_MIGRATION_GUIDE.md, runbooks/ |
+| `security/` | Security policies & runbooks | SECURITY_RUNBOOK.md, PENTEST_REPORT.md, audits/ |
 | `compliance/` | Regulatory compliance | OJK_BI_REGULATORY_AUDIT.md |
 | `qa/` | Testing strategy & reports | QA_STRATEGY.md, JACOCO_SETUP.md |
 | `reports/` | Test reports | QA_TEST_REPORT.md |
 | `roadmap/` | Project roadmap & todos | TODOS.md |
-| `adr/` | Architecture decision records | 0000-0007 (ADR index) |
+| `adr/` | Architecture decision records | 0000-0013 (ADR index) |
 | `test-improvements.md` | E2E test fixes summary | test-improvements.md |
 
 ---
@@ -31,7 +31,7 @@
 - **[CONTRIBUTING.md](guides/CONTRIBUTING.md)** - Git workflow, commit conventions, PR process
 - **[ONBOARDING.md](guides/ONBOARDING.md)** - Developer onboarding guide
 - **[GEMINI.md](guides/GEMINI.md)** - AI Assistant guidelines (mirrored in `CLAUDE.md`)
-- **[REMEDIATION_PLAYBOOK.md](guides/REMEDIATION_PLAYBOOK.md)** - Production readiness remediation plan with code examples
+- **[REMEDIATION_PLAYBOOK.md](guides/REMEDIATION_PLAYBOOK.md)** - Production readiness remediation plan (historical — all items resolved)
 - **[LESSONS.md](guides/LESSONS.md)** - Lessons learned & implementation patterns
 - **[QA_STRATEGY.md](qa/QA_STRATEGY.md)** - Testing standards, TDD workflow, coverage thresholds
 
@@ -57,7 +57,6 @@
 - **[QA_STRATEGY.md](qa/QA_STRATEGY.md)** - Testing philosophy, test pyramid, patterns
 - **[JACOCO_SETUP.md](qa/JACOCO_SETUP.md)** - Code coverage setup
 - **[QA_TEST_REPORT.md](reports/QA_TEST_REPORT.md)** - Latest test execution reports
-- **[test-improvements.md](test-improvements.md)** - E2E fixes summary and remaining work
 
 ### For AI/ML Engineers
 - **[AGENT_SKILLS_GUIDE.md](guides/AGENT_SKILLS_GUIDE.md)** - AI Skills & Agents catalog
@@ -77,20 +76,29 @@ docs/
 │   └── PRD.md                       # Product Requirements Document
 │
 ├── guides/
-│   ├── GEMINI.md                    # AI Assistant Guidelines (CLAUDE.md alias)
+│   ├── GEMINI.md                    # AI Assistant Guidelines
 │   ├── CONTRIBUTING.md              # Git workflow & commit conventions
 │   ├── AGENT_SKILLS_GUIDE.md        # AI Skills & Agents catalog
 │   ├── TDD_QUICK_REFERENCE.md       # TDD quick reference
 │   ├── DATABASE_CACHE_OPTIMIZATION.md  # DB & Cache optimization guide
-│   └── VAULT.md                     # HashiCorp Vault setup
+│   ├── VAULT.md                     # HashiCorp Vault setup
+│   ├── WEBHOOK_HANDLING.md          # Webhook framework guide
+│   ├── JAVA_CONTAINER_STRATEGY.md   # Java container build strategy
+│   ├── LESSONS.md                   # Lessons learned & patterns
+│   ├── ONBOARDING.md                # Developer onboarding
+│   └── REMEDIATION_PLAYBOOK.md      # Remediation plan (historical)
 │
 ├── operations/
 │   ├── DISASTER_RECOVERY.md         # Backup & restore procedures
-│   └── LOKISTACK.md                 # Logging & monitoring (LokiStack)
+│   ├── LOKISTACK.md                 # Logging & monitoring (LokiStack)
+│   ├── KAFKA_TOPIC_STANDARDS.md     # Kafka naming & partitioning
+│   ├── PODMAN_MIGRATION_GUIDE.md    # Docker → Podman migration
+│   └── runbooks/                    # Operational runbooks
 │
 ├── security/
 │   ├── SECURITY_RUNBOOK.md          # Security incident response
-│   └── PENTEST_REPORT.md            # Penetration testing results
+│   ├── PENTEST_REPORT.md            # Penetration testing results
+│   └── audits/                      # Data protection audit findings
 │
 ├── compliance/
 │   └── OJK_BI_REGULATORY_AUDIT.md   # OJK & BI regulatory compliance
@@ -102,15 +110,16 @@ docs/
 ├── reports/
 │   └── QA_TEST_REPORT.md            # Latest test execution reports
 │
+├── archive/                         # Historical/deprecated docs
+│
 ├── roadmap/
 │   └── TODOS.md                     # Project roadmap & task tracking
-│
-├── test-improvements.md             # E2E test fixes summary
 │
 └── adr/
     ├── README.md                    # ADR index
     ├── 0000-adr-guidelines.md       # ADR writing guidelines
-    └── 0001-template.md             # ADR template
+    ├── 0001-template.md             # ADR template
+    └── 0002-0013                    # Accepted architectural decisions
 ```
 
 ---
@@ -122,7 +131,7 @@ docs/
 - [SERVICE_CATALOG.md](architecture/SERVICE_CATALOG.md) - Complete service inventory
 - [EVENT_CATALOG.md](architecture/EVENT_CATALOG.md) - Kafka topics and event schemas
 - [API_STANDARDS.md](api/API_STANDARDS.md) - REST API naming & conventions
-- [ADR Index](adr/README.md) - Architecture Decision Records (0002-0007)
+- **[ADR Index](adr/README.md)** - Architecture Decision Records (0002-0013)
 - [ARCHITECTURE.md](architecture/ARCHITECTURE.md#3-microservices-architecture) - Service specifications
 - [ARCHITECTURE.md](architecture/ARCHITECTURE.md#4-event-driven-architecture) - Event streaming (Kafka)
 - [ARCHITECTURE.md](architecture/ARCHITECTURE.md#5-data-architecture) - Database strategy
@@ -175,4 +184,4 @@ docs/
 
 ---
 
-_Last Updated: February 4, 2026_
+_Last Updated: February 10, 2026_

@@ -141,7 +141,7 @@ podman inspect payu-account-service | jq '.[0].State.Health'
 # 2. Configuration error
 # 3. Out of memory
 
-# Try increasing memory limit in docker-compose.yml
+# Try increasing memory limit in podman-compose.yml
 # Then rebuild
 podman-compose up -d --force-recreate <service>
 ```
@@ -155,7 +155,7 @@ podman-compose up -d --force-recreate <service>
 # Check container limits
 podman inspect payu-account-service | jq '.[0].HostConfig.Memory'
 
-# Increase in docker-compose.yml:
+# Increase in podman-compose.yml:
 # services:
 #   account-service:
 #     mem_limit: 2g  # Increase from 1g
@@ -270,7 +270,7 @@ podman exec payu-redis redis-cli ping
 # Check REDIS_HOST env var
 podman exec payu-account-service printenv | grep REDIS
 
-# Fix: Add to docker-compose.yml
+# Fix: Add to podman-compose.yml
 # environment:
 #   REDIS_HOST: redis
 #   REDIS_PORT: 6379
@@ -353,7 +353,7 @@ mvn idea:idea  # or mvn eclipse:eclipse
 **Solutions**:
 ```bash
 # Check build context
-# In docker-compose.yml:
+# In podman-compose.yml:
 # build:
 #   context: ./backend  # Should be parent of all services
 #   dockerfile: account-service/Dockerfile
@@ -466,7 +466,7 @@ sudo sysctl -p
 #     readinessstate:
 #       enabled: false  # Disable if causing delays
 
-# Increase startup timeout in docker-compose.yml
+# Increase startup timeout in podman-compose.yml
 # healthcheck:
 #   start_period: 60s  # Increase from 30s
 
@@ -484,7 +484,7 @@ podman logs payu-account-service -f
 podman stats --no-stream
 
 # Tune JVM settings
-# In docker-compose.yml:
+# In podman-compose.yml:
 # JAVA_OPTS: "-XX:MaxRAMPercentage:60.0"
 
 # Check for memory leaks
@@ -527,7 +527,7 @@ sudo netstat -tulpn | grep 8001
 # Stop conflicting service
 sudo systemctl stop postgresql  # If local PostgreSQL conflicts
 
-# Or change port in docker-compose.yml
+# Or change port in podman-compose.yml
 # ports:
 #   - "8002:8080"  # Use different host port
 ```

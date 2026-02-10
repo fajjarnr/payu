@@ -149,7 +149,6 @@ payu/
 │   ├── setup.sh                # Full environment setup
 │   ├── setup-dev.sh            # Quick start
 │   └── verify-env.sh           # Health verification
-├── docker-compose.yml          # Local development compose
 └── pom.xml                     # Parent POM
 ```
 
@@ -393,7 +392,7 @@ podman logs payu-postgres -f
 # Check container memory limits
 podman inspect payu-account-service | jq '.[0].HostConfig.Memory'
 
-# Increase limit in docker-compose.yml
+# Increase limit in podman-compose.yml
 # Then restart
 podman-compose up -d --force-recreate
 ```

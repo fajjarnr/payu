@@ -6,6 +6,7 @@
 > **Auditor**: Compliance Auditor Agent
 > **Classification**: Confidential
 > **Version**: 1.0
+> **⚠️ Note (Feb 2026)**: This audit is from Jan 2025. Many findings have since been addressed by security-starter (field encryption, PBKDF2 key derivation, key rotation), BFF pattern (httpOnly cookies), and credential cleanup (P0-SEC-002). A re-audit against current codebase is recommended to update finding statuses.
 
 ---
 

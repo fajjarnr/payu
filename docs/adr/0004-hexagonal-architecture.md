@@ -57,18 +57,9 @@ PayU platform needs to maintain clean separation between business logic and tech
 
 ## Decision
 
-**Choose Hexagonal Architecture** for all Core Banking services with complex domain logic:
-- account-service
-- transaction-service
-- wallet-service
-- investment-service
-- lending-service
-- fx-service
+**Choose Hexagonal Architecture** for all 19 Java/Quarkus microservices.
 
-**Use Layered Architecture** for simpler services:
-- notification-service (mainly message sending)
-- cms-service (content CRUD)
-- ab-testing-service (feature flag CRUD)
+> **Amendment (Feb 10, 2026)**: Originally scoped to 6 core services only. After TD-ARCH-004 refactoring (Batches 1-3), all 19 services now use hexagonal architecture — 100% compliance. The simpler services (notification, cms, ab-testing, etc.) also benefited from clear port/adapter separation for testability.
 
 ## Rationale
 

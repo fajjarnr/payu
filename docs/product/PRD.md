@@ -354,15 +354,22 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 | `kyc-service` | Python FastAPI 3.12 | OCR, liveness detection ML (UBI-based) |
 | `analytics-service` | Python FastAPI 3.12 | User insights, ML recommendations (UBI-based) |
 
-#### 14.1.2 Upcoming Services (Roadmap)
+#### 14.1.2 ~~Upcoming Services~~ All Implemented (Feb 2026)
 
-| Service | Category | Domain | Priority |
-|---------|----------|--------|----------|
-| `investment-service` | Financial | Digital Deposits, Mutual Funds, Gold | Phase 2/3 |
-| `lending-service` | Financial | Personal Loan, PayLater, Credit Underwriting | Phase 3/4 |
-| `promotion-service` | Engagement | Rewards, Cashback, Referral, Loyalty Points | Phase 2 |
-| `backoffice-service` | Operations | Manual KYC Review, Fraud Monitoring, Customer Ops | Operational |
-| `partner-service` | Ecosystem | B2B Standard API (SNAP BI), Merchant Portal | Ecosystem |
+| Service | Category | Domain | Status |
+|---------|----------|--------|--------|
+| `investment-service` | Financial | Digital Deposits, Mutual Funds, Gold | ✅ Live |
+| `lending-service` | Financial | Personal Loan, PayLater, Credit Underwriting | ✅ Live |
+| `promotion-service` | Engagement | Rewards, Cashback, Referral, Loyalty Points | ✅ Live |
+| `backoffice-service` | Operations | Manual KYC Review, Fraud Monitoring, Customer Ops | ✅ Live |
+| `partner-service` | Ecosystem | B2B Standard API (SNAP BI), Merchant Portal | ✅ Live |
+| `support-service` | Support | Customer support, ticketing, agent training | ✅ Live |
+| `compliance-service` | Compliance | AML, regulatory audit, GDPR | ✅ Live |
+| `statement-service` | Financial | PDF e-statement generation | ✅ Live |
+| `cms-service` | Platform | Banners, promos, dynamic content | ✅ Live |
+| `ab-testing-service` | Platform | UI/Feature experimentation | ✅ Live |
+| `fx-service` | Financial | Currency exchange rates & conversion | ✅ Live |
+| `api-portal-service` | Platform | Centralized OpenAPI docs & sandbox | ✅ Live |
 
 ### 14.2 Infrastructure
 
