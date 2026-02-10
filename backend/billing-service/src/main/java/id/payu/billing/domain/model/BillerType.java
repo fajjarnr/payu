@@ -1,4 +1,4 @@
-package id.payu.billing.domain;
+package id.payu.billing.domain.model;
 
 /**
  * Enum representing available billers.

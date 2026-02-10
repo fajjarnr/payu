@@ -1,6 +1,6 @@
 package id.payu.billing.resource;
 
-import id.payu.billing.client.WalletClient;
+import id.payu.billing.adapter.client.WalletClient;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;

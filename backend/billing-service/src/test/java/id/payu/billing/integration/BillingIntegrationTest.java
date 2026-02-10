@@ -1,6 +1,6 @@
 package id.payu.billing.integration;
 
-import id.payu.billing.client.WalletClient;
+import id.payu.billing.adapter.client.WalletClient;
 import id.payu.billing.dto.CreatePaymentRequest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;

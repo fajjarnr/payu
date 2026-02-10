@@ -1,4 +1,4 @@
-package id.payu.billing.client;
+package id.payu.billing.adapter.client;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

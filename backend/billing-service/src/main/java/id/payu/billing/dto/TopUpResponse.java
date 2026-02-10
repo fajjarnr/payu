@@ -1,6 +1,6 @@
 package id.payu.billing.dto;
 
-import id.payu.billing.domain.BillPayment;
+import id.payu.billing.domain.model.BillPayment;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;

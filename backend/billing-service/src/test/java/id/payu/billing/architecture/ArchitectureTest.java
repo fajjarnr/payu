@@ -12,14 +12,14 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architecture Tests for Billing Service (Spring Boot).
- * 
+ * Architecture Tests for Billing Service (Spring Boot) — Hexagonal Architecture.
+ *
  * Enforces:
- * - Layered architecture boundaries
- * - Naming conventions
- * - Domain isolation
+ * - Ports & Adapters (hexagonal) layer boundaries
+ * - Domain isolation from frameworks
+ * - Naming conventions for each layer
  */
-@DisplayName("Architecture Rules - Billing Service")
+@DisplayName("Architecture Rules - Billing Service (Hexagonal)")
 class ArchitectureTest {
 
     private static JavaClasses importedClasses;
@@ -32,29 +32,43 @@ class ArchitectureTest {
     }
 
     @Nested
-    @DisplayName("Layered Architecture")
-    class LayeredArchitectureRules {
+    @DisplayName("Hexagonal Architecture")
+    class HexagonalArchitectureRules {
 
         @Test
-        @DisplayName("should follow layered architecture pattern")
-        void shouldFollowLayeredArchitecture() {
+        @DisplayName("should follow hexagonal (ports & adapters) architecture pattern")
+        void shouldFollowHexagonalArchitecture() {
             layeredArchitecture()
                     .consideringAllDependencies()
-                    .layer("Resource").definedBy("..resource..")
-                    .layer("Service").definedBy("..service..")
+                    // Adapter layers (driving / driven)
+                    .layer("Adapter.Web").definedBy("..adapter.web..")
+                    .layer("Adapter.Client").definedBy("..adapter.client..")
+                    .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
+                    .layer("Adapter.Messaging").definedBy("..adapter.messaging..")
+                    // Application layer (use-case orchestration)
+                    .layer("Application").definedBy("..application..")
+                    // Domain layer (model + ports)
                     .layer("Domain").definedBy("..domain..")
-                    .layer("Client").definedBy("..client..")
+                    // Cross-cutting
+                    .layer("Config").definedBy("..config..")
                     .layer("DTO").definedBy("..dto..")
-                    
-                    // Resource layer is entry point
-                    .whereLayer("Resource").mayNotBeAccessedByAnyLayer()
-                    // Service layer accessed by Resource
-                    .whereLayer("Service").mayOnlyBeAccessedByLayers("Resource")
-                    // Domain layer can be accessed by all business layers
-                    .whereLayer("Domain").mayOnlyBeAccessedByLayers("Service", "Resource", "DTO")
-                    // Client layer for external calls (wallet-service)
-                    .whereLayer("Client").mayOnlyBeAccessedByLayers("Service")
-                    
+                    .layer("Exception").definedBy("..exception..")
+
+                    // Driving adapters (Web) are entry points — not accessed by other layers
+                    .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
+                    // Application layer accessed only by driving adapters
+                    .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter.Web")
+                    // Domain layer is the core — accessed by Application + Adapters
+                    .whereLayer("Domain").mayOnlyBeAccessedByLayers(
+                            "Application",
+                            "Adapter.Web", "Adapter.Client", "Adapter.Persistence", "Adapter.Messaging",
+                            "DTO", "Exception"
+                    )
+                    // Driven adapters implement domain ports
+                    .whereLayer("Adapter.Client").mayOnlyBeAccessedByLayers("Application")
+                    .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
+                    .whereLayer("Adapter.Messaging").mayOnlyBeAccessedByLayers("Application")
+
                     .check(importedClasses);
         }
     }
@@ -64,27 +78,27 @@ class ArchitectureTest {
     class DomainIsolationRules {
 
         @Test
-        @DisplayName("domain should not depend on external frameworks except JPA")
-        void domainShouldNotDependOnExternalFrameworks() {
+        @DisplayName("domain should not depend on adapters, config, or Spring")
+        void domainShouldNotDependOnInfrastructure() {
             noClasses()
                     .that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat()
                     .resideInAnyPackage(
-                            "..resource..",
-                            "..client..",
+                            "..adapter..",
+                            "..config..",
                             "org.springframework.."
                     )
-                    .because("Domain layer must be independent of infrastructure concerns")
+                    .because("Domain layer must be independent of infrastructure concerns (Hexagonal rule)")
                     .check(importedClasses);
         }
 
         @Test
-        @DisplayName("DTOs should not depend on services")
+        @DisplayName("DTOs should not depend on application services")
         void dtosShouldNotDependOnServices() {
             noClasses()
                     .that().resideInAPackage("..dto..")
                     .should().dependOnClassesThat()
-                    .resideInAPackage("..service..")
+                    .resideInAPackage("..application..")
                     .because("DTOs should be data transfer objects without business logic dependencies")
                     .check(importedClasses);
         }
@@ -95,22 +109,22 @@ class ArchitectureTest {
     class NamingConventionRules {
 
         @Test
-        @DisplayName("resources should have Resource suffix")
-        void resourcesShouldHaveResourceSuffix() {
+        @DisplayName("web adapter classes should have Controller suffix")
+        void webAdaptersShouldHaveControllerSuffix() {
             classes()
-                    .that().resideInAPackage("..resource..")
+                    .that().resideInAPackage("..adapter.web..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
-                    .should().haveSimpleNameEndingWith("Resource")
-                    .because("JAX-RS resource classes should follow naming convention")
+                    .should().haveSimpleNameEndingWith("Controller")
+                    .because("REST controller classes should follow naming convention")
                     .check(importedClasses);
         }
 
         @Test
-        @DisplayName("services should have Service suffix")
+        @DisplayName("application services should have Service suffix")
         void servicesShouldHaveServiceSuffix() {
             classes()
-                    .that().resideInAPackage("..service..")
+                    .that().resideInAPackage("..application.service..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Service")
@@ -119,13 +133,25 @@ class ArchitectureTest {
         }
 
         @Test
-        @DisplayName("clients should have Client suffix")
-        void clientsShouldHaveClientSuffix() {
+        @DisplayName("persistence adapters should have Adapter or Repository suffix")
+        void persistenceAdaptersShouldFollowNaming() {
             classes()
-                    .that().resideInAPackage("..client..")
+                    .that().resideInAPackage("..adapter.persistence..")
                     .and().areTopLevelClasses()
-                    .should().haveSimpleNameEndingWith("Client")
-                    .because("REST client interfaces should follow naming convention")
+                    .should().haveSimpleNameEndingWith("Adapter")
+                    .orShould().haveSimpleNameEndingWith("Repository")
+                    .because("Persistence adapter classes should follow naming convention")
+                    .check(importedClasses);
+        }
+
+        @Test
+        @DisplayName("ports should be interfaces")
+        void portsShouldBeInterfaces() {
+            classes()
+                    .that().resideInAPackage("..domain.port..")
+                    .and().areTopLevelClasses()
+                    .should().beInterfaces()
+                    .because("Ports define contracts and must be interfaces")
                     .check(importedClasses);
         }
     }
@@ -137,11 +163,9 @@ class ArchitectureTest {
         @Test
         @DisplayName("should use constructor injection (Spring best practice)")
         void shouldPreferConstructorInjection() {
-            // This is a relaxed check, but encourages constructor injection
-            // We'll just check that @jakarta.inject.Inject is NOT used (Quarkus/CDI)
             noFields()
                     .should().beAnnotatedWith("jakarta.inject.Inject")
-                    .because("This is a Spring Boot service - avoid using Quarkus @Inject")
+                    .because("This is a Spring Boot service — avoid using Quarkus @Inject")
                     .check(importedClasses);
         }
     }
@@ -149,14 +173,14 @@ class ArchitectureTest {
     @Nested
     @DisplayName("Persistence Rules")
     class PersistenceRules {
- 
+
         @Test
-        @DisplayName("Repositories should be in repository package")
-        void repositoriesShouldBeInRepositoryPackage() {
+        @DisplayName("Repositories should be in adapter.persistence package")
+        void repositoriesShouldBeInPersistencePackage() {
             classes()
                     .that().areAssignableTo(org.springframework.data.repository.Repository.class)
-                    .should().resideInAPackage("..repository..")
-                    .because("Repositories are infrastructure concerns for data access")
+                    .should().resideInAPackage("..adapter.persistence..")
+                    .because("Repositories are driven adapter infrastructure concerns")
                     .check(importedClasses);
         }
     }

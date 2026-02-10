@@ -1,6 +1,6 @@
 package id.payu.billing.dto;
 
-import id.payu.billing.domain.BillerType;
+import id.payu.billing.domain.model.BillerType;
 import java.math.BigDecimal;
 import java.util.List;
 

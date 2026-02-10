@@ -1,6 +1,6 @@
-package id.payu.billing.repository;
+package id.payu.billing.adapter.persistence.repository;
 
-import id.payu.billing.domain.BillPayment;
+import id.payu.billing.domain.model.BillPayment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

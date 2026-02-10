@@ -1,7 +1,7 @@
-package id.payu.billing.controller;
+package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
-import id.payu.billing.domain.BillerType;
+import id.payu.billing.domain.model.BillerType;
 import id.payu.billing.dto.BillerDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

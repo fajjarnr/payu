@@ -1,10 +1,11 @@
-package id.payu.billing.service;
+package id.payu.billing.application.service;
 
-import id.payu.billing.client.WalletClient;
-import id.payu.billing.domain.BillPayment;
-import id.payu.billing.domain.BillerType;
+import id.payu.billing.domain.model.BillPayment;
+import id.payu.billing.domain.model.BillerType;
+import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
+import id.payu.billing.domain.port.out.PaymentEventPort;
+import id.payu.billing.domain.port.out.WalletPort;
 import id.payu.billing.dto.TopUpRequest;
-import id.payu.billing.repository.BillPaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import id.payu.outbox.service.OutboxService;
 
 import java.math.BigDecimal;
 
@@ -30,17 +30,17 @@ class TopUpServiceTest {
     PaymentService paymentService;
  
     @Mock
-    BillPaymentRepository billPaymentRepository;
+    BillPaymentPersistencePort persistencePort;
  
     @Mock
-    WalletClient walletClient;
+    WalletPort walletPort;
  
     @Mock
-    OutboxService outboxService;
+    PaymentEventPort eventPort;
 
     @BeforeEach
     void setup() {
-        lenient().when(billPaymentRepository.save(any(BillPayment.class)))
+        lenient().when(persistencePort.save(any(BillPayment.class)))
                 .thenAnswer(invocation -> {
                     BillPayment p = invocation.getArgument(0);
                     if (p.getId() == null) {
@@ -67,21 +67,21 @@ class TopUpServiceTest {
                 new BigDecimal("100000")
             );
 
-            when(walletClient.reserveBalance(eq("account-123"), any()))
-                .thenReturn(new WalletClient.ReserveResponse("res-123", "account-123", "ref-123", "RESERVED"));
+            when(walletPort.reserveBalance(eq("account-123"), any(BigDecimal.class), any(String.class)))
+                .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals("account-123", payment.accountId);
-            assertEquals(BillerType.GOPAY, payment.billerType);
-            assertEquals("08123456789", payment.customerId);
-            assertEquals(new BigDecimal("100000"), payment.amount);
-            assertEquals(BillPayment.PaymentStatus.COMPLETED, payment.status);
-            assertNotNull(payment.referenceNumber);
-            assertTrue(payment.referenceNumber.startsWith("BILL"));
+            assertEquals("account-123", payment.getAccountId());
+            assertEquals(BillerType.GOPAY, payment.getBillerType());
+            assertEquals("08123456789", payment.getCustomerId());
+            assertEquals(new BigDecimal("100000"), payment.getAmount());
+            assertEquals(BillPayment.PaymentStatus.COMPLETED, payment.getStatus());
+            assertNotNull(payment.getReferenceNumber());
+            assertTrue(payment.getReferenceNumber().startsWith("BILL"));
             
-            verify(walletClient).reserveBalance(eq("account-123"), any());
+            verify(walletPort).reserveBalance(eq("account-123"), any(BigDecimal.class), any(String.class));
         }
 
         @Test
@@ -94,14 +94,14 @@ class TopUpServiceTest {
                 new BigDecimal("50000")
             );
 
-            when(walletClient.reserveBalance(eq("account-456"), any()))
-                .thenReturn(new WalletClient.ReserveResponse("res-456", "account-456", "ref-456", "RESERVED"));
+            when(walletPort.reserveBalance(eq("account-456"), any(BigDecimal.class), any(String.class)))
+                .thenReturn(new WalletPort.ReserveResult("res-456", "RESERVED"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals(BillerType.OVO, payment.billerType);
-            assertEquals(BillPayment.PaymentStatus.COMPLETED, payment.status);
+            assertEquals(BillerType.OVO, payment.getBillerType());
+            assertEquals(BillPayment.PaymentStatus.COMPLETED, payment.getStatus());
         }
 
         @Test
@@ -114,14 +114,14 @@ class TopUpServiceTest {
                 new BigDecimal("200000")
             );
 
-            when(walletClient.reserveBalance(eq("account-789"), any()))
-                .thenReturn(new WalletClient.ReserveResponse("res-789", "account-789", "ref-789", "RESERVED"));
+            when(walletPort.reserveBalance(eq("account-789"), any(BigDecimal.class), any(String.class)))
+                .thenReturn(new WalletPort.ReserveResult("res-789", "RESERVED"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals(BillerType.DANA, payment.billerType);
-            assertEquals(BillPayment.PaymentStatus.COMPLETED, payment.status);
+            assertEquals(BillerType.DANA, payment.getBillerType());
+            assertEquals(BillPayment.PaymentStatus.COMPLETED, payment.getStatus());
         }
 
         @Test
@@ -134,14 +134,14 @@ class TopUpServiceTest {
                 new BigDecimal("75000")
             );
 
-            when(walletClient.reserveBalance(eq("account-999"), any()))
-                .thenReturn(new WalletClient.ReserveResponse("res-999", "account-999", "ref-999", "RESERVED"));
+            when(walletPort.reserveBalance(eq("account-999"), any(BigDecimal.class), any(String.class)))
+                .thenReturn(new WalletPort.ReserveResult("res-999", "RESERVED"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals(BillerType.LINKAJA, payment.billerType);
-            assertEquals(BillPayment.PaymentStatus.COMPLETED, payment.status);
+            assertEquals(BillerType.LINKAJA, payment.getBillerType());
+            assertEquals(BillPayment.PaymentStatus.COMPLETED, payment.getStatus());
         }
 
         @Test
@@ -154,14 +154,14 @@ class TopUpServiceTest {
                 new BigDecimal("100000")
             );
 
-            when(walletClient.reserveBalance(eq("account-123"), any()))
-                .thenReturn(new WalletClient.ReserveResponse(null, "account-123", null, "FAILED"));
+            when(walletPort.reserveBalance(eq("account-123"), any(BigDecimal.class), any(String.class)))
+                .thenReturn(new WalletPort.ReserveResult(null, "FAILED"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals(BillPayment.PaymentStatus.FAILED, payment.status);
-            assertEquals("Failed to reserve balance", payment.failureReason);
+            assertEquals(BillPayment.PaymentStatus.FAILED, payment.getStatus());
+            assertEquals("Failed to reserve balance", payment.getFailureReason());
         }
 
         @Test
@@ -174,14 +174,14 @@ class TopUpServiceTest {
                 new BigDecimal("50000")
             );
 
-            when(walletClient.reserveBalance(any(), any()))
+            when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenThrow(new RuntimeException("Connection refused"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
             assertNotNull(payment);
-            assertEquals(BillPayment.PaymentStatus.FAILED, payment.status);
-            assertEquals("Wallet service unavailable", payment.failureReason);
+            assertEquals(BillPayment.PaymentStatus.FAILED, payment.getStatus());
+            assertEquals("Wallet service unavailable", payment.getFailureReason());
         }
 
         @Test
@@ -217,13 +217,13 @@ class TopUpServiceTest {
                 new BigDecimal("100000")
             );
 
-            when(walletClient.reserveBalance(any(), any()))
-                .thenReturn(new WalletClient.ReserveResponse("res-123", "account-123", "ref-123", "RESERVED"));
+            when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
+                .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
-            assertEquals(new BigDecimal("1000"), payment.adminFee);
-            assertEquals(new BigDecimal("101000"), payment.totalAmount);
+            assertEquals(new BigDecimal("1000"), payment.getAdminFee());
+            assertEquals(new BigDecimal("101000"), payment.getTotalAmount());
         }
 
         @Test
@@ -236,13 +236,13 @@ class TopUpServiceTest {
                 new BigDecimal("300000")
             );
 
-            when(walletClient.reserveBalance(any(), any()))
-                .thenReturn(new WalletClient.ReserveResponse("res-123", "account-123", "ref-123", "RESERVED"));
+            when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
+                .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
-            assertEquals(new BigDecimal("1500"), payment.adminFee);
-            assertEquals(new BigDecimal("301500"), payment.totalAmount);
+            assertEquals(new BigDecimal("1500"), payment.getAdminFee());
+            assertEquals(new BigDecimal("301500"), payment.getTotalAmount());
         }
 
         @Test
@@ -255,13 +255,13 @@ class TopUpServiceTest {
                 new BigDecimal("1000000")
             );
 
-            when(walletClient.reserveBalance(any(), any()))
-                .thenReturn(new WalletClient.ReserveResponse("res-123", "account-123", "ref-123", "RESERVED"));
+            when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
+                .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
             BillPayment payment = paymentService.createTopUp(request);
 
-            assertEquals(new BigDecimal("2000"), payment.adminFee);
-            assertEquals(new BigDecimal("1002000"), payment.totalAmount);
+            assertEquals(new BigDecimal("2000"), payment.getAdminFee());
+            assertEquals(new BigDecimal("1002000"), payment.getTotalAmount());
         }
     }
 }

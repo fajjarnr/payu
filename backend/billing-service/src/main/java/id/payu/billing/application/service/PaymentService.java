@@ -1,12 +1,15 @@
-package id.payu.billing.service;
+package id.payu.billing.application.service;
 
-import id.payu.billing.client.WalletClient;
-import id.payu.billing.domain.BillPayment;
-import id.payu.billing.domain.BillerType;
+import id.payu.billing.domain.model.BillPayment;
+import id.payu.billing.domain.model.BillerType;
+import id.payu.billing.domain.port.in.PayBillUseCase;
+import id.payu.billing.domain.port.in.PaymentQueryUseCase;
+import id.payu.billing.domain.port.in.TopUpUseCase;
+import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
+import id.payu.billing.domain.port.out.PaymentEventPort;
+import id.payu.billing.domain.port.out.WalletPort;
 import id.payu.billing.dto.CreatePaymentRequest;
 import id.payu.billing.dto.TopUpRequest;
-import id.payu.billing.repository.BillPaymentRepository;
-import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,11 +26,11 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PaymentService {
+public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQueryUseCase {
 
-    private final BillPaymentRepository billPaymentRepository;
-    private final WalletClient walletClient;
-    private final OutboxService outboxService;
+    private final BillPaymentPersistencePort persistencePort;
+    private final WalletPort walletPort;
+    private final PaymentEventPort eventPort;
 
     @Transactional
     public BillPayment createPayment(CreatePaymentRequest request) {
@@ -52,17 +54,16 @@ public class PaymentService {
         payment.setTotalAmount(request.amount().add(adminFee));
         payment.setStatus(BillPayment.PaymentStatus.PENDING);
 
-        payment = billPaymentRepository.save(payment);
+        payment = persistencePort.save(payment);
         log.info("Payment created: id={}, reference={}", payment.getId(), payment.getReferenceNumber());
 
         // Reserve balance from wallet
         try {
-            WalletClient.ReserveResponse reserveResponse = walletClient.reserveBalance(
-                    request.accountId(),
-                    new WalletClient.ReserveRequest(payment.getTotalAmount(), payment.getReferenceNumber())
+            WalletPort.ReserveResult reserveResult = walletPort.reserveBalance(
+                    request.accountId(), payment.getTotalAmount(), payment.getReferenceNumber()
             );
 
-            if ("RESERVED".equals(reserveResponse.status())) {
+            if ("RESERVED".equals(reserveResult.status())) {
                 payment.setStatus(BillPayment.PaymentStatus.PROCESSING);
                 // Simulate biller processing (in production, call actual biller API)
                 processWithBiller(payment);
@@ -76,10 +77,10 @@ public class PaymentService {
             payment.setFailureReason("Wallet service unavailable");
         }
 
-        payment = billPaymentRepository.save(payment);
+        payment = persistencePort.save(payment);
 
         // Publish event
-        publishPaymentEvent(payment);
+        eventPort.publishPaymentEvent(payment);
 
         return payment;
     }
@@ -106,17 +107,16 @@ public class PaymentService {
         payment.setTotalAmount(request.amount().add(adminFee));
         payment.setStatus(BillPayment.PaymentStatus.PENDING);
 
-        payment = billPaymentRepository.save(payment);
+        payment = persistencePort.save(payment);
         log.info("Top-up created: id={}, reference={}", payment.getId(), payment.getReferenceNumber());
 
         // Reserve balance from wallet
         try {
-            WalletClient.ReserveResponse reserveResponse = walletClient.reserveBalance(
-                    request.accountId(),
-                    new WalletClient.ReserveRequest(payment.getTotalAmount(), payment.getReferenceNumber())
+            WalletPort.ReserveResult reserveResult = walletPort.reserveBalance(
+                    request.accountId(), payment.getTotalAmount(), payment.getReferenceNumber()
             );
 
-            if ("RESERVED".equals(reserveResponse.status())) {
+            if ("RESERVED".equals(reserveResult.status())) {
                 payment.setStatus(BillPayment.PaymentStatus.PROCESSING);
                 // Simulate e-wallet provider processing (in production, call actual e-wallet API)
                 processWithEwalletProvider(payment);
@@ -130,20 +130,20 @@ public class PaymentService {
             payment.setFailureReason("Wallet service unavailable");
         }
 
-        payment = billPaymentRepository.save(payment);
+        payment = persistencePort.save(payment);
 
         // Publish event
-        publishPaymentEvent(payment);
+        eventPort.publishPaymentEvent(payment);
 
         return payment;
     }
 
     public Optional<BillPayment> getPayment(UUID id) {
-        return billPaymentRepository.findById(id);
+        return persistencePort.findById(id);
     }
 
     public Optional<BillPayment> getPaymentByReference(String referenceNumber) {
-        return billPaymentRepository.findByReferenceNumber(referenceNumber);
+        return persistencePort.findByReferenceNumber(referenceNumber);
     }
 
     private void processWithBiller(BillPayment payment) {
@@ -191,24 +191,4 @@ public class PaymentService {
         }
     }
 
-    private void publishPaymentEvent(BillPayment payment) {
-        Map<String, Object> payload = Map.of(
-                "paymentId", payment.getId().toString(),
-                "referenceNumber", payment.getReferenceNumber(),
-                "accountId", payment.getAccountId(),
-                "billerCode", payment.getBillerType().getCode(),
-                "amount", payment.getTotalAmount(),
-                "status", payment.getStatus().name(),
-                "timestamp", LocalDateTime.now().toString()
-        );
-        outboxService.createEvent(
-                "BillPayment",
-                payment.getId().toString(),
-                "PaymentCompleted",
-                payload,
-                null,
-                "payment-events"
-        );
-        log.debug("Outbox event created for payment: {}", payment.getId());
-    }
 }
