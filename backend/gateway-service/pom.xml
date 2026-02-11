@@ -64,7 +64,9 @@
             <artifactId>quarkus-redis-client</artifactId>
         </dependency>
 
-        <!-- JWT/OIDC for authentication -->
+        <!-- JWT/OIDC - kept on classpath for Vert.x WebClient transitive dep.
+             Quarkus proactive auth is DISABLED (application.yaml) so these
+             do NOT intercept requests; our AuthorizationFilter handles JWT. -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc</artifactId>

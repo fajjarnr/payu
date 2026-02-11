@@ -6,16 +6,17 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Login request DTO with comprehensive input validation.
+ * Login request DTO with input validation.
  *
- * Validation rules:
- * - Username: 3-50 characters, alphanumeric with dots and underscores
- * - Password: 8-128 characters, must include uppercase, lowercase, digit, and special char
+ * Validation is intentionally lenient for login: only checks presence and size.
+ * The actual password complexity rules are enforced during registration (RegisterRequest),
+ * not at login time. Keycloak performs the actual credential verification.
  *
- * These validations help prevent:
- * - SQL injection via pattern restrictions
- * - Brute force attacks via size constraints
- * - Injection attacks via character whitelist
+ * Username validation:
+ * - 3-50 characters, alphanumeric with dots and underscores
+ *
+ * Password validation:
+ * - Present and 1-128 characters (any format accepted — Keycloak validates)
  */
 public record LoginRequest(
     @NotBlank(message = "Username is required")
@@ -25,9 +26,7 @@ public record LoginRequest(
     String username,
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$",
-            message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character")
+    @Size(min = 1, max = 128, message = "Password must not exceed 128 characters")
     @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
     String password
 ) {}

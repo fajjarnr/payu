@@ -4,15 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.*;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -20,7 +18,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -30,42 +27,22 @@ public class SecurityConfig {
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     /**
-     * Public endpoints that bypass JWT authentication entirely.
-     * This filter chain is evaluated first (Order 1) and handles requests without OAuth2 Resource Server.
-     * Uses wildcard matchers to ensure all subpaths are also public.
+     * Single security filter chain with proper authorization rules.
+     * Public endpoints (registration, actuator, swagger) are permitted without authentication.
+     * All other endpoints require a valid JWT token from Keycloak.
      */
     @Bean
-    @Order(1)
-    public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .securityMatcher("/api/v1/accounts/**", "/api/v1/auth/**")
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-            // Explicitly disable OAuth2 Resource Server for public endpoints
-            .oauth2ResourceServer(oauth2 -> oauth2.disable());
-
-        log.info("Public security filter chain configured for: /api/v1/accounts/**, /api/v1/auth/**");
-        return http.build();
-    }
-
-    /**
-     * JWT-authenticated endpoints for all other requests.
-     * This filter chain is evaluated second (Order 2) and requires valid JWT tokens.
-     * Explicitly excludes public paths that are handled by the first filter chain.
-     */
-    @Bean
-    @Order(2)
-    public SecurityFilterChain jwtSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // All actuator endpoints are public (handled by WebSecurityCustomizer)
+                // Public endpoints - no authentication required
+                .requestMatchers("/api/v1/accounts/register").permitAll()
+                // Actuator endpoints
                 .requestMatchers("/actuator/**", "/account-service/actuator/**").permitAll()
-                // Swagger/OpenAPI docs are public
+                // Swagger/OpenAPI docs
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 // All other requests require authentication
                 .anyRequest().authenticated()
@@ -76,18 +53,8 @@ public class SecurityConfig {
                 )
             );
 
-        log.info("JWT security filter chain configured for authenticated endpoints");
+        log.info("Security filter chain configured: /api/v1/accounts/register=public, all others=JWT authenticated");
         return http.build();
-    }
-
-    /**
-     * Bypass Spring Security entirely for actuator endpoints.
-     * This is applied AFTER the filter chains above, as a final fallback.
-     */
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/actuator/**", "/account-service/actuator/**");
     }
 
     @Bean

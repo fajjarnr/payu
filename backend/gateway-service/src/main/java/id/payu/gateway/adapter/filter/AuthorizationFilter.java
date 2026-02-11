@@ -34,7 +34,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     // Public endpoints that don't require authentication
     private static final String[] PUBLIC_ENDPOINTS = {
         "/api/v1/auth/login",
-        "/api/v1/accounts/register",  // Registration endpoint in account-service
+        "/api/v1/accounts",           // Account endpoints (account-service handles its own auth)
         "/api/v1/auth/refresh",
         "/api/v1/otp/send",
         "/api/v1/otp/verify",

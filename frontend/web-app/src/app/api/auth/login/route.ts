@@ -4,6 +4,21 @@ import { NextResponse } from 'next/server';
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
 
 /**
+ * Decode JWT payload without verifying signature (BFF already trusts the token from the gateway).
+ * Extracts user claims from the Keycloak access token.
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * BFF Login Route — Authenticates user and stores tokens in httpOnly cookies.
  *
  * Flow:
@@ -37,7 +52,21 @@ export async function POST(request: Request) {
       data.access_token ?? data.data?.access_token ?? data.data?.accessToken;
     const refreshToken =
       data.refresh_token ?? data.data?.refresh_token ?? data.data?.refreshToken;
-    const user = data.user ?? data.data?.user;
+
+    // Extract user info from JWT payload (auth-service returns Keycloak tokens directly)
+    let user = data.user ?? data.data?.user;
+    if (!user && accessToken) {
+      const claims = decodeJwtPayload(accessToken);
+      if (claims) {
+        user = {
+          id: claims.sub as string,
+          username: claims.preferred_username as string,
+          fullName: (claims.name as string) || '',
+          email: (claims.email as string) || '',
+          roles: ((claims.realm_access as Record<string, unknown>)?.roles as string[]) || [],
+        };
+      }
+    }
 
     const isProduction = process.env.NODE_ENV === 'production';
     const cookieStore = await cookies();

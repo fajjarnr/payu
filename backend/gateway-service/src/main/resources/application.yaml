@@ -6,6 +6,10 @@ quarkus:
   # HTTP Server
   http:
     port: 8080
+    auth:
+      # Disable proactive authentication so Quarkus does NOT validate Bearer tokens
+      # at the Vert.x layer. Our custom AuthorizationFilter handles JWT validation.
+      proactive: false
   # OIDC Configuration (Red Hat SSO / Keycloak)
   oidc:
     enabled: ${OIDC_ENABLED:false}
