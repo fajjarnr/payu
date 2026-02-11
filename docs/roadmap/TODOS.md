@@ -54,6 +54,67 @@
 
 ---
 
+## 🧪 Container Environment Testing Results (Feb 11, 2026)
+
+Endpoint testing dari frontend web-app ke semua backend service di environment Podman Compose.
+
+### ✅ Services Healthy (HTTP 200)
+
+| Service | Direct Access | Via Gateway | Notes |
+|---------|---------------|-------------|-------|
+| Postgres (via auth health) | ✅ 200 | N/A | Connected via health check |
+| Redis (via auth health) | ✅ 200 | N/A | Connected via health check |
+| Kafka (via account health) | ✅ 200 | N/A | Connected via health check |
+| Keycloak Realm | ✅ 200 | N/A | OIDC discovery endpoint OK |
+| Web-App Health | ✅ 200 | N/A | Frontend responding |
+| Gateway Health | ✅ 200 | N/A | Quarkus health endpoint OK |
+| Auth Service | ✅ 200 | 401* | *Requires JWT token |
+| Account Service | ✅ 200 | 401* | *Requires JWT token |
+| Wallet Service | ✅ 200 | 401* | *Requires JWT token |
+
+### 🔧 Issues Found & Fixed
+
+| ID | Issue | Root Cause | Fix Applied |
+|----|-------|------------|-------------|
+| **ENV-001** | Gateway Containerfile tidak support uber-jar | Quarkus butuh runner JAR | Containerfile diupdate: `target/*-runner.jar` |
+| **ENV-002** | Service port mismatch | Default Spring Boot port 8080 | Tambah `SERVER_PORT` env var |
+| **ENV-003** | DNS resolution gagal antar container | Missing `--network-alias` | Recreate dengan `--network-alias <service-name>` |
+| **ENV-004** | Kafka connection failure | Bootstrap server localhost:9092 | Update ke `kafka:29092` |
+| **ENV-005** | Redis connection failure | Missing Redis env vars | Tambah `REDIS_HOST=redis` dan `REDIS_PORT=6379` |
+| **ENV-006** | Gateway env vars missing | `JWT_SECRET` dan `WEBHOOK_PARTNER_1_SECRET` | Ditambahkan ke startup command |
+
+### 📋 Action Items untuk Podman Compose
+
+| ID | Task | Priority | Status |
+|----|------|----------|--------|
+| **PODMAN-001** | Update `gateway-service/Containerfile` untuk Quarkus uber-jar | P0 | ✅ DONE |
+| **PODMAN-002** | Tambah `SERVER_PORT` ke semua Spring Boot services | P0 | ✅ DONE |
+| **PODMAN-003** | Pastikan `--network-alias` set di podman-compose.yml | P0 | ⚠️ PENDING - Manual fix diterapkan |
+| **PODMAN-004** | Update Kafka bootstrap server env vars | P1 | ✅ DONE |
+| **PODMAN-005** | Update Redis connection env vars | P1 | ✅ DONE |
+| **PODMAN-006** | Dokumentasi troubleshooting container networking | P2 | ⬜ TODO |
+
+### 🔐 Gateway Authentication Notes
+
+Semua routing via Gateway (`/api/v1/*`) mengembalikan **401 Unauthorized** karena:
+1. Endpoints dilindungi oleh JWT Bearer token validation
+2. Gateway menggunakan Quarkus OIDC extension
+3. Perlu login via Keycloak terlebih dahulu untuk mendapatkan access token
+
+**Workaround untuk testing:**
+```bash
+# Get token from Keycloak
+TOKEN=$(curl -s -X POST http://localhost:8099/realms/payu/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password&client_id=payu-web&username=customer1&password=P@ssw0rd123" \
+  | jq -r '.access_token')
+
+# Use token for API calls
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/accounts/health
+```
+
+---
+
 ## 📋 Remaining Work
 
 ### 🟡 Open Items
