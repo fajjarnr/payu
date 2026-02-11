@@ -113,6 +113,29 @@ TOKEN=$(curl -s -X POST http://localhost:8099/realms/payu/protocol/openid-connec
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/accounts/health
 ```
 
+### 📝 Testing Notes
+
+**Login Flow Status:**
+- Keycloak OIDC endpoint responding (200)
+- JWT token generation requires valid client credentials
+- Gateway routing works with valid token (401 without token = expected)
+- Direct service access available for development (ports 8001-8004)
+
+**Known Limitations:**
+1. Keycloak client `payu-web-app` requires secret/public client setting adjustment
+2. BFF proxy login returning "Authentication service unavailable" - gateway connectivity issue
+3. Gateway-to-backend service routing requires JWT token (by design)
+
+**Development Workaround:**
+For development/testing without JWT:
+```bash
+# Direct access to services (no auth required)
+curl http://localhost:8001/actuator/health  # Account
+curl http://localhost:8002/actuator/health  # Auth
+curl http://localhost:8003/actuator/health  # Transaction
+curl http://localhost:8004/actuator/health  # Wallet
+```
+
 ---
 
 ## 📋 Remaining Work
