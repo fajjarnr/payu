@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
-const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
+const GATEWAY_URL = process.env.GATEWAY_URL || "http://gateway-service:8080";
 
 /**
  * Decode JWT payload without verifying signature (BFF already trusts the token from the gateway).
@@ -9,9 +9,9 @@ const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
  */
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
+    const payload = Buffer.from(parts[1], "base64url").toString("utf-8");
     return JSON.parse(payload);
   } catch {
     return null;
@@ -36,8 +36,8 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const res = await fetch(`${GATEWAY_URL}/api/v1/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
@@ -61,42 +61,44 @@ export async function POST(request: Request) {
         user = {
           id: claims.sub as string,
           username: claims.preferred_username as string,
-          fullName: (claims.name as string) || '',
-          email: (claims.email as string) || '',
-          roles: ((claims.realm_access as Record<string, unknown>)?.roles as string[]) || [],
+          fullName: (claims.name as string) || "",
+          email: (claims.email as string) || "",
+          roles:
+            ((claims.realm_access as Record<string, unknown>)
+              ?.roles as string[]) || [],
         };
       }
     }
 
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === "production";
     const cookieStore = await cookies();
 
     if (accessToken) {
-      cookieStore.set('accessToken', accessToken, {
+      cookieStore.set("accessToken", accessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'strict',
+        sameSite: "strict",
         maxAge: 900, // 15 minutes
-        path: '/',
+        path: "/",
       });
     }
 
     if (refreshToken) {
-      cookieStore.set('refreshToken', refreshToken, {
+      cookieStore.set("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'strict',
+        sameSite: "strict",
         maxAge: 604_800, // 7 days
-        path: '/',
+        path: "/",
       });
     }
 
     // Return user data WITHOUT tokens — browser never sees JWT
     return NextResponse.json({ success: true, data: { user } });
   } catch (error) {
-    console.error('[BFF] Login proxy error:', error);
+    console.error("[BFF] Login proxy error:", error);
     return NextResponse.json(
-      { success: false, message: 'Authentication service unavailable' },
+      { success: false, message: "Authentication service unavailable" },
       { status: 503 },
     );
   }

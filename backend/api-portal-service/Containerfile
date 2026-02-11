@@ -20,8 +20,8 @@ USER 185
 
 WORKDIR /deployments
 
-# Copy the pre-built artifact from host (requires mvn clean package run locally first)
-COPY --chown=185 target/*.jar /deployments/app.jar
+# Copy the pre-built Quarkus uber-jar (requires: mvn package -DskipTests -Dquarkus.package.jar.type=uber-jar)
+COPY --chown=185 target/*-runner.jar /deployments/app.jar
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]

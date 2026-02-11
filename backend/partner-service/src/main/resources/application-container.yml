@@ -2,7 +2,7 @@
 spring:
   main:
     allow-bean-definition-overriding: true
-  
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/payu_test_partner}
     username: ${DB_USERNAME:payu_test}
@@ -16,38 +16,52 @@ spring:
       max-lifetime: 1800000
       keepalive-time: 60000
       pool-name: container-pool
-  
+
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-  
+
   flyway:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: false
-  
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
     consumer:
       auto-startup: true
       group-id: partner-service-container
-  
+
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-  
+
   cloud:
     vault:
       enabled: false
 
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
   health:
     kafka:
+      enabled: true
+    livenessstate:
+      enabled: true
+    readinessstate:
       enabled: true
 
 partner:

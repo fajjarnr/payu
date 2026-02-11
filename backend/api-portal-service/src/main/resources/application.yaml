@@ -3,9 +3,9 @@ quarkus:
     name: api-portal-service
     version: 1.0.0
   http:
-    port: 8080
+    port: ${QUARKUS_HTTP_PORT:8080}
   oidc:
-    auth-server-url: ${KEYCLOAK_URL:http://localhost:9080}/realms/${KEYCLOAK_REALM:payu}
+    auth-server-url: ${KEYCLOAK_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM:payu}
     client-id: ${OIDC_CLIENT_ID:api-portal-service}
     tls:
       verification: none
