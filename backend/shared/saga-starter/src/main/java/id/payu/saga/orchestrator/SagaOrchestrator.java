@@ -6,6 +6,8 @@ import id.payu.saga.model.SagaState;
 import id.payu.saga.model.SagaStep;
 import id.payu.saga.model.StepResult;
 import id.payu.saga.repository.SagaRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Propagation;
@@ -29,6 +31,9 @@ import java.util.function.Function;
 public abstract class SagaOrchestrator<T> {
 
     protected final SagaRepository sagaRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final List<SagaStep<T>> steps = new ArrayList<>();
     private String sagaType;
@@ -67,7 +72,7 @@ public abstract class SagaOrchestrator<T> {
 
         // Create and persist saga instance
         SagaInstance instance = createSagaInstance(sagaId, initialData);
-        sagaRepository.save(instance);
+        instance = sagaRepository.save(instance);
 
         T currentData = initialData;
         List<String> executedSteps = new ArrayList<>();
@@ -83,18 +88,21 @@ public abstract class SagaOrchestrator<T> {
                     continue;
                 }
 
-                // Update state
+                // Update state - re-fetch to get current version
+                instance = sagaRepository.findById(sagaId).orElse(instance);
                 instance.transitionTo("EXECUTING_" + step.getName());
-                sagaRepository.save(instance);
+                instance = sagaRepository.save(instance);
 
                 // Execute step with retry logic
                 StepResult<T> result = executeStepWithRetry(step, currentData);
 
                 if (result.isSuccess()) {
-                    // Record successful step
+                    // Record successful step - re-fetch to get current version
+                    instance = sagaRepository.findById(sagaId).orElse(instance);
                     currentData = result.getContext();
                     executedSteps.add(step.getName());
                     instance.recordStepCompletion(step.getName(), result.getMetadata());
+                    instance = sagaRepository.save(instance);
                     log.debug("Step completed successfully: {} for saga: {}", step.getName(), sagaId);
                 } else {
                     // Step failed
@@ -106,12 +114,13 @@ public abstract class SagaOrchestrator<T> {
                         continue;
                     }
 
-                    // Record failure and trigger compensation
+                    // Record failure and trigger compensation - re-fetch to get current version
+                    instance = sagaRepository.findById(sagaId).orElse(instance);
                     instance.recordError(step.getName(), result.getMessage());
                     instance.transitionTo(SagaState.FAILED.name());
-                    sagaRepository.save(instance);
+                    instance = sagaRepository.save(instance);
 
-                    if (step.hasCompensation() && result.isTriggerCompensation()) {
+                    if (result.isTriggerCompensation() && !executedSteps.isEmpty()) {
                         return compensate(sagaId, executedSteps, currentData, result.getError());
                     }
 
@@ -119,7 +128,8 @@ public abstract class SagaOrchestrator<T> {
                 }
             }
 
-            // All steps completed successfully
+            // All steps completed successfully - re-fetch to get current version
+            instance = sagaRepository.findById(sagaId).orElse(instance);
             instance.transitionTo(SagaState.COMPLETED.name());
             instance.complete();
             sagaRepository.save(instance);
@@ -129,6 +139,7 @@ public abstract class SagaOrchestrator<T> {
 
         } catch (Exception e) {
             log.error("Unexpected error in saga: {}", sagaId, e);
+            instance = sagaRepository.findById(sagaId).orElse(instance);
             instance.recordError("UNKNOWN", e.getMessage());
             instance.transitionTo(SagaState.FAILED.name());
             sagaRepository.save(instance);
@@ -167,7 +178,7 @@ public abstract class SagaOrchestrator<T> {
 
         SagaInstance instance = instanceOpt.get();
         instance.transitionTo(SagaState.COMPENSATING.name());
-        sagaRepository.save(instance);
+        instance = sagaRepository.save(instance);
 
         // Reverse the executed steps for compensation
         List<String> stepsToCompensate = new ArrayList<>(executedSteps);
@@ -186,8 +197,18 @@ public abstract class SagaOrchestrator<T> {
                 try {
                     log.debug("Compensating step: {} for saga: {}", stepName, sagaId);
 
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> stepContext = (Map<String, Object>) instance.getStepContext().get(stepName);
+                    Object rawContext = instance.getStepContext().get(stepName);
+                    Map<String, Object> stepContext = null;
+                    if (rawContext instanceof Map) {
+                        try {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> ctx = (Map<String, Object>) rawContext;
+                            stepContext = ctx;
+                        } catch (ClassCastException e) {
+                            // If cast fails, use null context
+                            stepContext = null;
+                        }
+                    }
                     T compensationContext = prepareCompensationContext(currentData, stepContext);
 
                     StepResult<T> result = step.getCompensation().apply(compensationContext);
@@ -209,7 +230,8 @@ public abstract class SagaOrchestrator<T> {
             }
         }
 
-        // Update final state
+        // Update final state - re-fetch to get current version
+        instance = sagaRepository.findById(sagaId).orElse(instance);
         if (compensationError == null) {
             instance.transitionTo(SagaState.COMPENSATED.name());
             instance.complete();
@@ -273,7 +295,12 @@ public abstract class SagaOrchestrator<T> {
         payload.put("initialData", initialData);
         payload.put("correlationId", sagaId);
 
-        return SagaInstance.create(sagaType, SagaState.STARTED.name(), payload);
+        return SagaInstance.builder()
+                .sagaId(sagaId)
+                .sagaType(sagaType)
+                .currentState(SagaState.STARTED.name())
+                .payload(payload)
+                .build();
     }
 
     /**
@@ -296,5 +323,16 @@ public abstract class SagaOrchestrator<T> {
      */
     protected List<SagaStep<T>> getSteps() {
         return Collections.unmodifiableList(steps);
+    }
+
+    /**
+     * Save saga instance and refresh to get updated version.
+     */
+    protected SagaInstance saveAndRefresh(SagaInstance instance) {
+        SagaInstance saved = sagaRepository.save(instance);
+        if (entityManager != null && entityManager.contains(saved)) {
+            entityManager.refresh(saved);
+        }
+        return saved;
     }
 }

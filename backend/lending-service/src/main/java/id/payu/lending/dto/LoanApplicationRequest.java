@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record LoanApplicationRequest(
-        @NotBlank(message = "User ID is required")
+        @NotNull(message = "User ID is required")
         UUID userId,
 
         @NotBlank(message = "External ID is required")

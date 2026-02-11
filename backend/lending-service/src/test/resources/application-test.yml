@@ -1,11 +1,24 @@
+# Test configuration for lending-service integration tests
+# Uses H2 in-memory database for fast test execution
+
 spring:
   datasource:
-    url: jdbc:tc:postgresql:16:///lending_test
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    primary:
+      hikari:
+        jdbc-url: jdbc:h2:mem:lending_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+        username: sa
+        password:
+        driver-class-name: org.h2.Driver
+    read-replica:
+      enabled: false
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
   flyway:
     enabled: false
   kafka:
@@ -16,6 +29,7 @@ spring:
         jwt:
           issuer-uri: https://fake-issuer.example.com
           jwk-set-uri: https://fake-issuer.example.com/.well-known/jwks.json
+
 payu:
   outbox:
     enabled: false
@@ -23,6 +37,7 @@ payu:
     enabled: false
   cache:
     enabled: false
+
 logging:
   level:
     id.payu.lending: DEBUG

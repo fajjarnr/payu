@@ -208,13 +208,27 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
 
         BigDecimal score = calculateDefaultScore(userId);
 
-        CreditScore creditScore = new CreditScore();
-        creditScore.setUserId(userId);
-        creditScore.setScore(score);
-        creditScore.setRiskCategory(determineRiskCategory(score));
-        creditScore.setLastCalculatedAt(LocalDateTime.now());
-        creditScore.setCreatedAt(LocalDateTime.now());
-        creditScore.setUpdatedAt(LocalDateTime.now());
+        // Check if credit score already exists for this user
+        Optional<CreditScore> existingScore = creditScorePersistenceAdapter.findByUserId(userId);
+
+        CreditScore creditScore;
+        if (existingScore.isPresent()) {
+            // Update existing credit score
+            creditScore = existingScore.get();
+            creditScore.setScore(score);
+            creditScore.setRiskCategory(determineRiskCategory(score));
+            creditScore.setLastCalculatedAt(LocalDateTime.now());
+            creditScore.setUpdatedAt(LocalDateTime.now());
+        } else {
+            // Create new credit score
+            creditScore = new CreditScore();
+            creditScore.setUserId(userId);
+            creditScore.setScore(score);
+            creditScore.setRiskCategory(determineRiskCategory(score));
+            creditScore.setLastCalculatedAt(LocalDateTime.now());
+            creditScore.setCreatedAt(LocalDateTime.now());
+            creditScore.setUpdatedAt(LocalDateTime.now());
+        }
 
         return creditScorePersistenceAdapter.save(creditScore);
     }

@@ -1,27 +1,25 @@
 package id.payu.lending.integration;
 
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
- * Shared Testcontainers configuration for lending-service integration tests.
+ * Shared test configuration for lending-service integration tests.
  * <p>
  * Provides:
  * <ul>
- *   <li>Static PostgreSQL 16 container via {@code @ServiceConnection}</li>
  *   <li>Mock {@link JwtDecoder} that accepts any Bearer token and produces a
  *       deterministic {@link Jwt} with a configurable {@code userId} claim</li>
  * </ul>
+ * <p>
+ * Note: Tests use H2 in-memory database configured in application-test.yml
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class TestContainersConfig {
@@ -30,16 +28,6 @@ public class TestContainersConfig {
     public static final UUID TEST_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private static final String ISSUER = "https://fake-issuer.example.com";
-
-    @Bean
-    @ServiceConnection
-    @SuppressWarnings("resource")
-    static PostgreSQLContainer<?> postgresContainer() {
-        return new PostgreSQLContainer<>("postgres:16-alpine")
-                .withDatabaseName("lending_test")
-                .withUsername("test")
-                .withPassword("test");
-    }
 
     /**
      * Mock JWT decoder that bypasses real token validation.

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class LoanManagementService implements LoanManagementUseCase {
@@ -43,10 +44,12 @@ public class LoanManagementService implements LoanManagementUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("Loan not found: " + loanId));
 
         List<RepaymentSchedule> schedules = generateRepaymentSchedule(loan);
-        schedules.forEach(repaymentSchedulePersistencePort::save);
+        List<RepaymentSchedule> savedSchedules = schedules.stream()
+                .map(repaymentSchedulePersistencePort::save)
+                .collect(Collectors.toList());
 
-        log.info("Created {} repayment schedules for loan: {}", schedules.size(), loanId);
-        return schedules;
+        log.info("Created {} repayment schedules for loan: {}", savedSchedules.size(), loanId);
+        return savedSchedules;
     }
 
     @Override

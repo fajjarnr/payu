@@ -71,11 +71,12 @@ public interface SagaRepository extends JpaRepository<SagaInstance, String> {
      */
     @Modifying
     @Query("UPDATE SagaInstance s SET s.currentState = :newState, s.previousState = s.currentState, " +
-           "s.lastUpdatedAt = CURRENT_TIMESTAMP, s.version = s.version + 1 " +
+           "s.lastUpdatedAt = :now, s.version = s.version + 1 " +
            "WHERE s.sagaId = :sagaId AND s.version = :expectedVersion")
     int updateStateWithVersion(@Param("sagaId") String sagaId,
                                @Param("newState") String newState,
-                               @Param("expectedVersion") Long expectedVersion);
+                               @Param("expectedVersion") Long expectedVersion,
+                               @Param("now") Instant now);
 
     /**
      * Find sagas started within a time range.

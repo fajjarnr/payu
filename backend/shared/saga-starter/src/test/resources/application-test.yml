@@ -1,0 +1,46 @@
+# Test configuration for saga-starter integration tests
+# Uses H2 in-memory database
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        # Disable PostgreSQL-specific features for H2
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: true
+
+# Saga configuration for tests
+payu:
+  saga:
+    enabled: true
+    persistent: true
+    compensation-enabled: true
+    default-timeout: PT5M
+    default-step-timeout: PT30S
+    default-max-retries: 3
+    default-retry-delay: PT1S
+    monitoring-enabled: true
+    events-enabled: false  # Disable Kafka events for tests
+    cleanup-enabled: false  # Disable cleanup for tests
+    optimistic-locking: true
+
+# Logging
+logging:
+  level:
+    id.payu.saga: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    org.hibernate.SQL: DEBUG

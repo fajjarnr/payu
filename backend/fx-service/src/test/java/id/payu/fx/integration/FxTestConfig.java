@@ -1,11 +1,10 @@
 package id.payu.fx.integration;
 
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,27 +12,39 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Shared Testcontainers configuration for fx-service integration tests.
+ * Shared test configuration for fx-service integration tests.
+ *
+ * <p>
+ * Provides:
+ * <ul>
+ *   <li>Mock {@link JwtDecoder} that accepts any Bearer token and produces a
+ *       deterministic {@link Jwt} with a configurable {@code account_id} claim</li>
+ * </ul>
+ * <p>
+ * Note: Tests use H2 in-memory database configured in application-test.yml
  */
-@TestConfiguration
+@TestConfiguration(proxyBeanMethods = false)
 public class FxTestConfig {
 
     static final String TEST_ACCOUNT_ID = UUID.randomUUID().toString();
 
+    /**
+     * Mock JWT decoder that bypasses real token validation.
+     * Every incoming token string is accepted and mapped to a JWT
+     * with an {@code account_id} claim set to {@link #TEST_ACCOUNT_ID}.
+     */
     @Bean
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgresContainer() {
-        return new PostgreSQLContainer<>("postgres:16-alpine")
-                .withDatabaseName("fx_test")
-                .withUsername("test")
-                .withPassword("test");
-    }
-
-    @Bean
+    @Primary
     public JwtDecoder jwtDecoder() {
         return token -> buildTestJwt(TEST_ACCOUNT_ID);
     }
 
+    /**
+     * Build a fake JWT with standard claims and an {@code account_id} attribute.
+     *
+     * @param accountId the UUID to embed as the {@code account_id} claim
+     * @return a fully-populated {@link Jwt}
+     */
     static Jwt buildTestJwt(String accountId) {
         return new Jwt(
                 "test-token",
@@ -51,6 +62,10 @@ public class FxTestConfig {
         );
     }
 
+    /**
+     * Returns a Bearer Authorization header value suitable for
+     * {@link org.springframework.boot.test.web.client.TestRestTemplate}.
+     */
     static String bearerToken() {
         return "Bearer test-token";
     }

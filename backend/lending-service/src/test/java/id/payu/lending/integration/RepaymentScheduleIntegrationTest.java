@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -223,7 +223,7 @@ class RepaymentScheduleIntegrationTest {
                         .build())
                 .header("Authorization", TestContainersConfig.bearerToken())
                 .exchange()
-                .expectStatus().is5xx(); // IllegalStateException mapped to 500
+                .expectStatus().is5xxServerError(); // IllegalStateException mapped to 500
     }
 
     // ─── helpers ────────────────────────────────────────────────────
