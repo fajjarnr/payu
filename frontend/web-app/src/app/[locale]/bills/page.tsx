@@ -29,18 +29,20 @@ export default function BillsPage() {
   { name: 'Game Voucher', icon: Gamepad2, color: 'bg-orange-100 text-orange-600', code: 'VOUCHER' },
  ];
 
+ const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
+
  const { data: recentPayments, isLoading } = useQuery({
-  queryKey: ['recent-payments'],
+  queryKey: ['recent-payments', accountId],
   queryFn: async () => {
-   const response = await api.get('/payments?size=5');
+   const response = await api.get('/billing/payments?size=5');
    return response.data;
   },
-  enabled: false
+  enabled: !!accountId
  });
 
  const paymentMutation = useMutation({
   mutationFn: (data: CreatePaymentRequest) => {
-   return api.post('/payments', data);
+   return api.post('/billing/payments', data);
   },
   onSuccess: () => {
    addToast(`Pembayaran ${selectedBiller?.name} sebesar Rp ${parseFloat(amount).toLocaleString()} telah diproses.`, 'success');

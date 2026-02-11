@@ -1,4 +1,4 @@
-export { useAuthStore } from './authStore';
+export { useAuthStore, useIsAuthenticated } from './authStore';
 export { useUIStore } from './uiStore';
 export { useNotificationStore } from './notificationStore';
 export { useWalletStore } from './walletStore';

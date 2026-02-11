@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-02-11
+
+### Fixed (P0)
+
+- Container fixes untuk partner-service dan api-portal-service
+- Python container fixes untuk analytics-service dan kyc-service (setuptools)
+- Frontend auth flow: gunakan real user data dari BFF response
+- Fix isAuthenticated persistence setelah page refresh
+- Fix login redirect ke /dashboard
+
+### Fixed (P1)
+
+- Navigation links sekarang locale-aware
+- BFF proxy error handling improvement
+- Bills page API endpoint alignment
+- WebSocket URL configuration
+
+### Changed
+
+- Infrastructure configuration untuk local Podman deployment
+
 ## [Unreleased]
 
 ### Changed

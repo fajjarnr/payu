@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { useAuthStore } from '@/stores';
+import { useIsAuthenticated } from '@/stores';
 import type { PortfolioUpdate } from '@/types';
 
 export interface UseWebSocketOptions {
@@ -16,7 +16,7 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   const { onMessage, onError, onClose, onOpen, enabled = true } = options;
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useIsAuthenticated();
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

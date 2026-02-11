@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginRequest } from '@/types';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 import Image from 'next/image';
 import { useAuthStore } from '@/stores';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,7 @@ export default function LoginPage() {
     onSuccess: (response) => {
       const user = response.data?.user;
       if (user) setAuth(user, user.id);
-      router.push('/');
+      router.push('/dashboard');
     },
     onError: (error) => {
       console.error('Login failed:', error);

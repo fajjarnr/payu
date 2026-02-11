@@ -36,7 +36,10 @@ export class ErrorBoundary extends Component<Props, State> {
  };
 
  private handleGoHome = () => {
-  window.location.href = '/';
+  // Extract locale from current URL path for locale-aware redirect
+  const pathLocale = window.location.pathname.match(/^\/(en|id)(\/|$)/);
+  const locale = pathLocale ? pathLocale[1] : 'id';
+  window.location.href = `/${locale}`;
  };
 
  public render() {

@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { Home, Wallet, Repeat, Receipt } from 'lucide-react';
 import clsx from 'clsx';
-import { useAuthStore } from '@/stores';
+import { useIsAuthenticated } from '@/stores';
+import { Link } from '@/lib/navigation';
 
 /**
  * SECURITY NOTICE: Authentication Check
@@ -17,7 +17,7 @@ export default function MobileNav() {
   const t = useTranslations('nav');
   const locale = useLocale();
   const pathname = usePathname();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useIsAuthenticated();
 
   // Helper to localize paths
   const l = (path: string) => locale === 'id' ? path : `/${locale}${path}`;

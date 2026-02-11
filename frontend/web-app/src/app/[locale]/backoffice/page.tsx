@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 import { Users, AlertTriangle, Headphones, FileText, FlaskConical, ClipboardCheck, ArrowUpRight, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';

@@ -74,11 +74,11 @@ async function proxyRequest(
     // GET requests return an empty payload so the UI renders with defaults.
     // Mutating methods still surface the 503 so users know the write failed.
     if (request.method === 'GET' || request.method === 'HEAD') {
-      console.warn('[BFF] Gateway offline – returning empty payload for', request.method, request.nextUrl.pathname);
+      console.warn('[BFF] Gateway offline – returning error payload for', request.method, request.nextUrl.pathname);
       return NextResponse.json(
-        { data: null, items: [], total: 0, _fallback: true },
+        { error: true, _fallback: true, data: null, items: [], total: 0 },
         {
-          status: 200,
+          status: 503,
           headers: { 'X-Fallback': 'gateway-offline' },
         },
       );

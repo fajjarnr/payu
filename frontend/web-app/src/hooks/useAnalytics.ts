@@ -17,7 +17,9 @@ export function useAnalyticsWebSocket(accountId: string | undefined) {
   const handleOpen = () => setIsConnected(true);
   const handleClose = () => setIsConnected(false);
 
-  useWebSocket(`${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080'}/ws/analytics/${accountId || ''}`, {
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ? `wss://${window.location.host}` : 'wss://localhost');
+
+  useWebSocket(`${wsUrl}/ws/analytics/${accountId || ''}`, {
     onMessage: handleUpdate,
     onOpen: handleOpen,
     onClose: handleClose,

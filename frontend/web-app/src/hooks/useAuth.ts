@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AuthService from '@/services/AuthService';
 import { useAuthStore } from '@/stores';
 import type { LoginRequest, User } from '@/types';
+import { createLocaleHref } from '@/lib/navigation';
+import { useLocale } from 'next-intl';
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
@@ -11,21 +13,13 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
-    onSuccess: async () => {
+    onSuccess: async (response) => {
       // Tokens are managed via httpOnly cookies by the backend
       // We only store user profile and account ID in the store
-      const mockUser: User = {
-        id: '',
-        externalId: '',
-        username: '',
-        email: '',
-        fullName: '',
-        nik: '',
-        kycStatus: 'PENDING',
-        createdAt: '',
-        updatedAt: ''
-      };
-      setAuth(mockUser, '');
+      const user = response.data?.user;
+      if (user) {
+        setAuth(user, user.id);
+      }
       await queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
     onError: (error) => {
@@ -37,6 +31,7 @@ export const useLogin = () => {
 export const useLogout = () => {
   const queryClient = useQueryClient();
   const logout = useAuthStore((state) => state.logout);
+  const locale = useLocale();
 
   return useMutation({
     mutationFn: async () => {
@@ -48,7 +43,7 @@ export const useLogout = () => {
     onSuccess: () => {
       queryClient.clear();
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        window.location.href = createLocaleHref('/login', locale);
       }
     },
   });

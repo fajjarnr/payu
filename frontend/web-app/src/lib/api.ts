@@ -72,7 +72,10 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError);
         if (typeof window !== 'undefined') {
-          window.location.href = '/login';
+          // Extract locale from current URL path for locale-aware redirect
+          const pathLocale = window.location.pathname.match(/^\/(en|id)(\/|$)/);
+          const locale = pathLocale ? pathLocale[1] : 'id';
+          window.location.href = `/${locale}/login`;
         }
         return Promise.reject(refreshError);
       } finally {
