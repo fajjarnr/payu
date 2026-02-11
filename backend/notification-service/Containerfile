@@ -20,8 +20,11 @@ USER 185
 
 WORKDIR /deployments
 
-# Copy the pre-built artifact from host (requires mvn clean package run locally first)
-COPY --chown=185 target/*.jar /deployments/app.jar
+# Copy the Quarkus fast-jar structure
+COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 target/quarkus-app/*.jar /deployments/
+COPY --chown=185 target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Volume mounts for temporary files and logs
 VOLUME ["/deployments/tmp", "/deployments/logs"]
@@ -30,7 +33,12 @@ VOLUME ["/deployments/tmp", "/deployments/logs"]
 EXPOSE 8086
 
 # JVM configuration for containers
-ENV JAVA_OPTS="-XX:+UseContainerSupport     -XX:MaxRAMPercentage=75.0     -XX:InitialRAMPercentage=50.0     -XX:+UseG1GC     -XX:MaxGCPauseMillis=200     -Djava.security.egd=file:/dev/./urandom"
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:InitialRAMPercentage=50.0 \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -Djava.security.egd=file:/dev/./urandom"
 
-# Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]
+# Run the application using Quarkus runner
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar quarkus-run.jar"]
