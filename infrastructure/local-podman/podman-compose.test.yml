@@ -132,7 +132,7 @@ services:
   # IDENTITY (Test)
   # ============================================
   keycloak-test:
-    image: quay.io/keycloak/keycloak:26.0
+    image: quay.io/keycloak/keycloak:latest
     container_name: payu-keycloak-test
     podman_networks:
       - name: payu-test-network
