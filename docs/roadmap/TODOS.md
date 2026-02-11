@@ -5,10 +5,11 @@
 > **Last Synchronized**: February 11, 2026
 >
 > **Recent Updates (Feb 11, 2026)**:
-> - ✅ **All 28 containers running** (6 infra + 22 services)
+> - ✅ **All 35 containers running** (13 infra + 21 services + 1 web-app)
 > - ✅ **P0 Fixes**: Container fixes, Frontend auth flow, billing-service port interfaces
 > - ✅ **P1 Fixes**: Locale-aware navigation, BFF proxy, Bills page, WebSocket
-> - ✅ **Infrastructure**: Local Podman deployment stabilized
+> - ✅ **Infrastructure**: Local Podman deployment stabilized with monitoring stack
+> - ✅ **API Testing**: Web-App ↔ Backend integration verified
 > - 🟡 **Status**: Ready for OpenShift deployment (92%)
 
 ---
@@ -123,6 +124,24 @@
 
 ## 🔧 Container Environment Status
 
+### API Testing Results (Feb 11, 2026)
+
+| Endpoint | Status | Response |
+|----------|--------|----------|
+| Web-App Health (`/api/health`) | ✅ PASS | `{"status": "healthy"}` |
+| Gateway Health (`/health`) | ✅ PASS | `{"status": "UP"}` |
+| Keycloak OIDC | ✅ PASS | Discovery endpoint OK |
+| Account Service (`:8001`) | ✅ PASS | UP |
+| Auth Service (`:8002`) | ✅ PASS | UP |
+| Transaction Service (`:8003`) | ✅ PASS | UP |
+| Wallet Service (`:8004`) | ✅ PASS | UP |
+| Prometheus (`:9090`) | ✅ PASS | Healthy |
+| Grafana (`:3000`) | ✅ PASS | OK |
+| Kafka UI (`:8088`) | ✅ PASS | UP |
+
+### Running Containers (35/38)
+
+**Infrastructure (13):**
 ```
 ✅ payu-postgres             Up (healthy)
 ✅ payu-redis                Up (healthy)
@@ -130,6 +149,17 @@
 ✅ payu-zookeeper            Up (healthy)
 ✅ payu-keycloak             Up (healthy)
 ✅ payu-jaeger               Up (healthy)
+✅ payu-prometheus           Up (healthy)
+✅ payu-grafana              Up (healthy)
+✅ payu-loki                 Up (healthy)
+✅ payu-promtail             Up
+✅ payu-alertmanager         Up (healthy)
+✅ payu-kafka-ui             Up
+✅ payu-vault                Up (healthy)
+```
+
+**Backend Services (21):**
+```
 ✅ payu-gateway-service      Up (healthy)
 ✅ payu-account-service      Up
 ✅ payu-auth-service         Up
@@ -151,10 +181,14 @@
 ✅ payu-api-portal-service   Up
 ✅ payu-kyc-service          Up
 ✅ payu-analytics-service    Up
+```
+
+**Frontend (1):**
+```
 ✅ payu-web-app              Up
 ```
 
-**Total: 28/28 services running**
+**Total: 35/35 services running**
 
 ---
 

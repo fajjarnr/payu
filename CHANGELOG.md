@@ -9,13 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Complete Podman Compose Deployment (28 Services)**:
-  - All 22 backend microservices containerized and running
-  - 6 infrastructure services (postgres, redis, kafka, zookeeper, keycloak, jaeger)
+- **Complete Podman Compose Deployment (35 Services)**:
+  - All 21 backend microservices containerized and running
+  - 13 infrastructure services (postgres, redis, kafka, zookeeper, keycloak, jaeger, prometheus, grafana, loki, vault, etc.)
+  - Full monitoring stack (Prometheus, Grafana, Alertmanager, Loki, Promtail)
   - Frontend web-app (Next.js) running on port 3001
   - Service port mapping standardized (8001-8093)
   - Database initialization for all 26 PostgreSQL databases
   - Inter-service networking with DNS aliases
+- **API Testing Results**:
+  - Web-App ↔ Backend integration verified
+  - Gateway routing tested
+  - Keycloak OIDC discovery validated
+  - Core services (account, auth, transaction, wallet) health: 100%
+  - Monitoring stack (Prometheus, Grafana, Kafka-UI) operational
 
 ### Fixed (P0)
 
@@ -39,7 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Infrastructure configuration untuk local Podman deployment
-- Container Environment Readiness: **100% (28/28 services running)**
+- Container Environment Readiness: **100% (35/35 services running)**
+- Updated TODOS.md with API testing results and comprehensive container status
 
 ## [Unreleased]
 
