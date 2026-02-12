@@ -1,0 +1,103 @@
+# PayU Platform - Red Hat Data Grid (Infinispan)
+# Distributed caching and data grid solution
+# Requires: Red Hat Data Grid Operator (installed via OLM)
+
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: payu-datagrid
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-datagrid
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+    environment: dev
+spec:
+  # Number of replicas for high availability
+  replicas: 1  # Increase to 3 for production HA
+
+  # Service type: DataGrid for caching or Cache for in-memory only
+  service:
+    type: DataGrid
+
+  # Security configuration
+  security:
+    endpointAuthentication: false  # Enable for production with proper auth
+    # endpointSecretName: datagrid-credentials
+
+  # Container resources
+  container:
+    memory: "512Mi"
+    cpu: "250m"
+
+  # JVM options
+  jvm:
+    heapSize: "256Mi"
+
+  # Expose route for external access (optional)
+  # expose:
+  #   type: Route
+
+---
+# Redis-compatible service alias
+# Provides a redis:// endpoint for applications expecting Redis
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/managed-by: datagrid
+spec:
+  type: ClusterIP
+  selector:
+    app: infinispan-pod
+    app.kubernetes.io/created-by: payu-datagrid
+    clusterName: payu-datagrid
+  ports:
+    - port: 6379
+      targetPort: 11222
+      name: redis
+      protocol: TCP
+
+---
+# Cache configuration example
+apiVersion: infinispan.org/v2alpha1
+kind: Cache
+metadata:
+  name: payu-sessions
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-sessions
+    app.kubernetes.io/part-of: payu
+    infinispan.org/cluster: payu-datagrid
+spec:
+  clusterName: payu-datagrid
+  name: sessions
+  template: |
+    <local-cache>
+      <memory max-count="10000"/>
+      <expiration lifespan="3600000" max-idle="1800000"/>
+    </local-cache>
+
+---
+# Credentials secret (if endpoint authentication is enabled)
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: datagrid-credentials
+#   namespace: payu-dev
+# type: Opaque
+# stringData:
+#   username: admin
+#   password: "<secure-password>"
+
+---
+# Connection information
+# Data Grid endpoints:
+#   - REST:   http://payu-datagrid:11222
+#   - HotRod: payu-datagrid:11222
+#   - Redis:  redis:6379 (mapped to Data Grid)

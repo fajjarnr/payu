@@ -33,6 +33,8 @@ interface AuthState {
   // Tokens are now managed via httpOnly cookies by the backend
   user: User | null;
   accountId: string | null;
+  /** True when user is authenticated - derived from user and accountId presence */
+  isAuthenticated: boolean;
   setAuth: (user: User, accountId: string) => void;
   setUser: (user: User) => void;
   setAuthenticated: (authenticated: boolean) => void;
@@ -45,11 +47,13 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       accountId: null,
+      isAuthenticated: false,
 
       setAuth: (user, accountId) => {
         set({
           user,
-          accountId
+          accountId,
+          isAuthenticated: true
         });
       },
 
@@ -58,17 +62,18 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setAuthenticated: (authenticated) => {
-        // This method is kept for backward compatibility
-        // isAuthenticated is now derived from user and accountId
-        if (!authenticated) {
-          set({ user: null, accountId: null });
+        if (authenticated) {
+          set({ isAuthenticated: true });
+        } else {
+          set({ user: null, accountId: null, isAuthenticated: false });
         }
       },
 
       logout: () => {
         set({
           user: null,
-          accountId: null
+          accountId: null,
+          isAuthenticated: false
         });
       },
 
@@ -82,7 +87,8 @@ export const useAuthStore = create<AuthState>()(
       // Tokens are NEVER persisted - they're in httpOnly cookies
       partialize: (state) => ({
         user: state.user,
-        accountId: state.accountId
+        accountId: state.accountId,
+        isAuthenticated: state.isAuthenticated
       })
     }
   )

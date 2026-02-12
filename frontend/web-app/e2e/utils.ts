@@ -132,9 +132,18 @@ export interface AccessibilityViolation {
 }
 
 /**
+ * Raw accessibility violation from axe-core
+ */
+interface RawAccessibilityViolation {
+  id: string;
+  impact?: string | null;
+  description?: string;
+}
+
+/**
  * Filter out minor accessibility issues that are acceptable in test environment
  */
-export function filterMinorA11yIssues(violations: any[]): AccessibilityViolation[] {
+export function filterMinorA11yIssues(violations: RawAccessibilityViolation[]): AccessibilityViolation[] {
   // Filter out known design-debt a11y issues that are not functional blockers:
   // - color-contrast: design-related, tracked as design debt
   // - region: landmark issues from BFF fallback empty states
@@ -142,7 +151,13 @@ export function filterMinorA11yIssues(violations: any[]): AccessibilityViolation
   // - svg-img-alt: decorative SVGs without alt text — design debt
   // - nested-interactive: card components with nested focusable elements — design debt
   const designDebtRules = ['color-contrast', 'region', 'button-name', 'svg-img-alt', 'nested-interactive'];
-  return violations.filter(v => !designDebtRules.includes(v.id));
+  return violations
+    .filter(v => !designDebtRules.includes(v.id))
+    .map(v => ({
+      id: v.id,
+      impact: v.impact ?? 'unknown',
+      description: v.description ?? 'No description available',
+    }));
 }
 
 /**

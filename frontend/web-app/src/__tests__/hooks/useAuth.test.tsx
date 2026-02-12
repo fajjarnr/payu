@@ -61,10 +61,20 @@ describe('useLogin hook', () => {
 
   it('should login successfully with valid credentials', async () => {
     const mockLoginResponse = {
-      access_token: 'access-token-123',
-      refresh_token: 'refresh-token-123',
-      expires_in: 3600,
-      token_type: 'Bearer'
+      success: true,
+      data: {
+        user: {
+          id: 'user-123',
+          externalId: 'ext-123',
+          username: 'testuser',
+          email: 'test@example.com',
+          fullName: 'Test User',
+          nik: '1234567890123456',
+          kycStatus: 'PENDING' as const,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z'
+        }
+      }
     };
 
     vi.mocked(AuthService.login).mockResolvedValue(mockLoginResponse);
@@ -91,10 +101,20 @@ describe('useLogin hook', () => {
 
   it('should invalidate auth queries on successful login', async () => {
     const mockLoginResponse = {
-      access_token: 'access-token-123',
-      refresh_token: 'refresh-token-123',
-      expires_in: 3600,
-      token_type: 'Bearer'
+      success: true,
+      data: {
+        user: {
+          id: 'user-123',
+          externalId: 'ext-123',
+          username: 'testuser',
+          email: 'test@example.com',
+          fullName: 'Test User',
+          nik: '1234567890123456',
+          kycStatus: 'PENDING' as const,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z'
+        }
+      }
     };
 
     vi.mocked(AuthService.login).mockResolvedValue(mockLoginResponse);
@@ -288,10 +308,20 @@ describe('useAuth integration', () => {
 
   it('should handle complete auth flow: login -> logout', async () => {
     const mockLoginResponse = {
-      access_token: 'access-token-123',
-      refresh_token: 'refresh-token-123',
-      expires_in: 3600,
-      token_type: 'Bearer'
+      success: true,
+      data: {
+        user: {
+          id: 'user-123',
+          externalId: 'ext-123',
+          username: 'testuser',
+          email: 'test@example.com',
+          fullName: 'Test User',
+          nik: '1234567890123456',
+          kycStatus: 'PENDING' as const,
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-01T00:00:00Z'
+        }
+      }
     };
 
     vi.mocked(AuthService.login).mockResolvedValue(mockLoginResponse);

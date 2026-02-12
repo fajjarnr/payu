@@ -1,0 +1,52 @@
+# PayU Platform - Namespaces
+# Define all namespaces for the platform with proper labels
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-dev
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/managed-by: openshift
+    environment: dev
+    tier: development
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/managed-by: openshift
+    environment: sit
+    tier: testing
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/managed-by: openshift
+    environment: uat
+    tier: pre-production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-preprod
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/managed-by: openshift
+    environment: preprod
+    tier: pre-production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-prod
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/managed-by: openshift
+    environment: prod
+    tier: production

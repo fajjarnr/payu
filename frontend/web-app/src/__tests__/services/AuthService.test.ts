@@ -31,10 +31,20 @@ describe('AuthService', () => {
   describe('login', () => {
     it('should successfully login without storing tokens in localStorage', async () => {
       const mockResponse: LoginResponse = {
-        access_token: 'mock_access_token',
-        refresh_token: 'mock_refresh_token',
-        expires_in: 3600,
-        token_type: 'Bearer',
+        success: true,
+        data: {
+          user: {
+            id: 'user-123',
+            externalId: 'ext-123',
+            username: 'testuser',
+            email: 'test@example.com',
+            fullName: 'Test User',
+            nik: '1234567890123456',
+            kycStatus: 'PENDING',
+            createdAt: '2024-01-01T00:00:00Z',
+            updatedAt: '2024-01-01T00:00:00Z'
+          }
+        }
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
@@ -54,10 +64,20 @@ describe('AuthService', () => {
 
     it('should handle login response without storing tokens locally', async () => {
       const mockResponse: LoginResponse = {
-        access_token: 'access_token_only',
-        refresh_token: '',
-        expires_in: 3600,
-        token_type: 'Bearer',
+        success: true,
+        data: {
+          user: {
+            id: 'user-123',
+            externalId: 'ext-123',
+            username: 'testuser',
+            email: 'test@example.com',
+            fullName: 'Test User',
+            nik: '1234567890123456',
+            kycStatus: 'PENDING',
+            createdAt: '2024-01-01T00:00:00Z',
+            updatedAt: '2024-01-01T00:00:00Z'
+          }
+        }
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockResponse });

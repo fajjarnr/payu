@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-02-12
+
+### Added
+
+- **OpenShift Infrastructure Deployment (Production Ready)**:
+  - **Crunchy Postgres for Kubernetes**: High availability PostgreSQL 16 with pgBackRest backups, pgBouncer pooling, and automated user/database provisioning for 26 databases
+  - **Red Hat Data Grid (Infinispan)**: Distributed caching with Redis-compatible API (port 6379 mapped to 11222)
+  - **AMQ Streams (Kafka 4.0)**: Event streaming with KRaft mode (no ZooKeeper), 4.0.0 version with KafkaNodePool for controllers and brokers
+  - **AMQ Streams Console**: Web-based Kafka UI for topic management, consumer groups monitoring, and message browsing
+  - **Red Hat Single Sign-On (RHSSO 7.6)**: Enterprise Keycloak with external database integration to Crunchy Postgres
+  - **Infrastructure Documentation**: Complete YAML manifests in `infrastructure/openshift/examples/` (01-07)
+  - **Operations Guides**: `INFRASTRUCTURE_DEPLOYMENT.md` and `INFRASTRUCTURE_SUMMARY.md` with deployment procedures
+  - All components deployed in `payu-dev` namespace with proper labeling and resource limits
+  - External access via OpenShift Routes with edge TLS termination
+
+### Changed
+
+- **Kafka Console Configuration**: Updated to use `kafkaClusters` format with `credentials.kafkaUser` for SCRAM-SHA-512 authentication
+- **Kafka Listener Security**: Enabled SCRAM-SHA-512 authentication on `plain` listener for Console connectivity
+
 ## [Unreleased] - 2026-02-11
 
 ### Added

@@ -9,6 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useCards, useFreezeCard, useUnfreezeCard, useCreateCard } from '@/hooks';
 
+interface CardData {
+    id: string;
+    cardNumber: string;
+    expiryDate: string;
+    cardHolder: string;
+    status: string;
+}
+
 export default function CardsPage() {
     const [showFullDetails, setShowFullDetails] = useState(false);
     const { data: cardsData, isLoading: loadingCards } = useCards();
@@ -16,7 +24,7 @@ export default function CardsPage() {
     const unfreezeCard = useUnfreezeCard();
     const createCard = useCreateCard();
 
-    const primaryCard = (cardsData as any)?.[0];
+    const primaryCard = (cardsData as CardData[] | undefined)?.[0];
     const cardNumber = primaryCard?.cardNumber ?? '4829 5678 9032 4410';
     const cardExpiry = primaryCard?.expiryDate ?? '08 / 29';
     const cardOwner = primaryCard?.cardHolder ?? 'PENGGUNA PAYU';

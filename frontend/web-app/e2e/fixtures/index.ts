@@ -3,7 +3,13 @@
  *
  * These fixtures automatically handle authentication for protected routes.
  * The middleware.ts requires session cookies for routes like /investments, /dashboard, etc.
+ *
+ * NOTE: This file uses Playwright's fixture pattern which uses a `use` function
+ * parameter that ESLint incorrectly flags as a React Hook. The react-hooks/rules-of-hooks
+ * rule is disabled for this file since these are Playwright fixtures, not React components.
  */
+
+/* eslint-disable react-hooks/rules-of-hooks */
 
 import { test as base, expect, Page, BrowserContext } from '@playwright/test';
 
