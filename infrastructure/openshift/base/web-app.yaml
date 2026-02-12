@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: web-app
-          image: image-registry.openshift-image-registry.svc:5000/payu/web-app:1.0.0
+          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/web-app:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -28,14 +28,16 @@ spec:
               protocol: TCP
           env:
             - name: NEXT_PUBLIC_GATEWAY_URL
-              value: "https://gateway-payu.apps.ocp4.example.com"
+              value: "https://gateway-payu-dev.apps.cluster.payu.fajjjar.my.id"
             - name: NEXTAUTH_URL
-              value: "https://web-payu.apps.ocp4.example.com"
+              value: "https://web-app-payu-dev.apps.cluster.payu.fajjjar.my.id"
             - name: NEXTAUTH_SECRET
               valueFrom:
                 secretKeyRef:
                   name: web-credentials
                   key: nextauth-secret
+            - name: GATEWAY_URL
+              value: "http://gateway-service:8080"
           resources:
             requests:
               memory: "256Mi"

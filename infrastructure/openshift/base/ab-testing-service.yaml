@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: ab-testing-service
-          image: image-registry.openshift-image-registry.svc:5000/payu/ab-testing-service:1.0.0
+          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/ab-testing-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -34,7 +34,7 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "container"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://postgres:5432/payu_abtesting"
+              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_abtesting"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -45,6 +45,10 @@ spec:
                 secretKeyRef:
                   name: db-credentials
                   key: password
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
           resources:
             requests:
               memory: "256Mi"

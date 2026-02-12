@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: gateway-service
-          image: image-registry.openshift-image-registry.svc:5000/payu/gateway-service:1.0.0
+          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/gateway-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -43,6 +43,22 @@ spec:
                 configMapKeyRef:
                   name: gateway-config
                   key: oidc-auth-server-url
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_gateway_service"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secrets
+                  key: JWT_SECRET
+            - name: WEBHOOK_PARTNER_1_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secrets
+                  key: WEBHOOK_PARTNER_1_SECRET
           envFrom:
             - configMapRef:
                 name: gateway-services-config
@@ -123,7 +139,7 @@ kind: ConfigMap
 metadata:
   name: gateway-config
 data:
-  oidc-auth-server-url: "http://keycloak:8180/realms/payu"
+  oidc-auth-server-url: "http://keycloak-discovery:8080/auth/realms/payu"
 ---
 apiVersion: route.openshift.io/v1
 kind: Route

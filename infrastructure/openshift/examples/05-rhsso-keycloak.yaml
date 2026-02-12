@@ -67,6 +67,8 @@ spec:
 
 ---
 # Service for internal Keycloak connections
+# Note: RHSSO operator creates 'keycloak' (HTTPS 8443) and 'keycloak-discovery' (HTTP 8080)
+# For internal service-to-service (avoid SSL cert issues), use keycloak-discovery:8080
 apiVersion: v1
 kind: Service
 metadata:
@@ -82,12 +84,12 @@ spec:
     app: keycloak
     app.kubernetes.io/managed-by: keycloak-operator
   ports:
-    - port: 8080
-      targetPort: 8080
-      name: http
     - port: 8443
       targetPort: 8443
       name: https
+    - port: 8080
+      targetPort: 8080
+      name: http
 
 ---
 # Credentials secret (auto-created by operator)
@@ -153,8 +155,63 @@ spec:
     protocol: openid-connect
 
 ---
+# Backend client for auth-service (confidential)
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: payu-backend
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-backend
+    app.kubernetes.io/part-of: payu
+spec:
+  instanceSelector:
+    matchLabels:
+      app: payu-keycloak
+  realmSelector:
+    matchLabels:
+      app: payu-realm
+  client:
+    clientId: payu-backend
+    name: "PayU Backend Services"
+    enabled: true
+    clientAuthenticatorType: client-secret
+    secret: payu-backend-secret
+    redirectUris:
+      - "*"
+    webOrigins:
+      - "+"
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: true
+    serviceAccountsEnabled: true
+    publicClient: false
+    protocol: openid-connect
+
+---
+# Keycloak credentials secret for auth-service
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-credentials
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: keycloak-credentials
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: sso
+type: Opaque
+stringData:
+  KEYCLOAK_CLIENT_SECRET: "payu-backend-secret"
+  KEYCLOAK_ADMIN_USERNAME: "admin"
+  KEYCLOAK_ADMIN_PASSWORD: "<from-credential-payu-keycloak-secret>"
+
+---
 # Access Information
-# Keycloak URL: https://keycloak-payu-dev.apps.cluster.payu.fajjjar.my.id/auth
+# Keycloak External URL: https://keycloak-payu-dev.apps.cluster.payu.fajjjar.my.id/auth
 # Admin Credentials: Get from secret credential-payu-keycloak
-# Internal Service: http://keycloak.payu-dev.svc:8080/auth
+# Internal HTTP (no SSL): http://keycloak-discovery:8080/auth  (use for service-to-service)
+# Internal HTTPS: https://keycloak:8443/auth  (requires SSL trust config in Java)
+# OIDC Issuer: http://keycloak-discovery:8080/auth/realms/payu
+# Token Endpoint: http://keycloak-discovery:8080/auth/realms/payu/protocol/openid-connect/token
 # Realm: payu
+# Backend Client: payu-backend (confidential, secret: payu-backend-secret)

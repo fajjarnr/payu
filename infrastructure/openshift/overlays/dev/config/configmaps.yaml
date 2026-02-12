@@ -4,7 +4,7 @@ metadata:
   name: postgres-config
   namespace: payu-dev
 data:
-  POSTGRES_HOST: "postgres-primary.payu-dev.svc.cluster.local"
+  POSTGRES_HOST: "payu-postgres-primary"
   POSTGRES_PORT: "5432"
   POSTGRES_DB: "payu"
   POSTGRES_MAX_CONNECTIONS: "20"
@@ -16,7 +16,7 @@ metadata:
   name: redis-config
   namespace: payu-dev
 data:
-  REDIS_HOST: "redis-master.payu-dev.svc.cluster.local"
+  REDIS_HOST: "redis"
   REDIS_PORT: "6379"
   REDIS_MAX_RETRIES: "3"
 ---
@@ -26,7 +26,7 @@ metadata:
   name: kafka-config
   namespace: payu-dev
 data:
-  KAFKA_BOOTSTRAP_SERVERS: "kafka-broker-0.kafka-broker.payu-dev.svc.cluster.local:9092"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
   KAFKA_RETRIES: "3"
   KAFKA_ACKS: "all"
 ---
@@ -57,8 +57,8 @@ data:
   QUARKUS_HTTP_CORS_HEADERS: "Authorization,Content-Type,Accept,Origin,X-Requested-With"
   QUARKUS_HTTP_CORS_CREDENTIALS: "true"
   QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: "10M"
-  OIDC_AUTH_SERVER_URL: "https://sso-dev.payu.id/realms/payu"
-  OIDC_CLIENT_ID: "payu-gateway"
+  OIDC_AUTH_SERVER_URL: "http://keycloak-discovery:8080/auth/realms/payu"
+  OIDC_CLIENT_ID: "payu-backend"
   OIDC_ENABLED: "true"
   ACCOUNT_SERVICE_URL: "http://account-service:8080"
   AUTH_SERVICE_URL: "http://auth-service:8080"

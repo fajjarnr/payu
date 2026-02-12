@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: api-portal-service
-          image: image-registry.openshift-image-registry.svc:5000/payu/api-portal-service:1.0.0
+          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/api-portal-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -32,7 +32,7 @@ spec:
               protocol: TCP
           env:
             - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://postgres:5432/payu_api_portal"
+              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_api_portal"
             - name: QUARKUS_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -45,6 +45,10 @@ spec:
                   key: password
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
           resources:
             requests:
               memory: "256Mi"

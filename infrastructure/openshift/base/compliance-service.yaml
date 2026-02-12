@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: compliance-service
-          image: image-registry.openshift-image-registry.svc:5000/payu/compliance-service:1.0.0
+          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/compliance-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -34,7 +34,7 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "container"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://postgres:5432/payu_compliance"
+              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_compliance"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -47,6 +47,10 @@ spec:
                   key: password
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
           resources:
             requests:
               memory: "256Mi"
@@ -56,15 +60,15 @@ spec:
               cpu: "1000m"
           livenessProbe:
             httpGet:
-              path: /actuator/health/liveness
+              path: /compliance-service/actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 45
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /actuator/health/readiness
+              path: /compliance-service/actuator/health/readiness
               port: 8080
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 5
 ---
 apiVersion: v1

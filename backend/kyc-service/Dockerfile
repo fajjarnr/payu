@@ -25,19 +25,21 @@ COPY src ./src
 ####
 FROM registry.access.redhat.com/ubi9/python-311:latest
 
+USER root
+
 WORKDIR /app
 
+# Create directories and set permissions first (as root)
+RUN mkdir -p /app/tmp /app/logs /app/models /app/uploads && \
+    chown -R 185:0 /app
+
 # Copy virtual environment and source
-COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /app/src /app/src
+COPY --from=builder --chown=185:0 /opt/venv /opt/venv
+COPY --from=builder --chown=185:0 /app/src /app
 
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Create directories and set permissions
-RUN mkdir -p /app/tmp /app/logs /app/models /app/uploads && \
-    chown -R 185:0 /app
 
 USER 185
 

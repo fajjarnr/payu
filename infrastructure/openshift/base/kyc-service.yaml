@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: kyc-service
-          image: image-registry.openshift-image-registry.svc:5000/payu/kyc-service:1.0.0
+          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/kyc-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -32,7 +32,7 @@ spec:
               protocol: TCP
           env:
             - name: DATABASE_URL
-              value: "postgresql://payu:$(DATABASE_PASSWORD)@postgres:5432/payu_kyc"
+              value: "postgresql+asyncpg://payu:$(DATABASE_PASSWORD)@payu-postgres-primary:5432/payu_kyc"
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -42,6 +42,12 @@ spec:
               value: "kafka:9092"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4317"
+            - name: SECRET_KEY
+              value: "CF2owM6bqkyWHSHCGlxMvx/PwBFQ2XCq4C3kdA7tiqQ="
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
           resources:
             requests:
               memory: "512Mi"

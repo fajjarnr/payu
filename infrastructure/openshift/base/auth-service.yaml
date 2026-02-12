@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: image-registry.openshift-image-registry.svc:5000/payu/auth-service:1.0.0
+          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/auth-service:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -34,9 +34,24 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "container"
             - name: KEYCLOAK_SERVER_URL
-              value: "http://keycloak:8080"
+              value: "http://keycloak-discovery:8080/auth"
+            - name: OIDC_ISSUER
+              value: "http://keycloak-discovery:8080/auth/realms/payu"
+            - name: KEYCLOAK_REALM
+              value: "payu"
+            - name: KEYCLOAK_CLIENT_ID
+              value: "payu-backend"
+            - name: KEYCLOAK_CLIENT_SECRET
+              value: "payu-backend-secret"
+            - name: KEYCLOAK_ADMIN_USERNAME
+              value: "admin"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-credentials
+                  key: KEYCLOAK_ADMIN_PASSWORD
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://postgres:5432/payu_auth"
+              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_auth"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -49,6 +64,10 @@ spec:
                   key: password
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
           resources:
             requests:
               memory: "256Mi"

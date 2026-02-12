@@ -1,0 +1,5 @@
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
+COPY target/dukcapil-simulator-1.0.0-SNAPSHOT.jar /deployments/app.jar
+WORKDIR /deployments
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/deployments/app.jar"]
