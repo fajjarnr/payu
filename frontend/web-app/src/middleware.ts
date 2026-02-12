@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { locales, defaultLocale } from './i18n/config';
+import { edgeLogger } from './lib/edge-logger';
 
 const intlMiddleware = createMiddleware({
   locales,
@@ -26,6 +27,10 @@ export default function middleware(request: NextRequest) {
   if (pathWithoutLocale === '/' && hasSession) {
     const localeMatch = pathname.match(/^\/(en|id)/);
     const locale = localeMatch ? localeMatch[0] : '';
+    edgeLogger.info('Redirecting authenticated user to dashboard', {
+      action: 'middleware',
+      path: pathname,
+    });
     return NextResponse.redirect(new URL(`${locale}/dashboard`, request.url));
   }
 
@@ -48,6 +53,11 @@ export default function middleware(request: NextRequest) {
     const loginUrl = new URL(`${locale}/login`, request.url);
     // Optional: add callback URL for better UX
     loginUrl.searchParams.set('callbackUrl', pathname);
+    edgeLogger.warn('Unauthenticated access — redirecting to login', {
+      action: 'middleware',
+      path: pathname,
+      callbackUrl: pathname,
+    });
     return NextResponse.redirect(loginUrl);
   }
 

@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import logger, { getCorrelationId, withCorrelation } from '@/lib/logger';
 
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
 
@@ -18,6 +19,10 @@ async function proxyRequest(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
+  const correlationId = getCorrelationId(request);
+  const log = withCorrelation(correlationId);
+  const startTime = Date.now();
+
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('accessToken')?.value;
@@ -29,10 +34,11 @@ async function proxyRequest(
     // Forward query parameters
     request.nextUrl.searchParams.forEach((v: string, k: string) => url.searchParams.set(k, v));
 
+    log.info({ action: 'proxy', method: request.method, path: `/api/v1/${backendPath}`, hasAuth: !!token }, 'Proxy request');
+
     // Build upstream headers
     const headers: HeadersInit = {
-      'X-Correlation-Id':
-        request.headers.get('x-correlation-id') || crypto.randomUUID(),
+      'X-Correlation-Id': correlationId,
     };
 
     if (token) {
@@ -63,6 +69,8 @@ async function proxyRequest(
 
     const responseBody = await res.text();
 
+    log.info({ action: 'proxy', method: request.method, path: `/api/v1/${backendPath}`, status: res.status, durationMs: Date.now() - startTime }, 'Proxy response');
+
     return new NextResponse(responseBody, {
       status: res.status,
       headers: {
@@ -74,7 +82,7 @@ async function proxyRequest(
     // GET requests return an empty payload so the UI renders with defaults.
     // Mutating methods still surface the 503 so users know the write failed.
     if (request.method === 'GET' || request.method === 'HEAD') {
-      console.warn('[BFF] Gateway offline – returning error payload for', request.method, request.nextUrl.pathname);
+      log.warn({ action: 'proxy', method: request.method, path: request.nextUrl.pathname, err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Gateway offline — returning fallback for read request');
       return NextResponse.json(
         { error: true, _fallback: true, data: null, items: [], total: 0 },
         {
@@ -84,7 +92,7 @@ async function proxyRequest(
       );
     }
 
-    console.error('[BFF] Proxy error:', error);
+    log.error({ action: 'proxy', method: request.method, path: request.nextUrl.pathname, err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Proxy error');
     return NextResponse.json(
       { error: 'Service unavailable' },
       { status: 503 },

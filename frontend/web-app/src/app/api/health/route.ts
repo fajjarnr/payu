@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/logger';
 
 /**
  * Health check endpoint for container orchestration
@@ -22,7 +23,8 @@ export async function GET() {
         },
       }
     );
-  } catch {
+  } catch (error) {
+    logger.error({ action: 'health', err: error instanceof Error ? error : { message: String(error) } }, 'Health check failed');
     return NextResponse.json(
       {
         status: 'unhealthy',

@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  serverExternalPackages: ['pino', 'pino-pretty'],
   // Gateway rewrite REMOVED — BFF proxy at /api/v1/[...path] handles forwarding
   // with httpOnly cookie → Bearer token conversion (P0-SEC-001)
   images: {

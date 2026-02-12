@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import logger from '@/lib/logger';
 
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
 
@@ -10,11 +11,13 @@ const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
  * the httpOnly cookie, sent to the backend, and replaced by the new pair.
  */
 export async function POST() {
+  const startTime = Date.now();
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get('refreshToken')?.value;
 
     if (!refreshToken) {
+      logger.warn({ action: 'refresh' }, 'Token refresh failed — no refresh token cookie');
       const response = NextResponse.json(
         { success: false, message: 'No refresh token' },
         { status: 401 },
@@ -22,6 +25,8 @@ export async function POST() {
       response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
       return response;
     }
+
+    logger.info({ action: 'refresh' }, 'Token refresh attempt');
 
     const res = await fetch(`${GATEWAY_URL}/api/v1/auth/refresh`, {
       method: 'POST',
@@ -32,6 +37,7 @@ export async function POST() {
     const data = await res.json();
 
     if (!res.ok) {
+      logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected by gateway');
       const response = NextResponse.json(data, { status: res.status });
       response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
       response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
@@ -66,9 +72,11 @@ export async function POST() {
       });
     }
 
+    logger.info({ action: 'refresh', durationMs: Date.now() - startTime }, 'Token refresh successful');
+
     return response;
   } catch (error) {
-    console.error('[BFF] Token refresh error:', error);
+    logger.error({ action: 'refresh', err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Token refresh proxy error');
     return NextResponse.json(
       { success: false, message: 'Token refresh failed' },
       { status: 503 },

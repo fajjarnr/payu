@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import logger, { getCorrelationId, withCorrelation } from "@/lib/logger";
 
 const GATEWAY_URL = process.env.GATEWAY_URL || "http://gateway-service:8080";
 
@@ -31,8 +32,13 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
  *   - PCI-DSS 8.2.4 compliant
  */
 export async function POST(request: Request) {
+  const correlationId = getCorrelationId(request);
+  const log = withCorrelation(correlationId);
+  const startTime = Date.now();
+
   try {
     const body = await request.json();
+    log.info({ action: "login", username: body.username }, "Login attempt");
 
     const res = await fetch(`${GATEWAY_URL}/api/v1/auth/login`, {
       method: "POST",
@@ -43,6 +49,7 @@ export async function POST(request: Request) {
     const data = await res.json();
 
     if (!res.ok) {
+      log.warn({ action: "login", username: body.username, status: res.status, durationMs: Date.now() - startTime }, "Login failed");
       return NextResponse.json(data, { status: res.status });
     }
 
@@ -74,6 +81,7 @@ export async function POST(request: Request) {
     // Build response and set cookies directly on the NextResponse object
     // (cookies() from next/headers does NOT attach Set-Cookie to NextResponse.json())
     const response = NextResponse.json({ success: true, data: { user } });
+    response.headers.set("X-Correlation-Id", correlationId);
 
     if (accessToken) {
       response.cookies.set("accessToken", accessToken, {
@@ -95,9 +103,11 @@ export async function POST(request: Request) {
       });
     }
 
+    log.info({ action: "login", userId: user?.id, username: user?.username, durationMs: Date.now() - startTime }, "Login successful");
+
     return response;
   } catch (error) {
-    console.error("[BFF] Login proxy error:", error);
+    log.error({ action: "login", err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, "Login proxy error");
     return NextResponse.json(
       { success: false, message: "Authentication service unavailable" },
       { status: 503 },
