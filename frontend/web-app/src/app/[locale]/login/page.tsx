@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginRequest } from '@/types';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Link } from '@/lib/navigation';
 import Image from 'next/image';
 import { useAuthStore } from '@/stores';
@@ -14,12 +14,49 @@ import { Label } from '@/components/ui/label';
 import { CheckCircle2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
+/**
+ * Page wrapper — provides Suspense boundary required by useSearchParams().
+ * Next.js 16 bails out of static rendering when useSearchParams() is used
+ * outside a Suspense boundary.
+ */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginSkeleton />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginSkeleton() {
+  return (
+    <div className="min-h-screen w-full flex bg-background animate-pulse">
+      <div className="hidden lg:flex w-1/2 bg-zinc-900" />
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-[420px] space-y-8">
+          <div className="h-10 w-48 bg-muted rounded-xl" />
+          <div className="h-5 w-64 bg-muted/60 rounded-xl" />
+          <div className="space-y-4">
+            <div className="h-12 bg-muted/30 rounded-lg" />
+            <div className="h-12 bg-muted/30 rounded-lg" />
+          </div>
+          <div className="h-12 bg-emerald-800/50 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoginForm() {
   const t = useTranslations('auth');
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
+
+  // Read callbackUrl set by middleware when redirecting unauthenticated users.
+  // Sanitize: only allow relative paths to prevent open-redirect attacks.
+  const rawCallback = searchParams.get('callbackUrl') || '/dashboard';
+  const callbackUrl = rawCallback.startsWith('/') && !rawCallback.startsWith('//') ? rawCallback : '/dashboard';
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
     resolver: zodResolver(loginSchema)
@@ -42,7 +79,9 @@ export default function LoginPage() {
     onSuccess: (response) => {
       const user = response.data?.user;
       if (user) setAuth(user, user.id);
-      router.push('/dashboard');
+      // Hard redirect ensures the browser sends fresh cookies in a full page request.
+      // router.push() can serve stale RSC cache without the newly-set httpOnly cookies.
+      window.location.href = callbackUrl;
     },
     onError: (error) => {
       console.error('Login failed:', error);

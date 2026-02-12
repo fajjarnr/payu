@@ -34,6 +34,17 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`${locale}/dashboard`, request.url));
   }
 
+  // 1b. Auto-redirect from Login to Dashboard if already logged in
+  if (pathWithoutLocale === '/login' && hasSession) {
+    const localeMatch = pathname.match(/^\/(en|id)/);
+    const locale = localeMatch ? localeMatch[0] : '';
+    edgeLogger.info('Redirecting authenticated user away from login to dashboard', {
+      action: 'middleware',
+      path: pathname,
+    });
+    return NextResponse.redirect(new URL(`${locale}/dashboard`, request.url));
+  }
+
   // 2. Protect authenticated routes — everything except public pages
   const publicRoutes = [
     '/login',
