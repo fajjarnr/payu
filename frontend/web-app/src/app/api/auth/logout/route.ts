@@ -21,15 +21,15 @@ export async function POST() {
       });
     }
 
-    cookieStore.delete('accessToken');
-    cookieStore.delete('refreshToken');
-
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
+    return response;
   } catch {
     // Even on error, clear cookies
-    const cookieStore = await cookies();
-    cookieStore.delete('accessToken');
-    cookieStore.delete('refreshToken');
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
+    return response;
   }
 }

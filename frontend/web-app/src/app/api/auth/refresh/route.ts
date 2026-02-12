@@ -15,11 +15,12 @@ export async function POST() {
     const refreshToken = cookieStore.get('refreshToken')?.value;
 
     if (!refreshToken) {
-      cookieStore.delete('accessToken');
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, message: 'No refresh token' },
         { status: 401 },
       );
+      response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
+      return response;
     }
 
     const res = await fetch(`${GATEWAY_URL}/api/v1/auth/refresh`, {
@@ -31,9 +32,10 @@ export async function POST() {
     const data = await res.json();
 
     if (!res.ok) {
-      cookieStore.delete('accessToken');
-      cookieStore.delete('refreshToken');
-      return NextResponse.json(data, { status: res.status });
+      const response = NextResponse.json(data, { status: res.status });
+      response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
+      response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
+      return response;
     }
 
     const newAccessToken =
@@ -42,28 +44,29 @@ export async function POST() {
       data.refresh_token ?? data.data?.refresh_token ?? data.data?.refreshToken;
 
     const isProduction = process.env.NODE_ENV === 'production';
+    const response = NextResponse.json({ success: true });
 
     if (newAccessToken) {
-      cookieStore.set('accessToken', newAccessToken, {
+      response.cookies.set('accessToken', newAccessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 900,
         path: '/',
       });
     }
 
     if (newRefreshToken) {
-      cookieStore.set('refreshToken', newRefreshToken, {
+      response.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 604_800,
         path: '/',
       });
     }
 
-    return NextResponse.json({ success: true });
+    return response;
   } catch (error) {
     console.error('[BFF] Token refresh error:', error);
     return NextResponse.json(

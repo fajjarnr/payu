@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 const GATEWAY_URL = process.env.GATEWAY_URL || "http://gateway-service:8080";
@@ -28,7 +27,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
  * Security:
  *   - httpOnly: JS cannot read tokens (prevents XSS token theft)
  *   - secure: HTTPS-only in production
- *   - sameSite=strict: prevents CSRF
+ *   - sameSite=lax: allows same-site navigation while preventing CSRF
  *   - PCI-DSS 8.2.4 compliant
  */
 export async function POST(request: Request) {
@@ -71,30 +70,32 @@ export async function POST(request: Request) {
     }
 
     const isProduction = process.env.NODE_ENV === "production";
-    const cookieStore = await cookies();
+
+    // Build response and set cookies directly on the NextResponse object
+    // (cookies() from next/headers does NOT attach Set-Cookie to NextResponse.json())
+    const response = NextResponse.json({ success: true, data: { user } });
 
     if (accessToken) {
-      cookieStore.set("accessToken", accessToken, {
+      response.cookies.set("accessToken", accessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 900, // 15 minutes
         path: "/",
       });
     }
 
     if (refreshToken) {
-      cookieStore.set("refreshToken", refreshToken, {
+      response.cookies.set("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 604_800, // 7 days
         path: "/",
       });
     }
 
-    // Return user data WITHOUT tokens — browser never sees JWT
-    return NextResponse.json({ success: true, data: { user } });
+    return response;
   } catch (error) {
     console.error("[BFF] Login proxy error:", error);
     return NextResponse.json(
