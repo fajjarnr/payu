@@ -2,6 +2,7 @@ package id.payu.account.entity;
 
 import id.payu.account.multitenancy.TenantAware;
 import id.payu.security.annotation.Sensitive;
+import id.payu.security.converter.EncryptedStringConverter;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -28,12 +29,14 @@ public class User {
     @Sensitive
     private String username;
 
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false, length = 512)
     @Sensitive
+    @Convert(converter = EncryptedStringConverter.class)
     private String email;
 
-    @Column(name = "phone_number", unique = true)
+    @Column(name = "phone_number", unique = true, length = 512)
     @Sensitive
+    @Convert(converter = EncryptedStringConverter.class)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
