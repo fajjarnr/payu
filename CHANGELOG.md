@@ -46,21 +46,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Documents 7 known PayU platform issues with quick fixes
   - Cross-references with LESSONS.md and INFRASTRUCTURE_DEPLOYMENT.md
 
-- **DB-001: PostgreSQL Connection Exhaustion Fix** (Feb 18, 2026):
-  - **Problem**: `FATAL: sorry, too many clients already` - partner-service, fx-service, backoffice failing to start
-  - **Root Cause**: 22 services × HikariCP pool (10 connections) > PostgreSQL `max_connections` (100)
-  - **Immediate Fix**: Scale down non-critical services temporarily to free DB connections:
-    ```bash
-    oc scale deployment ab-testing-service analytics-service backoffice-service \
-        lending-service investment-service promotion-service cms-service \
-        compliance-service --replicas=0 -n payu-dev
+- **DB-002: PostgreSQL Permanent Fix** (Feb 18, 2026):
+  - **Problem**: `max_connections` default 100 too low for 22 services
+  - **Solution**: Patroni dynamic configuration with performance tuning
+  - **Changes**:
+    ```yaml
+    # PostgreSQL Parameters
+    max_connections: 300
+    max_prepared_transactions: 300
+    shared_buffers: 256MB
+    effective_cache_size: 768MB
+    work_mem: 8MB
+    wal_level: replica
+    max_wal_size: 2GB
+    autovacuum: on
+
+    # pgBouncer Config
+    max_client_conn: 1000
+    default_pool_size: 20
+    pool_mode: transaction
     ```
-  - **Affected Services Fixed**: partner-service, fx-service, backoffice-service
-  - **Also Fixed**: fx-service health check path (context path `/fx-api`)
-  - **Result**: All 22 core services + 7 infra pods = 36/36 Running
-  - **Simulators Status**: bi-fast-simulator, dukcapil-simulator (ErrImagePull - images not built yet)
-  - **Added to LESSONS.md**: Pattern for diagnosing and resolving connection exhaustion
-  - **TODO**: Increase PostgreSQL `max_connections` to 300+ and tune HikariCP pool sizes
+  - **File**: `infrastructure/openshift/infra/base/crunchy-postgres.yaml`
+  - **Verification**: `max_connections = '300'` in postgresql.conf
+  - **Result**: partner-service, fx-service, backoffice-service all Running without workaround
+
+- **DB-001: PostgreSQL Connection Exhaustion - Workaround** (Feb 18, 2026):
+  - **Problem**: `FATAL: sorry, too many clients already` - services failing to start
+  - **Root Cause**: 22 services × 10 connections > 100 max_connections
+  - **Workaround**: Scale down non-critical services to free connections
+  - **Added to LESSONS.md**: Pattern for diagnosing connection exhaustion
 
 - **INFRA-001: Infrastructure Folder Cleanup**:
   - Removed `infrastructure/openshift/examples/` - redundant with `infra/` Kustomize structure

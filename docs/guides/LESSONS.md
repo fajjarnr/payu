@@ -354,11 +354,29 @@
         ```
     2.  Restart failing service (e.g., `partner-service`)
     3.  Scale up services again after startup completes
-*   **Long-term Fix**:
-    *   Increase PostgreSQL `max_connections` to 300+ in Crunchy PostgresCluster spec
-    *   Configure pgBouncer with higher `max_client_conn` (e.g., 1000)
+*   **Fixed (DB-002)**: Increased PostgreSQL `max_connections` from 100 to 300 via Patroni dynamic configuration
+*   **Also Tuned**: pgBouncer config with `max_client_conn: 1000`, `default_pool_size: 20`, `pool_mode: transaction`
+*   **Crunchy Postgres Configuration**:
+    ```yaml
+    # infrastructure/openshift/infra/base/crunchy-postgres.yaml
+    spec:
+      patroni:
+        dynamicConfiguration:
+          postgresql:
+            parameters:
+              max_connections: 300
+              max_prepared_transactions: 300
+              shared_buffers: 256MB
+              effective_cache_size: 768MB
+      proxy:
+        pgBouncer:
+          config:
+            max_client_conn: 1000
+            default_pool_size: 20
+            pool_mode: transaction
+    ```
+*   **Future Tuning**:
     *   Tune HikariCP pool sizes per service (reduce from 10 to 5 for non-critical services)
-    *   Consider using pgBouncer in transaction pooling mode
 *   **Monitoring**:
     ```bash
     # Check active connections

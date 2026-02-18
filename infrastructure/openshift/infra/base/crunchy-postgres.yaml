@@ -35,7 +35,7 @@ spec:
   # pgBackRest backup configuration
   backups:
     pgbackrest:
-      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.53-1
+      # Let operator choose compatible image
       repos:
         - name: repo1
           volume:
@@ -51,6 +51,33 @@ spec:
     pgBouncer:
       image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbouncer:ubi8-1.23-1
       replicas: 1
+      # pgBouncer configuration
+      # Ref: https://www.pgbouncer.org/config.html
+      config:
+        # Pool settings
+        max_client_conn: 1000
+        default_pool_size: 20
+        min_pool_size: 5
+        reserve_pool_size: 10
+        reserve_pool_timeout: 3
+
+        # Pool mode: transaction (best for OLTP)
+        pool_mode: transaction
+
+        # Connection limits per database
+        max_db_connections: 100
+        max_user_connections: 100
+
+        # Timeouts
+        server_idle_timeout: 600
+        server_lifetime: 3600
+        client_idle_timeout: 0
+        client_login_timeout: 60
+
+        # Logging
+        verbose: 0
+        admin_users: payu
+        stats_users: payu
 
   # User and all databases
   # IMPORTANT: keycloak is included here so pg_hba.conf is auto-configured
@@ -81,3 +108,37 @@ spec:
         - payu_abtesting
         - keycloak
       options: "SUPERUSER"
+
+  # Patroni dynamic configuration for performance tuning
+  # Ref: https://patroni.readthedocs.io/en/latest/dynamic_configuration.html
+  patroni:
+    dynamicConfiguration:
+      postgresql:
+        parameters:
+          # Connection limits - 300 for 22 services with pool size 10 each
+          max_connections: 300
+          max_prepared_transactions: 300
+
+          # Memory settings (25% of 1GB = 256MB)
+          shared_buffers: 256MB
+          effective_cache_size: 768MB
+          work_mem: 8MB
+          maintenance_work_mem: 128MB
+
+          # WAL settings for write performance
+          wal_level: replica
+          max_wal_size: 2GB
+          min_wal_size: 512MB
+          checkpoint_timeout: 10min
+          checkpoint_completion_target: 0.9
+
+          # Autovacuum for busy tables
+          autovacuum: on
+          autovacuum_max_workers: 4
+          autovacuum_naptime: 30s
+          autovacuum_vacuum_scale_factor: 0.05
+          autovacuum_analyze_scale_factor: 0.02
+
+          # Query planner
+          random_page_cost: 1.1
+          effective_io_concurrency: 200
