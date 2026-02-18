@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-02-18
+
+### Security (PCI-DSS / PII Hardening)
+
+- **Tier 1 — P0 Critical Fixes**:
+  - `wallet-service`: CardResponse now masks PAN via `@JsonIgnore`/`@JsonProperty` — API only returns `****-****-****-1234`
+  - `kyc-service`: Added `mask_nik()` helper and `safe_dump()` on Pydantic models — NIK masked as `3201********8901` in API responses, Kafka events, and all log statements
+  - Fixed 5 files: `schemas.py`, `kyc_service.py`, `dukcapil_client.py`, `ocr_service.py`, `kyc.py`
+- **Tier 2 — P1 Encryption & Credential Hygiene**:
+  - `account-service`: User `email` and `phoneNumber` encrypted at rest via `EncryptedStringConverter` (AES-256-GCM)
+  - Added Flyway V6 migration expanding email/phone columns to VARCHAR(512) for encrypted ciphertext
+  - Removed hardcoded DB password defaults from 5 services: backoffice, billing, notification, partner, promotion
+
+### Added
+
+- **Frontend Service Tests (8 new test files, 120+ test cases)**:
+  - `BillingService.test.ts` — createPayment, createTopUp, getPaymentHistory, getPayment, getBillers
+  - `ComplianceService.test.ts` — audit reports CRUD, GDPR audits (13 methods)
+  - `FxService.test.ts` — rates, conversions, formatCurrency, getCurrencyInfo, SUPPORTED_CURRENCIES
+  - `InvestmentService.test.ts` — accounts, deposits, mutual funds, gold, sell
+  - `KYCService.test.ts` — startVerification, uploadKtp, uploadSelfie, getVerificationStatus, getUserKycHistory
+  - `NotificationService.test.ts` — sendNotification, getUserNotifications, markAsRead
+  - `StatementService.test.ts` — generate, list, download, getLatest, formatPeriodType, getStatusColor
+  - `SupportService.test.ts` — agents, modules, trainings, tickets, FAQs (18 methods)
+  - Total frontend tests: **286 passing** (18/19 test files)
+
 ## [Unreleased] - 2026-02-12
 
 ### Added
