@@ -42,3 +42,20 @@ export function useUnfreezeCard() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cards'] }); },
   });
 }
+
+export function useDeleteCard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cardId: string) => WalletService.deleteCard(cardId),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cards'] }); },
+  });
+}
+
+export function useUpdateCard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ cardId, data }: { cardId: string; data: import('@/services/WalletService').UpdateCardRequest }) =>
+      WalletService.updateCard(cardId, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cards'] }); },
+  });
+}

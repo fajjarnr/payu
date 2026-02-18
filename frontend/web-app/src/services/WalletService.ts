@@ -125,6 +125,18 @@ export class WalletService {
     return response.data;
   }
 
+  /** DELETE /cards/{cardId} — Delete/Close card */
+  async deleteCard(cardId: string): Promise<{ status: string; cardId: string }> {
+    const response = await api.delete<{ status: string; cardId: string }>(`/cards/${cardId}`);
+    return response.data;
+  }
+
+  /** PUT /cards/{cardId} — Update card limits */
+  async updateCard(cardId: string, request: UpdateCardRequest): Promise<VirtualCard> {
+    const response = await api.put<VirtualCard>(`/cards/${cardId}`, request);
+    return response.data;
+  }
+
   // === Pockets (FE-GAP-010) ===
 
   /** POST /pockets — Create a pocket */
@@ -211,6 +223,13 @@ export interface CreateCardRequest {
   cardholderName: string;
   dailyLimit?: number;
   monthlyLimit?: number;
+}
+
+export interface UpdateCardRequest {
+  dailyLimit?: number;
+  monthlyLimit?: number;
+  onlineEnabled?: boolean;
+  internationalEnabled?: boolean;
 }
 
 // === Pocket Types ===

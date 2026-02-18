@@ -88,7 +88,15 @@ export {
 } from './useGamification';
 
 // ── Cards ──
-export { useCards, useCard, useCreateCard, useFreezeCard, useUnfreezeCard } from './useCards';
+export {
+  useCards,
+  useCard,
+  useCreateCard,
+  useFreezeCard,
+  useUnfreezeCard,
+  useDeleteCard,
+  useUpdateCard
+} from './useCards';
 
 // ── Pockets ──
 export {
