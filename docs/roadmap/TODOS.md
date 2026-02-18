@@ -71,6 +71,7 @@
 | **DB-001** | Fix PostgreSQL connection exhaustion - scale workaround | P1 | ✅ **Complete** |
 | **DB-002** | Fix PostgreSQL max_connections (100→300) + pgBouncer tuning | P0 | ✅ **Complete** |
 | **LOAD-001** | K6 Load Testing - Smoke test passed, load/stress pending | P1 | 🟡 **In Progress** |
+| **E2E-001** | Database CRUD E2E Tests - Account, Wallet, Transaction, User Profile | P1 | ✅ **Complete** |
 
 ### ⚠️ Pre-Production Checklist
 

@@ -46,6 +46,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Documents 7 known PayU platform issues with quick fixes
   - Cross-references with LESSONS.md and INFRASTRUCTURE_DEPLOYMENT.md
 
+- **E2E-001: Database CRUD E2E Tests** (Feb 18, 2026):
+  - **Created comprehensive E2E test suite for database CRUD operations**:
+    - `account-crud.spec.ts` - Account registration, profile management, deletion
+      - CREATE: New account with validation, KYC upload
+      - READ: Display account info, verification status
+      - UPDATE: Profile info, security settings, 2FA
+      - DELETE: Account deactivation with confirmation
+    - `wallet-crud.spec.ts` - Wallet management and operations
+      - CREATE: New wallets with initial balance
+      - READ: Wallet list, transaction history, total balance
+      - UPDATE: Rename wallet, archive/unarchive
+      - DELETE: Remove empty wallets only
+      - Ledger integrity checks
+    - `transaction-crud.spec.ts` - Transaction lifecycle
+      - CREATE: Transfers, QRIS payments, VA payments
+      - READ: Transaction history, filtering, search
+      - UPDATE: Add notes, categorize, mark favorite
+      - DELETE: Cancel pending transactions
+      - Idempotency and integrity checks
+    - `user-profile-crud.spec.ts` - User profile management
+      - CREATE: Complete profile with address, emergency contact
+      - READ: Profile view, membership tier, devices
+      - UPDATE: Photo, phone, email, address
+      - DELETE: Account deactivation with checks
+      - Privacy settings and data export
+  - **Total**: 80+ new test cases covering critical database operations
+  - **Location**: `frontend/web-app/e2e/`
+
 - **LOAD-001: K6 Load Testing Suite** (Feb 18, 2026):
   - **Smoke Test**: ✅ PASSED - All 13 checks passed
     - Avg response time: 3.92ms (Excellent)
