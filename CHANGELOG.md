@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Logging Starter Module (Standardized Logging)**:
+  - Created `logging-starter` shared module for consistent logging across all services
+  - Features:
+    - JSON logging via LogstashEncoder (LokiStack compatible)
+    - MDC support for `correlation_id`, `trace_id`, `span_id`
+    - OpenTelemetry integration for distributed tracing
+    - Automatic `X-Correlation-Id` header propagation
+    - Profile-based configuration (plain text for dev, JSON for prod)
+    - Async logging for production performance
+  - Components:
+    - `PayuLoggingAutoConfiguration`: Auto-configuration for Spring Boot
+    - `CorrelationIdFilter`: Reads/generates correlation IDs from HTTP headers
+    - `TraceIdFilter`: Extracts OTel trace/span IDs
+    - `MdcUtil`: Programmatic MDC manipulation utility
+    - `logback-payu-base.xml`: Standard logback configuration template
+  - Integration:
+    - `lending-service`: Updated to use logging-starter (example implementation)
+  - Documentation: Complete README with usage examples and migration guide
+
 - **Backend Integration Tests (P19 Audit - R-004, R-006)**:
   - `statement-service`: Added comprehensive integration test suite (0% → 100% coverage)
     - `StatementControllerIntegrationTest`: 17 test cases covering CRUD operations, authentication, authorization
