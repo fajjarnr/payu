@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PayU Standard Logging Configuration for promotion-service -->
+<configuration>
+    <include resource="logback-payu-base.xml"/>
+</configuration>

@@ -64,8 +64,12 @@ resilience4j:
       default:
         timeout-duration: 10s
 
-# Cache Configuration
+# PayU Configuration
 payu:
+  logging:
+    service-name: ${spring.application.name}
+    service-version: "1.0.0"
+    environment: ${SPRING_PROFILES_ACTIVE:dev}
   cache:
     enabled: true
     redis:
