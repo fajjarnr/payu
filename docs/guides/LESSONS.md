@@ -338,6 +338,38 @@
 *   **Note**: Spring will warn "This is not recommended" but this is necessary when OAuth2 resource server is enabled globally.
 *   **Alternative**: Disable OAuth2 for specific paths using `securityMatcher()`.
 
+### 8. PostgreSQL Connection Exhaustion (Feb 2026)
+
+*   **The Problem**: Services fail to start with `FATAL: sorry, too many clients already` or `Connection is not available, request timed out after 30000ms (total=1, active=1, idle=0, waiting=0)`.
+*   **Root Cause**:
+    *   22 microservices × HikariCP pool (10 connections) = 220+ connections to PostgreSQL
+    *   Default Crunchy Postgres `max_connections` = 100 (too low for PayU platform)
+    *   pgBouncer default `max_client_conn` may also be limiting
+*   **Immediate Fix** (when connections exhausted):
+    1.  Scale down non-critical services temporarily:
+        ```bash
+        oc scale deployment ab-testing-service analytics-service \
+            dukcapil-simulator bi-fast-simulator backoffice-service \
+            --replicas=0 -n payu-dev
+        ```
+    2.  Restart failing service (e.g., `partner-service`)
+    3.  Scale up services again after startup completes
+*   **Long-term Fix**:
+    *   Increase PostgreSQL `max_connections` to 300+ in Crunchy PostgresCluster spec
+    *   Configure pgBouncer with higher `max_client_conn` (e.g., 1000)
+    *   Tune HikariCP pool sizes per service (reduce from 10 to 5 for non-critical services)
+    *   Consider using pgBouncer in transaction pooling mode
+*   **Monitoring**:
+    ```bash
+    # Check active connections
+    oc exec -it payu-postgres-instance1-dmb4-0 -- psql -U payu -c \
+        "SELECT count(*) FROM pg_stat_activity;"
+
+    # Check connection by database
+    oc exec -it payu-postgres-instance1-dmb4-0 -- psql -U payu -c \
+        "SELECT datname, count(*) FROM pg_stat_activity GROUP BY datname;"
+    ```
+
 ### 7. Gateway Service URL Configuration (Feb 2026)
 
 *   **The Problem**: Gateway proxying fails with "Connection refused: localhost/127.0.0.1:8081" even though service is running.

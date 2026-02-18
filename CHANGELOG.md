@@ -39,6 +39,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added Flyway V6 migration expanding email/phone columns to VARCHAR(512) for encrypted ciphertext
   - Removed hardcoded DB password defaults from 5 services: backoffice, billing, notification, partner, promotion
 
+- **PODMAN-006: Container Troubleshooting Documentation**:
+  - Created comprehensive `docs/operations/CONTAINER_TROUBLESHOOTING.md`
+  - Covers Podman Compose (local dev) and OpenShift/Kubernetes (production)
+  - Includes quick diagnosis flowchart, memory requirements, health check configs
+  - Documents 7 known PayU platform issues with quick fixes
+  - Cross-references with LESSONS.md and INFRASTRUCTURE_DEPLOYMENT.md
+
+- **DB-001: PostgreSQL Connection Exhaustion Fix** (Feb 18, 2026):
+  - **Problem**: `FATAL: sorry, too many clients already` - partner-service, fx-service, backoffice failing to start
+  - **Root Cause**: 22 services × HikariCP pool (10 connections) > PostgreSQL `max_connections` (100)
+  - **Immediate Fix**: Scale down non-critical services temporarily to free DB connections:
+    ```bash
+    oc scale deployment ab-testing-service analytics-service backoffice-service \
+        lending-service investment-service promotion-service cms-service \
+        compliance-service --replicas=0 -n payu-dev
+    ```
+  - **Affected Services Fixed**: partner-service, fx-service, backoffice-service
+  - **Also Fixed**: fx-service health check path (context path `/fx-api`)
+  - **Result**: All 22 core services + 7 infra pods = 36/36 Running
+  - **Simulators Status**: bi-fast-simulator, dukcapil-simulator (ErrImagePull - images not built yet)
+  - **Added to LESSONS.md**: Pattern for diagnosing and resolving connection exhaustion
+  - **TODO**: Increase PostgreSQL `max_connections` to 300+ and tune HikariCP pool sizes
+
+- **INFRA-001: Infrastructure Folder Cleanup**:
+  - Removed `infrastructure/openshift/examples/` - redundant with `infra/` Kustomize structure
+  - Removed `infrastructure/helm/` - not used (deployment uses Kustomize)
+  - Removed `infrastructure/debezium/` - not deployed (outbox pattern used instead)
+  - Kept: `operators/`, `infra/`, `base/`, `overlays/`, `local-podman/`, `quadlet/`
+
+- **OpenShift NetworkPolicy Simplification**:
+  - Removed 7 custom NetworkPolicies: `allow-from-gateway`, `allow-from-router`, `allow-intra-namespace`, `allow-keycloak-from-auth`, `allow-prometheus-scrape`, `default-deny-*`
+  - Commented out `network-policies.yaml` from Kustomize base
+  - Removed `commonLabels` from Kustomize base
+  - Only 2 Kafka operator NetworkPolicies remain (auto-managed by AMQ Streams)
+
+- **Keycloak Realm Configuration (payu)**:
+  - Imported payu realm with 4 clients: `payu-web-app`, `payu-backend`, `payu-gateway`, `payu-mobile`
+  - 5 roles: `USER`, `ADMIN`, `KYC_VERIFIED`, `PREMIUM`, `MERCHANT`
+  - 4 users configured including `customer1`
+  - Updated redirect URIs for OpenShift domain: `apps.payu.ocp.fajjjar.my.id`
+  - E2E Login verified: `https://payu-dev.apps.payu.ocp.fajjjar.my.id/api/auth/login` → customer1 login OK
+
 ### Added
 
 - **Frontend Service Tests (8 new test files, 120+ test cases)**:

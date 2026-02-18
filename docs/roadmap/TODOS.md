@@ -2,7 +2,7 @@
 
 > **Platform Maturity**: 🟢 **100%** | **Production Readiness**: 🟢 **100/100**
 > **Strategic Objective**: Stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
-> **Last Synchronized**: February 18, 2026
+> **Last Synchronized**: February 18, 2026 (commit 67b3a0e)
 >
 > **Recent Updates (Feb 18, 2026)**:
 > - ✅ **OpenShift Deployed**: All 22 services + web-app running on OCP 4.20+ (payu-dev namespace)
@@ -10,7 +10,10 @@
 > - ✅ **Kustomize IaC**: Complete infra manifests (operators/ + infra/ + overlays/) for reproducible deployments
 > - ✅ **TLS**: Let's Encrypt certs via cert-manager DNS01/Route53
 > - ✅ **Images**: All 22 services built via Podman, pushed to OCP internal registry (tag 1.2.0)
-> - 🟢 **Status**: Running on OpenShift (35/35 pods)
+> - ✅ **NetworkPolicies Simplified**: Removed 7 custom NetworkPolicies, kept only Kafka operator policies
+> - ✅ **Keycloak Realm Imported**: payu realm with 4 clients, 5 roles, 4 users, E2E login verified
+> - ✅ **PostgreSQL Connection Fix**: Workaround for connection exhaustion (scale down/up pattern)
+> - 🟢 **Status**: Running on OpenShift (36/36 pods, 22 services + infra)
 
 ---
 
@@ -63,7 +66,9 @@
 | **P2-FE-003** | Mobile App Feature Parity | P2 | 🟡 Deferred |
 | **OCP-007** | Service Mesh mTLS enforcement | P3 | 🟡 Planned |
 | **OCP-010** | API versioning headers | P3 | 🟡 Planned |
-| **PODMAN-006** | Dokumentasi troubleshooting container | P2 | ⬜ TODO |
+| **PODMAN-006** | Dokumentasi troubleshooting container | P2 | ✅ **Complete** |
+| **INFRA-001** | Cleanup infrastructure/ folder - hapus helm/, examples/, debezium/ | P2 | ✅ **Complete** |
+| **DB-001** | Fix PostgreSQL connection exhaustion - scale workaround | P1 | ✅ **Complete** |
 
 ### ⚠️ Pre-Production Checklist
 
@@ -90,10 +95,11 @@
 | **PostgreSQL (Crunchy PGO)** | ✅ Running | 24 databases, pgBouncer, pgBackRest |
 | **Kafka (AMQ Streams)** | ✅ Running | KRaft mode, 1 broker + 1 controller |
 | **DataGrid (Infinispan)** | ✅ Running | RESP connector, auth enabled |
-| **Keycloak (RHSSO)** | ✅ Running | payu realm, 2 clients |
+| **Keycloak (RHSSO)** | ✅ Running | payu realm, 4 clients, 5 roles, 4 users |
 | **Vault + VSO** | ✅ Running | 5 secrets synced to K8s |
 | **TLS (cert-manager)** | ✅ Ready | Let's Encrypt DNS01/Route53 |
-| **Total Pods** | ✅ **35/35** | All Running in payu-dev namespace |
+| **NetworkPolicies** | ✅ Simplified | 2 Kafka operator policies only |
+| **Total Pods** | ✅ **36/36** | 22 services + 7 infra (simulators excluded) |
 
 > **Cluster**: OCP 4.20+, 6 nodes, domain `apps.payu.ocp.fajjjar.my.id`
 
