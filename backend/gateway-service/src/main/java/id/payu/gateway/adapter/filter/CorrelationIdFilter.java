@@ -30,15 +30,15 @@ public class CorrelationIdFilter implements ContainerRequestFilter, ContainerRes
         // Get or generate correlation ID
         String correlationId = requestContext.getHeaderString(CORRELATION_ID_HEADER);
         if (correlationId == null || correlationId.isBlank()) {
-            correlationId = UUID.randomUUID().toString();
+            correlationId = UUID.randomUUID().toString().replace("-", "");
         }
 
         // Generate request ID
         String requestId = UUID.randomUUID().toString().substring(0, 8);
 
-        // Store in MDC for logging
-        org.jboss.logging.MDC.put("correlationId", correlationId);
-        org.jboss.logging.MDC.put("requestId", requestId);
+        // Store in MDC for logging (using underscore naming for consistency with Spring Boot services)
+        org.jboss.logging.MDC.put("correlation_id", correlationId);
+        org.jboss.logging.MDC.put("request_id", requestId);
 
         // Store for response
         requestContext.setProperty(CORRELATION_ID_HEADER, correlationId);
@@ -78,7 +78,7 @@ public class CorrelationIdFilter implements ContainerRequestFilter, ContainerRes
         }
 
         // Clean up MDC
-        org.jboss.logging.MDC.remove("correlationId");
-        org.jboss.logging.MDC.remove("requestId");
+        org.jboss.logging.MDC.remove("correlation_id");
+        org.jboss.logging.MDC.remove("request_id");
     }
 }

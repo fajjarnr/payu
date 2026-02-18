@@ -68,8 +68,10 @@ quarkus:
       "io.quarkus.oidc":
         level: DEBUG
     console:
-      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlationId}] [%c{3.}] (%t) %s%e%n"
-      json: false
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlation_id}] [%X{trace_id}] [%c{3.}] (%t) %s%e%n"
+      json:
+        ~: true
+        pretty-print: false
 # Gateway Configuration
 gateway:
   # Authorization Configuration
