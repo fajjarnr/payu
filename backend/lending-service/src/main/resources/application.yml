@@ -110,6 +110,15 @@ resilience4j:
 
 # PayU Configuration
 payu:
+  logging:
+    service-name: ${spring.application.name}
+    service-version: "1.0.0"
+    environment: ${SPRING_PROFILES_ACTIVE:dev}
+    correlation:
+      enabled: true
+      header-name: "X-Correlation-Id"
+    tracing:
+      enabled: true
   outbox:
     enabled: true
     publisher:
