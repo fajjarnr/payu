@@ -80,6 +80,12 @@ export class TransactionService {
     await api.post('/transactions/qris/pay', request);
   }
 
+  /** POST /transactions/{transactionId}/cancel — Cancel pending transaction */
+  async cancelTransaction(transactionId: string): Promise<{ status: string; transactionId: string }> {
+    const response = await api.post<{ status: string; transactionId: string }>(`/transactions/${transactionId}/cancel`);
+    return response.data;
+  }
+
   // === Scheduled Transfers (FE-GAP-007) ===
 
   async createScheduledTransfer(request: CreateScheduledTransferRequest): Promise<ScheduledTransfer> {

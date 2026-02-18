@@ -53,3 +53,17 @@ export const useProcessQrisPayment = () => {
     }
   });
 };
+
+export const useCancelTransaction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (transactionId: string) => TransactionService.cancelTransaction(transactionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+    onError: (error) => {
+      console.error('Cancel transaction failed:', error);
+    }
+  });
+};
