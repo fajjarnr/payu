@@ -1,10 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Search, ChevronDown, MoreHorizontal, RotateCcw, ArrowRight, User, Landmark, Smartphone, ReceiptText, MoreHorizontal as MoreIcon } from 'lucide-react';
+import { Link } from '@/lib/navigation';
+import { Search, ChevronDown, MoreHorizontal, RotateCcw, ArrowRight, User, Landmark, Smartphone, ReceiptText, MoreHorizontal as MoreIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -13,28 +16,72 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useTransactions, useCancelTransaction } from '@/hooks';
+import { useAuthStore } from '@/stores';
+import { toast } from 'sonner';
 
-interface TransferItem {
+interface Transaction {
   id: string;
-  name: string;
-  date: string;
+  referenceNumber: string;
+  senderAccountId: string;
+  recipientAccountId: string;
+  type: 'TRANSFER' | 'PAYMENT' | 'DEPOSIT' | 'WITHDRAWAL' | 'QRIS';
   amount: number;
-  category: string;
-  account: string;
-  avatar?: string;
+  currency: string;
+  description: string;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'PROCESSING';
+  createdAt: string;
 }
+
+const statusConfig = {
+  PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' },
+  PROCESSING: { label: 'Diproses', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+  COMPLETED: { label: 'Selesai', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  FAILED: { label: 'Gagal', color: 'bg-red-500/10 text-red-600 border-red-500/20' },
+  CANCELLED: { label: 'Batal', color: 'bg-gray-500/10 text-gray-600 border-gray-500/20' },
+};
 
 interface TransferActivityProps {
   className?: string;
 }
 
 export default function TransferActivity({ className = '' }: TransferActivityProps) {
-  const transfers: TransferItem[] = [
-    { id: '1', name: 'Alex Johnson', date: '22 Jan 2026, 09:30 AM', amount: -7500000, category: 'Transfer ke', account: 'Tabungan (****5678)' },
-    { id: '2', name: 'Tagihan Netflix', date: '21 Jan 2026, 03:45 AM', amount: -159000, category: 'Langganan', account: 'Netflix' },
-    { id: '3', name: 'John Doe', date: '20 Jan 2026, 11:10 AM', amount: -4500000, category: 'Transfer ke', account: 'Tabungan (****9876)' },
-    { id: '4', name: 'Maria Garcia', date: '19 Jan 2026, 07:45 AM', amount: -350000, category: 'Transfer ke', account: 'Tabungan (****4321)' },
-  ];
+  const accountId = useAuthStore((state) => state.accountId);
+  const { data: transactions, isLoading } = useTransactions(accountId || undefined, 0, 5);
+  const cancelTransaction = useCancelTransaction();
+
+  const handleCancel = async (transactionId: string) => {
+    try {
+      await cancelTransaction.mutateAsync(transactionId);
+      toast.success('Transaksi berhasil dibatalkan');
+    } catch (error) {
+      toast.error('Gagal membatalkan transaksi');
+    }
+  };
+
+  const canCancel = (status: string) => status === 'PENDING' || status === 'PROCESSING';
+
+  const formatAmount = (amount: number) => {
+    return `Rp ${Math.abs(amount).toLocaleString('id-ID')}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  // Show skeleton or empty state if no transactions
+  const displayTransactions = transactions || [];
 
   return (
     <div data-testid="transfer-activity-section" className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
@@ -101,92 +148,156 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
         </CardHeader>
 
         <CardContent>
-          <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-border/50 hover:bg-transparent">
-                  <TableHead className="h-14 text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase">Tanggal</TableHead>
-                  <TableHead className="h-14 text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase">Penerima</TableHead>
-                  <TableHead className="h-14 text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase text-center">Rekening</TableHead>
-                  <TableHead className="h-14 text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase text-right">Jumlah</TableHead>
-                  <TableHead className="h-12 w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transfers.map((item) => (
-                  <TableRow key={item.id} data-testid={`transfer-row-${item.id}`} className="group border-b border-border/30 hover:bg-muted/30 transition-colors">
-                    <TableCell className="py-8 sm:py-10 whitespace-nowrap text-xs sm:text-xs text-muted-foreground font-bold tabular-nums uppercase tracking-tighter opacity-70">
-                      {item.date}
-                    </TableCell>
-                    <TableCell className="py-8 sm:py-10">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:scale-110 transition-transform shadow-sm">
-                          <User className="h-6 w-6 text-primary" />
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b border-border/50 hover:bg-transparent">
+                      <TableHead className="h-14 text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase">Tanggal</TableHead>
+                      <TableHead className="h-14 text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase">Penerima</TableHead>
+                      <TableHead className="h-14 text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase text-center">Status</TableHead>
+                      <TableHead className="h-14 text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase text-right">Jumlah</TableHead>
+                      <TableHead className="h-12 w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {displayTransactions.map((item: Transaction) => (
+                      <TableRow key={item.id} data-testid={`transfer-row-${item.id}`} className="group border-b border-border/30 hover:bg-muted/30 transition-colors">
+                        <TableCell className="py-6 sm:py-8 whitespace-nowrap">
+                          <div className="text-xs sm:text-xs text-muted-foreground font-bold tabular-nums uppercase tracking-tighter opacity-70">
+                            {formatDate(item.createdAt)}
+                          </div>
+                          <div className="text-xs font-mono text-muted-foreground/50 mt-1">
+                            {item.referenceNumber}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-6 sm:py-8">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:scale-110 transition-transform shadow-sm">
+                              <User className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest leading-none mb-2 uppercase opacity-60">{item.type}</p>
+                              <p className="text-sm font-bold text-foreground uppercase tracking-tight truncate max-w-[150px]">{item.description}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-6 sm:py-8 text-center">
+                          <Badge variant="outline" className={cn("font-bold text-xs", statusConfig[item.status]?.color || statusConfig.PENDING.color)}>
+                            {statusConfig[item.status]?.label || item.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-6 sm:py-8 text-right">
+                          <p className={cn(
+                            "text-sm sm:text-base font-bold tabular-nums tracking-tight",
+                            item.type === 'DEPOSIT' ? "text-emerald-600" : "text-foreground"
+                          )}>
+                            {item.type === 'DEPOSIT' ? '+' : '-'}{formatAmount(item.amount)}
+                          </p>
+                        </TableCell>
+                        <TableCell className="py-6 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem className="cursor-pointer">
+                                Lihat Detail
+                              </DropdownMenuItem>
+                              {canCancel(item.status) && (
+                                <DropdownMenuItem
+                                  className="cursor-pointer text-red-600 focus:text-red-600"
+                                  onClick={() => handleCancel(item.id)}
+                                >
+                                  <X className="h-4 w-4 mr-2" />
+                                  Batalkan
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card Layout */}
+              <div className="md:hidden space-y-4">
+                {displayTransactions.map((item: Transaction) => (
+                  <div key={item.id} data-testid={`transfer-card-mobile-${item.id}`} className="bg-muted/30 p-4 rounded-xl border border-transparent hover:border-primary/20 transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-card flex items-center justify-center border border-border shadow-sm">
+                          <User className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest leading-none mb-2 uppercase opacity-60">{item.category}</p>
-                          <p className="text-sm font-bold text-foreground uppercase tracking-tight">{item.name}</p>
+                          <p className="text-xs font-bold text-foreground leading-tight truncate max-w-[120px]">{item.description}</p>
+                          <p className="text-xs font-semibold text-muted-foreground tracking-widest leading-none uppercase">{item.type}</p>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-8 sm:py-10 text-center">
-                      <span className="text-xs sm:text-xs font-bold text-foreground tracking-widest bg-muted/60 px-4 py-2 rounded-xl inline-block uppercase border border-border/20 group-hover:border-primary/40 transition-colors shadow-sm">
-                        {item.account}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-8 sm:py-10 text-right">
-                      <p className="text-sm sm:text-base font-bold text-foreground tabular-nums tracking-tight">
-                        Rp {Math.abs(item.amount).toLocaleString('id-ID')}
+                      <p className={cn(
+                        "text-sm font-bold tabular-nums",
+                        item.type === 'DEPOSIT' ? "text-emerald-600" : "text-foreground"
+                      )}>
+                        {item.type === 'DEPOSIT' ? '+' : '-'}{formatAmount(item.amount)}
                       </p>
-                    </TableCell>
-                    <TableCell className="py-6 text-right">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <p className="text-xs font-medium text-muted-foreground">{formatDate(item.createdAt)}</p>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={cn("font-bold text-xs", statusConfig[item.status]?.color || statusConfig.PENDING.color)}>
+                          {statusConfig[item.status]?.label || item.status}
+                        </Badge>
+                        {canCancel(item.status) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleCancel(item.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Mobile Card Layout */}
-          <div className="md:hidden space-y-4">
-            {transfers.map((item) => (
-              <div key={item.id} data-testid={`transfer-card-mobile-${item.id}`} className="bg-muted/30 p-4 rounded-xl border border-transparent hover:border-primary/20 transition-all">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-card flex items-center justify-center border border-border shadow-sm">
-                      <User className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-foreground leading-tight">{item.name}</p>
-                      <p className="text-xs font-semibold text-muted-foreground tracking-widest leading-none uppercase">{item.category}</p>
-                    </div>
-                  </div>
-                  <p className="text-sm font-bold text-foreground tabular-nums">Rp {Math.abs(item.amount).toLocaleString('id-ID')}</p>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                  <p className="text-xs font-medium text-muted-foreground">{item.date}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-foreground tracking-wider uppercase">{item.account}</span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
               </div>
-            ))}
-          </div>
 
-          <div className="mt-10 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-6">
-            <Button variant="ghost" size="sm" data-testid="repeat-last-transfer-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:text-primary/80 tracking-widest transition-colors uppercase h-auto p-0 hover:bg-transparent">
-              <RotateCcw className="h-4 w-4" /> Ulangi Transfer Terakhir
-            </Button>
-            <Button variant="ghost" size="sm" data-testid="view-full-history-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:underline tracking-widest transition-all uppercase h-auto p-0 hover:bg-transparent">
-              Riwayat Lengkap <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
+              {!displayTransactions.length && (
+                <div className="text-center py-12">
+                  <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ReceiptText className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Belum Ada Transaksi</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Transaksi Anda akan muncul di sini
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-10 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-6">
+                <Button variant="ghost" size="sm" data-testid="repeat-last-transfer-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:text-primary/80 tracking-widest transition-colors uppercase h-auto p-0 hover:bg-transparent">
+                  <RotateCcw className="h-4 w-4" /> Ulangi Transfer Terakhir
+                </Button>
+                <Link href="/transactions">
+                  <Button variant="ghost" size="sm" data-testid="view-full-history-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:underline tracking-widest transition-all uppercase h-auto p-0 hover:bg-transparent">
+                    Riwayat Lengkap <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
