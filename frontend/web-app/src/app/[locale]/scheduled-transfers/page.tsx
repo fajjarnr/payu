@@ -244,15 +244,15 @@ export default function ScheduledTransfersPage() {
                               </div>
                               <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
-                                  <ArrowRightLeft className="h-3 w-3" /
+                                  <ArrowRightLeft className="h-3 w-3" />
                                   Rp {transfer.amount.toLocaleString('id-ID')}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" /
+                                  <Calendar className="h-3 w-3" />
                                   {getScheduleTypeLabel(transfer.scheduleType)}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" /
+                                  <Clock className="h-3 w-3" />
                                   {new Date(transfer.nextExecutionDate).toLocaleDateString('id-ID')}
                                 </span>
                               </div>
