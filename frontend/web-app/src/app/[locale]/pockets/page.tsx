@@ -621,7 +621,7 @@ export default function PocketsPage() {
                                                     <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                                                         <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${percentage}%` }} />
                                                     </div>
-                                                    <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">Target: Rp {pocket.target.toLocaleString('id-ID')}</p>
+                                                    {pocket.target && <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">Target: Rp {pocket.target.toLocaleString('id-ID')}</p>}
                                                 </div>
                                             </div>
 
