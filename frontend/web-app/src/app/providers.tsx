@@ -35,6 +35,7 @@ const getQueryClient = () => {
 };
 
 import { ThemeProvider } from 'next-themes';
+import { Toaster } from 'sonner';
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => getQueryClient());
@@ -44,6 +45,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <ExperimentProvider>
           {children}
+          <Toaster position="top-right" richColors />
         </ExperimentProvider>
       </QueryClientProvider>
     </ThemeProvider>
