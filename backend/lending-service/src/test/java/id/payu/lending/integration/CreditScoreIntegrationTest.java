@@ -147,20 +147,16 @@ class CreditScoreIntegrationTest {
     @Test
     @DisplayName("Should return 404 for user without credit score")
     void getCreditScore_forUnknownUser_shouldReturn404() {
-        // Use the test user ID so ownership check passes, but ensure no score is pre-calculated
-        // We use a random UUID — the ownership @PreAuthorize might block this,
-        // so we test with the test user and no prior calculation
-        UUID userId = TestContainersConfig.TEST_USER_ID;
+        // Use a random UUID that doesn't have a credit score
+        UUID userId = UUID.randomUUID();
 
         // Attempt to get score without prior calculation
-        // Note: if a previous test already calculated, this may return 200.
-        // In a clean state, it returns 404.
+        // Should return 404 when credit score not found
         webTestClient.get()
                 .uri(BASE_PATH + "/credit-score/" + userId)
                 .header("Authorization", TestContainersConfig.bearerToken())
                 .exchange()
-                .expectBody()
-                .jsonPath("$.success").exists();
+                .expectStatus().isNotFound();
     }
 
     @Test

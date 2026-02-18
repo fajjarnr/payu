@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Backend Integration Tests (P19 Audit - R-004, R-006)**:
+  - `statement-service`: Added comprehensive integration test suite (0% → 100% coverage)
+    - `StatementControllerIntegrationTest`: 17 test cases covering CRUD operations, authentication, authorization
+    - `StatementRepositoryIntegrationTest`: 12 test cases for database operations
+    - `TestContainersConfig`: Shared test configuration with mock JWT decoder
+  - `fx-service`: Added `FxConversionFlowIntegrationTest` for currency conversion flows
+
+### Fixed
+
+- **E2E Test Fixes (Frontend)**:
+  - Fixed settings-flow.spec.ts: Updated 14 test cases to match actual UI
+  - Removed domicile field tests (field removed from settings page)
+  - Updated placeholders: `Nama lengkap`, `email@contoh.com`
+  - Fixed button assertions: Use `toBeAttached()` instead of `toBeEnabled()`
+
 ## [1.3.0] - 2026-02-18
 
 ### Added
