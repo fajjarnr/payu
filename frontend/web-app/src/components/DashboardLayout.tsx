@@ -20,7 +20,8 @@ import {
   LogOut,
   QrCode,
   Receipt,
-  TrendingUp
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
@@ -91,6 +92,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
     { href: l('/dashboard'), icon: LayoutDashboard, label: t('dashboard') },
     { href: l('/pockets'), icon: Wallet, label: t('accounts') },
     { href: l('/transfer'), icon: ArrowRightLeft, label: t('transfers') },
+    { href: l('/scheduled-transfers'), icon: Calendar, label: 'Terjadwal' },
     { href: l('/exchange'), icon: TrendingUp, label: t('exchange') },
     { href: l('/qris'), icon: QrCode, label: t('qrPayment') },
     { href: l('/bills'), icon: Receipt, label: t('bills') },
