@@ -186,3 +186,6 @@ export {
   useSnapBiAuthToken,
   useSnapBiPayment
 } from './usePartner';
+
+// ── User ──
+export { useUser, useUpdateUser } from './useUser';

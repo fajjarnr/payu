@@ -1,17 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight, FileText } from 'lucide-react';
+import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight, FileText, Loader2, CheckCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import StatementDownloader from '@/components/settings/statement-downloader';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { useAuth, useUpdateUser } from '@/hooks';
+import { useAuthStore } from '@/stores';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'statements'>('profile');
+  const { user } = useAuth();
+  const updateUser = useUpdateUser();
+  const logout = useAuthStore((state) => state.logout);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    address: '',
+  });
+
+  // Initialize form with user data
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.fullName || '',
+        email: user.email || '',
+        phoneNumber: user.phoneNumber || '',
+        address: user.address || '',
+      });
+    }
+  }, [user]);
 
   const menuItems = [
     { label: 'Profil Umum', icon: User, active: activeTab === 'profile', onClick: () => setActiveTab('profile') },
@@ -26,6 +52,24 @@ export default function SettingsPage() {
     { label: 'Grafis Mode Gelap', desc: 'Antarmuka visual kontras tinggi', icon: Moon, active: false },
     { label: 'Wawasan Pemasaran', desc: 'Pembaruan promosi, berita, dan hadiah', icon: Globe, active: true },
   ];
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async () => {
+    if (!user?.id) return;
+
+    await updateUser.mutateAsync({
+      userId: user.id,
+      data: formData,
+    });
+  };
+
+  const handleClearSession = () => {
+    logout();
+    window.location.href = '/login';
+  };
 
   return (
     <DashboardLayout>
@@ -49,9 +93,9 @@ export default function SettingsPage() {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
                   <div className="relative w-24 h-24 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-bold text-4xl shadow-xl shadow-primary/20 mb-8 transition-transform group-hover:scale-110">
-                    P
+                    {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : 'P'}
                   </div>
-                  <h3 className="text-xl font-bold text-foreground">PENGGUNA PAYU</h3>
+                  <h3 className="text-xl font-bold text-foreground">{formData.fullName || 'PENGGUNA PAYU'}</h3>
                   <p className="text-xs font-bold text-primary tracking-widest uppercase mt-3 bg-success-light px-4 py-1.5 rounded-full border border-primary/10">Premium Member</p>
 
                   <div className="w-full h-[1px] bg-border my-10" />
@@ -59,7 +103,7 @@ export default function SettingsPage() {
                   <div className="w-full space-y-4 px-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">ID Akun</span>
-                      <span className="text-xs font-bold text-foreground font-mono">PAYU-09228373</span>
+                      <span className="text-xs font-bold text-foreground font-mono">{user?.id?.slice(0, 12) || 'PAYU-09228373'}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Status</span>
@@ -98,6 +142,25 @@ export default function SettingsPage() {
                   <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card space-y-12 relative overflow-hidden h-full">
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
 
+                    {/* Success Alert */}
+                    {updateUser.isSuccess && (
+                      <Alert className="bg-green-500/10 border-green-500/20 relative z-10">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <AlertDescription className="text-green-500">
+                          Profil berhasil diperbarui!
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Error Alert */}
+                    {updateUser.isError && (
+                      <Alert className="bg-red-500/10 border-red-500/20 relative z-10">
+                        <AlertDescription className="text-red-500">
+                          Gagal memperbarui profil. Silakan coba lagi.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     {/* Personal Details */}
                     <section className="space-y-12 relative z-10">
                       <div className="flex items-center gap-4">
@@ -108,22 +171,58 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {[
-                          { label: 'Nama Lengkap (Sesuai KTP)', val: 'PENGGUNA PAYU', type: 'text' },
-                          { label: 'Email Kontak', val: 'user@payu.id', type: 'email' },
-                          { label: 'Protokol Telepon', val: '+62 812-3456-7890', type: 'text' },
-                          { label: 'Domisili Saat Ini', val: 'Jakarta, Indonesia', type: 'text' },
-                        ].map((field, i) => (
-                          <div key={i} className="space-y-3">
-                            <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">{field.label}</label>
-                            <Input
-                              type={field.type}
-                              defaultValue={field.val}
-                              placeholder={field.val}
-                              className="font-bold"
-                            />
-                          </div>
-                        ))}
+                        <div className="space-y-3">
+                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                            Nama Lengkap (Sesuai KTP)
+                          </label>
+                          <Input
+                            type="text"
+                            value={formData.fullName}
+                            onChange={(e) => handleInputChange('fullName', e.target.value)}
+                            placeholder="Nama lengkap"
+                            className="font-bold"
+                            disabled={updateUser.isPending}
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                            Email Kontak
+                          </label>
+                          <Input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => handleInputChange('email', e.target.value)}
+                            placeholder="email@contoh.com"
+                            className="font-bold"
+                            disabled={updateUser.isPending}
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                            Protokol Telepon
+                          </label>
+                          <Input
+                            type="text"
+                            value={formData.phoneNumber}
+                            onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                            placeholder="+62 812-3456-7890"
+                            className="font-bold"
+                            disabled={updateUser.isPending}
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                            Domisili Saat Ini
+                          </label>
+                          <Input
+                            type="text"
+                            value={formData.address}
+                            onChange={(e) => handleInputChange('address', e.target.value)}
+                            placeholder="Jakarta, Indonesia"
+                            className="font-bold"
+                            disabled={updateUser.isPending}
+                          />
+                        </div>
                       </div>
                     </section>
 
@@ -152,10 +251,25 @@ export default function SettingsPage() {
                     </section>
 
                     <div className="flex flex-col sm:flex-row gap-4 pt-10 relative z-10">
-                      <Button className="flex-1 shadow-xl">
-                        Sinkronisasi Profil
+                      <Button
+                        className="flex-1 shadow-xl"
+                        onClick={handleSubmit}
+                        disabled={updateUser.isPending || !user?.id}
+                      >
+                        {updateUser.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Menyimpan...
+                          </>
+                        ) : (
+                          'Sinkronisasi Profil'
+                        )}
                       </Button>
-                      <Button variant="outline" className="text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20">
+                      <Button
+                        variant="outline"
+                        className="text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20"
+                        onClick={handleClearSession}
+                      >
                         <Trash2 className="h-5 w-5 mr-1" />
                         Hapus Sesi
                       </Button>
