@@ -9,6 +9,12 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/__tests__/**/*.test.{ts,tsx}'],
+    server: {
+      deps: {
+        // Inline next-intl so Vite's resolver handles 'next/navigation' import
+        inline: ['next-intl'],
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -24,6 +30,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // next/navigation.js exists but ESM can't resolve 'next/navigation' without extension
+      // next-intl imports 'next/navigation' using ESM, causing ERR_MODULE_NOT_FOUND in jsdom
+      'next/navigation': path.resolve(__dirname, 'node_modules/next/navigation.js'),
     },
   },
 });

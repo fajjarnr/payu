@@ -15,3 +15,29 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
   unobserve: vi.fn(),
 })) as unknown as typeof IntersectionObserver;
+
+// Global mock for next/navigation (required by next-intl in jsdom environment)
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+  useParams: () => ({}),
+  useSelectedLayoutSegment: () => null,
+  useSelectedLayoutSegments: () => [],
+  useServerInsertedHTML: vi.fn(),
+  redirect: vi.fn(),
+  permanentRedirect: vi.fn(),
+  notFound: vi.fn(),
+  forbidden: vi.fn(),
+  unauthorized: vi.fn(),
+  ReadonlyURLSearchParams: URLSearchParams,
+  RedirectType: { push: 'push', replace: 'replace' },
+  ServerInsertedHTMLContext: { Provider: ({ children }: { children: React.ReactNode }) => children },
+}));

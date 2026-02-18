@@ -29,7 +29,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `NotificationService.test.ts` — sendNotification, getUserNotifications, markAsRead
   - `StatementService.test.ts` — generate, list, download, getLatest, formatPeriodType, getStatusColor
   - `SupportService.test.ts` — agents, modules, trainings, tickets, FAQs (18 methods)
-  - Total frontend tests: **286 passing** (18/19 test files)
+- **Frontend Page Tests (19 new test files, 102 test cases)**:
+  - Core pages: Login, Dashboard, Transfer, Bills, Cards, Notifications
+  - Financial pages: Exchange, Investments, Lending
+  - Utility pages: Settings, Security, QRIS, Pockets, Rewards
+  - Other pages: Analytics, Support, Onboarding, SplitBill, Merchant
+  - Total frontend tests: **21 page files + 8 service files = 29 new test files**
+
+### Changed
+
+- **Test Infrastructure**: Added global `next/navigation` mock in `vitest.setup.ts` with all Next.js navigation exports
+- **Vitest Config**: Added `server.deps.inline: ['next-intl']` to fix ESM module resolution for `next/navigation` in jsdom
+- **Vitest Config**: Added resolve alias for `next/navigation` → `next/navigation.js`
+- **Scorecard**: Security 82→92, Frontend Web-App 88→95
 
 ## [Unreleased] - 2026-02-12
 
