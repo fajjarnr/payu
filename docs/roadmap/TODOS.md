@@ -70,6 +70,7 @@
 | **INFRA-001** | Cleanup infrastructure/ folder - hapus helm/, examples/, debezium/ | P2 | ✅ **Complete** |
 | **DB-001** | Fix PostgreSQL connection exhaustion - scale workaround | P1 | ✅ **Complete** |
 | **DB-002** | Fix PostgreSQL max_connections (100→300) + pgBouncer tuning | P0 | ✅ **Complete** |
+| **LOAD-001** | K6 Load Testing - Smoke test passed, load/stress pending | P1 | 🟡 **In Progress** |
 
 ### ⚠️ Pre-Production Checklist
 

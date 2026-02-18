@@ -46,6 +46,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Documents 7 known PayU platform issues with quick fixes
   - Cross-references with LESSONS.md and INFRASTRUCTURE_DEPLOYMENT.md
 
+- **LOAD-001: K6 Load Testing Suite** (Feb 18, 2026):
+  - **Smoke Test**: ✅ PASSED - All 13 checks passed
+    - Avg response time: 3.92ms (Excellent)
+    - p95 response time: 8.23ms (Under 500ms threshold)
+    - Keycloak OIDC: Responding correctly
+    - All core services: Accessible and responding
+  - **Created Test Suite**:
+    - `smoke-test.js` - Quick functionality verification (1 user, 30s)
+    - `load-test.js` - Sustained load test (up to 100 users, ~25min)
+    - `stress-test.js` - Breaking point analysis (up to 1000 users, ~40min)
+    - `config.js` - Shared configuration and thresholds
+  - **Location**: `tests/performance/k6/`
+  - **Next**: Run load-test.js and stress-test.js for full validation
+
 - **DB-002: PostgreSQL Permanent Fix** (Feb 18, 2026):
   - **Problem**: `max_connections` default 100 too low for 22 services
   - **Solution**: Patroni dynamic configuration with performance tuning
