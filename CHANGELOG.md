@@ -9,24 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Logging Starter Module (Standardized Logging)**:
-  - Created `logging-starter` shared module for consistent logging across all services
-  - Features:
-    - JSON logging via LogstashEncoder (LokiStack compatible)
-    - MDC support for `correlation_id`, `trace_id`, `span_id`
-    - OpenTelemetry integration for distributed tracing
-    - Automatic `X-Correlation-Id` header propagation
-    - Profile-based configuration (plain text for dev, JSON for prod)
-    - Async logging for production performance
-  - Components:
-    - `PayuLoggingAutoConfiguration`: Auto-configuration for Spring Boot
-    - `CorrelationIdFilter`: Reads/generates correlation IDs from HTTP headers
-    - `TraceIdFilter`: Extracts OTel trace/span IDs
-    - `MdcUtil`: Programmatic MDC manipulation utility
-    - `logback-payu-base.xml`: Standard logback configuration template
-  - Integration:
-    - `lending-service`: Updated to use logging-starter (example implementation)
-  - Documentation: Complete README with usage examples and migration guide
+- **Logging Standardization Across All Services**:
+
+  **Spring Boot `logging-starter` Module:**
+  - Created shared module for consistent JSON logging across 16 Spring Boot services
+  - Features: JSON format (LokiStack compatible), MDC support, OpenTelemetry integration
+  - Components: Auto-configuration, CorrelationIdFilter, TraceIdFilter, MdcUtil
+  - Standard config: `logback-payu-base.xml` template
+
+  **Integrated Services (16 Spring Boot):**
+  - lending-service (reference implementation)
+  - account-service, auth-service, backoffice-service
+  - billing-service, cms-service, compliance-service
+  - fx-service, investment-service, partner-service
+  - promotion-service, statement-service, support-service
+  - ab-testing-service, transaction-service, wallet-service
+
+  **Quarkus Services (3):**
+  - Updated gateway-service with JSON logging configuration
+  - Standardized MDC key names (`correlation_id`, `trace_id`)
+  - Added QUARKUS_LOGGING.md documentation
+
+  **Python Services (2):**
+  - Created `payu-logging` Python package with structlog
+  - JSON format compatible with Java logging
+  - OpenTelemetry trace/span ID integration
+  - FastAPI middleware for correlation ID propagation
+  - Services: kyc-service, analytics-service
+
+  **Result:** All 21 backend services now use standardized logging format for unified LokiStack and OpenTelemetry tracing.
 
 - **Backend Integration Tests (P19 Audit - R-004, R-006)**:
   - `statement-service`: Added comprehensive integration test suite (0% → 100% coverage)
