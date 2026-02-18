@@ -25,27 +25,19 @@ import {
 import { useTransactions, useCancelTransaction } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { toast } from 'sonner';
+import type { Transaction } from '@/services/TransactionService';
 
-interface Transaction {
-  id: string;
-  referenceNumber: string;
-  senderAccountId: string;
-  recipientAccountId: string;
-  type: 'TRANSFER' | 'PAYMENT' | 'DEPOSIT' | 'WITHDRAWAL' | 'QRIS';
-  amount: number;
-  currency: string;
-  description: string;
-  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'PROCESSING';
-  createdAt: string;
-}
-
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string }> = {
   PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' },
+  VALIDATING: { label: 'Validasi', color: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
   PROCESSING: { label: 'Diproses', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
   COMPLETED: { label: 'Selesai', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
   FAILED: { label: 'Gagal', color: 'bg-red-500/10 text-red-600 border-red-500/20' },
   CANCELLED: { label: 'Batal', color: 'bg-gray-500/10 text-gray-600 border-gray-500/20' },
 };
+
+// Helper to check if transaction type is a credit (income)
+const isCreditType = (type: string): boolean => type === 'TOP_UP';
 
 interface TransferActivityProps {
   className?: string;
@@ -197,9 +189,9 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                         <TableCell className="py-6 sm:py-8 text-right">
                           <p className={cn(
                             "text-sm sm:text-base font-bold tabular-nums tracking-tight",
-                            item.type === 'DEPOSIT' ? "text-emerald-600" : "text-foreground"
+                            isCreditType(item.type) ? "text-emerald-600" : "text-foreground"
                           )}>
-                            {item.type === 'DEPOSIT' ? '+' : '-'}{formatAmount(item.amount)}
+                            {isCreditType(item.type) ? '+' : '-'}{formatAmount(item.amount)}
                           </p>
                         </TableCell>
                         <TableCell className="py-6 text-right">
@@ -247,9 +239,9 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                       </div>
                       <p className={cn(
                         "text-sm font-bold tabular-nums",
-                        item.type === 'DEPOSIT' ? "text-emerald-600" : "text-foreground"
+                        isCreditType(item.type) ? "text-emerald-600" : "text-foreground"
                       )}>
-                        {item.type === 'DEPOSIT' ? '+' : '-'}{formatAmount(item.amount)}
+                        {isCreditType(item.type) ? '+' : '-'}{formatAmount(item.amount)}
                       </p>
                     </div>
                     <div className="flex items-center justify-between pt-3 border-t border-border/50">

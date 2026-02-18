@@ -371,7 +371,7 @@ export default function ScheduledTransfersPage() {
               <label className="text-sm font-medium">Frekuensi</label>
               <Select
                 value={editForm.frequency}
-                onValueChange={(value) => setEditForm((prev) => ({ ...prev, frequency: value }))}
+                onValueChange={(value: string) => setEditForm((prev) => ({ ...prev, frequency: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />

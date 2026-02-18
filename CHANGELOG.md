@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-02-18
+## [1.3.0] - 2026-02-18
+
+### Added
+
+- **Web-App Image 1.3.0 (Semantic Versioning)**:
+  - Fixed all TypeScript build errors for production build
+  - Added missing `sonner` dependency for toast notifications
+  - Added `@radix-ui/react-select` dependency for Select component
+  - Fixed Transaction type compatibility between services and UI components
+  - Removed unused `useSearchParams` import causing prerender errors
+  - Added `isCreditType()` helper for proper transaction amount display (credit = green/debit = default)
+  - Extended `statusConfig` to include `VALIDATING` status
+  - Built and pushed image `payu/web-app:1.3.0` to OpenShift registry
+  - Updated deployment in `payu-dev` namespace to use new image tag
+
+## [1.2.0] - 2026-02-18
 
 ### Added
 

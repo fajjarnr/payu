@@ -9,10 +9,11 @@
 > - ✅ **Infrastructure via Operators**: Crunchy PGO, AMQ Streams (KRaft), DataGrid, RHSSO, Vault, cert-manager
 > - ✅ **Kustomize IaC**: Complete infra manifests (operators/ + infra/ + overlays/) for reproducible deployments
 > - ✅ **TLS**: Let's Encrypt certs via cert-manager DNS01/Route53
-> - ✅ **Images**: All 22 services built via Podman, pushed to OCP internal registry (tag 1.2.0)
+> - ✅ **Images**: All 22 services built via Podman, pushed to OCP internal registry (tag 1.3.0 for web-app)
 > - ✅ **NetworkPolicies Simplified**: Removed 7 custom NetworkPolicies, kept only Kafka operator policies
 > - ✅ **Keycloak Realm Imported**: payu realm with 4 clients, 5 roles, 4 users, E2E login verified
 > - ✅ **PostgreSQL Connection Fix**: Workaround for connection exhaustion (scale down/up pattern)
+> - ✅ **Web-App v1.3.0**: TypeScript errors fixed, sonner/radix-ui deps added, Transaction types aligned
 > - 🟢 **Status**: Running on OpenShift (36/36 pods, 22 services + infra)
 
 ---

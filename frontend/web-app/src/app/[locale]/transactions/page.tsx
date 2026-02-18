@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { useAuthStore } from '@/stores';
@@ -49,24 +48,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import clsx from 'clsx';
+import type { Transaction } from '@/services/TransactionService';
 
-interface Transaction {
-  id: string;
-  referenceNumber: string;
-  senderAccountId: string;
-  recipientAccountId: string;
-  type: 'TRANSFER' | 'PAYMENT' | 'DEPOSIT' | 'WITHDRAWAL' | 'QRIS';
-  amount: number;
-  currency: string;
-  description: string;
-  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'PROCESSING';
-  failureReason?: string;
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
-}
-
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
   PROCESSING: { label: 'Diproses', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: RotateCcw },
   COMPLETED: { label: 'Selesai', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: CheckCircle2 },
@@ -74,17 +58,20 @@ const statusConfig = {
   CANCELLED: { label: 'Dibatalkan', color: 'bg-gray-500/10 text-gray-600 border-gray-500/20', icon: X },
 };
 
-const typeConfig = {
-  TRANSFER: { label: 'Transfer', icon: ArrowLeftRight },
-  PAYMENT: { label: 'Pembayaran', icon: ArrowUpRight },
-  DEPOSIT: { label: 'Deposit', icon: ArrowDownLeft },
-  WITHDRAWAL: { label: 'Penarikan', icon: ArrowUpRight },
-  QRIS: { label: 'QRIS', icon: ArrowUpRight },
+const typeConfig: Record<string, { label: string; icon: typeof ArrowLeftRight }> = {
+  INTERNAL_TRANSFER: { label: 'Transfer', icon: ArrowLeftRight },
+  BIFAST_TRANSFER: { label: 'BI-FAST', icon: ArrowUpRight },
+  SKN_TRANSFER: { label: 'SKN', icon: ArrowUpRight },
+  RTGS_TRANSFER: { label: 'RTGS', icon: ArrowUpRight },
+  QRIS_PAYMENT: { label: 'QRIS', icon: ArrowUpRight },
+  BILL_PAYMENT: { label: 'Pembayaran', icon: ArrowUpRight },
+  TOP_UP: { label: 'Top Up', icon: ArrowDownLeft },
 };
 
+// Helper to check if transaction type is a credit (income)
+const isCreditType = (type: string): boolean => type === 'TOP_UP';
+
 export default function TransactionsPage() {
-  const t = useTranslations();
-  const searchParams = useSearchParams();
   const accountId = useAuthStore((state) => state.accountId);
   const [page, setPage] = useState(0);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -292,11 +279,11 @@ export default function TransactionsPage() {
                                 <div className="flex items-center gap-3">
                                   <div className={clsx(
                                     "h-10 w-10 rounded-xl flex items-center justify-center",
-                                    transaction.type === 'DEPOSIT' ? "bg-emerald-500/10" : "bg-primary/10"
+                                    isCreditType(transaction.type) ? "bg-emerald-500/10" : "bg-primary/10"
                                   )}>
                                     <TypeIcon className={clsx(
                                       "h-5 w-5",
-                                      transaction.type === 'DEPOSIT' ? "text-emerald-500" : "text-primary"
+                                      isCreditType(transaction.type) ? "text-emerald-500" : "text-primary"
                                     )} />
                                   </div>
                                   <span className="text-sm font-bold text-foreground">{type.label}</span>
@@ -315,9 +302,9 @@ export default function TransactionsPage() {
                               </TableCell>
                               <TableCell className={clsx(
                                 "py-6 text-right font-bold tabular-nums",
-                                transaction.type === 'DEPOSIT' ? "text-emerald-600" : "text-foreground"
+                                isCreditType(transaction.type) ? "text-emerald-600" : "text-foreground"
                               )}>
-                                {transaction.type === 'DEPOSIT' ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
+                                {isCreditType(transaction.type) ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
                               </TableCell>
                               <TableCell className="py-6 text-right">
                                 <DropdownMenu>
@@ -365,11 +352,11 @@ export default function TransactionsPage() {
                             <div className="flex items-center gap-3">
                               <div className={clsx(
                                 "h-10 w-10 rounded-xl flex items-center justify-center",
-                                transaction.type === 'DEPOSIT' ? "bg-emerald-500/10" : "bg-primary/10"
+                                isCreditType(transaction.type) ? "bg-emerald-500/10" : "bg-primary/10"
                               )}>
                                 <TypeIcon className={clsx(
                                   "h-5 w-5",
-                                  transaction.type === 'DEPOSIT' ? "text-emerald-500" : "text-primary"
+                                    isCreditType(transaction.type) ? "text-emerald-500" : "text-primary"
                                 )} />
                               </div>
                               <div>
@@ -388,9 +375,9 @@ export default function TransactionsPage() {
                             </p>
                             <p className={clsx(
                               "text-sm font-bold tabular-nums",
-                              transaction.type === 'DEPOSIT' ? "text-emerald-600" : "text-foreground"
+                              isCreditType(transaction.type) ? "text-emerald-600" : "text-foreground"
                             )}>
-                              {transaction.type === 'DEPOSIT' ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
+                              {isCreditType(transaction.type) ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
                             </p>
                           </div>
                           {canCancel(transaction.status) && (
