@@ -2080,5 +2080,40 @@
 
 ---
 
+## 🧪 E2E Testing with Playwright (Feb 18, 2026)
+
+### 1. Test Selectors Must Match Actual UI
+
+* **The Problem**: E2E tests fail when they reference UI elements that don't exist (e.g., looking for "Domisili Saat Ini" field that was removed from settings page).
+* **The Symptom**: Tests timeout with `locator.fill: Timeout 15000ms exceeded` or similar errors.
+* **The Fix**: Always verify test selectors against actual rendered UI. When UI changes, update tests immediately.
+* **Best Practice**: Use stable selectors like `data-testid` instead of text content when possible.
+
+### 2. Form Placeholder Mismatches
+
+* **The Problem**: Tests use hardcoded placeholders that don't match the actual input placeholders in the UI.
+* **Example**: Test expects `PENGGUNA PAYU` but UI has `Nama lengkap`.
+* **The Fix**: Keep test placeholders in sync with UI. Use page object pattern to centralize selector definitions.
+
+### 3. Button State Assertions
+
+* **The Problem**: Testing `toBeEnabled()` on buttons that may be disabled during loading states causes flaky tests.
+* **The Fix**: Use `toBeAttached()` or `toBeVisible()` for buttons that may have dynamic enable/disable states based on data loading.
+* **Alternative**: Wait for specific conditions before asserting button state.
+
+### 4. Type Compatibility Between Services and UI
+
+* **The Problem**: TypeScript interfaces for Transaction types differ between `services/TransactionService.ts` and page components, causing type errors.
+* **The Fix**: Import types from a single source of truth (e.g., `types/index.ts`) rather than defining duplicate interfaces.
+* **Pattern**: Use helper functions like `isCreditType(type: string)` instead of hardcoded string comparisons.
+
+### 5. Dependency Management for E2E
+
+* **The Problem**: Missing runtime dependencies (like `sonner` for toasts or `@radix-ui/react-select` for Select component) cause build failures.
+* **The Fix**: Always verify `package.json` dependencies include all UI libraries used in components under test.
+* **Check**: Run `npm run type-check` before committing E2E tests to catch missing dependencies early.
+
+---
+
 _See also: [REMEDIATION_PLAYBOOK.md](REMEDIATION_PLAYBOOK.md) for prioritized step-by-step action plans._
 
