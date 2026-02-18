@@ -208,19 +208,6 @@ export default function SettingsPage() {
                             disabled={updateUser.isPending}
                           />
                         </div>
-                        <div className="space-y-3">
-                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-                            Domisili Saat Ini
-                          </label>
-                          <Input
-                            type="text"
-                            value={formData.address}
-                            onChange={(e) => handleInputChange('address', e.target.value)}
-                            placeholder="Jakarta, Indonesia"
-                            className="font-bold"
-                            disabled={updateUser.isPending}
-                          />
-                        </div>
                       </div>
                     </section>
 
