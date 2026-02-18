@@ -591,7 +591,7 @@ export default function PocketsPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {sharedPockets.map((pocket) => {
-                                    const percentage = Math.round((pocket.balance / pocket.target) * 100);
+                                    const percentage = pocket.target ? Math.round((pocket.balance / pocket.target) * 100) : 0;
                                     const isSelected = selectedPocket === pocket.id;
 
                                     return (
