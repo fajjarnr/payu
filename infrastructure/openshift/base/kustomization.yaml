@@ -29,9 +29,6 @@ resources:
   - wallet-service.yaml
   - web-app.yaml
   # Security & Networking
-  - network-policies.yaml
+  # NOTE: NetworkPolicies disabled in dev — re-enable for staging/prod
+  # - network-policies.yaml
   - tls-certificates.yaml
-
-# Ensure all resources get the part-of label for NetworkPolicy intra-namespace rules
-commonLabels:
-  app.kubernetes.io/part-of: payu-banking
