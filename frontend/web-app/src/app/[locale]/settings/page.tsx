@@ -24,7 +24,6 @@ export default function SettingsPage() {
     fullName: '',
     email: '',
     phoneNumber: '',
-    address: '',
   });
 
   // Initialize form with user data
@@ -34,7 +33,6 @@ export default function SettingsPage() {
         fullName: user.fullName || '',
         email: user.email || '',
         phoneNumber: user.phoneNumber || '',
-        address: user.address || '',
       });
     }
   }, [user]);
