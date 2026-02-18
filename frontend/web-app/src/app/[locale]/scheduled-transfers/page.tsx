@@ -63,7 +63,7 @@ export default function ScheduledTransfersPage() {
   const [editForm, setEditForm] = useState({
     amount: 0,
     description: '',
-    scheduleType: 'ONE_TIME',
+    frequency: 'ONE_TIME',
   });
 
   const handleOpenEditModal = (transfer: ScheduledTransfer) => {
@@ -71,7 +71,7 @@ export default function ScheduledTransfersPage() {
     setEditForm({
       amount: transfer.amount,
       description: transfer.description || '',
-      scheduleType: transfer.scheduleType,
+      frequency: transfer.frequency,
     });
     setIsEditModalOpen(true);
   };
@@ -89,7 +89,7 @@ export default function ScheduledTransfersPage() {
       data: {
         amount: editForm.amount,
         description: editForm.description,
-        scheduleType: editForm.scheduleType as any,
+        frequency: editForm.frequency as any,
       },
     });
 
@@ -249,7 +249,7 @@ export default function ScheduledTransfersPage() {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {getScheduleTypeLabel(transfer.scheduleType)}
+                                  {getScheduleTypeLabel(transfer.frequency)}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
@@ -370,8 +370,8 @@ export default function ScheduledTransfersPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Frekuensi</label>
               <Select
-                value={editForm.scheduleType}
-                onValueChange={(value) => setEditForm((prev) => ({ ...prev, scheduleType: value }))}
+                value={editForm.frequency}
+                onValueChange={(value) => setEditForm((prev) => ({ ...prev, frequency: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
