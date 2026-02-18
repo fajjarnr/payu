@@ -1,39 +1,81 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical } from "lucide-react";
+import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, X, ArrowDownLeft, Trash2, CreditCard as CardIcon, Edit3 } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
-import { BalanceResponse, WalletTransaction, Pocket, SharedMember } from '@/types';
+import { BalanceResponse, WalletTransaction, Pocket } from '@/types';
 import api from '@/lib/api';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { SkeletonBalance, SkeletonTransaction } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores';
-import { usePockets, usePocketsTotalBalance, useCreatePocket } from '@/hooks';
+import {
+  usePockets,
+  usePocketsTotalBalance,
+  useCreatePocket,
+  useCreditPocket,
+  useDebitPocket,
+  useFreezePocket,
+  useUnfreezePocket,
+  useClosePocket
+} from '@/hooks';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { toast } from 'sonner';
+
+interface SharedMember {
+  accountId: string;
+  fullName: string;
+  role: 'OWNER' | 'ADMIN' | 'MEMBER';
+  joinedAt: string;
+}
 
 interface SharedPocket extends Pocket {
   sharedMembers?: SharedMember[];
   isShared?: boolean;
 }
 
-/**
- * SECURITY NOTICE: Account ID Access
- * ================================
- * This component retrieves accountId from the auth store (Zustand),
- * NOT from localStorage (security vulnerability).
- *
- * The auth store persists only non-sensitive data (user profile, account ID).
- * Tokens are managed exclusively via httpOnly cookies from the backend.
- */
 export default function PocketsPage() {
     // SECURITY: Get accountId from auth store, NOT localStorage
     const accountId = useAuthStore((state) => state.accountId) || '';
     const [selectedPocket, setSelectedPocket] = useState<string | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_showMemberModal, setShowMemberModal] = useState(false);
-    const { data: pocketsData } = usePockets();
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
+    const [isDebitModalOpen, setIsDebitModalOpen] = useState(false);
+    const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
+    const [selectedPocketForAction, setSelectedPocketForAction] = useState<Pocket | null>(null);
+
+    // Form states
+    const [newPocketName, setNewPocketName] = useState('');
+    const [newPocketTarget, setNewPocketTarget] = useState('');
+    const [newPocketType, setNewPocketType] = useState<'SAVINGS' | 'GOAL'>('SAVINGS');
+    const [amount, setAmount] = useState('');
+
+    const { data: pocketsData, isLoading: pocketsLoading } = usePockets();
+    const { data: totalBalance } = usePocketsTotalBalance('IDR');
     const createPocket = useCreatePocket();
+    const creditPocket = useCreditPocket();
+    const debitPocket = useDebitPocket();
+    const freezePocket = useFreezePocket();
+    const unfreezePocket = useUnfreezePocket();
+    const closePocket = useClosePocket();
 
     const { data: balance, isLoading: balanceLoading } = useQuery({
         queryKey: ['wallet-balance', accountId],
@@ -52,6 +94,111 @@ export default function PocketsPage() {
         },
         enabled: !!accountId
     });
+
+    const handleCreatePocket = async () => {
+        if (!newPocketName.trim()) {
+            toast.error('Nama kantong wajib diisi');
+            return;
+        }
+
+        try {
+            await createPocket.mutateAsync({
+                accountId,
+                name: newPocketName,
+                currency: 'IDR',
+                target: newPocketTarget ? parseFloat(newPocketTarget) : undefined,
+                type: newPocketType
+            });
+            toast.success('Kantong berhasil dibuat');
+            setIsCreateModalOpen(false);
+            setNewPocketName('');
+            setNewPocketTarget('');
+        } catch (error) {
+            toast.error('Gagal membuat kantong');
+        }
+    };
+
+    const handleCredit = async () => {
+        if (!selectedPocketForAction || !amount) return;
+
+        try {
+            await creditPocket.mutateAsync({
+                pocketId: selectedPocketForAction.id,
+                amount: parseFloat(amount),
+                currency: 'IDR'
+            });
+            toast.success('Berhasil menambah dana');
+            setIsCreditModalOpen(false);
+            setAmount('');
+            setSelectedPocketForAction(null);
+        } catch (error) {
+            toast.error('Gagal menambah dana');
+        }
+    };
+
+    const handleDebit = async () => {
+        if (!selectedPocketForAction || !amount) return;
+
+        try {
+            await debitPocket.mutateAsync({
+                pocketId: selectedPocketForAction.id,
+                amount: parseFloat(amount),
+                currency: 'IDR'
+            });
+            toast.success('Berhasil mengambil dana');
+            setIsDebitModalOpen(false);
+            setAmount('');
+            setSelectedPocketForAction(null);
+        } catch (error) {
+            toast.error('Gagal mengambil dana');
+        }
+    };
+
+    const handleFreeze = async (pocketId: string) => {
+        try {
+            await freezePocket.mutateAsync(pocketId);
+            toast.success('Kantong berhasil dibekukan');
+        } catch (error) {
+            toast.error('Gagal membekukan kantong');
+        }
+    };
+
+    const handleUnfreeze = async (pocketId: string) => {
+        try {
+            await unfreezePocket.mutateAsync(pocketId);
+            toast.success('Kantong berhasil diaktifkan kembali');
+        } catch (error) {
+            toast.error('Gagal mengaktifkan kantong');
+        }
+    };
+
+    const handleClose = async () => {
+        if (!selectedPocketForAction) return;
+
+        try {
+            await closePocket.mutateAsync(selectedPocketForAction.id);
+            toast.success('Kantong berhasil ditutup');
+            setIsCloseModalOpen(false);
+            setSelectedPocketForAction(null);
+        } catch (error) {
+            toast.error('Gagal menutup kantong');
+        }
+    };
+
+    const openCreditModal = (pocket: Pocket) => {
+        setSelectedPocketForAction(pocket);
+        setIsCreditModalOpen(true);
+    };
+
+    const openDebitModal = (pocket: Pocket) => {
+        setSelectedPocketForAction(pocket);
+        setIsDebitModalOpen(true);
+    };
+
+    const openCloseModal = (pocket: Pocket) => {
+        setSelectedPocketForAction(pocket);
+        setIsCloseModalOpen(true);
+    };
 
     const savingGoals = [
         {
@@ -108,8 +255,7 @@ export default function PocketsPage() {
         }
     ];
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _activePocket = selectedPocket
+    const activePocket = selectedPocket
         ? sharedPockets.find(p => p.id === selectedPocket)
         : null;
 
@@ -127,14 +273,16 @@ export default function PocketsPage() {
                                 <div className="flex gap-3">
                                     <ButtonMotion>
                                         <button
-                                            onClick={() => setShowMemberModal(true)}
                                             className="bg-muted lg:bg-card text-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest border border-border shadow-lg hover:bg-muted/80 transition-all flex items-center gap-2 uppercase"
                                         >
                                             <Users className="h-4 w-4 text-emerald-500" /> Kantong Bersama
                                         </button>
                                     </ButtonMotion>
                                     <ButtonMotion>
-                                        <button className="bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-emerald-500/20 flex items-center gap-2 hover:bg-emerald-500 transition-all uppercase">
+                                        <button
+                                            onClick={() => setIsCreateModalOpen(true)}
+                                            className="bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-emerald-500/20 flex items-center gap-2 hover:bg-emerald-500 transition-all uppercase"
+                                        >
                                             <Plus className="h-4 w-4" /> Tambah Kantong
                                         </button>
                                     </ButtonMotion>
@@ -209,8 +357,111 @@ export default function PocketsPage() {
                             </StaggerItem>
                         </div>
 
-                            <div className="md:col-span-12 lg:col-span-12 gap-8 mt-12 grid grid-cols-1 lg:grid-cols-12">
-                                <div className="lg:col-span-7 space-y-8">
+                        {/* Pockets List with CRUD */}
+                        <div className="mt-12">
+                            <div className="flex justify-between items-center mb-8">
+                                <h3 className="text-xl font-bold text-foreground">Kantong Saya</h3>
+                                <Badge variant="outline" className="font-mono">
+                                    Total: Rp {totalBalance?.totalBalance?.toLocaleString('id-ID') || 0}
+                                </Badge>
+                            </div>
+
+                            {pocketsLoading ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="bg-card rounded-xl p-6 border border-border shadow-sm h-40 animate-pulse" />
+                                    ))}
+                                </div>
+                            ) : pocketsData && pocketsData.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {pocketsData.map((pocket) => {
+                                        const percentage = pocket.target ? Math.round((pocket.balance / pocket.target) * 100) : 0;
+                                        return (
+                                            <div key={pocket.id} className="bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-card transition-all group">
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={clsx(
+                                                            "h-10 w-10 rounded-xl flex items-center justify-center",
+                                                            pocket.status === 'FROZEN' ? "bg-yellow-500/10 text-yellow-500" : "bg-emerald-500/10 text-emerald-500"
+                                                        )}>
+                                                            {pocket.type === 'GOAL' ? <Target className="h-5 w-5" /> : <Wallet className="h-5 w-5" />}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-bold text-foreground text-sm">{pocket.name}</h4>
+                                                            <Badge variant="outline" className="text-xs mt-1">
+                                                                {pocket.type}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                                                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                                            </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-48">
+                                                            <DropdownMenuItem onClick={() => openCreditModal(pocket)} className="cursor-pointer">
+                                                                <ArrowDownLeft className="h-4 w-4 mr-2 text-emerald-500" />
+                                                                Tambah Dana
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => openDebitModal(pocket)} className="cursor-pointer">
+                                                                <ArrowUpRight className="h-4 w-4 mr-2 text-blue-500" />
+                                                                Ambil Dana
+                                                            </DropdownMenuItem>
+                                                            {pocket.status === 'ACTIVE' ? (
+                                                                <DropdownMenuItem onClick={() => handleFreeze(pocket.id)} className="cursor-pointer">
+                                                                    <Lock className="h-4 w-4 mr-2 text-yellow-500" />
+                                                                    Bekukan
+                                                                </DropdownMenuItem>
+                                                            ) : (
+                                                                <DropdownMenuItem onClick={() => handleUnfreeze(pocket.id)} className="cursor-pointer">
+                                                                    <UnlockIcon className="h-4 w-4 mr-2 text-emerald-500" />
+                                                                    Aktifkan
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            <DropdownMenuItem onClick={() => openCloseModal(pocket)} className="cursor-pointer text-red-600 focus:text-red-600">
+                                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                                Tutup Kantong
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-end">
+                                                        <p className="text-2xl font-bold text-foreground">Rp {pocket.balance.toLocaleString('id-ID')}</p>
+                                                        {pocket.target && <span className="text-xs font-bold text-primary">{percentage}%</span>}
+                                                    </div>
+                                                    {pocket.target && (
+                                                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                                            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${Math.min(percentage, 100)}%` }} />
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center justify-between pt-2">
+                                                        <Badge variant={pocket.status === 'ACTIVE' ? 'default' : 'secondary'} className="text-xs">
+                                                            {pocket.status}
+                                                        </Badge>
+                                                        <span className="text-xs text-muted-foreground">{pocket.currency}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 bg-muted/30 rounded-2xl border border-border">
+                                    <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                    <h4 className="text-lg font-bold text-foreground mb-2">Belum Ada Kantong</h4>
+                                    <p className="text-sm text-muted-foreground mb-4">Buat kantong pertama Anda untuk mulai mengalokasikan dana</p>
+                                    <Button onClick={() => setIsCreateModalOpen(true)}>
+                                        <Plus className="h-4 w-4 mr-2" /> Buat Kantong
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="md:col-span-12 lg:col-span-12 gap-8 mt-12 grid grid-cols-1 lg:grid-cols-12">
+                            <div className="lg:col-span-7 space-y-8">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold text-foreground">Tujuan Khusus</h3>
                                     <button className="text-xs font-bold text-primary hover:underline">Kelola Portofolio</button>
@@ -263,7 +514,7 @@ export default function PocketsPage() {
                                 </div>
                             </div>
 
-                                <div className="lg:col-span-5 space-y-8">
+                            <div className="lg:col-span-5 space-y-8">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold text-foreground">Buku Besar Terakhir</h3>
                                     <div className="h-10 w-10 bg-muted/50 rounded-xl flex items-center justify-center border border-border">
@@ -439,6 +690,199 @@ export default function PocketsPage() {
                     </StaggerContainer>
                 </div>
             </PageTransition>
+
+            {/* Create Pocket Modal */}
+            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Buat Kantong Baru</DialogTitle>
+                        <DialogDescription>
+                            Buat kantong untuk mengalokasikan dana sesuai tujuan Anda
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Nama Kantong</Label>
+                            <Input
+                                id="name"
+                                placeholder="Contoh: Dana Darurat, Liburan"
+                                value={newPocketName}
+                                onChange={(e) => setNewPocketName(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="target">Target Dana (Opsional)</Label>
+                            <Input
+                                id="target"
+                                type="number"
+                                placeholder="5000000"
+                                value={newPocketTarget}
+                                onChange={(e) => setNewPocketTarget(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Tipe Kantong</Label>
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant={newPocketType === 'SAVINGS' ? 'default' : 'outline'}
+                                    className="flex-1"
+                                    onClick={() => setNewPocketType('SAVINGS')}
+                                >
+                                    <Wallet className="h-4 w-4 mr-2" /> Tabungan
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={newPocketType === 'GOAL' ? 'default' : 'outline'}
+                                    className="flex-1"
+                                    onClick={() => setNewPocketType('GOAL')}
+                                >
+                                    <Target className="h-4 w-4 mr-2" /> Target
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleCreatePocket}
+                            disabled={createPocket.isPending || !newPocketName.trim()}
+                        >
+                            {createPocket.isPending ? 'Membuat...' : 'Buat Kantong'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Credit Modal */}
+            <Dialog open={isCreditModalOpen} onOpenChange={setIsCreditModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tambah Dana</DialogTitle>
+                        <DialogDescription>
+                            Tambahkan dana ke {selectedPocketForAction?.name}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="p-4 bg-muted rounded-xl">
+                            <p className="text-sm text-muted-foreground">Saldo Saat Ini</p>
+                            <p className="text-2xl font-bold">Rp {selectedPocketForAction?.balance.toLocaleString('id-ID')}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="amount">Jumlah Dana</Label>
+                            <Input
+                                id="amount"
+                                type="number"
+                                placeholder="100000"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCreditModalOpen(false)}>
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleCredit}
+                            disabled={creditPocket.isPending || !amount}
+                        >
+                            {creditPocket.isPending ? 'Memproses...' : 'Tambah Dana'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Debit Modal */}
+            <Dialog open={isDebitModalOpen} onOpenChange={setIsDebitModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Ambil Dana</DialogTitle>
+                        <DialogDescription>
+                            Ambil dana dari {selectedPocketForAction?.name}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="p-4 bg-muted rounded-xl">
+                            <p className="text-sm text-muted-foreground">Saldo Tersedia</p>
+                            <p className="text-2xl font-bold">Rp {selectedPocketForAction?.balance.toLocaleString('id-ID')}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="debit-amount">Jumlah Dana</Label>
+                            <Input
+                                id="debit-amount"
+                                type="number"
+                                placeholder="100000"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDebitModalOpen(false)}>
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleDebit}
+                            disabled={debitPocket.isPending || !amount}
+                            variant="destructive"
+                        >
+                            {debitPocket.isPending ? 'Memproses...' : 'Ambil Dana'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Close Modal */}
+            <Dialog open={isCloseModalOpen} onOpenChange={setIsCloseModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600 flex items-center gap-2">
+                            <Trash2 className="h-5 w-5" />
+                            Tutup Kantong?
+                        </DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin menutup kantong "{selectedPocketForAction?.name}"? Dana yang tersisa akan dikembalikan ke dompet utama.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                        <p className="text-sm text-red-600 font-medium">⚠️ Tindakan ini tidak dapat dibatalkan</p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCloseModalOpen(false)}>
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleClose}
+                            disabled={closePocket.isPending}
+                            variant="destructive"
+                        >
+                            {closePocket.isPending ? 'Menutup...' : 'Ya, Tutup Kantong'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </DashboardLayout>
+    );
+}
+
+// Unlock icon component
+function UnlockIcon({ className }: { className?: string }) {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={className}
+        >
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+        </svg>
     );
 }
