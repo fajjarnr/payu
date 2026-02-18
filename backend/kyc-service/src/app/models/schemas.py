@@ -4,6 +4,18 @@ from datetime import datetime
 from enum import Enum
 
 
+def mask_nik(nik: str) -> str:
+    """Mask NIK to show only first 4 and last 4 digits.
+
+    Format: 1234********5678
+    Compliant with UU PDP (Indonesian Personal Data Protection Law)
+    and PCI-DSS requirements for PII masking.
+    """
+    if not nik or len(nik) < 8:
+        return "****"
+    return nik[:4] + "*" * (len(nik) - 8) + nik[-4:]
+
+
 class KycStatus(str, Enum):
     PENDING = "PENDING"
     PROCESSING = "PROCESSING"
@@ -43,19 +55,24 @@ class KtpOcrResult(BaseModel):
 
     @property
     def masked_nik(self) -> str:
-        """
-        Returns the masked NIK showing only first 4 and last 4 digits.
-        Format: 1234********5678
-        """
-        if not self.nik or len(self.nik) < 8:
-            return "****"
-        return self.nik[:4] + "********" + self.nik[-4:]
+        """Returns the masked NIK showing only first 4 and last 4 digits."""
+        return mask_nik(self.nik)
 
     @field_validator("nik")
     def validate_nik(cls, v):
         if len(v) != 16 or not v.isdigit():
             raise ValueError("NIK must be 16 digits")
         return v
+
+    def safe_dump(self) -> dict:
+        """Serialize with NIK masked for API responses.
+
+        Use this instead of model_dump() when returning data to clients.
+        model_dump() should only be used for internal/DB storage.
+        """
+        data = self.model_dump()
+        data["nik"] = mask_nik(self.nik)
+        return data
 
 
 class LivenessCheckResult(BaseModel):
@@ -95,13 +112,18 @@ class DukcapilVerificationResult(BaseModel):
 
     @property
     def masked_nik(self) -> str:
+        """Returns the masked NIK showing only first 4 and last 4 digits."""
+        return mask_nik(self.nik)
+
+    def safe_dump(self) -> dict:
+        """Serialize with NIK masked for API responses.
+
+        Use this instead of model_dump() when returning data to clients.
+        model_dump() should only be used for internal/DB storage.
         """
-        Returns the masked NIK showing only first 4 and last 4 digits.
-        Format: 1234********5678
-        """
-        if not self.nik or len(self.nik) < 8:
-            return "****"
-        return self.nik[:4] + "********" + self.nik[-4:]
+        data = self.model_dump()
+        data["nik"] = mask_nik(self.nik)
+        return data
 
 
 class KycVerification(BaseModel):
@@ -146,6 +168,15 @@ class GetKycStatusResponse(BaseModel):
     rejection_reason: Optional[str] = None
     created_at: datetime
     completed_at: Optional[datetime] = None
+
+    def safe_dump(self) -> dict:
+        """Serialize with all NIK fields masked for API responses."""
+        data = self.model_dump()
+        if self.ktp_ocr_result:
+            data["ktp_ocr_result"] = self.ktp_ocr_result.safe_dump()
+        if self.dukcapil_result:
+            data["dukcapil_result"] = self.dukcapil_result.safe_dump()
+        return data
 
 
 class ErrorResponse(BaseModel):

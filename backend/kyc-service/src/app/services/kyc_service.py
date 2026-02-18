@@ -7,7 +7,7 @@ from base64 import b64decode
 from structlog import get_logger
 
 from app.database import KycVerificationEntity
-from app.models.schemas import KycVerification, KycStatus, KtpOcrResult, LivenessCheckResult, FaceMatchResult, DukcapilVerificationResult
+from app.models.schemas import KycVerification, KycStatus, KtpOcrResult, LivenessCheckResult, FaceMatchResult, DukcapilVerificationResult, mask_nik
 from app.ml.ocr_service import OcrService
 from app.ml.liveness_service import LivenessService
 from app.ml.face_service import FaceService
@@ -82,14 +82,14 @@ class KycService:
             event={
                 "verification_id": verification_id,
                 "user_id": verification.user_id,
-                "nik": ocr_result.nik,
+                "nik": mask_nik(ocr_result.nik),
                 "name": ocr_result.name
             }
         )
 
         return {
             "status": verification.status,
-            "ocr_result": ocr_result.model_dump()
+            "ocr_result": ocr_result.safe_dump()
         }
 
     async def process_selfie_upload(
@@ -117,7 +117,7 @@ class KycService:
             return {
                 "status": KycStatus.REJECTED.value,
                 "rejection_reason": "Liveness check failed",
-                "liveness_result": liveness_result.model_dump()
+                "liveness_result": liveness_result.model_dump(),
             }
 
         ocr_data = KtpOcrResult(**verification.ktp_ocr_result)
@@ -136,7 +136,7 @@ class KycService:
                 "status": KycStatus.REJECTED.value,
                 "rejection_reason": "Face matching failed",
                 "liveness_result": liveness_result.model_dump(),
-                "face_match_result": face_match_result.model_dump()
+                "face_match_result": face_match_result.model_dump(),
             }
 
         dukcapil_result = await self.dukcapil_client.verify_nik(ocr_data.nik)
@@ -151,7 +151,7 @@ class KycService:
                 "rejection_reason": "NIK verification failed",
                 "liveness_result": liveness_result.model_dump(),
                 "face_match_result": face_match_result.model_dump(),
-                "dukcapil_result": dukcapil_result.model_dump()
+                "dukcapil_result": dukcapil_result.safe_dump(),
             }
 
         verification.selfie_image_url = f"/uploads/selfie/{verification_id}.jpg"
@@ -169,7 +169,7 @@ class KycService:
             event={
                 "verification_id": verification_id,
                 "user_id": verification.user_id,
-                "nik": ocr_data.nik,
+                "nik": mask_nik(ocr_data.nik),
                 "name": ocr_data.name,
                 "status": "VERIFIED"
             }
@@ -185,7 +185,7 @@ class KycService:
             "status": KycStatus.VERIFIED.value,
             "liveness_result": liveness_result.model_dump(),
             "face_match_result": face_match_result.model_dump(),
-            "dukcapil_result": dukcapil_result.model_dump()
+            "dukcapil_result": dukcapil_result.safe_dump(),
         }
 
     async def get_verification(self, verification_id: str) -> KycVerificationEntity | None:

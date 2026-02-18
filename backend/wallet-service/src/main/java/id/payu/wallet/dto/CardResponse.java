@@ -1,5 +1,7 @@
 package id.payu.wallet.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -48,8 +50,12 @@ public class CardResponse {
      * Returns the masked card number showing only last 4 digits.
      * Format: ****-****-****-1234
      *
+     * <p>This is the ONLY card number representation exposed in API responses
+     * to comply with PCI-DSS requirements.</p>
+     *
      * @return masked card number
      */
+    @JsonProperty("cardNumber")
     public String getMaskedCardNumber() {
         if (cardNumber == null || cardNumber.length() < 4) {
             return "****";
@@ -58,10 +64,12 @@ public class CardResponse {
     }
 
     /**
-     * @deprecated Use {@link #getMaskedCardNumber()} instead for security.
-     * This method is kept for internal mapping but should not be exposed.
+     * Internal-only accessor for mapping. NEVER serialized to JSON.
+     *
+     * @deprecated Use {@link #getMaskedCardNumber()} for API responses.
      */
     @Deprecated
+    @JsonIgnore
     public String getCardNumber() { return cardNumber; }
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
 

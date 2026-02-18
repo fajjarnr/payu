@@ -2,7 +2,7 @@ import httpx
 from structlog import get_logger
 from typing import Optional
 
-from app.models.schemas import DukcapilVerificationResult
+from app.models.schemas import DukcapilVerificationResult, mask_nik
 from app.config import get_settings
 
 logger = get_logger(__name__)
@@ -17,7 +17,7 @@ class DukcapilClient:
 
     async def verify_nik(self, nik: str) -> DukcapilVerificationResult:
         try:
-            logger.info("Verifying NIK with Dukcapil", nik=nik)
+            logger.info("Verifying NIK with Dukcapil", nik=mask_nik(nik))
 
             response = await self.client.post(
                 f"{self.base_url}/verify",
@@ -27,7 +27,7 @@ class DukcapilClient:
             response.raise_for_status()
             data = response.json()
 
-            logger.info("Dukcapil verification completed", nik=nik, is_valid=data.get('is_valid'))
+            logger.info("Dukcapil verification completed", nik=mask_nik(nik), is_valid=data.get('is_valid'))
 
             return DukcapilVerificationResult(
                 nik=data.get('nik', nik),

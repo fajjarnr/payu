@@ -4,7 +4,7 @@ from paddleocr import PaddleOCR
 from typing import Tuple
 from structlog import get_logger
 
-from app.models.schemas import KtpOcrResult
+from app.models.schemas import KtpOcrResult, mask_nik
 from app.config import get_settings
 
 logger = get_logger(__name__)
@@ -39,7 +39,7 @@ class OcrService:
 
             logger.info(
                 "KTP OCR extraction completed",
-                nik=parsed_data.get('nik', 'N/A'),
+                nik=mask_nik(parsed_data.get('nik', '')),
                 confidence=confidence
             )
 

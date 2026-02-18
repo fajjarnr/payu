@@ -313,7 +313,7 @@ async def get_kyc_status(
         )
 
         return ApiResponse.success(
-            data=response_data.model_dump(),
+            data=response_data.safe_dump(),
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
     except Exception as e:
@@ -351,7 +351,7 @@ async def get_user_kyc_history(
                 rejection_reason=v.rejection_reason,
                 created_at=v.created_at,
                 completed_at=v.completed_at,
-            ).model_dump()
+            ).safe_dump()
             for v in verifications
         ]
 
