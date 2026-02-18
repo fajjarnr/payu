@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# PayU Infrastructure - Base manifests
+# Contains all supporting infrastructure CRs
+# Apply with: oc apply -k infrastructure/openshift/infra/overlays/dev/
+# ============================================================
+#
+# Deployment Order:
+# 1. Operators:  oc apply -k infrastructure/openshift/operators/
+# 2. Wait:       Wait for all operator CSVs to reach 'Succeeded'
+# 3. Infra:      oc apply -k infrastructure/openshift/infra/overlays/dev/
+# 4. Vault Init: oc apply -f infrastructure/openshift/infra/base/vault-init-job.yaml
+#                (update passwords first!)
+# 5. Services:   oc apply -k infrastructure/openshift/overlays/dev/
+# ============================================================
+
+resources:
+  # Database
+  - crunchy-postgres.yaml
+  # Cache (Redis-compatible)
+  - datagrid.yaml
+  # Event Streaming
+  - amq-streams.yaml
+  # Kafka UI
+  - kafka-console.yaml
+  # Identity & Access
+  - rhsso-keycloak.yaml
+  # Secret Management
+  - vault.yaml
+  # TLS / cert-manager
+  - cert-manager.yaml
+  # Shared ConfigMaps
+  - common-configmaps.yaml
+
+commonLabels:
+  environment: dev

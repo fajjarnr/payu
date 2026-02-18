@@ -1,92 +1,54 @@
 # TLS Certificate Management for PayU Banking Platform
-# Uses OpenShift cert-manager operator for automated certificate lifecycle
+# Uses cert-manager with letsencrypt-cluster-issuer (DNS01 via Route53)
 #
-# Prerequisites:
-# 1. Install cert-manager operator: oc apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
-# 2. Create ClusterIssuer for your CA (Let's Encrypt or internal CA)
----
-# ClusterIssuer: Let's Encrypt Production
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: security@payu.id
-    privateKeySecretRef:
-      name: letsencrypt-prod-key
-    solvers:
-      - http01:
-          ingress:
-            class: openshift-default
----
-# ClusterIssuer: Let's Encrypt Staging (for testing)
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-staging
-spec:
-  acme:
-    server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: security@payu.id
-    privateKeySecretRef:
-      name: letsencrypt-staging-key
-    solvers:
-      - http01:
-          ingress:
-            class: openshift-default
+# The cluster already has a wildcard certificate for *.apps.payu.ocp.fajjjar.my.id
+# managed by the ingress-certificate in openshift-ingress namespace.
+#
+# These certificates are for service-specific TLS secrets if needed.
+# For dev, Routes use edge termination with the default ingress wildcard cert.
 ---
 # Certificate: Gateway service (public-facing API)
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: gateway-tls
-  namespace: payu-prod
 spec:
   secretName: gateway-tls-secret
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-cluster-issuer
     kind: ClusterIssuer
-  commonName: api.payu.id
+    group: cert-manager.io
   dnsNames:
-    - api.payu.id
-    - gateway.payu.id
-  duration: 2160h    # 90 days
-  renewBefore: 720h  # 30 days before expiry
+    - gateway-payu-dev.apps.payu.ocp.fajjjar.my.id
+  duration: 720h     # 30 days
+  renewBefore: 168h  # 7 days before expiry
 ---
 # Certificate: Web app (public-facing)
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: web-app-tls
-  namespace: payu-prod
 spec:
   secretName: web-app-tls-secret
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-cluster-issuer
     kind: ClusterIssuer
-  commonName: app.payu.id
+    group: cert-manager.io
   dnsNames:
-    - app.payu.id
-    - www.payu.id
-  duration: 2160h
-  renewBefore: 720h
+    - payu-dev.apps.payu.ocp.fajjjar.my.id
+  duration: 720h
+  renewBefore: 168h
 ---
-# Route: Gateway with cert-manager TLS
+# Route: Gateway with TLS
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: gateway-service-tls
-  namespace: payu-prod
-  annotations:
-    cert-manager.io/issuer-name: letsencrypt-prod
-    cert-manager.io/issuer-kind: ClusterIssuer
   labels:
     app.kubernetes.io/name: gateway-service
     app.kubernetes.io/part-of: payu-banking
 spec:
-  host: api.payu.id
+  host: gateway-payu-dev.apps.payu.ocp.fajjjar.my.id
   to:
     kind: Service
     name: gateway-service
@@ -96,25 +58,18 @@ spec:
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
-    certificate: ""     # Populated by cert-manager
-    key: ""             # Populated by cert-manager
-    caCertificate: ""   # Populated by cert-manager
   wildcardPolicy: None
 ---
-# Route: Web App with cert-manager TLS
+# Route: Web App with TLS
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: web-app-tls
-  namespace: payu-prod
-  annotations:
-    cert-manager.io/issuer-name: letsencrypt-prod
-    cert-manager.io/issuer-kind: ClusterIssuer
   labels:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu-banking
 spec:
-  host: app.payu.id
+  host: payu-dev.apps.payu.ocp.fajjjar.my.id
   to:
     kind: Service
     name: web-app

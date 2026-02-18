@@ -1,0 +1,194 @@
+# PayU Platform - HashiCorp Vault (Dev Mode)
+# Secret management with VSO (Vault Secrets Operator)
+# Prerequisite: vault-secrets-operator subscription installed
+# ============================================================
+#
+# IMPORTANT: This is a dev-mode Vault. For production, use:
+# - Persistent storage backend (Raft or Consul)
+# - Auto-unseal (AWS KMS, Azure Key Vault, etc.)
+# - HA mode with 3+ replicas
+# ============================================================
+
+# Vault Deployment (dev mode)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vault
+    spec:
+      containers:
+        - name: vault
+          image: docker.io/hashicorp/vault:1.15
+          env:
+            - name: VAULT_ADDR
+              value: "http://0.0.0.0:8200"
+            - name: VAULT_DEV_ROOT_TOKEN_ID
+              value: "payu-dev-root-token"
+            - name: SKIP_SETCAP
+              value: "1"
+            - name: HOME
+              value: /tmp
+          ports:
+            - containerPort: 8200
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /v1/sys/health
+              port: 8200
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+
+---
+# Vault Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: vault
+  ports:
+    - port: 8200
+      targetPort: 8200
+      name: http
+
+---
+# VaultConnection - VSO connects to Vault
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: vault-connection
+spec:
+  address: http://vault.payu-dev.svc.cluster.local:8200
+  skipTLSVerify: true
+
+---
+# VaultAuth - Kubernetes auth method
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: vault-auth
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: vault-connection
+  kubernetes:
+    role: payu-dev
+    serviceAccount: default
+    audiences:
+      - vault
+
+---
+# VaultStaticSecret - db-credentials
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: vault-db-credentials
+spec:
+  type: kv-v2
+  mount: secret
+  path: payu/db-credentials
+  refreshAfter: 60s
+  destination:
+    name: db-credentials
+    create: true
+    labels:
+      app.kubernetes.io/component: secrets
+      app.kubernetes.io/part-of: payu
+
+---
+# VaultStaticSecret - jwt-secret
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: vault-jwt-secret
+spec:
+  type: kv-v2
+  mount: secret
+  path: payu/jwt-secret
+  refreshAfter: 60s
+  destination:
+    name: jwt-secret
+    create: true
+    labels:
+      app.kubernetes.io/component: secrets
+      app.kubernetes.io/part-of: payu
+
+---
+# VaultStaticSecret - encryption-keys
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: vault-encryption-keys
+spec:
+  type: kv-v2
+  mount: secret
+  path: payu/encryption-keys
+  refreshAfter: 60s
+  destination:
+    name: encryption-keys
+    create: true
+    labels:
+      app.kubernetes.io/component: secrets
+      app.kubernetes.io/part-of: payu
+
+---
+# VaultStaticSecret - keycloak-credentials
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: vault-keycloak-credentials
+spec:
+  type: kv-v2
+  mount: secret
+  path: payu/keycloak-credentials
+  refreshAfter: 60s
+  destination:
+    name: keycloak-credentials
+    create: true
+    labels:
+      app.kubernetes.io/component: secrets
+      app.kubernetes.io/part-of: payu
+
+---
+# VaultStaticSecret - keycloak-db-secret
+# IMPORTANT: Vault path must contain FQDN for POSTGRES_EXTERNAL_ADDRESS
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: vault-keycloak-db-secret
+spec:
+  type: kv-v2
+  mount: secret
+  path: payu/keycloak-db
+  refreshAfter: 60s
+  destination:
+    name: keycloak-db-secret
+    create: true
+    labels:
+      app.kubernetes.io/component: secrets
+      app.kubernetes.io/part-of: payu

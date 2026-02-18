@@ -1,0 +1,102 @@
+# PayU Platform - Vault Init Job
+# Seeds Vault with initial secrets after deployment
+# Run ONCE after Vault pod is ready:
+#   oc apply -f vault-init-job.yaml
+# ============================================================
+#
+# This job:
+# 1. Enables KV-v2 secrets engine
+# 2. Configures Kubernetes auth method
+# 3. Seeds initial secrets (db-credentials, jwt, encryption, keycloak)
+#
+# IMPORTANT: Update passwords before running in non-dev environments!
+# ============================================================
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-init
+  labels:
+    app.kubernetes.io/name: vault-init
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: secrets
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: vault-init
+          image: docker.io/hashicorp/vault:1.15
+          env:
+            - name: VAULT_ADDR
+              value: "http://vault.payu-dev.svc.cluster.local:8200"
+            - name: VAULT_TOKEN
+              value: "payu-dev-root-token"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "=== Waiting for Vault to be ready ==="
+              until vault status 2>/dev/null; do sleep 2; done
+
+              echo "=== Enabling KV-v2 secrets engine ==="
+              vault secrets enable -path=secret kv-v2 2>/dev/null || echo "KV-v2 already enabled"
+
+              echo "=== Configuring Kubernetes auth ==="
+              vault auth enable kubernetes 2>/dev/null || echo "K8s auth already enabled"
+              vault write auth/kubernetes/config \
+                kubernetes_host="https://kubernetes.default.svc:443"
+
+              echo "=== Creating policy ==="
+              vault policy write payu-dev - <<POLICY
+              path "secret/data/payu/*" {
+                capabilities = ["read", "list"]
+              }
+              POLICY
+
+              echo "=== Creating role ==="
+              vault write auth/kubernetes/role/payu-dev \
+                bound_service_account_names=default \
+                bound_service_account_namespaces=payu-dev \
+                policies=payu-dev \
+                audience=vault \
+                ttl=1h
+
+              echo "=== Seeding db-credentials ==="
+              # Get password from Crunchy PGO auto-generated secret
+              vault kv put secret/payu/db-credentials \
+                username=payu \
+                password="REPLACE_WITH_CRUNCHY_PASSWORD" \
+                host="payu-postgres-primary.payu-dev.svc.cluster.local" \
+                port="5432"
+
+              echo "=== Seeding jwt-secret ==="
+              vault kv put secret/payu/jwt-secret \
+                JWT_SECRET="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 64)"
+
+              echo "=== Seeding encryption-keys ==="
+              vault kv put secret/payu/encryption-keys \
+                AES_ENCRYPTION_KEY="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 32 | base64)" \
+                SECRET_KEY="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 32 | base64)"
+
+              echo "=== Seeding keycloak-credentials ==="
+              vault kv put secret/payu/keycloak-credentials \
+                KEYCLOAK_CLIENT_SECRET="payu-backend-secret" \
+                KEYCLOAK_ADMIN_USERNAME="admin" \
+                KEYCLOAK_ADMIN_PASSWORD="REPLACE_WITH_ADMIN_PASSWORD"
+
+              echo "=== Seeding keycloak-db ==="
+              vault kv put secret/payu/keycloak-db \
+                POSTGRES_DATABASE="keycloak" \
+                POSTGRES_EXTERNAL_ADDRESS="payu-postgres-primary.payu-dev.svc.cluster.local" \
+                POSTGRES_EXTERNAL_PORT="5432" \
+                POSTGRES_HOST="payu-postgres-primary.payu-dev.svc.cluster.local" \
+                POSTGRES_USERNAME="payu" \
+                POSTGRES_PASSWORD="REPLACE_WITH_CRUNCHY_PASSWORD" \
+                POSTGRES_SUPERUSER="false" \
+                SSLMODE="prefer"
+
+              echo "=== Vault initialization complete ==="

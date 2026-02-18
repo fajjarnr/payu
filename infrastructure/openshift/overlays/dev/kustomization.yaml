@@ -4,13 +4,101 @@ kind: Kustomization
 resources:
   - ../../base
   - config/configmaps.yaml
-  - secrets/secrets-template.yaml
+  - secrets/dev-secrets.yaml
 
 namespace: payu-dev
 
-# Dev: single replica, debug logging, relaxed limits
+# ============================================================
+# Image overrides: update registry + tag for all services
+# Base uses: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/<svc>:1.0.0
+# Dev uses:  image-registry.openshift-image-registry.svc:5000/payu-dev/<svc>:1.2.0
+# ============================================================
+images:
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/account-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/auth-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/wallet-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/transaction-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/investment-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/lending-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/statement-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/notification-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/backoffice-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/partner-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/promotion-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/support-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/compliance-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/fx-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/cms-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/ab-testing-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/ab-testing-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/billing-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/gateway-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/api-portal-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/kyc-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/analytics-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
+    newTag: "1.2.0"
+  # web-app already uses internal registry in base, just update tag
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
+    newTag: "1.2.0"
+  # Simulators (disabled but need tag override for consistency)
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/bi-fast-simulator
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/dukcapil-simulator
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
+    newTag: "1.2.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/qris-simulator
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
+    newTag: "1.2.0"
+
+# ============================================================
+# Strategic merge patches: override env vars for operator-deployed infra
+# DB: payu-postgres-primary.payu-dev.svc:5432
+# Kafka: kafka-kafka-bootstrap.payu-dev.svc:9092
+# Redis/DataGrid: payu-datagrid.payu-dev.svc:11222
+# ============================================================
 patches:
-  # Scale down to 1 replica for cost savings
+  # --- Scale all to 1 replica ---
   - patch: |-
       - op: replace
         path: /spec/replicas
@@ -19,9 +107,600 @@ patches:
       kind: Deployment
       labelSelector: "app.kubernetes.io/part-of=payu"
 
-configMapGenerator:
-  - name: dev-shared-config
-    literals:
-      - SPRING_PROFILES_ACTIVE=container
-      - LOG_LEVEL=DEBUG
-      - OTEL_TRACES_SAMPLER_ARG=1.0
+  # --- Disable simulators (no images built yet) ---
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+    target:
+      kind: Deployment
+      name: bi-fast-simulator
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+    target:
+      kind: Deployment
+      name: dukcapil-simulator
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+    target:
+      kind: Deployment
+      name: qris-simulator
+
+  # ============================================================
+  # Spring Boot services: DB + Kafka + Redis overrides
+  # ============================================================
+  - target:
+      kind: Deployment
+      name: account-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: account-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: account-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_account"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: auth-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: auth-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: auth-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_auth"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: wallet-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: wallet-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: wallet-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_wallet"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: transaction-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: transaction-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: transaction-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_transaction"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: investment-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: investment-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: investment-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_investment"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: lending-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: lending-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: lending-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_lending"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: statement-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: statement-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: statement-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_statement"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: backoffice-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: backoffice-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: backoffice-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_backoffice"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: partner-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: partner-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: partner-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_partner"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: promotion-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: promotion-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: promotion-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_promotion"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: support-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: support-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: support-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_support"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: compliance-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: compliance-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: compliance-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_compliance"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: fx-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: fx-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: fx-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_fx"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: cms-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: cms-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: cms-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_cms"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: ab-testing-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: ab-testing-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: ab-testing-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_abtesting"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: billing-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: billing-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: billing-service
+                env:
+                  - name: SPRING_DATASOURCE_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_billing"
+                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  # ============================================================
+  # Quarkus services
+  # ============================================================
+  - target:
+      kind: Deployment
+      name: notification-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: notification-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: notification-service
+                env:
+                  - name: QUARKUS_DATASOURCE_JDBC_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_notification"
+                  - name: KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: api-portal-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: api-portal-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: api-portal-service
+                env:
+                  - name: QUARKUS_DATASOURCE_JDBC_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_account"
+
+  # Patch gateway-config ConfigMap: update OIDC URL to use FQDN
+  - target:
+      kind: ConfigMap
+      name: gateway-config
+    patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: gateway-config
+      data:
+        oidc-auth-server-url: "http://keycloak-discovery.payu-dev.svc:8080/auth/realms/payu"
+
+  - target:
+      kind: Deployment
+      name: gateway-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: gateway-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: gateway-service
+                env:
+                  - name: QUARKUS_REDIS_HOSTS
+                    value: "redis://developer:payu-cache-dev@payu-datagrid.payu-dev.svc:11222"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+                  - name: OIDC_ENABLED
+                    value: "false"
+
+  # ============================================================
+  # Python services
+  # ============================================================
+  - target:
+      kind: Deployment
+      name: kyc-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: kyc-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: kyc-service
+                env:
+                  - name: DATABASE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: DATABASE_URL
+                    value: "postgresql+asyncpg://payu:$(DATABASE_PASSWORD)@payu-postgres-primary.payu-dev.svc:5432/payu_kyc"
+                  - name: KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  - target:
+      kind: Deployment
+      name: analytics-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: analytics-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: analytics-service
+                env:
+                  - name: DATABASE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
+                  - name: DATABASE_URL
+                    value: "postgresql+asyncpg://payu:$(DATABASE_PASSWORD)@payu-postgres-primary.payu-dev.svc:5432/payu_analytics"
+                  - name: KAFKA_BOOTSTRAP_SERVERS
+                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
+                  - name: REDIS_HOST
+                    value: "payu-datagrid.payu-dev.svc"
+                  - name: REDIS_PORT
+                    value: "11222"
+
+  # ============================================================
+  # Web App: override gateway URL for actual OCP domain
+  # ============================================================
+  - target:
+      kind: Deployment
+      name: web-app
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: web-app
+      spec:
+        template:
+          spec:
+            containers:
+              - name: web-app
+                env:
+                  - name: NEXT_PUBLIC_GATEWAY_URL
+                    value: "https://gateway-payu-dev.apps.payu.ocp.fajjjar.my.id"
+                  - name: NEXTAUTH_URL
+                    value: "https://payu-dev.apps.payu.ocp.fajjjar.my.id"
+                  - name: GATEWAY_URL
+                    value: "http://gateway-service:8080"
+
+  # ============================================================
+  # Route host patches: base service routes redirect to match TLS routes
+  # We keep the base routes but give them unique hostnames to avoid conflicts
+  # The -tls routes from tls-certificates.yaml are the primary routes
+  # ============================================================
+  - target:
+      kind: Route
+      name: gateway-service
+    patch: |-
+      - op: add
+        path: /spec/host
+        value: gateway-internal-payu-dev.apps.payu.ocp.fajjjar.my.id
+
+  - target:
+      kind: Route
+      name: web-app
+    patch: |-
+      - op: add
+        path: /spec/host
+        value: web-internal-payu-dev.apps.payu.ocp.fajjjar.my.id
+
+  # ============================================================
+  # Disable deny network policies in dev (operator infra lacks payu-banking labels)
+  # ============================================================
+  - target:
+      kind: NetworkPolicy
+      name: default-deny-ingress
+    patch: |-
+      - op: replace
+        path: /spec/podSelector
+        value:
+          matchLabels:
+            disable-in-dev: "true"
+  - target:
+      kind: NetworkPolicy
+      name: default-deny-egress
+    patch: |-
+      - op: replace
+        path: /spec/podSelector
+        value:
+          matchLabels:
+            disable-in-dev: "true"

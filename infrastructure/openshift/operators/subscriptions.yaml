@@ -1,0 +1,101 @@
+# PayU Platform - Operator Subscriptions
+# All operators required for the platform infrastructure
+# Apply BEFORE deploying infra CRs
+# ============================================================
+
+# 1. Crunchy Postgres for Kubernetes (PostgreSQL)
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: crunchy-postgres-operator
+  namespace: openshift-operators
+spec:
+  channel: v5
+  name: crunchy-postgres-operator
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+
+---
+# 2. Red Hat Data Grid (Infinispan - Redis-compatible cache)
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: datagrid
+  namespace: openshift-operators
+spec:
+  channel: stable
+  name: datagrid
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+
+---
+# 3. AMQ Streams (Apache Kafka)
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: amq-streams
+  namespace: openshift-operators
+spec:
+  channel: stable
+  name: amq-streams
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+
+---
+# 4. AMQ Streams Console (Kafka UI)
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: amq-streams-console
+  namespace: openshift-operators
+spec:
+  channel: stable
+  name: amq-streams-console
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+
+---
+# 5. Red Hat Single Sign-On (Keycloak) - namespace-scoped
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhsso-operator
+  namespace: payu-dev  # namespace-scoped operator
+spec:
+  channel: stable
+  name: rhsso-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+
+---
+# 6. Vault Secrets Operator (HashiCorp)
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: vault-secrets-operator
+  namespace: openshift-operators
+spec:
+  channel: stable
+  name: vault-secrets-operator
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+
+---
+# 7. cert-manager Operator for Red Hat OpenShift
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-cert-manager-operator
+  namespace: cert-manager-operator
+spec:
+  channel: stable-v1
+  name: openshift-cert-manager-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

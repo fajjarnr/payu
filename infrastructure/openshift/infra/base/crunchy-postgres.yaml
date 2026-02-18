@@ -1,0 +1,83 @@
+# PayU Platform - Crunchy Postgres for Kubernetes
+# PostgreSQL 16 with pgBouncer, pgBackRest, and multi-database setup
+# Prerequisite: crunchy-postgres-operator subscription installed
+# ============================================================
+
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: payu-postgres
+  labels:
+    app.kubernetes.io/name: payu-postgres
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-16.4-0
+  postgresVersion: 16
+
+  instances:
+    - name: instance1
+      replicas: 1
+      dataVolumeClaimSpec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+        limits:
+          memory: "1Gi"
+          cpu: "1000m"
+
+  # pgBackRest backup configuration
+  backups:
+    pgbackrest:
+      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.53-1
+      repos:
+        - name: repo1
+          volume:
+            volumeClaimSpec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 10Gi
+
+  # pgBouncer connection pooling
+  proxy:
+    pgBouncer:
+      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbouncer:ubi8-1.23-1
+      replicas: 1
+
+  # User and all databases
+  # IMPORTANT: keycloak is included here so pg_hba.conf is auto-configured
+  users:
+    - name: payu
+      databases:
+        - payu_account
+        - payu_auth
+        - payu_transaction
+        - payu_wallet
+        - payu_notification
+        - payu_billing
+        - payu_kyc
+        - payu_analytics
+        - payu_compliance
+        - payu_bifast
+        - payu_dukcapil
+        - payu_qris
+        - payu_investment
+        - payu_lending
+        - payu_backoffice
+        - payu_partner
+        - payu_promotion
+        - payu_support
+        - payu_statement
+        - payu_fx
+        - payu_cms
+        - payu_abtesting
+        - keycloak
+      options: "SUPERUSER"

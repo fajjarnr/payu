@@ -1,0 +1,127 @@
+# PayU Platform - Red Hat Data Grid (Infinispan)
+# Distributed caching with RESP (Redis-compatible) connector
+# Prerequisite: datagrid operator subscription installed
+# ============================================================
+#
+# IMPORTANT NOTES (DataGrid 8.5.x):
+# 1. RESP connector does NOT support custom 'port' attribute → use default socketBinding
+# 2. endpointAuthentication MUST be true for RESP → security realm with passwords required
+# 3. Credentials are in datagrid-credentials secret (identities.yaml format)
+# 4. endpointEncryption.type must be "None" for plain redis:// connections (dev).
+#    If using TLS (rediss://), set type to "Service" for OpenShift auto-certs.
+# ============================================================
+
+# Credentials secret for DataGrid endpoint authentication
+apiVersion: v1
+kind: Secret
+metadata:
+  name: datagrid-credentials
+  labels:
+    app.kubernetes.io/name: datagrid-credentials
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+type: Opaque
+stringData:
+  identities.yaml: |
+    credentials:
+      - username: developer
+        password: payu-cache-dev
+        roles:
+          - admin
+
+---
+# Infinispan CR - DataGrid instance
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: payu-datagrid
+  labels:
+    app.kubernetes.io/name: payu-datagrid
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+spec:
+  replicas: 1
+
+  service:
+    type: DataGrid
+
+  # Authentication MUST be enabled for RESP connector (DataGrid 8.5+)
+  security:
+    endpointAuthentication: true
+    endpointSecretName: datagrid-credentials
+    # For dev: disable TLS so clients can use plain redis:// protocol
+    # For prod: set type: Service and use rediss:// in clients
+    endpointEncryption:
+      type: None
+
+  container:
+    memory: "512Mi"
+    cpu: "250m"
+
+  jvm:
+    heapSize: "256Mi"
+
+  # Custom config for RESP (Redis protocol) connector
+  configMapName: payu-datagrid-custom-config
+
+---
+# Custom Infinispan configuration with RESP connector
+# NOTE: Do NOT add 'port:' to respConnector — DataGrid 8.5 doesn't support it.
+# RESP listens on the default socketBinding port (11222).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payu-datagrid-custom-config
+  labels:
+    app.kubernetes.io/name: payu-datagrid-config
+    app.kubernetes.io/part-of: payu
+data:
+  infinispan-config.yaml: |
+    infinispan:
+      server:
+        endpoints:
+          - connectors:
+              rest:
+                restConnector: null
+              hotrod:
+                hotrodConnector: null
+              resp:
+                respConnector: null
+            securityRealm: default
+            socketBinding: default
+
+---
+# Redis-compatible service alias
+# Applications can connect via: redis.payu-dev.svc:11222
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/managed-by: datagrid
+spec:
+  type: ExternalName
+  externalName: payu-datagrid.payu-dev.svc.cluster.local
+
+---
+# Cache configuration for sessions
+apiVersion: infinispan.org/v2alpha1
+kind: Cache
+metadata:
+  name: payu-sessions
+  labels:
+    app.kubernetes.io/name: payu-sessions
+    app.kubernetes.io/part-of: payu
+    infinispan.org/cluster: payu-datagrid
+spec:
+  clusterName: payu-datagrid
+  name: sessions
+  template: |
+    <local-cache>
+      <encoding media-type="application/x-protostream"/>
+      <memory max-count="10000"/>
+      <expiration lifespan="3600000" max-idle="1800000"/>
+    </local-cache>

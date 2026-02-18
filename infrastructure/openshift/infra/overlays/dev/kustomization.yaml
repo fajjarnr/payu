@@ -1,0 +1,89 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# PayU Infrastructure - Dev Overlay
+# Dev-specific patches for supporting infrastructure
+# Apply with: oc apply -k infrastructure/openshift/infra/overlays/dev/
+# ============================================================
+
+resources:
+  - ../../base
+
+namespace: payu-dev
+
+# Dev-specific patches
+patches:
+  # --------------------------------------------------------
+  # Postgres: Dev sizing (1 replica, 10Gi)
+  # Production: increase replicas to 3, storage to 100Gi
+  # --------------------------------------------------------
+  - target:
+      kind: PostgresCluster
+      name: payu-postgres
+    patch: |
+      - op: replace
+        path: /spec/instances/0/replicas
+        value: 1
+
+  # --------------------------------------------------------
+  # DataGrid: Dev sizing (1 replica, 512Mi)
+  # --------------------------------------------------------
+  - target:
+      kind: Infinispan
+      name: payu-datagrid
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+
+  # --------------------------------------------------------
+  # Kafka: Dev sizing (1 broker, 1 controller, ephemeral)
+  # Production: 3 brokers, 3 controllers, persistent-claim
+  # --------------------------------------------------------
+  - target:
+      kind: KafkaNodePool
+      name: controller
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: KafkaNodePool
+      name: broker
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+
+  # --------------------------------------------------------
+  # Keycloak: Dev (1 instance)
+  # --------------------------------------------------------
+  - target:
+      kind: Keycloak
+      name: payu-keycloak
+    patch: |
+      - op: replace
+        path: /spec/instances
+        value: 1
+
+  # --------------------------------------------------------
+  # Kafka Console: Dev hostname
+  # --------------------------------------------------------
+  - target:
+      kind: Console
+      name: payu-kafka-console
+    patch: |
+      - op: replace
+        path: /spec/hostname
+        value: kafka-console-payu-dev.apps.payu.ocp.fajjjar.my.id
+
+  # --------------------------------------------------------
+  # Redis ExternalName: Use FQDN for DNS resolution
+  # --------------------------------------------------------
+  - target:
+      kind: Service
+      name: redis
+    patch: |
+      - op: replace
+        path: /spec/externalName
+        value: payu-datagrid.payu-dev.svc.cluster.local
