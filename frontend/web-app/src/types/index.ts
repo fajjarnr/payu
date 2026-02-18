@@ -44,13 +44,15 @@ export interface Pocket {
   id: string;
   name: string;
   balance: number;
-  target: number;
-  type: 'MAIN' | 'SAVING' | 'SHARED';
+  target?: number;
+  type: 'MAIN' | 'SAVING' | 'SHARED' | 'SAVINGS' | 'GOAL';
   sharedMembers?: SharedMember[];
   isShared?: boolean;
   ownerAccountId?: string;
   createdAt: string;
   updatedAt: string;
+  currency?: string;
+  status?: 'ACTIVE' | 'FROZEN' | 'CLOSED';
 }
 
 export interface SharedMember {
