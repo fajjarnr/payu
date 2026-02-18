@@ -5,12 +5,12 @@
 > **Last Synchronized**: February 18, 2026
 >
 > **Recent Updates (Feb 18, 2026)**:
-> - ✅ **Security P0**: PAN masking (CardResponse @JsonIgnore), NIK masking (KYC safe_dump/mask_nik)
-> - ✅ **Security P1**: PII encryption at-rest (AES-256-GCM on User email/phone), hardcoded passwords removed from 5 services
-> - ✅ **Frontend Tests**: 8 new service tests + 19 new page tests (102 test cases) — all passing
-> - ✅ **Test Infrastructure**: Fixed global next/navigation ESM mock, vitest deps.inline for next-intl
-> - ✅ **All 35 containers running** (13 infra + 21 services + 1 web-app)
-> - 🟢 **Status**: Ready for OpenShift deployment (100%)
+> - ✅ **OpenShift Deployed**: All 22 services + web-app running on OCP 4.20+ (payu-dev namespace)
+> - ✅ **Infrastructure via Operators**: Crunchy PGO, AMQ Streams (KRaft), DataGrid, RHSSO, Vault, cert-manager
+> - ✅ **Kustomize IaC**: Complete infra manifests (operators/ + infra/ + overlays/) for reproducible deployments
+> - ✅ **TLS**: Let's Encrypt certs via cert-manager DNS01/Route53
+> - ✅ **Images**: All 22 services built via Podman, pushed to OCP internal registry (tag 1.2.0)
+> - 🟢 **Status**: Running on OpenShift (35/35 pods)
 
 ---
 
@@ -65,13 +65,15 @@
 | **OCP-010** | API versioning headers | P3 | 🟡 Planned |
 | **PODMAN-006** | Dokumentasi troubleshooting container | P2 | ⬜ TODO |
 
-### ⚠️ Pre-Production Checklist (OpenShift Deployment)
+### ⚠️ Pre-Production Checklist
 
 | Item | Status | Owner |
 | :--- | :--- | :--- |
-| OpenShift cluster provisioning | ⬜ Not ready | **Ops/SRE** |
-| Container image push to registry | ⬜ Pending | **Ops/SRE** |
-| Secrets injection (Vault/sealed-secrets) | ⬜ Pending | **Ops/SRE** |
+| OpenShift cluster provisioning | ✅ Done (6 nodes, OCP 4.20+) | Ops |
+| Container image build & push | ✅ Done (22 images, tag 1.2.0) | Ops |
+| Secrets injection (Vault + VSO) | ✅ Done (5 VaultStaticSecrets) | Ops |
+| Operator subscriptions (7) | ✅ Done (Crunchy, AMQ, DataGrid, RHSSO, Vault, cert-manager) | Ops |
+| TLS certificates (Let's Encrypt) | ✅ Done (DNS01/Route53) | Ops |
 | Load testing execution (K6) | ⬜ Not executed | QA |
 | Disaster recovery live test | ⬜ Not tested | QA |
 | PCI-DSS / UU PDP formal audit | ⬜ Not audited | Compliance |
@@ -79,18 +81,21 @@
 
 ---
 
-## 🚢 OpenShift Deployment Readiness: 100%
+## 🚢 OpenShift Deployment Status: LIVE
 
-| Component | Ready | Total | Status |
-| :--- | :--- | :--- | :--- |
-| **Backend Services** | 22 | 22 | ✅ 100% |
-| **Frontend Apps** | 1 | 1 | ✅ 100% |
-| **Infrastructure** | 26 | 28 | 🟢 93% |
-| **Security** | 9 | 10 | 🟢 90% |
-| **Testing** | 22 | 22 | ✅ 100% |
-| **Overall** | — | — | **🟢 100%** |
+| Component | Status | Details |
+| :--- | :--- | :--- |
+| **Backend Services** | ✅ 22/22 Running | Spring Boot 3.4 + Quarkus 3.x + Python FastAPI |
+| **Frontend Web-App** | ✅ 1/1 Running | Next.js 15+ |
+| **PostgreSQL (Crunchy PGO)** | ✅ Running | 24 databases, pgBouncer, pgBackRest |
+| **Kafka (AMQ Streams)** | ✅ Running | KRaft mode, 1 broker + 1 controller |
+| **DataGrid (Infinispan)** | ✅ Running | RESP connector, auth enabled |
+| **Keycloak (RHSSO)** | ✅ Running | payu realm, 2 clients |
+| **Vault + VSO** | ✅ Running | 5 secrets synced to K8s |
+| **TLS (cert-manager)** | ✅ Ready | Let's Encrypt DNS01/Route53 |
+| **Total Pods** | ✅ **35/35** | All Running in payu-dev namespace |
 
-> ✅ **Ready to deploy** when cluster is provisioned. Only needs: real secrets at deploy time.
+> **Cluster**: OCP 4.20+, 6 nodes, domain `apps.payu.ocp.fajjjar.my.id`
 
 ---
 
@@ -98,6 +103,7 @@
 
 | Phase | Milestone | Date |
 | :--- | :--- | :--- |
+| **P28** | OpenShift Production Deployment: 35/35 pods, infra Kustomize, TLS | Feb 2026 |
 | **P27** | Security Hardening: PAN/NIK masking, PII encryption, password removal | Feb 2026 |
 | **P27** | Frontend Page Test Coverage: 21 files, 102 tests | Feb 2026 |
 | **P26** | Backend Testing Improvements (85→95/100) | Feb 2026 |
@@ -128,74 +134,45 @@
 
 ---
 
-## 🔧 Container Environment Status
+## � OpenShift Environment Status (Feb 18, 2026)
 
-### API Testing Results (Feb 11, 2026)
+**Namespace**: `payu-dev` | **Cluster**: OCP 4.20+ | **Image Tag**: `1.2.0`
 
-| Endpoint | Status | Response |
-|----------|--------|----------|
-| Web-App Health (`/api/health`) | ✅ PASS | `{"status": "healthy"}` |
-| Gateway Health (`/health`) | ✅ PASS | `{"status": "UP"}` |
-| Keycloak OIDC | ✅ PASS | Discovery endpoint OK |
-| Account Service (`:8001`) | ✅ PASS | UP |
-| Auth Service (`:8002`) | ✅ PASS | UP |
-| Transaction Service (`:8003`) | ✅ PASS | UP |
-| Wallet Service (`:8004`) | ✅ PASS | UP |
-| Prometheus (`:9090`) | ✅ PASS | Healthy |
-| Grafana (`:3000`) | ✅ PASS | OK |
-| Kafka UI (`:8088`) | ✅ PASS | UP |
-
-### Running Containers (35/38)
-
-**Infrastructure (13):**
+**Infrastructure Pods:**
 ```
-✅ payu-postgres             Up (healthy)
-✅ payu-redis                Up (healthy)
-✅ payu-kafka                Up (healthy)
-✅ payu-zookeeper            Up (healthy)
-✅ payu-keycloak             Up (healthy)
-✅ payu-jaeger               Up (healthy)
-✅ payu-prometheus           Up (healthy)
-✅ payu-grafana              Up (healthy)
-✅ payu-loki                 Up (healthy)
-✅ payu-promtail             Up
-✅ payu-alertmanager         Up (healthy)
-✅ payu-kafka-ui             Up
-✅ payu-vault                Up (healthy)
+✅ payu-postgres (Crunchy PGO)       4/4 Running — 24 databases, pgBouncer
+✅ kafka-broker-0 (AMQ Streams)      1/1 Running — KRaft, v4.0.0
+✅ kafka-controller-1                1/1 Running
+✅ payu-datagrid-0 (Infinispan)      1/1 Running — RESP connector, auth enabled
+✅ keycloak-0 (RHSSO)               1/1 Running — payu realm
+✅ vault (HashiCorp)                 1/1 Running — dev mode, VSO syncing
+✅ kafka-console                     2/2 Running — AMQ Streams Console
 ```
 
-**Backend Services (21):**
+**Application Pods (22 services + 1 web-app):**
 ```
-✅ payu-gateway-service      Up (healthy)
-✅ payu-account-service      Up
-✅ payu-auth-service         Up
-✅ payu-wallet-service       Up
-✅ payu-transaction-service  Up
-✅ payu-billing-service      Up
-✅ payu-statement-service    Up
-✅ payu-investment-service   Up
-✅ payu-lending-service      Up
-✅ payu-fx-service           Up
-✅ payu-support-service      Up
-✅ payu-promotion-service    Up
-✅ payu-backoffice-service   Up
-✅ payu-compliance-service   Up
-✅ payu-partner-service      Up
-✅ payu-cms-service          Up
-✅ payu-ab-testing-service   Up
-✅ payu-notification-service Up
-✅ payu-api-portal-service   Up
-✅ payu-kyc-service          Up
-✅ payu-analytics-service    Up
+✅ account-service      1/1    ✅ lending-service       1/1
+✅ auth-service         1/1    ✅ notification-service  1/1
+✅ transaction-service  1/1    ✅ partner-service       1/1
+✅ wallet-service       1/1    ✅ promotion-service     1/1
+✅ investment-service   1/1    ✅ support-service       1/1
+✅ billing-service      1/1    ✅ compliance-service    1/1
+✅ fx-service           1/1    ✅ backoffice-service    1/1
+✅ statement-service    1/1    ✅ cms-service           1/1
+✅ gateway-service      1/1    ✅ ab-testing-service    1/1
+✅ api-portal-service   1/1    ✅ kyc-service           1/1
+✅ analytics-service    1/1    ✅ web-app               1/1
 ```
 
-**Frontend (1):**
+**Kustomize Deployment Order:**
+```bash
+1. oc apply -k infrastructure/openshift/operators/       # 7 operator subscriptions
+2. # Wait for CSVs to reach 'Succeeded'
+3. oc apply -k infrastructure/openshift/infra/overlays/dev/  # All infra CRs
+4. oc apply -f infrastructure/openshift/infra/base/vault-init-job.yaml
+5. oc apply -k infrastructure/openshift/overlays/dev/    # App services
 ```
-✅ payu-web-app              Up
-```
-
-**Total: 35/35 services running**
 
 ---
 
-_Last Updated: February 11, 2026 | PayU Engineering Team_
+_Last Updated: February 18, 2026 | PayU Engineering Team_

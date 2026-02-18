@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-02-18
 
+### Added
+
+- **OpenShift Production Deployment (35/35 pods running)**:
+  - All 22 backend services + web-app deployed to `payu-dev` namespace on OCP 4.20+
+  - All images built via Podman with semver tag `1.2.0`, pushed to OCP internal registry
+  - Complete Kustomize IaC structure:
+    - `operators/`: 7 operator subscriptions (Crunchy PGO, DataGrid, AMQ Streams, AMQ Streams Console, RHSSO, Vault Secrets Operator, cert-manager)
+    - `infra/base/`: All infrastructure CRs with troubleshooting lessons baked in
+    - `infra/overlays/dev/`: Dev sizing patches
+    - `overlays/dev/`: App service image transformers, env patches, route patches
+  - TLS via cert-manager: Let's Encrypt DNS01/Route53 for gateway + web-app routes
+  - Vault dev server with VSO syncing 5 secrets to K8s
+
+### Fixed
+
+- **Keycloak CrashLoopBackOff**: ExternalName service `keycloak-postgresql` had non-FQDN (`payu-postgres-primary.payu-dev.svc` → DNS NXDOMAIN). Fixed by using full FQDN `...svc.cluster.local`
+- **DataGrid CrashLoopBackOff**: Two issues: (1) RESP connector `port: 6379` attribute not supported by DG 8.5.14 — removed, (2) RESP requires `endpointAuthentication: true` with credential secret
+- **DataGrid Redis TLS mismatch**: `endpointEncryption.type: Service` caused gateway `CONNECTION_CLOSED` with plain `redis://`. Fixed by setting `type: None` for dev
+- **Gateway Redis auth**: DataGrid auth enabled but gateway used unauthenticated URL. Fixed with `redis://developer:payu-cache-dev@payu-datagrid.payu-dev.svc:11222`
+- **NetworkPolicy blocking login**: Gateway and web-app pods missing `app.kubernetes.io/part-of: payu-banking` label, so `allow-intra-namespace` policy didn't apply. Only `allow-from-router` matched → internal pod-to-pod traffic blocked. Fixed by adding `commonLabels` in base Kustomization
+
 ### Security (PCI-DSS / PII Hardening)
 
 - **Tier 1 — P0 Critical Fixes**:

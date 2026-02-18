@@ -1983,5 +1983,52 @@
 
 ---
 
+## ☁️ OpenShift Deployment (Feb 18, 2026)
+
+### 1. DataGrid (Infinispan) 8.5.x RESP Connector
+
+* **No Custom Port Attribute**: DataGrid 8.5.14 does NOT support `port:` attribute on `respConnector`. The RESP protocol shares the default `socketBinding` port (11222). Adding `port: 6379` causes CrashLoopBackOff with `ISPN000encoding` errors.
+* **Authentication Required**: RESP connector requires `endpointAuthentication: true` with a credential secret in `identities.yaml` format. Without it, DataGrid crashes because RESP needs a security realm with password-capable identities.
+* **TLS Mismatch**: If `endpointEncryption.type: Service` (default on OpenShift), clients must use `rediss://` (TLS). Using plain `redis://` results in `CONNECTION_CLOSED` immediately. For dev, set `endpointEncryption.type: None` and use `redis://`.
+* **Auth URL Format**: Quarkus Redis client supports `redis://username:password@host:port` format for AUTH with DataGrid RESP.
+
+### 2. Keycloak (RHSSO) ExternalName DNS
+
+* **FQDN Required**: ExternalName services MUST use fully qualified domain names (FQDN) ending in `.svc.cluster.local`. Short names like `payu-postgres-primary.payu-dev.svc` cause DNS NXDOMAIN from within pods because the DNS search path doesn't always resolve them.
+* **The Symptom**: Keycloak CrashLoopBackOff with `Connection refused` or `NXDOMAIN` to the PostgreSQL ExternalName service.
+* **The Fix**: Always use `payu-postgres-primary.payu-dev.svc.cluster.local` in ExternalName services and secrets.
+
+### 3. NetworkPolicy & Pod Labels (Critical)
+
+* **The Problem**: If a NetworkPolicy selects a pod (via `podSelector`), only traffic explicitly allowed by matching policies is permitted. The `allow-from-router` policy selected gateway/web-app pods (by `app` label) but only allowed router ingress — blocking all intra-namespace pod-to-pod traffic.
+* **The Symptom**: Web-app → gateway-service:8080 connection timeout. External routes work fine (router → pod), but internal service-to-service calls fail.
+* **The Fix**: Ensure all service pods have the `app.kubernetes.io/part-of: payu-banking` label so the `allow-intra-namespace` NetworkPolicy also applies. Use `commonLabels` in Kustomize base to guarantee this.
+* **Key Insight**: NetworkPolicies are additive per pod. If Pod X is selected by Policy A (allows router) and Policy B (allows intra-namespace), BOTH sets of rules apply. But if only Policy A selects it, only router traffic is allowed.
+
+### 4. Vault Dev Mode on OpenShift
+
+* **No StatefulSet Needed**: Vault in `-dev` mode doesn't persist data. Use a simple `Deployment` + `Service` instead of StatefulSet.
+* **K8s Auth**: Vault Secrets Operator (VSO) needs `VaultConnection` (address) + `VaultAuth` (kubernetes method, role, mount) resources. The Vault init job should configure `vault auth enable kubernetes`, write policies, and create roles.
+* **VAULT_ADDR**: Always explicitly set `VAULT_ADDR=http://127.0.0.1:8200` in healthchecks — Vault defaults to HTTPS which fails in dev mode.
+
+### 5. Kustomize Image Transformers for OCP Internal Registry
+
+* **Pattern**: Use `images:` in Kustomize overlay to remap image names from external to internal registry:
+    ```yaml
+    images:
+      - name: external-registry/payu-dev/account-service
+        newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
+        newTag: "1.2.0"
+    ```
+* **Gotcha**: The `name` must match the image reference in the base manifest exactly, including any registry prefix.
+
+### 6. cert-manager on OpenShift
+
+* **Operator Namespace**: The `openshift-cert-manager-operator` subscription goes in `cert-manager-operator` namespace (not `openshift-operators`).
+* **AWS Credentials Secret**: Must be in `cert-manager` namespace (where the cert-manager controller runs), not in the application namespace.
+* **ClusterIssuer**: Cluster-scoped resource — no namespace needed. Certificates are namespace-scoped and reference the ClusterIssuer by name.
+
+---
+
 _See also: [REMEDIATION_PLAYBOOK.md](REMEDIATION_PLAYBOOK.md) for prioritized step-by-step action plans._
 

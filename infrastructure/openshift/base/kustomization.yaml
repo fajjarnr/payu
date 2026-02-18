@@ -32,6 +32,6 @@ resources:
   - network-policies.yaml
   - tls-certificates.yaml
 
-# Add ConfigMapGenerator for shared config if needed, but current manifests use inline configs or placeholders.
-# Secrets should be managed securely (e.g. sealed secrets or external secrets), 
-# but for this base, we assume they exist or are created separately.
+# Ensure all resources get the part-of label for NetworkPolicy intra-namespace rules
+commonLabels:
+  app.kubernetes.io/part-of: payu-banking
