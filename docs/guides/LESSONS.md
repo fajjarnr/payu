@@ -1,5 +1,33 @@
 # PayU Platform - Lessons Learned & Troubleshooting Guide
 
+## 📊 Logging & Observability
+
+### 12. Logging Standardization Across Polyglot Services (Feb 19, 2026)
+
+*   **The Problem**: With 21 backend services using different technologies (Spring Boot, Quarkus, Python), logs had inconsistent formats, making aggregation and analysis in LokiStack difficult. Correlation IDs and trace IDs were not propagated consistently.
+*   **The Standard**: Created unified logging approach with JSON format compatible with LokiStack and OpenTelemetry:
+    *   **Spring Boot**: `logging-starter` shared module using Logstash Logback Encoder
+    *   **Quarkus**: JSON logging configuration with standard MDC keys
+    *   **Python**: `payu-logging` package using structlog with JSON output
+*   **Key Components**:
+    *   Standard MDC keys: `correlation_id`, `trace_id`, `span_id`, `service`
+    *   JSON format with `timestamp`, `level`, `logger`, `message`, `mdc` fields
+    *   Auto-configuration via Spring Boot starters or FastAPI middleware
+*   **Integration Pattern**:
+    ```xml
+    <!-- Spring Boot: Add dependency only -->
+    <dependency>
+        <groupId>id.payu</groupId>
+        <artifactId>logging-starter</artifactId>
+    </dependency>
+    ```
+    ```python
+    # Python: Initialize in main.py
+    from payu_logging import init_logging, get_logger
+    init_logging(service_name="kyc-service", json_format=True)
+    ```
+*   **Result**: All 21 services now produce consistent JSON logs with correlation tracking, enabling effective distributed tracing and centralized log analysis.
+
 ## 🐳 Containerization & Podman Compose
 
 ### 1. Podman-Compose Compatibility
