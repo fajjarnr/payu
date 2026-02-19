@@ -63,13 +63,6 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
-        <!-- PayU Logging Starter -->
-        <dependency>
-            <groupId>id.payu</groupId>
-            <artifactId>logging-starter</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>

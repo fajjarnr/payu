@@ -87,13 +87,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
-
-        <!-- PayU Logging Starter -->
-        <dependency>
-            <groupId>id.payu</groupId>
-            <artifactId>logging-starter</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         </dependency>
 
         <!-- HashiCorp Vault -->

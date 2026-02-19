@@ -35,6 +35,7 @@
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <springdoc.version>2.3.0</springdoc.version>
         <lombok.version>1.18.42</lombok.version>
+        <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
     </properties>
 
     <modules>
@@ -44,6 +45,7 @@
         <module>shared/security-starter</module>
         <module>shared/resilience-starter</module>
         <module>shared/cache-starter</module>
+        <module>shared/logging-starter</module>
         <module>shared/outbox-starter</module>
         <module>shared/saga-starter</module>
 
@@ -185,6 +187,13 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- Logstash Logback Encoder for JSON Logging -->
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>${logstash-logback-encoder.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
