@@ -18,6 +18,7 @@ kind: Keycloak
 metadata:
   name: payu-keycloak
   labels:
+    app: payu-keycloak
     app.kubernetes.io/name: payu-keycloak
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: sso
