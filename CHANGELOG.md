@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Zero-Downtime Deployment Framework (DEPLOY-001)**:
+  - **Comprehensive Deployment Guide** (`docs/operations/ZERO-DOWNTIME-DEPLOYMENT.md`):
+    - Three deployment strategies: Blue-Green, Canary, Rolling
+    - Database migration safety with expand-contract pattern
+    - Rollback decision matrix with automated thresholds
+    - Emergency procedures for deployment failures
+    - Kubernetes probe optimization for zero-downtime
+    - ArgoCD GitOps sync wave configuration
+  - **Deployment Automation Scripts** (`scripts/deployment/`):
+    - `blue-green-deploy.sh` - Full blue-green deployment with health checks and automatic rollback
+    - `canary-deploy.sh` - Progressive canary releases with traffic splitting (Istio/Route)
+    - `canary-promote.sh` - Promote canary traffic percentage or complete rollout
+    - `canary-rollback.sh` - Instant rollback to stable version with cleanup
+    - `verify-deployment.sh` - Multi-dimensional deployment verification (pods, health, metrics)
+    - `test-zero-downtime.sh` - Automated zero-downtime validation with load testing
+  - **Supported Patterns**:
+    - Blue-Green: ~30 second rollback, suitable for major releases and DB migrations
+    - Canary: 10% → 25% → 50% → 75% → 100% progressive rollout with auto-rollback
+    - Rolling: Low-risk patch updates with Kubernetes native rolling updates
+  - **Safety Features**:
+    - Pre-deployment health verification
+    - Automatic rollback on failure detection
+    - Database compatibility checks
+    - Real-time monitoring during deployment
+    - Traffic split configuration (Istio VirtualService or OpenShift Route)
+
 - **PCI-DSS v4.0 & UU PDP Compliance Audit (SEC-001)**:
   - **Comprehensive Security Audit Report** (`docs/security/PCI-DSS-UU-PDP-AUDIT-REPORT.md`):
     - PCI-DSS v4.0 compliance assessment: 94/100 score

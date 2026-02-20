@@ -1,5 +1,62 @@
 # PayU Platform - Lessons Learned & Troubleshooting Guide
 
+## 🚀 Deployment & Release Engineering
+
+### 14. Zero-Downtime Deployment Strategies (Feb 20, 2026)
+
+*   **The Problem**: Traditional deployments cause service interruptions (503 errors, connection drops) when pods restart. For a financial platform, even brief downtime is unacceptable. Rolling updates have gray periods where old and new versions coexist, potentially causing data inconsistencies.
+
+*   **The Solution**: Implement three deployment strategies with automated rollback capabilities:
+    *   **Blue-Green Deployment**: Maintain two identical environments (blue=stable, green=new)
+        *   Deploy new version to inactive environment
+        *   Run full health verification before traffic switch
+        *   Instant traffic switch via route patch (~10 seconds)
+        *   Keep old version for immediate rollback (~30 seconds)
+    *   **Canary Releases**: Progressive traffic shifting with monitoring
+        *   Start with 10% traffic to new version
+        *   Monitor error rates, latency, resource usage
+        *   Progressive promotion: 10% → 25% → 50% → 75% → 100%
+        *   Instant rollback on threshold breach
+    *   **Rolling Deployment**: Native Kubernetes rolling update for low-risk changes
+
+*   **Key Implementation Details**:
+    ```bash
+    # Blue-Green: Instant traffic switch
+    oc patch route gateway-service -p '{"spec":{"to":{"name":"gateway-service-green"}}}'
+
+    # Canary: Progressive traffic split
+    oc patch virtualservice gateway-service --type='json' -p '[{
+        "op": "replace",
+        "path": "/spec/http/0/route",
+        "value": [
+            {"destination": {"host": "gateway-service"}, "weight": 90},
+            {"destination": {"host": "gateway-service-canary"}, "weight": 10}
+        ]
+    }]'
+    ```
+
+*   **Database Migration Safety (Expand-Contract Pattern)**:
+    *   **Phase 1 (Expand)**: Add new columns/tables, keep old ones
+    *   **Phase 2 (Migrate)**: Backfill data, dual-write to both schemas
+    *   **Phase 3 (Contract)**: Remove old columns in subsequent release
+    *   Never modify existing columns in-place during deployment
+
+*   **Automated Safety Checks**:
+    *   Pre-deployment: Verify current version health, check DB compatibility
+    *   During deployment: Monitor pod readiness, health endpoints, error rates
+    *   Post-deployment: 5-minute monitoring window with automatic rollback
+    *   Rollback triggers: >1% error rate, >500ms P95 latency, pod restarts >2
+
+*   **Rollback Decision Matrix**:
+    | Metric | Threshold | Action |
+    |--------|-----------|--------|
+    | Error Rate | > 1% | Immediate rollback |
+    | P95 Latency | > 500ms | Immediate rollback |
+    | CPU Usage | > 90% for 5min | Evaluate rollback |
+    | Pod Restarts | > 2 | Immediate rollback |
+
+*   **Result**: Zero-downtime deployment capability with <30 second rollback time, suitable for production financial services requiring 99.99% availability.
+
 ## 📊 Logging & Observability
 
 ### 12. Logging Standardization Across Polyglot Services (Feb 19, 2026)
