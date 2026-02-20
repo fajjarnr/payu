@@ -82,6 +82,36 @@
 
 *   **Result**: Comprehensive understanding of platform performance under realistic CRUD workloads, with data consistency validation and breaking point identification.
 
+### 14. Disaster Recovery Testing on OpenShift (Feb 20, 2026)
+
+*   **The Problem**: DR plans documented but never tested lead to false confidence. Without live testing, RTO/RPO targets are unverified assumptions, and recovery procedures may be outdated or incomplete.
+*   **The Approach**: Create automated DR test scripts that can be run regularly to verify recovery procedures:
+    *   **PostgreSQL Failover Test** (`scripts/dr-test-postgres-failover.sh`):
+        *   Deletes primary pod to simulate failure
+        *   Measures failover time (RTO verification)
+        *   Verifies new primary accepts connections
+        *   Confirms old primary recovers as standby
+    *   **Kafka Broker Recovery Test** (`scripts/dr-test-kafka-failover.sh`):
+        *   Tests broker pod failure scenarios
+        *   Verifies topic integrity after recovery
+        *   Measures message publishing/consumption continuity
+*   **Key Learnings**:
+    *   **RTO Measurement**: Automated timing from failure detection to service restoration
+    *   **Data Integrity Checks**: Post-recovery verification of database consistency
+    *   **Patroni Behavior**: Understanding automatic vs manual failover triggers
+    *   **Operator Patterns**: Leveraging OpenShift operators (Crunchy PGO, AMQ Streams) for managed recovery
+*   **DR Runbook Structure** (`docs/operations/DISASTER_RECOVERY.md`):
+    *   Per-component RTO/RPO definitions
+    *   Service priority tiers (P0 critical, P1 high, P2 medium, P3 low)
+    *   Step-by-step recovery procedures with copy-paste commands
+    *   Escalation matrix and incident response workflow
+*   **Test Schedule**:
+    *   Backup verification: Daily (automated)
+    *   PostgreSQL failover: Weekly (manual)
+    *   Kafka recovery: Weekly (manual)
+    *   Full DR simulation: Quarterly
+*   **Result**: Verified DR procedures with measurable RTO/RPO, automated test scripts for regression testing, and comprehensive runbook for incident response.
+
 ## 🐳 Containerization & Podman Compose
 
 ### 1. Podman-Compose Compatibility

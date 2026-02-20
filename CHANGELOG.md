@@ -39,6 +39,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   **Result:** All 21 backend services now use standardized logging format for unified LokiStack and OpenTelemetry tracing.
 
+- **Disaster Recovery Testing Framework (DR-001)**:
+  - **DR Runbook v2.0** (`docs/operations/DISASTER_RECOVERY.md`):
+    - Complete RTO/RPO definitions per component (PostgreSQL: 2min/0, Kafka: 5min/<5min, Vault: 10min/0)
+    - Service priority tiers (P0: auth/transaction/wallet/account, P1: gateway/notification/compliance)
+    - Component-specific recovery procedures for Crunchy PGO, AMQ Streams, Vault, DataGrid, Keycloak
+    - Complete platform restore procedure from namespace deletion
+    - Incident response workflow with escalation matrix
+  - **Automated DR Test Scripts**:
+    - `scripts/dr-test-postgres-failover.sh` - Tests Patroni HA failover, measures RTO, verifies data integrity
+    - `scripts/dr-test-kafka-failover.sh` - Tests broker recovery, verifies topic/message continuity
+    - Helper scripts: `dr-postgres-full-restore.sh`, `dr-kafka-topic-recovery.sh`, `dr-vault-recovery.sh`
+  - **Test Scenarios Covered**:
+    - PostgreSQL primary failure with automatic failover
+    - Complete database restore from pgBackRest (full and PITR)
+    - Kafka broker failure and topic recovery
+    - Vault unseal/secret rotation procedures
+    - Complete namespace deletion recovery
+  - **DR Architecture Documentation**:
+    - Multi-AZ deployment diagram
+    - Backup architecture (pgBackRest, MM2, Vault snapshots)
+    - Gradual degradation response matrix (Level 1-4)
+    - DR test schedule (weekly PostgreSQL/Kafka, quarterly full simulation)
+
 - **K6 CRUD Load Testing Suite (LOAD-001)**:
   - **Best Practice Implementation**: Full CRUD load tests (not just health checks)
   - **Modular Library Architecture** (`tests/performance/k6/lib/`):

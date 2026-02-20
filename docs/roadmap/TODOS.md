@@ -90,7 +90,10 @@
 | Operator subscriptions (7) | ✅ Done (Crunchy, AMQ, DataGrid, RHSSO, Vault, cert-manager) | Ops |
 | TLS certificates (Let's Encrypt) | ✅ Done (DNS01/Route53) | Ops |
 | Load testing execution (K6) | ✅ Scripts ready (pending cluster access) | QA |
-| Disaster recovery live test | ⬜ Not tested | QA |
+| **DR-001: Disaster Recovery Testing** | 🟡 Scripts ready, pending live execution | QA |
+|   - PostgreSQL failover test | 🟡 Script: dr-test-postgres-failover.sh | QA |
+|   - Kafka broker recovery test | 🟡 Script: dr-test-kafka-failover.sh | QA |
+|   - Complete platform restore procedure | ✅ Documented in DISASTER_RECOVERY.md | Platform |
 | PCI-DSS / UU PDP formal audit | ⬜ Not audited | Compliance |
 | Zero-downtime deployment live test | ⬜ Not tested | Ops |
 
