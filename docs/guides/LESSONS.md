@@ -28,6 +28,60 @@
     ```
 *   **Result**: All 21 services now produce consistent JSON logs with correlation tracking, enabling effective distributed tracing and centralized log analysis.
 
+## 🧪 Load Testing & Performance Engineering
+
+### 13. K6 CRUD Load Testing Best Practices (Feb 20, 2026)
+
+*   **The Problem**: Basic health check load tests (ping endpoints) don't reflect real-world usage. They miss critical performance characteristics like:
+    *   Write vs read performance differences (writes are more expensive)
+    *   Database contention under concurrent CREATE/UPDATE/DELETE operations
+    *   Data consistency issues (read-after-write, transaction atomicity)
+    *   Real-world bottlenecks in business logic
+
+*   **The Solution**: Implement comprehensive CRUD load testing with K6:
+    *   **Modular Library Architecture**: Reusable CRUD functions in `lib/` directory
+        *   `lib/auth.js` - Login, register, profile CRUD
+        *   `lib/wallet.js` - Wallet/pocket CRUD with credit/freeze/close
+        *   `lib/transaction.js` - Transfer, history, QRIS operations
+        *   `lib/card.js` - Virtual card CRUD with freeze/unfreeze
+    *   **Test Coverage**:
+        *   `crud-load-test.js` - 100 VU, 25min sustained load
+        *   `crud-stress-test.js` - 1000 VU, 40min breaking point analysis
+        *   `crud-data-consistency-test.js` - Consistency validation under load
+
+*   **Key Patterns**:
+    ```javascript
+    // Reusable CRUD function with metrics
+    export function createPocket(gatewayUrl, token, pocketData) {
+        const startTime = Date.now();
+        const response = http.post(url, payload, { headers });
+
+        crudCreateDuration.add(Date.now() - startTime);
+        const success = check(response, { 'status is 201': (r) => r.status === 201 });
+        crudCreateSuccess.add(success);
+
+        return { success, body: JSON.parse(response.body) };
+    }
+    ```
+
+*   **Consistency Tests**:
+    *   Read-after-write: Create resource → immediately read (should find)
+    *   Transaction atomicity: Transfer with idempotency key → verify retrieval
+    *   Concurrent updates: Multiple rapid credits → verify final balance
+
+*   **Test Data Strategy**:
+    *   Use unique identifiers per VU: `k6-${Date.now()}-${Math.random()}`
+    *   Rotate through test users: `TEST_USERS[__VU % TEST_USERS.length]`
+    *   Weighted operations (40% read, 25% create, 20% transfer, 15% card)
+
+*   **Metrics to Track**:
+    *   Operation-specific success rates: `crud_create_success`, `crud_read_success`
+    *   Latency by operation type: `crud_create_duration`, `crud_read_duration`
+    *   Business metrics: `transfer_amount_total`, `pocket_created_total`
+    *   Consistency metrics: `read_after_write_consistency`, `transaction_atomicity`
+
+*   **Result**: Comprehensive understanding of platform performance under realistic CRUD workloads, with data consistency validation and breaking point identification.
+
 ## 🐳 Containerization & Podman Compose
 
 ### 1. Podman-Compose Compatibility

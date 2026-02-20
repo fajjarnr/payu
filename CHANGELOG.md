@@ -39,6 +39,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   **Result:** All 21 backend services now use standardized logging format for unified LokiStack and OpenTelemetry tracing.
 
+- **K6 CRUD Load Testing Suite (LOAD-001)**:
+  - **Best Practice Implementation**: Full CRUD load tests (not just health checks)
+  - **Modular Library Architecture** (`tests/performance/k6/lib/`):
+    - `lib/auth.js` - Login, register, profile CRUD operations
+    - `lib/wallet.js` - Wallet/pocket CREATE, READ, UPDATE (credit/freeze), DELETE (close)
+    - `lib/transaction.js` - Transfer CREATE, history READ, QRIS operations
+    - `lib/card.js` - Virtual card CREATE, READ, UPDATE (freeze/unfreeze)
+  - **Test Scripts**:
+    - `crud-load-test.js` - 100 VU, 25min sustained load (95% CREATE/UPDATE success target)
+    - `crud-stress-test.js` - 1000 VU, 40min breaking point analysis
+    - `crud-data-consistency-test.js` - Read-after-write, atomicity, concurrent update tests
+  - **Custom Metrics**:
+    - CRUD operation success rates: `crud_create_success`, `crud_read_success`, `crud_update_success`, `crud_delete_success`
+    - Consistency metrics: `read_after_write_consistency` (target >99%), `transaction_atomicity` (target >99.9%)
+    - Business metrics: `transfer_amount_total`, `pocket_created_total`, `card_created_total`
+  - **Test Runner**: `run-all-tests.sh` with `--crud`, `--consistency`, `--local` flags
+  - **Documentation**: `CRUD_TESTS_GUIDE.md` with complete API reference
+
 - **Backend Integration Tests (P19 Audit - R-004, R-006)**:
   - `statement-service`: Added comprehensive integration test suite (0% → 100% coverage)
     - `StatementControllerIntegrationTest`: 17 test cases covering CRUD operations, authentication, authorization
