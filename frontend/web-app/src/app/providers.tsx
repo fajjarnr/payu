@@ -41,7 +41,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => getQueryClient());
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <ExperimentProvider>
           {children}

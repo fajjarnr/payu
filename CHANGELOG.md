@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **K6 Baseline Performance Tests (LOAD-001)**:
+  - **Comprehensive CRUD Test Suite** (`tests/performance/k6-baseline/`):
+    - 22 service-specific baseline tests covering all PayU microservices
+    - Core Services (4): account-service, auth-service, wallet-service, transaction-service
+    - Financial Services (5): investment-service, lending-service, fx-service, billing-service, statement-service
+    - Supporting Services (11): notification-service, partner-service, promotion-service, support-service, compliance-service, backoffice-service, cms-service, ab-testing-service, api-portal-service, kyc-service, analytics-service
+  - **Shared Test Infrastructure**:
+    - `config/baseline-config.js`: Centralized configuration with SLA thresholds (p50<100ms, p95<300ms, p99<500ms), service endpoints, test users
+    - `lib/auth-helper.js`: Authentication utilities (login, MFA, register, refresh token, logout)
+    - `lib/crud-helper.js`: Generic CRUD operations (create, read, list, update, patch, delete) with metrics tracking
+  - **Service-Specific Metrics**: Custom K6 metrics for each operation type
+    - Example: `wallet_credit_duration`, `lending_apply_loan_duration`, `transaction_transfer_duration`
+  - **Test Data Generators**: Realistic data generation for each service domain (loans, investments, transfers, etc.)
+  - **Unified Test Runner** (`unified-baseline-runner.js`): Execute tests for multiple services in parallel
+  - **Load Profile**: 5-stage baseline (warm up → baseline load → sustained → ramp down → cool down)
+  - **Documentation**: Comprehensive README with usage examples and troubleshooting guide
+
 - **Rate Limiting Best Practices (RATE-001)**:
   - **Enhanced Gateway Rate Limiting** (`backend/gateway-service/src/main/java/id/payu/gateway/adapter/filter/RateLimitFilter.java`):
     - Differentiated rate limits per endpoint category (auth: 30/min, OTP: 5/min, default: 100/min)

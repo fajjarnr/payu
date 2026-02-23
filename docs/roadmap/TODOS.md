@@ -92,6 +92,13 @@
 | | - CRUD stress test: 1000 VU, 40min (breaking point analysis) | | |
 | | - Data consistency test: read-after-write, atomicity, concurrent updates | | |
 | | - Test libraries: `lib/auth.js`, `lib/wallet.js`, `lib/transaction.js`, `lib/card.js` | | |
+| | **K6 Baseline Tests - All 22 Services**: Comprehensive CRUD baseline tests for performance benchmarking | | |
+| | - Core Services: account, auth, wallet, transaction (4 services) | | |
+| | - Financial Services: investment, lending, fx, billing, statement (5 services) | | |
+| | - Supporting Services: notification, partner, promotion, support, compliance, backoffice, cms, ab-testing, api-portal, kyc, analytics (11 services) | | |
+| | - Config: `baseline-config.js` with SLA thresholds (p50<100ms, p95<300ms, p99<500ms) | | |
+| | - Libraries: `auth-helper.js`, `crud-helper.js` for reusable operations | | |
+| | - Unified runner: `unified-baseline-runner.js` for multi-service testing | | |
 | **E2E-001** | Database CRUD E2E Tests - Comprehensive CRUD coverage for Account, Wallet, Transaction, Profile, Card, Bills, Investment, Lending | P1 | ✅ **Complete** — 11 tests passing, covers all major CRUD operations |
 | **LOG-001** | Logging Standardization - JSON logging with LokiStack/OpenTelemetry compatibility across all 21 services | P1 | ✅ **Complete** — logging-starter module, 16 Spring Boot + 3 Quarkus + 2 Python services |
 | **SEC-001** | PCI-DSS v4.0 & UU PDP Compliance Audit - Comprehensive security audit with 95/100 score | P0 | ✅ **Complete** — Full compliance attestation, audit report in `docs/security/PCI-DSS-UU-PDP-AUDIT-REPORT.md` |

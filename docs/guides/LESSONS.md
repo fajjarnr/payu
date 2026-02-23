@@ -437,6 +437,121 @@
 
 *   **Test Data Strategy**:
     *   Use unique identifiers per VU: `k6-${Date.now()}-${Math.random()}`
+
+### 19. K6 Baseline Testing for All Microservices (Feb 23, 2026)
+
+*   **The Problem**: Performance testing is often limited to a few critical services (auth, transaction) while supporting services (notification, support, compliance) are untested. This leads to:
+    *   Undetected performance regressions in supporting services
+    *   No established SLAs for service-level agreements
+    *   Inconsistent load testing patterns across teams
+    *   Difficulty identifying which services need optimization
+
+*   **The Solution**: Create a comprehensive K6 baseline test suite covering all 22 PayU microservices with standardized patterns:
+    *   **Directory Structure**:
+        ```
+        k6-baseline/
+        ├── config/baseline-config.js          # Shared config, thresholds, SLAs
+        ├── lib/auth-helper.js                 # Login, MFA, token refresh
+        ├── lib/crud-helper.js                 # Generic CRUD operations
+        ├── core-services/                      # 4 critical services
+        ├── financial-services/                 # 5 financial products
+        ├── supporting-services/                # 11 infrastructure services
+        └── unified-baseline-runner.js         # Multi-service test runner
+        ```
+    *   **Standardized Test Structure** (every service follows same pattern):
+        ```javascript
+        // 1. Service-specific metrics
+        const serviceMetrics = {
+          operationNameDuration: new Trend('service_operation_duration'),
+        };
+
+        // 2. Test configuration
+        export const options = {
+          stages: BASELINE_STAGES,  // Shared load profile
+          thresholds: BASELINE_THRESHOLDS,  // Shared SLAs
+        };
+
+        // 3. Test data generators
+        function generateTestData(uniqueId) { return { /* ... */ }; }
+
+        // 4. Main test scenario with grouped operations
+        export default function () {
+          group('Service - CRUD Operations', () => {
+            group('CREATE: Operation', () => { /* ... */ });
+            group('READ: Operation', () => { /* ... */ });
+            group('UPDATE: Operation', () => { /* ... */ });
+            group('DELETE: Operation', () => { /* ... */ });
+          });
+        }
+        ```
+
+*   **Key Implementation Details**:
+    *   **SLA Thresholds** (production grade):
+        ```javascript
+        BASELINE_THRESHOLDS = {
+          http_req_duration: [
+            { threshold: 'p(50)<100', abortOnFail: false },
+            { threshold: 'p(95)<300', abortOnFail: false },
+            { threshold: 'p(99)<500', abortOnFail: false },
+          ],
+          http_req_failed: ['rate<0.001'],  // 0.1% error rate
+        }
+        ```
+    *   **Load Profile** (5-stage):
+        ```javascript
+        BASELINE_STAGES = [
+          { duration: '30s', target: 5 },     // Warm up
+          { duration: '2m', target: 10 },     // Baseline load
+          { duration: '5m', target: 20 },     // Sustained baseline
+          { duration: '2m', target: 10 },     // Ramp down
+          { duration: '30s', target: 0 },     // Cool down
+        ]
+        ```
+    *   **Service-Specific SLAs**: Different targets based on service criticality
+        *   Core (auth, wallet): p95 < 300ms
+        *   Financial (lending, statement): p95 < 500ms
+        *   Analytics: p95 < 800ms (complex queries expected)
+
+*   **CRUD Helper Library** (`lib/crud-helper.js`):
+    *   Generic `create()`, `read()`, `list()`, `update()`, `patch()`, `del()` functions
+    *   Automatic metrics collection (duration, success rate)
+    *   JSON parsing with error handling
+    *   Health check utility
+    ```javascript
+    export function create(endpoint, payload, token, options = {}) {
+      const startTime = new Date();
+      const response = http.post(url, JSON.stringify(payload), { headers });
+      crudMetrics.createDuration.add(new Date() - startTime);
+      // ... checks and return
+    }
+    ```
+
+*   **Running Baseline Tests**:
+    ```bash
+    # Individual service
+    k6 run core-services/wallet-service-crud.js
+
+    # Multiple services via unified runner
+    k6 run unified-baseline-runner.js --env SERVICES=wallet,transaction,auth
+
+    # All services
+    k6 run unified-baseline-runner.js
+    ```
+
+*   **Best Practices**:
+    *   Use `group()` for clear test reporting and organization
+    *   Define service-specific metrics for granular monitoring
+    *   Create realistic data generators matching production patterns
+    *   Include setup/teardown with health checks
+    *   Use `sleep()` between operations to simulate realistic user behavior
+    *   Rotate through test users: `login(__VU % 5)` to distribute load
+    *   Store entity IDs from CREATE operations for subsequent READ/UPDATE/DELETE tests
+
+*   **Interpreting Results**:
+    *   Pass criteria: All checks pass, error rate < 0.1%, response times meet SLAs
+    *   Run 3-5 times to establish stable baselines (variations > 10% warrant investigation)
+    *   Compare results against previous runs to detect performance regressions
+    *   Use JSON output (`--out json=results.json`) for detailed analysis and CI integration
     *   Rotate through test users: `TEST_USERS[__VU % TEST_USERS.length]`
     *   Weighted operations (40% read, 25% create, 20% transfer, 15% card)
 
