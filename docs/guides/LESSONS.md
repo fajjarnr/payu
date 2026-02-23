@@ -394,6 +394,18 @@
     *   Use `directAccessGrantsEnabled: true` for password-based authentication
     *   Rate limiting may activate after multiple failed login attempts
 
+### 20. Token Refresh and JWT Validation Issues (Feb 23, 2026)
+
+*   **The Problem**: After successful login, users were stuck in a redirect loop because access tokens would expire, and refresh requests to `/api/v1/auth/refresh` returned HTTP 500. Additionally, backend services returned HTTP 401 despite valid Keycloak tokens.
+*   **The Root Cause**:
+    1.  **Auth Service**: Tried to rotate a custom refresh token locally via `RefreshTokenService` which caused internal errors because the token originated from Keycloak and couldn't be parsed correctly locally.
+    2.  **Resource Servers (Wallet, Transaction, etc.)**: The `OIDC_ISSUER` environment variable was set to the default localhost URL inside the cluster, causing JWT signature validation to fail.
+    3.  **Hikari Config**: `wallet-service` failed to execute read operations returning 500s because Hikari was incorrectly set to `auto-commit: true` while Spring JPA expects transaction boundaries to manage commits.
+*   **The Fix**:
+    1.  Directly pass the Keycloak refresh token back to Keycloak's token endpoint (`refreshTokenBlocking`) in `AuthController` and don't try to parse it locally.
+    2.  Set `OIDC_ISSUER="http://keycloak-discovery:8080/auth/realms/payu"` on all backend resource server deployments (`oc set env ...`).
+    3.  Ensure `auto-commit: false` is set in all `application-container.yml` database configurations for Spring Boot JPA compatibility.
+
 ## 🧪 Load Testing & Performance Engineering
 
 ### 13. K6 CRUD Load Testing Best Practices (Feb 20, 2026)

@@ -5,6 +5,8 @@
 > **Last Synchronized**: February 23, 2026 (commit dc46723c)
 >
 > **Recent Updates (Feb 23, 2026)**:
+> - ✅ **Auth Refresh Fixed**: Resolved 500 internal errors in refresh token endpoint by delegating directly to Keycloak.
+> - ✅ **OIDC Config & JPA Fixed**: Updated `OIDC_ISSUER` across core services and fixed auto-commit db issues in `wallet-service`.
 > - ✅ **High Availability Implemented**: 2 replicas + HPA + PDB for critical services
 > - ✅ **HPA**: 12 HorizontalPodAutoscalers (CPU 70% target, min 1-2, max 3-5)
 > - ✅ **PDB**: 22 PodDisruptionBudgets (minAvailable: 1) for zero-downtime maintenance

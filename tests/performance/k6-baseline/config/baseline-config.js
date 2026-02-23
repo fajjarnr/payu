@@ -70,9 +70,7 @@ export const BASELINE_STAGES = [
 export const TEST_USERS = [
   { username: 'customer1', password: 'password123' },
   { username: 'customer2', password: 'password123' },
-  { username: 'customer3', password: 'password123' },
-  { username: 'customer4', password: 'password123' },
-  { username: 'customer5', password: 'password123' }
+  { username: 'admin', password: 'admin123' }
 ];
 
 // Content types

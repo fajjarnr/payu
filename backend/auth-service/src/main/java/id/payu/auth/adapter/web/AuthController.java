@@ -340,23 +340,15 @@ public class AuthController extends BaseController {
             HttpServletRequest httpRequest
     ) {
         try {
-            // Step 1: Rotate the refresh token (invalidates old, issues new)
-            RefreshTokenService.RefreshTokenResponse oldRefreshResponse =
-                    refreshTokenService.rotateRefreshToken(request.refreshToken());
-
-            // Step 2: Use Keycloak to get new access token
-            // Note: We use the old refresh token for Keycloak refresh
+            // Step 1: Use Keycloak to get new access token using the provided refresh token
             LoginResponse keycloakResponse = keycloakService.refreshTokenBlocking(request.refreshToken());
 
-            // Step 3: Build response with new tokens
+            // Step 2: Build response with new tokens
             RefreshTokenResponse response = new RefreshTokenResponse(
                     keycloakResponse.accessToken(),
-                    oldRefreshResponse.refreshToken(),
+                    keycloakResponse.refreshToken(),
                     keycloakResponse.expiresIn(),
-                    java.time.Duration.between(
-                            java.time.Instant.now(),
-                            oldRefreshResponse.expiresAt()
-                    ).getSeconds(),
+                    7 * 24 * 3600L, // default 7 days for new refresh token lifetime
                     keycloakResponse.tokenType()
             );
 
@@ -374,7 +366,7 @@ public class AuthController extends BaseController {
         } catch (Exception e) {
             // SECURITY: Don't log full stack trace to prevent information disclosure
             log.error("Token refresh failed for IP: {} - {}",
-                    getClientIpAddress(httpRequest), e.getClass().getSimpleName());
+                    getClientIpAddress(httpRequest), e.getClass().getSimpleName(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(
                             ErrorCode.INTERNAL_ERROR.getCode(),

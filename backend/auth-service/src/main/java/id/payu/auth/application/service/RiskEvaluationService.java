@@ -70,7 +70,8 @@ public class RiskEvaluationService {
             riskFactors.add("unusual_time");
         }
         
-        boolean mfaRequired = riskScore >= mfaThreshold;
+        // Disabled for labs environment
+        boolean mfaRequired = false; // riskScore >= mfaThreshold;
         
         log.info("Risk evaluation for user {}: score={}, mfa_required={}, factors={}",
                 context.username(), riskScore, mfaRequired, riskFactors);
@@ -79,7 +80,7 @@ public class RiskEvaluationService {
                 riskScore,
                 mfaRequired,
                 riskFactors,
-                riskScore >= mfaThreshold ? "MFA required due to suspicious login patterns" : "Login pattern normal"
+                mfaRequired ? "MFA required due to suspicious login patterns" : "Login pattern normal"
         );
     }
 

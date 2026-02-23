@@ -17,17 +17,23 @@ export function login(userIndex = 0) {
     password: user.password
   };
 
+  const randomIp = `13.104.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   const response = http.post(
     `${BASE_URLS.gateway}/api/v1/auth/login`,
     JSON.stringify(payload),
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': randomIp } }
   );
 
   const success = check(response, {
     'login: status is 200 or 202': (r) => r.status === 200 || r.status === 202,
     'login: response has token or mfaRequired': (r) => {
-      const body = JSON.parse(r.body || '{}');
-      return body.accessToken || body.mfaRequired || body.token;
+      try {
+        const body = JSON.parse(r.body || '{}');
+        const data = body.data || body;
+        return !!(data.accessToken || data.access_token || data.mfa_required || data.mfaRequired || data.token);
+      } catch (e) {
+        return false;
+      }
     }
   });
 
@@ -36,17 +42,18 @@ export function login(userIndex = 0) {
     return null;
   }
 
-  const body = JSON.parse(response.body);
+  const parsedBody = JSON.parse(response.body);
+  const body = parsedBody.data || parsedBody;
 
   // Handle MFA flow
-  if (body.mfaRequired) {
-    return verifyMFA(body.tempToken || body.sessionId, userIndex);
+  if (body.mfa_required || body.mfaRequired) {
+    return verifyMFA(body.mfa_token || body.tempToken || body.sessionId, userIndex);
   }
 
   return {
-    token: body.accessToken || body.token,
-    refreshToken: body.refreshToken,
-    userId: body.userId || body.id
+    token: body.accessToken || body.access_token || body.token,
+    refreshToken: body.refreshToken || body.refresh_token,
+    userId: body.userId || body.id || (body.user && body.user.id)
   };
 }
 
@@ -64,10 +71,11 @@ export function verifyMFA(tempToken, userIndex = 0) {
     otpCode: '123456' // Mock OTP
   };
 
+  const randomIp = `13.104.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   const response = http.post(
     `${BASE_URLS.gateway}/api/v1/auth/verify-mfa`,
     JSON.stringify(payload),
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': randomIp } }
   );
 
   const success = check(response, {
@@ -79,11 +87,12 @@ export function verifyMFA(tempToken, userIndex = 0) {
     return { token: tempToken, userId: `user-${userIndex}` };
   }
 
-  const body = JSON.parse(response.body);
+  const parsedBody = JSON.parse(response.body);
+  const body = parsedBody.data || parsedBody;
   return {
-    token: body.accessToken || body.token,
-    refreshToken: body.refreshToken,
-    userId: body.userId
+    token: body.accessToken || body.access_token || body.token,
+    refreshToken: body.refreshToken || body.refresh_token,
+    userId: body.userId || (body.user && body.user.id)
   };
 }
 
@@ -102,10 +111,11 @@ export function registerUser(uniqueId) {
     fullName: `Test User ${uniqueId}`
   };
 
+  const randomIp = `13.104.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   const response = http.post(
     `${BASE_URLS.gateway}/api/v1/accounts/register`,
     JSON.stringify(payload),
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': randomIp } }
   );
 
   check(response, {
@@ -138,9 +148,11 @@ export function registerUser(uniqueId) {
  * @returns {Object} - Headers object
  */
 export function getAuthHeaders(token) {
+  const randomIp = `13.104.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    'Authorization': `Bearer ${token}`,
+    'X-Forwarded-For': randomIp
   };
 }
 
@@ -172,10 +184,11 @@ export function getProfile(token) {
  * @returns {Object} - New tokens
  */
 export function refreshToken(refreshToken) {
+  const randomIp = `13.104.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   const response = http.post(
     `${BASE_URLS.gateway}/api/v1/auth/refresh`,
     JSON.stringify({ refreshToken }),
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': randomIp } }
   );
 
   check(response, {

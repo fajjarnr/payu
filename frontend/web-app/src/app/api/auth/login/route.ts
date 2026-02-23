@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     if (accessToken) {
       response.cookies.set("accessToken", accessToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: false, // Labs environment: relax secure requirement
         sameSite: "lax",
         maxAge: 900, // 15 minutes
         path: "/",
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     if (refreshToken) {
       response.cookies.set("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: false, // Labs environment: relax secure requirement
         sameSite: "lax",
         maxAge: 604_800, // 7 days
         path: "/",

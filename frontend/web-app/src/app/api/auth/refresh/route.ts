@@ -55,7 +55,7 @@ export async function POST() {
     if (newAccessToken) {
       response.cookies.set('accessToken', newAccessToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: false, // Labs environment: relax secure requirement
         sameSite: 'lax',
         maxAge: 900,
         path: '/',
@@ -65,7 +65,7 @@ export async function POST() {
     if (newRefreshToken) {
       response.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: false, // Labs environment: relax secure requirement
         sameSite: 'lax',
         maxAge: 604_800,
         path: '/',

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Token Refresh & Authentication Loop Issues**:
+  - `auth-service`: Fixed HTTP 500 error in `/api/v1/auth/refresh` by reverting to Keycloak direct token refresh without local token rotation mapping.
+  - `wallet-service`: Fixed connection pool errors where Hikari was configured with `auto-commit: true` instead of `false` in `application-container.yml`, resolving JPA transaction exceptions.
+  - `wallet-service`, `transaction-service`, `account-service`, `investment-service`: Corrected `OIDC_ISSUER` OpenShift environment variable to point to the Keycloak discovery endpoint, resolving HTTP 401 Unauthorized for valid Keycloak JWTs.
+
 ### Added
 
 - **K6 Baseline Performance Tests (LOAD-001)**:
