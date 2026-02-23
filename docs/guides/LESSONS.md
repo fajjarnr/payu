@@ -2,6 +2,94 @@
 
 ## 🚀 Deployment & Release Engineering
 
+### 18. High Availability Best Practices - HPA, PDB, and Multi-Replica (Feb 23, 2026)
+
+*   **The Problem**: Single-replica deployments create single points of failure. When a node fails or during maintenance, services become unavailable. Without Pod Disruption Budgets (PDB), voluntary disruptions (node draining, upgrades) can cause total service outage. Without Horizontal Pod Autoscaler (HPA), services cannot handle traffic spikes.
+
+*   **The Solution**: Implement the "Production HA Trio":
+    1.  **Multiple Replicas**: Minimum 2 replicas for critical services (gateway, auth, transaction, account, wallet)
+    2.  **Pod Disruption Budget (PDB)**: Ensure at least 1 pod remains during disruptions
+    3.  **Horizontal Pod Autoscaler (HPA)**: Auto-scale based on CPU utilization (70% target)
+
+*   **Implementation**:
+
+    ```yaml
+    # Deployment: 2 replicas with zero-downtime rolling update
+    spec:
+      replicas: 2
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1          # Allow 1 extra pod during update
+          maxUnavailable: 0    # Never drop below desired replicas
+      template:
+        spec:
+          terminationGracePeriodSeconds: 60  # Graceful shutdown time
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+    ```
+
+    ```yaml
+    # HPA: Scale 2-5 replicas based on CPU
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: gateway-service
+      minReplicas: 2
+      maxReplicas: 5
+      metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 70
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300  # Wait 5 min before scaling down
+        scaleUp:
+          stabilizationWindowSeconds: 60   # Scale up faster
+    ```
+
+    ```yaml
+    # PDB: Ensure high availability during disruptions
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    spec:
+      minAvailable: 1
+      selector:
+        matchLabels:
+          app: gateway-service
+    ```
+
+*   **Key Lessons**:
+    *   Critical services (gateway, auth, transaction, account, wallet) should have minimum 2 replicas
+    *   Use `maxUnavailable: 0` to prevent capacity drop during rolling updates
+    *   Set `terminationGracePeriodSeconds: 60` for Spring Boot to allow graceful shutdown
+    *   HPA prevents manual intervention during traffic spikes
+    *   PDB prevents accidental downtime during node maintenance
+    *   Apply HPA/PDB to the same namespace as deployments: `oc apply -f hpa.yaml -n payu-dev`
+
+*   **Verification Commands**:
+    ```bash
+    # Check replica status
+    oc get deployment -n payu-dev
+
+    # Check HPA status
+    oc get hpa -n payu-dev
+
+    # Check PDB status
+    oc get pdb -n payu-dev
+
+    # Verify pod distribution across nodes
+    oc get pods -n payu-dev -o wide
+    ```
+
 ### 15. OpenShift Image Registry and Kustomize Deployment (Feb 23, 2026)
 
 *   **The Problem**: Deploying to OpenShift requires proper image registry configuration and Kustomize orchestration. Common issues include:

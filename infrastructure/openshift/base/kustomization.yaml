@@ -28,6 +28,9 @@ resources:
   - transaction-service.yaml
   - wallet-service.yaml
   - web-app.yaml
+  # High Availability
+  - hpa.yaml
+  - pdb.yaml
   # Security & Networking
   # NOTE: NetworkPolicies disabled in dev — re-enable for staging/prod
   # - network-policies.yaml

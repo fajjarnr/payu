@@ -1,0 +1,296 @@
+# =============================================================================
+# Pod Disruption Budget (PDB) for PayU Services
+# =============================================================================
+# Ensures minimum availability during node maintenance, upgrades, or eviction
+# minAvailable: 1 means at least 1 pod must remain running
+# This prevents total service outage during voluntary disruptions
+# =============================================================================
+
+# Critical Services - Require at least 1 pod during disruptions
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway-service-pdb
+  labels:
+    app: gateway-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: gateway-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: auth-service-pdb
+  labels:
+    app: auth-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: auth-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: transaction-service-pdb
+  labels:
+    app: transaction-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: transaction-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: account-service-pdb
+  labels:
+    app: account-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: account-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wallet-service-pdb
+  labels:
+    app: wallet-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wallet-service
+
+# Supporting Services
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: notification-service-pdb
+  labels:
+    app: notification-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: notification-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: billing-service-pdb
+  labels:
+    app: billing-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: billing-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: investment-service-pdb
+  labels:
+    app: investment-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: investment-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lending-service-pdb
+  labels:
+    app: lending-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: lending-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fx-service-pdb
+  labels:
+    app: fx-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: fx-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: statement-service-pdb
+  labels:
+    app: statement-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: statement-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: partner-service-pdb
+  labels:
+    app: partner-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: partner-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: promotion-service-pdb
+  labels:
+    app: promotion-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: promotion-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: support-service-pdb
+  labels:
+    app: support-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: support-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: compliance-service-pdb
+  labels:
+    app: compliance-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: compliance-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backoffice-service-pdb
+  labels:
+    app: backoffice-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: backoffice-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cms-service-pdb
+  labels:
+    app: cms-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: cms-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ab-testing-service-pdb
+  labels:
+    app: ab-testing-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ab-testing-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-portal-service-pdb
+  labels:
+    app: api-portal-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api-portal-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kyc-service-pdb
+  labels:
+    app: kyc-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: kyc-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: analytics-service-pdb
+  labels:
+    app: analytics-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: analytics-service
+
+# Web App
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-app-pdb
+  labels:
+    app: web-app
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: web-app

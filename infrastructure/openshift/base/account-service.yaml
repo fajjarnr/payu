@@ -8,7 +8,12 @@ metadata:
     app.kubernetes.io/component: backend
     app.kubernetes.io/part-of: payu
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: account-service
@@ -22,6 +27,11 @@ spec:
         prometheus.io/path: "/actuator/prometheus"
         prometheus.io/port: "8080"
     spec:
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: account-service
           image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/account-service:1.0.0
