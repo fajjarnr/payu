@@ -1,0 +1,43 @@
+# Contoh Konfigurasi Ingress Menggunakan Nginx Ingress Controller di OpenShift
+# (Catatan: Ini adalah konfigurasi referensi, dan tidak dideploy secara otomatis
+# karena PayU UI saat ini menggunakan layanan OpenShift Route default `tls-certificates.yaml`)
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-app-nginx-ingress
+  namespace: payu-dev
+  annotations:
+    # Memaksa kubernetes untuk memilih Controller berbasis Nginx, 
+    # bukan Controller default OpenShift Router
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    
+    # Opsi Tambahan Jika Anda Membutuhkan TLS/SSL dari Cert-Manager via Nginx:
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+    # Konsep Custom Error Pages (Opsional)
+    # nginx.ingress.kubernetes.io/custom-http-errors: "404,500,503"
+    
+spec:
+  # Referensi IngressClass yang didefinisikan Nginx Ingress Operator
+  ingressClassName: nginx
+  
+  # Penyesuaian konfigurasi TLS (Uncomment jika menggunakan Sertifikat)
+  tls:
+  - hosts:
+    - payu.apps.fajjjar.my.id
+    secretName: wildcard-apps-tls-secret
+      
+  rules:
+  - host: payu.apps.fajjjar.my.id
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-app
+            port:
+              # Arahkan ke ClusterIP pod `web-app`
+              number: 8080

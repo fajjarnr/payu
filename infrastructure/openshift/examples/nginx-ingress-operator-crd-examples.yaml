@@ -1,0 +1,81 @@
+# =========================================================================
+# Contoh Custom Resource (CR) NginxIngress untuk NGINX Ingress Operator
+# Reference: https://docs.nginx.com/nginx-ingress-controller/installation/nginx-ingress-operator/
+# =========================================================================
+
+# -------------------------------------------------------------------------
+# 1. VERSI OPEN SOURCE (OSS) - Yang saat ini kita gunakan
+# -------------------------------------------------------------------------
+apiVersion: charts.nginx.org/v1alpha1
+kind: NginxIngress
+metadata:
+  name: nginx-ingress-oss
+  namespace: nginx-ingress
+spec:
+  controller:
+    kind: deployment
+    replicaCount: 1
+    nginxplus: false  # <--- Matikan fitur Plus
+    image:
+      repository: nginx/nginx-ingress
+      tag: "5.3.4-ubi"
+      pullPolicy: IfNotPresent
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    ingressClass:
+      name: nginx
+      create: true
+    enableCertManager: true
+    enableCustomResources: true
+
+---
+
+# -------------------------------------------------------------------------
+# 2. VERSI PLUS (Komersial) - Membutuhkan Lisensi
+# -------------------------------------------------------------------------
+apiVersion: charts.nginx.org/v1alpha1
+kind: NginxIngress
+metadata:
+  name: nginx-ingress-plus
+  namespace: nginx-ingress
+spec:
+  controller:
+    kind: deployment
+    replicaCount: 2
+    nginxplus: true   # <--- Aktifkan fitur Plus
+    
+    # Image Plus biasanya ditarik dari registry privat NGINX
+    image:
+      repository: private-registry.nginx.com/nginx-ic/nginx-plus-ingress
+      tag: "3.5.0"
+    
+    # Secret yang berisi file lisensi (nginx-repo.crt & nginx-repo.key)
+    # Wajib dibuat sebelum men-deploy CR ini
+    serviceAccount:
+      imagePullSecretName: nginx-plus-license-secret
+    
+    # Konfigurasi dashboard monitoring (Fitur Khusus Plus)
+    nginxStatus:
+      enable: true
+      port: 8080
+      allowCidrs: "0.0.0.0/0" # Sesuaikan untuk akses dashboard
+    
+    # Fitur Keamanan WAF (Fitur Khusus Plus)
+    appprotect:
+      enable: true
+    
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    
+    ingressClass:
+      name: nginx-plus # Nama class berbeda agar tidak bentrok
+      create: true
+    
+    enableCertManager: true
+    enableCustomResources: true
+    reportIngressStatus:
+      enable: true
