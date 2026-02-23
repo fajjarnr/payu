@@ -15,6 +15,7 @@ import { CheckCircle2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Suspense, useEffect } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Page wrapper — provides Suspense boundary required by useSearchParams().
@@ -78,15 +79,25 @@ function LoginForm() {
     },
     onSuccess: (response) => {
       const user = response.data?.user;
-      if (user) setAuth(user, user.id);
-      // Hard redirect ensures the browser sends fresh cookies in a full page request.
-      // router.push() can serve stale RSC cache without the newly-set httpOnly cookies.
-      window.location.href = callbackUrl;
+      
+      if (response.data?.mfa_required) {
+        toast.warning(response.data.message || 'MFA Required: Suspicious login pattern detected.');
+        return;
+      }
+      
+      if (user) {
+        setAuth(user, user.id);
+        toast.success(t('loginSuccess') || 'Login successful!');
+        // Hard redirect ensures the browser sends fresh cookies in a full page request.
+        window.location.href = callbackUrl;
+      } else {
+        toast.error('Login failed: Invalid server response');
+      }
     },
     onError: (error) => {
       console.error('Login failed:', error);
       const msg = error instanceof Error ? error.message : 'Login gagal';
-      alert(msg);
+      toast.error(msg);
     },
   });
 

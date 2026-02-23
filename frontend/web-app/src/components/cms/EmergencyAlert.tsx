@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { X, AlertTriangle, Info, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 import { useEmergencyAlerts } from '@/hooks';
 import type { Content } from '@/services/CMSService';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

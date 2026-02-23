@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PartnerService, Partner } from '@/services/PartnerService';
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 
 export default function MerchantDashboard() {
  const [partner, setPartner] = useState<Partner | null>(null);

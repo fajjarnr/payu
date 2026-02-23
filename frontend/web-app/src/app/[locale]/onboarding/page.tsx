@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerUserSchema, RegisterUserRequest } from '@/types';
 import api from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 import { 
   Camera, 
   ChevronRight, 
@@ -19,13 +19,14 @@ import {
   Fingerprint
 } from 'lucide-react';
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Stepper } from '@/components/ui/stepper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 export default function OnboardingPage() {
   const t = useTranslations('auth.onboarding');
@@ -44,7 +45,7 @@ export default function OnboardingPage() {
     },
     onError: (error) => {
       console.error('Registration failed:', error);
-      alert('Pendaftaran gagal. Silakan coba lagi.');
+      toast.error('Pendaftaran gagal. Silakan coba lagi.');
     }
   });
 

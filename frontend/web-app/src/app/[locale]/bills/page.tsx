@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useUIStore } from '@/stores';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function BillsPage() {
  const { addToast } = useUIStore();
@@ -58,7 +59,7 @@ export default function BillsPage() {
 
  const handlePay = () => {
   if (!selectedBiller || !customerId || !amount) {
-   alert('Silakan isi semua bidang yang diperlukan');
+   toast.warning('Silakan isi semua bidang yang diperlukan');
    return;
   }
 

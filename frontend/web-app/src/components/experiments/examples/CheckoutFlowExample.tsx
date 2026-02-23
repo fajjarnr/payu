@@ -13,6 +13,7 @@ import React, { useState } from 'react';
 import { useExperiment } from '@/hooks/useExperiment';
 import { ExperimentVariant } from '@/components/experiments';
 import { FeatureFlag } from '@/components/experiments';
+import { toast } from 'sonner';
 
 declare global {
   interface Window {
@@ -184,7 +185,7 @@ export function PurchaseCompleteWithTracking() {
       });
     }
 
-    alert('Purchase completed!');
+    toast.success('Purchase completed!');
   };
 
   return (

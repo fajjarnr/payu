@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 import { usePopups } from '@/hooks';
 import { Button } from '@/components/ui/button';
 import {

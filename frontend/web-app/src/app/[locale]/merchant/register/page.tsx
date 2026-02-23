@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { Building2, Mail, Phone, User, CreditCard, ArrowRight, ShieldCheck, CheckCircle2, FileText } from 'lucide-react';
 import { PartnerService } from '@/services/PartnerService';
 import { z } from 'zod';
 import clsx from 'clsx';
+import { toast } from 'sonner';
 
 const merchantSchema = z.object({
  name: z.string().min(3, 'Nama merchant minimal 3 karakter'),
@@ -40,11 +41,11 @@ export default function MerchantRegisterPage() {
  const registerMutation = useMutation({
   mutationFn: (data: MerchantFormData) => PartnerService.register(data),
   onSuccess: () => {
-   alert('Registrasi merchant berhasil! Silakan tunggu verifikasi.');
+   toast.success('Registrasi merchant berhasil! Silakan tunggu verifikasi.');
    router.push('/merchant');
   },
   onError: () => {
-   alert('Registrasi gagal. Silakan coba lagi.');
+   toast.error('Registrasi gagal. Silakan coba lagi.');
   }
  });
 

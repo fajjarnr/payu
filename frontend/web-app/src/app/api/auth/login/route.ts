@@ -80,7 +80,11 @@ export async function POST(request: Request) {
 
     // Build response and set cookies directly on the NextResponse object
     // (cookies() from next/headers does NOT attach Set-Cookie to NextResponse.json())
-    const response = NextResponse.json({ success: true, data: { user } });
+    const responseData = {
+      ...(data.data || data),
+      user: user || data.data?.user
+    };
+    const response = NextResponse.json({ success: true, data: responseData });
     response.headers.set("X-Correlation-Id", correlationId);
 
     if (accessToken) {
