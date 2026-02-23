@@ -16,4 +16,8 @@ public interface RewardRepository extends JpaRepository<Reward, UUID> {
     List<Reward> findByAccountIdAndStatus(String accountId, Reward.Status status);
 
     Optional<Reward> findByTransactionId(String transactionId);
+
+    long countByAccountId(String accountId);
+
+    long countByPromotionCode(String promotionCode);
 }

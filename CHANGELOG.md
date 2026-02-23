@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Rate Limiting Best Practices (RATE-001)**:
+  - **Enhanced Gateway Rate Limiting** (`backend/gateway-service/src/main/java/id/payu/gateway/adapter/filter/RateLimitFilter.java`):
+    - Differentiated rate limits per endpoint category (auth: 30/min, OTP: 5/min, default: 100/min)
+    - IP-based tracking with proxy support (X-Forwarded-For, X-Real-IP headers)
+    - Sliding window algorithm with Redis for distributed rate limiting
+    - Configurable rate limit windows: 5 min for auth/OTP, 1 min for others
+    - Fail-open strategy (allow if Redis unavailable)
+    - Proper rate limit headers (X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Window)
+  - **Updated Configuration** (`backend/gateway-service/src/main/resources/application.yaml`):
+    - Auth endpoints: 30 req/min, burst 50 (was 5/min - too restrictive)
+    - OTP endpoints: 5 req/min, burst 8 (security critical)
+    - Public content: 120 req/min, burst 200
+  - **Best Practices Documented**: Lessons learned in `docs/guides/LESSONS.md`
+
+- **Keycloak User Seeder (KEYCLOAK-001)**:
+  - **Automated Test User Creation** (`scripts/keycloak-seeder.sh`):
+    - Creates test users: customer1, customer2, admin
+    - Configures payu-backend client with proper credentials
+    - Idempotent (updates existing users)
+  - **Test Credentials**:
+    - customer1 / password123
+    - customer2 / password123
+    - admin / admin123
+  - **Fixed Login Issues**: payu-backend client created, user credentials properly set
+
+- **OpenShift Deployment Hardening**:
+  - **Image Registry Configuration**:
+    - Enabled defaultRoute for OpenShift internal registry
+    - All 22 services built and pushed with tag 1.3.0
+    - Podman-based build workflow documented
+  - **Kustomize Deployment**:
+    - Proper order: operators → infra → apps
+    - Secrets management: db-credentials, jwt-secret, redis-credentials
+    - Image tag synchronization between Kustomize and registry
+  - **4 Service Build Fixes**:
+    - billing-service: Created missing domain.port.out interfaces
+    - investment-service: Fixed MockBean annotation import
+    - promotion-service: Fixed private field access in tests
+    - statement-service: Removed duplicate test method
+  - **Redis Credentials Fix**: Updated DataGrid authentication (developer/payu-cache-dev)
+
 - **Zero-Downtime Deployment Framework (DEPLOY-001)**:
   - **Comprehensive Deployment Guide** (`docs/operations/ZERO-DOWNTIME-DEPLOYMENT.md`):
     - Three deployment strategies: Blue-Green, Canary, Rolling

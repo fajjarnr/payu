@@ -2,7 +2,15 @@
 
 > **Platform Maturity**: 🟢 **100%** | **Production Readiness**: 🟢 **100/100**
 > **Strategic Objective**: Stand-alone digital banking infrastructure on Red Hat OpenShift 4.20+.
-> **Last Synchronized**: February 20, 2026 (commit 0f1e7af)
+> **Last Synchronized**: February 23, 2026 (commit dc46723c)
+>
+> **Recent Updates (Feb 23, 2026)**:
+> - ✅ **22/22 Services Running**: All services deployed and healthy on OpenShift
+> - ✅ **4 Failed Services Fixed**: billing-service, investment-service, promotion-service, statement-service
+> - ✅ **Rate Limiting Enhanced**: Best practices implemented (auth: 30/min, burst: 50)
+> - ✅ **Keycloak User Seeder**: scripts/keycloak-seeder.sh for test users (customer1, customer2, admin)
+> - ✅ **Image Registry**: defaultRoute enabled, all images tagged 1.3.0 pushed
+> - ✅ **Login Fixed**: Invalid credentials resolved, payu-backend client configured
 >
 > **Recent Updates (Feb 20, 2026)**:
 > - ✅ **OpenShift Deployed**: All 22 services + web-app running on OCP 4.20+ (payu-dev namespace)
@@ -64,6 +72,9 @@
 
 | ID | Description | Priority | Status |
 | :--- | :--- | :--- | :--- |
+| **RATE-001** | Rate Limiting Best Practices - Enhanced gateway rate limiting with differentiated limits | P1 | ✅ **Complete** |
+| **KEYCLOAK-001** | Keycloak User Seeder - Automated test user creation script | P1 | ✅ **Complete** |
+| **BUILD-001** | Fix 4 Service Build Errors - billing, investment, promotion, statement | P0 | ✅ **Complete** |
 | **P2-FE-003** | Mobile App Feature Parity | P2 | 🟡 Deferred |
 | **OCP-007** | Service Mesh mTLS enforcement | P3 | 🟡 Planned |
 | **OCP-010** | API versioning headers | P3 | 🟡 Planned |
@@ -114,7 +125,7 @@
 | **Vault + VSO** | ✅ Running | 5 secrets synced to K8s |
 | **TLS (cert-manager)** | ✅ Ready | Let's Encrypt DNS01/Route53 |
 | **NetworkPolicies** | ✅ Simplified | 2 Kafka operator policies only |
-| **Total Pods** | ✅ **36/36** | 22 services + 7 infra (simulators excluded) |
+| **Total Pods** | ✅ **34/34** | 22 services + 7 infra (simulators excluded) |
 
 > **Cluster**: OCP 4.20+, 6 nodes, domain `apps.payu.ocp.fajjjar.my.id`
 
@@ -124,6 +135,7 @@
 
 | Phase | Milestone | Date |
 | :--- | :--- | :--- |
+| **P29** | Full Platform Live: 34/34 pods, 22 services, login working, rate limiting | Feb 2026 |
 | **P28** | OpenShift Production Deployment: 35/35 pods, infra Kustomize, TLS | Feb 2026 |
 | **P27** | Security Hardening: PAN/NIK masking, PII encryption, password removal | Feb 2026 |
 | **P27** | Frontend Page Test Coverage: 21 files, 102 tests | Feb 2026 |
@@ -196,4 +208,4 @@
 
 ---
 
-_Last Updated: February 18, 2026 | PayU Engineering Team_
+_Last Updated: February 23, 2026 | PayU Engineering Team_

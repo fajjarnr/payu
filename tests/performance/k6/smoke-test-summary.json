@@ -1,0 +1,225 @@
+{
+    "metrics": {
+        "data_sent": {
+            "count": 45186,
+            "rate": 1447.9013723522685
+        },
+        "http_req_waiting": {
+            "p(90)": 11.5053438,
+            "p(95)": 12.749588999999986,
+            "avg": 12.082212628571428,
+            "min": 3.270855,
+            "med": 6.483556,
+            "max": 357.026344
+        },
+        "data_received": {
+            "count": 275784,
+            "rate": 8836.985616624574
+        },
+        "checks": {
+            "passes": 377,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_blocked": {
+            "avg": 0.1432743885714284,
+            "min": 0.002119,
+            "med": 0.003051,
+            "max": 11.379357,
+            "p(90)": 0.0054624,
+            "p(95)": 0.006495899999999999
+        },
+        "http_req_duration": {
+            "avg": 12.144240462857143,
+            "min": 3.341314,
+            "med": 6.606874,
+            "max": 357.233598,
+            "p(90)": 11.5639838,
+            "p(95)": 12.823519099999984,
+            "thresholds": {
+                "avg<300": false,
+                "p(95)<500": false,
+                "p(99)<1000": false
+            }
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0.060304880000000005,
+            "min": 0,
+            "med": 0,
+            "max": 4.401149,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 1
+        },
+        "http_req_sending": {
+            "max": 0.077484,
+            "p(90)": 0.022423999999999996,
+            "p(95)": 0.026405699999999983,
+            "avg": 0.015147268571428571,
+            "min": 0.006452,
+            "med": 0.013308
+        },
+        "http_req_receiving": {
+            "min": 0.020391,
+            "med": 0.044242,
+            "max": 0.12977,
+            "p(90)": 0.0673782,
+            "p(95)": 0.0717866,
+            "avg": 0.04688056571428569
+        },
+        "iteration_duration": {
+            "avg": 1063.2188348965517,
+            "min": 1040.058937,
+            "med": 1045.370726,
+            "max": 1443.935463,
+            "p(90)": 1062.562331,
+            "p(95)": 1118.9881587999998
+        },
+        "http_reqs": {
+            "rate": 5.6075496871076655,
+            "count": 175,
+            "thresholds": {
+                "rate>100": true
+            }
+        },
+        "http_req_failed": {
+            "fails": 29,
+            "passes": 146,
+            "thresholds": {
+                "rate<0.01": true
+            },
+            "value": 0.8342857142857143
+        },
+        "http_req_connecting": {
+            "avg": 0.04266533714285714,
+            "min": 0,
+            "med": 0,
+            "max": 3.146581,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus_max": {
+            "value": 1,
+            "min": 1,
+            "max": 1
+        },
+        "iterations": {
+            "count": 29,
+            "rate": 0.9292510910064132
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(90)": 5.6442068,
+            "p(95)": 7.856471399999993,
+            "avg": 6.389076931034483,
+            "min": 4.369225,
+            "med": 4.785337,
+            "max": 44.279573
+        }
+    },
+    "setup_data": {
+        "startTime": "2026-02-23T11:48:27.644Z"
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "gateway health status is 200 or 404": {
+                    "name": "gateway health status is 200 or 404",
+                    "path": "::gateway health status is 200 or 404",
+                    "id": "71d1ea5a96977ad8a997646a6a055ce2",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "gateway response time < 500ms": {
+                    "passes": 29,
+                    "fails": 0,
+                    "name": "gateway response time < 500ms",
+                    "path": "::gateway response time < 500ms",
+                    "id": "48693e03b639171db544fc79447d3ba3"
+                },
+                "keycloak oidc status is 200": {
+                    "name": "keycloak oidc status is 200",
+                    "path": "::keycloak oidc status is 200",
+                    "id": "bb76cd82d4dba825360d8448b1906020",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "keycloak response time < 1000ms": {
+                    "name": "keycloak response time < 1000ms",
+                    "path": "::keycloak response time < 1000ms",
+                    "id": "fd37ba6b0c771a040232c03d5827a65a",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "keycloak returns valid json": {
+                    "name": "keycloak returns valid json",
+                    "path": "::keycloak returns valid json",
+                    "id": "73ebfe4fc876aaf54e8482c0f11f37f4",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "token endpoint responds": {
+                    "name": "token endpoint responds",
+                    "path": "::token endpoint responds",
+                    "id": "f2b9de9a02858d0b4c1f3c3b3f7c7a89",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "token endpoint time < 1000ms": {
+                    "name": "token endpoint time < 1000ms",
+                    "path": "::token endpoint time < 1000ms",
+                    "id": "26939aa39f0af78f1baaa0f0441f9a19",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "account-service responds": {
+                    "path": "::account-service responds",
+                    "id": "efbf029f4868ffc3415c429e9968d459",
+                    "passes": 29,
+                    "fails": 0,
+                    "name": "account-service responds"
+                },
+                "account-service time < 1000ms": {
+                    "name": "account-service time < 1000ms",
+                    "path": "::account-service time < 1000ms",
+                    "id": "cfbf87ce72eda49564a751eb186996cd",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "wallet-service responds": {
+                    "name": "wallet-service responds",
+                    "path": "::wallet-service responds",
+                    "id": "053ea4ac458b3f8777645686be5e2cfb",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "wallet-service time < 1000ms": {
+                    "passes": 29,
+                    "fails": 0,
+                    "name": "wallet-service time < 1000ms",
+                    "path": "::wallet-service time < 1000ms",
+                    "id": "5d94943fd724270fe1957fe4b206a18d"
+                },
+                "transaction-service responds": {
+                    "name": "transaction-service responds",
+                    "path": "::transaction-service responds",
+                    "id": "35dd3c48e933f739926da5b884ac3f37",
+                    "passes": 29,
+                    "fails": 0
+                },
+                "transaction-service time < 1000ms": {
+                    "passes": 29,
+                    "fails": 0,
+                    "name": "transaction-service time < 1000ms",
+                    "path": "::transaction-service time < 1000ms",
+                    "id": "e12c4793793ec7d39eaa87f5bb48f355"
+                }
+            }
+    }
+}

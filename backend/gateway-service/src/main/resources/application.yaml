@@ -151,19 +151,30 @@ gateway:
     exposed-headers: X-Request-Id,X-Correlation-Id
     allow-credentials: true
     max-age: 3600
-  # Rate Limiting
+  # Rate Limiting - Best Practices Implementation
+  # Differentiated limits per endpoint type with burst handling
   rate-limit:
     enabled: true
     default:
-      requests-per-minute: 60
-      burst: 100
+      requests-per-minute: 100
+      burst: 150
     endpoints:
+      # Auth: Higher limits for login attempts (users may retry)
+      # 30/min = 1 attempt every 2 seconds, burst 50 for initial load
       auth:
-        requests-per-minute: 5
-        burst: 10
+        requests-per-minute: 30
+        burst: 50
+      # OTP: Strict limits (security critical)
       otp:
-        requests-per-minute: 3
-        burst: 5
+        requests-per-minute: 5
+        burst: 8
+      # Public content: High limits for landing pages
+      contents:
+        requests-per-minute: 120
+        burst: 200
+      promotions:
+        requests-per-minute: 100
+        burst: 150
       transfer:
         requests-per-minute: 10
         burst: 20
@@ -287,34 +298,45 @@ gateway:
       - "status-codes"
       - "user-agents"
       - "endpoints"
-  # Enhanced Rate Limiting with bucket4j
+  # Enhanced Rate Limiting (Token Bucket) - Production Best Practices
+  # Token bucket allows burst traffic while maintaining sustainable rate
   rate-limit-v2:
     enabled: true
-    algorithm: "token-bucket" # token-bucket, leaky-bucket, fixed-window
+    algorithm: "token-bucket"
     default:
-      capacity: 100
-      refill-tokens: 60
-      refill-duration: "60s"
-    per-user:
-      capacity: 1000
+      capacity: 150
       refill-tokens: 100
       refill-duration: "60s"
+    # Per-user limits (after authentication)
+    per-user:
+      capacity: 2000
+      refill-tokens: 500
+      refill-duration: "60s"
+    # Per-IP limits (for unauthenticated/public endpoints)
     per-ip:
-      capacity: 200
-      refill-tokens: 20
+      capacity: 500
+      refill-tokens: 100
       refill-duration: "60s"
     endpoints:
+      # Auth endpoints: Allow burst for login retries, but not too high (security)
       auth:
-        capacity: 10
+        capacity: 50
+        refill-tokens: 30
+        refill-duration: "60s"
+      # OTP: Very strict (prevent brute force)
+      otp:
+        capacity: 8
         refill-tokens: 5
         refill-duration: "60s"
-      otp:
-        capacity: 5
-        refill-tokens: 3
-        refill-duration: "60s"
+      # Financial operations: Moderate limits
       transfer:
-        capacity: 20
-        refill-tokens: 10
+        capacity: 30
+        refill-tokens: 15
+        refill-duration: "60s"
+      # Read-only endpoints: Higher limits
+      balance:
+        capacity: 100
+        refill-tokens: 60
         refill-duration: "60s"
   # API Key Management
   api-keys:

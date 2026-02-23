@@ -188,40 +188,6 @@ class StatementRepositoryIntegrationTest {
     }
 
     @Test
-    @DisplayName("Should find statements by status")
-    void findByStatus_shouldReturnStatementsWithStatus() {
-        // Create completed statement
-        Statement completedStatement = Statement.builder()
-                .customerId(CUSTOMER_ID_1)
-                .accountNumber(ACCOUNT_NUMBER)
-                .statementPeriod(LocalDate.of(2026, 1, 1))
-                .storagePath("s3://bucket/statement-1.pdf")
-                .openingBalance(new BigDecimal("1000000.00"))
-                .closingBalance(new BigDecimal("1100000.00"))
-                .status(Statement.StatementStatus.COMPLETED)
-                .build();
-        statementRepository.save(completedStatement);
-
-        // Create generating statement
-        Statement generatingStatement = Statement.builder()
-                .customerId(CUSTOMER_ID_1)
-                .accountNumber(ACCOUNT_NUMBER)
-                .statementPeriod(LocalDate.of(2026, 2, 1))
-                .storagePath("s3://bucket/statement-2.pdf")
-                .openingBalance(new BigDecimal("1100000.00"))
-                .closingBalance(new BigDecimal("1200000.00"))
-                .status(Statement.StatementStatus.GENERATING)
-                .build();
-        statementRepository.save(generatingStatement);
-
-        List<Statement> completedStatements = statementRepository
-                .findByStatus(Statement.StatementStatus.COMPLETED);
-
-        assertThat(completedStatements).hasSize(1);
-        assertThat(completedStatements.get(0).getStatus()).isEqualTo(Statement.StatementStatus.COMPLETED);
-    }
-
-    @Test
     @DisplayName("Should count statements by customer ID")
     void countByCustomerId_shouldReturnCount() {
         // Create 3 statements

@@ -67,14 +67,14 @@ class PromotionServiceIntegrationTest {
         Promotion promotion = promotionService.createPromotion(request);
 
         Assertions.assertNotNull(promotion.getId());
-        Assertions.assertEquals("TEST-CASHBACK-001", promotion.code);
-        Assertions.assertEquals("Test Cashback Promotion", promotion.name);
-        Assertions.assertEquals(Promotion.PromotionType.CASHBACK, promotion.promotionType);
-        Assertions.assertEquals(Promotion.RewardType.PERCENTAGE, promotion.rewardType);
-        Assertions.assertEquals(new BigDecimal("10"), promotion.rewardValue);
-        Assertions.assertEquals(1000, promotion.maxRedemptions);
-        Assertions.assertEquals(new BigDecimal("50000"), promotion.minTransactionAmount);
-        Assertions.assertEquals(Promotion.Status.DRAFT, promotion.status);
+        Assertions.assertEquals("TEST-CASHBACK-001", promotion.getCode());
+        Assertions.assertEquals("Test Cashback Promotion", promotion.getName());
+        Assertions.assertEquals(Promotion.PromotionType.CASHBACK, promotion.getPromotionType());
+        Assertions.assertEquals(Promotion.RewardType.PERCENTAGE, promotion.getRewardType());
+        Assertions.assertEquals(new BigDecimal("10"), promotion.getRewardValue());
+        Assertions.assertEquals(1000, promotion.getMaxRedemptions());
+        Assertions.assertEquals(new BigDecimal("50000"), promotion.getMinTransactionAmount());
+        Assertions.assertEquals(Promotion.Status.DRAFT, promotion.getStatus());
         Assertions.assertEquals(0, promotion.getRedemptionCount());
         Assertions.assertNotNull(promotion.getCreatedAt());
         Assertions.assertNotNull(promotion.getUpdatedAt());

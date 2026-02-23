@@ -22,8 +22,8 @@ export default defineConfig({
     timeout: 10000, // Increase expect timeout to 10 seconds
   },
   use: {
-    // Use port 3001 for tests (containerized web-app)
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001',
+    // Use port 3000 for tests (local dev server)
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -62,11 +62,11 @@ export default defineConfig({
     },
     */
   ],
-  // Disable webServer - we use the containerized app
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120000,
-  // },
+  // Enable webServer for E2E tests
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+  },
 });

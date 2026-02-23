@@ -2,6 +2,62 @@
 
 ## 🚀 Deployment & Release Engineering
 
+### 15. OpenShift Image Registry and Kustomize Deployment (Feb 23, 2026)
+
+*   **The Problem**: Deploying to OpenShift requires proper image registry configuration and Kustomize orchestration. Common issues include:
+    *   Container images not accessible due to missing `defaultRoute` in image registry
+    *   Pods stuck in `ImagePullBackOff` because images aren't pushed to the internal registry
+    *   Inconsistent image tags between Kustomize overlays and actual built images
+    *   Missing secrets (db-credentials, jwt-secret, redis-credentials) causing `CreateContainerConfigError`
+
+*   **The Solution**: Follow the proper deployment sequence with registry configuration:
+
+    ```bash
+    # 1. Enable defaultRoute for OpenShift image registry
+    oc patch configs.imageregistry.operator.openshift.io cluster --type=merge \
+        -p '{"spec":{"defaultRoute":true}}'
+
+    # 2. Get registry route
+    REGISTRY=$(oc get route default-route -n openshift-image-registry -o jsonpath='{.spec.host}')
+
+    # 3. Login to registry
+    podman login -u kubeadmin -p $(oc whoami -t) $REGISTRY --tls-verify=false
+
+    # 4. Tag and push images
+    podman tag localhost/payu-<service>:1.3.0 $REGISTRY/payu-dev/<service>:1.3.0
+    podman push $REGISTRY/payu-dev/<service>:1.3.0 --tls-verify=false
+
+    # 5. Apply Kustomize in correct order
+    oc apply -k infrastructure/openshift/operators/          # Operators
+    oc apply -k infrastructure/openshift/infra/overlays/dev/ # Infrastructure
+    oc apply -k infrastructure/openshift/overlays/dev/       # Applications
+    ```
+
+*   **Required Secrets for Application Startup**:
+    ```bash
+    # Database credentials
+    oc create secret generic db-credentials \
+        --from-literal=username=payu \
+        --from-literal=password=<postgres-password>
+
+    # JWT secrets
+    oc create secret generic jwt-secret \
+        --from-literal=JWT_SECRET=<256-bit-secret> \
+        --from-literal=REFRESH_TOKEN_SECRET=<256-bit-secret>
+
+    # Redis credentials (DataGrid/Infinispan)
+    oc create secret generic redis-credentials \
+        --from-literal=url="redis://developer:payu-cache-dev@payu-datagrid.payu-dev.svc:11222" \
+        --from-literal=REDIS_PASSWORD=payu-cache-dev \
+        --from-literal=REDIS_USERNAME=developer
+    ```
+
+*   **Key Lessons**:
+    *   Always update image tags in `kustomization.yaml` before deployment
+    *   Use `oc set image` to patch deployments if images change after initial deployment
+    *   Check pod events with `oc describe pod` for detailed error messages
+    *   Verify ImageStreams are created: `oc get is -n payu-dev`
+
 ### 14. Zero-Downtime Deployment Strategies (Feb 20, 2026)
 
 *   **The Problem**: Traditional deployments cause service interruptions (503 errors, connection drops) when pods restart. For a financial platform, even brief downtime is unacceptable. Rolling updates have gray periods where old and new versions coexist, potentially causing data inconsistencies.
@@ -84,6 +140,171 @@
     init_logging(service_name="kyc-service", json_format=True)
     ```
 *   **Result**: All 21 services now produce consistent JSON logs with correlation tracking, enabling effective distributed tracing and centralized log analysis.
+
+## 🛡️ Rate Limiting & API Protection
+
+### 17. Gateway Rate Limiting Best Practices (Feb 23, 2026)
+
+*   **The Problem**: Default rate limiting configurations are often too restrictive (5 req/min for auth) or too permissive, causing:
+    *   Legitimate users blocked during login retries (too strict)
+    *   Brute force attacks possible (too permissive)
+    *   No differentiation between endpoint sensitivity levels
+    *   Poor IP-based tracking behind proxies
+
+*   **The Solution**: Implement differentiated rate limiting with best practices:
+
+    ```yaml
+    # application.yaml - Rate Limit Configuration
+    gateway:
+      rate-limit:
+        enabled: true
+        default:
+          requests-per-minute: 100
+          burst: 150
+        endpoints:
+          # Auth: Higher limits for login retries (users may mistype)
+          auth:
+            requests-per-minute: 30    # 1 attempt every 2 seconds
+            burst: 50                   # Allow initial burst
+          # OTP: Strict limits (security critical)
+          otp:
+            requests-per-minute: 5
+            burst: 8
+          # Financial: Moderate limits
+          transfer:
+            requests-per-minute: 10
+            burst: 20
+          # Read-only: Higher limits
+          balance:
+            requests-per-minute: 30
+            burst: 50
+    ```
+
+*   **Key Implementation Details**:
+    *   **Differentiated Windows**: Auth/OTP = 5 min, Default = 1 min
+    *   **IP Extraction**: Support X-Forwarded-For and X-Real-IP headers
+    *   **Sliding Window**: Use Redis INCR with TTL for atomic operations
+    *   **Fail Open**: Allow requests if Redis is unavailable
+    *   **Proper Headers**: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Window
+
+*   **Rate Limit Categories**:
+    | Category | Requests/Min | Burst | Window | Use Case |
+    |----------|--------------|-------|--------|----------|
+    | auth | 30 | 50 | 5 min | Login attempts |
+    | otp | 5 | 8 | 5 min | OTP generation |
+    | transfer | 10 | 20 | 1 min | Financial transactions |
+    | balance | 30 | 50 | 1 min | Balance checks |
+    | default | 100 | 150 | 1 min | General API |
+
+*   **Code Implementation** (`RateLimitFilter.java`):
+    ```java
+    // Get real client IP considering proxies
+    private String getClientIp(ContainerRequestContext ctx) {
+        String forwarded = ctx.getHeaderString("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        String realIp = ctx.getHeaderString("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp;
+        }
+        return "unknown";
+    }
+    ```
+
+*   **Result**: Balanced protection - prevents abuse while allowing legitimate user workflows.
+
+## 🔐 Identity & Access Management
+
+### 16. Keycloak User Seeding and Client Configuration (Feb 23, 2026)
+
+*   **The Problem**: After deploying PayU to OpenShift, login fails with "Invalid credentials" even when users exist in the database. This is because:
+    *   Keycloak admin password may differ from the one in secrets
+    *   The required `payu-backend` client is not created by default
+    *   Test users don't exist in Keycloak realm
+    *   Web-app expects users to be available for immediate login
+
+*   **The Solution**: Create a Keycloak user seeder script and configure the required client:
+
+    ```bash
+    #!/bin/bash
+    # scripts/keycloak-seeder.sh
+
+    KEYCLOAK_URL="https://keycloak-payu-dev.apps.payu.ocp.fajjjar.my.id"
+    ADMIN_USER="admin"
+    ADMIN_PASS=$(oc get secret keycloak-credentials -n payu-dev -o jsonpath='{.data.KEYCLOAK_ADMIN_PASSWORD}' | base64 -d)
+    REALM="payu"
+
+    # Get admin token
+    ADMIN_TOKEN=$(curl -s -X POST "${KEYCLOAK_URL}/auth/realms/master/protocol/openid-connect/token" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "username=${ADMIN_USER}" \
+      -d "password=${ADMIN_PASS}" \
+      -d "grant_type=password" \
+      -d "client_id=admin-cli" \
+      | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+    # Create payu-backend client
+    curl -s -X POST "${KEYCLOAK_URL}/auth/admin/realms/${REALM}/clients" \
+      -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "clientId": "payu-backend",
+        "name": "PayU Backend",
+        "enabled": true,
+        "clientAuthenticatorType": "client-secret",
+        "secret": "payu-backend-secret",
+        "redirectUris": ["*"],
+        "webOrigins": ["*"],
+        "directAccessGrantsEnabled": true,
+        "serviceAccountsEnabled": true,
+        "publicClient": false
+      }'
+
+    # Create test user
+    curl -s -X POST "${KEYCLOAK_URL}/auth/admin/realms/${REALM}/users" \
+      -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "username": "customer1",
+        "email": "customer1@payu.id",
+        "firstName": "Customer",
+        "lastName": "One",
+        "enabled": true,
+        "emailVerified": true
+      }'
+    ```
+
+*   **Test Credentials After Seeding**:
+    | Username | Email | Password |
+    |----------|-------|----------|
+    | customer1 | customer1@payu.id | password123 |
+    | customer2 | customer2@payu.id | password123 |
+    | admin | admin@payu.id | admin123 |
+
+*   **Verification Commands**:
+    ```bash
+    # Test direct Keycloak login
+    curl -s -X POST "https://keycloak-payu-dev.apps.payu.ocp.fajjjar.my.id/auth/realms/payu/protocol/openid-connect/token" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "username=customer1" \
+      -d "password=password123" \
+      -d "grant_type=password" \
+      -d "client_id=payu-backend" \
+      -d "client_secret=payu-backend-secret"
+
+    # Test via Gateway
+    curl -s -X POST https://gateway-payu-dev.apps.payu.ocp.fajjjar.my.id/api/v1/auth/login \
+      -H "Content-Type: application/json" \
+      -H "X-Client-Id: web-app" \
+      -d '{"username":"customer1","password":"password123"}'
+    ```
+
+*   **Key Lessons**:
+    *   Always verify the correct admin password from `keycloak-credentials` secret
+    *   The `payu-backend` client must be created before users can authenticate via API
+    *   Use `directAccessGrantsEnabled: true` for password-based authentication
+    *   Rate limiting may activate after multiple failed login attempts
 
 ## 🧪 Load Testing & Performance Engineering
 
