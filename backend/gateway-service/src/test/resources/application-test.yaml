@@ -1,0 +1,41 @@
+# Test configuration for gateway-service
+quarkus:
+  application:
+    name: gateway-service-test
+    version: 1.0.0
+  http:
+    port: 8081
+    auth:
+      proactive: false
+  oidc:
+    enabled: false
+    auth-server-url: http://localhost:8080/realms/payu
+    token:
+      issuer: http://localhost:8080/realms/payu
+      audience: gateway-service
+  redis:
+    hosts: redis://localhost:6379
+  log:
+    level: WARN
+    category:
+      "id.payu.gateway":
+        level: DEBUG
+
+gateway:
+  authorization:
+    enabled: true
+    jwt-secret: test-jwt-secret-for-testing-only
+  request-signing:
+    enabled: false
+    partner-keys:
+      partner-1: dGVzdC1zZWNyZXQta2V5
+  services:
+    account-service:
+      url: http://localhost:8001
+      timeout: 30s
+    auth-service:
+      url: http://localhost:8002
+      timeout: 10s
+    transaction-service:
+      url: http://localhost:8003
+      timeout: 30s
