@@ -127,16 +127,18 @@ export class LendingService {
     return response.data;
   }
 
+  // BUG-BE-079 Fix: Financial data (amount, merchantName) moved from URL query params
+  // to POST JSON body. Query params are logged in access logs and browser history.
   async recordPurchase(userId: string, merchantName: string, amount: number, description?: string): Promise<PayLaterTransaction> {
-    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/purchase`, null, {
-      params: { merchantName, amount, description }
+    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/purchase`, {
+      merchantName, amount, description
     });
     return response.data;
   }
 
   async recordPayment(userId: string, amount: number): Promise<PayLaterTransaction> {
-    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/payment`, null, {
-      params: { amount }
+    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/payment`, {
+      amount
     });
     return response.data;
   }

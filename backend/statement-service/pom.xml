@@ -89,6 +89,13 @@
             <version>${apache.pdfbox.version}</version>
         </dependency>
 
+        <!-- BUG-BE-050: AWS S3 SDK for persistent PDF storage (replaces /tmp) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.25.16</version>
+        </dependency>
+
         <!-- Database -->
         <dependency>
             <groupId>org.postgresql</groupId>

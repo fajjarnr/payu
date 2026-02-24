@@ -50,6 +50,7 @@ public class StatementService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final WalletServiceClient walletServiceClient;
     private final TransactionServiceClient transactionServiceClient;
+    private final id.payu.statement.adapter.storage.S3StorageAdapter s3StorageAdapter;
 
     @Value("${statement.storage.path:/tmp/statements}")
     private String storagePath;
@@ -64,10 +65,14 @@ public class StatementService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
 
     /**
-     * Generate statement for a user for a specific month
+     * Generate statement for a user for a specific month.
+     *
+     * BUG-BE-049 Fix: Removed @Transactional from @Async method.
+     * @Transactional has no effect on @Async methods because the transaction
+     * context is not propagated to the async thread. Each repository.save()
+     * call runs in its own implicit transaction via Spring's default behavior.
      */
     @Async
-    @Transactional
     public void generateStatement(StatementGenerationRequest request) {
         LocalDate statementPeriod = YearMonth.of(request.getYear(), request.getMonth()).atDay(1);
 
@@ -520,7 +525,20 @@ public class StatementService {
             .replaceAll("\\B(?=(\\d{3})+(?!\\d))", ".");
     }
 
+    /**
+     * Store PDF - uses S3 in production, local filesystem for development.
+     * BUG-BE-050 Fix: PDFs in /tmp are ephemeral in Kubernetes (lost on pod restart).
+     * S3/MinIO storage ensures persistence across pod lifecycle.
+     */
     private String storePdf(UUID statementId, byte[] pdfBytes) throws IOException {
+        // Use S3 when available (production)
+        if (s3StorageAdapter.isEnabled()) {
+            log.info("Storing PDF to S3: statementId={}", statementId);
+            return s3StorageAdapter.uploadPdf(statementId, pdfBytes);
+        }
+
+        // Fallback to local storage (development only)
+        log.warn("S3 not configured — using local /tmp storage (NOT suitable for production)");
         Path storageDir = Paths.get(storagePath);
         if (!Files.exists(storageDir)) {
             Files.createDirectories(storageDir);

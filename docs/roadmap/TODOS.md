@@ -43,6 +43,28 @@
 | **GAP-007** | `wallet-service` | Escrow/payment holding belum ada | TokoBapak tidak bisa implement checkout |
 | **GAP-008** | *(belum ada)* | Recurring/subscription billing belum ada | Nobar tidak bisa auto-debit |
 
+> ### 📋 Triage Notes — Remaining P0 Items (Feb 24, 2026)
+>
+> **GAP Items (Semua ⏭️ SKIP):** TokoBapak dan Nobar belum di-develop. GAP-001 s/d GAP-008 adalah fitur integrasi yang baru dibutuhkan saat partner app mulai development. PayU sebagai standalone banking platform sudah bisa jalan tanpa fitur ini.
+>
+> **Sisa P0 Bugs — Verdict:**
+>
+> | ID | Service | Verdict | Alasan |
+> | :--- | :--- | :--- | :--- |
+> | ~~BUG-BE-049~~ | ~~statement-service~~ | ✅ **Fixed** | Removed `@Transactional` from `@Async` method. |
+> | ~~BUG-BE-050~~ | ~~statement-service~~ | ✅ **Fixed** | Added S3StorageAdapter for persistent PDF storage (AWS S3/MinIO). Falls back to local for dev. |
+> | **BUG-BE-061** | `promotion-service` | ⏭️ **Skip** | Gamification/badge feature opsional, tidak mempengaruhi core banking flow. `getTransactionAmount()` return ZERO hanya berdampak pada badge berbasis amount. |
+> | **BUG-BE-064** | `shared/cache-starter` | ⏭️ **Skip** | Stale-while-revalidate tetap return data (meski stale). Tidak ada data loss, hanya delay refresh. Bisa dioptimasi nanti. |
+> | **BUG-BE-076** | `api-portal-service` | ⏭️ **Skip** | Sandbox store in-memory hanya untuk developer testing. Partner belum ada, jadi belum relevan. |
+> | ~~BUG-BE-078~~ | ~~fx-service~~ | ✅ **Fixed** | Changed `/fx-api/v1` to `/api/v1/fx`. |
+> | ~~BUG-BE-079~~ | ~~lending-service~~ | ✅ **Fixed** | Moved financial data from URL params to POST JSON body. |
+> | **BUG-BE-080** | `lending-service` | ⏭️ **Skip** | Pre-approval endpoints belum diprioritaskan. Feature belum aktif di frontend. |
+> | **BUG-BE-091** | `shared/api-commons` | ⏭️ **Skip** | Fixed-window burst hanya masalah di high traffic. Low-traffic fase awal masih aman. Bisa optimize ke sliding window nanti. |
+> | **BUG-BE-092** | `shared/api-commons` | ⏭️ **Skip** | `Thread.sleep()` di webhook retry hanya masalah jika webhook dipakai intensif. Partner belum aktif. |
+> | ~~XBUG-001~~ | ~~Statement FE↔BE~~ | ✅ **Fixed** | Changed `StatementStatus` from 'READY' to 'COMPLETED'. |
+> | ~~XBUG-005~~ | ~~Statement FE↔BE~~ | ✅ **Fixed** | Added `customerId` to `StatementGenerationRequest`. |
+
+
 ---
 
 ## 🐛 Bug Backlog — Batch 1: Core Services (Feb 24, 2026)
@@ -195,8 +217,8 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-049** | `statement-service` | `StatementService.java` L69-70 | **`@Async` + `@Transactional` anti-pattern** — `@Transactional` tidak efektif di thread async. State bisa stuck di `GENERATING`. | Pisahkan inner `@Transactional` untuk DB ops dari `@Async` outer. |
-| **BUG-BE-050** | `statement-service` | `StatementService.java` L54 | **PDF disimpan ke `/tmp/statements`** — ephemeral di Kubernetes, hilang saat pod restart. | Ganti ke persistent volume atau upload ke object storage (S3/MinIO). |
+| ✅ ~~BUG-BE-049~~ | ~~statement-service~~ | ~~StatementService.java L69-70~~ | ~~FIXED: Removed `@Transactional` from `@Async` method. Each repository.save() runs in its own implicit transaction.~~ | ~~Pisahkan inner `@Transactional` untuk DB ops dari `@Async` outer.~~ |
+| ✅ ~~BUG-BE-050~~ | ~~statement-service~~ | ~~StatementService.java L54~~ | ~~FIXED: Added S3StorageAdapter with AWS S3/MinIO support. storePdf() uses S3 in production, falls back to local /tmp for dev.~~ | ~~Ganti ke persistent volume atau upload ke object storage (S3/MinIO).~~ |
 
 ---
 
@@ -278,8 +300,8 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-076** | `api-portal-service` | `SandboxService.java` L28-29 | **Sandbox store in-memory** — `paymentStore` + `refundStore` hilang saat pod restart. Tim dev TokoBapak/Nobar kehilangan test data. | Gunakan Redis atau database. |
 | ✅ ~~BUG-BE-077~~ | ~~api-portal-service~~ | ~~SandboxService.java L34~~ | ~~FIXED: Reference numbers (PAY, REF) replaced with UUID-based generation.~~ | ~~Ganti ke `UUID.randomUUID()`.~~ |
-| **BUG-BE-078** | `fx-service` | `FxService.ts` L138 | **`/fx-api/v1` prefix hardcode** — berbeda dari semua service lain, tidak ada BFF routing untuk ini. Semua FX calls 404. | Unify ke `/api/fx/v1`, update BFF routing. |
-| **BUG-BE-079** | `lending-service` | `LendingService.ts` L130-134 | **Data finansial di URL query params** — `amount`, `merchantName` dikirim sebagai `params: {}` → ter-log di server access logs, browser history. | Ubah ke POST JSON body. |
+| ✅ ~~BUG-BE-078~~ | ~~fx-service~~ | ~~FxService.ts L138~~ | ~~FIXED: Changed baseUrl from `/fx-api/v1` to `/api/v1/fx` to match standard BFF routing pattern.~~ | ~~Unify ke `/api/fx/v1`, update BFF routing.~~ |
+| ✅ ~~BUG-BE-079~~ | ~~lending-service~~ | ~~LendingService.ts L130-134~~ | ~~FIXED: Moved `amount`, `merchantName` from URL query params to POST JSON body to prevent access log exposure.~~ | ~~Ubah ke POST JSON body.~~ |
 | **BUG-BE-080** | `lending-service` | `LendingService.ts` L161-173 | **Pre-approval endpoints ada di frontend, tidak ada di backend** — 404. | Expose di `LendingController.java` atau hapus dari `LendingService.ts`. |
 | **BUG-BE-090** | `shared/api-commons` | `RateLimitAspect.java` L45-50 | **Race condition rate limit** — `increment` + `expire` dua operasi Redis terpisah. Jika `expire` gagal: counter tanpa TTL → user permanently blocked. | Gunakan Redis Lua script untuk atomic increment+expire. |
 | **BUG-BE-091** | `shared/api-commons` | `RateLimitAspect.java` L69 | **Fixed-window rate limit mudah di-burst** — 59 req/menit di detik 59 + 59 req di detik 0 next = 118 req dalam 2 detik. | Gunakan sliding window atau Token Bucket. |
@@ -375,11 +397,11 @@
 
 | ID | Frontend | Backend | Mismatch |
 | :--- | :--- | :--- | :--- |
-| **XBUG-001** | `StatementStatus = 'READY'` | Backend return `COMPLETED` | Frontend polling status `READY` → loop selamanya |
+| ✅ ~~XBUG-001~~ | ~~`StatementStatus = 'READY'`~~ | ~~Backend return `COMPLETED`~~ | ~~FIXED: Changed frontend StatementStatus from 'READY' to 'COMPLETED'. Polling, display labels, and badge colors updated.~~ |
 | **XBUG-002** | `PaymentStatus` tidak punya `PROCESSING`/`REFUNDED` | Backend punya | Status baru dari backend ditampilkan sebagai blank |
 | **XBUG-003** | `Experiment` punya `variants: Variant[]` array | Backend hanya punya `variantAConfig`/`variantBConfig` | Struktur sama sekali berbeda → deserialisasi gagal |
 | **XBUG-004** | Frontend punya 15+ method scheduled-transfers dan split-bills | Backend tidak punya endpoint ini | Semua call 404 |
-| **XBUG-005** | `POST /statements/generate` tidak kirim `customerId` | Backend butuh `customerId` untuk security check | User bisa generate statement orang lain |
+| ✅ ~~XBUG-005~~ | ~~`POST /statements/generate` tidak kirim `customerId`~~ | ~~Backend butuh `customerId` untuk security check~~ | ~~FIXED: Added `customerId` to `StatementGenerationRequest` interface.~~ |
 | **XBUG-011** | `RewardType = 'LOYALTY_POINTS' \| 'CASHBACK' \| 'VOUCHER'` | Backend: `PERCENTAGE \| FIXED_AMOUNT \| REWARD_POINTS` | Tipe yang frontend kirim tidak dikenal backend |
 | **XBUG-012** | `LoyaltyBalanceResponse` punya `pointsExpiring` + `expiryDate` | Backend DTO tidak punya field ini | UI selalu tampilkan `undefined` |
 | **XBUG-013** | `Reward.status = 'PENDING' \| 'APPROVED' \| 'REDEEMED'` | Backend: `AWARDED \| CLAIMED \| EXPIRED` | Status dari backend muncul sebagai blank di frontend |

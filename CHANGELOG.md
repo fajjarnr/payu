@@ -89,6 +89,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Verified Already Fixed**: BUG-BE-002 (auth uses Redis CacheService), BUG-BE-060 (pg_advisory_xact_lock), BUG-BE-062 (cashback saga), BUG-BE-090 (Lua script), BUG-FE-021 (idempotency headers), BUG-FE-027 (retry=0).
   - **Test Results**: investment-service 14/15 pass (1 pre-existing Mockito stub issue), promotion-service CashbackServiceTest 11/11, CashbackSagaTest 6/6 pass.
 
+- **P0 Critical Fixes — Statement, FX, Lending, Cross-Service (BUG-BE-049, 050, 078, 079, XBUG-001, 005) (2026-02-24)**:
+  - **BUG-BE-049** (`statement-service`): Removed `@Transactional` from `@Async generateStatement()`. The annotation has no effect on async threads — each `repository.save()` now runs in its own implicit transaction, preventing statements from being stuck in GENERATING.
+  - **BUG-BE-050** (`statement-service`): Created `S3StorageAdapter` for persistent PDF storage via AWS S3/MinIO. Replaces ephemeral `/tmp` storage that is lost on pod restart. Falls back to local filesystem when S3 is not configured (dev mode).
+  - **BUG-BE-078** (`fx-service` frontend): Changed FX API base URL from `/fx-api/v1` to `/api/v1/fx` to match standard BFF routing. The old prefix didn't match any route, causing all FX calls to 404.
+  - **BUG-BE-079** (`lending-service` frontend): Moved financial data (`amount`, `merchantName`) from URL query params to POST JSON body in `recordPurchase`/`recordPayment`. Query params get logged in server access logs and browser history.
+  - **XBUG-001** (cross-service): Changed frontend `StatementStatus` from `'READY'` to `'COMPLETED'` to match backend enum. Frontend was stuck in infinite polling loop.
+  - **XBUG-005** (cross-service): Added `customerId` to `StatementGenerationRequest` interface. Without it, backend cannot enforce ownership validation — users could generate statements for other accounts.
+
 ### Changed
 
 - **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:

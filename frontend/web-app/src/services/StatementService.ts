@@ -5,7 +5,9 @@ import api, { isAxiosError } from '@/lib/api';
  * Based on backend StatementResponse DTO
  */
 
-export type StatementStatus = 'GENERATING' | 'READY' | 'FAILED';
+// XBUG-001 Fix: Changed 'READY' to 'COMPLETED' to match backend StatementStatus enum.
+// Backend returns COMPLETED, not READY — frontend was stuck in infinite polling loop.
+export type StatementStatus = 'GENERATING' | 'COMPLETED' | 'FAILED';
 
 export interface Statement {
   id: string;
@@ -29,6 +31,9 @@ export interface Statement {
 }
 
 export interface StatementGenerationRequest {
+  // XBUG-005 Fix: Added customerId for backend ownership validation.
+  // Without this, users could generate statements for other accounts.
+  customerId: string;
   accountNumber: string;
   year: number;
   month: number;
@@ -198,7 +203,7 @@ export class StatementService {
 
       const updatedStatement = await this.getStatement(statement.id);
 
-      if (updatedStatement.status === 'READY') {
+      if (updatedStatement.status === 'COMPLETED') {
         // Download when ready
         await this.downloadStatementWithFilename(statement.id);
         return;
@@ -232,7 +237,7 @@ export class StatementService {
   formatStatementStatus(status: StatementStatus): string {
     const statuses: Record<StatementStatus, string> = {
       GENERATING: 'Sedang Dibuat',
-      READY: 'Siap Diunduh',
+      COMPLETED: 'Siap Diunduh',
       FAILED: 'Gagal'
     };
     return statuses[status] || status;
@@ -244,7 +249,7 @@ export class StatementService {
   getStatusColor(status: StatementStatus): string {
     const colors: Record<StatementStatus, string> = {
       GENERATING: 'bg-warning/10 text-warning border-warning/20',
-      READY: 'bg-primary/10 text-primary border-primary/20',
+      COMPLETED: 'bg-primary/10 text-primary border-primary/20',
       FAILED: 'bg-destructive/10 text-destructive border-destructive/20'
     };
     return colors[status] || 'bg-muted/10 text-muted-foreground border-border';

@@ -135,7 +135,9 @@ export const SUPPORTED_CURRENCIES: Record<string, CurrencyInfo> = {
 
 export class FxService {
   private static instance: FxService;
-  private baseUrl = '/fx-api/v1';
+  // BUG-BE-078 Fix: Changed from '/fx-api/v1' to '/api/v1/fx' to match
+  // standard service routing pattern. The old prefix didn't match any BFF route.
+  private baseUrl = '/api/v1/fx';
 
   private constructor() {}
 
