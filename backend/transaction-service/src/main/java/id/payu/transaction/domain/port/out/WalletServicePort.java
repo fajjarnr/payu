@@ -9,4 +9,5 @@ public interface WalletServicePort {
     ReserveBalanceResponse reserveBalance(UUID accountId, String transactionId, java.math.BigDecimal amount);
     void commitBalance(UUID accountId, String transactionId, java.math.BigDecimal amount);
     void releaseBalance(UUID accountId, String transactionId, java.math.BigDecimal amount);
+    void creditBalance(String accountId, String transactionId, java.math.BigDecimal amount);
 }

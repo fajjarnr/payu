@@ -68,9 +68,9 @@
 | :--- | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-005~~ | ~~auth-service~~ | ~~KeycloakService.java L89~~ | ~~FIXED: Removed token plaintext logging. Username masked via `maskUsername()` helper (first 2 + last 2 chars).~~ | ~~Hapus log ini, atau log hanya status.~~ |
 | ✅ ~~BUG-BE-006~~ | ~~gateway-service~~ | ~~AuthorizationFilter.java L37~~ | ~~FIXED: Narrowed `/api/v1/accounts` to `/api/v1/accounts/register` only in PUBLIC_ENDPOINTS.~~ | ~~Hapus prefix, ganti exact /register.~~ |
-| **BUG-BE-007** | `transaction-service` | `InitiateTransferCommandHandler.java` L79-81 | **Non-BIFAST transfer tidak diproses** — `INTERNAL_TRANSFER`, `SKN`, `RTGS` create DB record di status `VALIDATING` tapi tidak pernah diproses. | Tambahkan processing branch per transfer type. |
+| ✅ ~~BUG-BE-007~~ | ~~transaction-service~~ | ~~InitiateTransferCommandHandler.java L79-81~~ | ~~FIXED: Added processing branches for INTERNAL (immediate commit) and SKN/RTGS (queue for clearing) transfers.~~ | ~~Tambahkan processing branch per transfer type.~~ |
 | **BUG-BE-008** | `wallet-service` | `WalletService.java` L162-163 | **Type mismatch**: `accountId` String di-cast ke UUID → `IllegalArgumentException` runtime. | Standardisasi: pilih satu, `accountId` selalu UUID atau selalu String. |
-| **BUG-BE-009** | `lending-service` | `LoanManagementService.java` L103-130 | **Repayment schedule calculation error** — installment terakhir pakai `monthlyInstallment` bukan `outstandingPrincipal + interest`. | Pada last installment: `installmentAmount = outstandingPrincipal + interestAmount`. |
+| ✅ ~~BUG-BE-009~~ | ~~lending-service~~ | ~~LoanManagementService.java L103-130~~ | ~~FIXED: Last installment amount now uses actual remaining principal + interest instead of the standard monthly rate.~~ | ~~Pada last installment: `installmentAmount = outstandingPrincipal + interestAmount`.~~ |
 | **BUG-BE-010** | `auth-service` | `KeycloakService.java` L199-215 | **`Mono.block()` di Spring MVC thread** — Blocking WebFlux di Tomcat thread pool → thread starvation under load. | Ganti ke synchronous `RestTemplate` atau migrasi ke WebFlux. |
 | **BUG-BE-011** | `transaction-service` | `ScheduledTransferScheduler.java` L22 | **`@Scheduled` tanpa distributed lock** — Multi-pod: semua pod proses transfer yang sama bersamaan. | Tambahkan distributed lock via Redis (`ShedLock` atau custom). |
 
@@ -114,7 +114,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-018** | `investment-service` | `WalletServiceAdapter.java` L29-31 | **Endpoint wallet tidak ada** — `POST /wallets/{userId}/deduct` dan `/credit` tidak terdefinisi di `WalletController`. Semua beli/jual investasi 404. | Sesuaikan dengan flow reserve-commit yang ada di `wallet-service`. |
 | ✅ ~~BUG-BE-019~~ | ~~shared/security-starter~~ | ~~EncryptionService.java L263~~ | ~~FIXED: PBKDF2 salt now configurable via `payu.security.encryption.salt` property. Default fallback preserved for backward compat.~~ | ~~Jadikan configurable via env var.~~ |
-| **BUG-BE-020** | `account-service` | `UserApplicationService.java` L35-36 | **`@Transactional` + `@Async` anti-pattern** — `@Transactional` tidak efektif di thread async. Bug sama di `InvestmentApplicationService.java`. | Pisahkan: sync untuk DB ops, async hanya untuk event publishing. |
+| ✅ ~~BUG-BE-020~~ | ~~account-service~~ | ~~UserApplicationService.java L35-36~~ | ~~FIXED: Removed `@Async` from registerUser to ensure DB ops run synchronously within the transaction.~~ | ~~Pisahkan: sync untuk DB ops, async hanya untuk event publishing.~~ |
 
 ---
 
@@ -124,9 +124,9 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-021** | `investment-service` | `InvestmentApplicationService.java` L115 | **No saga compensation** — `deductBalance` sukses tapi `saveDeposit` gagal → uang hilang tanpa deposit tersimpan. | Implementasikan saga: jika save gagal, `creditBalance()` rollback. |
 | ✅ ~~BUG-BE-022~~ | ~~investment-service~~ | ~~Multiple files~~ | ~~FIXED: Reference numbers (DEP, MF, SELL) replaced with UUID-based generation.~~ | ~~Ganti ke UUID-based.~~ |
-| **BUG-BE-023** | `fx-service` | `FxRateService.java` L59-61 | `updateRates()` abort semua jika satu currency error. | Catch exception per-currency, lanjutkan ke berikutnya. |
+| ✅ ~~BUG-BE-023~~ | ~~fx-service~~ | ~~FxRateService.java L59-61~~ | ~~FIXED: Caught exception per-currency to continue updating other rates even if one fails.~~ | ~~Catch exception per-currency, lanjutkan ke berikutnya.~~ |
 | **BUG-BE-024** | `fx-service` | `FxConversionService.java` L27-35 | **FX conversion tidak pernah gerakkan wallet** — status PENDING dibuat tapi tidak ada debit/kredit. | Integrasikan dengan wallet reservation flow. |
-| **BUG-BE-025** | `notification-service` | `NotificationService.java` L75 | `retryCount++` tanpa retry logic — notifikasi FAILED tidak pernah dicoba ulang. | Implementasi retry scheduler untuk FAILED notifications. |
+| ✅ ~~BUG-BE-025~~ | ~~notification-service~~ | ~~NotificationService.java L75~~ | ~~FIXED: Added retry scheduling logic with exponential backoff and a scheduled job to process pending retries.~~ | ~~Implementasi retry scheduler untuk FAILED notifications.~~ |
 | **BUG-BE-026** | `notification-service` | `SmsSender.java` L16-29 | **SMS sender adalah mock** — OTP tidak pernah terkirim ke user. | Integrasikan Twilio/Vonage atau provider SMS lokal. |
 | **BUG-BE-027** | `account-service` | `UserApplicationService.java` L64 | **User `ACTIVE` meski KYC `REJECTED`** — user bisa login dan transaksi meski gagal KYC. | Jika `kycStatus == REJECTED`, set `status = PENDING_VERIFICATION`. |
 

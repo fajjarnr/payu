@@ -33,7 +33,8 @@ public class UserApplicationService implements RegisterUserUseCase {
 
     @Override
     @Transactional
-    @Async
+    // BUG-BE-020 fix: Removed @Async — @Transactional is ineffective on async threads.
+    // DB operations must run synchronously. Event publishing can be async separately.
     @CircuitBreaker(name = "dukcapilService", fallbackMethod = "registerFallback")
     @Retry(name = "dukcapilService")
     @TimeLimiter(name = "dukcapilService")

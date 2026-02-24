@@ -74,6 +74,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **BUG-BE-034** (`support-service`): Added `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` to all write endpoints (createAgent, updateStatus, createModule, assignTraining).
   - **Test Results**: wallet-service WalletServiceTest 21/21, lending-service all pass.
 
+- **Multi-Service Bug Fixes — Business Logic & Concurrency (BUG-BE-007, 009, 020, 023, 025) (2026-02-24)**:
+  - **BUG-BE-007** (`transaction-service`): Processed non-BIFAST transfers (INTERNAL, SKN, RTGS). Internal transfers complete immediately with balance commit, while inter-bank transfers queue as PENDING. Addressed type mismatch in Transaction entity where `completedAt` expects `Instant`. Added `creditBalance` API integration.
+  - **BUG-BE-009** (`lending-service`): Re-calculated repayment schedule for the last installment. `installmentAmount = outstandingPrincipal + interestAmount` to resolve accumulation rounding errors.
+  - **BUG-BE-020** (`account-service`): Removed `@Async` from `registerUser` that conflicted with `@Transactional`. Database operations and sequence must run synchronously for integrity before resolving future. 
+  - **BUG-BE-023** (`fx-service`): Prevented FX rate update from aborting fully upon encountering a single rate retrieval fault. Uses isolated try-catch to allow other currencies to continue updating.
+  - **BUG-BE-025** (`notification-service`): Replaced simple incrementer with scheduled retry implementation. Failed notifications execute a dynamic schedule with exponential backoff strategy (up to 3 limits) managed by a scheduled job.
+  - **Test Results**: lending-service all pass, notification-service all pass, transaction-service compiles properly without `Instant` conversion error.
+
 ### Changed
 
 - **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:

@@ -75,9 +75,18 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         transaction.setStatus(Transaction.TransactionStatus.VALIDATING);
         transactionPersistencePort.save(transaction);
 
-        // Process based on transfer type
-        if (command.type() == InitiateTransferRequest.TransactionType.BIFAST_TRANSFER) {
-            processBiFastTransfer(transaction, command);
+        // Process based on transfer type (BUG-BE-007: handle all types, not just BIFAST)
+        switch (command.type()) {
+            case BIFAST_TRANSFER -> processBiFastTransfer(transaction, command);
+            case INTERNAL_TRANSFER -> processInternalTransfer(transaction, command);
+            case SKN_TRANSFER, RTGS_TRANSFER -> processInterBankTransfer(transaction, command);
+            default -> {
+                transaction.setStatus(Transaction.TransactionStatus.FAILED);
+                transaction.setFailureReason("Unsupported transfer type: " + command.type());
+                transactionPersistencePort.save(transaction);
+                eventPublisherPort.publishTransactionFailed(transaction, "Unsupported transfer type");
+                throw new IllegalArgumentException("Unsupported transfer type: " + command.type());
+            }
         }
 
         log.info("Transfer initiated successfully: {}", transaction.getId());
@@ -161,6 +170,64 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         }
     }
 
+    /**
+     * Process internal transfer — immediately completes by committing the reserved balance.
+     * BUG-BE-007 fix: Previously, INTERNAL_TRANSFER was left stuck in VALIDATING status.
+     */
+    private void processInternalTransfer(Transaction transaction, InitiateTransferCommand command) {
+        try {
+            // For internal transfers, commit the reservation immediately
+            walletServicePort.commitBalance(
+                    command.senderAccountId(),
+                    transaction.getId().toString(),
+                    command.amount().getAmount()
+            );
+
+            // Credit the recipient
+            walletServicePort.creditBalance(
+                    command.recipientAccountNumber(),
+                    transaction.getId().toString(),
+                    command.amount().getAmount()
+            );
+
+            transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
+            transaction.setCompletedAt(java.time.Instant.now());
+            eventPublisherPort.publishTransactionCompleted(transaction);
+        } catch (Exception e) {
+            log.error("Internal transfer failed, initiating compensation. Transaction: {}, Error: {}",
+                    transaction.getId(), e.getMessage());
+
+            try {
+                walletServicePort.releaseBalance(
+                        command.senderAccountId(),
+                        transaction.getId().toString(),
+                        command.amount().getAmount()
+                );
+                log.info("Balance released successfully for transaction: {}", transaction.getId());
+            } catch (Exception compensationError) {
+                log.error("Failed to release balance during compensation for transaction: {}. Error: {}",
+                        transaction.getId(), compensationError.getMessage());
+            }
+
+            transaction.setStatus(Transaction.TransactionStatus.FAILED);
+            transaction.setFailureReason("Internal transfer failed: " + e.getMessage());
+            eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
+        } finally {
+            transactionPersistencePort.save(transaction);
+        }
+    }
+
+    /**
+     * Process inter-bank transfer (SKN/RTGS) — sets to PENDING for downstream clearing.
+     * BUG-BE-007 fix: Previously, SKN and RTGS were left stuck in VALIDATING status.
+     */
+    private void processInterBankTransfer(Transaction transaction, InitiateTransferCommand command) {
+        // SKN/RTGS transfers are queued for batch/real-time clearing
+        // The actual clearing is handled by the downstream clearing system
+        transaction.setStatus(Transaction.TransactionStatus.PENDING);
+        transactionPersistencePort.save(transaction);
+        log.info("{} transfer queued for clearing: {}", command.type(), transaction.getId());
+    }
     private String generateReferenceNumber() {
         return "TXN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }

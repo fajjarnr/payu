@@ -132,4 +132,34 @@ public class WalletServiceAdapter implements WalletServicePort {
         log.warn("Circuit breaker fallback for releaseBalance: {}", e.getMessage());
         // In production, this should trigger a compensation/retry mechanism
     }
+
+    @Override
+    @CircuitBreaker(name = "walletService", fallbackMethod = "creditBalanceFallback")
+    @Retry(name = "walletService")
+    public void creditBalance(String accountId, String transactionId, BigDecimal amount) {
+        String url = walletServiceUrl + "/api/v1/wallets/" + accountId + "/credit";
+        log.info("Crediting balance: accountId={}, transactionId={}, amount={}", accountId, transactionId, amount);
+
+        Map<String, Object> request = Map.of(
+                "amount", amount,
+                "referenceId", transactionId,
+                "description", "Internal transfer credit"
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+
+        try {
+            restTemplate.postForObject(url, entity, Map.class);
+            log.info("Balance credited successfully: accountId={}", accountId);
+        } catch (Exception e) {
+            log.error("Failed to credit balance: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    private void creditBalanceFallback(String accountId, String transactionId, BigDecimal amount, Exception e) {
+        log.warn("Circuit breaker fallback for creditBalance: {}", e.getMessage());
+    }
 }

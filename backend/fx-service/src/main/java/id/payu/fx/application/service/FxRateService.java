@@ -5,6 +5,8 @@ import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.in.FxRateUseCase;
 import id.payu.fx.domain.port.out.FxRateProviderPort;
 import id.payu.fx.domain.port.out.FxRateRepositoryPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,6 +15,8 @@ import java.util.*;
 
 @Service
 public class FxRateService implements FxRateUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(FxRateService.class);
 
     private final FxRateRepositoryPort fxRateRepository;
     private final FxRateProviderPort fxRateProvider;
@@ -51,15 +55,24 @@ public class FxRateService implements FxRateUseCase {
             return;
         }
         
+        int successCount = 0;
+        int failCount = 0;
         for (String currency : SUPPORTED_CURRENCIES) {
             if (!currency.equals(BASE_CURRENCY)) {
                 try {
                     FxRate baseToTarget = fetchAndCacheRate(BASE_CURRENCY, currency);
                     FxRate targetToBase = fetchAndCacheRate(currency, BASE_CURRENCY);
+                    successCount++;
                 } catch (Exception e) {
-                    throw new FxRateUpdateException("Failed to update rates for " + currency, e);
+                    // BUG-BE-023 fix: Log error and continue instead of aborting all updates
+                    log.warn("Failed to update rates for {}: {}. Continuing with other currencies.",
+                            currency, e.getMessage());
+                    failCount++;
                 }
             }
+        }
+        if (failCount > 0) {
+            log.warn("FX rate update completed with {} successes and {} failures", successCount, failCount);
         }
     }
 

@@ -56,6 +56,9 @@ public class Notification extends PanacheEntityBase {
 
     public LocalDateTime readAt;
 
+    /** BUG-BE-025: Scheduled retry time for failed notifications */
+    public LocalDateTime scheduledAt;
+
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();

@@ -111,13 +111,19 @@ public class LoanManagementService implements LoanManagementUseCase {
             BigDecimal principalAmount = loan.getMonthlyInstallment().subtract(interestAmount);
 
             if (i == loan.getTenureMonths()) {
+                // BUG-BE-009 fix: Last installment uses remaining principal, not calculated monthly
                 principalAmount = outstandingPrincipal;
             }
+
+            // BUG-BE-009 fix: installmentAmount for last month = actual remaining principal + interest
+            BigDecimal installmentAmount = (i == loan.getTenureMonths())
+                    ? outstandingPrincipal.add(interestAmount)
+                    : loan.getMonthlyInstallment();
 
             RepaymentSchedule schedule = new RepaymentSchedule();
             schedule.setLoanId(loan.getId());
             schedule.setInstallmentNumber(i);
-            schedule.setInstallmentAmount(loan.getMonthlyInstallment());
+            schedule.setInstallmentAmount(installmentAmount);
             schedule.setPrincipalAmount(principalAmount);
             schedule.setInterestAmount(interestAmount);
             schedule.setOutstandingPrincipal(outstandingPrincipal);

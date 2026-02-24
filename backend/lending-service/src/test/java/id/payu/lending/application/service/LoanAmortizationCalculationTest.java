@@ -367,10 +367,20 @@ class LoanAmortizationCalculationTest {
         }
 
         @Test
-        @DisplayName("all installment amounts equal monthly installment")
+        @DisplayName("non-last installment amounts equal monthly installment, last = principal + interest (BUG-BE-009)")
         void allInstallmentAmountsMatch() {
-            assertThat(schedules).allSatisfy(s ->
-                    assertThat(s.getInstallmentAmount()).isEqualByComparingTo(MONTHLY_INSTALLMENT));
+            // Non-last installments should equal the standard monthly installment
+            for (int i = 0; i < schedules.size() - 1; i++) {
+                assertThat(schedules.get(i).getInstallmentAmount())
+                        .as("installment %d amount", i + 1)
+                        .isEqualByComparingTo(MONTHLY_INSTALLMENT);
+            }
+            // Last installment = remaining outstanding + interest (may differ from monthly)
+            RepaymentSchedule last = schedules.get(schedules.size() - 1);
+            BigDecimal expectedLast = last.getPrincipalAmount().add(last.getInterestAmount());
+            assertThat(last.getInstallmentAmount())
+                    .as("last installment amount = principal + interest")
+                    .isEqualByComparingTo(expectedLast);
         }
 
         @Test
