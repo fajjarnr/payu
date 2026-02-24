@@ -58,7 +58,7 @@
 | ✅ ~~BUG-BE-001~~ | ~~gateway-service~~ | ~~AuthorizationFilter.java L154-184~~ | ~~FIXED: JWT validation implemented dengan nimbus-jose-jwt — signature verification (RS256), expiration, issuer, audience validation~~ | ~~Implementasi JWT validation benar via Quarkus OIDC atau nimbus-jose-jwt~~ |
 | **BUG-BE-002** | `auth-service` | `KeycloakService.java` L45 + `MFATokenService.java` L17-18 | **In-memory state di scaled environment** — `failedAttempts`, `tokenStore`, `otpStore`, `challengeStore` di `ConcurrentHashMap`. Multi-pod (HPA min 2): state pod A ≠ pod B. | Pindahkan semua state ke Redis via `CacheService`. |
 | ✅ ~~BUG-BE-003~~ | ~~transaction-service~~ | ~~InitiateTransferCommandHandler.java L164-166~~ | ~~FIXED: All reference number generators (TXN, QRI, SPL, SCH, BILL, DEP, MF, SELL, PAY, REF) replaced with UUID-based generation across 5 services (transaction, billing, investment, api-portal)~~ | ~~Ganti ke `UUID.randomUUID()`.~~ |
-| **BUG-BE-004** | `wallet-service` | `WalletService.java` L47-54 | **Cache invalidation tidak complete** — `reserveBalance` tidak invalidate `wallet:id:` cache key. | Tambah `cacheService.invalidate("wallet:id:" + wallet.getId())` di semua mutasi. |
+| ✅ ~~BUG-BE-004~~ | ~~wallet-service~~ | ~~WalletService.java L47-54~~ | ~~FIXED: Added `wallet:id:` cache invalidation to all mutation methods (reserveBalance, commitReservation, releaseReservation, credit).~~ | ~~Tambah cache invalidation di semua mutasi.~~ |
 
 ---
 
@@ -80,9 +80,9 @@
 
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
-| **BUG-BE-012** | `promotion-service` | `ReferralService.java` L184 — `Math.random()` untuk referral code, potential collision. | Gunakan `SecureRandom`. |
-| **BUG-BE-013** | `wallet-service` | `createWallet` query `findByAccountId` dua kali jika wallet sudah ada. | Gunakan result dari cek pertama. |
-| **BUG-BE-014** | `lending-service` | `processRepayment` tidak `@Transactional`. | Tambahkan `@Transactional`. |
+| ✅ ~~BUG-BE-012~~ | ~~promotion-service~~ | ~~FIXED: Replaced `Math.random()` with `SecureRandom` for referral code generation.~~ | ~~Gunakan `SecureRandom`.~~ |
+| ✅ ~~BUG-BE-013~~ | ~~wallet-service~~ | ~~FIXED: Reused first `findByAccountId` result instead of querying DB twice.~~ | ~~Gunakan result dari cek pertama.~~ |
+| ✅ ~~BUG-BE-014~~ | ~~lending-service~~ | ~~FIXED: Added `@Transactional` to `processRepayment` method.~~ | ~~Tambahkan `@Transactional`.~~ |
 | **BUG-BE-015** | `transaction-service` | Komentar TODO: pagination info tidak dikembalikan ke client. | Implementasi `Page<Transaction>` return. |
 | ✅ ~~BUG-BE-016~~ | ~~auth-service~~ | ~~FIXED: Username masked in all log statements via `maskUsername()` — shows only first 2 + last 2 chars.~~ | ~~Mask or hash username in logs.~~ |
 | ✅ ~~BUG-BE-017~~ | ~~gateway-service~~ | ~~FIXED: Authorization header no longer logged. Downgraded to DEBUG with only `hasAuth` boolean.~~ | ~~Remove or downgrade to DEBUG.~~ |
@@ -155,7 +155,7 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-033~~ | ~~backoffice-service~~ | ~~SecurityConfig.java L46~~ | ~~FIXED: CORS origins restricted to `backoffice.payu.id`, `backoffice.payu.co.id`, `admin.payu.id`. Headers restricted. AllowCredentials enabled.~~ | ~~Ganti dengan specific origins.~~ |
-| **BUG-BE-034** | `support-service` | Seluruh controller | **No role-based authorization** — `.authenticated()` saja, user biasa bisa akses semua endpoint termasuk create agent, delete module. | Tambahkan `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` pada endpoint sensitif. |
+| ✅ ~~BUG-BE-034~~ | ~~support-service~~ | ~~Seluruh controller~~ | ~~FIXED: Added `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` to all write endpoints (createAgent, updateAgentStatus, createModule, updateModuleStatus, assignTraining).~~ | ~~Tambahkan role-based authorization.~~ |
 | ✅ ~~BUG-BE-035~~ | ~~partner-service~~ | ~~SnapBiTokenService.java L31~~ | ~~FIXED: Partner token store moved to Redis with TTL. Token now shared across pods.~~ | ~~Pindahkan `tokenStore` ke Redis dengan TTL.~~ |
 | ✅ ~~BUG-BE-036~~ | ~~partner-service~~ | ~~SnapBiTokenService.java L115~~ | ~~FIXED: Cleanup scheduler added with `@Scheduled(fixedRate = 60000)`.~~ | ~~Tambahkan `@Scheduled(fixedRate = 60000)`.~~ |
 

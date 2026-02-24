@@ -66,6 +66,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **BUG-BE-033** (`backoffice-service`): CORS origins restricted from `*` to `backoffice.payu.id`, `backoffice.payu.co.id`, `admin.payu.id`. Headers restricted. AllowCredentials enabled.
   - **Test Results**: auth-service 65/65, security-starter 30/30 — all pass.
 
+- **Multi-Service Bug Fixes — Cache, Security, Data Integrity (BUG-BE-004, 012, 013, 014, 034) (2026-02-24)**:
+  - **BUG-BE-004** (`wallet-service`): Added `wallet:id:` cache key invalidation to all mutation methods — balance, reserve, commit, release, and credit now all invalidate 4 cache keys.
+  - **BUG-BE-012** (`promotion-service`): Replaced insecure `Math.random()` with `SecureRandom` for referral code generation.
+  - **BUG-BE-013** (`wallet-service`): Eliminated redundant `findByAccountId` DB call in `createWallet` — reuses first query result.
+  - **BUG-BE-014** (`lending-service`): Added missing `@Transactional` to `processRepayment` to prevent partial updates.
+  - **BUG-BE-034** (`support-service`): Added `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` to all write endpoints (createAgent, updateStatus, createModule, assignTraining).
+  - **Test Results**: wallet-service WalletServiceTest 21/21, lending-service all pass.
+
 ### Changed
 
 - **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:

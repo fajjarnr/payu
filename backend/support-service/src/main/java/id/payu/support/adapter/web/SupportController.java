@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -62,6 +63,7 @@ public class SupportController extends BaseController {
     }
 
     @PostMapping("/agents")
+    @PreAuthorize("hasRole('SUPPORT_MANAGER')")
     @Operation(summary = "Create a new support agent", description = "Register a new support agent in the system")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Agent created successfully",
@@ -113,6 +115,7 @@ public class SupportController extends BaseController {
     }
 
     @PatchMapping("/agents/{id}/status")
+    @PreAuthorize("hasRole('SUPPORT_MANAGER')")
     @Operation(summary = "Update agent active status", description = "Activate or deactivate a support agent")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Agent status updated successfully",
@@ -157,6 +160,7 @@ public class SupportController extends BaseController {
     }
 
     @PostMapping("/modules")
+    @PreAuthorize("hasRole('SUPPORT_MANAGER')")
     @Operation(summary = "Create a new training module", description = "Create a new training module in the system")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Training module created successfully",
@@ -191,6 +195,7 @@ public class SupportController extends BaseController {
     }
 
     @PatchMapping("/modules/{id}/status")
+    @PreAuthorize("hasRole('SUPPORT_MANAGER')")
     @Operation(summary = "Update training module status", description = "Update the status of a training module")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Training module status updated successfully",
@@ -271,6 +276,7 @@ public class SupportController extends BaseController {
     }
 
     @PostMapping("/trainings/assign")
+    @PreAuthorize("hasRole('SUPPORT_MANAGER')")
     @Operation(summary = "Assign training to an agent", description = "Assign a training module to an agent or update existing training status")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Training assigned successfully",

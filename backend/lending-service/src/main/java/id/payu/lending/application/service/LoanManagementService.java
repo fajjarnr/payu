@@ -63,6 +63,7 @@ public class LoanManagementService implements LoanManagementUseCase {
     }
 
     @Override
+    @Transactional
     public RepaymentSchedule processRepayment(UUID repaymentScheduleId, BigDecimal amount) {
         log.info("Processing repayment for schedule: {} with amount: {}", repaymentScheduleId, amount);
 

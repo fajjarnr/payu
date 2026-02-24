@@ -78,9 +78,11 @@ public class WalletService implements WalletUseCase {
     public Wallet createWallet(String accountId) {
         log.info("Creating wallet for account: {}", accountId);
 
-        if (walletPersistencePort.findByAccountId(accountId).isPresent()) {
+        // BUG-BE-013 Fix: Reuse result from first query instead of querying twice
+        Optional<Wallet> existing = walletPersistencePort.findByAccountId(accountId);
+        if (existing.isPresent()) {
             log.warn("Wallet already exists for account: {}", accountId);
-            return walletPersistencePort.findByAccountId(accountId).get();
+            return existing.get();
         }
 
         Wallet wallet = Wallet.builder()
@@ -156,6 +158,7 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("balance:account:" + accountId);
         cacheService.invalidate("balance:available:account:" + accountId);
         cacheService.invalidate("wallet:account:" + accountId);
+        cacheService.invalidate("wallet:id:" + wallet.getId());
 
         LedgerEntry debitEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
@@ -201,6 +204,7 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("balance:account:" + accountId.toString());
         cacheService.invalidate("balance:available:account:" + accountId.toString());
         cacheService.invalidate("wallet:account:" + accountId.toString());
+        cacheService.invalidate("wallet:id:" + wallet.getId());
 
         LedgerEntry commitEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
@@ -245,6 +249,7 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("balance:account:" + accountId.toString());
         cacheService.invalidate("balance:available:account:" + accountId.toString());
         cacheService.invalidate("wallet:account:" + accountId.toString());
+        cacheService.invalidate("wallet:id:" + wallet.getId());
 
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
@@ -296,6 +301,7 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("balance:account:" + accountId);
         cacheService.invalidate("balance:available:account:" + accountId);
         cacheService.invalidate("wallet:account:" + accountId);
+        cacheService.invalidate("wallet:id:" + wallet.getId());
 
         // Generate transaction ID
         UUID transactionId = UUID.randomUUID();

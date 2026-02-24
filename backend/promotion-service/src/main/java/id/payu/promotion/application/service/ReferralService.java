@@ -177,11 +177,13 @@ public class ReferralService {
         loyaltyPointsRepository.save(loyaltyPoints);
     }
 
+    private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
+
     private String generateReferralCode() {
         String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
         StringBuilder code = new StringBuilder();
         for (int i = 0; i < 8; i++) {
-            code.append(chars.charAt((int) (Math.random() * chars.length())));
+            code.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
         }
         return code.toString();
     }
