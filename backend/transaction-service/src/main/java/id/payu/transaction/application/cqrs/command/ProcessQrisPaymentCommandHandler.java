@@ -74,6 +74,6 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
     }
 
     private String generateReferenceNumber() {
-        return "QRI" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+        return "QRI-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 }

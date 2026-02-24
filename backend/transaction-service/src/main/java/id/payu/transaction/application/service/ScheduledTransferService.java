@@ -199,7 +199,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
     }
 
     private String generateReferenceNumber() {
-        return "SCH" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+        return "SCH-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 
     private Instant calculateNextExecutionDate(ScheduledTransfer.ScheduleType scheduleType, Instant baseDate,

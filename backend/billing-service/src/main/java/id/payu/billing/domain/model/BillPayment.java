@@ -82,7 +82,7 @@ public class BillPayment {
         }
         updatedAt = LocalDateTime.now();
         if (referenceNumber == null) {
-            referenceNumber = "BILL" + System.currentTimeMillis() + (int) (Math.random() * 1000);
+            referenceNumber = "BILL-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
         }
         if (adminFee == null) {
             adminFee = BigDecimal.ZERO;

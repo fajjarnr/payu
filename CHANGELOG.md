@@ -46,6 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `docs/INDEX.md` with the new documentation structure and removed stale references.
   - Ensured `docs/guides/GEMINI.md` clearly marks the root `GEMINI.md` as the source of truth.
 
+- **Reference Number Collision Fix — UUID Migration (BUG-BE-003, 022, 038, 077, 114, 115, 123) (2026-02-24)**:
+  - **Problem**: Reference numbers generated via `currentTimeMillis() + random(1000)` are collision-prone under concurrent load. Same pattern existed in 12 locations across 5 services.
+  - **Solution**: Replaced all collision-prone generators with UUID-based format: `PREFIX-` + 16-char uppercase hex from `UUID.randomUUID()`.
+  - **Services Fixed**:
+    - `transaction-service`: TXN, QRI, SPL, SCH reference numbers (4 files)
+    - `billing-service`: BILL reference number + BILLER/EWALLET transaction IDs (2 files)
+    - `investment-service`: DEP, MF, SELL reference numbers (1 file, 3 locations)
+    - `api-portal-service`: PAY, REF reference numbers (1 file, 2 locations)
+  - **Format**: `TXN-A1B2C3D4E5F6G7H8`, `BILL-9A0B1C2D3E4F5G6H`, etc.
+  - **Test Results**: All related unit tests pass (ScheduledTransferServiceTest 13/13, SplitBillServiceTest 11/11, TransactionServiceTest 5/5)
+
 ### Changed
 
 - **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:

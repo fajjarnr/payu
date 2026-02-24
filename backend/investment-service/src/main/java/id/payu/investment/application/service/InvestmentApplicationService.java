@@ -145,7 +145,7 @@ public class InvestmentApplicationService implements
                 .fee(BigDecimal.ZERO)
                 .currency("IDR")
                 .status(InvestmentTransaction.TransactionStatus.COMPLETED)
-                .referenceNumber("DEP-" + System.currentTimeMillis())
+                .referenceNumber("DEP-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -210,7 +210,7 @@ public class InvestmentApplicationService implements
                 .fee(fee)
                 .currency("IDR")
                 .status(InvestmentTransaction.TransactionStatus.COMPLETED)
-                .referenceNumber("MF-" + System.currentTimeMillis())
+                .referenceNumber("MF-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -355,7 +355,7 @@ public class InvestmentApplicationService implements
                 .fee(fee)
                 .currency("IDR")
                 .status(InvestmentTransaction.TransactionStatus.COMPLETED)
-                .referenceNumber("SELL-" + System.currentTimeMillis())
+                .referenceNumber("SELL-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
                 .createdAt(now)
                 .updatedAt(now)
                 .build();

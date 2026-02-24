@@ -162,7 +162,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     }
 
     private String generateReferenceNumber() {
-        return "TXN" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+        return "TXN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 
     private BigDecimal calculateFee(Transaction.TransactionType type) {

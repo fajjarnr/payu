@@ -320,7 +320,7 @@ public class SplitBillService implements SplitBillUseCase {
     }
 
     private String generateReferenceNumber() {
-        return "SPL" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+        return "SPL-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
     }
 
     private SplitBillResponse mapToResponse(SplitBill splitBill) {

@@ -57,7 +57,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | ~~BUG-BE-001~~ | ~~gateway-service~~ | ~~AuthorizationFilter.java L154-184~~ | ~~FIXED: JWT validation implemented dengan nimbus-jose-jwt — signature verification (RS256), expiration, issuer, audience validation~~ | ~~Implementasi JWT validation benar via Quarkus OIDC atau nimbus-jose-jwt~~ |
 | **BUG-BE-002** | `auth-service` | `KeycloakService.java` L45 + `MFATokenService.java` L17-18 | **In-memory state di scaled environment** — `failedAttempts`, `tokenStore`, `otpStore`, `challengeStore` di `ConcurrentHashMap`. Multi-pod (HPA min 2): state pod A ≠ pod B. | Pindahkan semua state ke Redis via `CacheService`. |
-| **BUG-BE-003** | `transaction-service` | `InitiateTransferCommandHandler.java` L164-166 | **Reference number generator collision-prone** — `"TXN" + currentTimeMillis() + random(1000)`. Bug sama di 5 titik lain. | Ganti ke `UUID.randomUUID()`. |
+| ~~BUG-BE-003~~ | ~~transaction-service~~ | ~~InitiateTransferCommandHandler.java L164-166~~ | ~~FIXED: All reference number generators (TXN, QRI, SPL, SCH, BILL, DEP, MF, SELL, PAY, REF) replaced with UUID-based generation across 5 services (transaction, billing, investment, api-portal)~~ | ~~Ganti ke `UUID.randomUUID()`.~~ |
 | **BUG-BE-004** | `wallet-service` | `WalletService.java` L47-54 | **Cache invalidation tidak complete** — `reserveBalance` tidak invalidate `wallet:id:` cache key. | Tambah `cacheService.invalidate("wallet:id:" + wallet.getId())` di semua mutasi. |
 
 ---
@@ -123,7 +123,7 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-021** | `investment-service` | `InvestmentApplicationService.java` L115 | **No saga compensation** — `deductBalance` sukses tapi `saveDeposit` gagal → uang hilang tanpa deposit tersimpan. | Implementasikan saga: jika save gagal, `creditBalance()` rollback. |
-| **BUG-BE-022** | `investment-service` | Multiple files | Reference number `"DEP-" + currentTimeMillis()` collision-prone. | Ganti ke UUID-based. |
+| ~~BUG-BE-022~~ | ~~investment-service~~ | ~~Multiple files~~ | ~~FIXED: Reference numbers (DEP, MF, SELL) replaced with UUID-based generation.~~ | ~~Ganti ke UUID-based.~~ |
 | **BUG-BE-023** | `fx-service` | `FxRateService.java` L59-61 | `updateRates()` abort semua jika satu currency error. | Catch exception per-currency, lanjutkan ke berikutnya. |
 | **BUG-BE-024** | `fx-service` | `FxConversionService.java` L27-35 | **FX conversion tidak pernah gerakkan wallet** — status PENDING dibuat tapi tidak ada debit/kredit. | Integrasikan dengan wallet reservation flow. |
 | **BUG-BE-025** | `notification-service` | `NotificationService.java` L75 | `retryCount++` tanpa retry logic — notifikasi FAILED tidak pernah dicoba ulang. | Implementasi retry scheduler untuk FAILED notifications. |
@@ -166,7 +166,7 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-037** | `billing-service` | `PaymentService.java` L69 | **Biller processing adalah mock** — selalu set `COMPLETED` tanpa panggil biller API. Balance terpotong, tagihan tidak dibayar. | Implementasi adapter per-biller (PLN, PDAM, dll.) atau set `PROCESSING` + callback. |
-| **BUG-BE-038** | `billing-service` | `BillPayment.java` L85 | Reference number `"BILL" + currentTimeMillis() + random(1000)` collision-prone. | Ganti ke UUID-based. |
+| ~~BUG-BE-038~~ | ~~billing-service~~ | ~~BillPayment.java L85~~ | ~~FIXED: Reference number + biller transaction IDs replaced with UUID-based generation.~~ | ~~Ganti ke UUID-based.~~ |
 | **BUG-BE-039** | `billing-service` | `PaymentService.java` L61-78 | **Balance reserved tapi tidak di-commit** — `reserveBalance()` dipanggil, `commitReservation()` tidak pernah dipanggil. Balance stuck di "reserved" selamanya. | Setelah biller sukses: `walletPort.commitReservation(reservationId)`. Jika gagal: `releaseReservation()`. |
 | **BUG-BE-040** | `backoffice-service` | `UniversalSearchService.java` L26-55 | **Search load semua hasil ke memory** — fetch ALL records, paginate di Java `subList()`. OOM risk untuk data besar. | Implementasi pagination di repository dengan `Pageable`. |
 | **BUG-BE-041** | `partner-service` | `SnapBiSignatureService.java` L19-22 | **Format SNAP-BI signature salah** — tidak menggunakan `SHA-256 hex(body)` sesuai standar BI. Signature verifikasi di BI akan gagal. | Ikuti spesifikasi SNAP-BI: `method + ":" + sha256hex(body) + ":" + timestamp`. |
@@ -277,7 +277,7 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-076** | `api-portal-service` | `SandboxService.java` L28-29 | **Sandbox store in-memory** — `paymentStore` + `refundStore` hilang saat pod restart. Tim dev TokoBapak/Nobar kehilangan test data. | Gunakan Redis atau database. |
-| **BUG-BE-077** | `api-portal-service` | `SandboxService.java` L34 | Reference number `"PAY" + currentTimeMillis() + random(1000)` — collision guaranteed di load test concurrent. | Ganti ke `UUID.randomUUID()`. |
+| ~~BUG-BE-077~~ | ~~api-portal-service~~ | ~~SandboxService.java L34~~ | ~~FIXED: Reference numbers (PAY, REF) replaced with UUID-based generation.~~ | ~~Ganti ke `UUID.randomUUID()`.~~ |
 | **BUG-BE-078** | `fx-service` | `FxService.ts` L138 | **`/fx-api/v1` prefix hardcode** — berbeda dari semua service lain, tidak ada BFF routing untuk ini. Semua FX calls 404. | Unify ke `/api/fx/v1`, update BFF routing. |
 | **BUG-BE-079** | `lending-service` | `LendingService.ts` L130-134 | **Data finansial di URL query params** — `amount`, `merchantName` dikirim sebagai `params: {}` → ter-log di server access logs, browser history. | Ubah ke POST JSON body. |
 | **BUG-BE-080** | `lending-service` | `LendingService.ts` L161-173 | **Pre-approval endpoints ada di frontend, tidak ada di backend** — 404. | Expose di `LendingController.java` atau hapus dari `LendingService.ts`. |
@@ -523,8 +523,8 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-114** | `transaction-service` | `ProcessQrisPaymentCommandHandler.java` L77 | **Reference number collision** — `"QRI" + currentTimeMillis() + (int)(Math.random() * 1000)`. Pattern sama dengan BUG-BE-003. | Ganti ke UUID-based. |
-| **BUG-BE-115** | `transaction-service` | `SplitBillService.java` L323 | **Reference number collision (SplitBill)** — `"SPL" + currentTimeMillis() + (int)(Math.random() * 1000)`. | Ganti ke UUID-based. |
+| ~~BUG-BE-114~~ | ~~transaction-service~~ | ~~ProcessQrisPaymentCommandHandler.java L77~~ | ~~FIXED: Reference number replaced with UUID-based generation.~~ | ~~Ganti ke UUID-based.~~ |
+| ~~BUG-BE-115~~ | ~~transaction-service~~ | ~~SplitBillService.java L323~~ | ~~FIXED: Reference number replaced with UUID-based generation.~~ | ~~Ganti ke UUID-based.~~ |
 | **BUG-BE-116** | `transaction-service` | `ScheduledTransferService.java` L192-198 | **Scheduled transfer set FAILED permanently setelah 1x gagal** — tidak ada retry mechanism. Jika wallet insufficient saat scheduled run (misal gaji belum masuk saat subuh), transfer permanently FAILED. | Tambahkan retry count dan status `RETRY_PENDING`. Retry beberapa kali sebelum final FAILED. |
 | **BUG-BE-117** | `transaction-service` | `SplitBillService.java` L82, L145 | **`canBeCancelled()` digunakan untuk authorize update DAN add participant** — method name menyesatkan. Logic seharusnya: boleh update kalau DRAFT/ACTIVE, tapi hanya boleh cancel kalau belum ada payment. | Pisahkan: `canBeModified()` untuk update/addParticipant, `canBeCancelled()` hanya untuk cancel. |
 | **BUG-BE-118** | `transaction-service` | `SplitBillService.java` L277-295 | **`settleSplitBill()` ≠ actual settlement** — method set status COMPLETED tapi **tidak memproses sisa pembayaran**. Participant yang belum bayar dianggap lunas tanpa uang berpindah. Ini bukan settlement, ini force-close. | Rename ke `forceCloseSplitBill()` atau implementasi actual settlement via wallet transfer. |
@@ -539,7 +539,7 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-123** | `transaction-service` | `ScheduledTransferService.java` L201-202 | **Reference number collision (ScheduledTransfer)** — `"SCH" + currentTimeMillis() + Math.random()`. | Ganti ke UUID. |
+| ~~BUG-BE-123~~ | ~~transaction-service~~ | ~~ScheduledTransferService.java L201-202~~ | ~~FIXED: Reference number replaced with UUID-based generation.~~ | ~~Ganti ke UUID.~~ |
 | **BUG-BE-124** | `transaction-service` | `SplitBillService.java` L298-300 | **EQUAL split rounding error** — `totalAmount / participants.size()` dengan `HALF_UP`. 100.00 / 3 = 33.34 * 3 = 100.02 (off by 0.02). | Hitung sisa rounding, assign ke participant terakhir: `lastParticipant.amountOwed = total - sum(others)`. |
 | **BUG-BE-125** | `wallet-service` | `CardService.java` L49 | **Expiry date `MM/yy` format** — Disimpan sebagai String, tidak di-parse saat validasi. Card dengan expiry lalu bisa tetap ACTIVE. | Tambahkan `isExpired()` check atau simpan sebagai `YearMonth` lalu validate di freeze/unfreeze flow. |
 | **BUG-CROSS-019** | FE ↔ BE | `TransactionService.ts` L193 vs BE | **ScheduledTransfer `frequency` enum mismatch** — FE: `'ONCE' \| 'DAILY' \| 'WEEKLY' \| 'MONTHLY'`. BE `ScheduleType`: `ONE_TIME`, `RECURRING_DAILY`, `RECURRING_WEEKLY`, `RECURRING_MONTHLY`, `RECURRING_CUSTOM`. FE kirim `ONCE`, BE expect `ONE_TIME`. | Sinkronkan enum atau mapping di BFF proxy. |

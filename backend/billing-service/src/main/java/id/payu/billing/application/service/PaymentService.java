@@ -149,14 +149,14 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
     private void processWithBiller(BillPayment payment) {
         payment.setStatus(BillPayment.PaymentStatus.COMPLETED);
         payment.setCompletedAt(LocalDateTime.now());
-        payment.setBillerTransactionId("BILLER-" + System.currentTimeMillis());
+        payment.setBillerTransactionId("BILLER-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase());
         log.info("Payment completed: id={}", payment.getId());
     }
 
     private void processWithEwalletProvider(BillPayment payment) {
         payment.setStatus(BillPayment.PaymentStatus.COMPLETED);
         payment.setCompletedAt(LocalDateTime.now());
-        payment.setBillerTransactionId("EWALLET-" + System.currentTimeMillis());
+        payment.setBillerTransactionId("EWALLET-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase());
         log.info("E-wallet top-up completed: id={}", payment.getId());
     }
 

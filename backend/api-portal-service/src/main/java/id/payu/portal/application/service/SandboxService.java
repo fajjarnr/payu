@@ -31,13 +31,13 @@ public class SandboxService {
     public Uni<SandboxPaymentResponse> createPayment(SandboxPaymentRequest request) {
         return simulateLatency()
             .onItem().transform(ignored -> {
-                String paymentReferenceNo = "PAY" + System.currentTimeMillis() + random.nextInt(1000);
+                String paymentReferenceNo = "PAY-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
                 String transactionDate = DateTimeFormatter.ISO_INSTANT.format(Instant.now());
                 
                 SandboxPaymentResponse response = new SandboxPaymentResponse(
                     request.partnerReferenceNo(),
                     paymentReferenceNo,
-                    "REF" + System.currentTimeMillis(),
+                    "REF-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase(),
                     transactionDate,
                     "COMPLETED",
                     new SandboxPaymentResponse.Amount(request.amount().value(), request.amount().currency()),
