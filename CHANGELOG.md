@@ -36,6 +36,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `docs/roadmap/GATEWAY_ARCH.md` — Architecture review, gap analysis, integration roadmap (TokoBapak/Nobar)
   - Updated `docs/INDEX.md` untuk mencerminkan struktur baru
 
+- **Documentation Consolidation & Cleanup (2026-02-24)**:
+  - Merged redundant onboarding guides into a single comprehensive `docs/guides/ONBOARDING.md`.
+  - Unified general and container-specific troubleshooting into `docs/TROUBLESHOOTING.md` at the root for easier access.
+  - Consolidated API Standards and Spectral Validation guides into `docs/api/API_STANDARDS.md`.
+  - Integrated infrastructure summary into a unified `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md`.
+  - Relocated `USAGE.md` to `docs/guides/` for structural consistency.
+  - Archived obsolete remediation playbooks and backup files to `docs/archive/`.
+  - Updated `docs/INDEX.md` with the new documentation structure and removed stale references.
+  - Ensured `docs/guides/GEMINI.md` clearly marks the root `GEMINI.md` as the source of truth.
+
 ### Changed
 
 - **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:

@@ -1,412 +1,223 @@
-# Developer Onboarding Guide
+# PayU Developer Onboarding Guide
 
-> **First-day setup and environment configuration for new PayU developers**
+> **Your guide to first-day setup, environment configuration, and development workflow.**
 
-Welcome to the PayU Digital Banking Platform! This guide will help you get up and running quickly.
+Selamat datang di PayU Digital Banking Platform! Panduan ini akan membantumu menyiapkan lingkungan pengembangan serta memahami struktur dan alur kerja platform kami.
 
 ---
 
 ## 📋 Pre-Onboarding Checklist
 
-Before your first day, ensure you have:
+Pastikan hal-hal berikut sudah siap atau dalam proses sebelum memulai:
 
-- [ ] **Company laptop** with admin privileges
-- [ ] **GitHub account** added to PayU organization
-- [ ] **OpenShift cluster access** credentials
-- [ ] **Slack account** joined to `#payu-dev` workspace
-- [ ] **Email access** configured
+- [ ] **Laptop Perusahaan** dengan akses admin.
+- [ ] **Akun GitHub** yang sudah ditambahkan ke organisasi PayU.
+- [ ] **Akses Cluster OpenShift** (untuk stage dev/staging).
+- [ ] **Workspace Slack** (gabung ke channel `#payu-dev`).
+- [ ] **Akses Email Korporat**.
 
 ---
 
-## 🚀 Day 1: Environment Setup
+## 🛠️ 1. Prerequisites (Kebutuhan Sistem)
 
-### 1. Clone Repository
+Pastikan *tooling* berikut terinstall di mesin lokalmu. Gunakan script verifikasi jika ragu.
 
+| Tool | Version | Description |
+|:-----|:--------|:------------|
+| **Java** | 21+ LTS | Runtime inti untuk backend (Spring Boot & Quarkus). |
+| **Maven** | 3.9+ | Build tool untuk ekosistem Java. |
+| **Node.js** | 22+ LTS | Runtime untuk frontend (Next.js & React Native). |
+| **Python** | 3.12+ | Runtime untuk servis AI/ML (FastAPI). |
+| **Podman** | Latest | Container runtime utama (rootless). Docker bisa jadi fallback. |
+| **Git** | Latest | Akses repositori dan version control. |
+
+### Verifikasi Cepat
 ```bash
-# Clone with SSH (recommended)
+# Jalankan script verifikasi dependensi
+./scripts/verify-env.sh --deps
+```
+
+Jika ada yang kurang, kamu bisa menjalankan script setup otomatis (mendukung Ubuntu, Fedora, macOS):
+```bash
+./scripts/setup.sh
+```
+
+---
+
+## 🚀 2. Day 1: Setup Lingkungan (Quick Start)
+
+Langkah awal untuk menjalankan PayU di mesin lokalmu.
+
+### 2.1 Clone Repositori
+```bash
+# Clone dengan SSH (direkomendasikan)
 git clone git@github.com:payu-id/payu.git
 cd payu
 
-# Or with HTTPS
+# Atau HTTPS
 git clone https://github.com/payu-id/payu.git
 cd payu
-
-# Verify upstream remote
-git remote -v
 ```
 
-### 2. Install Prerequisites
-
-#### Java 21 LTS
-
+### 2.2 Konfigurasi Git
 ```bash
-# Verify Java installation
-java -version  # Should show 21.x.x
-
-# If not installed:
-# macOS: brew install openjdk@21
-# Ubuntu: sudo apt install openjdk-21-jdk
-# Windows: Download from adoptium.net
-```
-
-#### Maven 3.9+
-
-```bash
-# Verify Maven
-mvn -version  # Should show 3.9.x or higher
-
-# Set environment variables
-export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-export MAVEN_HOME=/usr/local/opt/maven
-```
-
-#### Node.js 22+
-
-```bash
-# Verify Node.js
-node -v  # Should show v22.x or higher
-npm -v   # Should show 10.x or higher
-
-# If not installed:
-# macOS: brew install node
-# Ubuntu: sudo apt install nodejs npm
-```
-
-#### Python 3.12
-
-```bash
-# Verify Python
-python3 --version  # Should show 3.12.x
-
-# If not installed:
-# macOS: brew install python@3.12
-# Ubuntu: sudo apt install python3.12 python3.12-venv
-```
-
-#### Podman (Preferred) / Docker (Fallback)
-
-```bash
-# Verify Podman
-podman --version
-podman compose version || podman-compose --version
-
-# If using Docker instead
-docker --version
-docker compose version
-
-# Start Docker Desktop if not running
-open -a Docker
-```
-
-### 3. Configure Git
-
-```bash
-# Set your Git credentials
-git config --global user.name "Your Name"
-git config --global user.email "your.email@payu.id"
-
-# Set default branch
+git config --global user.name "Nama Kamu"
+git config --global user.email "email.kamu@payu.id"
 git config --global init.defaultBranch main
-
-# Enable GPG signing for commits (optional)
-git config --global commit.gpgsign true
 ```
 
-### 4. Install IDE Extensions
-
-**For VS Code:**
-
+### 2.3 Menjalankan Seluruh Platform
+Cara termudah untuk memulai adalah menggunakan script `setup-dev.sh`:
 ```bash
-# Install recommended extensions
-code --install-extension ms-vscode.vscode-typescript-next
-code --install-extension golang.go
-code --install-extension ms-python.python
+# Clone, build, dan jalankan seluruh servis infrasruktur + backend
+./scripts/setup-dev.sh
+```
+Script ini akan:
+1. Verifikasi dependensi.
+2. Build shared starters (libraries).
+3. Build semua microservices Java & Python.
+4. Menjalankan infrastruktur (Postgres, Redis, Kafka, Keycloak) via Podman Compose.
+5. Verifikasi kesehatan (*health check*) semua servis.
+
+### 2.4 Setup Manual (Opsional)
+Jika kamu ingin kontrol lebih detail:
+```bash
+# 1. Build shared libraries
+cd backend/shared && mvn clean install -DskipTests
+
+# 2. Start Infrastruktur
+cd ../.. && podman compose up -d postgres redis kafka keycloak
+
+# 3. Jalankan service spesifik
+cd backend/account-service && mvn spring-boot:run
+```
+
+---
+
+## 💻 3. IDE & Editor Configuration
+
+Kami merekomendasikan **VS Code** atau **IntelliJ IDEA**.
+
+### VS Code Extension pack:
+```bash
 code --install-extension redhat.java
 code --install-extension vscjava.vscode-java-pack
+code --install-extension ms-python.python
 code --install-extension dbaeumer.vscode-eslint
 code --install-extension esbenp.prettier-vscode
 ```
 
-**For IntelliJ IDEA:**
-
-- Install Spring Boot Plugin
-- Install Lombok Plugin
-- Enable annotation processing
+### IntelliJ IDEA:
+- Install **Spring Boot** & **Lombok** plugins.
+- Aktifkan **Annotation Processing** di settings.
 
 ---
 
-## 🔧 Development Environment Setup
+## 🏗️ 4. Project Structure (Struktur Repositori)
 
-### 1. Local Infrastructure (Compose)
-
-```bash
-# Start all infrastructure services (preferred)
-podman compose up -d
-
-# Or with Docker
-docker compose up -d
-
-# Verify services are running
-podman compose ps
-
-# Check logs
-podman compose logs -f
-
-# Docker fallback
-docker compose ps
-docker compose logs -f
 ```
-
-Services started:
-- PostgreSQL 16 (port 5432)
-- Redis/Data Grid (port 6379)
-- Kafka (port 9092)
-- Keycloak (port 8080)
-
-### 2. Backend Services
-
-```bash
-# Build all services (skip tests for speed)
-cd backend
-mvn clean package -DskipTests -T 1C
-
-# Or build specific service
-cd account-service
-mvn clean package -DskipTests
-
-# Run a service
-cd account-service
-mvn spring-boot:run
-```
-
-### 3. Frontend Applications
-
-```bash
-# Web App
-cd frontend/web-app
-npm install
-npm run dev
-
-# Developer Docs
-cd frontend/developer-docs
-npm install
-npm run dev
-
-# Mobile App
-cd frontend/mobile
-npm install
-npm run start  # Expo Go app
+payu/
+├── backend/                    # Implementasi Microservices
+│   ├── shared/                 # Libraries/Starter yang digunakan bersama
+│   ├── [service-name]/         # Microservice spesifik (Java/Quarkus)
+│   ├── kyc-service/            # OCR & Liveness (Python/FastAPI)
+│   └── simulators/             # Mock eksternal (BI-FAST, etc.)
+├── frontend/                   # Aplikasi Web dan Mobile
+│   ├── web-app/                # Digital Banking UI (Next.js)
+│   ├── mobile/                 # Mobile Application (React Native)
+│   └── developer-docs/         # Partner Portal
+├── docs/                       # Dokumentasi (C4, PRD, Guides)
+├── infrastructure/             # Manifest OpenShift & K8s
+├── scripts/                    # Script automasi (setup, test, deploy)
+└── .agent/                     # AI Skills & Agent Ecosystem
 ```
 
 ---
 
-## 🔑 Access & Credentials
+## 🏃 5. Running & Accessing Services
 
-### OpenShift Cluster Access
+Setelah menjalankan `./scripts/setup-dev.sh`, berikut adalah endpoint penting:
 
+| Service | URL | Description |
+|:--------|:-----|:------------|
+| **Web App** | http://localhost:3001 | Main Consumer Interface |
+| **API Gateway** | http://localhost:8080 | Backend Entry Point |
+| **API Portal** | http://localhost:8080/api-docs | Interactive Swagger UI |
+| **Keycloak Admin**| http://localhost:8099 | Identity Management (master realm) |
+| **Jaeger UI** | http://localhost:16686 | Distributed Tracing |
+
+### Kredensial Default (Local)
+- **Keycloak Admin**: `admin` / `P@ssw0rd123`
+- **Customer Account**: `customer1` / `P@ssw0rd123`
+
+---
+
+## 🔄 6. Development Workflow (Alur Kerja)
+
+### Backend (Java)
+1. Edit kode di `backend/[service]`.
+2. Build: `mvn clean package -DskipTests`.
+3. Restart container: `podman restart payu-[service]`.
+4. Format kode: `mvn spotless:apply`.
+
+### Frontend (Next.js)
+1. `cd frontend/web-app`.
+2. `npm install`.
+3. `npm run dev`.
+
+### Python (KYC/Analytics)
+1. Gunakan venv (`python3 -m venv .venv`).
+2. `pip install -r requirements.txt`.
+3. Jalankan: `uvicorn app.main:app --reload`.
+
+---
+
+## 🧪 7. Testing (Standa Pengujian)
+
+PayU mengadopsi TDD (*Test Driven Development*).
+
+- **Unit Tests**: `mvn test` (backend) atau `npm test` (frontend).
+- **Integration Tests**: Gunakan profile `integration` atau Testcontainers.
+- **E2E Tests**: Jalankan `npx playwright test` di folder `frontend/web-app`.
+
+---
+
+## 🆘 8. Troubleshooting (Pemecahan Masalah)
+
+### Port Terpakai?
 ```bash
-# Login to OpenShift
-oc login https://api.payu-openshift.id:6443 \
-  --username=<your-username> \
-  --password=<your-password>
-
-# Set current project
-oc project payu-dev
-
-# Verify access
-oc get pods
+lsof -i :8080  # Cari PID yang memakai port
+kill -9 [PID]   # Hentikan proses tersebut
 ```
 
-### Database Access
-
-| Environment | Host | Port | Username | Password |
-|-------------|------|------|----------|----------|
-| **Local** | localhost | 5432 | payu | payu123 |
-| **Dev** | postgres-dev.payu.svc | 5432 | See Vault | See Vault |
-
-### Service Accounts
-
-| Service | Purpose | How to Get |
-|---------|---------|-----------|
-| **GitHub** | Code access | Request in #platform-ops |
-| **OpenShift** | Cluster access | Request in #platform-ops |
-| **Vault** | Secrets access | Request in #security |
-
----
-
-## 📚 Essential Documentation
-
-Read these in order:
-
-1. **[INDEX.md](./INDEX.md)** - Documentation catalog
-2. **[ARCHITECTURE.md](./architecture/ARCHITECTURE.md)** - System architecture overview
-3. **[CONTRIBUTING.md](./guides/CONTRIBUTING.md)** - Git workflow & conventions
-4. **[QA_STRATEGY.md](./qa/QA_STRATEGY.md)** - Testing standards
-
----
-
-## 🏃 Quick Start Tasks
-
-Complete these tasks in your first week:
-
-### Day 1-2: Setup & Hello World
-
-- [ ] Complete environment setup
-- [ ] Run all infrastructure services locally
-- [ ] Build and run `account-service` locally
-- [ ] Run `web-app` locally
-- [ ] Make a small test change and verify it works
-
-### Day 3-4: Understand the Codebase
-
-- [ ] Read ARCHITECTURE.md (focus on microservices)
-- [ ] Explore `backend/account-service` code
-- [ ] Explore `frontend/web-app` code
-- [ ] Run unit tests for a service
-- [ ] Review the C4 diagrams
-
-### Day 5: First Contribution
-
-- [ ] Pick a small task from TODOS.md
-- [ ] Create a feature branch
-- [ ] Make the change
-- [ ] Write/update tests
-- [ ] Submit a PR
-
----
-
-## 🧪 Verification Commands
-
-Verify your setup by running these commands:
-
+### Container Error?
 ```bash
-# 1. Verify Java
-java -version  # Expected: openjdk 21.x.x
-
-# 2. Verify Maven
-mvn -version   # Expected: Apache Maven 3.9.x
-
-# 3. Verify Node.js
-node -v        # Expected: v22.x.x
-npm -v         # Expected: 10.x.x
-
-# 4. Verify Python
-python3 --version  # Expected: Python 3.12.x
-
-# 5. Verify Podman
-podman ps       # Should list running containers
-
-# 6. Verify Infrastructure
-curl -s http://localhost:5432 > /dev/null && echo "PostgreSQL OK"
-curl -s http://localhost:6379 > /dev/null && echo "Redis OK"
-
-# 7. Verify Git
-git remote -v  # Should show payu origin
-
-# 8. Verify OpenShift (if configured)
-oc whoami       # Should show your username
+podman logs -f payu-[service-name]  # Cek log spesifik
+podman ps -a                        # Lihat status seluruh container
 ```
 
----
-
-## 🆘 Troubleshooting
-
-### Issue: "Port already in use"
-
+### Reset Total
 ```bash
-# Find process using port
-lsof -i :5432  # PostgreSQL
-lsof -i :8080  # Backend service
-
-# Kill process
-kill -9 <PID>
+podman-compose down
+podman volume rm payu_postgres_data  # Hapus data DB (HATI-HATI!)
+./scripts/setup-dev.sh --clean
 ```
 
-### Issue: "Maven build fails"
-
-```bash
-# Clean Maven cache
-rm -rf ~/.m2/repository
-
-# Rebuild
-mvn clean install -DskipTests -T 1C
-```
-
-### Issue: "npm install fails"
-
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Delete node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### Issue: "Docker containers won't start"
-
-```bash
-# Check Docker Desktop is running
-docker info
-
-# Restart Docker Desktop
-# Or restart Docker daemon (Linux)
-sudo systemctl restart docker
-```
+Untuk panduan lebih lengkap, lihat **[docs/TROUBLESHOOTING.md](../TROUBLESHOOTING.md)**.
 
 ---
 
-## 📖 Learning Resources
+## 📖 9. Essential Resources
 
-### Internal Resources
-
-- **[Agent Skills Guide](./guides/AGENT_SKILLS_GUIDE.md)** - AI-assisted development
-- **[TDD Quick Reference](./guides/TDD_QUICK_REFERENCE.md)** - Test-driven development
-- **[Database Optimization](./guides/DATABASE_CACHE_OPTIMIZATION.md)** - DB best practices
-
-### External Resources
-
-- [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/)
-- [Quarkus Documentation](https://quarkus.io/guides/)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Native Docs](https://reactnative.dev/docs/getting-started)
-- [OpenShift Documentation](https://docs.openshift.com/)
+1. **[INDEX.md](../INDEX.md)** - Peta navigasi dokumentasi.
+2. **[ARCHITECTURE.md](../architecture/ARCHITECTURE.md)** - Memahami desain sistem.
+3. **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Git workflow & branch naming.
+4. **[LESSONS.md](./LESSONS.md)** - Pola dan pelajaran teknis masa lalu.
+5. **[AGENT_SKILLS_GUIDE.md](./AGENT_SKILLS_GUIDE.md)** - Cara bekerja dengan AI Assistant.
 
 ---
 
-## 👥 Who to Ask
+**Selamat berkarya di PayU! 🚀**
+Jika ada kendala, jangan ragu bertanya di channel `#payu-dev`.
 
-| Question Type | Channel/Person |
-|---------------|----------------|
-| **Setup issues** | #platform-ops Slack channel |
-| **Code review** | Create PR, request review |
-| **Architecture** | @architect Slack mention |
-| **Security** | #security Slack channel |
-| **Product** | #product Slack channel |
-| **General help** | #payu-dev Slack channel |
-
----
-
-## ✅ Onboarding Completion Checklist
-
-Complete all items to finish onboarding:
-
-### Week 1
-- [ ] Environment fully configured
-- [ ] Can build and run backend services
-- [ ] Can build and run frontend apps
-- [ ] First PR submitted and merged
-
-### Month 1
-- [ ] Completed 3-5 tasks from TODOS.md
-- [ ] Written tests for new code
-- [ ] Presented a topic in team standup
-- [ ] Reviewed at least 2 PRs
-
----
-
-**Welcome aboard!** We're excited to have you on the team. If you have any questions, don't hesitate to reach out.
-
----
-
-_Last Updated: January 30, 2026_
+_Last Updated: February 24, 2026_

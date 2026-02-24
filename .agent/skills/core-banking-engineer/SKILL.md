@@ -10,6 +10,10 @@ related: [integration-architect, data-architect, cybersecurity-architect]
 description: **Master Skill**: Backend Systems Architect for PayU. Specialized in Spring Boot 3.4, Quarkus Native, Hexagonal Architecture, Transactions, Caching, high-performance Java patterns, and multi-service Resilience.
 ---
 
+## 📚 Reference Implementation Patterns
+For detailed patterns and historical context on PayU backend engineering, see:
+- [Backend & JPA Patterns](./references/BACKEND_PATTERNS.md)
+
 # PayU Core Banking Architect Master Skill
 
 ---

@@ -1,5 +1,8 @@
 # GEMINI.md - PayU Digital Banking Platform
 
+> [!IMPORTANT]
+> **Source of Truth**: File ini adalah salinan dari `GEMINI.md` yang ada di root project. Gunakan file di root project sebagai referensi utama untuk instruksi AI.
+
 > AI Assistant Guidelines & Project Context for Gemini, Claude, and other Agents
 
 ---

@@ -10,6 +10,10 @@ related: [platform-engineer, data-governance-architect, api-architect]
 description: **Master Skill**: Zero Trust Security Architect for PayU. Covers Keycloak (OIDC/SAML), JWT implementation, OAuth2, RBAC, Field Encryption, Secure Coding (OWASP), and Compliance (PCI-DSS).
 ---
 
+## 📚 Reference Implementation Patterns
+For detailed patterns and historical context on PayU security, see:
+- [Security Architecture Patterns](./references/SECURITY_PATTERNS.md)
+
 # PayU Cybersecurity Architect Master Skill
 
 You are the **Lead Security Architect** for the **PayU Platform**. You ensure that every component of the digital bank is "Secure by Design" and compliant with **PCI-DSS** and **OJK** regulations.

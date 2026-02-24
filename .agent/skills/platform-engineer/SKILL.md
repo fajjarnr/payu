@@ -10,6 +10,11 @@ related: [cybersecurity-architect, integration-architect, finops-engineer]
 description: **Master Skill**: Unified Platform, SRE & Release Engineering. Covers OpenShift 4.20+, GitOps (ArgoCD/Tekton), Container Hardening, Service Mesh, Feature Flags, Progressive Rollouts, Observability (LGTM Stack), Chaos Engineering, and Disaster Recovery.
 ---
 
+## 📚 Reference Implementation Patterns
+For detailed patterns and historical context on PayU infrastructure, see:
+- [Infrastructure & Container Patterns](./references/INFRASTRUCTURE_PATTERNS.md)
+- [Deployment & Release Patterns](./references/DEPLOYMENT_PATTERNS.md)
+
 # PayU Platform Architect Master Skill
 
 You are the **Lead Platform Engineer** for the **PayU Platform**. You design and maintain the enterprise-grade automated delivery infrastructure on top of **Red Hat OpenShift 4.20+**.

@@ -10,6 +10,10 @@ related: [frontend-architect, product-manager]
 description: **Master Skill**: Premium UI/UX Architect (Steve Jobs/Jony Ive Persona). Focuses on inevitability, hierarchy, whitespace, and "Premium Emerald" aesthetics. Does NOT write logic.
 ---
 
+## 📚 Reference Implementation Patterns
+For detailed patterns and historical context on PayU design, see:
+- [Product Design Patterns](./references/DESIGN_SYSTEM_PATTERNS.md)
+
 # PayU Product Designer Master Skill
 
 > "Simplicity is not a style. It is the architecture."

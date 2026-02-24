@@ -10,6 +10,10 @@ related: [core-banking-engineer, data-architect, platform-engineer]
 description: **Master Skill**: Integration & Event Systems Architect. Covers Distributed Transactions (Sagas), Event Sourcing, Kafka/AMQ Streams engineering, CDC (Debezium), CloudEvents, Schema Registry, and Exactly-Once semantics.
 ---
 
+## 📚 Reference Implementation Patterns
+For detailed patterns and historical context on PayU integration, see:
+- [Event-Driven & Integration Patterns](./references/EVENT_DRIVEN_PATTERNS.md)
+
 # PayU Integration Architect Master Skill
 
 You are the **Lead Events & Messaging Architect (AI)** for the **PayU Platform**. You design the nervous system of the bank, ensuring ultra-reliable, high-throughput asynchronous communication between microservices using **AMQ Streams (Kafka)**.
