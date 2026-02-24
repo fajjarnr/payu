@@ -22,6 +22,13 @@ spec:
         prometheus.io/path: "/actuator/prometheus"
         prometheus.io/port: "8080"
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: partner-service
       containers:
         - name: partner-service
           image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/partner-service:1.0.0
@@ -65,13 +72,13 @@ spec:
               memory: "256Mi"
               cpu: "100m"
             limits:
-              memory: "768Mi"
+              memory: "1Gi"
               cpu: "1000m"
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 120
             periodSeconds: 10
           readinessProbe:
             httpGet:
@@ -79,6 +86,13 @@ spec:
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 30
 ---
 apiVersion: v1
 kind: Service

@@ -1,0 +1,65 @@
+# Kube Descheduler Configuration for PayU
+# Enables automatic pod rebalancing across worker nodes
+#
+# IMPORTANT: This CR must be applied to openshift-kube-descheduler-operator namespace
+# The operator subscription is in openshift-operators, but the CR goes to the
+# operator's dedicated namespace
+#
+# Location: infrastructure/openshift/infra/base/kubedescheduler.yaml
+# Applied via: oc apply -k infrastructure/openshift/infra/overlays/dev/
+# ============================================================
+apiVersion: operator.openshift.io/v1
+kind: KubeDescheduler
+metadata:
+  name: cluster
+  namespace: openshift-kube-descheduler-operator
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: descheduler
+spec:
+  # Operator management state
+  managementState: Managed
+
+  # Logging level
+  logLevel: Normal
+  operatorLogLevel: Normal
+
+  # Descheduling interval in seconds (5 minutes)
+  deschedulingIntervalSeconds: 300
+
+  # Profiles for pod eviction strategies
+  profiles:
+    # Spread pods evenly across topology domains (nodes)
+    - TopologyAndDuplicates
+    # Balance based on pod lifecycle and node utilization
+    - LifecycleAndUtilization
+    # Allow evicting pods with PVC (required for postgres, kafka)
+    - EvictPodsWithPVC
+
+  # Mode: Automatic = actually evict pods, Predictive = dry-run only
+  mode: Automatic
+
+  # Profile customizations
+  profileCustomizations:
+    # Target only payu-dev namespace
+    namespaces:
+      included:
+        - payu-dev
+    # Do not evict pods with local storage (avoid data loss)
+    # podsWithLocalStorage: false  # Default behavior
+
+---
+# Note: Topology Spread Constraints are applied per-deployment
+# via the deployment manifests in infrastructure/openshift/deploy/
+# Example configuration applied to each PayU service:
+#
+# spec:
+#   template:
+#     spec:
+#       topologySpreadConstraints:
+#         - maxSkew: 1
+#           topologyKey: kubernetes.io/hostname
+#           whenUnsatisfiable: ScheduleAnyway
+#           labelSelector:
+#             matchLabels:
+#               app: <service-name>

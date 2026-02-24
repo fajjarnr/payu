@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cafe-ingress
+  namespace: cafe-demo
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-apps-issuer"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - cafe.apps.fajjjar.my.id
+    secretName: cafe-tls-secret
+  rules:
+  - host: cafe.apps.fajjjar.my.id
+    http:
+      paths:
+      - path: /tea
+        pathType: Prefix
+        backend:
+          service:
+            name: tea-svc
+            port:
+              number: 80
+      - path: /coffee
+        pathType: Prefix
+        backend:
+          service:
+            name: coffee-svc
+            port:
+              number: 80

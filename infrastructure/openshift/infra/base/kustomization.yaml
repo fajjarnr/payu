@@ -32,6 +32,8 @@ resources:
   - vault.yaml
   # TLS / cert-manager
   - cert-manager.yaml
+  # Pod Rebalancing
+  - kubedescheduler.yaml
   # Shared ConfigMaps
   - common-configmaps.yaml
 
