@@ -101,11 +101,13 @@ public class WalletController extends BaseController {
     }
 
     @PostMapping("/reservations/{reservationId}/commit")
+    @PreAuthorize("isAuthenticated() and @walletController.validateReservationOwnership(#reservationId, authentication.principal.accountId)")
     @Operation(summary = "Commit reservation", description = "Commit a reserved balance to complete the transaction")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reservation committed successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Reservation not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid reservation state")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - reservation access denied")
     public ResponseEntity<ApiResponse<Map<String, String>>> commitReservation(
             @Parameter(description = "Reservation ID", required = true) @PathVariable String reservationId) {
         log.info("Committing reservation: {}", reservationId);
@@ -114,16 +116,35 @@ public class WalletController extends BaseController {
     }
 
     @PostMapping("/reservations/{reservationId}/release")
+    @PreAuthorize("isAuthenticated() and @walletController.validateReservationOwnership(#reservationId, authentication.principal.accountId)")
     @Operation(summary = "Release reservation", description = "Release a reserved balance back to available balance")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reservation released successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Reservation not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid reservation state")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - reservation access denied")
     public ResponseEntity<ApiResponse<Map<String, String>>> releaseReservation(
             @Parameter(description = "Reservation ID", required = true) @PathVariable String reservationId) {
         log.info("Releasing reservation: {}", reservationId);
         walletUseCase.releaseReservation(reservationId);
         return ok(Map.of("status", "RELEASED", "reservationId", reservationId));
+    }
+
+    /**
+     * Validates that the authenticated user owns the reservation.
+     * Used by @PreAuthorize for ownership-based access control.
+     *
+     * @param reservationId the reservation ID to check
+     * @param accountId the authenticated user's account ID
+     * @return true if the user owns the reservation, false otherwise
+     */
+    public boolean validateReservationOwnership(String reservationId, String accountId) {
+        try {
+            String reservationOwnerId = walletUseCase.getAccountIdByReservationId(reservationId);
+            return reservationOwnerId.equals(accountId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @PostMapping("/{accountId}/credit")

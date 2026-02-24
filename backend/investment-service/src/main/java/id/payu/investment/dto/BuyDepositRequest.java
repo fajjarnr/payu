@@ -9,13 +9,13 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public record BuyDepositRequest(
-    @NotBlank(message = "User ID is required")
-    String userId,
-    
+    @NotBlank(message = "Account ID is required")
+    String accountId,
+
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "1000000.00", message = "Minimum deposit amount is Rp 1,000,000")
     BigDecimal amount,
-    
+
     @NotNull(message = "Tenure is required")
     @Min(value = 1, message = "Minimum tenure is 1 month")
     @Max(value = 12, message = "Maximum tenure is 12 months")

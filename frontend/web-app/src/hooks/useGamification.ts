@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import PromotionService from '@/services/PromotionService';
 
 export function useGamificationSummary(userId: string) {
@@ -55,6 +56,7 @@ export function useCheckin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, accountId }: { userId: string; accountId: string }) => PromotionService.checkin(accountId),
+    ...MutationPresets.nonFinancial,
     onSuccess: (_, { userId }) => {
       qc.invalidateQueries({ queryKey: ['gamification-summary', userId] });
       qc.invalidateQueries({ queryKey: ['gamification-streak', userId] });
@@ -68,6 +70,7 @@ export function useRecordTransaction() {
   return useMutation({
     mutationFn: ({ userId, transactionId, amount }: { userId: string; transactionId: string; amount: number }) =>
       PromotionService.recordGamificationTransaction(transactionId, amount),
+    ...MutationPresets.nonFinancial,
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['gamification-summary', vars.userId] });
       qc.invalidateQueries({ queryKey: ['gamification-level', vars.userId] });

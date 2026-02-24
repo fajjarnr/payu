@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import TransactionService from '@/services/TransactionService';
 import type { CreateScheduledTransferRequest } from '@/services/TransactionService';
 
@@ -25,6 +26,7 @@ export function useCreateScheduledTransfer() {
   return useMutation({
     mutationFn: (request: CreateScheduledTransferRequest) =>
       TransactionService.createScheduledTransfer(request),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['scheduled-transfers'] }); },
   });
 }
@@ -34,6 +36,7 @@ export function useUpdateScheduledTransfer() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<CreateScheduledTransferRequest> }) =>
       TransactionService.updateScheduledTransfer(id, data),
+    ...MutationPresets.nonFinancial,
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['scheduled-transfer', vars.id] });
       qc.invalidateQueries({ queryKey: ['scheduled-transfers'] });
@@ -45,6 +48,7 @@ export function useCancelScheduledTransfer() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => TransactionService.cancelScheduledTransfer(id),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['scheduled-transfers'] }); },
   });
 }
@@ -53,6 +57,7 @@ export function usePauseScheduledTransfer() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => TransactionService.pauseScheduledTransfer(id),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['scheduled-transfers'] }); },
   });
 }
@@ -61,6 +66,7 @@ export function useResumeScheduledTransfer() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => TransactionService.resumeScheduledTransfer(id),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['scheduled-transfers'] }); },
   });
 }

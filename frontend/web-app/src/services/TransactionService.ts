@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { getFinancialMutationHeaders } from '@/lib/utils';
 import type { TransactionType, TransactionStatus, TransferType } from '@/types';
 
 // Re-export types for convenience
@@ -60,7 +61,9 @@ export class TransactionService {
   }
 
   async initiateTransfer(request: InitiateTransferRequest): Promise<InitiateTransferResponse> {
-    const response = await api.post<InitiateTransferResponse>('/transactions/transfer', request);
+    const response = await api.post<InitiateTransferResponse>('/transactions/transfer', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
@@ -77,7 +80,9 @@ export class TransactionService {
   }
 
   async processQrisPayment(request: ProcessQrisPaymentRequest): Promise<void> {
-    await api.post('/transactions/qris/pay', request);
+    await api.post('/transactions/qris/pay', request, {
+      headers: getFinancialMutationHeaders(),
+    });
   }
 
   /** POST /transactions/{transactionId}/cancel — Cancel pending transaction */

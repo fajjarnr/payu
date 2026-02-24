@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import LendingService from '@/services/LendingService';
 import type { LoanApplicationRequest, PayLaterLimitRequest, PreApprovalCheckRequest } from '@/services/LendingService';
 
@@ -56,6 +57,7 @@ export function useApplyLoan() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (request: LoanApplicationRequest) => LendingService.applyLoan(request),
+    ...MutationPresets.financial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['loan'] }); },
   });
 }
@@ -65,6 +67,7 @@ export function useActivatePayLater() {
   return useMutation({
     mutationFn: ({ userId, request }: { userId: string; request: PayLaterLimitRequest }) =>
       LendingService.activatePayLater(userId, request),
+    ...MutationPresets.financial,
     onSuccess: (_, vars) => { qc.invalidateQueries({ queryKey: ['paylater', vars.userId] }); },
   });
 }
@@ -72,5 +75,6 @@ export function useActivatePayLater() {
 export function useCheckPreApproval() {
   return useMutation({
     mutationFn: (request: PreApprovalCheckRequest) => LendingService.checkPreApproval(request),
+    ...MutationPresets.readOnly,
   });
 }

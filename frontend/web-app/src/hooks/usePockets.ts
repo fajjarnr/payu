@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import WalletService from '@/services/WalletService';
 import type { CreatePocketRequest } from '@/services/WalletService';
 
@@ -38,6 +39,7 @@ export function useCreatePocket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (request: CreatePocketRequest) => WalletService.createPocket(request),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['pockets'] }); },
   });
 }
@@ -47,6 +49,7 @@ export function useCreditPocket() {
   return useMutation({
     mutationFn: ({ pocketId, amount, currency }: { pocketId: string; amount: number; currency: string }) =>
       WalletService.creditPocket(pocketId, amount, currency),
+    ...MutationPresets.financial,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pockets'] });
       qc.invalidateQueries({ queryKey: ['pocket'] });
@@ -59,6 +62,7 @@ export function useDebitPocket() {
   return useMutation({
     mutationFn: ({ pocketId, amount, currency }: { pocketId: string; amount: number; currency: string }) =>
       WalletService.debitPocket(pocketId, amount, currency),
+    ...MutationPresets.financial,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pockets'] });
       qc.invalidateQueries({ queryKey: ['pocket'] });
@@ -70,6 +74,7 @@ export function useFreezePocket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (pocketId: string) => WalletService.freezePocket(pocketId),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['pockets'] }); },
   });
 }
@@ -78,6 +83,7 @@ export function useUnfreezePocket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (pocketId: string) => WalletService.unfreezePocket(pocketId),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['pockets'] }); },
   });
 }
@@ -86,6 +92,7 @@ export function useClosePocket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (pocketId: string) => WalletService.closePocket(pocketId),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['pockets'] }); },
   });
 }

@@ -9,6 +9,7 @@ import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.PayLater;
 import id.payu.lending.domain.model.PayLaterTransaction;
 import id.payu.lending.domain.model.RepaymentSchedule;
+import id.payu.lending.dto.LoanApplicationCommand;
 import id.payu.lending.dto.LoanApplicationRequest;
 import id.payu.lending.dto.LoanPreApprovalResponse;
 import id.payu.lending.dto.PayLaterLimitRequest;
@@ -53,6 +54,7 @@ public class LendingController extends BaseController {
     private final LendingSecurityService lendingSecurityService;
 
     @PostMapping("/loans")
+    @PreAuthorize("isAuthenticated()")
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "Loan",
@@ -64,9 +66,25 @@ public class LendingController extends BaseController {
             content = @Content(schema = @Schema(implementation = Loan.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    public CompletableFuture<ResponseEntity<ApiResponse<Loan>>> applyLoan(@Valid @RequestBody LoanApplicationRequest request) {
-        log.info("Received loan application request for user: {}", request.userId());
-        return lendingApplicationService.applyLoan(request)
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - cannot apply loan for another user")
+    public CompletableFuture<ResponseEntity<ApiResponse<Loan>>> applyLoan(
+            @Valid @RequestBody LoanApplicationCommand command,
+            java.security.Principal principal) {
+        // Extract userId from JWT (authentication.name) instead of request body
+        UUID authenticatedUserId = UUID.fromString(principal.getName());
+        log.info("Received loan application request for authenticated user: {}", authenticatedUserId);
+
+        // Create a new request with the authenticated user's ID
+        LoanApplicationRequest securedRequest = new LoanApplicationRequest(
+                authenticatedUserId,
+                command.externalId(),
+                command.loanType(),
+                command.principalAmount(),
+                command.tenureMonths(),
+                command.purpose()
+        );
+
+        return lendingApplicationService.applyLoan(securedRequest)
                 .thenApply(loan -> {
                     URI location = ServletUriComponentsBuilder
                             .fromCurrentRequest()

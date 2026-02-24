@@ -1,16 +1,27 @@
 package id.payu.transaction.application.service;
 
 import id.payu.transaction.domain.model.Transaction;
+import id.payu.transaction.domain.port.out.AccountServicePort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Service for verifying resource ownership and authorization.
  *
  * Ensures that users can only access resources they own, implementing
  * the principle of least privilege and data-level authorization.
+ *
+ * <p>Multi-Account Support:</p>
+ * <ul>
+ *   <li>Users may have multiple accounts (savings, checking, pockets)</li>
+ *   <li>Authorization checks against all user accounts, not just primary</li>
+ *   <li>Account IDs are fetched from account-service via {@link AccountServicePort}</li>
+ * </ul>
  *
  * PCI-DSS Compliance:
  * - Requirement 7: Restrict access to cardholder data by business need-to-know
@@ -22,9 +33,13 @@ import org.springframework.stereotype.Component;
 public class AuthorizationService {
 
     private final TransactionPersistencePort transactionPersistencePort;
+    private final AccountServicePort accountServicePort;
 
     /**
      * Verifies that the user has access to the specified transaction.
+     *
+     * <p>Supports multi-account scenarios by checking if the transaction's
+     * sender account belongs to any of the user's accounts.</p>
      *
      * @param transactionId The transaction ID to check
      * @param userId The user ID requesting access
@@ -34,8 +49,11 @@ public class AuthorizationService {
         Transaction transaction = transactionPersistencePort.findById(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
 
+        // Get all account IDs for the user (multi-account support)
+        List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);
+
         // Check if user owns the sender account associated with this transaction
-        if (!transaction.getSenderAccountId().toString().equals(extractAccountIdFromUserId(userId))) {
+        if (!userAccountIds.contains(transaction.getSenderAccountId())) {
             log.warn("User {} attempted to access transaction {} belonging to account {}",
                     maskUserId(userId), transactionId, transaction.getSenderAccountId());
             throw new org.springframework.security.access.AccessDeniedException(
@@ -46,16 +64,18 @@ public class AuthorizationService {
     /**
      * Verifies that the user owns the specified account.
      *
+     * <p>Supports multi-account scenarios by checking against all accounts
+     * associated with the user.</p>
+     *
      * @param accountId The account ID to check
      * @param userId The user ID requesting access
      * @throws org.springframework.security.access.AccessDeniedException if user doesn't own the account
      */
     public void verifyAccountOwnership(java.util.UUID accountId, String userId) {
-        // Extract account ID from user context and verify ownership
-        // This is a simplified version - in production, you'd query an account service
-        String userAccountId = extractAccountIdFromUserId(userId);
+        // Get all account IDs for the user (multi-account support)
+        List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);
 
-        if (!accountId.toString().equals(userAccountId)) {
+        if (!userAccountIds.contains(accountId)) {
             log.warn("User {} attempted to access account {}",
                     maskUserId(userId), accountId);
             throw new org.springframework.security.access.AccessDeniedException(
@@ -66,33 +86,23 @@ public class AuthorizationService {
     /**
      * Verifies that the sender account in the request belongs to the user.
      *
+     * <p>Supports multi-account scenarios by checking against all accounts
+     * associated with the user.</p>
+     *
      * @param senderAccountId The sender account ID from the request
      * @param userId The authenticated user ID
      * @throws org.springframework.security.access.AccessDeniedException if user doesn't own the account
      */
     public void verifySenderAccountOwnership(java.util.UUID senderAccountId, String userId) {
-        String userAccountId = extractAccountIdFromUserId(userId);
+        // Get all account IDs for the user (multi-account support)
+        List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);
 
-        if (!senderAccountId.toString().equals(userAccountId)) {
+        if (!userAccountIds.contains(senderAccountId)) {
             log.warn("User {} attempted to transfer from account {}",
                     maskUserId(userId), senderAccountId);
             throw new org.springframework.security.access.AccessDeniedException(
                     "Access denied: You can only transfer from your own account");
         }
-    }
-
-    /**
-     * Extracts account ID from user ID or context.
-     * In production, this would query a user service or parse JWT claims.
-     *
-     * @param userId The user ID
-     * @return The account ID associated with the user
-     */
-    private String extractAccountIdFromUserId(String userId) {
-        // TODO: Implement proper account ID extraction from JWT or user service
-        // For now, return the userId as-is assuming it contains account info
-        // In production: userClient.getAccounts(userId).getPrimaryAccountId()
-        return userId;
     }
 
     /**

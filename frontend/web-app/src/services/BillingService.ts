@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { getFinancialMutationHeaders } from '@/lib/utils';
 
 export interface BillPayment {
   id: string;
@@ -50,12 +51,16 @@ class BillingService {
   }
 
   async createPayment(request: CreatePaymentRequest): Promise<BillPayment> {
-    const response = await api.post('/billing/payments', request);
+    const response = await api.post('/billing/payments', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
   async createTopUp(request: TopUpRequest): Promise<BillPayment> {
-    const response = await api.post('/billing/topup', request);
+    const response = await api.post('/billing/topup', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 

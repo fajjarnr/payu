@@ -3,6 +3,7 @@ package id.payu.investment.adapter.web;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.investment.application.service.InvestmentApplicationService;
+import id.payu.investment.application.service.InvestmentSecurityService;
 import id.payu.investment.domain.model.Deposit;
 import id.payu.investment.domain.model.Gold;
 import id.payu.investment.domain.model.InvestmentAccount;
@@ -12,14 +13,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -30,26 +34,33 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("/api/v1/investments")
 @Tag(name = "Investment", description = "Investment management APIs for deposits, mutual funds, and gold")
+@SecurityRequirement(name = "bearerAuth")
 public class InvestmentController extends BaseController {
 
     private final InvestmentApplicationService investmentApplicationService;
+    private final InvestmentSecurityService investmentSecurityService;
 
-    public InvestmentController(InvestmentApplicationService investmentApplicationService) {
+    public InvestmentController(InvestmentApplicationService investmentApplicationService,
+                                InvestmentSecurityService investmentSecurityService) {
         this.investmentApplicationService = investmentApplicationService;
+        this.investmentSecurityService = investmentSecurityService;
     }
 
     @PostMapping("/accounts")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create investment account", description = "Creates a new investment account for a user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Account created successfully",
             content = @Content(schema = @Schema(implementation = InvestmentAccount.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentAccount>>> createAccount(
-            @Valid @RequestBody CreateInvestmentAccountRequest request) {
-        return investmentApplicationService.createAccount(request.userId())
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
+        return investmentApplicationService.createAccount(userId)
                 .thenApply(this::ok);
     }
 
     @PostMapping("/deposits")
+    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
     @Audited(
             operation = Audited.Operation.OTHER,
             entityType = "Deposit",
@@ -63,15 +74,15 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request or insufficient balance")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found")
     public CompletableFuture<ResponseEntity<ApiResponse<Deposit>>> buyDeposit(
-            @Parameter(description = "Account ID", required = true) @RequestParam String accountId,
-            @Parameter(description = "User ID", required = true) @RequestParam String userId,
-            @Parameter(description = "Amount to invest", required = true) @RequestParam BigDecimal amount,
-            @Parameter(description = "Tenure in months", required = true) @RequestParam Integer tenure) {
-        return investmentApplicationService.buyDeposit(accountId, userId, amount, tenure)
+            @Valid @RequestBody BuyDepositRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
+        return investmentApplicationService.buyDeposit(request.accountId(), userId, request.amount(), request.tenure())
                 .thenApply(this::ok);
     }
 
     @PostMapping("/mutual-funds")
+    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
     @Audited(
             operation = Audited.Operation.OTHER,
             entityType = "InvestmentTransaction",
@@ -85,15 +96,15 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request or insufficient balance")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account or fund not found")
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentTransaction>>> buyMutualFund(
-            @Parameter(description = "Account ID", required = true) @RequestParam String accountId,
-            @Parameter(description = "User ID", required = true) @RequestParam String userId,
-            @Parameter(description = "Fund code", required = true) @RequestParam String fundCode,
-            @Parameter(description = "Amount to invest", required = true) @RequestParam BigDecimal amount) {
-        return investmentApplicationService.buyMutualFund(accountId, userId, fundCode, amount)
+            @Valid @RequestBody BuyMutualFundRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
+        return investmentApplicationService.buyMutualFund(request.accountId(), userId, request.fundCode(), request.amount())
                 .thenApply(this::ok);
     }
 
     @PostMapping("/gold")
+    @PreAuthorize("isAuthenticated()")
     @Audited(
             operation = Audited.Operation.OTHER,
             entityType = "Gold",
@@ -106,13 +117,15 @@ public class InvestmentController extends BaseController {
             content = @Content(schema = @Schema(implementation = Gold.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request or insufficient balance")
     public CompletableFuture<ResponseEntity<ApiResponse<Gold>>> buyGold(
-            @Parameter(description = "User ID", required = true) @RequestParam String userId,
-            @Parameter(description = "Amount to invest", required = true) @RequestParam BigDecimal amount) {
-        return investmentApplicationService.buyGold(userId, amount)
+            @Valid @RequestBody BuyGoldRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
+        return investmentApplicationService.buyGold(userId, request.amount())
                 .thenApply(this::ok);
     }
 
     @PostMapping("/sell")
+    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
     @Audited(
             operation = Audited.Operation.OTHER,
             entityType = "InvestmentTransaction",
@@ -126,31 +139,34 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Investment not found")
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentTransaction>>> sellInvestment(
-            @Parameter(description = "Account ID", required = true) @RequestParam String accountId,
-            @Parameter(description = "Transaction ID", required = true) @RequestParam UUID transactionId,
-            @Parameter(description = "Amount to sell", required = true) @RequestParam BigDecimal amount) {
-        return investmentApplicationService.sellInvestment(accountId, transactionId, amount)
+            @Valid @RequestBody SellInvestmentRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        return investmentApplicationService.sellInvestment(request.accountId(), request.transactionId(), request.amount())
                 .thenApply(this::ok);
     }
 
-    @GetMapping("/accounts/{userId}")
-    @Operation(summary = "Get investment account", description = "Retrieves investment account for a user")
+    @GetMapping("/accounts/me")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get investment account", description = "Retrieves investment account for the authenticated user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Account found",
             content = @Content(schema = @Schema(implementation = InvestmentAccount.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found")
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentAccount>>> getAccount(
-            @Parameter(description = "User ID", required = true) @PathVariable String userId) {
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
         return investmentApplicationService.getAccountByUserId(userId)
                 .thenApply(this::ok);
     }
 
-    @GetMapping("/gold/{userId}")
-    @Operation(summary = "Get gold investment", description = "Retrieves gold investment for a user")
+    @GetMapping("/gold/me")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get gold investment", description = "Retrieves gold investment for the authenticated user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Gold investment found",
             content = @Content(schema = @Schema(implementation = Gold.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Gold investment not found")
     public CompletableFuture<ResponseEntity<ApiResponse<Gold>>> getGold(
-            @Parameter(description = "User ID", required = true) @PathVariable String userId) {
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
         return investmentApplicationService.getGoldByUserId(userId)
                 .thenApply(this::ok);
     }

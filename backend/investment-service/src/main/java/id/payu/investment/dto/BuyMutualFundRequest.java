@@ -7,12 +7,12 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public record BuyMutualFundRequest(
-    @NotBlank(message = "User ID is required")
-    String userId,
-    
+    @NotBlank(message = "Account ID is required")
+    String accountId,
+
     @NotBlank(message = "Fund code is required")
     String fundCode,
-    
+
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "10000.00", message = "Minimum investment is Rp 10,000")
     BigDecimal amount

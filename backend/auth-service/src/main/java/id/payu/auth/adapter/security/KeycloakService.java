@@ -9,6 +9,7 @@ import id.payu.auth.config.KeycloakConfig;
 import id.payu.auth.domain.model.LoginContext;
 import id.payu.auth.dto.LoginResponse;
 import id.payu.auth.exception.MFAException;
+import id.payu.cache.service.CacheService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +25,6 @@ import reactor.core.publisher.Mono;
 
 import jakarta.ws.rs.core.Response;
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -41,8 +40,10 @@ public class KeycloakService {
     private final RiskEvaluationService riskEvaluationService;
     private final MFATokenService mfaTokenService;
     private final ObjectMapper objectMapper;
+    private final CacheService cacheService;
 
-    private final Map<String, FailedAttempt> failedAttempts = new ConcurrentHashMap<>();
+    private static final String FAILED_ATTEMPTS_KEY_PREFIX = "auth:failedAttempts:";
+    private static final Duration FAILED_ATTEMPTS_TTL = Duration.ofMinutes(15);
 
     @Value("${payu.security.max-login-attempts:5}")
     private int maxLoginAttempts;
@@ -86,7 +87,7 @@ public class KeycloakService {
                 .bodyToMono(String.class)
                 .map(jsonResponse -> {
                     try {
-                        log.info("Keycloak response for user {}: {}", username, jsonResponse);
+                        log.info("Keycloak token obtained successfully for user: {}", username);
                         JsonNode root = objectMapper.readTree(jsonResponse);
                         String accessToken = root.get("access_token").asText();
                         String refreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
@@ -94,8 +95,8 @@ public class KeycloakService {
                         String tokenType = root.get("token_type").asText();
                         return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
                     } catch (Exception e) {
-                        log.error("Failed to deserialize Keycloak response for user {}: {} - JSON: {}",
-                                username, e.getMessage(), jsonResponse, e);
+                        log.error("Failed to deserialize Keycloak response for user {}: {}",
+                                username, e.getMessage(), e);
                         throw new IllegalArgumentException("Failed to parse login response: " + e.getMessage(), e);
                     }
                 })
@@ -156,8 +157,8 @@ public class KeycloakService {
                         String tokenType = root.get("token_type").asText();
                         return new LoginResponse(accessToken, newRefreshToken, expiresIn, tokenType);
                     } catch (Exception e) {
-                        log.error("Failed to deserialize refresh token response: {} - JSON: {}",
-                                e.getMessage(), jsonResponse, e);
+                        log.error("Failed to deserialize refresh token response: {}",
+                                e.getMessage(), e);
                         throw new IllegalArgumentException("Failed to parse refresh response: " + e.getMessage(), e);
                     }
                 })
@@ -274,8 +275,8 @@ public class KeycloakService {
                         String tokenType = root.get("token_type").asText();
                         return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
                     } catch (Exception e) {
-                        log.error("Failed to deserialize Keycloak response for user {}: {} - JSON: {}",
-                                username, e.getMessage(), jsonResponse, e);
+                        log.error("Failed to deserialize Keycloak response for user {}: {}",
+                                username, e.getMessage(), e);
                         throw new IllegalArgumentException("Failed to parse login response: " + e.getMessage(), e);
                     }
                 })
@@ -291,14 +292,20 @@ public class KeycloakService {
     }
 
     private void recordFailedAttemptInternal(String username) {
-        FailedAttempt attempt = failedAttempts.computeIfAbsent(username,
-                k -> new FailedAttempt(0, 0L));
+        String key = FAILED_ATTEMPTS_KEY_PREFIX + username;
+        FailedAttempt attempt = cacheService.get(key, FailedAttempt.class,
+                () -> new FailedAttempt(0, 0L));
+
+        if (attempt == null) {
+            attempt = new FailedAttempt(0, 0L);
+        }
+
         attempt.increment();
         if (attempt.getCount() >= maxLoginAttempts) {
             attempt.setLockUntil(System.currentTimeMillis() + Duration.ofMinutes(lockoutDurationMinutes).toMillis());
             log.warn("Account locked: {} until {}", username, attempt.getLockUntil());
         }
-        failedAttempts.put(username, attempt);
+        cacheService.put(key, attempt, FAILED_ATTEMPTS_TTL);
         riskEvaluationService.recordFailedAttempt(username);
     }
 
@@ -333,7 +340,8 @@ public class KeycloakService {
     }
 
     private boolean isAccountLocked(String username) {
-        FailedAttempt attempt = failedAttempts.get(username);
+        String key = FAILED_ATTEMPTS_KEY_PREFIX + username;
+        FailedAttempt attempt = cacheService.get(key, FailedAttempt.class);
         if (attempt == null) {
             return false;
         }
@@ -342,7 +350,8 @@ public class KeycloakService {
     }
 
     private void clearFailedAttempts(String username) {
-        failedAttempts.remove(username);
+        String key = FAILED_ATTEMPTS_KEY_PREFIX + username;
+        cacheService.invalidate(key);
         riskEvaluationService.clearFailedAttempts(username);
     }
 
@@ -383,9 +392,19 @@ public class KeycloakService {
         return form;
     }
 
-    private static class FailedAttempt {
+    /**
+     * Serializable class for storing failed login attempts in Redis.
+     * Must be public and have a default constructor for JSON serialization.
+     */
+    public static class FailedAttempt {
         private int count;
         private long lockUntil;
+
+        // Default constructor for JSON deserialization
+        public FailedAttempt() {
+            this.count = 0;
+            this.lockUntil = 0L;
+        }
 
         public FailedAttempt(int count, long lockUntil) {
             this.count = count;
@@ -394,6 +413,10 @@ public class KeycloakService {
 
         public int getCount() {
             return count;
+        }
+
+        public void setCount(int count) {
+            this.count = count;
         }
 
         public void increment() {

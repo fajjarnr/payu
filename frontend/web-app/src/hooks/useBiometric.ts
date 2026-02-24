@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import AuthService from '@/services/AuthService';
 import type { BiometricRegistration, BiometricAuthRequest } from '@/services/AuthService';
 
@@ -24,6 +25,7 @@ export function useRegisterBiometric() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (registration: BiometricRegistration) => AuthService.registerBiometric(registration),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['biometric-registrations'] }); },
   });
 }
@@ -31,6 +33,7 @@ export function useRegisterBiometric() {
 export function useAuthenticateBiometric() {
   return useMutation({
     mutationFn: (request: BiometricAuthRequest) => AuthService.authenticateBiometric(request),
+    ...MutationPresets.nonFinancial,
   });
 }
 
@@ -38,6 +41,7 @@ export function useRevokeBiometric() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (registrationId: string) => AuthService.revokeBiometricRegistration(registrationId),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['biometric-registrations'] }); },
   });
 }

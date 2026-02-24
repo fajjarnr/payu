@@ -6,6 +6,7 @@ import id.payu.investment.domain.model.Deposit;
 import id.payu.investment.domain.model.Gold;
 import id.payu.investment.domain.model.InvestmentAccount;
 import id.payu.investment.domain.model.InvestmentTransaction;
+import id.payu.investment.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -24,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +43,7 @@ class InvestmentControllerTest {
     private String testAccountId;
     private UUID testTransactionId;
     private BigDecimal testAmount;
+    private Jwt mockJwt;
 
     @BeforeEach
     void setUp() {
@@ -47,6 +51,8 @@ class InvestmentControllerTest {
         testAccountId = UUID.randomUUID().toString();
         testTransactionId = UUID.randomUUID();
         testAmount = new BigDecimal("1000000.00");
+        mockJwt = mock(Jwt.class);
+        given(mockJwt.getSubject()).willReturn(testUserId);
     }
 
     @Nested
@@ -67,8 +73,8 @@ class InvestmentControllerTest {
             given(investmentApplicationService.createAccount(testUserId))
                     .willReturn(CompletableFuture.completedFuture(account));
 
-            ResponseEntity<ApiResponse<InvestmentAccount>> response = 
-                    investmentController.createAccount(new id.payu.investment.dto.CreateInvestmentAccountRequest(testUserId))
+            ResponseEntity<ApiResponse<InvestmentAccount>> response =
+                    investmentController.createAccount(mockJwt)
                             .get();
 
             assertThat(response.getBody()).isNotNull();
@@ -92,16 +98,51 @@ class InvestmentControllerTest {
                     .status(Deposit.DepositStatus.ACTIVE)
                     .build();
 
+            BuyDepositRequest request = new BuyDepositRequest(testAccountId, testAmount, 6);
+
             given(investmentApplicationService.buyDeposit(testAccountId, testUserId, testAmount, 6))
                     .willReturn(CompletableFuture.completedFuture(deposit));
 
-            ResponseEntity<ApiResponse<Deposit>> response = 
-                    investmentController.buyDeposit(testAccountId, testUserId, testAmount, 6)
+            ResponseEntity<ApiResponse<Deposit>> response =
+                    investmentController.buyDeposit(request, mockJwt)
                             .get();
 
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getData().getAmount()).isEqualTo(testAmount);
             verify(investmentApplicationService).buyDeposit(testAccountId, testUserId, testAmount, 6);
+        }
+    }
+
+    @Nested
+    @DisplayName("buyMutualFund")
+    class BuyMutualFund {
+
+        @Test
+        @DisplayName("should buy mutual fund successfully")
+        void shouldBuyMutualFundSuccessfully() throws Exception {
+            String fundCode = "FUND001";
+            InvestmentTransaction transaction = InvestmentTransaction.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(testAccountId)
+                    .type(InvestmentTransaction.TransactionType.BUY)
+                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .investmentId(fundCode)
+                    .amount(testAmount)
+                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .build();
+
+            BuyMutualFundRequest request = new BuyMutualFundRequest(testAccountId, fundCode, testAmount);
+
+            given(investmentApplicationService.buyMutualFund(testAccountId, testUserId, fundCode, testAmount))
+                    .willReturn(CompletableFuture.completedFuture(transaction));
+
+            ResponseEntity<ApiResponse<InvestmentTransaction>> response =
+                    investmentController.buyMutualFund(request, mockJwt)
+                            .get();
+
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getData().getAmount()).isEqualTo(testAmount);
+            verify(investmentApplicationService).buyMutualFund(testAccountId, testUserId, fundCode, testAmount);
         }
     }
 
@@ -120,16 +161,49 @@ class InvestmentControllerTest {
                     .currentValue(testAmount)
                     .build();
 
+            BuyGoldRequest request = new BuyGoldRequest(testAmount);
+
             given(investmentApplicationService.buyGold(testUserId, testAmount))
                     .willReturn(CompletableFuture.completedFuture(gold));
 
-            ResponseEntity<ApiResponse<Gold>> response = 
-                    investmentController.buyGold(testUserId, testAmount)
+            ResponseEntity<ApiResponse<Gold>> response =
+                    investmentController.buyGold(request, mockJwt)
                             .get();
 
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getData().getUserId()).isEqualTo(testUserId);
             verify(investmentApplicationService).buyGold(testUserId, testAmount);
+        }
+    }
+
+    @Nested
+    @DisplayName("sellInvestment")
+    class SellInvestment {
+
+        @Test
+        @DisplayName("should sell investment successfully")
+        void shouldSellInvestmentSuccessfully() throws Exception {
+            InvestmentTransaction transaction = InvestmentTransaction.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(testAccountId)
+                    .type(InvestmentTransaction.TransactionType.SELL)
+                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .amount(testAmount)
+                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .build();
+
+            SellInvestmentRequest request = new SellInvestmentRequest(testAccountId, testTransactionId, testAmount);
+
+            given(investmentApplicationService.sellInvestment(testAccountId, testTransactionId, testAmount))
+                    .willReturn(CompletableFuture.completedFuture(transaction));
+
+            ResponseEntity<ApiResponse<InvestmentTransaction>> response =
+                    investmentController.sellInvestment(request, mockJwt)
+                            .get();
+
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getData().getAmount()).isEqualTo(testAmount);
+            verify(investmentApplicationService).sellInvestment(testAccountId, testTransactionId, testAmount);
         }
     }
 }

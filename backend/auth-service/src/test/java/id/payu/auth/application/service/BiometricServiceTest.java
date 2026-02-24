@@ -1,21 +1,35 @@
 package id.payu.auth.application.service;
 
+import id.payu.auth.adapter.persistence.repository.BiometricRegistrationRepository;
 import id.payu.auth.dto.*;
 import id.payu.auth.exception.BiometricException;
+import id.payu.cache.service.CacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
 import java.security.*;
+import java.time.Duration;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BiometricServiceTest {
+
+    @Mock
+    private BiometricRegistrationRepository biometricRepository;
+
+    @Mock
+    private CacheService cacheService;
 
     @InjectMocks
     private BiometricService biometricService;
@@ -53,14 +67,19 @@ class BiometricServiceTest {
 
     @Test
     void generateChallenge_Success() {
+        // Given
         long beforeTime = System.currentTimeMillis();
+
+        // When
         BiometricChallengeResponse response = biometricService.generateChallenge(testUsername, testDeviceId);
 
+        // Then
         assertNotNull(response.challenge());
         assertNotNull(response.challengeId());
         assertNotNull(response.expiresAt());
         assertTrue(response.expiresAt() > beforeTime);
         assertEquals("Challenge generated successfully", response.message());
+        verify(cacheService).put(contains("auth:biometric:challenge:"), eq(response.challenge()), eq(Duration.ofMinutes(5)));
     }
 
     @Test
@@ -76,6 +95,14 @@ class BiometricServiceTest {
                 signature,
                 challenge
         );
+
+        when(biometricRepository.findByUsernameAndActiveTrue(testUsername)).thenReturn(Collections.emptyList());
+        when(biometricRepository.findByUsernameAndDeviceIdAndActiveTrue(testUsername, testDeviceId)).thenReturn(Optional.empty());
+        when(biometricRepository.save(any())).thenAnswer(invocation -> {
+            id.payu.auth.domain.model.BiometricRegistrationEntity entity = invocation.getArgument(0);
+            entity.setRegistrationId("test-registration-id");
+            return entity;
+        });
 
         BiometricRegistrationResponse response = biometricService.registerBiometric(request);
 
@@ -102,18 +129,17 @@ class BiometricServiceTest {
                 challenge
         );
 
-        // Register 5 devices for the same user (max is 5)
+        // Create 5 existing registrations
+        java.util.List<id.payu.auth.domain.model.BiometricRegistrationEntity> existingRegistrations = new java.util.ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            BiometricRegistrationRequest r = new BiometricRegistrationRequest(
-                    testUsername,  // Same username
-                    testPublicKeyString,
-                    testDeviceId + "-" + i,  // Different device IDs
-                    testDeviceType,
-                    signature,
-                    challenge
-            );
-            biometricService.registerBiometric(r);
+            id.payu.auth.domain.model.BiometricRegistrationEntity entity = new id.payu.auth.domain.model.BiometricRegistrationEntity();
+            entity.setRegistrationId("reg-" + i);
+            entity.setUsername(testUsername);
+            entity.setDeviceId(testDeviceId + "-" + i);
+            entity.setActive(true);
+            existingRegistrations.add(entity);
         }
+        when(biometricRepository.findByUsernameAndActiveTrue(testUsername)).thenReturn(existingRegistrations);
 
         // The 6th registration should fail
         BiometricException exception = assertThrows(BiometricException.class,
@@ -135,43 +161,38 @@ class BiometricServiceTest {
                 signature,
                 challenge
         );
-        biometricService.registerBiometric(request);
 
-        BiometricRegistrationRequest request2 = new BiometricRegistrationRequest(
-                testUsername,
-                testPublicKeyString,
-                testDeviceId,
-                testDeviceType,
-                signature,
-                challenge
-        );
+        when(biometricRepository.findByUsernameAndActiveTrue(testUsername)).thenReturn(Collections.emptyList());
+
+        id.payu.auth.domain.model.BiometricRegistrationEntity existingEntity = new id.payu.auth.domain.model.BiometricRegistrationEntity();
+        existingEntity.setRegistrationId("existing-id");
+        existingEntity.setUsername(testUsername);
+        existingEntity.setDeviceId(testDeviceId);
+        existingEntity.setActive(true);
+        when(biometricRepository.findByUsernameAndDeviceIdAndActiveTrue(testUsername, testDeviceId))
+                .thenReturn(Optional.of(existingEntity));
 
         BiometricException exception = assertThrows(BiometricException.class,
-                () -> biometricService.registerBiometric(request2));
+                () -> biometricService.registerBiometric(request));
         assertEquals("BIO_007", exception.getErrorCode());
         assertTrue(exception.getMessage().contains("already registered"));
     }
 
     @Test
     void authenticateWithBiometric_Success() {
-        String challenge = "auth-challenge";
-        String signature = createTestSignature(challenge);
-
-        BiometricRegistrationRequest regRequest = new BiometricRegistrationRequest(
-                testUsername,
-                testPublicKeyString,
-                testDeviceId,
-                testDeviceType,
-                signature,
-                challenge
-        );
-        biometricService.registerBiometric(regRequest);
-
-        var registration = biometricService.findRegistration(testUsername, testDeviceId);
-        assertTrue(registration.isPresent());
-
         String authChallenge = "auth-test-challenge";
         String authSignature = createTestSignature(authChallenge);
+
+        // Create a mock registration DTO
+        var registration = new id.payu.auth.domain.model.BiometricRegistration(
+                "test-registration-id",
+                testUsername,
+                testDeviceId,
+                testDeviceType,
+                testPublicKeyString,
+                java.time.Instant.now(),
+                true
+        );
 
         BiometricAuthenticationRequest authRequest = new BiometricAuthenticationRequest(
                 testUsername,
@@ -180,14 +201,14 @@ class BiometricServiceTest {
                 authChallenge
         );
 
-        BiometricAuthenticationResponse response = biometricService.authenticateWithBiometric(authRequest, registration.get());
+        BiometricAuthenticationResponse response = biometricService.authenticateWithBiometric(authRequest, registration);
 
         assertNotNull(response.accessToken());
         assertNotNull(response.refreshToken());
         assertEquals("Bearer", response.tokenType());
-        assertEquals(3600L, response.expiresIn());
+        assertEquals(900L, response.expiresIn());
         assertEquals(testDeviceId, response.deviceId());
-        assertEquals(registration.get().registrationId(), response.registrationId());
+        assertEquals(registration.registrationId(), response.registrationId());
         assertEquals("Biometric authentication successful", response.message());
     }
 
@@ -196,30 +217,14 @@ class BiometricServiceTest {
         String challenge = "test-challenge";
         String signature = createTestSignature(challenge);
 
-        BiometricRegistrationRequest regRequest = new BiometricRegistrationRequest(
-                testUsername,
-                testPublicKeyString,
-                testDeviceId,
-                testDeviceType,
-                signature,
-                challenge
-        );
-        biometricService.registerBiometric(regRequest);
-
-        // Save the registration reference before revoking (findRegistration only returns active ones)
-        var registration = biometricService.findRegistration(testUsername, testDeviceId).get();
-        String registrationId = registration.registrationId();
-
-        biometricService.revokeRegistration(registrationId);
-
-        // Create an inactive registration object to pass to the method
+        // Create an inactive registration
         var inactiveRegistration = new id.payu.auth.domain.model.BiometricRegistration(
-                registrationId,
+                "test-registration-id",
                 testUsername,
                 testDeviceId,
                 testDeviceType,
                 testPublicKeyString,
-                registration.createdAt(),
+                java.time.Instant.now(),
                 false  // inactive
         );
 
@@ -239,20 +244,17 @@ class BiometricServiceTest {
     @Test
     void authenticateWithBiometric_InvalidSignature_ThrowsException() {
         String challenge = "test-challenge";
-        String signature = createTestSignature(challenge);
 
-        BiometricRegistrationRequest regRequest = new BiometricRegistrationRequest(
+        // Create a mock registration
+        var registration = new id.payu.auth.domain.model.BiometricRegistration(
+                "test-registration-id",
                 testUsername,
-                testPublicKeyString,
                 testDeviceId,
                 testDeviceType,
-                signature,
-                challenge
+                testPublicKeyString,
+                java.time.Instant.now(),
+                true
         );
-        biometricService.registerBiometric(regRequest);
-
-        var registration = biometricService.findRegistration(testUsername, testDeviceId);
-        assertTrue(registration.isPresent());
 
         String invalidSignature = Base64.getEncoder().encodeToString(new byte[32]);
         BiometricAuthenticationRequest authRequest = new BiometricAuthenticationRequest(
@@ -263,27 +265,28 @@ class BiometricServiceTest {
         );
 
         BiometricException exception = assertThrows(BiometricException.class,
-                () -> biometricService.authenticateWithBiometric(authRequest, registration.get()));
+                () -> biometricService.authenticateWithBiometric(authRequest, registration));
         assertEquals("BIO_002", exception.getErrorCode());
     }
 
     @Test
     void findRegistration_RegistrationExists_ReturnsRegistration() {
-        String challenge = "test-challenge";
-        String signature = createTestSignature(challenge);
+        // Given
+        id.payu.auth.domain.model.BiometricRegistrationEntity entity = new id.payu.auth.domain.model.BiometricRegistrationEntity();
+        entity.setRegistrationId("test-reg-id");
+        entity.setUsername(testUsername);
+        entity.setDeviceId(testDeviceId);
+        entity.setDeviceType(testDeviceType);
+        entity.setPublicKey(testPublicKeyString);
+        entity.setActive(true);
 
-        BiometricRegistrationRequest request = new BiometricRegistrationRequest(
-                testUsername,
-                testPublicKeyString,
-                testDeviceId,
-                testDeviceType,
-                signature,
-                challenge
-        );
-        biometricService.registerBiometric(request);
+        when(biometricRepository.findByUsernameAndDeviceIdAndActiveTrue(testUsername, testDeviceId))
+                .thenReturn(Optional.of(entity));
 
+        // When
         var result = biometricService.findRegistration(testUsername, testDeviceId);
 
+        // Then
         assertTrue(result.isPresent());
         assertEquals(testUsername, result.get().username());
         assertEquals(testDeviceId, result.get().deviceId());
@@ -291,53 +294,55 @@ class BiometricServiceTest {
 
     @Test
     void findRegistration_RegistrationNotFound_ReturnsEmpty() {
+        when(biometricRepository.findByUsernameAndDeviceIdAndActiveTrue("nonexistent", "nonexistent-device"))
+                .thenReturn(Optional.empty());
+
         var result = biometricService.findRegistration("nonexistent", "nonexistent-device");
         assertFalse(result.isPresent());
     }
 
     @Test
     void getUserRegistrations_ReturnsUserRegistrations() {
-        String challenge = "test-challenge";
-        String signature = createTestSignature(challenge);
-
+        // Given
+        java.util.List<id.payu.auth.domain.model.BiometricRegistrationEntity> mockRegistrations = new java.util.ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            String username = testUsername + "-" + i;
-            BiometricRegistrationRequest request = new BiometricRegistrationRequest(
-                    username,
-                    testPublicKeyString,
-                    testDeviceId + "-" + i,
-                    testDeviceType,
-                    signature,
-                    challenge
-            );
-            biometricService.registerBiometric(request);
+            id.payu.auth.domain.model.BiometricRegistrationEntity entity = new id.payu.auth.domain.model.BiometricRegistrationEntity();
+            entity.setRegistrationId("reg-" + i);
+            entity.setUsername(testUsername + "-0");
+            entity.setDeviceId(testDeviceId + "-" + i);
+            entity.setDeviceType(testDeviceType);
+            entity.setPublicKey(testPublicKeyString);
+            entity.setActive(true);
+            mockRegistrations.add(entity);
         }
+        when(biometricRepository.findByUsernameAndActiveTrue(testUsername + "-0")).thenReturn(mockRegistrations);
 
+        // When
         var registrations = biometricService.getUserRegistrations(testUsername + "-0");
 
-        assertEquals(1, registrations.size());
+        // Then
+        assertEquals(3, registrations.size());
         assertTrue(registrations.stream().allMatch(r -> r.username().equals(testUsername + "-0")));
     }
 
     @Test
     void revokeRegistration_MakesRegistrationInactive() {
-        String challenge = "test-challenge";
-        String signature = createTestSignature(challenge);
+        // Given
+        String registrationId = "test-reg-id";
+        id.payu.auth.domain.model.BiometricRegistrationEntity entity = new id.payu.auth.domain.model.BiometricRegistrationEntity();
+        entity.setRegistrationId(registrationId);
+        entity.setUsername(testUsername);
+        entity.setDeviceId(testDeviceId);
+        entity.setActive(true);
 
-        BiometricRegistrationRequest request = new BiometricRegistrationRequest(
-                testUsername,
-                testPublicKeyString,
-                testDeviceId,
-                testDeviceType,
-                signature,
-                challenge
-        );
-        BiometricRegistrationResponse regResponse = biometricService.registerBiometric(request);
+        when(biometricRepository.findById(registrationId)).thenReturn(Optional.of(entity));
 
-        biometricService.revokeRegistration(regResponse.registrationId());
+        // When
+        biometricService.revokeRegistration(registrationId);
 
-        var result = biometricService.findRegistration(testUsername, testDeviceId);
-        assertFalse(result.isPresent());
+        // Then
+        assertFalse(entity.isActive());
+        verify(biometricRepository).save(entity);
     }
 
     private String createTestSignature(String data) {

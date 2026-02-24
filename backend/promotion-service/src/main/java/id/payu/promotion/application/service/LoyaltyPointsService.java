@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -36,11 +37,19 @@ public class LoyaltyPointsService {
         this.promotionEventsTopic = promotionEventsTopic;
     }
 
-    @Transactional
+    /**
+     * Add loyalty points to an account with race condition protection.
+     * Uses pessimistic locking (SELECT FOR UPDATE) to prevent lost updates.
+     *
+     * @param request the points addition request
+     * @return the created loyalty points record
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public LoyaltyPoints addPoints(CreateLoyaltyPointsRequest request) {
         LOG.info("Adding points: accountId={}, points={}", request.accountId(), request.points());
 
-        Integer currentBalance = calculateCurrentBalance(request.accountId());
+        // Use atomic balance calculation with pessimistic lock to prevent race conditions
+        Integer currentBalance = calculateCurrentBalanceWithLock(request.accountId());
 
         LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
         loyaltyPoints.setAccountId(request.accountId());
@@ -60,12 +69,21 @@ public class LoyaltyPointsService {
         return loyaltyPoints;
     }
 
-    @Transactional
+    /**
+     * Redeem loyalty points from an account with race condition protection.
+     * Uses pessimistic locking (SELECT FOR UPDATE) to prevent concurrent overdrafts.
+     *
+     * @param request the points redemption request
+     * @return the created redemption record
+     * @throws IllegalArgumentException if insufficient balance
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public LoyaltyPoints redeemPoints(RedeemLoyaltyPointsRequest request) {
         LOG.info("Redeeming points: accountId={}, points={}",
             request.accountId(), request.points());
 
-        Integer currentBalance = calculateCurrentBalance(request.accountId());
+        // Use atomic balance calculation with pessimistic lock to prevent race conditions
+        Integer currentBalance = calculateCurrentBalanceWithLock(request.accountId());
 
         if (currentBalance < request.points()) {
             throw new IllegalArgumentException("Insufficient loyalty points balance");
@@ -121,6 +139,28 @@ public class LoyaltyPointsService {
         );
     }
 
+    /**
+     * Calculate current balance with pessimistic locking to prevent race conditions.
+     * This method acquires a database lock on the most recent record for the account,
+     * ensuring concurrent transactions serialize their access.
+     *
+     * @param accountId the account ID
+     * @return the current balance (0 if no records)
+     */
+    @Transactional(readOnly = true)
+    public Integer calculateCurrentBalanceWithLock(String accountId) {
+        Optional<LoyaltyPoints> latestRecord = loyaltyPointsRepository
+            .findTopByAccountIdOrderByCreatedAtDescWithLock(accountId);
+        return latestRecord.map(LoyaltyPoints::getBalanceAfter).orElse(0);
+    }
+
+    /**
+     * Calculate current balance without locking (for read-only operations).
+     * Use this for queries that don't modify the balance.
+     *
+     * @param accountId the account ID
+     * @return the current balance (0 if no records)
+     */
     public Integer calculateCurrentBalance(String accountId) {
         List<LoyaltyPoints> pointsList = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
         if (pointsList.isEmpty()) {

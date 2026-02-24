@@ -5,6 +5,96 @@ import logger, { getCorrelationId, withCorrelation } from '@/lib/logger';
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
 
 /**
+ * Whitelist of allowed API path prefixes for SSRF prevention.
+ * Only paths starting with these prefixes will be proxied to the backend.
+ */
+const ALLOWED_PATH_PREFIXES = [
+  '/api/v1/accounts',
+  '/api/v1/auth',
+  '/api/v1/billing',
+  '/api/v1/compliance',
+  '/api/v1/fx',
+  '/api/v1/investments',
+  '/api/v1/lending',
+  '/api/v1/notifications',
+  '/api/v1/partners',
+  '/api/v1/promotions',
+  '/api/v1/statements',
+  '/api/v1/support',
+  '/api/v1/transactions',
+  '/api/v1/wallets',
+  '/api/v1/users',
+  '/api/v1/kyc',
+  '/api/v1/cms',
+  '/api/v1/backoffice',
+  '/api/v1/health',
+];
+
+/**
+ * Validates and sanitizes the backend path to prevent SSRF attacks.
+ *
+ * Security checks:
+ * 1. Rejects paths containing '..' (path traversal)
+ * 2. Rejects absolute paths (starting with '/')
+ * 3. Rejects empty path segments
+ * 4. Validates against allowed prefixes whitelist
+ *
+ * @param pathSegments - Array of path segments from the URL
+ * @returns Sanitized path string
+ * @throws Error if path is invalid or potentially malicious
+ */
+function sanitizeBackendPath(pathSegments: string[]): string {
+  // Check for empty path
+  if (!pathSegments || pathSegments.length === 0) {
+    throw new Error('Path is required');
+  }
+
+  // Validate each segment
+  for (const segment of pathSegments) {
+    // Reject empty segments
+    if (!segment || segment.length === 0) {
+      throw new Error('Invalid path: empty segment');
+    }
+
+    // Reject path traversal attempts (..)
+    if (segment === '..' || segment.includes('..')) {
+      throw new Error('Invalid path: path traversal detected');
+    }
+
+    // Reject absolute paths (starting with /)
+    if (segment.startsWith('/')) {
+      throw new Error('Invalid path: absolute path not allowed');
+    }
+
+    // Reject null bytes and control characters
+    if (/[\x00-\x1f\x7f]/.test(segment)) {
+      throw new Error('Invalid path: control characters detected');
+    }
+
+    // Reject URL-encoded traversal attempts
+    if (segment.includes('%2e') || segment.includes('%2E') ||
+        segment.includes('%2f') || segment.includes('%2F') ||
+        segment.includes('%5c') || segment.includes('%5C')) {
+      throw new Error('Invalid path: encoded traversal detected');
+    }
+  }
+
+  const backendPath = pathSegments.join('/');
+
+  // Validate against whitelist
+  const fullPath = `/api/v1/${backendPath}`;
+  const isAllowed = ALLOWED_PATH_PREFIXES.some(prefix =>
+    fullPath.startsWith(prefix + '/') || fullPath === prefix
+  );
+
+  if (!isAllowed) {
+    throw new Error(`Invalid path: '${fullPath}' is not in allowed whitelist`);
+  }
+
+  return backendPath;
+}
+
+/**
  * BFF Catch-All API Proxy — Forwards authenticated requests to the gateway.
  *
  * Flow:
@@ -28,7 +118,25 @@ async function proxyRequest(
     const token = cookieStore.get('accessToken')?.value;
 
     const { path } = await params;
-    const backendPath = path.join('/');
+
+    // SSRF Prevention: Sanitize and validate path before use
+    let backendPath: string;
+    try {
+      backendPath = sanitizeBackendPath(path);
+    } catch (sanitizeError) {
+      log.warn({
+        action: 'proxy',
+        method: request.method,
+        path: path.join('/'),
+        error: sanitizeError instanceof Error ? sanitizeError.message : 'Unknown error',
+      }, 'SSRF prevention: blocked invalid path');
+
+      return NextResponse.json(
+        { error: 'Bad Request', message: 'Invalid path' },
+        { status: 400 },
+      );
+    }
+
     const url = new URL(`/api/v1/${backendPath}`, GATEWAY_URL);
 
     // Forward query parameters
@@ -79,23 +187,15 @@ async function proxyRequest(
     });
   } catch (error) {
     // Graceful fallback when gateway is unreachable.
-    // GET requests return an empty payload so the UI renders with defaults.
-    // Mutating methods still surface the 503 so users know the write failed.
-    if (request.method === 'GET' || request.method === 'HEAD') {
-      log.warn({ action: 'proxy', method: request.method, path: request.nextUrl.pathname, err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Gateway offline — returning fallback for read request');
-      return NextResponse.json(
-        { error: true, _fallback: true, data: null, items: [], total: 0 },
-        {
-          status: 503,
-          headers: { 'X-Fallback': 'gateway-offline' },
-        },
-      );
-    }
-
-    log.error({ action: 'proxy', method: request.method, path: request.nextUrl.pathname, err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Proxy error');
+    // All requests return 503 error so the UI can properly handle error states.
+    // The _fallback flag allows FE to distinguish gateway offline vs other errors.
+    log.warn({ action: 'proxy', method: request.method, path: request.nextUrl.pathname, err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Gateway offline — returning 503 error');
     return NextResponse.json(
-      { error: 'Service unavailable' },
-      { status: 503 },
+      { error: true, _fallback: true, message: 'Service unavailable' },
+      {
+        status: 503,
+        headers: { 'X-Fallback': 'gateway-offline' },
+      },
     );
   }
 }

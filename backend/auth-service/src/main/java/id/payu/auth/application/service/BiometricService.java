@@ -6,6 +6,7 @@ import id.payu.auth.dto.*;
 import id.payu.auth.domain.model.BiometricRegistrationEntity;
 import id.payu.auth.exception.BiometricException;
 import id.payu.auth.adapter.persistence.repository.BiometricRegistrationRepository;
+import id.payu.cache.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,10 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
@@ -26,7 +27,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BiometricService {
 
     private final BiometricRegistrationRepository biometricRepository;
-    private final Map<String, String> challengeStore = new ConcurrentHashMap<>();
+    private final CacheService cacheService;
+
+    private static final String CHALLENGE_KEY_PREFIX = "auth:biometric:challenge:";
+    private static final Duration CHALLENGE_TTL = Duration.ofMinutes(5);
 
     @Value("${payu.biometric.challenge-expiry-seconds:300}")
     private long challengeExpirySeconds;
@@ -41,7 +45,8 @@ public class BiometricService {
         String storeKey = buildChallengeKey(username, deviceId, challengeId);
         long expiresAt = Instant.now().plusSeconds(challengeExpirySeconds).toEpochMilli();
 
-        challengeStore.put(storeKey, challenge);
+        // Store in Redis with TTL instead of in-memory map
+        cacheService.put(storeKey, challenge, CHALLENGE_TTL);
 
         log.info("Generated biometric challenge for user {} on device {}", username, deviceId);
 
@@ -209,7 +214,7 @@ public class BiometricService {
     }
 
     private String buildChallengeKey(String username, String deviceId, String challengeId) {
-        return username + ":" + deviceId + ":" + challengeId;
+        return CHALLENGE_KEY_PREFIX + username + ":" + deviceId + ":" + challengeId;
     }
 
     private PublicKey decodePublicKey(String publicKeyString) {

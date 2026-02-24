@@ -6,17 +6,22 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Aspect for implementing rate limiting on API endpoints.
  * Uses Redis to track request counts per client.
+ * <p>
+ * Uses atomic Lua script to prevent race condition between INCR and EXPIRE.
+ * BUG-BE-090 Fix: Lua script ensures both operations are atomic.
  */
 @Aspect
 @Component
@@ -24,8 +29,26 @@ public class RateLimitAspect {
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    /**
+     * Lua script for atomic increment and expire.
+     * Returns the current count after increment.
+     * If this is the first request (count == 1), sets the expiration.
+     * <p>
+     * KEYS[1]: rate limit key
+     * ARGV[1]: expiration time in seconds
+     */
+    private static final String RATE_LIMIT_LUA_SCRIPT =
+            "local current = redis.call('incr', KEYS[1]) " +
+            "if current == 1 then " +
+            "    redis.call('expire', KEYS[1], ARGV[1]) " +
+            "end " +
+            "return current";
+
+    private final DefaultRedisScript<Long> rateLimitScript;
+
     public RateLimitAspect(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
+        this.rateLimitScript = new DefaultRedisScript<>(RATE_LIMIT_LUA_SCRIPT, Long.class);
     }
 
     /**
@@ -42,11 +65,17 @@ public class RateLimitAspect {
         int limit = rateLimit.value();
         long windowSeconds = rateLimit.windowSeconds();
 
-        Long currentCount = redisTemplate.opsForValue().increment(key);
+        // BUG-BE-090 Fix: Use atomic Lua script to prevent race condition
+        // between INCR and EXPIRE operations
+        Long currentCount = redisTemplate.execute(
+                rateLimitScript,
+                Collections.singletonList(key),
+                String.valueOf(windowSeconds)
+        );
 
-        if (currentCount == null || currentCount == 1) {
-            // First request in window, set expiration
-            redisTemplate.expire(key, windowSeconds, TimeUnit.SECONDS);
+        if (currentCount == null) {
+            // Redis execution failed, allow request but log warning
+            return joinPoint.proceed();
         }
 
         if (currentCount > limit) {

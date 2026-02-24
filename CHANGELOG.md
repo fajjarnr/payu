@@ -37,6 +37,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **P0 Critical** (14 bugs): Gateway JWT placeholder (BUG-BE-001), auth in-memory state (BUG-BE-002),
     cashback tidak credit wallet (BUG-BE-062), loyalty points race condition (BUG-BE-060),
     `RateLimitAspect` race condition non-atomic (BUG-BE-090), dan lainnya
+
+- **promotion-service: Cashback Wallet Credit Fix (BUG-BE-062) (2026-02-24)**:
+  - **Problem**: Cashback status di-set `CREDITED` tanpa memanggil wallet-service untuk credit ke user.
+    Ini menyebabkan cashback tercatat tapi saldo wallet tidak bertambah.
+  - **Solution**: Implementasi Saga Pattern untuk atomicity antara wallet credit dan cashback record:
+    - `CashbackSagaOrchestrator`: Orchestrates 2-step saga (CREDIT_WALLET → RECORD_CASHBACK)
+    - `WalletClient`: REST client ke wallet-service dengan circuit breaker dan retry
+    - `CashbackSagaContext`: Context object untuk menyimpan state saga
+    - Status `CREDITED` hanya di-set setelah wallet credit berhasil
+    - Compensation logic untuk rollback jika terjadi failure
+  - **Files Changed**:
+    - `application/service/CashbackService.java` — Refactored untuk menggunakan saga pattern
+    - `application/saga/CashbackSagaOrchestrator.java` — New saga orchestrator
+    - `application/saga/CashbackSagaContext.java` — New saga context
+    - `adapter/client/WalletClient.java` — New wallet service client
+    - `domain/port/out/WalletServicePort.java` — New output port
+    - `config/RestTemplateConfig.java` — New REST template configuration
+    - `PromotionServiceApplication.java` — Added `@EnableSaga` annotation
+    - `pom.xml` — Added saga-starter dependency
+    - `application.yml` — Added wallet service URL configuration
+  - **Tests**: 17 unit tests covering success, failure, and compensation scenarios
+
+- **gateway-service: JWT Placeholder Fix (BUG-BE-001) (2026-02-24)**:
+  - **Problem**: `AuthorizationFilter.validateToken()` hanya cek `token.length() < 10` (PLACEHOLDER).
+    Siapapun dengan token >=10 karakter bisa bypass autentikasi.
+  - **Solution**: Implementasi JWT validation yang lengkap menggunakan nimbus-jose-jwt:
+    - Signature verification menggunakan RS256 dan JWKS dari Keycloak
+    - Expiration validation (exp claim)
+    - Issuer validation (iss claim)
+    - Audience validation (aud claim)
+    - Required claims validation (sub, exp, iat)
+  - **Changes**:
+    - `AuthorizationFilter.java`: Replaced placeholder validation with full JWT processor
+    - Added `initJwtProcessor()` untuk load JWKS dari Keycloak OIDC discovery
+    - Added `extractAccountId()` dan `extractRoles()` untuk parsing Keycloak claims
+    - `pom.xml`: Added explicit dependency `com.nimbusds:nimbus-jose-jwt:9.40`
+    - `application.yaml`: Added `quarkus.oidc.token.audience` configuration
+    - Added `AuthorizationFilterTest.java`: 11 integration tests untuk JWT validation
+
+### Fixed
+
+- **partner-service: SNAP-BI Token Store Redis Migration (BUG-BE-035, BUG-BE-036) (2026-02-24)**:
+  - **Problem**: In-memory `tokenStore` caused tokens generated on pod A to not be recognized on pod B.
+    Revoke operation did not work cross-pod, breaking HPA/scaling.
+  - **Solution**: Migrated token storage to Redis with proper TTL matching token expiry time.
+  - **Changes**:
+    - `SnapBiTokenService.java`: Replaced `ConcurrentHashMap` with `RedisTemplate<String, TokenInfo>`
+    - Redis key pattern: `snapbi:token:{clientId}` with TTL from `partner.jwt.expiration-ms`
+    - Added `@Scheduled(fixedRate = 60000)` for `cleanupExpiredTokens()` to run every minute
+    - Added `@EnableScheduling` to `PartnerServiceApplication.java`
+    - Added Redis configuration to `application.yml`
   - **Shared `api-commons` findings**: `RateLimitAspect` burst window vulnerability (BUG-BE-091),
     `WebhookProcessor` Thread.sleep blocking (BUG-BE-092)
   - **Frontend** (26 bugs): No idempotency keys (BUG-FE-021), global mutation retry=1 (BUG-FE-027),

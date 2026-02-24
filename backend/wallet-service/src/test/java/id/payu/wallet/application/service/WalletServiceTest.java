@@ -325,4 +325,50 @@ class WalletServiceTest {
         assertThat(result).hasSize(1);
         verify(walletPersistencePort).findByTransactionId(transactionId);
     }
+
+    @Test
+    @DisplayName("Should get account ID by reservation ID")
+    void shouldGetAccountIdByReservationId() {
+        UUID reservationId = testLedgerEntry.getTransactionId();
+        when(walletPersistencePort.findByTransactionId(reservationId)).thenReturn(List.of(testLedgerEntry));
+
+        String result = walletService.getAccountIdByReservationId(reservationId.toString());
+
+        assertThat(result).isEqualTo(testWallet.getAccountId());
+        verify(walletPersistencePort).findByTransactionId(reservationId);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when getting account ID for non-existent reservation")
+    void shouldThrowExceptionWhenGettingAccountIdForNonExistentReservation() {
+        UUID reservationId = UUID.randomUUID();
+        when(walletPersistencePort.findByTransactionId(reservationId)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> walletService.getAccountIdByReservationId(reservationId.toString()))
+                .isInstanceOf(ReservationNotFoundException.class)
+                .hasMessageContaining(reservationId.toString());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when getting account ID for non-reservation transaction")
+    void shouldThrowExceptionWhenGettingAccountIdForNonReservationTransaction() {
+        UUID transactionId = UUID.randomUUID();
+        LedgerEntry nonReservationEntry = LedgerEntry.builder()
+                .id(UUID.randomUUID())
+                .transactionId(transactionId)
+                .accountId(UUID.fromString(testWallet.getAccountId()))
+                .entryType(LedgerEntry.EntryType.CREDIT)
+                .amount(new BigDecimal("5000000"))
+                .currency("IDR")
+                .referenceType("CREDIT")  // Not RESERVATION
+                .referenceId("REF-001")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(walletPersistencePort.findByTransactionId(transactionId)).thenReturn(List.of(nonReservationEntry));
+
+        assertThatThrownBy(() -> walletService.getAccountIdByReservationId(transactionId.toString()))
+                .isInstanceOf(ReservationNotFoundException.class)
+                .hasMessageContaining(transactionId.toString());
+    }
 }

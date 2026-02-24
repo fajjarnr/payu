@@ -12,11 +12,11 @@
 
 | Kategori | P0 Critical | P1 High | P2 Medium | P3 Low | Total |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| Backend Logic | 38 | 64 | 42 | 5 | **149** |
+| Backend Logic | 36 | 64 | 42 | 5 | **147** |
 | Frontend Logic | 7 | 11 | 23 | 5 | **46** |
 | Frontend-Backend Mismatch | 13 | 9 | 7 | — | **29** |
 | Auth / Session | 2 | 2 | 3 | 3 | **10** |
-| **TOTAL** | **60** | **86** | **75** | **13** | **~234** |
+| **TOTAL** | **58** | **86** | **75** | **13** | **~232** |
 
 > ⚠️ **Catatan**: Scorecard "Production Readiness 100/100" di PROGRESS.md mencerminkan infra/deploy coverage,
 > **bukan** correctness business logic. Bug di bawah ini adalah temuan dari code review mendalam (Feb 24, 2026).
@@ -29,9 +29,9 @@
 
 | ID | Service | Issue | Impact |
 | :--- | :--- | :--- | :--- |
-| **BUG-BE-001** | `gateway-service` | **JWT validation adalah PLACEHOLDER** — siapapun dengan token ≥10 karakter masuk | Seluruh platform tidak aman |
+| ~~BUG-BE-001~~ | ~~gateway-service~~ | ~~FIXED: JWT validation implemented dengan nimbus-jose-jwt — signature, expiration, issuer, audience validation~~ | ~~Seluruh platform tidak aman~~ |
 | **BUG-BE-002** | `auth-service` | In-memory `failedAttempts`, `tokenStore`, `otpStore`, `challengeStore` — multi-pod tidak sync | MFA/brute-force protection gagal di scale-out |
-| **BUG-BE-035** | `partner-service` | In-memory `tokenStore` SNAP-BI — token tidak persistent antar pod | Partner integration gagal di HPA |
+| ~~BUG-BE-035~~ | ~~partner-service~~ | ~~FIXED: Token store moved to Redis with TTL — token persistent antar pod~~ | ~~Partner integration gagal di HPA~~ |
 | **BUG-BE-062** | `promotion-service` | Cashback langsung `CREDITED` tanpa credit wallet | User tidak terima uang cashback |
 | **BUG-BE-060** | `promotion-service` | Race condition di loyalty points balance — lost update | Saldo poin salah |
 | **BUG-BE-090** | `shared/api-commons` | `RateLimitAspect`: `increment` + `expire` non-atomic — permanent rate-limit possible | User bisa di-block selamanya |
@@ -55,7 +55,7 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-001** | `gateway-service` | `AuthorizationFilter.java` L154-184 | **JWT validation adalah PLACEHOLDER** — `validateToken()` hanya cek `token.length() < 10`. Siapapun dengan token ≥10 karakter masuk sebagai user random. | Implementasi JWT validation benar via Quarkus OIDC atau `nimbus-jose-jwt`. Verifikasi signature dari Keycloak JWKS. |
+| ~~BUG-BE-001~~ | ~~gateway-service~~ | ~~AuthorizationFilter.java L154-184~~ | ~~FIXED: JWT validation implemented dengan nimbus-jose-jwt — signature verification (RS256), expiration, issuer, audience validation~~ | ~~Implementasi JWT validation benar via Quarkus OIDC atau nimbus-jose-jwt~~ |
 | **BUG-BE-002** | `auth-service` | `KeycloakService.java` L45 + `MFATokenService.java` L17-18 | **In-memory state di scaled environment** — `failedAttempts`, `tokenStore`, `otpStore`, `challengeStore` di `ConcurrentHashMap`. Multi-pod (HPA min 2): state pod A ≠ pod B. | Pindahkan semua state ke Redis via `CacheService`. |
 | **BUG-BE-003** | `transaction-service` | `InitiateTransferCommandHandler.java` L164-166 | **Reference number generator collision-prone** — `"TXN" + currentTimeMillis() + random(1000)`. Bug sama di 5 titik lain. | Ganti ke `UUID.randomUUID()`. |
 | **BUG-BE-004** | `wallet-service` | `WalletService.java` L47-54 | **Cache invalidation tidak complete** — `reserveBalance` tidak invalidate `wallet:id:` cache key. | Tambah `cacheService.invalidate("wallet:id:" + wallet.getId())` di semua mutasi. |
@@ -156,8 +156,8 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-033** | `backoffice-service` | `SecurityConfig.java` L46 | **CORS wildcard di admin service** — `allowedOrigins("*")`. Internal admin tool seharusnya paling strict. | Ganti dengan `List.of("https://backoffice.payu.id")`. |
 | **BUG-BE-034** | `support-service` | Seluruh controller | **No role-based authorization** — `.authenticated()` saja, user biasa bisa akses semua endpoint termasuk create agent, delete module. | Tambahkan `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` pada endpoint sensitif. |
-| **BUG-BE-035** | `partner-service` | `SnapBiTokenService.java` L31 | **Partner token store in-memory** — token pod A tidak dikenali pod B. Revoke tidak berlaku cross-pod. | Pindahkan `tokenStore` ke Redis dengan TTL. |
-| **BUG-BE-036** | `partner-service` | `SnapBiTokenService.java` L115 | **`cleanupExpiredTokens()` tidak pernah dijadwalkan** — memory leak token expired. | Tambahkan `@Scheduled(fixedRate = 60000)`. |
+| ~~BUG-BE-035~~ | ~~partner-service~~ | ~~SnapBiTokenService.java L31~~ | ~~FIXED: Partner token store moved to Redis with TTL. Token now shared across pods.~~ | ~~Pindahkan `tokenStore` ke Redis dengan TTL.~~ |
+| ~~BUG-BE-036~~ | ~~partner-service~~ | ~~SnapBiTokenService.java L115~~ | ~~FIXED: Cleanup scheduler added with `@Scheduled(fixedRate = 60000)`.~~ | ~~Tambahkan `@Scheduled(fixedRate = 60000)`.~~ |
 
 ---
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import ComplianceService from '@/services/ComplianceService';
 import type { CreateAuditReportRequest, CreateGdprAuditRequest, GdprSearchCriteria } from '@/services/ComplianceService';
 
@@ -24,6 +25,7 @@ export function useCreateAuditReport() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateAuditReportRequest) => ComplianceService.createAuditReport(data),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['audit-reports'] }); },
   });
 }
@@ -56,6 +58,7 @@ export function useCreateGdprAudit() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateGdprAuditRequest) => ComplianceService.createGdprAudit(data),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['gdpr-audits'] }); },
   });
 }
@@ -63,6 +66,7 @@ export function useCreateGdprAudit() {
 export function useSearchGdprAudits() {
   return useMutation({
     mutationFn: (criteria: GdprSearchCriteria) => ComplianceService.searchGdprAudits(criteria),
+    ...MutationPresets.readOnly,
   });
 }
 
@@ -70,6 +74,7 @@ export function useDeleteGdprAudit() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (auditId: string) => ComplianceService.deleteGdprAudit(auditId),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['gdpr-audits'] }); },
   });
 }

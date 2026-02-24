@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import PromotionService from '@/services/PromotionService';
 import type { ClaimPromotionRequest } from '@/services/PromotionService';
 
@@ -80,6 +81,7 @@ export function useClaimPromotion() {
   return useMutation({
     mutationFn: ({ code, request }: { code: string; request: ClaimPromotionRequest }) =>
       PromotionService.claimPromotion(code, request),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['promotions'] });
       qc.invalidateQueries({ queryKey: ['rewards'] });

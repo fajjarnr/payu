@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { getFinancialMutationHeaders } from '@/lib/utils';
 
 export interface BalanceResponse {
   accountId: string;
@@ -55,22 +56,30 @@ export class WalletService {
   }
 
   async reserveBalance(accountId: string, request: ReserveBalanceRequest): Promise<ReserveBalanceResponse> {
-    const response = await api.post<ReserveBalanceResponse>(`/wallets/${accountId}/reserve`, request);
+    const response = await api.post<ReserveBalanceResponse>(`/wallets/${accountId}/reserve`, request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
   async commitReservation(reservationId: string): Promise<{ status: string; reservationId: string }> {
-    const response = await api.post<{ status: string; reservationId: string }>(`/wallets/reservations/${reservationId}/commit`);
+    const response = await api.post<{ status: string; reservationId: string }>(`/wallets/reservations/${reservationId}/commit`, null, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
   async releaseReservation(reservationId: string): Promise<{ status: string; reservationId: string }> {
-    const response = await api.post<{ status: string; reservationId: string }>(`/wallets/reservations/${reservationId}/release`);
+    const response = await api.post<{ status: string; reservationId: string }>(`/wallets/reservations/${reservationId}/release`, null, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
   async credit(accountId: string, request: CreditRequest): Promise<{ status: string; accountId: string }> {
-    const response = await api.post<{ status: string; accountId: string }>(`/wallets/${accountId}/credit`, request);
+    const response = await api.post<{ status: string; accountId: string }>(`/wallets/${accountId}/credit`, request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 

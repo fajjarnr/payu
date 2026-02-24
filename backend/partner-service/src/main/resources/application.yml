@@ -18,6 +18,10 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 springdoc:
   api-docs:

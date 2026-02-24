@@ -17,7 +17,9 @@ const createQueryClient = () => new QueryClient({
    },
   },
   mutations: {
-   retry: 1,
+   // BUG-FE-027: Default retry 0 for all mutations to prevent double-debit
+   // Financial mutations must never auto-retry on network errors
+   retry: 0,
   },
  },
 });

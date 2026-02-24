@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import FxService, { type ConvertCurrencyRequest, type FxConversionRequest } from '@/services/FxService';
 import type { FxRate, FxConversion } from '@/types';
 
@@ -29,6 +30,7 @@ export const useAllFxRates = (enabled = true) => {
 export const useFxEstimate = () => {
   return useMutation({
     mutationFn: (request: ConvertCurrencyRequest) => FxService.estimateConversion(request),
+    ...MutationPresets.readOnly,
   });
 };
 
@@ -37,6 +39,7 @@ export const useFxConversion = () => {
 
   return useMutation({
     mutationFn: (request: FxConversionRequest) => FxService.createConversion(request),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
       queryClient.invalidateQueries({ queryKey: ['fx-conversions'] });
@@ -73,6 +76,7 @@ export const useFxReverse = () => {
 
   return useMutation({
     mutationFn: (conversionId: string) => FxService.reverseConversion(conversionId),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
       queryClient.invalidateQueries({ queryKey: ['fx-conversions'] });

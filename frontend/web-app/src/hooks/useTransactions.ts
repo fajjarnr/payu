@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import TransactionService from '@/services/TransactionService';
+import { MutationPresets } from '@/lib/mutation-config';
 import type { InitiateTransferRequest, ProcessQrisPaymentRequest } from '@/types';
 
 export const useTransactions = (accountId: string | undefined, page = 0, size = 20) => {
@@ -29,6 +30,7 @@ export const useInitiateTransfer = () => {
 
   return useMutation({
     mutationFn: (request: InitiateTransferRequest) => TransactionService.initiateTransfer(request),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -44,6 +46,7 @@ export const useProcessQrisPayment = () => {
 
   return useMutation({
     mutationFn: (request: ProcessQrisPaymentRequest) => TransactionService.processQrisPayment(request),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -59,6 +62,7 @@ export const useCancelTransaction = () => {
 
   return useMutation({
     mutationFn: (transactionId: string) => TransactionService.cancelTransaction(transactionId),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },

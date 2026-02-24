@@ -10,8 +10,12 @@ import java.util.UUID;
  * Card response DTO.
  *
  * <p><b>Security:</b> Card numbers are masked in API responses to show only
- * the last 4 digits (e.g., ****-****-****-1234). This prevents exposure of
- * full card numbers via API responses.</p>
+ * the last 4 digits (e.g., **** **** **** 1234). This prevents exposure of
+ * full card numbers via API responses as per PCI-DSS requirements.</p>
+ *
+ * <p><b>PCI-DSS Compliance:</b> Full card numbers must NEVER be exposed in API responses.
+ * Use {@link #getCardNumber()} for API responses (returns masked format) and
+ * {@link #getFullCardNumber()} for internal processing only.</p>
  */
 public class CardResponse {
     private UUID id;
@@ -48,30 +52,37 @@ public class CardResponse {
 
     /**
      * Returns the masked card number showing only last 4 digits.
-     * Format: ****-****-****-1234
+     * Format: **** **** **** 1234
      *
      * <p>This is the ONLY card number representation exposed in API responses
-     * to comply with PCI-DSS requirements.</p>
+     * to comply with PCI-DSS requirements. Full card numbers must NEVER be
+     * exposed in API responses.</p>
      *
-     * @return masked card number
+     * @return masked card number (e.g., "**** **** **** 3456")
      */
     @JsonProperty("cardNumber")
-    public String getMaskedCardNumber() {
+    public String getCardNumber() {
         if (cardNumber == null || cardNumber.length() < 4) {
-            return "****";
+            return "**** **** **** ****";
         }
-        return "****-****-****-" + cardNumber.substring(cardNumber.length() - 4);
+        // PCI-DSS compliant masking: only last 4 digits visible
+        return "**** **** **** " + cardNumber.substring(cardNumber.length() - 4);
     }
 
     /**
-     * Internal-only accessor for mapping. NEVER serialized to JSON.
-     *
-     * @deprecated Use {@link #getMaskedCardNumber()} for API responses.
+     * Internal-only setter for mapping. Use getCardNumber() for API responses
+     * which returns PCI-DSS compliant masked format.
      */
-    @Deprecated
-    @JsonIgnore
-    public String getCardNumber() { return cardNumber; }
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
+
+    /**
+     * Internal-only accessor for full card number. NEVER exposed in API responses.
+     * Use only for internal processing (e.g., payment authorization).
+     *
+     * @return full card number (for internal use only)
+     */
+    @JsonIgnore
+    public String getFullCardNumber() { return cardNumber; }
 
     public String getExpiryDate() { return expiryDate; }
     public void setExpiryDate(String expiryDate) { this.expiryDate = expiryDate; }

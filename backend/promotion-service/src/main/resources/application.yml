@@ -86,6 +86,11 @@ logging:
     root: INFO
     id.payu.promotion: DEBUG
 
+# Service URLs
+services:
+  wallet:
+    url: ${WALLET_SERVICE_URL:http://localhost:8084}
+
 ---
 # Development Profile
 spring:

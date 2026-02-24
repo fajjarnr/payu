@@ -155,6 +155,50 @@ class WalletControllerTest {
     }
 
     @Test
+    @DisplayName("Should validate reservation ownership - owner matches")
+    void shouldValidateReservationOwnership_WhenOwnerMatches() {
+        String reservationId = UUID.randomUUID().toString();
+        String accountId = testWallet.getAccountId();
+
+        when(walletUseCase.getAccountIdByReservationId(reservationId)).thenReturn(accountId);
+
+        boolean isOwner = walletController.validateReservationOwnership(reservationId, accountId);
+
+        assertThat(isOwner).isTrue();
+        verify(walletUseCase).getAccountIdByReservationId(reservationId);
+    }
+
+    @Test
+    @DisplayName("Should reject reservation ownership - owner does not match")
+    void shouldRejectReservationOwnership_WhenOwnerDoesNotMatch() {
+        String reservationId = UUID.randomUUID().toString();
+        String actualOwnerId = testWallet.getAccountId();
+        String differentAccountId = UUID.randomUUID().toString();
+
+        when(walletUseCase.getAccountIdByReservationId(reservationId)).thenReturn(actualOwnerId);
+
+        boolean isOwner = walletController.validateReservationOwnership(reservationId, differentAccountId);
+
+        assertThat(isOwner).isFalse();
+        verify(walletUseCase).getAccountIdByReservationId(reservationId);
+    }
+
+    @Test
+    @DisplayName("Should reject reservation ownership - reservation not found")
+    void shouldRejectReservationOwnership_WhenReservationNotFound() {
+        String reservationId = UUID.randomUUID().toString();
+        String accountId = testWallet.getAccountId();
+
+        when(walletUseCase.getAccountIdByReservationId(reservationId))
+                .thenThrow(new id.payu.wallet.application.service.ReservationNotFoundException(reservationId));
+
+        boolean isOwner = walletController.validateReservationOwnership(reservationId, accountId);
+
+        assertThat(isOwner).isFalse();
+        verify(walletUseCase).getAccountIdByReservationId(reservationId);
+    }
+
+    @Test
     @DisplayName("Should credit amount to wallet")
     void shouldCreditAmountToWallet() {
         CreditRequest request = new CreditRequest(new BigDecimal("5000000"), "REF-001", "Test credit");

@@ -1,5 +1,6 @@
 package id.payu.promotion;
 
+import id.payu.saga.annotation.EnableSaga;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -23,6 +24,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaAuditing
 @EnableKafka
 @EnableAsync
+@EnableSaga
 public class PromotionServiceApplication {
 
     public static void main(String[] args) {

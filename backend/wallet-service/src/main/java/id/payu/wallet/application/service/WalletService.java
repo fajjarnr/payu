@@ -267,6 +267,19 @@ public class WalletService implements WalletUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public String getAccountIdByReservationId(String reservationId) {
+        log.debug("Getting account ID for reservation: {}", reservationId);
+
+        return walletPersistencePort.findByTransactionId(UUID.fromString(reservationId))
+                .stream()
+                .filter(entry -> "RESERVATION".equals(entry.getReferenceType()))
+                .findFirst()
+                .map(entry -> entry.getAccountId().toString())
+                .orElseThrow(() -> new ReservationNotFoundException(reservationId));
+    }
+
+    @Override
     @Transactional
     public String credit(String accountId, BigDecimal amount, String referenceId, String description) {
         log.info("Crediting {} to account {} with reference {}", amount, accountId, referenceId);

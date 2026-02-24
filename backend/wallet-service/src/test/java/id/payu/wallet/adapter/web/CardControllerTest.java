@@ -53,7 +53,7 @@ class CardControllerTest {
     }
 
     @Test
-    @DisplayName("Should create virtual card")
+    @DisplayName("Should create virtual card with masked card number")
     void shouldCreateVirtualCard() {
         CreateCardRequest request = new CreateCardRequest("ACC-001", "John Doe", new BigDecimal("5000000"));
 
@@ -64,13 +64,15 @@ class CardControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getData().getCardNumber()).isEqualTo(testCard.getCardNumber());
+        // PCI-DSS compliance: API response must show masked card number (only last 4 digits)
+        assertThat(response.getBody().getData().getCardNumber()).isEqualTo("**** **** **** 4444");
+        assertThat(response.getBody().getData().getFullCardNumber()).isEqualTo(testCard.getCardNumber());
         assertThat(response.getBody().getData().getStatus()).isEqualTo(Card.CardStatus.ACTIVE.name());
         verify(cardUseCase).createVirtualCard("ACC-001", "John Doe", new BigDecimal("5000000"));
     }
 
     @Test
-    @DisplayName("Should get cards by account ID")
+    @DisplayName("Should get cards by account ID with masked card numbers")
     void shouldGetCardsByAccountId() {
         when(cardUseCase.getCardsByAccountId("ACC-001")).thenReturn(List.of(testCard));
 
@@ -78,7 +80,9 @@ class CardControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getData()).hasSize(1);
-        assertThat(response.getBody().getData().get(0).getCardNumber()).isEqualTo(testCard.getCardNumber());
+        // PCI-DSS compliance: API response must show masked card number (only last 4 digits)
+        assertThat(response.getBody().getData().get(0).getCardNumber()).isEqualTo("**** **** **** 4444");
+        assertThat(response.getBody().getData().get(0).getFullCardNumber()).isEqualTo(testCard.getCardNumber());
         verify(cardUseCase).getCardsByAccountId("ACC-001");
     }
 
@@ -105,7 +109,7 @@ class CardControllerTest {
     }
 
     @Test
-    @DisplayName("Should get card by ID")
+    @DisplayName("Should get card by ID with masked card number")
     void shouldGetCardById() {
         String cardId = testCard.getId().toString();
         when(cardUseCase.getCardById(cardId)).thenReturn(Optional.of(testCard));
@@ -114,7 +118,9 @@ class CardControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getData().getCardNumber()).isEqualTo(testCard.getCardNumber());
+        // PCI-DSS compliance: API response must show masked card number (only last 4 digits)
+        assertThat(response.getBody().getData().getCardNumber()).isEqualTo("**** **** **** 4444");
+        assertThat(response.getBody().getData().getFullCardNumber()).isEqualTo(testCard.getCardNumber());
         verify(cardUseCase).getCardById(cardId);
     }
 

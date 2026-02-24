@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import SupportService from '@/services/SupportService';
 import type { CreateAgentRequest, CreateModuleRequest, AssignTrainingRequest, AgentStatus, TrainingStatus, CreateTicketRequest, TicketCategory, TicketPriority } from '@/services/SupportService';
 
@@ -32,6 +33,7 @@ export function useCreateAgent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateAgentRequest) => SupportService.createAgent(data),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['support-agents'] }); },
   });
 }
@@ -41,6 +43,7 @@ export function useUpdateAgentStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: AgentStatus }) =>
       SupportService.updateAgentStatus(id, status),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['support-agents'] }); },
   });
 }
@@ -64,6 +67,7 @@ export function useCreateModule() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateModuleRequest) => SupportService.createModule(data),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['training-modules'] }); },
   });
 }
@@ -73,6 +77,7 @@ export function useUpdateModuleStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: TrainingStatus }) =>
       SupportService.updateModuleStatus(id, status),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['training-modules'] }); },
   });
 }
@@ -98,6 +103,7 @@ export function useAssignTraining() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: AssignTrainingRequest) => SupportService.assignTraining(data),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['agent-trainings'] });
       qc.invalidateQueries({ queryKey: ['support-training-status'] });
@@ -118,6 +124,7 @@ export function useCreateTicket() {
   return useMutation({
     mutationFn: (data: CreateTicketRequest) =>
       SupportService.createTicket(data),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['support-tickets'] }); },
   });
 }

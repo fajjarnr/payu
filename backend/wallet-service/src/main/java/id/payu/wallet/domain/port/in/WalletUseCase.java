@@ -72,6 +72,14 @@ public interface WalletUseCase {
     void releaseReservation(String reservationId);
 
     /**
+     * Get account ID associated with a reservation.
+     * Used for ownership validation before commit/release operations.
+     * @param reservationId reservation ID
+     * @return account ID that owns the reservation
+     */
+    String getAccountIdByReservationId(String reservationId);
+
+    /**
      * Credit amount to wallet (incoming transfer).
      * @param accountId   account to credit
      * @param amount      amount to credit

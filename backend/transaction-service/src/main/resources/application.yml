@@ -77,6 +77,8 @@ services:
     url: http://localhost:9000
   qris:
     url: http://localhost:9001
+  account:
+    url: http://localhost:8081
 kafka:
   bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
   producer:
@@ -165,7 +167,7 @@ sharding:
   enable-cross-partition-queries: true
   max-query-parallelism: 4
   partition-key: senderAccountId
-# Resilience4j configuration for wallet-service calls
+# Resilience4j configuration for external service calls
 resilience4j:
   circuitbreaker:
     instances:
@@ -178,9 +180,26 @@ resilience4j:
         wait-duration-in-open-state: 5s
         failure-rate-threshold: 50
         event-consumer-buffer-size: 10
+      accountService:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
   retry:
     instances:
       walletService:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.net.ConnectException
+      accountService:
         max-attempts: 3
         wait-duration: 500ms
         enable-exponential-backoff: true

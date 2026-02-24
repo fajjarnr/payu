@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import AuthService from '@/services/AuthService';
 import { useAuthStore } from '@/stores';
 import type { LoginRequest, User } from '@/types';
@@ -13,6 +14,7 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
+    ...MutationPresets.nonFinancial,
     onSuccess: async (response) => {
       // Tokens are managed via httpOnly cookies by the backend
       // We only store user profile and account ID in the store
@@ -45,6 +47,7 @@ export const useLogout = () => {
         .catch(() => { /* best-effort */ });
       logout();
     },
+    ...MutationPresets.nonFinancial,
     onSuccess: () => {
       queryClient.clear();
       if (typeof window !== 'undefined') {
@@ -59,6 +62,7 @@ export const useRefreshToken = () => {
 
   return useMutation({
     mutationFn: () => AuthService.refreshToken(),
+    ...MutationPresets.nonFinancial,
     onSuccess: (data) => {
       // Tokens are managed via httpOnly cookies by the backend
       setAuthenticated(true);

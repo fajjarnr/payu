@@ -21,6 +21,7 @@ quarkus:
       verification: none # pragma: allowlist secret
     token:
       issuer: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
+      audience: ${OIDC_AUDIENCE:gateway-service}
     # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks
     # This mitigates the "none" algorithm attack and ensures asymmetric encryption
     jws-algorithm: RS256

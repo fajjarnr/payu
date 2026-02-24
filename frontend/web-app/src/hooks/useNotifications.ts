@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import NotificationService from '@/services/NotificationService';
 
 export function useNotifications(userId: string, page = 0, size = 20) {
@@ -23,6 +24,7 @@ export function useMarkNotificationRead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (notificationId: string) => NotificationService.markAsRead(notificationId),
+    ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['notifications'] }); },
   });
 }

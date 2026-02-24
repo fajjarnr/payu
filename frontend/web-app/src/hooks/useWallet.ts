@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import WalletService from '@/services/WalletService';
 import type { ReserveBalanceRequest, CreditRequest } from '@/services/WalletService';
 
@@ -20,6 +21,7 @@ export const useReserveBalance = () => {
   return useMutation({
     mutationFn: ({ accountId, request }: { accountId: string; request: ReserveBalanceRequest }) =>
       WalletService.reserveBalance(accountId, request),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
     }
@@ -31,6 +33,7 @@ export const useCommitReservation = () => {
 
   return useMutation({
     mutationFn: (reservationId: string) => WalletService.commitReservation(reservationId),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -43,6 +46,7 @@ export const useReleaseReservation = () => {
 
   return useMutation({
     mutationFn: (reservationId: string) => WalletService.releaseReservation(reservationId),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
     }
@@ -55,6 +59,7 @@ export const useCreditWallet = () => {
   return useMutation({
     mutationFn: ({ accountId, request }: { accountId: string; request: CreditRequest }) =>
       WalletService.credit(accountId, request),
+    ...MutationPresets.financial,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });

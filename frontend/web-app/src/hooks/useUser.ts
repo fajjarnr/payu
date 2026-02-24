@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MutationPresets } from '@/lib/mutation-config';
 import UserService from '@/services/UserService';
 import type { UpdateUserRequest } from '@/services/UserService';
 import { useAuthStore } from '@/stores';
@@ -23,6 +24,7 @@ export const useUpdateUser = () => {
   return useMutation({
     mutationFn: ({ userId, data }: { userId: string; data: UpdateUserRequest }) =>
       UserService.updateUser(userId, data),
+    ...MutationPresets.nonFinancial,
     onSuccess: (response) => {
       // Update the auth store with new user data
       if (response.user) {
