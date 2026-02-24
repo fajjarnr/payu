@@ -144,8 +144,12 @@ public class PromotionService {
             throw new IllegalArgumentException("Promotion is expired or not yet started");
         }
 
-        if (promotion.getMaxRedemptions() != null &&
-            promotion.getRedemptionCount() >= promotion.getMaxRedemptions()) {
+        // BUG-BE-063 Fix: Use atomic increment to prevent race condition on maxRedemptions
+        // The old code: read count → check < max → increment was vulnerable to concurrent claims
+        // both passing the check before either increments.
+        // atomicIncrementRedemptionCount returns 0 if maxRedemptions already reached.
+        int updated = promotionRepository.atomicIncrementRedemptionCount(promotion.getId());
+        if (updated == 0) {
             throw new IllegalArgumentException("Promotion has reached maximum redemptions");
         }
 
@@ -172,9 +176,6 @@ public class PromotionService {
         }
 
         reward = rewardRepository.save(reward);
-
-        promotion.setRedemptionCount(promotion.getRedemptionCount() + 1);
-        promotionRepository.save(promotion);
 
         publishPromotionEvent(promotion, "CLAIMED");
         publishRewardEvent(reward);

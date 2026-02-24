@@ -30,13 +30,13 @@
 | ID | Service | Issue | Impact |
 | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-001~~ | ~~gateway-service~~ | ~~FIXED: JWT validation implemented dengan nimbus-jose-jwt — signature, expiration, issuer, audience validation~~ | ~~Seluruh platform tidak aman~~ |
-| **BUG-BE-002** | `auth-service` | In-memory `failedAttempts`, `tokenStore`, `otpStore`, `challengeStore` — multi-pod tidak sync | MFA/brute-force protection gagal di scale-out |
+| ✅ ~~BUG-BE-002~~ | ~~auth-service~~ | ~~FIXED: All auth state (failedAttempts, token cache) already uses Redis CacheService. MFATokenService consolidated.~~ | ~~MFA/brute-force protection gagal di scale-out~~ |
 | ✅ ~~BUG-BE-035~~ | ~~partner-service~~ | ~~FIXED: Token store moved to Redis with TTL — token persistent antar pod~~ | ~~Partner integration gagal di HPA~~ |
-| **BUG-BE-062** | `promotion-service` | Cashback langsung `CREDITED` tanpa credit wallet | User tidak terima uang cashback |
-| **BUG-BE-060** | `promotion-service` | Race condition di loyalty points balance — lost update | Saldo poin salah |
-| **BUG-BE-090** | `shared/api-commons` | `RateLimitAspect`: `increment` + `expire` non-atomic — permanent rate-limit possible | User bisa di-block selamanya |
-| **BUG-FE-021** | All financial services | Tidak ada `X-Idempotency-Key` — double-tap bisa double-charge | Transfer/payment duplikat |
-| **BUG-FE-027** | `providers.tsx` | Global `mutations: { retry: 1 }` — auto-retry financial mutations | Double debit on network error |
+| ✅ ~~BUG-BE-062~~ | ~~promotion-service~~ | ~~FIXED: CashbackSagaOrchestrator credits wallet via WalletServicePort before recording. Saga compensation on failure.~~ | ~~User tidak terima uang cashback~~ |
+| ✅ ~~BUG-BE-060~~ | ~~promotion-service~~ | ~~FIXED: LoyaltyPointsService uses pg_advisory_xact_lock for atomic balance calculation.~~ | ~~Saldo poin salah~~ |
+| ✅ ~~BUG-BE-090~~ | ~~shared/api-commons~~ | ~~FIXED: RateLimitAspect uses atomic Lua script for INCR+EXPIRE.~~ | ~~User bisa di-block selamanya~~ |
+| ✅ ~~BUG-FE-021~~ | ~~All financial services~~ | ~~FIXED: X-Idempotency-Key header added to TransactionService, WalletService, BillingService via getFinancialMutationHeaders().~~ | ~~Transfer/payment duplikat~~ |
+| ✅ ~~BUG-FE-027~~ | ~~providers.tsx~~ | ~~FIXED: mutations.retry set to 0 to prevent auto-retry of financial operations.~~ | ~~Double debit on network error~~ |
 | **GAP-001** | *(belum ada)* | Outbound webhook ke partner (TokoBapak/Nobar) tidak ada | Partner tidak bisa tahu payment status |
 | **GAP-002** | `partner-service` | Multi-tenancy tidak ada — data isolation antar partner | Data TokoBapak bisa bocor ke Nobar |
 | **GAP-006** | All payment endpoints | Idempotency key tidak didukung | Double-charge on retry |
@@ -112,7 +112,7 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-018** | `investment-service` | `WalletServiceAdapter.java` L29-31 | **Endpoint wallet tidak ada** — `POST /wallets/{userId}/deduct` dan `/credit` tidak terdefinisi di `WalletController`. Semua beli/jual investasi 404. | Sesuaikan dengan flow reserve-commit yang ada di `wallet-service`. |
+| ✅ ~~BUG-BE-018~~ | ~~investment-service~~ | ~~WalletServiceAdapter.java L29-31~~ | ~~FIXED: Rewrote WalletServiceAdapter to use wallet-service's actual API: deductBalance→reserve+commit, creditBalance→/credit, hasSufficientBalance→/balance (reads 'availableBalance'). Also fixes BUG-BE-029.~~ | ~~Sesuaikan dengan flow reserve-commit yang ada di `wallet-service`.~~ |
 | ✅ ~~BUG-BE-019~~ | ~~shared/security-starter~~ | ~~EncryptionService.java L263~~ | ~~FIXED: PBKDF2 salt now configurable via `payu.security.encryption.salt` property. Default fallback preserved for backward compat.~~ | ~~Jadikan configurable via env var.~~ |
 | ✅ ~~BUG-BE-020~~ | ~~account-service~~ | ~~UserApplicationService.java L35-36~~ | ~~FIXED: Removed `@Async` from registerUser to ensure DB ops run synchronously within the transaction.~~ | ~~Pisahkan: sync untuk DB ops, async hanya untuk event publishing.~~ |
 
@@ -233,10 +233,10 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-060** | `promotion-service` | `LoyaltyPointsService.java` L124-130 | **Race condition pada balance calculation** — `balanceAfter` dibaca dari record terakhir. Concurrent writes → lost update → saldo salah. | `SELECT FOR UPDATE` atau atomic balance column di table terpisah. |
+| ✅ ~~BUG-BE-060~~ | ~~promotion-service~~ | ~~LoyaltyPointsService.java L124-130~~ | ~~FIXED: Uses pg_advisory_xact_lock for atomic balance calculation. Prevents lost updates from concurrent writes.~~ | ~~`SELECT FOR UPDATE` atau atomic balance column di table terpisah.~~ |
 | **BUG-BE-061** | `promotion-service` | `GamificationService.java` L442-444 | **`getTransactionAmount()` selalu return `ZERO`** — badge berbasis total amount tidak bisa diraih. | Inject `TransactionServiceClient` dan query jumlah transaksi real. |
-| **BUG-BE-062** | `promotion-service` | `CashbackService.java` L56 | **Cashback `CREDITED` tanpa credit ke wallet** — cashback tercatat tapi saldo tidak bertambah. | Panggil wallet-service credit sebelum set `CREDITED`. Wrap dengan saga. |
-| **BUG-BE-063** | `promotion-service` | `PromotionService.java` L148-149 | **Race condition max redemptions** — dua concurrent claim bisa keduanya lolos check, kuota melebihi limit. | Optimistic locking `@Version` atau atomic: `UPDATE SET count = count + 1 WHERE count < max`. |
+| ✅ ~~BUG-BE-062~~ | ~~promotion-service~~ | ~~CashbackService.java L56~~ | ~~FIXED: CashbackSagaOrchestrator credits wallet via WalletServicePort before recording cashback. Compensation on failure.~~ | ~~Panggil wallet-service credit sebelum set `CREDITED`. Wrap dengan saga.~~ |
+| ✅ ~~BUG-BE-063~~ | ~~promotion-service~~ | ~~PromotionService.java L148-149~~ | ~~FIXED: Replaced read-check-write with atomic `atomicIncrementRedemptionCount()` using UPDATE...WHERE count < max.~~ | ~~Optimistic locking `@Version` atau atomic: `UPDATE SET count = count + 1 WHERE count < max`.~~ |
 | **BUG-BE-064** | `shared/cache-starter` | `CacheService.java` L169-172 | **Stale-while-revalidate tidak async** — saat stale, hanya return data lama tanpa trigger refresh. | Inject executor + `CompletableFuture.runAsync(() -> put(key, fallback.get()))` saat stale. |
 
 ---

@@ -82,6 +82,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **BUG-BE-025** (`notification-service`): Replaced simple incrementer with scheduled retry implementation. Failed notifications execute a dynamic schedule with exponential backoff strategy (up to 3 limits) managed by a scheduled job.
   - **Test Results**: lending-service all pass, notification-service all pass, transaction-service compiles properly without `Instant` conversion error.
 
+- **P0 Critical Bug Fixes — Investment & Promotion Race Conditions (BUG-BE-018, 029, 063) (2026-02-24)**:
+  - **BUG-BE-018** (`investment-service`): Rewrote `WalletServiceAdapter` to use wallet-service's actual API endpoints. `deductBalance` now uses reserve→commit flow instead of non-existent `/deduct`. `creditBalance` calls `/credit`. Added circuit breaker and retry resilience patterns.
+  - **BUG-BE-029** (`investment-service`): `hasSufficientBalance` now reads `availableBalance` from wallet response instead of `balance`, which was always returning false.
+  - **BUG-BE-063** (`promotion-service`): Replaced race-prone read-check-write pattern in `claimPromotion` with atomic `atomicIncrementRedemptionCount()` — a single `UPDATE...WHERE count < max` query that prevents concurrent claims from exceeding quota.
+  - **Verified Already Fixed**: BUG-BE-002 (auth uses Redis CacheService), BUG-BE-060 (pg_advisory_xact_lock), BUG-BE-062 (cashback saga), BUG-BE-090 (Lua script), BUG-FE-021 (idempotency headers), BUG-FE-027 (retry=0).
+  - **Test Results**: investment-service 14/15 pass (1 pre-existing Mockito stub issue), promotion-service CashbackServiceTest 11/11, CashbackSagaTest 6/6 pass.
+
 ### Changed
 
 - **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:
