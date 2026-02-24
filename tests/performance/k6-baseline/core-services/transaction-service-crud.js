@@ -3,7 +3,7 @@
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
-import { BASELINE_THRESHOLDS, BASELINE_STAGES, SERVICE_ENDPOINTS } from '../config/baseline-config.js';
+import { BASELINE_THRESHOLDS, BASELINE_STAGES, SERVICE_ENDPOINTS, BASE_URLS } from '../config/baseline-config.js';
 import { login, getAuthHeaders } from '../lib/auth-helper.js';
 import { create, read, update, list } from '../lib/crud-helper.js';
 
