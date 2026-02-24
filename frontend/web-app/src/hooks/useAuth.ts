@@ -9,7 +9,7 @@ import { useLocale } from 'next-intl';
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { setAuth, setTokenExpiry } = useAuthStore();
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) => AuthService.login(credentials),
@@ -20,6 +20,11 @@ export const useLogin = () => {
       if (user) {
         setAuth(user, user.id);
       }
+      // Track when the accessToken cookie will expire so useSilentRefresh
+      // can proactively refresh before it expires (no token is exposed here)
+      const expiresIn: number = response.data?.expiresIn ?? 900; // seconds
+      setTokenExpiry(Date.now() + expiresIn * 1000);
+
       await queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
     onError: (error) => {
@@ -50,14 +55,16 @@ export const useLogout = () => {
 };
 
 export const useRefreshToken = () => {
-  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const { setAuthenticated, setTokenExpiry } = useAuthStore();
 
   return useMutation({
     mutationFn: () => AuthService.refreshToken(),
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Tokens are managed via httpOnly cookies by the backend
-      // We just update the authenticated state
       setAuthenticated(true);
+      // Re-arm the expiry timer with the new token's lifetime
+      const expiresIn = data?.expiresIn ?? 900;
+      setTokenExpiry(Date.now() + expiresIn * 1000);
     }
   });
 };

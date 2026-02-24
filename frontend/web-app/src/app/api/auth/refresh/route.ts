@@ -49,15 +49,15 @@ export async function POST() {
     const newRefreshToken =
       data.refresh_token ?? data.data?.refresh_token ?? data.data?.refreshToken;
 
-    const isProduction = process.env.NODE_ENV === 'production';
-    const response = NextResponse.json({ success: true });
+    const ACCESS_TOKEN_MAX_AGE = 900; // 15 minutes
+    const response = NextResponse.json({ success: true, expiresIn: ACCESS_TOKEN_MAX_AGE });
 
     if (newAccessToken) {
       response.cookies.set('accessToken', newAccessToken, {
         httpOnly: true,
         secure: false, // Labs environment: relax secure requirement
         sameSite: 'lax',
-        maxAge: 900,
+        maxAge: ACCESS_TOKEN_MAX_AGE,
         path: '/',
       });
     }

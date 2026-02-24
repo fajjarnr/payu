@@ -13,6 +13,7 @@ const mockLogout = vi.fn();
 const mockSetAuthenticated = vi.fn();
 const mockSetUser = vi.fn();
 const mockClearAuth = vi.fn();
+const mockSetTokenExpiry = vi.fn();
 
 vi.mock('@/stores/authStore', () => ({
   useAuthStore: vi.fn((selector: (state: unknown) => unknown) => {
@@ -20,9 +21,11 @@ vi.mock('@/stores/authStore', () => ({
       user: null,
       accountId: null,
       isAuthenticated: false,
+      tokenExpiresAt: null,
       setAuth: mockSetAuth,
       setUser: mockSetUser,
       setAuthenticated: mockSetAuthenticated,
+      setTokenExpiry: mockSetTokenExpiry,
       logout: mockLogout,
       clearAuth: mockClearAuth
     };
@@ -236,7 +239,7 @@ describe('useRefreshToken hook', () => {
   });
 
   it('should refresh token successfully', async () => {
-    vi.mocked(AuthService.refreshToken).mockResolvedValue(undefined);
+    vi.mocked(AuthService.refreshToken).mockResolvedValue({ expiresIn: 900 });
 
     const { result } = renderHook(() => useRefreshToken(), { wrapper });
 
@@ -269,7 +272,7 @@ describe('useRefreshToken hook', () => {
   });
 
   it('should update authenticated state in store on successful refresh', async () => {
-    vi.mocked(AuthService.refreshToken).mockResolvedValue(undefined);
+    vi.mocked(AuthService.refreshToken).mockResolvedValue({ expiresIn: 900 });
 
     const { result } = renderHook(() => useRefreshToken(), { wrapper });
 
@@ -348,7 +351,7 @@ describe('useAuth integration', () => {
   });
 
   it('should handle token refresh during authenticated session', async () => {
-    vi.mocked(AuthService.refreshToken).mockResolvedValue(undefined);
+    vi.mocked(AuthService.refreshToken).mockResolvedValue({ expiresIn: 900 });
 
     const { result } = renderHook(() => useRefreshToken(), { wrapper });
 

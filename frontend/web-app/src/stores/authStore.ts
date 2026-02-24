@@ -35,9 +35,16 @@ interface AuthState {
   accountId: string | null;
   /** True when user is authenticated - derived from user and accountId presence */
   isAuthenticated: boolean;
+  /**
+   * Timestamp (ms) when the accessToken cookie will expire.
+   * Stored in-memory only (not persisted) to schedule proactive token refresh.
+   * Populated after login or refresh. Does NOT contain the token itself.
+   */
+  tokenExpiresAt: number | null;
   setAuth: (user: User, accountId: string) => void;
   setUser: (user: User) => void;
   setAuthenticated: (authenticated: boolean) => void;
+  setTokenExpiry: (expiresAt: number) => void;
   logout: () => void;
   clearAuth: () => void;
 }
@@ -48,6 +55,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       accountId: null,
       isAuthenticated: false,
+      tokenExpiresAt: null,
 
       setAuth: (user, accountId) => {
         set({
@@ -55,6 +63,10 @@ export const useAuthStore = create<AuthState>()(
           accountId,
           isAuthenticated: true
         });
+      },
+
+      setTokenExpiry: (expiresAt) => {
+        set({ tokenExpiresAt: expiresAt });
       },
 
       setUser: (user) => {
@@ -73,7 +85,8 @@ export const useAuthStore = create<AuthState>()(
         set({
           user: null,
           accountId: null,
-          isAuthenticated: false
+          isAuthenticated: false,
+          tokenExpiresAt: null
         });
       },
 
@@ -89,6 +102,8 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         accountId: state.accountId,
         isAuthenticated: state.isAuthenticated
+        // tokenExpiresAt intentionally NOT persisted:
+        // cookie is the source of truth; useSilentRefresh re-estimates on mount
       })
     }
   )

@@ -15,7 +15,7 @@
 | `compliance/` | Regulatory compliance | OJK_BI_REGULATORY_AUDIT.md |
 | `qa/` | Testing strategy & reports | QA_STRATEGY.md, JACOCO_SETUP.md |
 | `reports/` | Test reports | QA_TEST_REPORT.md |
-| `roadmap/` | Project roadmap & todos | TODOS.md |
+| `roadmap/` | Project roadmap, bugs & gateway arch | TODOS.md · PROGRESS.md · GATEWAY_ARCH.md |
 | `adr/` | Architecture decision records | 0000-0013 (ADR index) |
 | `test-improvements.md` | E2E test fixes summary | test-improvements.md |
 
@@ -37,7 +37,9 @@
 
 ### For Product Managers
 - **[PRD.md](product/PRD.md)** - Product requirements, features, success metrics
-- **[TODOS.md](roadmap/TODOS.md)** - Project roadmap, task tracking, completion status
+- **[TODOS.md](roadmap/TODOS.md)** - Bug backlog & open actionable items
+- **[PROGRESS.md](roadmap/PROGRESS.md)** - Deployment history, scorecard, completed milestones
+- **[GATEWAY_ARCH.md](roadmap/GATEWAY_ARCH.md)** - Gateway architecture, gap analysis (TokoBapak/Nobar integration)
 
 ### For DevOps/SRE
 - **[DISASTER_RECOVERY.md](operations/DISASTER_RECOVERY.md)** - Backup & restore procedures
@@ -113,7 +115,9 @@ docs/
 ├── archive/                         # Historical/deprecated docs
 │
 ├── roadmap/
-│   └── TODOS.md                     # Project roadmap & task tracking
+│   ├── TODOS.md                     # Bug backlog & open items
+│   ├── PROGRESS.md                  # Deployment history & scorecard
+│   └── GATEWAY_ARCH.md              # Gateway architecture & integration gaps
 │
 └── adr/
     ├── README.md                    # ADR index

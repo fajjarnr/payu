@@ -7,7 +7,7 @@ resources:
   - secrets/secrets-template.yaml
   - monitoring/hpa.yaml
 
-namespace: payu-prod
+namespace: payu
 
 # Production: use values as-is from base (2 replicas default, gateway=3)
 # HPA will scale up based on load

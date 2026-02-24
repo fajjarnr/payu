@@ -10,7 +10,11 @@ export interface LoginRequest {
  */
 export interface LoginResponse {
   success: boolean;
-  data: { user: User };
+  data: {
+    user: User;
+    /** Seconds until the accessToken cookie expires — safe to expose, not the token itself */
+    expiresIn?: number;
+  };
 }
 
 interface UserSession {
@@ -144,14 +148,15 @@ export class AuthService {
    * Refreshes the authentication token.
    * Backend handles token rotation via httpOnly cookies.
    *
-   * @returns Promise resolving when refresh is complete
+   * @returns Promise resolving with expiresIn (seconds) for the new access token
    */
-  async refreshToken(): Promise<void> {
+  async refreshToken(): Promise<{ expiresIn?: number }> {
     const res = await fetch('/api/auth/refresh', {
       method: 'POST',
       credentials: 'include',
     });
     if (!res.ok) throw new Error('Token refresh failed');
+    return res.json();
   }
 
   /**

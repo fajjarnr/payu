@@ -1,3 +1,5 @@
+import { SilentRefreshProvider } from '@/components/auth/SilentRefreshProvider';
+
 /**
  * Dashboard layout — Forces dynamic rendering for all dashboard routes.
  *
@@ -16,5 +18,6 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <SilentRefreshProvider>{children}</SilentRefreshProvider>;
 }
+

@@ -18,9 +18,12 @@ export default function middleware(request: NextRequest) {
   const pathWithoutLocale = pathname.replace(/^\/(en|id)/, '') || '/';
   
   // Authentication check - verify existence of session tokens
-  // These are httpOnly cookies set by the backend
-  const hasSession = request.cookies.has('accessToken') || 
-                     request.cookies.has('refreshToken') || 
+  // Priority: refreshToken (7 days) > accessToken (15 min) > session cookie
+  // We check refreshToken first because an expired accessToken does NOT mean
+  // the session is dead — the 401 interceptor in api.ts will silently refresh it.
+  // Only when there's no refreshToken do we treat the session as truly expired.
+  const hasSession = request.cookies.has('refreshToken') ||
+                     request.cookies.has('accessToken') ||
                      request.cookies.has('payu_session');
 
   // 1. Auto-redirect from Landing to Dashboard if already logged in

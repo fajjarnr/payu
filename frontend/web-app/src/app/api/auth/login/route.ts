@@ -80,9 +80,11 @@ export async function POST(request: Request) {
 
     // Build response and set cookies directly on the NextResponse object
     // (cookies() from next/headers does NOT attach Set-Cookie to NextResponse.json())
+    const ACCESS_TOKEN_MAX_AGE = 900; // 15 minutes
     const responseData = {
       ...(data.data || data),
-      user: user || data.data?.user
+      user: user || data.data?.user,
+      expiresIn: ACCESS_TOKEN_MAX_AGE, // seconds until accessToken expires — safe to expose
     };
     const response = NextResponse.json({ success: true, data: responseData });
     response.headers.set("X-Correlation-Id", correlationId);
@@ -92,7 +94,7 @@ export async function POST(request: Request) {
         httpOnly: true,
         secure: false, // Labs environment: relax secure requirement
         sameSite: "lax",
-        maxAge: 900, // 15 minutes
+        maxAge: ACCESS_TOKEN_MAX_AGE,
         path: "/",
       });
     }

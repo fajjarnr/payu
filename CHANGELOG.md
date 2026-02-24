@@ -5,7 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
+
+---
+
 ## [Unreleased]
+
+### Added
+
+- **Documentation Restructuring — Roadmap Split (2026-02-24)**:
+  - **Split `TODOS.md` (749 baris) menjadi 3 dokumen terpisah** untuk eliminasi kontradiksi dan improve navigasi:
+    - `docs/roadmap/TODOS.md` — Pure bug backlog & open actionable items (~117 bugs terdokumentasi)
+    - `docs/roadmap/PROGRESS.md` — Deployment history, scorecard, DORA metrics, completed milestones
+    - `docs/roadmap/GATEWAY_ARCH.md` — Architecture review, gap analysis, integration roadmap (TokoBapak/Nobar)
+  - Updated `docs/INDEX.md` untuk mencerminkan struktur baru
+
+### Changed
+
+- **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:
+  - Re-evaluasi platform PayU dari standalone digital banking → core banking/payment gateway
+  - Identifikasi 10 critical architecture gaps (GAP-001 s/d GAP-010):
+    - **P0**: Outbound Webhook, Multi-Tenancy, Idempotency, Escrow (TokoBapak), Recurring Billing (Nobar)
+    - **P1**: Settlement & Reconciliation, Rate Card per Partner, Refund & Dispute
+    - **P2**: API Key Management, Multi-Currency Settlement
+  - Revisi evaluasi service: `partner-service`, `api-portal-service`, `compliance-service`, `saga-starter` dikonfirmasi sebagai **essential** untuk gateway role (sebelumnya dievaluasi sebagai overkill)
+  - Rekomendasi hapus/simplify: `ab-testing-service`, Gamification XP/Badge, Robo-Advisory
+
+### Fixed (Code Review Findings)
+
+- **Backend Code Review — 90+ Bugs Teridentifikasi (2026-02-24)**:
+  - **P0 Critical** (14 bugs): Gateway JWT placeholder (BUG-BE-001), auth in-memory state (BUG-BE-002),
+    cashback tidak credit wallet (BUG-BE-062), loyalty points race condition (BUG-BE-060),
+    `RateLimitAspect` race condition non-atomic (BUG-BE-090), dan lainnya
+  - **Shared `api-commons` findings**: `RateLimitAspect` burst window vulnerability (BUG-BE-091),
+    `WebhookProcessor` Thread.sleep blocking (BUG-BE-092)
+  - **Frontend** (26 bugs): No idempotency keys (BUG-FE-021), global mutation retry=1 (BUG-FE-027),
+    localStorage use di ABTestingService (BUG-FE-020), dan lainnya
+  - **Cross-service mismatches** (18 bugs): Statement status enum mismatch, scheduled-transfers 404,
+    PaymentStatus missing PROCESSING/REFUNDED, dan lainnya
+  - Detail lengkap: `docs/roadmap/TODOS.md`
+
+---
 
 ### Fixed
 
@@ -227,7 +267,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Built and pushed image `payu/web-app:1.3.0` to OpenShift registry
   - Updated deployment in `payu-dev` namespace to use new image tag
 
-## [1.2.0] - 2026-02-18
+## [1.2.5] - 2026-02-18
+
+> Milestone: OpenShift HA Deployment — 22/22 services running, HPA + PDB, Keycloak seeder, rate limiting best practices.
 
 ### Added
 
@@ -384,7 +426,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Vitest Config**: Added resolve alias for `next/navigation` → `next/navigation.js`
 - **Scorecard**: Security 82→92, Frontend Web-App 88→95
 
-## [Unreleased] - 2026-02-12
+## [1.2.4] - 2026-02-12
+
+> Milestone: OpenShift Infrastructure Operators — Crunchy PGO, AMQ Streams (KRaft), DataGrid, RHSSO via Operator subscriptions.
 
 ### Added
 
@@ -404,7 +448,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Kafka Console Configuration**: Updated to use `kafkaClusters` format with `credentials.kafkaUser` for SCRAM-SHA-512 authentication
 - **Kafka Listener Security**: Enabled SCRAM-SHA-512 authentication on `plain` listener for Console connectivity
 
-## [Unreleased] - 2026-02-11
+## [1.2.3] - 2026-02-11
+
+> Milestone: Full Podman Compose Deployment (35 services), backend Integration Tests 100%, Production Readiness 98→100.
 
 ### Added
 
@@ -459,7 +505,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Container Environment Readiness: **100% (35/35 services running)**
 - Updated TODOS.md with API testing results and comprehensive container status
 
-## [Unreleased]
+## [1.2.2] - 2026-02-10
+
+> Milestone: Hexagonal Architecture 19/19 services complete, Technical Debt 19/19 resolved, OpenShift readiness audit 92%.
 
 ### Changed
 
@@ -783,7 +831,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Fixed Schema Collisions in Wallet Service (V3/V3.1)
     - Created Primary Schema for Partner Service (V1)
 
-## [1.2.0] - 2026-02-02
+## [1.2.1] - 2026-02-02
+
+> Milestone: Container environment fixes — all 9 failing services resolved, Flyway PG16 compat, Production Readiness 85→95%.
 
 ### Fixed
 

@@ -6,10 +6,16 @@
 
 ## ✅ Platform Status (Feb 2026)
 
-> **Production Readiness: 🟢 98/100** | **Platform Maturity: 🟢 98%**
+> **Deployment**: 🟢 22/22 services live on OpenShift | **E2E Tests**: 🟢 399/399 pass
 >
-> All P0-P3 blockers resolved. 19/19 tech debt items closed. 399/399 E2E tests pass.
-> - **Full roadmap**: `docs/roadmap/TODOS.md`
+> ⚠️ **Code Review Status (Feb 24, 2026)**: ~117 bugs teridentifikasi dari deep code review.
+> Scorecard infra/deployment tetap green, tapi logic correctness & security perlu perbaikan.
+> Gateway readiness untuk integrasi TokoBapak/Nobar: 5 P0 gaps belum diimplementasikan.
+>
+> **Dokumen Roadmap (split Feb 24)**:
+> - **Bug backlog & open items**: `docs/roadmap/TODOS.md`
+> - **Deployment history & scorecard**: `docs/roadmap/PROGRESS.md`
+> - **Gateway architecture & gap analysis**: `docs/roadmap/GATEWAY_ARCH.md`
 > - **Implementation patterns**: `docs/guides/LESSONS.md`
 > - **Architecture**: `docs/architecture/ARCHITECTURE.md`
 
@@ -17,17 +23,19 @@
 
 ## �📋 Project Overview
 
-**PayU** adalah platform digital banking standalone yang dibangun dengan arsitektur microservices di atas **Red Hat OpenShift 4.20+** ecosystem. Platform ini dirancang sebagai payment infrastructure berskala enterprise yang dapat digunakan oleh multiple projects.
+**PayU** adalah **core banking & payment gateway platform** yang dibangun dengan arsitektur microservices di atas **Red Hat OpenShift 4.20+** ecosystem. Platform ini dirancang sebagai payment infrastructure berskala enterprise yang **diintegrasikan oleh multiple project eksternal** (TokoBapak, Nobar, dll.).
 
 ### Quick Facts
 
-| Attribute             | Value                                 |
-| :-------------------- | :------------------------------------ |
-| **Project Name**      | PayU                                  |
-| **Type**              | Standalone Digital Banking Platform   |
-| **Architecture**      | Scalable Microservices + Event-Driven |
-| **Primary Languages** | Java 21, Python 3.12, TypeScript      |
-| **Last Updated**      | February 10, 2026                      |
+| Attribute             | Value                                              |
+| :-------------------- | :------------------------------------------------- |
+| **Project Name**      | PayU                                               |
+| **Type**              | Core Banking & Payment Gateway Platform            |
+| **Architecture**      | Scalable Microservices + Event-Driven + Hexagonal  |
+| **Primary Languages** | Java 21, Python 3.12, TypeScript                   |
+| **Last Updated**      | February 24, 2026                                  |
+| **Key Integrations**  | TokoBapak (e-commerce escrow), Nobar (subscription)|
+| **Gateway Standard**  | SNAP-BI (Bank Indonesia API Standard)              |
 
 ## ⚡ Quick Commands (for AI Agents)
 
@@ -43,10 +51,15 @@
 
 ## 📌 Fast Entry Points
 
-- `docs/INDEX.md` — Doc map & navigation hub
-- `docs/roadmap/TODOS.md` — Active roadmap and open tasks
-- `backend/SERVICES_STATUS.md` — Current service status summary
-- `backend/FACTORY_IMPLEMENTATION_SUMMARY.md` — Build/implementation summary
+| File | Tujuan |
+| :--- | :--- |
+| `docs/INDEX.md` | Doc map & navigation hub |
+| `docs/roadmap/TODOS.md` | **Bug backlog & open items** (~117 bugs, P0-P3) |
+| `docs/roadmap/PROGRESS.md` | Deployment history, scorecard, DORA metrics |
+| `docs/roadmap/GATEWAY_ARCH.md` | **Gateway architecture** — gap analysis TokoBapak/Nobar |
+| `docs/guides/LESSONS.md` | Implementation patterns & lessons learned |
+| `backend/SERVICES_STATUS.md` | Current service status summary |
+| `CHANGELOG.md` | Version history (ISO 8601, semver, no duplicates) |
 
 ---
 
@@ -90,7 +103,7 @@
 | `notification-service` | Quarkus 3.x Native | Push, SMS, Email, WhatsApp                 |
 | `gateway-service`      | Quarkus 3.x Native | API Gateway, Rate limiting                 |
 | `cms-service`          | Spring Boot 3.4    | Banners, Promos, Dynamic Content           |
-| `ab-testing-service`   | Spring Boot 3.4    | UI/Feature experimentation                  |
+| `ab-testing-service`   | Spring Boot 3.4    | UI/Feature experimentation ⚠️ **Kandidat hapus** |
 | `api-portal-service`   | Quarkus 3.x Native | Centralized OpenAPI Docs & Sandbox         |
 | `kyc-service`          | Python FastAPI     | OCR, Liveness Detection                    |
 | `analytics-service`    | Python FastAPI     | Fraud Scoring, User Insights               |
@@ -146,8 +159,9 @@ payu/
 │   ├── architecture/    # ARCHITECTURE.md
 │   ├── product/         # PRD.md
 │   ├── operations/      # Runbooks, DISASTER_RECOVERY.md
-│   ├── guides/          # AI Skills Guide
-│   └── security/        # Security policies
+│   ├── guides/          # AI Skills Guide (termasuk file ini)
+│   ├── security/        # Security policies
+│   └── roadmap/         # TODOS.md · PROGRESS.md · GATEWAY_ARCH.md
 ├── infrastructure/      # OpenShift, Helm, Tekton, ArgoCD
 ├── scripts/             # Automation scripts (backup, deploy, test)
 ├── tests/               # Gatling (Performance), Pytest (Regression), E2E
@@ -171,7 +185,9 @@ payu/
 4. **Error Handling**: Gunakan `GlobalExceptionHandler` dan custom `BusinessException` dengan error codes yang unik (e.g., `ACC_001`).
 5. **Annotation Processor Fallback**: Jika Lombok (`@Getter`, `@Setter`, `@Builder`, `@Slf4j`) gagal dikompilasi setelah 2 upaya perbaikan konfigurasi, segera beralih ke implementasi manual (explicit) untuk menjamin stabilitas build.
 6. **Enum Placement**: Selalu definisikan Enum domain sebagai file top-level (bukan inner class) untuk menghindari masalah resolusi simbol dan kompatibilitas dengan Lombok/JPA.
-7. **Changelog Sync**: Setiap kali melakukan update signifikan pada `docs/roadmap/TODOS.md`, WAJIB melakukan update pada `CHANGELOG.md` untuk mencatat perubahan versi atau milestone yang tercapai.
+7. **Doc Sync**: Setiap update signifikan WAJIB update `CHANGELOG.md`. Roadmap terbagi 3 file: `TODOS.md` (bugs), `PROGRESS.md` (history), `GATEWAY_ARCH.md` (arsitektur). Jangan campurkan konten.
+8. **Idempotency**: Semua endpoint payment/transfer WAJIB support `X-Idempotency-Key` header. Ini absolute requirement untuk gateway role.
+9. **Gateway-First Thinking**: Sebelum mengimplementasikan fitur, tanya: "Apakah ini relevan untuk payment gateway yang melayani TokoBapak/Nobar, atau hanya untuk consumer app?" Lihat `docs/roadmap/GATEWAY_ARCH.md` untuk konteks.
 
 ### Testing Guidelines (TDD)
 
@@ -454,11 +470,21 @@ This section defines the high-performance operational protocol for all AI Agents
 - **Verify Plan**: Check in before starting implementation.
 - **Track Progress**: Mark items complete as you go.
 - **Explain Changes**: High-level summary at each step.
-- **Document Results**: Add review section to `docs/roadmap/TODOS.md`.
+- **Document Results**: Add bug findings ke `docs/roadmap/TODOS.md`, architectural decisions ke `docs/roadmap/GATEWAY_ARCH.md`.
 - **Capture Lessons**: Update `docs/guides/LESSONS.md` after corrections.
+- **Changelog**: Update `CHANGELOG.md` `[Unreleased]` section for any significant change.
+
+**Doc Routing Rules**:
+| Konten | File Tujuan |
+| :--- | :--- |
+| Bug baru, open items, actionable todos | `docs/roadmap/TODOS.md` |
+| Deployment status, completed milestones | `docs/roadmap/PROGRESS.md` |
+| Architecture decisions, gap analysis | `docs/roadmap/GATEWAY_ARCH.md` |
+| Version changelog | `CHANGELOG.md` |
+| Implementation patterns | `docs/guides/LESSONS.md` |
 
 **Fast Path (Small Changes)**:
-- Boleh skip update `docs/roadmap/TODOS.md` dan `docs/guides/LESSONS.md` untuk perubahan kecil (<=2 file, 1 service, tanpa keputusan arsitektural).
+- Boleh skip update roadmap docs untuk perubahan kecil (<=2 file, 1 service, tanpa keputusan arsitektural).
 - Tetap berikan rencana singkat + langkah verifikasi di respons.
 
 ### ⚖️ Core Engineering Principles
@@ -476,4 +502,4 @@ _Usage_: When tasked with complex refactoring or multi-service updates, read the
 
 ---
 
-_Last Updated: February 2026_
+_Last Updated: 2026-02-24 | Platform: Payment Gateway for TokoBapak & Nobar | Active Bug Count: ~117 (see TODOS.md)_
