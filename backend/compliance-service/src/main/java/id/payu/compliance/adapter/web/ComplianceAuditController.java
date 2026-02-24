@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.web.server.ResponseStatusException;
+
 @RestController
 @RequestMapping("/api/v1/compliance")
 @Slf4j
@@ -35,13 +37,10 @@ import java.util.stream.Collectors;
 @SecurityRequirement(name = "bearerAuth")
 public class ComplianceAuditController extends BaseController {
 
-    private ComplianceAuditService complianceAuditService;
+    // BUG-BE-168: Make field final to ensure immutability
+    private final ComplianceAuditService complianceAuditService;
 
     public ComplianceAuditController(ComplianceAuditService complianceAuditService) {
-        this.complianceAuditService = complianceAuditService;
-    }
-
-    public void setComplianceAuditService(ComplianceAuditService complianceAuditService) {
         this.complianceAuditService = complianceAuditService;
     }
 
@@ -114,7 +113,8 @@ public class ComplianceAuditController extends BaseController {
         } else if (merchantId != null) {
             reports = complianceAuditService.getReportsByMerchant(merchantId);
         } else {
-            throw new IllegalArgumentException("At least one search parameter is required");
+            // BUG-BE-169: Use ResponseStatusException for 400 Bad Request instead of IllegalArgumentException
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one search parameter is required");
         }
 
         List<AuditReportResponse> response = reports.stream()

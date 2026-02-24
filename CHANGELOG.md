@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Auth Service Refactoring — Unified Keycloak MFA (2026-02-24)**:
+  - Removed internal MFA and Biometric implementations (`BiometricService`, `MFATokenService`, `BiometricController`, etc.) as PayU moves to Keycloak-native MFA for better enterprise security.
+  - Simplified `AuthController` and removed biometric/MFA endpoints.
+  - Updated `LoginRequest` validation to be more lenient, as password complexity is now managed by Keycloak.
+
+### Fixed (Code Review Findings)
+
+- **auth-service: Test Suite Green-up (2026-02-24)**:
+  - Fixed `SecurityConfigTest` by converting it to a minimal context test with inner `@Configuration`. This resolves the "no database connection" and "no redis connection" issues during test execution without requiring containers.
+  - Fixed `VaultConfigurationTest` by converting it to a plain unit test, eliminating unnecessary application context loading.
+  - Rewrote `LoginRequestValidationTest` to reflect updated validation rules (removal of strict complexity checks in DTO).
+  - Fixed `TooManyActualInvocations` in `RefreshTokenService` by refining Redis operations and TTL.
+  - Adjusted error handling in `AuthController` to return `BAD_REQUEST` (400) for authentication errors instead of `INTERNAL_SERVER_ERROR` (500).
+  - Re-stabilized the entire auth-service unit test suite (65 tests now passing).
+
+
 - **Documentation Restructuring — Roadmap Split (2026-02-24)**:
   - **Split `TODOS.md` (749 baris) menjadi 3 dokumen terpisah** untuk eliminasi kontradiksi dan improve navigasi:
     - `docs/roadmap/TODOS.md` — Pure bug backlog & open actionable items (~117 bugs terdokumentasi)

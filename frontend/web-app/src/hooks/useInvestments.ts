@@ -35,7 +35,10 @@ export function useBuyDeposit() {
   return useMutation({
     mutationFn: (request: BuyDepositRequest) => InvestmentService.buyDeposit(request),
     ...MutationPresets.financial,
-    onSuccess: (_, vars) => { qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); },
+    onSuccess: (_, vars) => { 
+      qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); 
+      qc.invalidateQueries({ queryKey: ['wallet-balance'] });
+    },
   });
 }
 
@@ -44,7 +47,10 @@ export function useBuyMutualFund() {
   return useMutation({
     mutationFn: (request: BuyMutualFundRequest) => InvestmentService.buyMutualFund(request),
     ...MutationPresets.financial,
-    onSuccess: (_, vars) => { qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); },
+    onSuccess: (_, vars) => { 
+      qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); 
+      qc.invalidateQueries({ queryKey: ['wallet-balance'] });
+    },
   });
 }
 
@@ -53,7 +59,11 @@ export function useBuyGold() {
   return useMutation({
     mutationFn: (request: BuyGoldRequest) => InvestmentService.buyGold(request),
     ...MutationPresets.financial,
-    onSuccess: (_, vars) => { qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); },
+    onSuccess: (_, vars) => { 
+      qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); 
+      qc.invalidateQueries({ queryKey: ['gold-holdings', vars.userId] }); 
+      qc.invalidateQueries({ queryKey: ['wallet-balance'] });
+    },
   });
 }
 
@@ -62,6 +72,10 @@ export function useSellInvestment() {
   return useMutation({
     mutationFn: (request: SellInvestmentRequest) => InvestmentService.sell(request),
     ...MutationPresets.financial,
-    onSuccess: (_, vars) => { qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); },
+    onSuccess: (_, vars) => { 
+      qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); 
+      qc.invalidateQueries({ queryKey: ['gold-holdings', vars.userId] });
+      qc.invalidateQueries({ queryKey: ['wallet-balance'] });
+    },
   });
 }

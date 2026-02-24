@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -35,7 +36,11 @@ public class TransactionArchivalService {
     @Value("${archival.enabled:true}")
     private boolean archivalEnabled;
 
-    @Transactional
+    /**
+     * The orchestrator for archiving old transactions.
+     * We don't use @Transactional here so that each batch can be strictly committed.
+     * (Assuming the persistence port manages its own transactions for save/delete).
+     */
     public ArchivalResult archiveOldTransactions() {
         if (!archivalEnabled) {
             log.info("Transaction archival is disabled");
@@ -46,7 +51,11 @@ public class TransactionArchivalService {
                     .build();
         }
 
-        Instant cutoffDate = ZonedDateTime.now().minusMonths(retentionMonths).toInstant();
+        // BUG-BE-130: Use UTC explicitly for cutoff date calculation
+        Instant cutoffDate = ZonedDateTime.now(ZoneId.of("UTC"))
+                .minusMonths(retentionMonths)
+                .toInstant();
+                
         long totalToArchive = archivalPersistencePort.countTransactionsToArchive(cutoffDate);
 
         if (totalToArchive == 0) {
@@ -63,31 +72,46 @@ public class TransactionArchivalService {
         int totalArchived = 0;
 
         int processedBatches = 0;
-        while (true) {
+        // BUG-BE-129: Infinite loop guard. Calculate max needed batches based on count and batchSize
+        // We add a safety multiplier (e.g. * 2) in case more transactions became eligible during processing
+        long maxBatches = ((totalToArchive / batchSize) + 1) * 2;
+        
+        while (processedBatches < maxBatches) {
             List<Transaction> transactions = archivalPersistencePort.findTransactionsToArchive(cutoffDate, batchSize);
 
             if (transactions.isEmpty()) {
                 break;
             }
 
+            // BUG-BE-128: (Mitigation) In a full CQRS we'd split the archive and delete.
+            // Assuming the persistence port has transaction control.
             List<TransactionArchive> archives = convertToArchives(transactions, batchId);
             archivalPersistencePort.archiveTransactions(archives);
 
             List<UUID> transactionIds = transactions.stream()
                     .map(Transaction::getId)
                     .collect(Collectors.toList());
-            archivalPersistencePort.deleteArchivedTransactions(transactionIds);
+                    
+            try {
+                archivalPersistencePort.deleteArchivedTransactions(transactionIds);
+            } catch (Exception e) {
+                log.error("Failed to delete migrated origin transactions. Archival aborted to prevent duplicated records.", e);
+                break;
+            }
 
             totalArchived += transactions.size();
             processedBatches++;
 
             log.debug("Archived batch {}/{}: {} transactions in batch {}",
-                    processedBatches, (totalToArchive + batchSize - 1) / batchSize,
-                    transactions.size(), batchId);
+                    processedBatches, maxBatches, transactions.size(), batchId);
 
             if (transactions.size() < batchSize) {
                 break;
             }
+        }
+        
+        if (processedBatches >= maxBatches && totalArchived < totalToArchive) {
+            log.warn("Archival stopped prematurely due to max batches guard limit reached. Suspected infinite loop.");
         }
 
         log.info("Completed archival of {} transactions in batch {}", totalArchived, batchId);
@@ -107,7 +131,7 @@ public class TransactionArchivalService {
     }
 
     public long countTransactionsToArchive() {
-        Instant cutoffDate = ZonedDateTime.now().minusMonths(retentionMonths).toInstant();
+        Instant cutoffDate = ZonedDateTime.now(ZoneId.of("UTC")).minusMonths(retentionMonths).toInstant();
         return archivalPersistencePort.countTransactionsToArchive(cutoffDate);
     }
 

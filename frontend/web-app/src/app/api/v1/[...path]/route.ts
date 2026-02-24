@@ -145,7 +145,7 @@ async function proxyRequest(
     log.info({ action: 'proxy', method: request.method, path: `/api/v1/${backendPath}`, hasAuth: !!token }, 'Proxy request');
 
     // Build upstream headers
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'X-Correlation-Id': correlationId,
     };
 
@@ -163,6 +163,25 @@ async function proxyRequest(
     if (accept) {
       headers['Accept'] = accept;
     }
+
+    // Forward API version header if present (OCP-010)
+    const apiVersion = request.headers.get('accept-version');
+    if (apiVersion) {
+      headers['Accept-Version'] = apiVersion;
+    }
+
+    // BUG-FE-029: Forward security and custom headers
+    // Idempotency, device tracking, signatures, etc.
+    const allowedHeaders = ['x-idempotency-key', 'x-device-id', 'x-client-version', 'x-signature', 'x-timestamp'];
+    request.headers.forEach((value, key) => {
+      const lowerKey = key.toLowerCase();
+      if (allowedHeaders.includes(lowerKey) || lowerKey.startsWith('x-')) {
+        // Skip already added X-Correlation-Id
+        if (lowerKey !== 'x-correlation-id') {
+          headers[key] = value;
+        }
+      }
+    });
 
     const body =
       request.method === 'GET' || request.method === 'HEAD'

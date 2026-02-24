@@ -1,14 +1,12 @@
 package id.payu.auth.adapter.security;
 
 import id.payu.auth.application.service.RiskEvaluationService;
-import id.payu.auth.application.service.MFATokenService;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.auth.config.KeycloakConfig;
 import id.payu.auth.domain.model.LoginContext;
 import id.payu.auth.dto.LoginResponse;
-import id.payu.auth.exception.MFAException;
 import id.payu.cache.service.CacheService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +36,6 @@ public class KeycloakService {
     private final KeycloakConfig keycloakConfig;
     private final WebClient.Builder webClientBuilder;
     private final RiskEvaluationService riskEvaluationService;
-    private final MFATokenService mfaTokenService;
     private final ObjectMapper objectMapper;
     private final CacheService cacheService;
 
@@ -172,22 +169,7 @@ public class KeycloakService {
         return Mono.error(new IllegalArgumentException("Too many login attempts. Please try again later."));
     }
 
-    public Mono<LoginResponse> verifyMFAAndCompleteLogin(String mfaToken, String otpCode, String username, String password, LoginContext context) {
-        if (!mfaTokenService.validateAndConsumeMFAToken(mfaToken, username)) {
-            return Mono.error(new MFAException("MFA_001", "Invalid or expired MFA token"));
-        }
 
-        if (!mfaTokenService.validateOTP(username, otpCode)) {
-            mfaTokenService.consumeOTP(username);
-            recordFailedAttemptInternal(username);
-            return Mono.error(new MFAException("MFA_002", "Invalid OTP code"));
-        }
-
-        mfaTokenService.consumeOTP(username);
-        riskEvaluationService.recordSuccessfulLogin(username, context);
-
-        return loginInternal(username, password);
-    }
 
     /**
      * Blocking version of validateCredentials for use in servlet (non-reactive) contexts.
@@ -216,24 +198,7 @@ public class KeycloakService {
                 .block(); // Block until Mono completes
     }
 
-    /**
-     * Blocking version of verifyMFAAndCompleteLogin for use in servlet (non-reactive) contexts.
-     * This method blocks the thread until the MFA verification completes.
-     *
-     * @param mfaToken the MFA token
-     * @param otpCode the OTP code
-     * @param username the username
-     * @param password the password
-     * @param context the login context
-     * @return LoginResponse containing access tokens
-     * @throws MFAException if MFA verification fails
-     */
-    public LoginResponse verifyMFAAndCompleteLoginBlocking(String mfaToken, String otpCode,
-                                                            String username, String password,
-                                                            LoginContext context) {
-        return verifyMFAAndCompleteLogin(mfaToken, otpCode, username, password, context)
-                .block(); // Block until Mono completes
-    }
+
 
     /**
      * Blocking version of refreshToken for use in servlet (non-reactive) contexts.

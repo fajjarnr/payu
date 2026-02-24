@@ -44,7 +44,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
+        // BUG-BE-163: Hardcode allowed origins instead of wildcard for the payment gateway.
+        configuration.setAllowedOrigins(List.of("https://payu.co.id", "https://partner.payu.co.id"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         

@@ -8,15 +8,11 @@ import id.payu.api.common.response.ApiResponse;
 import id.payu.auth.domain.model.LoginContext;
 import id.payu.auth.dto.LoginRequest;
 import id.payu.auth.dto.LoginResponse;
-import id.payu.auth.dto.MFAResponse;
-import id.payu.auth.dto.MFAVerifyRequest;
 import id.payu.auth.dto.RefreshTokenRequest;
 import id.payu.auth.dto.RefreshTokenResponse;
 import id.payu.auth.dto.SessionValidationResponse;
 import id.payu.auth.exception.AuthDomainException;
-import id.payu.auth.exception.MFAException;
 import id.payu.auth.adapter.security.KeycloakService;
-import id.payu.auth.application.service.MFATokenService;
 import id.payu.auth.adapter.persistence.RefreshTokenService;
 import id.payu.auth.application.service.RiskEvaluationService;
 import id.payu.auth.application.service.SessionValidationService;
@@ -54,7 +50,6 @@ public class AuthController extends BaseController {
 
     private final KeycloakService keycloakService;
     private final RiskEvaluationService riskEvaluationService;
-    private final MFATokenService mfaTokenService;
     private final RefreshTokenService refreshTokenService;
     private final SessionValidationService sessionValidationService;
 
@@ -85,8 +80,8 @@ public class AuthController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "Successful login or MFA required",
-                    content = @Content(schema = @Schema(oneOf = {LoginResponse.class, MFAResponse.class}))
+                    description = "Successful login",
+                    content = @Content(schema = @Schema(implementation = LoginResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -123,21 +118,8 @@ public class AuthController extends BaseController {
                         ));
             }
 
-            // Evaluate risk
-            RiskEvaluationService.RiskEvaluationResult riskResult =
-                    riskEvaluationService.evaluateRisk(context);
-
-            if (riskResult.isMfaRequired()) {
-                var mfaToken = mfaTokenService.generateMFAToken(request.username());
-                return ResponseEntity.ok(
-                        ApiResponse.success(new MFAResponse(
-                                true,
-                                mfaToken.mfaToken(),
-                                (mfaToken.expiresAt() - System.currentTimeMillis()) / 1000,
-                                riskResult.getMessage()
-                        ))
-                );
-            }
+            // Evaluate risk for telemetry
+            riskEvaluationService.evaluateRisk(context);
 
             // Complete login
             LoginResponse loginResponse = keycloakService.loginBlocking(
@@ -159,80 +141,7 @@ public class AuthController extends BaseController {
         }
     }
 
-    /**
-     * Verify MFA OTP code and complete authentication.
-     */
-    @PostMapping("/mfa/verify")
-    @Audited(
-            operation = id.payu.security.annotation.Audited.Operation.LOGIN,
-            entityType = "User",
-            maskData = true,
-            level = AuditLevel.INFO
-    )
-    @Operation(
-            summary = "Verify MFA code",
-            description = """
-                    Verifies the OTP code sent to the user's registered device
-                    and completes the authentication process.
 
-                    **Rate Limiting:** 10 requests per minute per IP
-                    """
-    )
-    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "MFA verified successfully, returns JWT tokens",
-                    content = @Content(schema = @Schema(implementation = LoginResponse.class))
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid OTP | Expired MFA token",
-                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
-            ),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "429",
-                    description = "Too many verification attempts",
-                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
-            )
-    })
-    @SecurityRequirements
-    @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "mfa")
-    public ResponseEntity<ApiResponse<LoginResponse>> verifyMFA(
-            @Valid @RequestBody MFAVerifyRequest request,
-            HttpServletRequest httpRequest
-    ) {
-        LoginContext context = buildLoginContext(request.username(), httpRequest);
-
-        try {
-            LoginResponse response = keycloakService.verifyMFAAndCompleteLoginBlocking(
-                    request.mfaToken(),
-                    request.otpCode(),
-                    request.username(),
-                    "",
-                    context
-            );
-
-            log.info("Successful MFA verification for user: {}", request.username());
-            return ResponseEntity.ok(ApiResponse.success(response));
-
-        } catch (MFAException e) {
-            log.warn("MFA verification failed for user: {} - {}",
-                    request.username(), e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(
-                            ErrorCode.AUTH_BUS_004.getCode(),
-                            ErrorCode.AUTH_BUS_004.getMessage()
-                    ));
-        } catch (Exception e) {
-            // SECURITY: Don't log full stack trace to prevent information disclosure
-            log.error("MFA verification failed for user: {} - {}", request.username(), e.getClass().getSimpleName());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(
-                            ErrorCode.INTERNAL_ERROR.getCode(),
-                            ErrorCode.INTERNAL_ERROR.getMessage()
-                    ));
-        }
-    }
 
     /**
      * Builds login context from HTTP request.

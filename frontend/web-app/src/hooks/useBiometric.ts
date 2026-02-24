@@ -5,11 +5,11 @@ import { MutationPresets } from '@/lib/mutation-config';
 import AuthService from '@/services/AuthService';
 import type { BiometricRegistration, BiometricAuthRequest } from '@/services/AuthService';
 
+// BUG-FE-035: Changed from useQuery (enabled: false) to useMutation
 export function useBiometricChallenge() {
-  return useQuery({
-    queryKey: ['biometric-challenge'],
-    queryFn: () => AuthService.getBiometricChallenge(),
-    enabled: false, // only fetch on demand
+  return useMutation({
+    mutationFn: () => AuthService.getBiometricChallenge(),
+    ...MutationPresets.nonFinancial,
   });
 }
 

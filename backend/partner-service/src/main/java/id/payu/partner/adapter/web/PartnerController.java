@@ -18,7 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 
-import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
 /**
  * REST controller for managing partners.
@@ -27,6 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/partners")
 @Tag(name = OpenApiConstants.TAG_PARTNER, description = "Partner management operations")
+@PreAuthorize("hasRole('ADMIN')") // BUG-BE-164: Restrict partner management to ADMIN
 public class PartnerController extends BaseController {
 
     private final PartnerService partnerService;
@@ -190,6 +192,7 @@ public class PartnerController extends BaseController {
     }
 
     @PostMapping("/{id}/keys/regenerate")
+    @RateLimiter(name = "regenerateKeys") // BUG-BE-165: Rate limiting to prevent abuse
     @Audited(
             operation = Audited.Operation.OTHER,
             entityType = "Partner",
@@ -227,6 +230,10 @@ public class PartnerController extends BaseController {
         PartnerDTO partner = partnerService.regenerateKeys(id);
         if (partner == null) {
             return notFound("Partner", id);
+        }
+        // BUG-BE-165: Mask the client secret instead of returning it fully
+        if (partner.getClientSecret() != null && partner.getClientSecret().length() >= 4) {
+            partner.setClientSecret(partner.getClientSecret().substring(0, 4) + "***");
         }
         return ok(partner);
     }

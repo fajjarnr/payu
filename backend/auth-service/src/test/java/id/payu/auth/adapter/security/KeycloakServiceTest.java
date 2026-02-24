@@ -1,13 +1,10 @@
 package id.payu.auth.adapter.security;
 
 import id.payu.auth.application.service.RiskEvaluationService;
-import id.payu.auth.application.service.MFATokenService;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.auth.config.KeycloakConfig;
 import id.payu.auth.domain.model.LoginContext;
 import id.payu.auth.dto.LoginResponse;
-import id.payu.auth.exception.MFAException;
 import id.payu.cache.service.CacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -68,9 +65,6 @@ class KeycloakServiceTest {
 
     @Mock
     private RiskEvaluationService riskEvaluationService;
-
-    @Mock
-    private MFATokenService mfaTokenService;
 
     @Mock
     private CacheService cacheService;
@@ -315,65 +309,6 @@ class KeycloakServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("MFA Verification")
-    class MFATokenVerification {
-
-        @Test
-        @DisplayName("should reject invalid MFA token")
-        void shouldRejectInvalidMFAToken() {
-            // Given
-            String mfaToken = "invalid-token";
-            String otpCode = "123456";
-            String username = "testuser";
-            String password = "password";
-            LoginContext context = new LoginContext(username, "192.168.1.1", "device-123", "Mozilla", System.currentTimeMillis());
-
-            when(mfaTokenService.validateAndConsumeMFAToken(mfaToken, username)).thenReturn(false);
-
-            // When
-            Mono<LoginResponse> result = keycloakService.verifyMFAAndCompleteLogin(
-                    mfaToken, otpCode, username, password, context);
-
-            // Then
-            StepVerifier.create(result)
-                    .expectErrorMatches(error ->
-                        error instanceof MFAException &&
-                        error.getMessage().contains("Invalid or expired MFA token"))
-                    .verify();
-
-            verifyNoInteractions(riskEvaluationService);
-        }
-
-        @Test
-        @DisplayName("should reject invalid OTP code")
-        void shouldRejectInvalidOTPCode() {
-            // Given
-            String mfaToken = "valid-mfa-token";
-            String otpCode = "000000";
-            String username = "testuser";
-            String password = "password";
-            LoginContext context = new LoginContext(username, "192.168.1.1", "device-123", "Mozilla", System.currentTimeMillis());
-
-            when(mfaTokenService.validateAndConsumeMFAToken(mfaToken, username)).thenReturn(true);
-            when(mfaTokenService.validateOTP(username, otpCode)).thenReturn(false);
-
-            // When
-            Mono<LoginResponse> result = keycloakService.verifyMFAAndCompleteLogin(
-                    mfaToken, otpCode, username, password, context);
-
-            // Then
-            StepVerifier.create(result)
-                    .expectErrorMatches(error ->
-                        error instanceof MFAException &&
-                        error.getMessage().contains("Invalid OTP code"))
-                    .verify();
-
-            verify(mfaTokenService).consumeOTP(username);
-        }
-    }
-
-    @Nested
     @DisplayName("Credential Validation")
     class CredentialValidation {
 

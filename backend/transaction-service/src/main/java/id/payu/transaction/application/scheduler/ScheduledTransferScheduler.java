@@ -18,10 +18,25 @@ public class ScheduledTransferScheduler {
 
     private final ScheduledTransferPersistencePort persistencePort;
     private final ScheduledTransferService scheduledTransferService;
+    private final org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
 
     @Scheduled(fixedRate = 60000)
     public void processDueScheduledTransfers() {
+        String lockKey = "lock:scheduled_transfers";
+        String lockValue = java.util.UUID.randomUUID().toString();
+        boolean lockAcquired = false;
+        
         try {
+            // Try to acquire lock for 55 seconds (slightly less than the schedule rate)
+            Boolean result = stringRedisTemplate.opsForValue()
+                    .setIfAbsent(lockKey, lockValue, java.time.Duration.ofSeconds(55));
+            lockAcquired = Boolean.TRUE.equals(result);
+
+            if (!lockAcquired) {
+                log.debug("Another instance is processing scheduled transfers, skipping...");
+                return;
+            }
+
             Instant now = Instant.now();
             List<ScheduledTransfer> dueTransfers = persistencePort.findDueScheduledTransfers(now);
 
@@ -44,6 +59,18 @@ public class ScheduledTransferScheduler {
 
         } catch (Exception e) {
             log.error("Error processing due scheduled transfers, error: {}", e.getMessage());
+        } finally {
+            if (lockAcquired) {
+                try {
+                    // Only release the lock if we hold it
+                    String currentValue = stringRedisTemplate.opsForValue().get(lockKey);
+                    if (lockValue.equals(currentValue)) {
+                        stringRedisTemplate.delete(lockKey);
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to release scheduled transfer lock: {}", e.getMessage());
+                }
+            }
         }
     }
 }

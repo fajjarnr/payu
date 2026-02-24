@@ -16,20 +16,35 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   const { onMessage, onError, onClose, onOpen, enabled = true } = options;
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const reconnectAttemptsRef = useRef(0);
   const isAuthenticated = useIsAuthenticated();
+
+  // Store callbacks in refs to avoid bloated dependencies in connect (BUG-FE-034)
+  const callbacksRef = useRef({ onMessage, onError, onClose, onOpen });
+  useEffect(() => {
+    callbacksRef.current = { onMessage, onError, onClose, onOpen };
+  }, [onMessage, onError, onClose, onOpen]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
     }
     if (wsRef.current) {
-      wsRef.current.close();
+      // 1000 indicates normal closure
+      wsRef.current.close(1000, 'User intentional disconnect');
       wsRef.current = null;
     }
   }, []);
 
   const connect = useCallback(() => {
     if (!enabled || !isAuthenticated) return;
+
+    if (wsRef.current) {
+      wsRef.current.close(1000, 'Reconnecting');
+    }
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
 
     // WebSocket connection uses httpOnly cookie for authentication
     // The browser automatically includes cookies with the WebSocket request
@@ -38,13 +53,14 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
 
     ws.onopen = (event) => {
       console.log('WebSocket connected');
-      onOpen?.(event);
+      reconnectAttemptsRef.current = 0; // reset attempts
+      callbacksRef.current.onOpen?.(event);
     };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        onMessage?.(data);
+        callbacksRef.current.onMessage?.(data);
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error);
       }
@@ -52,27 +68,35 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
-      onError?.(error);
+      callbacksRef.current.onError?.(error);
     };
 
     ws.onclose = (event) => {
       console.log('WebSocket closed:', event.code, event.reason);
-      onClose?.(event);
+      callbacksRef.current.onClose?.(event);
+      
+      // Prevent reconnecting if explicitly closed with 1000
+      if (event.code !== 1000 && enabled && isAuthenticated) {
+        const attempts = reconnectAttemptsRef.current;
+        const maxRetries = 10;
+        
+        if (attempts >= maxRetries) {
+          console.warn('Max WebSocket reconnect attempts reached');
+          return;
+        }
 
-      if (event.code !== 1000 && enabled) {
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s... max 30s
+        const backoffMs = Math.min(1000 * Math.pow(2, attempts), 30000);
+        reconnectAttemptsRef.current = attempts + 1;
+
+        // Call connect directly to get fresh closures and handlers (BUG-FE-030)
         reconnectTimeoutRef.current = setTimeout(() => {
-          if (enabled && isAuthenticated) {
-            const newWs = new WebSocket(url);
-            newWs.onopen = ws.onopen;
-            newWs.onmessage = ws.onmessage;
-            newWs.onerror = ws.onerror;
-            newWs.onclose = ws.onclose;
-            wsRef.current = newWs;
-          }
-        }, 3000);
+          console.log(`Reconnecting WebSocket after ${backoffMs}ms...`);
+          connect();
+        }, backoffMs);
       }
     };
-  }, [url, isAuthenticated, enabled, onMessage, onError, onClose, onOpen]);
+  }, [url, isAuthenticated, enabled]);
 
   useEffect(() => {
     connect();
@@ -82,7 +106,8 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   }, [connect, disconnect]);
 
   return {
-    ws: null as unknown as WebSocket,
+    // Return a getter to always reflect the current underlying websocket (BUG-FE-031)
+    get ws() { return wsRef.current; },
     disconnect,
     connect
   };

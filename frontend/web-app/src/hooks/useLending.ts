@@ -58,7 +58,11 @@ export function useApplyLoan() {
   return useMutation({
     mutationFn: (request: LoanApplicationRequest) => LendingService.applyLoan(request),
     ...MutationPresets.financial,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['loan'] }); },
+    onSuccess: (_, vars) => { 
+      qc.invalidateQueries({ queryKey: ['loan'] }); 
+      qc.invalidateQueries({ queryKey: ['credit-score', vars.userId] });
+      qc.invalidateQueries({ queryKey: ['wallet-balance'] });
+    },
   });
 }
 

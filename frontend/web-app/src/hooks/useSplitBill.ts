@@ -97,7 +97,11 @@ export function useSplitBillPayment() {
     mutationFn: ({ id, participantId, amount }: { id: string; participantId: string; amount: number }) =>
       TransactionService.makeParticipantPayment(id, participantId, amount),
     ...MutationPresets.financial,
-    onSuccess: (_, vars) => { qc.invalidateQueries({ queryKey: ['split-bill', vars.id] }); },
+    onSuccess: (_, vars) => { 
+      qc.invalidateQueries({ queryKey: ['split-bill', vars.id] }); 
+      qc.invalidateQueries({ queryKey: ['wallet-balance'] });
+      qc.invalidateQueries({ queryKey: ['transactions'] });
+    },
   });
 }
 
@@ -106,6 +110,10 @@ export function useSettleSplitBill() {
   return useMutation({
     mutationFn: (id: string) => TransactionService.settleSplitBill(id),
     ...MutationPresets.financial,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['split-bills'] }); },
+    onSuccess: () => { 
+      qc.invalidateQueries({ queryKey: ['split-bills'] }); 
+      qc.invalidateQueries({ queryKey: ['wallet-balance'] });
+      qc.invalidateQueries({ queryKey: ['transactions'] });
+    },
   });
 }

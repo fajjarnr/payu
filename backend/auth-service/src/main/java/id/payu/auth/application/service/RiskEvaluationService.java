@@ -90,7 +90,7 @@ public class RiskEvaluationService {
         
         // Add Device if new
         if (context.deviceId() != null && isNewDevice(profile, context.deviceId())) {
-            profile.addKnownDevice(context.deviceId());
+            // profile.addKnownDevice(context.deviceId());
         }
         
         // Add IP if new

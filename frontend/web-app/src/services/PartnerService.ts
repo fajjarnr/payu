@@ -7,9 +7,13 @@ export interface Partner {
   email: string;
   phone: string;
   clientId?: string;
-  clientSecret?: string;
+  // BUG-FE-032: clientSecret removed to prevent accidental exposure
   publicKey?: string;
   active: boolean;
+}
+
+export interface PartnerWithCredentials extends Partner {
+  clientSecret: string;
 }
 
 export interface Certificate {
@@ -46,7 +50,7 @@ export const PartnerService = {
 
   /** POST /partners — Register new partner */
   async register(data: { name: string; email: string; type: string; phone: string; publicKey?: string }) {
-    const response = await api.post<Partner>('/partners', data);
+    const response = await api.post<PartnerWithCredentials>('/partners', data);
     return response.data;
   },
 
@@ -64,7 +68,7 @@ export const PartnerService = {
 
   /** POST /partners/{id}/keys/regenerate — Regenerate API keys */
   async regenerateKeys(id: number) {
-    const response = await api.post<Partner>(`/partners/${id}/keys/regenerate`);
+    const response = await api.post<PartnerWithCredentials>(`/partners/${id}/keys/regenerate`);
     return response.data;
   },
 
@@ -141,12 +145,7 @@ export const PartnerService = {
   },
 
   // === SNAP-BI Integration ===
-
-  /** POST /partner/auth/token — Get SNAP-BI auth token */
-  async getSnapBiToken(clientId: string, clientSecret: string) {
-    const response = await api.post<{ accessToken: string; expiresIn: number }>('/partner/auth/token', { clientId, clientSecret });
-    return response.data;
-  },
+  // BUG-FE-033: getSnapBiToken via client credentials removed from frontend.
 
   /** POST /partner/payments — Create SNAP-BI payment */
   async createSnapBiPayment(data: { amount: number; currency: string; referenceId: string; description?: string }) {

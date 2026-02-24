@@ -27,14 +27,17 @@ public class LoyaltyPointsService {
     private final LoyaltyPointsRepository loyaltyPointsRepository;
     private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
     private final String promotionEventsTopic;
+    private final jakarta.persistence.EntityManager entityManager;
 
     public LoyaltyPointsService(
             LoyaltyPointsRepository loyaltyPointsRepository,
             KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
-            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic) {
+            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic,
+            jakarta.persistence.EntityManager entityManager) {
         this.loyaltyPointsRepository = loyaltyPointsRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.promotionEventsTopic = promotionEventsTopic;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -141,17 +144,22 @@ public class LoyaltyPointsService {
 
     /**
      * Calculate current balance with pessimistic locking to prevent race conditions.
-     * This method acquires a database lock on the most recent record for the account,
-     * ensuring concurrent transactions serialize their access.
+     * Uses PostgreSQL advisory lock to ensure serialization even when no previous
+     * records exist for the account, preventing phantom reads/lost updates.
      *
      * @param accountId the account ID
      * @return the current balance (0 if no records)
      */
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = false) // MUST be readWrite for advisory lock to hold correctly in PG
     public Integer calculateCurrentBalanceWithLock(String accountId) {
-        Optional<LoyaltyPoints> latestRecord = loyaltyPointsRepository
-            .findTopByAccountIdOrderByCreatedAtDescWithLock(accountId);
-        return latestRecord.map(LoyaltyPoints::getBalanceAfter).orElse(0);
+        // Acquire transaction-level advisory lock using Postgres hash function
+        entityManager.createNativeQuery("SELECT pg_advisory_xact_lock(hashtext(:accountId))")
+                     .setParameter("accountId", accountId)
+                     .getSingleResult();
+
+        // Safe to read the balance now, no other transaction can concurrently insert for this account
+        Integer balance = loyaltyPointsRepository.calculateBalanceByAccountId(accountId);
+        return balance != null ? balance : 0;
     }
 
     /**
