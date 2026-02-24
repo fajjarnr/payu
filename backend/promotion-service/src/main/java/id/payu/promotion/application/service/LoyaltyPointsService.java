@@ -122,17 +122,22 @@ public class LoyaltyPointsService {
         Integer currentBalance = calculateCurrentBalance(accountId);
 
         List<LoyaltyPoints> allPoints = loyaltyPointsRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+        // BUG-BE-065 Fix: Use .sum() of actual points, not .count() of records.
+        // .count() returned number of transactions, not total points value.
         long totalEarned = allPoints.stream()
             .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EARNED)
-            .count();
+            .mapToInt(LoyaltyPoints::getPoints)
+            .sum();
 
         long totalRedeemed = allPoints.stream()
             .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.REDEEMED)
-            .count();
+            .mapToInt(p -> Math.abs(p.getPoints()))
+            .sum();
 
         long expiredPointsCount = allPoints.stream()
             .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EXPIRED)
-            .count();
+            .mapToInt(p -> Math.abs(p.getPoints()))
+            .sum();
 
         return new LoyaltyBalanceResponse(
             currentBalance != null ? currentBalance : 0,

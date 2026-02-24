@@ -144,13 +144,13 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-021** | `investment-service` | `InvestmentApplicationService.java` L115 | **No saga compensation** — `deductBalance` sukses tapi `saveDeposit` gagal → uang hilang tanpa deposit tersimpan. | Implementasikan saga: jika save gagal, `creditBalance()` rollback. |
+| ✅ ~~BUG-BE-021~~ | ~~investment-service~~ | ~~InvestmentApplicationService.java L115~~ | ~~FIXED: Added saga compensation — if saveDeposit fails after wallet deduction, creditBalance() rollback is triggered. Logs CRITICAL if rollback also fails for manual intervention.~~ | ~~Implementasikan saga: jika save gagal, `creditBalance()` rollback.~~ |
 | ✅ ~~BUG-BE-022~~ | ~~investment-service~~ | ~~Multiple files~~ | ~~FIXED: Reference numbers (DEP, MF, SELL) replaced with UUID-based generation.~~ | ~~Ganti ke UUID-based.~~ |
 | ✅ ~~BUG-BE-023~~ | ~~fx-service~~ | ~~FxRateService.java L59-61~~ | ~~FIXED: Caught exception per-currency to continue updating other rates even if one fails.~~ | ~~Catch exception per-currency, lanjutkan ke berikutnya.~~ |
 | **BUG-BE-024** | `fx-service` | `FxConversionService.java` L27-35 | **FX conversion tidak pernah gerakkan wallet** — status PENDING dibuat tapi tidak ada debit/kredit. | Integrasikan dengan wallet reservation flow. |
 | ✅ ~~BUG-BE-025~~ | ~~notification-service~~ | ~~NotificationService.java L75~~ | ~~FIXED: Added retry scheduling logic with exponential backoff and a scheduled job to process pending retries.~~ | ~~Implementasi retry scheduler untuk FAILED notifications.~~ |
 | **BUG-BE-026** | `notification-service` | `SmsSender.java` L16-29 | **SMS sender adalah mock** — OTP tidak pernah terkirim ke user. | Integrasikan Twilio/Vonage atau provider SMS lokal. |
-| **BUG-BE-027** | `account-service` | `UserApplicationService.java` L64 | **User `ACTIVE` meski KYC `REJECTED`** — user bisa login dan transaksi meski gagal KYC. | Jika `kycStatus == REJECTED`, set `status = PENDING_VERIFICATION`. |
+| ✅ ~~BUG-BE-027~~ | ~~account-service~~ | ~~UserApplicationService.java L64~~ | ~~FIXED: User status now set based on KYC result — ACTIVE if approved, PENDING_VERIFICATION if rejected. Previously always ACTIVE.~~ | ~~Jika `kycStatus == REJECTED`, set `status = PENDING_VERIFICATION`.~~ |
 
 ---
 
@@ -267,7 +267,7 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-065** | `promotion-service` | `LoyaltyPointsService.java` L100-121 | **`getBalance()` count transaksi bukan sum poin** — `.count()` bukan `.mapToInt(getPoints).sum()`. Saldo poin selalu = jumlah record. | Ganti ke `.mapToInt(LoyaltyPoints::getPoints).sum()`. |
+| ✅ ~~BUG-BE-065~~ | ~~promotion-service~~ | ~~LoyaltyPointsService.java L100-121~~ | ~~FIXED: Replaced `.count()` with `.mapToInt(LoyaltyPoints::getPoints).sum()` for totalEarned, totalRedeemed, expiredPoints. Balance was showing count of records instead of actual point values.~~ | ~~Ganti ke `.mapToInt(LoyaltyPoints::getPoints).sum()`.~~ |
 | **BUG-BE-066** | `promotion-service` | `GamificationService.java` L127-174 | Idempotency check O(n) in-memory, tanpa DB unique constraint — concurrent request bisa duplicate insert. | Tambahkan `UNIQUE INDEX (account_id, transaction_id)` di DB. |
 | **BUG-BE-067** | `promotion-service` | `GamificationService.java` L374-427 | **N+1 query** — `badgeRepository.findById()` di-call per badge dalam loop. 50 badge = 50 queries. | Gunakan `findAllById(ids)` (1 query) + Map lookup. |
 | **BUG-BE-068** | `shared/saga-starter` | `SagaOrchestrator.java` L154-156 | **`executeAsync()` pakai `ForkJoinPool.commonPool()`** — kompete dengan HTTP workers, risk starvation. | Inject custom `TaskExecutor` dan gunakan di `supplyAsync(..., customExecutor)`. |

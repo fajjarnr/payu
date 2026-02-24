@@ -114,56 +114,70 @@ public class InvestmentApplicationService implements
 
         walletServicePort.deductBalance(userId, amount);
 
-        LocalDateTime now = LocalDateTime.now();
-        Deposit deposit = Deposit.builder()
-                .id(UUID.randomUUID())
-                .accountId(accountId)
-                .amount(amount)
-                .tenure(tenure)
-                .interestRate(interestRate)
-                .maturityAmount(maturityAmount)
-                .startDate(now)
-                .maturityDate(now.plusMonths(tenure))
-                .status(Deposit.DepositStatus.ACTIVE)
-                .currency("IDR")
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+        // BUG-BE-021 Fix: Saga compensation – if save fails after wallet deduction,
+        // credit the amount back. Without this, money is lost without a deposit record.
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            Deposit deposit = Deposit.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(accountId)
+                    .amount(amount)
+                    .tenure(tenure)
+                    .interestRate(interestRate)
+                    .maturityAmount(maturityAmount)
+                    .startDate(now)
+                    .maturityDate(now.plusMonths(tenure))
+                    .status(Deposit.DepositStatus.ACTIVE)
+                    .currency("IDR")
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
 
-        Deposit savedDeposit = investmentPersistencePort.saveDeposit(deposit);
-        investmentPersistencePort.updateAccountBalance(account.getId(), amount);
+            Deposit savedDeposit = investmentPersistencePort.saveDeposit(deposit);
+            investmentPersistencePort.updateAccountBalance(account.getId(), amount);
 
-        InvestmentTransaction transaction = InvestmentTransaction.builder()
-                .id(UUID.randomUUID())
-                .accountId(accountId)
-                .type(InvestmentTransaction.TransactionType.BUY)
-                .investmentType(InvestmentTransaction.InvestmentType.DEPOSIT)
-                .investmentId(savedDeposit.getId().toString())
-                .amount(amount)
-                .price(BigDecimal.ZERO)
-                .units(BigDecimal.ONE)
-                .fee(BigDecimal.ZERO)
-                .currency("IDR")
-                .status(InvestmentTransaction.TransactionStatus.COMPLETED)
-                .referenceNumber("DEP-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+            InvestmentTransaction transaction = InvestmentTransaction.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(accountId)
+                    .type(InvestmentTransaction.TransactionType.BUY)
+                    .investmentType(InvestmentTransaction.InvestmentType.DEPOSIT)
+                    .investmentId(savedDeposit.getId().toString())
+                    .amount(amount)
+                    .price(BigDecimal.ZERO)
+                    .units(BigDecimal.ONE)
+                    .fee(BigDecimal.ZERO)
+                    .currency("IDR")
+                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .referenceNumber("DEP-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
 
-        investmentPersistencePort.saveTransaction(transaction);
+            investmentPersistencePort.saveTransaction(transaction);
 
-        log.info("Deposit purchased successfully: {}", savedDeposit.getId());
+            log.info("Deposit purchased successfully: {}", savedDeposit.getId());
 
-        investmentEventPublisherPort.publishInvestmentCompleted(new InvestmentEvent(
-                savedDeposit.getId(),
-                userId,
-                "DEPOSIT_PURCHASED",
-                "DEPOSIT",
-                amount,
-                "COMPLETED",
-                LocalDateTime.now()));
+            investmentEventPublisherPort.publishInvestmentCompleted(new InvestmentEvent(
+                    savedDeposit.getId(),
+                    userId,
+                    "DEPOSIT_PURCHASED",
+                    "DEPOSIT",
+                    amount,
+                    "COMPLETED",
+                    LocalDateTime.now()));
 
-        return CompletableFuture.completedFuture(savedDeposit);
+            return CompletableFuture.completedFuture(savedDeposit);
+        } catch (Exception e) {
+            log.error("Deposit save failed after wallet deduction. Rolling back wallet for user {}: {}", userId, e.getMessage());
+            try {
+                walletServicePort.creditBalance(userId, amount);
+                log.info("Wallet rollback successful for user {}, amount {}", userId, amount);
+            } catch (Exception rollbackEx) {
+                log.error("CRITICAL: Wallet rollback FAILED for user {}, amount {}. Manual intervention required: {}",
+                        userId, amount, rollbackEx.getMessage());
+            }
+            throw new RuntimeException("Deposit purchase failed, wallet refunded: " + e.getMessage(), e);
+        }
     }
 
     @Override

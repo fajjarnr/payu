@@ -55,6 +55,12 @@ public class UserApplicationService implements RegisterUserUseCase {
 
         User.KycStatus kycStatus = kycResponse.verified() ? User.KycStatus.APPROVED : User.KycStatus.REJECTED;
 
+        // BUG-BE-027 Fix: Set user status based on KYC result.
+        // Previously always ACTIVE, allowing rejected KYC users to login and transact.
+        User.UserStatus userStatus = kycResponse.verified()
+                ? User.UserStatus.ACTIVE
+                : User.UserStatus.PENDING_VERIFICATION;
+
         User user = User.builder()
                 .externalId(command.externalId())
                 .username(command.username())
@@ -62,7 +68,7 @@ public class UserApplicationService implements RegisterUserUseCase {
                 .phoneNumber(command.phoneNumber())
                 .fullName(command.fullName())
                 .nik(command.nik())
-                .status(User.UserStatus.ACTIVE)
+                .status(userStatus)
                 .kycStatus(kycStatus)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
