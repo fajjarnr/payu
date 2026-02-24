@@ -23,6 +23,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Collections;
 
 /**
  * Auto-configuration for Security features
@@ -54,7 +55,12 @@ public class SecurityAutoConfiguration {
             return new EncryptionService(generateDefaultKey());
         }
 
-        return new EncryptionService(properties.getEncryption().getPassword());
+        String salt = properties.getEncryption().getSalt();
+        return new EncryptionService(
+                properties.getEncryption().getPassword(),
+                Collections.emptyList(),
+                salt
+        );
     }
 
     /**

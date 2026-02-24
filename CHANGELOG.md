@@ -57,6 +57,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Format**: `TXN-A1B2C3D4E5F6G7H8`, `BILL-9A0B1C2D3E4F5G6H`, etc.
   - **Test Results**: All related unit tests pass (ScheduledTransferServiceTest 13/13, SplitBillServiceTest 11/11, TransactionServiceTest 5/5)
 
+- **Security Hardening — Credential/PII Leak Prevention & CORS Lockdown (BUG-BE-005, 006, 016, 017, 019, 033) (2026-02-24)**:
+  - **BUG-BE-005** (`auth-service`): Removed plaintext token logging from `KeycloakService`. Only success/failure status logged.
+  - **BUG-BE-006** (`gateway-service`): Narrowed `/api/v1/accounts` public prefix to `/api/v1/accounts/register` only. All other account endpoints now require JWT.
+  - **BUG-BE-016** (`auth-service`): Added `maskUsername()` helper — PII now shows only first 2 + last 2 chars (e.g., `jo***oe`).
+  - **BUG-BE-017** (`gateway-service`): Downgraded Authorization header log from INFO to DEBUG, logging only `hasAuth=true/false` instead of full Bearer token.
+  - **BUG-BE-019** (`shared/security-starter`): PBKDF2 salt now configurable via `payu.security.encryption.salt` property. Default fallback preserved for backward compatibility.
+  - **BUG-BE-033** (`backoffice-service`): CORS origins restricted from `*` to `backoffice.payu.id`, `backoffice.payu.co.id`, `admin.payu.id`. Headers restricted. AllowCredentials enabled.
+  - **Test Results**: auth-service 65/65, security-starter 30/30 — all pass.
+
 ### Changed
 
 - **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:

@@ -41,19 +41,28 @@ public class EncryptionService {
     private final List<SecretKeySpec> previousKeys;
     private final int currentKeyVersion;
     private final ObjectMapper objectMapper;
+    private final byte[] pbkdf2Salt;
 
     public EncryptionService(String encryptionKey) {
-        this(encryptionKey, Collections.emptyList());
+        this(encryptionKey, Collections.emptyList(), null);
+    }
+
+    public EncryptionService(String encryptionKey, List<String> previousKeyStrings) {
+        this(encryptionKey, previousKeyStrings, null);
     }
 
     /**
-     * Construct with current key and optional previous keys for rotation.
+     * Construct with current key, optional previous keys for rotation, and optional salt.
      * Previous keys are used only for decryption of data encrypted with older keys.
      *
      * @param encryptionKey  Current encryption key (used for encrypt + decrypt)
      * @param previousKeys   Previous keys in reverse order (most recent first), used only for decryption fallback
+     * @param salt           Optional PBKDF2 salt (null for default). MUST be externalized via Vault in production (BUG-BE-019).
      */
-    public EncryptionService(String encryptionKey, List<String> previousKeys) {
+    public EncryptionService(String encryptionKey, List<String> previousKeys, String salt) {
+        this.pbkdf2Salt = (salt != null && !salt.isEmpty())
+                ? salt.getBytes(StandardCharsets.UTF_8)
+                : DEFAULT_PBKDF2_SALT;
         this.currentKeyVersion = previousKeys.size() + 1;
         this.secretKey = deriveKey(encryptionKey);
         this.previousKeys = new ArrayList<>();
@@ -260,7 +269,7 @@ public class EncryptionService {
     }
 
     private static final int PBKDF2_ITERATIONS = 600_000;
-    private static final byte[] PBKDF2_SALT = "PayU-AES-Key-Derivation-Salt-v1".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] DEFAULT_PBKDF2_SALT = "PayU-AES-Key-Derivation-Salt-v1".getBytes(StandardCharsets.UTF_8);
 
     /**
      * Derive a 256-bit key from the provided key string using PBKDF2.
@@ -270,7 +279,7 @@ public class EncryptionService {
         try {
             KeySpec spec = new PBEKeySpec(
                     keyString.toCharArray(),
-                    PBKDF2_SALT,
+                    this.pbkdf2Salt,
                     PBKDF2_ITERATIONS,
                     KEY_LENGTH
             );

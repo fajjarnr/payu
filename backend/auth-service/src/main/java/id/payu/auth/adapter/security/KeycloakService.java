@@ -84,7 +84,7 @@ public class KeycloakService {
                 .bodyToMono(String.class)
                 .map(jsonResponse -> {
                     try {
-                        log.info("Keycloak token obtained successfully for user: {}", username);
+                        log.info("Keycloak token obtained successfully for user: {}", maskUsername(username));
                         JsonNode root = objectMapper.readTree(jsonResponse);
                         String accessToken = root.get("access_token").asText();
                         String refreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
@@ -99,7 +99,7 @@ public class KeycloakService {
                 })
                 .doOnSuccess(response -> {
                     clearFailedAttempts(username);
-                    log.info("Successful login for user: {}", username);
+                    log.info("Successful login for user: {}", maskUsername(username));
                 })
                 .doOnError(error -> {
                     recordFailedAttemptInternal(username);
@@ -247,7 +247,7 @@ public class KeycloakService {
                 })
                 .doOnSuccess(response -> {
                     clearFailedAttempts(username);
-                    log.info("Successful login for user: {}", username);
+                    log.info("Successful login for user: {}", maskUsername(username));
                 })
                 .doOnError(error -> {
                     recordFailedAttemptInternal(username);
@@ -301,7 +301,7 @@ public class KeycloakService {
         keycloakAdmin.realm(keycloakConfig.getRealm())
                 .users().get(userId).resetPassword(credential);
 
-        log.info("Created user {} in Keycloak with ID {}", username, userId);
+        log.info("Created user {} in Keycloak with ID {}", maskUsername(username), userId);
     }
 
     private boolean isAccountLocked(String username) {
@@ -395,5 +395,17 @@ public class KeycloakService {
         public void setLockUntil(long lockUntil) {
             this.lockUntil = lockUntil;
         }
+    }
+
+    /**
+     * Masks a username for safe logging (BUG-BE-016).
+     * Shows first 2 and last 2 characters, masks the rest.
+     * Example: "johndoe" → "jo***oe"
+     */
+    private String maskUsername(String username) {
+        if (username == null || username.length() <= 4) {
+            return "****";
+        }
+        return username.substring(0, 2) + "***" + username.substring(username.length() - 2);
     }
 }

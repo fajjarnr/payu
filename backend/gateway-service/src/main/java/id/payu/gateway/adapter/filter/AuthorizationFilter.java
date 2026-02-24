@@ -50,7 +50,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     // Public endpoints that don't require authentication
     private static final String[] PUBLIC_ENDPOINTS = {
         "/api/v1/auth/login",
-        "/api/v1/accounts",           // Account endpoints (account-service handles its own auth)
+        "/api/v1/accounts/register",   // Only registration is public (BUG-BE-006 fix)
         "/api/v1/auth/refresh",
         "/api/v1/otp/send",
         "/api/v1/otp/verify",
@@ -188,7 +188,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
         // Get Authorization header
         String authHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
-        Log.infof("GW Auth Filter: path=%s, header=%s", path, authHeader);
+        Log.debugf("GW Auth Filter: path=%s, hasAuth=%s", path, authHeader != null);
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
             Log.warnf("Missing or invalid Authorization header for path: %s", path);
             abortWithUnauthorized(requestContext, "MISSING_TOKEN", "Valid JWT token required");

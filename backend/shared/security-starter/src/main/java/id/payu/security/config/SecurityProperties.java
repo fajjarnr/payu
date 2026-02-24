@@ -70,6 +70,12 @@ public class SecurityProperties {
         private String password;
 
         /**
+         * PBKDF2 salt for key derivation - MUST be externalized via Vault for production (BUG-BE-019).
+         * If unset, a default salt is used. Override via: payu.security.encryption.salt
+         */
+        private String salt;
+
+        /**
          * Fields to encrypt (regex patterns)
          */
         private List<String> fields = List.of(

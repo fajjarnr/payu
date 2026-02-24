@@ -66,8 +66,8 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-005** | `auth-service` | `KeycloakService.java` L89 | **Token plaintext di-log** — `log.info(..., jsonResponse)` cetak `access_token` + `refresh_token` ke log. | Hapus log ini, atau log hanya status sukses/gagal. |
-| **BUG-BE-006** | `gateway-service` | `AuthorizationFilter.java` L37 | **`/api/v1/accounts` sepenuhnya public** — Semua path prefix ini skip JWT validation. Hanya `/register` yang harusnya public. | Hapus prefix `/api/v1/accounts` dari `PUBLIC_ENDPOINTS`, ganti dengan `/api/v1/accounts/register` exact. |
+| ✅ ~~BUG-BE-005~~ | ~~auth-service~~ | ~~KeycloakService.java L89~~ | ~~FIXED: Removed token plaintext logging. Username masked via `maskUsername()` helper (first 2 + last 2 chars).~~ | ~~Hapus log ini, atau log hanya status.~~ |
+| ✅ ~~BUG-BE-006~~ | ~~gateway-service~~ | ~~AuthorizationFilter.java L37~~ | ~~FIXED: Narrowed `/api/v1/accounts` to `/api/v1/accounts/register` only in PUBLIC_ENDPOINTS.~~ | ~~Hapus prefix, ganti exact /register.~~ |
 | **BUG-BE-007** | `transaction-service` | `InitiateTransferCommandHandler.java` L79-81 | **Non-BIFAST transfer tidak diproses** — `INTERNAL_TRANSFER`, `SKN`, `RTGS` create DB record di status `VALIDATING` tapi tidak pernah diproses. | Tambahkan processing branch per transfer type. |
 | **BUG-BE-008** | `wallet-service` | `WalletService.java` L162-163 | **Type mismatch**: `accountId` String di-cast ke UUID → `IllegalArgumentException` runtime. | Standardisasi: pilih satu, `accountId` selalu UUID atau selalu String. |
 | **BUG-BE-009** | `lending-service` | `LoanManagementService.java` L103-130 | **Repayment schedule calculation error** — installment terakhir pakai `monthlyInstallment` bukan `outstandingPrincipal + interest`. | Pada last installment: `installmentAmount = outstandingPrincipal + interestAmount`. |
@@ -84,8 +84,8 @@
 | **BUG-BE-013** | `wallet-service` | `createWallet` query `findByAccountId` dua kali jika wallet sudah ada. | Gunakan result dari cek pertama. |
 | **BUG-BE-014** | `lending-service` | `processRepayment` tidak `@Transactional`. | Tambahkan `@Transactional`. |
 | **BUG-BE-015** | `transaction-service` | Komentar TODO: pagination info tidak dikembalikan ke client. | Implementasi `Page<Transaction>` return. |
-| **BUG-BE-016** | `auth-service` | Username (PII) di-log saat sukses login. | Mask atau hash username di log. |
-| **BUG-BE-017** | `gateway-service` | `authHeader` (mengandung Bearer token) di-log di INFO level. | Hapus atau turunkan ke DEBUG. |
+| ✅ ~~BUG-BE-016~~ | ~~auth-service~~ | ~~FIXED: Username masked in all log statements via `maskUsername()` — shows only first 2 + last 2 chars.~~ | ~~Mask or hash username in logs.~~ |
+| ✅ ~~BUG-BE-017~~ | ~~gateway-service~~ | ~~FIXED: Authorization header no longer logged. Downgraded to DEBUG with only `hasAuth` boolean.~~ | ~~Remove or downgrade to DEBUG.~~ |
 
 ---
 
@@ -113,7 +113,7 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-018** | `investment-service` | `WalletServiceAdapter.java` L29-31 | **Endpoint wallet tidak ada** — `POST /wallets/{userId}/deduct` dan `/credit` tidak terdefinisi di `WalletController`. Semua beli/jual investasi 404. | Sesuaikan dengan flow reserve-commit yang ada di `wallet-service`. |
-| **BUG-BE-019** | `shared/security-starter` | `EncryptionService.java` L263 | **PBKDF2 salt hardcoded** di source code — sama semua environment. | Jadikan configurable via env var `${payu.security.encryption.salt}`. |
+| ✅ ~~BUG-BE-019~~ | ~~shared/security-starter~~ | ~~EncryptionService.java L263~~ | ~~FIXED: PBKDF2 salt now configurable via `payu.security.encryption.salt` property. Default fallback preserved for backward compat.~~ | ~~Jadikan configurable via env var.~~ |
 | **BUG-BE-020** | `account-service` | `UserApplicationService.java` L35-36 | **`@Transactional` + `@Async` anti-pattern** — `@Transactional` tidak efektif di thread async. Bug sama di `InvestmentApplicationService.java`. | Pisahkan: sync untuk DB ops, async hanya untuk event publishing. |
 
 ---
@@ -154,7 +154,7 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-033** | `backoffice-service` | `SecurityConfig.java` L46 | **CORS wildcard di admin service** — `allowedOrigins("*")`. Internal admin tool seharusnya paling strict. | Ganti dengan `List.of("https://backoffice.payu.id")`. |
+| ✅ ~~BUG-BE-033~~ | ~~backoffice-service~~ | ~~SecurityConfig.java L46~~ | ~~FIXED: CORS origins restricted to `backoffice.payu.id`, `backoffice.payu.co.id`, `admin.payu.id`. Headers restricted. AllowCredentials enabled.~~ | ~~Ganti dengan specific origins.~~ |
 | **BUG-BE-034** | `support-service` | Seluruh controller | **No role-based authorization** — `.authenticated()` saja, user biasa bisa akses semua endpoint termasuk create agent, delete module. | Tambahkan `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` pada endpoint sensitif. |
 | ✅ ~~BUG-BE-035~~ | ~~partner-service~~ | ~~SnapBiTokenService.java L31~~ | ~~FIXED: Partner token store moved to Redis with TTL. Token now shared across pods.~~ | ~~Pindahkan `tokenStore` ke Redis dengan TTL.~~ |
 | ✅ ~~BUG-BE-036~~ | ~~partner-service~~ | ~~SnapBiTokenService.java L115~~ | ~~FIXED: Cleanup scheduler added with `@Scheduled(fixedRate = 60000)`.~~ | ~~Tambahkan `@Scheduled(fixedRate = 60000)`.~~ |
