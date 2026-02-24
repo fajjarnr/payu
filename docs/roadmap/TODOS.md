@@ -12,11 +12,11 @@
 
 | Kategori | P0 Critical | P1 High | P2 Medium | P3 Low | Total |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| Backend Logic | 14 | 26 | 18 | 5 | **63** |
-| Frontend Logic | 4 | 5 | 12 | 5 | **26** |
-| Frontend-Backend Mismatch | 8 | 7 | 3 | — | **18** |
+| Backend Logic | 35 | 58 | 38 | 5 | **136** |
+| Frontend Logic | 6 | 9 | 19 | 5 | **39** |
+| Frontend-Backend Mismatch | 13 | 7 | 7 | — | **27** |
 | Auth / Session | 2 | 2 | 3 | 3 | **10** |
-| **TOTAL** | **28** | **40** | **36** | **13** | **~117** |
+| **TOTAL** | **56** | **76** | **67** | **13** | **~212** |
 
 > ⚠️ **Catatan**: Scorecard "Production Readiness 100/100" di PROGRESS.md mencerminkan infra/deploy coverage,
 > **bukan** correctness business logic. Bug di bawah ini adalah temuan dari code review mendalam (Feb 24, 2026).
@@ -456,6 +456,241 @@
 | **ARCH-003** | Support ticket: end-user PayU atau project client yang integrasi? | Multi-tenancy di support-service |
 | **ARCH-004** | CMS: hanya untuk PayU web-app atau multi-tenant project client? | Multi-tenant mode di cms-service |
 
+---
+
+## 🐛 Bug Backlog — Batch 7: Shared Starters Deep Review (Feb 24, 2026)
+
+> Services: `shared/resilience-starter`, `shared/events-starter`, `shared/outbox-starter`, `shared/logging-starter`
+
+---
+
+### 🔴 Critical / P0
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-093** | `shared/resilience-starter` | `FinancialOperation.java` L48-54 | **`@FinancialOperation` annotation tidak berfungsi** — menggunakan `${payu.resilience.financial.circuit-breaker:default}` sebagai `name` pada `@CircuitBreaker`, tapi Resilience4j annotations **tidak support Spring property placeholders**. Semua `name` dan `fallbackMethod` literal string, bukan resolved value. Annotation ini decorative — tidak menerapkan resilience apapun. | Buat custom AOP `@Around` aspect yang membaca annotation attributes dan secara programmatic apply CircuitBreaker/Retry/Bulkhead/TimeLimiter dari registry. Atau ubah ke meta-annotation dengan hardcoded `name="financial-default"`. |
+| **BUG-BE-094** | `shared/outbox-starter` | `OutboxPublisher.java` L189-192 | **`throw` di dalam `whenComplete()` lambda** — exception dari `throw new OutboxPublishException(...)` di async callback tidak sampai ke caller. Exception hilang diam-diam, event dianggap sukses padahal Kafka gagal. | Hapus `throw` dari lambda. Gunakan `future.get(10, TimeUnit.SECONDS)` di L200 sebagai satu-satunya error detection (sudah ada), atau tangani error di callback dan set flag. |
+| **BUG-BE-095** | `shared/outbox-starter` | `OutboxPublisher.java` L322-329 | **`new ObjectMapper()` di setiap call `serializePayload()`** — ObjectMapper mahal untuk instantiate, dan `.registerModule(JavaTimeModule)` dipanggil setiap kali. Di `pollAndPublish` yang berjalan tiap 1 detik dengan 100 events per batch = 100 ObjectMapper baru per detik. | Inject `ObjectMapper` bean di constructor, atau buat static final instance. |
+| **BUG-BE-096** | `shared/outbox-starter` | `OutboxService.java` L68-69 | **`new ObjectMapper()` langsung di field** — `objectMapper = new ObjectMapper().findAndRegisterModules()`. Tidak menggunakan Spring-managed ObjectMapper bean dengan konfigurasi global (Jackson locale, date format, module). Bisa menyebabkan serialization yang berbeda dari ObjectMapper Spring yang digunakan REST controller. | Inject `ObjectMapper` via constructor `@RequiredArgsConstructor`. |
+
+---
+
+### 🟠 High Severity — Batch 7
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-097** | `shared/resilience-starter` | `ResilienceAutoConfiguration.java` L36 | **`matchIfMissing = false`** — resilience-starter **tidak auto-enable**. Service yang dependency ke resilience-starter tapi lupa set `payu.resilience.enabled=true` di `application.yml` → resilience patterns silently disabled. Semua `@CircuitBreaker`, `@Retry` dsb. tidak berfungsi tanpa explicit config. | Ubah ke `matchIfMissing = true` agar default-on. Atau dokumentasikan requirement di README. |
+| **BUG-BE-098** | `shared/resilience-starter` | `FallbackHandler.java` L98 | **Duplicate exception class di `@ExceptionHandler`** — `@ExceptionHandler({java.util.concurrent.TimeoutException.class, java.util.concurrent.TimeoutException.class})` — class yang sama di-list dua kali. Tidak error, tapi menunjukkan copy-paste typo. | Hapus duplikat. Jika ingin handle `io.github.resilience4j.timelimiter.exception.TimeoutException` juga, tambahkan class yang benar. |
+| **BUG-BE-099** | `shared/resilience-starter` | `ResilienceAspect.java` L28-66 | **`registerCircuitBreakerEventPublisher()` hanya register existing CB saat `@PostConstruct`** — CircuitBreaker yang dibuat SETELAH init (lazy-created saat first call) tidak di-register. Log monitoring untuk CB baru silently missing. | Register event publisher lewat `CircuitBreakerRegistry.getEventPublisher().onEntryAdded()` agar dinamis. |
+| **BUG-BE-100** | `shared/outbox-starter` | `OutboxPublisher.java` L95-96 | **`@Scheduled` + `@Transactional` tanpa distributed lock** — di multi-pod deployment, semua pod poll outbox table bersamaan. `findUnpublishedEventsWithLock` pakai pessimistic lock, tapi lock hanya efektif per-DB-connection. Dua pod bisa process batch yang sama jika menggunakan different DB connections. | Tambahkan `ShedLock` atau Redis distributed lock sebelum poll. Atau gunakan `SELECT FOR UPDATE SKIP LOCKED` di repository query (PostgreSQL 9.5+). |
+| **BUG-BE-101** | `shared/logging-starter` | `CorrelationIdFilter.java` L50 | **`MDC.clear()` terlalu agresif** — membersihkan SELURUH MDC context, termasuk entries yang di-set oleh framework lain (Spring Security, OpenTelemetry, Micrometer). | Gunakan `MDC.remove()` untuk setiap key yang di-set oleh filter ini, bukan `MDC.clear()`. |
+| **BUG-BE-102** | `shared/outbox-starter` | `OutboxCleanupScheduler.java` L39 | **`matchIfMissing = true` untuk cleanup** — Cleanup scheduler aktif by default. Jika service lupa konfigurasi `payu.outbox.cleanup.retention-days`, default mungkin `0` → langsung hapus semua published events termasuk yang baru. | Pastikan default `retentionDays` minimal 7 di `OutboxProperties`. Atau ubah ke `matchIfMissing = false` agar explicit opt-in. |
+
+---
+
+### 🟡 Medium Severity — Batch 7
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-103** | `shared/resilience-starter` | `CachedFallback.java` L187 | **`CacheEntry<V>` inner class tidak `static`** — inner class non-static membawa implicit reference ke outer `CachedFallback<T>`, menyebabkan potential memory leak jika `CacheEntry` di-retain. | Ubah ke `private static class CacheEntry<V>`. Akses `ttl` melalui parameter constructor. |
+| **BUG-BE-104** | `shared/resilience-starter` | `CachedFallback.java` L83-88 | **`refresh()` memanggil `supplier.get()` tanpa error handling** — jika supplier throw exception, cache tidak ter-update dan exception propagate ke caller tanpa fallback. | Wrap `supplier.get()` dalam try-catch. Jika gagal, retain value lama dan log warning. |
+| **BUG-BE-105** | `shared/events-starter` | `CloudEventBuilder.java` L16 | **`UUID.randomUUID()` dipanggil di field initializer** — setiap builder instance langsung generate UUID meski mungkin `.id()` akan dipanggil kemudian. Waste resource minor. | Lazy generate: set `id = null`, generate di `build()` jika masih null. |
+| **BUG-BE-106** | `shared/resilience-starter` | `ResilienceAutoConfiguration.java` L138 | **Unchecked cast `(Class<? extends Throwable>) Class.forName()`** — jika className bukan subclass Throwable, ClassCastException di-catch tapi exception tidak di-propagate. Silent misconfiguration. | Validasi `Throwable.class.isAssignableFrom(clazz)` sebelum cast. Log error jika bukan Throwable subclass. |
+| **BUG-BE-107** | `shared/outbox-starter` | `OutboxPublisher.java` L78-85 | **`init()` method tidak dipanggil otomatis** — tidak ada `@PostConstruct` annotation. Metrics gauge `outbox.pending.events` dan `outbox.unpublished.count` tidak pernah di-register kecuali dipanggil manual. | Tambahkan `@PostConstruct` pada `init()` method. |
+| **BUG-BE-108** | `shared/resilience-starter` | `FallbackHandler.java` L156-162 | **`getCircuitBreakerOpenResponse()` static helper tidak include `timestamp`** — response error tanpa timestamp menyulitkan debugging. Semua resilience error response MAP juga tidak immutable. | Tambahkan `response.put("timestamp", Instant.now())` dan gunakan `Map.of()` atau `Collections.unmodifiableMap()`. |
+
+---
+
+## 🐛 Bug Backlog — Batch 8: Deep-Dive Core Services (Feb 24, 2026)
+
+> Services: `transaction-service` (SplitBill, QRIS, ScheduledTransfer), `wallet-service` (Pocket, Card), `auth-service` (Biometric, Risk), Frontend cross-service
+
+---
+
+### 🔴 Critical / P0
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-109** | `wallet-service` | `PocketService.java` L156-172 | **Reflection hack untuk baca FX rate** — `rate.getClass().getDeclaredField("rate"); rateField.setAccessible(true)`. Port interface mengembalikan `Optional<?>` (wildcard), lalu pakai reflection untuk extract field `rate`. Fragile, security risk (`setAccessible`), dan akan break jika FxRate class berubah. | Definisikan proper return type di `FxRateProviderPort.getCurrentRate()`. Return `Optional<FxRate>` dengan getter `getRate()`, bukan wildcard. |
+| **BUG-BE-110** | `transaction-service` | `ProcessQrisPaymentCommand.java` L59, L61-68 | **QRIS payment tidak debit wallet** — setelah QRIS simulator return SUCCESS, `transaction.status = COMPLETED` tapi **tidak ada wallet debit**. Uang tidak berkurang dari user wallet. | Integrate wallet reservation flow: `reserve → qris → commit/release`. |
+| **BUG-BE-111** | `auth-service` | `BiometricService.java` L29, L44 | **`challengeStore` in-memory `ConcurrentHashMap`** — challenges hilang saat pod restart. Multi-pod: challenge generate di pod A, verify di pod B → selalu gagal. Sama dengan BUG-BE-002 pattern. | Pindahkan ke Redis dengan TTL `challengeExpirySeconds`. |
+| **BUG-BE-112** | `auth-service` | `BiometricService.java` L58, L124-125 | **Biometric auth return mock JWT token** — `"mock-jwt-access-token-" + UUID.randomUUID()`. Token ini bukan valid JWT dan tidak di-verify di gateway-service. User yang biometric auth tidak bisa akses protected endpoints. | Integrate dengan Keycloak untuk issue real token, atau delegate ke `AuthController` setelah biometric verified. |
+| **BUG-BE-113** | `transaction-service` | `SplitBillService.java` L254 | **`isFullyPaid()` dipanggil sebelum participant disimpan** — di `makePayment()`, `splitBill.isFullyPaid()` di L254 membaca dari old participants list (belum di-refresh dari DB setelah save di L252). `isFullyPaid` mungkin return salah karena ia cek stale data. | Pindahkan `splitBill.setParticipants(...)` di L266 ke sebelum `isFullyPaid()` check, atau re-fetch participants sebelum evaluasi completeness. |
+
+---
+
+### 🟠 High Severity — Batch 8
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-114** | `transaction-service` | `ProcessQrisPaymentCommandHandler.java` L77 | **Reference number collision** — `"QRI" + currentTimeMillis() + (int)(Math.random() * 1000)`. Pattern sama dengan BUG-BE-003. | Ganti ke UUID-based. |
+| **BUG-BE-115** | `transaction-service` | `SplitBillService.java` L323 | **Reference number collision (SplitBill)** — `"SPL" + currentTimeMillis() + (int)(Math.random() * 1000)`. | Ganti ke UUID-based. |
+| **BUG-BE-116** | `transaction-service` | `ScheduledTransferService.java` L192-198 | **Scheduled transfer set FAILED permanently setelah 1x gagal** — tidak ada retry mechanism. Jika wallet insufficient saat scheduled run (misal gaji belum masuk saat subuh), transfer permanently FAILED. | Tambahkan retry count dan status `RETRY_PENDING`. Retry beberapa kali sebelum final FAILED. |
+| **BUG-BE-117** | `transaction-service` | `SplitBillService.java` L82, L145 | **`canBeCancelled()` digunakan untuk authorize update DAN add participant** — method name menyesatkan. Logic seharusnya: boleh update kalau DRAFT/ACTIVE, tapi hanya boleh cancel kalau belum ada payment. | Pisahkan: `canBeModified()` untuk update/addParticipant, `canBeCancelled()` hanya untuk cancel. |
+| **BUG-BE-118** | `transaction-service` | `SplitBillService.java` L277-295 | **`settleSplitBill()` ≠ actual settlement** — method set status COMPLETED tapi **tidak memproses sisa pembayaran**. Participant yang belum bayar dianggap lunas tanpa uang berpindah. Ini bukan settlement, ini force-close. | Rename ke `forceCloseSplitBill()` atau implementasi actual settlement via wallet transfer. |
+| **BUG-BE-119** | `wallet-service` | `CardService.java` L28, L52, L110-115 | **`new Random()` dipakai untuk CVV dan card number** — `java.util.Random` bukan cryptographically secure. Card number dan CVV bisa diprediksi. | Ganti ke `SecureRandom` untuk semua card-related random generation. |
+| **BUG-BE-120** | `auth-service` | `RiskEvaluationService.java` L74 | **MFA hardcode disabled** — `boolean mfaRequired = false; // riskScore >= mfaThreshold`. Seluruh risk evaluation engine berjalan tapi hasilnya di-override. Risk score dihitung sia-sia. | Buat configurable: `@Value("${payu.security.risk.mfa-enabled:false}")`. Jangan hardcode. |
+| **BUG-BE-121** | `auth-service` | `RiskEvaluationService.java` L167 | **`isAccountActive()` pakai `mfaThreshold` sebagai lockout threshold** — `profile.getFailedAttempts() < mfaThreshold`. `mfaThreshold` (default 50) bukan lockout threshold. 50 failed attempts sebelum lock = brute force friendly. | Buat separate `@Value("${payu.security.risk.lockout-threshold:5}")`. |
+| **BUG-BE-122** | `auth-service` | `BiometricService.java` L58 | **Challenge ID tidak divalidasi saat register** — di `registerBiometric()`, `challengeKey` dibangun dengan `UUID.randomUUID().toString()` (baru!), bukan challengeId dari request. Challenge store lookup selalu miss → challenge validation bypassed. | Terima `challengeId` dari request dan gunakan itu untuk lookup di `challengeStore`. |
+
+---
+
+### 🟡 Medium Severity — Batch 8
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-123** | `transaction-service` | `ScheduledTransferService.java` L201-202 | **Reference number collision (ScheduledTransfer)** — `"SCH" + currentTimeMillis() + Math.random()`. | Ganti ke UUID. |
+| **BUG-BE-124** | `transaction-service` | `SplitBillService.java` L298-300 | **EQUAL split rounding error** — `totalAmount / participants.size()` dengan `HALF_UP`. 100.00 / 3 = 33.34 * 3 = 100.02 (off by 0.02). | Hitung sisa rounding, assign ke participant terakhir: `lastParticipant.amountOwed = total - sum(others)`. |
+| **BUG-BE-125** | `wallet-service` | `CardService.java` L49 | **Expiry date `MM/yy` format** — Disimpan sebagai String, tidak di-parse saat validasi. Card dengan expiry lalu bisa tetap ACTIVE. | Tambahkan `isExpired()` check atau simpan sebagai `YearMonth` lalu validate di freeze/unfreeze flow. |
+| **BUG-CROSS-019** | FE ↔ BE | `TransactionService.ts` L193 vs BE | **ScheduledTransfer `frequency` enum mismatch** — FE: `'ONCE' \| 'DAILY' \| 'WEEKLY' \| 'MONTHLY'`. BE `ScheduleType`: `ONE_TIME`, `RECURRING_DAILY`, `RECURRING_WEEKLY`, `RECURRING_MONTHLY`, `RECURRING_CUSTOM`. FE kirim `ONCE`, BE expect `ONE_TIME`. | Sinkronkan enum atau mapping di BFF proxy. |
+| **BUG-CROSS-020** | FE ↔ BE | `TransactionService.ts` L221-233 vs BE | **SplitBill `status` enum mismatch** — FE: `'DRAFT' \| 'ACTIVE' \| 'SETTLED' \| 'CANCELLED'`. BE: `DRAFT`, `ACTIVE`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`. FE tidak kenal `IN_PROGRESS` dan `COMPLETED`; BE tidak kenal `SETTLED`. | Sinkronkan: FE harus handle `IN_PROGRESS` dan `COMPLETED` dari BE. |
+| **BUG-CROSS-021** | FE ↔ BE | `TransactionService.ts` L228-234 vs BE | **SplitBillParticipant field mismatch** — FE `participant.name` dan `participant.amount`. BE expect `accountName`, `amountOwed`. Request params berbeda → 400 Bad Request. | Sesuaikan FE interface `name→accountName`, `amount→amountOwed`. |
+
+---
+
+
+---
+
+## 🐛 Bug Backlog — Batch 9: BFF Proxy, WebSocket, Authorization, Archival (Feb 24, 2026)
+
+> Areas: BFF proxy (`route.ts`), `useWebSocket.ts`, `AuthorizationService`, `TransactionArchivalService`, `SplitBillSecurityService`, `PartnerService.ts`
+
+---
+
+### 🔴 Critical / P0
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-FE-027** | `web-app` | `api/v1/[...path]/route.ts` L31-32 | **SSRF via path traversal** — `path.join('/')` langsung digunakan di `new URL()` tanpa sanitasi. Attacker bisa kirim `../../../internal/admin/secrets` dan BFF proxy forward ke internal endpoint yang seharusnya tidak accessible dari luar. | Sanitize `backendPath` — reject jika contains `..`, absolute paths, atau whitelist allowed prefixes. |
+| **BUG-FE-028** | `web-app` | `api/v1/[...path]/route.ts` L84-92 | **GET fallback returns 503 dengan data palsu** — saat gateway offline, GET return `{data: null, items: [], total: 0}` dengan status `503`. FE service yang check `response.data` tanpa check status → render empty state bukan error state. Users think no transactions exist. | Return only 503 error, jangan campur dengan data shape. Atau FE harus check `_fallback` flag. |
+| **BUG-BE-126** | `transaction-service` | `AuthorizationService.java` L91-95 | **`extractAccountIdFromUserId()` return `userId` as-is** — semua authorization check membandingkan `transaction.getSenderAccountId().toString()` dengan `userId` langsung. Jika userId = UUID dan accountId = UUID yang berbeda (multi-account), authorization selalu fail. Jika kebetulan match (single-account), ini accidental dan fragile. | Implement proper account lookup: call account-service atau parse JWT claims untuk extract accountId list. |
+| **BUG-BE-127** | `transaction-service` | `SplitBillSecurityService.java` L33 | **Type mismatch `UUID` vs `UUID`** — `response.getCreatorAccountId()` return `UUID`, dibandingkan dengan `userId` param yang juga `UUID`. Tapi jika `getCreatorAccountId()` return type sebenarnya String (check SplitBillResponse.java), comparison selalu false → owner check selalu fail → no one can access. | Pastikan tipe data creatorAccountId konsisten antara response DTO dan security check. |
+
+---
+
+### � High Severity — Batch 9
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-FE-029** | `web-app` | `api/v1/[...path]/route.ts` L40-46 | **BFF proxy tidak forward security headers** — hanya `Content-Type`, `Accept`, `Authorization`, `X-Correlation-Id` yang di-forward. Headers penting seperti `X-Idempotency-Key`, `X-Device-Id`, `X-Client-Version` STRIPPED. Gateway-first payment ops yang butuh idempotency key → key hilang di proxy layer. | Whitelist dan forward semua `X-*` custom headers. |
+| **BUG-FE-030** | `web-app` | `useWebSocket.ts` L62-73 | **WebSocket reconnect tanpa backoff** — reconnect selalu setelah 3 detik flat. Jika server down lama, client spam reconnect setiap 3 detik indefinitely. Juga, reconnect di `onclose` bikin WebSocket baru tapi **tidak reuse event handlers dari closure** — closure captured old callbacks. | Implementasi exponential backoff dengan max retries. Gunakan `connect()` function untuk reconnect agar handlers fresh. |
+| **BUG-FE-031** | `web-app` | `useWebSocket.ts` L85 | **`ws` return value selalu `null`** — `return { ws: null as unknown as WebSocket }`. Consumer yang akses `ws.readyState` atau `ws.send()` → runtime error. | Return `wsRef.current` atau wrap dalam getter. |
+| **BUG-BE-128** | `transaction-service` | `TransactionArchivalService.java` L67, L79 | **Archive + delete dalam satu transaksi** — jika `deleteArchivedTransactions()` gagal setelah `archiveTransactions()` sukses, rollback menghapus archive tapi transaksi asli juga di-rollback? Tergantung isolation level. Jika merge-commit dan partial fail → data loss. | Pisahkan: archive batch A → verify → delete batch A. Atau gunakan soft-delete pattern (set `archived=true`) lalu cleanup later. |
+| **BUG-BE-129** | `transaction-service` | `TransactionArchivalService.java` L66 | **Infinite loop jika `findTransactionsToArchive` selalu return same data** — while(true) loop query ulang setelah delete. Jika delete gagal (silently) → query return batch yang sama → infinite loop. | Tambahkan max iterations guard dan verify rowcount dari delete. |
+| **BUG-FE-032** | `web-app` | `PartnerService.ts` L9-10 | **`clientSecret` exposed di FE** — `Partner` interface punya `clientSecret?: string`. BFF proxy meneruskan ini dari backend ke browser. Client secret TIDAK BOLEH ada di frontend code. | Hapus `clientSecret` dari FE interface. Backend harus strip field ini di response (kecuali saat registration). |
+| **BUG-FE-033** | `web-app` | `PartnerService.ts` L146-148 | **SNAP-BI token via FE** — `getSnapBiToken(clientId, clientSecret)`. FE mengirim clientId + clientSecret ke backend melalui browser. Credentials di-expose di browser network tab. | SNAP-BI token harus diminta server-side only. Partner service harus handle token exchange di backend tanpa FE involvement. |
+
+---
+
+### �🟡 Medium Severity — Batch 9
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-FE-034** | `web-app` | `useWebSocket.ts` L75 | **`connect` dependency array bloated** — semua callbacks (`onMessage`, `onError`, etc.) dalam deps. Jika consumer tidak `useCallback` wrap → infinite reconnect loop. | Gunakan refs untuk callbacks: `const onMessageRef = useRef(onMessage)`. |
+| **BUG-FE-035** | `web-app` | `useBiometric.ts` L9-12 | **`useBiometricChallenge` sebagai `useQuery` dengan `enabled: false`** — idiomatic TanStack Query untuk manual triggers adalah `useMutation`, bukan disabled query. Disabled query != on-demand fetch. `refetch()` dari disabled query masih cache dan stale logic apply. | Ubah ke `useMutation` untuk challenge generation yang truly on-demand. |
+| **BUG-BE-130** | `transaction-service` | `TransactionArchivalService.java` L49 | **`ZonedDateTime.now()` tanpa explicit timezone** — behavior tergantung JVM timezone. Di container yang timezone = UTC vs Jakarta → cutoff date beda 7 jam. Transaction bisa ter-archive prematur atau terlambat. | Gunakan `ZonedDateTime.now(ZoneId.of("Asia/Jakarta"))` atau `Instant.now().minus(retentionMonths, ChronoUnit.MONTHS)`. |
+| **BUG-FE-036** | `web-app` | `useInvestments.ts` L27, L35, L43, L51, L59 | **Buy mutation `onSuccess` invalidate hanya `investment-account`** — setelah beli deposit/mutual fund/gold, cache `gold-holdings` dan query lain tidak di-invalidate. Halaman gold holdings show stale data. | Tambahkan `qc.invalidateQueries({ queryKey: ['gold-holdings'] })` di relevant mutations. |
+| **BUG-CROSS-022** | FE ↔ BE | `useSplitBill.ts` + `SplitBillService.java` | **SplitBill mutations tidak invalidate wallet balance** — setelah `makePayment` sukses, `wallet-balance` query key tidak di-invalidate. Dashboard balance stale. | Tambahkan `qc.invalidateQueries({ queryKey: ['wallet-balance'] })` di `useSplitBillPayment.onSuccess`. |
+| **BUG-CROSS-023** | FE ↔ BE | `useLending.ts` + `LendingService.ts` | **Loan application `onSuccess` invalidate hanya `['loan']`** — harusnya juga invalidate `['credit-score']` dan `['wallet-balance']` karena loan disbursement affects balance. | Tambahkan query key invalidations yang relevan. |
+
+---
+
+
+---
+
+## 🐛 Bug Backlog — Batch 10: Controllers & API Security (Feb 24, 2026)
+
+> Areas: `WalletController`, `CardController`, `TransactionController`, `SnapBiController`, `OnboardingController`
+
+---
+
+### 🔴 Critical / P0
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-131** | `wallet-service` | `CardController.java` L36-91 | **🔒 Tidak ada `@PreAuthorize` atau ownership check pada card endpoints** — semua card operations (create, freeze, unfreeze, list) tidak ada authorization. Siapapun yang terautentikasi bisa freeze/unfreeze card orang lain hanya dengan mengetahui cardId. | Tambahkan `@PreAuthorize` dan ownership validation sama seperti WalletController. |
+| **BUG-BE-132** | `wallet-service` | `WalletController.java` L103-127 | **🔒 Commit/release reservation tanpa ownership check** — Endpoint `POST /reservations/{reservationId}/commit` dan `/release` tidak punya `@PreAuthorize`. Siapapun bisa commit/release reservation orang lain. | Tambahkan ownership validation: lookup reservation → check wallet → verify accountId matches authenticated user. |
+| **BUG-BE-133** | `wallet-service` | `CardController.java` L93-103 | **🔒 Full card number exposed di API response** — `toCardResponse()` mengirim `card.getCardNumber()` (16 digit lengkap) ke client. PCI-DSS violation — hanya 4 digit terakhir yang boleh ditampilkan. | Mask card number: return `"**** **** **** " + cardNumber.substring(12)`. |
+| **BUG-BE-134** | `partner-service` | `SnapBiController.java` L62-101 | **🔒 SNAP-BI auth: no replay attack protection** — `X-TIMESTAMP` diterima apa adanya tanpa validasi window. Attacker bisa re-use old valid signature. Juga `X-EXTERNAL-ID` tidak dicek uniqueness (hanya di `createPayment` header declaration, not validated). | Validasi timestamp window ±5 menit. Enforce `X-EXTERNAL-ID` uniqueness dengan idempotency store. |
+| **BUG-BE-135** | `transaction-service` | `TransactionController.java` L172-184 | **🔒 Domain model `Transaction` langsung di-return via API** — `ApiResponse<Transaction>`. Domain entity bisa mengandung internal fields (audit timestamps, internal status, database IDs) yang tidak boleh exposed. | Buat `TransactionResponse` DTO dan mapping, sama seperti yang sudah dilakukan di `WalletController` (pakai `BalanceResponse`). |
+
+---
+
+### 🟠 High Severity — Batch 10
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-136** | `transaction-service` | `TransactionController.java` L216, L247-250 | **Account transaction list tanpa ownership validation** — `@PreAuthorize("hasAuthority('read:transaction')")` cek authority tapi tidak cek apakah `accountId` milik user. Anyone with `read:transaction` authority bisa query semua account transactions. | Tambahkan SpEL ownership check: `#accountId == authentication.principal.accountId` atau gunakan `AuthorizationService`. |
+| **BUG-BE-137** | `transaction-service` | `TransactionController.java` L253 | **Pagination TODO: `List<Transaction>` tanpa pagination metadata** — method accepts `page`/`size` params tapi return `List`, bukan `Page`. FE tidak tahu total pages/items. | Return `Page<Transaction>` dan include `PaginationInfo` di response. |
+| **BUG-BE-138** | `partner-service` | `SnapBiController.java` L37 | **Controller langsung akses `PartnerRepository`** — melanggar Hexagonal Architecture. Controller → Repository langsung, bypass domain/application layer. | Inject `PartnerService` (use case port), bukan `PartnerRepository`. |
+| **BUG-BE-139** | `partner-service` | `SnapBiController.java` L78-93 | **Signature validation: serialize request lalu compare** — `objectMapper.writeValueAsString(request)` re-serialize request yang sudah di-deserialize dari JSON. Jika field ordering atau whitespace berbeda dari original request → signature mismatch yang legitimate. | Gunakan raw request body (`@RequestBody String rawBody` + manual parsing) untuk signature validation, kemudian parse ke DTO. |
+| **BUG-BE-140** | `account-service` | `OnboardingController.java` L43-45 | **`CompletableFuture<ResponseEntity<User>>` return type** — async response tanpa timeout. Jika `registerUser` hangs → request hangs indefinitely. Juga, domain model `User` langsung di-return (mungkin contain password hash). | Tambahkan `.orTimeout(10, TimeUnit.SECONDS)`. Create `RegisterUserResponse` DTO tanpa sensitive fields. |
+| **BUG-BE-141** | `wallet-service` | `WalletController.java` L56 | **Account ID logged tanpa masking** — `log.info("Getting balance for account: {}", accountId)`. Di production, accountId bisa PII. | Gunakan masked log: `log.info("Getting balance for account: {}", maskAccountId(accountId))`. |
+| **BUG-BE-142** | `wallet-service` | `WalletController.java` L169 | **`UUID.fromString(accountId)` tanpa try-catch** — jika accountId bukan valid UUID → 500 error. Harusnya return 400. | Wrap dalam try-catch atau gunakan custom validator `@ValidUUID`. |
+
+---
+
+### 🟡 Medium Severity — Batch 10
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-143** | `transaction-service` | `TransactionController.java` L65-73 | **`extractUserId()` repeat pattern** — setiap method call `extractUserId()` manually. Error-prone jika developer lupa. | Inject userId via Spring `@AuthenticationPrincipal` parameter annotation. |
+| **BUG-BE-144** | `transaction-service` | `TransactionController.java` L128-144, L310-327 | **Generic exception catch returns 500** — `catch (Exception e)` logs stacktrace tapi returns generic error. Loses specific error info yang berguna untuk debugging. | Biarkan `@ControllerAdvice` / `GlobalExceptionHandler` handle exceptions secara uniform. Hapus try-catch di controller. |
+| **BUG-BE-145** | `wallet-service` | `CardController.java` L70 | **`ResponseEntity.notFound().build()` tanpa `ApiResponse` wrapper** — semua endpoint lain return `ApiResponse<>`, tapi not-found return bare 404. FE parsing inconsistent. | Return `ResponseEntity.status(404).body(ApiResponse.error("CARD_NOT_FOUND", "Card not found"))`. |
+| **BUG-BE-146** | `partner-service` | `SnapBiController.java` L259-272 | **`SnapErrorResponse` inner class** — error response class defined as inner class di controller. Tidak reusable dan visibility issues (public fields tapi private class). | Extract ke separate file `SnapErrorResponse.java` dengan proper encapsulation. |
+
+---
+
+---
+
+## 🐛 Bug Backlog — Batch 11 (Final): Remaining Controllers, FE Services, Auth Gaps (Feb 24, 2026)
+
+> Areas: `LendingController`, `InvestmentController`, `BillingController`, `BackofficeController`, `AuthController`, FE `AuthService.ts`, `InvestmentService.ts`
+
+---
+
+### 🔴 Critical / P0
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-147** | `lending-service` | `LendingController.java` L55-83 | **🔒 Loan application endpoint tanpa `@PreAuthorize`** — siapapun bisa apply loan atas nama user lain karena userId dari request body, bukan dari JWT. No ownership check. | Tambahkan `@PreAuthorize` dan extract userId dari JWT (bukan request body). |
+| **BUG-BE-148** | `lending-service` | `LendingController.java` L158-177 | **🔒 PayLater activate tanpa ownership check** — `userId` dari `@RequestParam`, siapapun bisa activate PayLater untuk user lain. Juga, `createRepaymentSchedule` (L101) dan `processRepayment` (L144) tanpa `@PreAuthorize`. | Tambahkan ownership validation via `@PreAuthorize` dan extract userId dari JWT. |
+| **BUG-BE-149** | `investment-service` | `InvestmentController.java` L30-157 | **🔒 Seluruh InvestmentController tanpa `@PreAuthorize` atau `@SecurityRequirement`** — semua endpoints (buy deposit, buy mutual fund, buy gold, sell, get account) tidak ada auth check. Siapapun bisa invest/sell atas nama user lain. | Tambahkan `@SecurityRequirement` dan `@PreAuthorize` ownership checks. |
+| **BUG-BE-150** | `investment-service` | `InvestmentController.java` L66-69, L88-91, L109-110, L129-131 | **Financial parameters via `@RequestParam` bukan `@RequestBody`** — amount, userId, accountId dikirim via query params. Query params logged di web server access logs, proxy logs, browser history. PII & financial data exposed di plaintext. | Pindahkan ke `@RequestBody` DTO (e.g., `BuyDepositRequest`, `BuyGoldRequest`). |
+| **BUG-BE-151** | `backoffice-service` | `BackofficeController.java` L223-227, L363-366, L453-456 | **🔒 Admin identity fallback ke `"system"`** — jika `X-Admin-User` header absent, adminUser = `"system"`. Audit trail rusak — semua actions tanpa header terlihat dilakukan oleh "system". No accountability. | Wajibkan header atau extract dari JWT `authentication.principal`. |
+
+---
+
+### 🟠 High Severity — Batch 11
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-BE-152** | `lending-service` | `LendingController.java` L195-223 | **PayLater purchase tanpa ownership validation** — `userId` dari path, `merchantName` dan `amount` dari `@RequestParam`. Siapapun bisa record purchase untuk user lain. Sama untuk `recordPayment` (L225). | Buat proper DTO `@RequestBody` dan tambahkan ownership `@PreAuthorize`. |
+| **BUG-BE-153** | `lending-service` | `LendingController.java` L260-268 | **Credit score calculation endpoint open** — `calculateCreditScore()` tanpa `@PreAuthorize`. Siapapun bisa trigger credit score calculation untuk user manapun via `@RequestParam userId`. | Tambahkan `@PreAuthorize` ownership check. |
+| **BUG-BE-154** | `auth-service` | `AuthController.java` L112-124, L143-146 | **Login: password dikirim 2x ke Keycloak** — `validateCredentialsBlocking()` pertama untuk validation, lalu `loginBlocking()` lagi dengan password yang sama. Double network call, double exposure of credentials. | Gabungkan: langsung call `loginBlocking()`, handle invalid credentials dari response. |
+| **BUG-BE-155** | `auth-service` | `AuthController.java` L117-123 | **Failed login tidak increment risk counter** — setelah `isValid == false`, langsung return error. `riskEvaluationService.recordFailedAttempt()` tidak dipanggil. Failed attempts counter tetap 0. Brute force undetected. | Tambahkan `riskEvaluationService.recordFailedAttempt(request.username())` sebelum return error. |
+| **BUG-BE-156** | `backoffice-service` | `BackofficeController.java` L159, L325, L415 | **List endpoints return raw `List<>` tanpa `ApiResponse` wrapper** — `listKycReviews()`, `listFraudCases()`, `listCustomerCases()` return `List<Response>` langsung, bukan `ResponseEntity<ApiResponse<List>>`. Response format inconsistent dengan endpoints lain. | Wrap dalam `ResponseEntity<ApiResponse<List<>>>` untuk consistency. |
+| **BUG-BE-157** | `backoffice-service` | `BackofficeController.java` L176, L335, L425 | **Enum `valueOf()` tanpa error handling** — `KycStatus.valueOf(status.toUpperCase())` bisa throw `IllegalArgumentException` jika status invalid. Return 500 bukan 400. | Wrap dalam try-catch, return 400 dengan message "Invalid status: ...". |
+| **BUG-BE-158** | `backoffice-service` | `BackofficeController.java` L262 | **Fraud case create pakai `APPLICATION_FORM_URLENCODED`** — satu-satunya endpoint yang pakai form-encoded bukan JSON. Inconsistent dengan semua endpoint lain. Juga, 9 `@RequestParam` di method signature = code smell. | Buat `CreateFraudCaseRequest` DTO JSON body seperti endpoint lain. |
+| **BUG-BE-159** | `billing-service` | `PaymentController.java` L62, L77 | **🔒 Bill payment lookup tanpa ownership check** — `getPayment()` dan `getPaymentByReference()` hanya check `isAuthenticated()`. Siapapun bisa query payment details orang lain dengan known ID/reference. | Tambahkan ownership validation: check if payment.accountId matches authenticated user. |
+
+---
+
+### 🟡 Medium Severity — Batch 11
+
+| ID | Service | File | Bug / Logic Issue | Solusi |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG-FE-037** | `web-app` | `AuthService.ts` L73 vs `api/v1/[...path]/route.ts` | **Login endpoint mismatch** — FE AuthService calls `/api/auth/login` (tanpa `v1`). BFF proxy hanya handle `/api/v1/*`. Login request tidak proxy ke backend. | Sesuaikan: FE harus panggil `/api/v1/auth/login` atau buat dedicated BFF auth route. |
+| **BUG-FE-038** | `web-app` | `AuthService.ts` L94-95, L154 | **Logout/refresh endpoint mismatch** — FE calls `/api/auth/logout` dan `/api/auth/refresh` tanpa `v1`. Sama problem dengan login. | Pindahkan ke `/api/v1/auth/*` atau buat route handler tersendiri. |
+| **BUG-CROSS-024** | FE ↔ BE | `InvestmentService.ts` L122-136 vs BE | **FE buy operations kirim request body, BE expect query params** — FE `api.post('/investments/deposits', request)` kirim JSON body. BE `@RequestParam amount` expect query string params. Request selalu gagal → 400. | Sync: either FE switch ke query params, atau (lebih baik) BE switch ke `@RequestBody`. |
+| **BUG-CROSS-025** | FE ↔ BE | `InvestmentService.ts` L140-142 vs BE | **Sell investment params mismatch** — FE: `{investmentId, amount}`. BE: `@RequestParam accountId, @RequestParam transactionId, @RequestParam amount`. FE tidak kirim `accountId`, kirim `investmentId` bukan `transactionId`. | Sinkronkan field names dan required params. |
+| **BUG-FE-039** | `web-app` | `AuthService.ts` L53-54, L123-124 | **`authenticated` flag = client-side state** — flag di-set manual. Jika page refresh → `authenticated = false` meskipun httpOnly cookie masih valid. `isAuthenticated()` bukan reliable. | Cek auth state via `validateSession()` saat init, atau hapus client-side flag entirely — rely on server response. |
+| **BUG-BE-160** | `lending-service` | `LendingController.java` L67 | **`CompletableFuture` tanpa timeout** — `applyLoan()` return `CompletableFuture` tanpa `.orTimeout()`. Request bisa hang indefinitely. | Tambahkan `.orTimeout(30, TimeUnit.SECONDS)`. |
+| **BUG-BE-161** | `investment-service` | `InvestmentController.java` L46-49, L65-72, etc. | **`CompletableFuture` tanpa timeout (semua endpoints)** — semua investment endpoints return `CompletableFuture` tanpa timeout. Pattern sama dengan BUG-BE-160. | Tambahkan `.orTimeout()` ke semua async endpoints. |
+| **BUG-BE-162** | `backoffice-service` | `BackofficeController.java` L482, L503 | **Universal search SQL injection risk** — `search(query, entityType)` langsung terima user input `query`. Tergantung implementasi `UniversalSearchService`, jika pakai native SQL query → SQL injection. | Verify `UniversalSearchService` pakai parameterized queries. Add input validation/sanitization. |
+
+---
+
 ### 🟡 Deferred (Diprioritaskan Nanti)
 
 | ID | Description | Status |
@@ -467,4 +702,4 @@
 
 ---
 
-_Last Updated: February 24, 2026 | Bug review session complete_
+_Last Updated: February 24, 2026 | Bug review session — Batch 11 (Final) complete. Total: ~210 bugs across 10 batches._
