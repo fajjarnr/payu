@@ -18,6 +18,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Simplified `AuthController` and removed biometric/MFA endpoints.
   - Updated `LoginRequest` validation to be more lenient, as password complexity is now managed by Keycloak.
 
+### Fixed (Code Review Findings — Feb 25, 2026)
+
+- **Batch Bug Fix Sprint (30 bugs resolved in single session)**:
+  - **billing-service**: BUG-BE-039 wallet reservation commit/release; BUG-BE-045 WalletPort interface methods
+  - **partner-service**: BUG-BE-041 SNAP-BI SHA-256 body hash; BUG-BE-044 thread-safe DateTimeFormatter; BUG-BE-047 @Scheduled cert rotation
+  - **outbox-starter**: BUG-BE-042 async exception propagation via handle(); BUG-BE-046 ObjectMapper Spring bean injection
+  - **saga-starter**: BUG-BE-068 dedicated thread pool; BUG-BE-069 non-blocking retry
+  - **compliance-service**: BUG-BE-070 role-based auth with @EnableMethodSecurity
+  - **statement-service**: BUG-BE-052 RestTemplate injection; BUG-BE-053 exception propagation; BUG-BE-059 readOnly=true fix
+  - **investment-service**: BUG-BE-028 BUY fee using managementFee
+  - **account-service**: BUG-BE-031 registration race condition
+  - **promotion-service**: BUG-BE-055 CacheEvict removal; BUG-BE-071 thread-safe UserLevel; BUG-BE-072 DB COUNT; BUG-BE-075 RoundingMode
+  - **cms-service**: BUG-BE-057 title uniqueness race condition
+  - **security-starter**: BUG-BE-030 DataMaskingAspect pointcut narrowed to @Audited
+  - **auth-service**: BUG-BE-166 MFA endpoints in PUBLIC_ENDPOINTS
+  - **api-commons**: BUG-BE-092 WebhookProcessor non-blocking retry
+  - **wallet/transaction-service**: BUG-BE-171 deprecated SecurityContextPersistenceFilter
+  - **Verified already fixed**: BUG-BE-029, 090, 163, 164, 165, 167
+
 ### Fixed (Code Review Findings)
 
 - **auth-service: Test Suite Green-up (2026-02-24)**:
