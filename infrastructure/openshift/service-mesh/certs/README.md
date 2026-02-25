@@ -13,6 +13,7 @@ This directory contains TLS certificates for the PayU Digital Banking Platform S
 **CN (Common Name)**: `api.payu.fajjjar.my.id`
 
 **SANs (Subject Alternative Names)**:
+
 - `api.payu.local` (local development)
 - `*.dev.payu.fajjjar.my.id` (development wildcard)
 - `*.staging.payu.fajjjar.my.id` (staging wildcard)

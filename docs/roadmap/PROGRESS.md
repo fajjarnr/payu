@@ -99,7 +99,7 @@
 
 **Initial OpenShift Deployment:**
 - ✅ **OpenShift Deployed** — 22 services + web-app on OCP 4.20+ (`payu-dev` namespace)
-- ✅ **Infrastructure via Operators** — Crunchy PGO, AMQ Streams (KRaft), DataGrid, RHSSO, Vault, cert-manager
+- ✅ **Infrastructure via Operators** — Crunchy PGO, AMQ Streams (KRaft), DataGrid, RHBK, Vault, cert-manager
 - ✅ **Kustomize IaC** — Complete manifests (`operators/` + `infra/` + `overlays/`) for reproducible deployments
 - ✅ **TLS** — Let's Encrypt certs via cert-manager DNS01/Route53
 - ✅ **Images Built** — All 22 services via Podman, pushed to OCP internal registry (`tag 1.3.0` for web-app)
@@ -144,7 +144,7 @@ Data Layer:
   PostgreSQL (Crunchy PGO): 22 databases (1 per service)
   Redis (DataGrid RESP): cache + session + rate-limit
   Kafka (AMQ Streams KRaft): event streaming
-  Keycloak (RHSSO): identity & access management
+  Keycloak (RHBK): identity & access management
   Vault: secret management
 ```
 

@@ -42,14 +42,14 @@ UBI9 `python-312` has known compatibility issues with native ML/AI dependencies:
 
 **Dual-ingress architecture** separating application traffic from platform traffic:
 
-| Traffic Type     | Ingress Controller              | Domain Pattern                                          | Example                                                  |
-| :--------------- | :------------------------------ | :------------------------------------------------------ | :------------------------------------------------------- |
-| **App (Prod)**   | Istio Ingress Gateway           | `payu.fajjjar.my.id` + `*.payu.fajjjar.my.id`           | `api.payu.fajjjar.my.id`, `sso.payu.fajjjar.my.id`       |
-| **App (Dev)**    | Istio Ingress Gateway           | `*.dev.payu.fajjjar.my.id`                               | `api.dev.payu.fajjjar.my.id`, `gateway.dev.payu.fajjjar.my.id` |
-| **App (Staging)**| Istio Ingress Gateway           | `*.staging.payu.fajjjar.my.id`                           | `api.staging.payu.fajjjar.my.id`                         |
-| **App (SIT/UAT)**| Istio Ingress Gateway           | `*.sit.payu.fajjjar.my.id`, `*.uat.payu.fajjjar.my.id`  | `api.sit.payu.fajjjar.my.id`                             |
-| **OCP Platform** | OCP Ingress Controller (HAProxy)| `*.apps.payu.ocp.fajjjar.my.id`                         | `console-openshift-console.apps.payu.ocp.fajjjar.my.id`  |
-| **OCP API**      | Kubernetes API                  | `api.payu.ocp.fajjjar.my.id`                            | —                                                        |
+| Traffic Type      | Ingress Controller               | Domain Pattern                                         | Example                                                        |
+| :---------------- | :------------------------------- | :----------------------------------------------------- | :------------------------------------------------------------- |
+| **App (Prod)**    | Istio Ingress Gateway            | `payu.fajjjar.my.id` + `*.payu.fajjjar.my.id`          | `api.payu.fajjjar.my.id`, `sso.payu.fajjjar.my.id`             |
+| **App (Dev)**     | Istio Ingress Gateway            | `*.dev.payu.fajjjar.my.id`                             | `api.dev.payu.fajjjar.my.id`, `gateway.dev.payu.fajjjar.my.id` |
+| **App (Staging)** | Istio Ingress Gateway            | `*.staging.payu.fajjjar.my.id`                         | `api.staging.payu.fajjjar.my.id`                               |
+| **App (SIT/UAT)** | Istio Ingress Gateway            | `*.sit.payu.fajjjar.my.id`, `*.uat.payu.fajjjar.my.id` | `api.sit.payu.fajjjar.my.id`                                   |
+| **OCP Platform**  | OCP Ingress Controller (HAProxy) | `*.apps.payu.ocp.fajjjar.my.id`                        | `console-openshift-console.apps.payu.ocp.fajjjar.my.id`        |
+| **OCP API**       | Kubernetes API                   | `api.payu.ocp.fajjjar.my.id`                           | —                                                              |
 
 **Rule**: ALL environments use Istio Ingress Gateway for application traffic. `*.apps.payu.ocp.*` is exclusively for OCP platform components (console, image registry, ArgoCD, Grafana).
 
@@ -130,11 +130,13 @@ Maintain a compatibility matrix between Red Hat products and OSS equivalents. Ke
 When running both OCP Ingress Controller and Istio Ingress Gateway on the same cluster with dedicated router nodes:
 
 **Architecture**:
+
 - 3 router nodes with taint `node-role.kubernetes.io/router:NoSchedule`
 - OCP Ingress Controller pods (HAProxy) → already scheduled on router nodes by OpenShift
 - Istio Ingress Gateway pods → must explicitly opt-in with `nodeSelector` + `tolerations`
 
 **Configuration**:
+
 ```yaml
 nodeSelector:
   node-role.kubernetes.io/router: ""
@@ -151,10 +153,10 @@ podAntiAffinity:
 ```
 
 **Dual LoadBalancer VIP separation**:
-| Component                    | Ports     | DNS Target                      |
+| Component | Ports | DNS Target |
 | :--------------------------- | :-------- | :------------------------------ |
-| OCP Ingress Controller (HAProxy) | 80, 443   | `*.apps.payu.ocp.fajjjar.my.id` |
-| Istio Ingress Gateway        | 8080, 8443 | `*.payu.fajjjar.my.id` + env wildcards |
+| OCP Ingress Controller (HAProxy) | 80, 443 | `*.apps.payu.ocp.fajjjar.my.id` |
+| Istio Ingress Gateway | 8080, 8443 | `*.payu.fajjjar.my.id` + env wildcards |
 
 **Rule**: Use separate LB VIPs with different ports (80/443 vs 8080/8443). Both can coexist on the same router nodes because they bind different ports. Set `replicas: 3` and HPA `minReplicas: 3` (one per router node).
 

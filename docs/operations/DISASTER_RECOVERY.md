@@ -17,7 +17,7 @@
    - [Kafka (AMQ Streams KRaft)](#kafka-amq-streams-kraft)
    - [Vault (HashiCorp with VSO)](#vault-hashicorp-with-vso)
    - [DataGrid (Infinispan)](#datagrid-infinispan)
-   - [Keycloak (RHSSO)](#keycloak-rhsso)
+   - [Keycloak (RHBK)](#keycloak-rhbk)
 6. [Service Degradation Scenarios](#service-degradation-scenarios)
 7. [Complete Platform Restore](#complete-platform-restore)
 8. [DR Testing Procedures](#dr-testing-procedures)
@@ -35,7 +35,7 @@ This Disaster Recovery (DR) Runbook provides comprehensive procedures for recove
 - **AMQ Streams (Kafka 4.0)** with KRaft mode
 - **Red Hat Data Grid** (Infinispan) for caching
 - **HashiCorp Vault** with Vault Secrets Operator (VSO)
-- **Keycloak (RHSSO)** for identity management
+- **Keycloak (RHBK)** for identity management
 
 ### DR Scenarios Covered
 
@@ -733,11 +733,11 @@ echo "DataGrid recovery complete."
 
 ---
 
-### Keycloak (RHSSO)
+### Keycloak (RHBK)
 
 #### Overview
 
-PayU uses Red Hat Single Sign-On (Keycloak):
+PayU uses Red Hat Build of Keycloak (RHBK 26.1):
 - **Database**: PostgreSQL (payu-keycloak db)
 - **Realm**: payu
 - **Clients**: web-app, mobile-app, api-gateway, admin-cli

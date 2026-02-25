@@ -1,5 +1,5 @@
-# PayU Platform - Namespace & OperatorGroup for RHSSO
-# RHSSO operator is namespace-scoped, requires OperatorGroup in target namespace
+# PayU Platform - Namespace & OperatorGroup for RHBK
+# RHBK operator is namespace-scoped, requires OperatorGroup in target namespace
 # ============================================================
 
 # Namespace
@@ -14,7 +14,7 @@ metadata:
     tier: development
 
 ---
-# OperatorGroup for namespace-scoped operators (RHSSO)
+# OperatorGroup for namespace-scoped operators (RHBK)
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:

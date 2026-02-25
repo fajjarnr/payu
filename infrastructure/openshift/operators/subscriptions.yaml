@@ -59,15 +59,16 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 5. Red Hat Single Sign-On (Keycloak) - namespace-scoped
+# 5. Red Hat Build of Keycloak (RHBK) - namespace-scoped
+# Migrated from RHSSO (rhsso-operator) → RHBK (rhbk-operator)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: rhsso-operator
+  name: rhbk-operator
   namespace: payu-dev  # namespace-scoped operator
 spec:
-  channel: stable
-  name: rhsso-operator
+  channel: stable-v26
+  name: rhbk-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic

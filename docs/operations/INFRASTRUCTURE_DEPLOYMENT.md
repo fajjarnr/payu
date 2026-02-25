@@ -14,7 +14,7 @@ Berikut adalah status dan endpoint infrastruktur yang berjalan di namespace `pay
 | PostgreSQL | Crunchy Postgres | 16 (ubi8) | ✅ Running |
 | Cache/Data Grid | Red Hat Data Grid | 8.5.5 | ✅ Running |
 | Message Broker | AMQ Streams (Kafka)| 4.0.0 (KRaft) | ✅ Running |
-| Identity/SSO | Red Hat Single Sign-On | 7.6 | ✅ Running |
+| Identity/SSO | Red Hat Build of Keycloak (RHBK) | 26.1 | ✅ Running |
 | Kafka UI | AMQ Streams Console | 3.1.0 | ✅ Running |
 
 ### Access Endpoints
@@ -65,10 +65,11 @@ Event streaming dalam mode **KRaft** (tanpa Zookeeper).
 - **Bootstrap Servers**: `kafka:9092` (Plain), `kafka:9093` (TLS).
 - **Verification**: `oc get kafka kafka`.
 
-### 4. Red Hat SSO (RHSSO 7.6)
-Sistem Identity & Access Management berbasis Keycloak.
+### 4. Red Hat Build of Keycloak (RHBK 26.1)
+Sistem Identity & Access Management.
 - **Realm**: `payu`
-- **Auth Server URL**: `http://keycloak.payu-dev.svc:8080/auth` (Internal)
+- **Auth Server URL**: `http://payu-keycloak-service.payu-dev.svc:8080/realms/payu` (Internal)
+- **Note**: RHBK 26+ tidak menggunakan `/auth` prefix (berbeda dari RHSSO 7.x)
 
 ---
 
@@ -80,7 +81,7 @@ Sistem Identity & Access Management berbasis Keycloak.
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
 │  │    Kafka     │  │    Redis     │  │   Keycloak   │  │Kafka Console │     │
-│  │  (AMQ Streams)│  │  (Data Grid) │  │   (RHSSO)    │  │(AMQ Streams) │     │
+│  │  (AMQ Streams)│  │  (Data Grid) │  │    (RHBK)    │  │(AMQ Streams) │     │
 │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘     │
 │         │                │                  │                  │            │
 │         └────────────────┼──────────────────┴──────────────────┘            │
@@ -108,7 +109,7 @@ Untuk deployment produksi, pastikan hal berikut dikonfigurasi:
 
 - **Postgres Connection**: Pastikan `pgBouncer` tidak penuh (cek `max_connections`).
 - **Kafka Connectivity**: Jika producer timeout, cek ACL dan KafkaUser sudah diaplikasikan.
-- **Keycloak 404**: Cek apakah `/auth` prefix sudah disertakan (RHSSO memerlukan prefix ini, berbeda dengan Keycloak 22+).
+- **Keycloak 404**: RHBK 26+ tidak menggunakan `/auth` prefix. URL langsung ke `/realms/payu`. Jika migrasi dari RHSSO, pastikan path sudah diperbarui.
 
 ---
 _Last Updated: February 24, 2026_

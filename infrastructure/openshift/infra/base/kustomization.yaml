@@ -24,10 +24,10 @@ resources:
   - amq-streams.yaml
   # Kafka UI
   - kafka-console.yaml
-  # Identity & Access
-  # IMPORTANT: keycloak-db-secret must be applied BEFORE rhsso-keycloak.yaml
-  - keycloak-db-secret.yaml
-  - rhsso-keycloak.yaml
+  # Identity & Access (RHBK - Red Hat Build of Keycloak)
+  # IMPORTANT: secrets must be applied BEFORE rhbk-keycloak.yaml
+  - rhbk-secrets.yaml
+  - rhbk-keycloak.yaml
   # Secret Management
   - vault.yaml
   # TLS / cert-manager

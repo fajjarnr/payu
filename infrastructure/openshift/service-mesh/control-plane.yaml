@@ -27,15 +27,15 @@ spec:
   version: v2.6
   tracing:
     type: Jaeger
-    sampling: 10000  # 10% sampling for production
+    sampling: 10000 # 10% sampling for production
   proxy:
     networking:
       # Configure proxy networking
       namespace: payu-prod
   policy:
-    type: Istiod  # Use Istiod for policy enforcement
+    type: Istiod # Use Istiod for policy enforcement
   telemetry:
-    type: Istiod  # Use Istiod for telemetry
+    type: Istiod # Use Istiod for telemetry
   # Istiod global configuration
   istio:
     global:
@@ -87,7 +87,7 @@ spec:
       # Certificate configuration
       env:
         - name: CITADEL_SELF_SIGNED_CA_ORG_EXPIRATION
-          value: "87600h"  # 10 years
+          value: "87600h" # 10 years
     # Galley configuration (configuration validation)
     galley:
       enabled: true
@@ -159,9 +159,9 @@ spec:
         # Remote address configuration
         proxyStatsMatcher:
           inclusionRegexps:
-            - ".*_cx_.*"  # Connection metrics
-            - ".*_rq_.*"  # Request metrics
-            - ".*_rs_.*"  # Response metrics
+            - ".*_cx_.*" # Connection metrics
+            - ".*_rq_.*" # Request metrics
+            - ".*_rs_.*" # Response metrics
       # Access logging configuration
       accessLogFile: "/dev/stdout"
       accessLogEncoding: JSON
@@ -199,7 +199,7 @@ spec:
         enabled: true
         # Service configuration
         service:
-          type: LoadBalancer  # Separate LB VIP from OCP Ingress Controller
+          type: LoadBalancer # Separate LB VIP from OCP Ingress Controller
           ports:
             - name: http2
               port: 8080
@@ -317,19 +317,19 @@ spec:
               maistra.io/member-of: istio-system
       ports:
         - protocol: TCP
-          port: 15012  # Pilot webhook
+          port: 15012 # Pilot webhook
         - protocol: TCP
-          port: 15014  # Pilot discovery
+          port: 15014 # Pilot discovery
         - protocol: TCP
-          port: 15010  # Pilot XDS
+          port: 15010 # Pilot XDS
   egress:
     - to:
         - namespaceSelector: {}
       ports:
         - protocol: TCP
-          port: 443  # Kubernetes API
+          port: 443 # Kubernetes API
         - protocol: TCP
-          port: 6443  # Kubernetes API secure
+          port: 6443 # Kubernetes API secure
 ---
 # HorizontalPodAutoscaler for Istio Ingress Gateway
 apiVersion: autoscaling/v2

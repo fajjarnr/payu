@@ -43,7 +43,7 @@ spec:
 
   # --- Hostname Configuration ---
   hostname:
-    hostname: https://keycloak-dev.payu.fajjjar.my.id
+    hostname: https://sso.dev.payu.fajjjar.my.id
     strict: false
     backchannelDynamic: true
 

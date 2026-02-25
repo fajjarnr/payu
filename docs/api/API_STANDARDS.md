@@ -12,13 +12,13 @@ This document defines the API standards that all PayU services must follow to en
 
 ### Environment-Based URLs
 
-| Environment | Base URL Pattern |
-|-------------|-------------------|
-| **Local** | `http://localhost:8080/api/v1` |
+| Environment     | Base URL Pattern                            |
+| --------------- | ------------------------------------------- |
+| **Local**       | `http://localhost:8080/api/v1`              |
 | **Development** | `https://api.dev.payu.fajjjar.my.id/api/v1` |
-| **SIT** | `https://api.sit.payu.fajjjar.my.id/api/v1` |
-| **UAT** | `https://api.uat.payu.fajjjar.my.id/api/v1` |
-| **Production** | `https://api.payu.fajjjar.my.id/api/v1` |
+| **SIT**         | `https://api.sit.payu.fajjjar.my.id/api/v1` |
+| **UAT**         | `https://api.uat.payu.fajjjar.my.id/api/v1` |
+| **Production**  | `https://api.payu.fajjjar.my.id/api/v1`     |
 
 ### URL Pattern
 
@@ -32,11 +32,11 @@ https://{environment}.payu.fajjjar.my.id/api/v{version}/{service}/{resource}[/{i
 
 ### Resource Names
 
-| Rule | Example |
-|------|---------|
-| **Plural nouns** | `/api/v1/accounts` (not `/account`) |
-| **Kebab-case** | `/api/v1/transaction-histories` (not `/transactionHistories`) |
-| **Noun-based** | `/api/v1/balances` (not `/getBalances`) |
+| Rule             | Example                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| **Plural nouns** | `/api/v1/accounts` (not `/account`)                           |
+| **Kebab-case**   | `/api/v1/transaction-histories` (not `/transactionHistories`) |
+| **Noun-based**   | `/api/v1/balances` (not `/getBalances`)                       |
 
 ---
 
@@ -44,13 +44,13 @@ https://{environment}.payu.fajjjar.my.id/api/v{version}/{service}/{resource}[/{i
 
 ### Method Usage Matrix
 
-| Method | Usage | Idempotent | Safe |
-|--------|-------|------------|------|
-| **GET** | Retrieve resources | ✅ | ✅ |
-| **POST** | Create resource | ❌ | ❌ |
-| **PUT** | Full update | ✅ | ❌ |
-| **PATCH** | Partial update | ❌ | ❌ |
-| **DELETE** | Delete resource | ✅ | ❌ |
+| Method     | Usage              | Idempotent | Safe |
+| ---------- | ------------------ | ---------- | ---- |
+| **GET**    | Retrieve resources | ✅         | ✅   |
+| **POST**   | Create resource    | ❌         | ❌   |
+| **PUT**    | Full update        | ✅         | ❌   |
+| **PATCH**  | Partial update     | ❌         | ❌   |
+| **DELETE** | Delete resource    | ✅         | ❌   |
 
 ---
 
@@ -93,18 +93,19 @@ X-Device-ID: {device_identifier}
 
 ### HTTP Status Codes
 
-| Status | Usage |
-|--------|-------|
-| **200 OK** | Successful GET, PUT, PATCH |
-| **201 Created** | Successful POST |
-| **400 Bad Request** | Validation error |
-| **401 Unauthorized** | Missing/invalid token |
-| **403 Forbidden** | Insufficient permissions |
-| **404 Not Found** | Resource not found |
-| **422 Unprocessable** | Business logic error |
-| **500 Internal Error** | Unexpected server error |
+| Status                 | Usage                      |
+| ---------------------- | -------------------------- |
+| **200 OK**             | Successful GET, PUT, PATCH |
+| **201 Created**        | Successful POST            |
+| **400 Bad Request**    | Validation error           |
+| **401 Unauthorized**   | Missing/invalid token      |
+| **403 Forbidden**      | Insufficient permissions   |
+| **404 Not Found**      | Resource not found         |
+| **422 Unprocessable**  | Business logic error       |
+| **500 Internal Error** | Unexpected server error    |
 
 ### Application Error Codes prefixes:
+
 `ACC` (Account), `AUT` (Auth), `TXN` (Transaction), `WAL` (Wallet), `KYC` (KYC), `GEN` (Generic).
 
 ---
@@ -118,6 +119,7 @@ PayU uses **URL-based versioning**: `/api/v1/accounts`. Breaking changes require
 ## 🔐 Authentication & Authorization
 
 Gunakan **OAuth2 Bearer Token** via `Authorization` header.
+
 - **Access Token**: 1 Hour lifetime.
 - **Refresh Token**: 30 Days lifetime.
 
@@ -134,6 +136,7 @@ Operasi mutating (POST/PUT/PATCH) wajib mendukung header `X-Idempotency-Key` (UU
 PayU menggunakan **Spectral** sebagai OpenAPI linter untuk memastikan spek API mematuhi standar di atas secara otomatis.
 
 ### Installation
+
 ```bash
 # Install via npm
 npm install -g @stoplight/spectral-cli
@@ -143,6 +146,7 @@ npm install -g @stoplight/spectral-cli
 ```
 
 ### Quick Start
+
 ```bash
 # Validasi file tunggal
 ./scripts/validate-api.sh docs/openapi/account-api.yaml
@@ -152,6 +156,7 @@ npm install -g @stoplight/spectral-cli
 ```
 
 ### Aturan yang Diverifikasi (Spectral Ruleset)
+
 1. **Response Envelope**: Semua response sukses harus menggunakan field `data` dan `meta`.
 2. **Idempotency**: Semua POST/PUT/PATCH harus mendefinisikan header `Idempotency-Key`.
 3. **Naming**: Path harus kebab-case (e.g., `/user-accounts`) dan memiliki prefix versi (`/v1/`).

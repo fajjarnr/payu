@@ -27,7 +27,7 @@ spec:
       hosts:
         - "*"
       tls:
-        httpsRedirect: true  # Redirect HTTP to HTTPS
+        httpsRedirect: true # Redirect HTTP to HTTPS
     # HTTPS Server (main ingress)
     # Istio Ingress Gateway handles ALL application traffic
     # OCP Ingress Controller (HAProxy) is reserved for platform-only routes
@@ -39,16 +39,16 @@ spec:
         # Local development
         - api.payu.local
         # Per-environment wildcard domains (Gateway API pattern)
-        - "*.dev.payu.fajjjar.my.id"       # Development
-        - "*.staging.payu.fajjjar.my.id"   # Staging
-        - "*.sit.payu.fajjjar.my.id"       # SIT
-        - "*.uat.payu.fajjjar.my.id"       # UAT
-        - "*.preprod.payu.fajjjar.my.id"   # Pre-production
-        - "*.payu.fajjjar.my.id"           # Production
-        - payu.fajjjar.my.id               # Production (apex)
+        - "*.dev.payu.fajjjar.my.id" # Development
+        - "*.staging.payu.fajjjar.my.id" # Staging
+        - "*.sit.payu.fajjjar.my.id" # SIT
+        - "*.uat.payu.fajjjar.my.id" # UAT
+        - "*.preprod.payu.fajjjar.my.id" # Pre-production
+        - "*.payu.fajjjar.my.id" # Production
+        - payu.fajjjar.my.id # Production (apex)
       tls:
-        mode: SIMPLE  # Simple TLS (server-side only)
-        credentialName: payu-ingress-cert  # TLS certificate secret
+        mode: SIMPLE # Simple TLS (server-side only)
+        credentialName: payu-ingress-cert # TLS certificate secret
         # For mTLS at the gateway, use:
         # mode: MUTUAL
         # credentialName: payu-ingress-cert
@@ -214,7 +214,7 @@ spec:
               number: 8087
             subset: v1
           weight: 100
-      timeout: 60s  # Longer timeout for image processing
+      timeout: 60s # Longer timeout for image processing
 
     # Analytics Service routes
     - match:
@@ -272,7 +272,7 @@ spec:
   hosts:
     - "*"
   gateways:
-    - mesh  # Internal mesh gateway
+    - mesh # Internal mesh gateway
   http:
     # Account Service
     - match:
@@ -334,7 +334,7 @@ spec:
       app: istio-ingressgateway
   action: CUSTOM
   provider:
-    name: oauth2-proxy  # Use OAuth2/Keycloak for authentication
+    name: oauth2-proxy # Use OAuth2/Keycloak for authentication
   rules:
     # Public endpoints (no auth required)
     - to:
@@ -378,8 +378,8 @@ spec:
         # Require API key for partner endpoints
         - key: request.headers[x-api-key]
           values:
-            - pk_live_*  # Production keys
-            - pk_test_*  # Test keys
+            - pk_live_* # Production keys
+            - pk_test_* # Test keys
         # Require client certificate for production
         - key: source.namespace
           values:
