@@ -31,7 +31,7 @@ spec:
               app: statement-service
       containers:
         - name: statement-service
-          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/statement-service:1.0.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service:v1.4.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -45,7 +45,7 @@ spec:
             - name: SERVICES_TRANSACTION_URL
               value: "http://transaction-service:8080"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_statement_service"
+              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_statement"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -57,11 +57,27 @@ spec:
                   name: db-credentials
                   key: password
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka:9092"
+              value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
             - name: REDIS_HOST
-              value: "redis"
+              value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT
-              value: "6379"
+              value: "11222"
+            - name: STATEMENT_STORAGE_TYPE
+              value: "s3"
+            - name: STATEMENT_STORAGE_S3_BUCKET
+              value: "payu-statements"
+            - name: STATEMENT_STORAGE_S3_REGION
+              value: "ap-southeast-1"
+            - name: STATEMENT_STORAGE_S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-s3-credentials
+                  key: AWS_ACCESS_KEY_ID
+            - name: STATEMENT_STORAGE_S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-s3-credentials
+                  key: AWS_SECRET_ACCESS_KEY
           resources:
             requests:
               memory: "256Mi"

@@ -2,7 +2,6 @@ package id.payu.resilience.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Map;
@@ -11,7 +10,6 @@ import java.util.Map;
  * Configuration properties for Resilience4j patterns
  */
 @Data
-@Component
 @ConfigurationProperties(prefix = "payu.resilience")
 public class ResilienceProperties {
 

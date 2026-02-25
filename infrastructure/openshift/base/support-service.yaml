@@ -31,7 +31,7 @@ spec:
               app: support-service
       containers:
         - name: support-service
-          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/support-service:1.0.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service:v1.4.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -45,7 +45,7 @@ spec:
             - name: OIDC_JWK_SET_URI
               value: "http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_support_service"
+              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_support"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -57,11 +57,11 @@ spec:
                   name: db-credentials
                   key: password
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka:9092"
+              value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
             - name: REDIS_HOST
-              value: "redis"
+              value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT
-              value: "6379"
+              value: "11222"
           resources:
             requests:
               memory: "256Mi"

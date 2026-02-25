@@ -1,0 +1,7 @@
+[Unit]
+Description=PayU RustFS Target
+After=rustfs.container
+Requires=rustfs.container
+
+[Install]
+WantedBy=podman-payu.service

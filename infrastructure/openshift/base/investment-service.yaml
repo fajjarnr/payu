@@ -31,7 +31,7 @@ spec:
               app: investment-service
       containers:
         - name: investment-service
-          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/investment-service:1.0.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service:v1.4.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -43,7 +43,7 @@ spec:
             - name: SERVICES_WALLET_URL
               value: "http://wallet-service:8080"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_investment"
+              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_investment"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -55,11 +55,11 @@ spec:
                   name: db-credentials
                   key: password
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka:9092"
+              value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
             - name: REDIS_HOST
-              value: "redis"
+              value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT
-              value: "6379"
+              value: "11222"
           resources:
             requests:
               memory: "256Mi"

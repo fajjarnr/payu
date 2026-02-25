@@ -64,7 +64,15 @@ spring:
 # Statement Service Configuration
 statement:
   storage:
+    type: ${STATEMENT_STORAGE_TYPE:local}
     path: ${STATEMENT_STORAGE_PATH:/tmp/statements}
+    s3:
+      bucket: ${STATEMENT_STORAGE_S3_BUCKET:payu-statements}
+      region: ${STATEMENT_STORAGE_S3_REGION:ap-southeast-1}
+      endpoint: ${STATEMENT_STORAGE_S3_ENDPOINT:}
+      access-key: ${STATEMENT_STORAGE_S3_ACCESS_KEY:}
+      secret-key: ${STATEMENT_STORAGE_S3_SECRET_KEY:}
+      prefix: statements/
   company:
     name: ${STATEMENT_COMPANY_NAME:PayU Digital Banking}
     address: ${STATEMENT_COMPANY_ADDRESS:Jakarta, Indonesia}

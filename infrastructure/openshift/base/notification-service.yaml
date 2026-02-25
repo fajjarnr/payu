@@ -31,7 +31,7 @@ spec:
               app: notification-service
       containers:
         - name: notification-service
-          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/notification-service:1.0.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service:v1.4.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -39,7 +39,7 @@ spec:
               protocol: TCP
           env:
             - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_notification_service"
+              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_notification"
             - name: QUARKUS_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -51,11 +51,11 @@ spec:
                   name: db-credentials
                   key: password
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka:9092"
+              value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
             - name: REDIS_HOST
-              value: "redis"
+              value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT
-              value: "6379"
+              value: "11222"
           resources:
             requests:
               memory: "256Mi"

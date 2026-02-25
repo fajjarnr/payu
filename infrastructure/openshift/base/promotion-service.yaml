@@ -31,7 +31,7 @@ spec:
               app: promotion-service
       containers:
         - name: promotion-service
-          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/promotion-service:1.0.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service:v1.4.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -43,7 +43,7 @@ spec:
             - name: SERVICES_TRANSACTION_URL
               value: "http://transaction-service:8080"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_promotion"
+              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_promotion"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -55,11 +55,11 @@ spec:
                   name: db-credentials
                   key: password
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka:9092"
+              value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
             - name: REDIS_HOST
-              value: "redis"
+              value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT
-              value: "6379"
+              value: "11222"
           resources:
             requests:
               memory: "256Mi"

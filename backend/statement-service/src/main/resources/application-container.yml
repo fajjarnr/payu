@@ -57,6 +57,19 @@ management:
     kafka:
       enabled: true
 
+statement:
+  storage:
+    type: ${STATEMENT_STORAGE_TYPE:s3}
+    s3:
+      bucket: ${STATEMENT_STORAGE_S3_BUCKET:payu-statements}
+      region: ${STATEMENT_STORAGE_S3_REGION:ap-southeast-1}
+      # On OpenShift: empty endpoint = AWS S3 native, creds from AWS_ACCESS_KEY_ID env
+      # On local compose: override with RustFS endpoint + static keys
+      endpoint: ${STATEMENT_STORAGE_S3_ENDPOINT:}
+      access-key: ${STATEMENT_STORAGE_S3_ACCESS_KEY:}
+      secret-key: ${STATEMENT_STORAGE_S3_SECRET_KEY:}
+      prefix: ${STATEMENT_STORAGE_S3_PREFIX:statements/}
+
 payu:
   security:
     encryption-enabled: false

@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
  *   <li>Cache warming executor</li>
  * </ul>
  */
-@AutoConfiguration
+@AutoConfiguration(after = RedisCacheConfig.class)
 @RequiredArgsConstructor
 @EnableAspectJAutoProxy
 @EnableConfigurationProperties(CacheProperties.class)

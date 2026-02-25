@@ -1,0 +1,27 @@
+[Unit]
+Description=PayU RustFS S3-Compatible Object Storage
+After=network.target container.service
+Requires=network.target container.service
+PartOf=podman-payu.service
+
+[Container]
+Image=rustfs/rustfs:latest
+ContainerName=payu-rustfs
+PodmanArgs=--pod=payu-data-pod --net=payu-network
+Network=payu-network
+PublishPort=9000:9000
+PublishPort=9001:9001
+Environment=RUSTFS_ACCESS_KEY=payu-admin
+Environment=RUSTFS_SECRET_KEY=payu-secret-key-change-me
+Volume=rustfs_data:/data
+Volume=rustfs_logs:/logs
+Exec=server /data --console-address :9001
+HealthCmd=curl -sf http://localhost:9000/health || exit 1
+HealthInterval=15s
+HealthTimeout=5s
+HealthStartPeriod=30s
+HealthRetries=3
+AutoUpdate=registry
+
+[Install]
+WantedBy=podman-payu.service

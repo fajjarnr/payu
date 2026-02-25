@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: qris-simulator
-          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/qris-simulator:1.0.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator:v1.4.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

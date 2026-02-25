@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: gateway-service
-          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/gateway-service:1.0.0
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:v1.4.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -44,11 +44,11 @@ spec:
                   name: gateway-config
                   key: oidc-auth-server-url
             - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://payu-postgres-primary:5432/payu_gateway_service"
+              value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_gateway_service"
             - name: REDIS_HOST
-              value: "redis"
+              value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT
-              value: "6379"
+              value: "11222"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
