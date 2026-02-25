@@ -139,7 +139,7 @@ kind: ConfigMap
 metadata:
   name: gateway-config
 data:
-  oidc-auth-server-url: "http://keycloak-discovery:8080/auth/realms/payu"
+  oidc-auth-server-url: "http://payu-keycloak-service:8080/realms/payu"
 ---
 apiVersion: route.openshift.io/v1
 kind: Route

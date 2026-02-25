@@ -41,9 +41,9 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "container"
             - name: OIDC_ISSUER
-              value: "http://keycloak-discovery:8080/auth/realms/payu"
+              value: "http://payu-keycloak-service:8080/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://keycloak-discovery:8080/auth/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://payu-postgres-primary:5432/payu_support_service"
             - name: SPRING_DATASOURCE_USERNAME

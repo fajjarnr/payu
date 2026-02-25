@@ -51,9 +51,9 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "container"
             - name: KEYCLOAK_SERVER_URL
-              value: "http://keycloak-discovery:8080/auth"
+              value: "http://payu-keycloak-service:8080"
             - name: OIDC_ISSUER
-              value: "http://keycloak-discovery:8080/auth/realms/payu"
+              value: "http://payu-keycloak-service:8080/realms/payu"
             - name: KEYCLOAK_REALM
               value: "payu"
             - name: KEYCLOAK_CLIENT_ID
@@ -65,8 +65,8 @@ spec:
             - name: KEYCLOAK_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-credentials
-                  key: KEYCLOAK_ADMIN_PASSWORD
+                  name: payu-keycloak-admin
+                  key: password
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://payu-postgres-primary:5432/payu_auth"
             - name: SPRING_DATASOURCE_USERNAME

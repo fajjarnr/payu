@@ -584,7 +584,7 @@ patches:
       metadata:
         name: gateway-config
       data:
-        oidc-auth-server-url: "http://keycloak-discovery.payu-dev.svc:8080/auth/realms/payu"
+        oidc-auth-server-url: "http://payu-keycloak-service.payu-dev.svc:8080/realms/payu"
 
   - target:
       kind: Deployment

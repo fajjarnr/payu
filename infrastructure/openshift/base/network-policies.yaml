@@ -114,6 +114,7 @@ spec:
   podSelector:
     matchLabels:
       app: keycloak
+      app.kubernetes.io/managed-by: keycloak-operator
   policyTypes:
     - Ingress
   ingress:
@@ -124,6 +125,8 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+        - protocol: TCP
+          port: 9000
 ---
 # NetworkPolicy: Default deny all egress (restrict outbound)
 apiVersion: networking.k8s.io/v1
@@ -157,8 +160,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               name: payu-infra
-    # Allow traffic to Keycloak
+    # Allow traffic to Keycloak (RHBK)
     - to:
         - podSelector:
             matchLabels:
               app: keycloak
+              app.kubernetes.io/managed-by: keycloak-operator
