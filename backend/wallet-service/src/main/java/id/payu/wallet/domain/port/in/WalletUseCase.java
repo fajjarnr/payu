@@ -98,7 +98,7 @@ public interface WalletUseCase {
      */
     List<WalletTransaction> getTransactionHistory(String accountId, int page, int size);
 
-    List<LedgerEntry> getLedgerEntriesByAccountId(UUID accountId);
+    List<LedgerEntry> getLedgerEntriesByAccountId(String accountId);
 
     List<LedgerEntry> getLedgerEntriesByTransactionId(UUID transactionId);
 }

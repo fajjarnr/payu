@@ -91,10 +91,10 @@
 | ✅ ~~BUG-BE-005~~ | ~~auth-service~~ | ~~KeycloakService.java L89~~ | ~~FIXED: Removed token plaintext logging. Username masked via `maskUsername()` helper (first 2 + last 2 chars).~~ | ~~Hapus log ini, atau log hanya status.~~ |
 | ✅ ~~BUG-BE-006~~ | ~~gateway-service~~ | ~~AuthorizationFilter.java L37~~ | ~~FIXED: Narrowed `/api/v1/accounts` to `/api/v1/accounts/register` only in PUBLIC_ENDPOINTS.~~ | ~~Hapus prefix, ganti exact /register.~~ |
 | ✅ ~~BUG-BE-007~~ | ~~transaction-service~~ | ~~InitiateTransferCommandHandler.java L79-81~~ | ~~FIXED: Added processing branches for INTERNAL (immediate commit) and SKN/RTGS (queue for clearing) transfers.~~ | ~~Tambahkan processing branch per transfer type.~~ |
-| **BUG-BE-008** | `wallet-service` | `WalletService.java` L162-163 | **Type mismatch**: `accountId` String di-cast ke UUID → `IllegalArgumentException` runtime. | Standardisasi: pilih satu, `accountId` selalu UUID atau selalu String. |
+| ✅ ~~BUG-BE-008~~ | ~~wallet-service~~ | ~~WalletService.java L162-163~~ | ~~FIXED: LedgerEntry and related entities now use `String accountId`. Prevented UUID parsing exceptions.~~ | ~~Standardisasi: pilih satu, `accountId` selalu UUID atau selalu String.~~ |
 | ✅ ~~BUG-BE-009~~ | ~~lending-service~~ | ~~LoanManagementService.java L103-130~~ | ~~FIXED: Last installment amount now uses actual remaining principal + interest instead of the standard monthly rate.~~ | ~~Pada last installment: `installmentAmount = outstandingPrincipal + interestAmount`.~~ |
-| **BUG-BE-010** | `auth-service` | `KeycloakService.java` L199-215 | **`Mono.block()` di Spring MVC thread** — Blocking WebFlux di Tomcat thread pool → thread starvation under load. | Ganti ke synchronous `RestTemplate` atau migrasi ke WebFlux. |
-| **BUG-BE-011** | `transaction-service` | `ScheduledTransferScheduler.java` L22 | **`@Scheduled` tanpa distributed lock** — Multi-pod: semua pod proses transfer yang sama bersamaan. | Tambahkan distributed lock via Redis (`ShedLock` atau custom). |
+| ✅ ~~BUG-BE-010~~ | ~~auth-service~~ | ~~KeycloakService.java L199-215~~ | ~~FIXED: Replaced `Mono.block()` with synchronous `RestTemplate` for blocking login/refresh/validate methods to avoid Tomcat thread starvation.~~ | ~~Ganti ke synchronous `RestTemplate` atau migrasi ke WebFlux.~~ |
+| ✅ ~~BUG-BE-011~~ | ~~transaction-service~~ | ~~ScheduledTransferScheduler.java L22~~ | ~~FIXED: Added Redis-based distributed lock (`stringRedisTemplate.opsForValue().setIfAbsent`) for `processDueScheduledTransfers` to handle multi-pod.~~ | ~~Tambahkan distributed lock via Redis (ShedLock atau custom).~~ |
 
 ---
 

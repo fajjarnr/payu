@@ -24,7 +24,7 @@ public class LedgerEntryEntity {
     private UUID transactionId;
 
     @Column(name = "account_id", nullable = false, updatable = false)
-    private UUID accountId;
+    private String accountId;
 
     @Column(name = "type", nullable = false, length = 10)
     private String entryType;
@@ -50,7 +50,7 @@ public class LedgerEntryEntity {
     public LedgerEntryEntity() {
     }
 
-    public LedgerEntryEntity(UUID id, UUID transactionId, UUID accountId, String entryType, BigDecimal amount, String currency, BigDecimal balanceAfter, String referenceType, String referenceId, LocalDateTime createdAt) {
+    public LedgerEntryEntity(UUID id, UUID transactionId, String accountId, String entryType, BigDecimal amount, String currency, BigDecimal balanceAfter, String referenceType, String referenceId, LocalDateTime createdAt) {
         this.id = id;
         this.transactionId = transactionId;
         this.accountId = accountId;
@@ -92,11 +92,11 @@ public class LedgerEntryEntity {
         this.transactionId = transactionId;
     }
 
-    public UUID getAccountId() {
+    public String getAccountId() {
         return accountId;
     }
 
-    public void setAccountId(UUID accountId) {
+    public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
 
@@ -159,7 +159,7 @@ public class LedgerEntryEntity {
     public static class LedgerEntryEntityBuilder {
         private UUID id;
         private UUID transactionId;
-        private UUID accountId;
+        private String accountId;
         private String entryType;
         private BigDecimal amount;
         private String currency;
@@ -181,7 +181,7 @@ public class LedgerEntryEntity {
             return this;
         }
 
-        public LedgerEntryEntityBuilder accountId(UUID accountId) {
+        public LedgerEntryEntityBuilder accountId(String accountId) {
             this.accountId = accountId;
             return this;
         }

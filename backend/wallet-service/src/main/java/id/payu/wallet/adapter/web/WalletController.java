@@ -187,7 +187,7 @@ public class WalletController extends BaseController {
     public ResponseEntity<ApiResponse<List<LedgerEntry>>> getLedgerEntries(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId) {
         log.info("Getting ledger entries for account: {}", accountId);
-        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByAccountId(UUID.fromString(accountId));
+        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByAccountId(accountId);
         return ok(ledgerEntries);
     }
 

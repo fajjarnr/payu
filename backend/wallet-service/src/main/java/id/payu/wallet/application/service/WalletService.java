@@ -163,7 +163,7 @@ public class WalletService implements WalletUseCase {
         LedgerEntry debitEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
                 .transactionId(UUID.fromString(reservationId))
-                .accountId(UUID.fromString(accountId)) // accountId is String in Wallet but often UUID in Ledger
+                .accountId(accountId) // accountId is String in both Wallet and Ledger now
                 .entryType(LedgerEntry.EntryType.DEBIT)
                 .amount(amount)
                 .currency(wallet.getCurrency())
@@ -193,17 +193,17 @@ public class WalletService implements WalletUseCase {
                 .orElseThrow(() -> new ReservationNotFoundException(reservationId));
 
         BigDecimal reservedAmount = debitEntry.getAmount();
-        UUID accountId = debitEntry.getAccountId(); // LedgerEntry uses UUID for accountId
+        String accountId = debitEntry.getAccountId();
 
-        Wallet wallet = getWalletByAccountId(accountId.toString())
-                .orElseThrow(() -> new WalletNotFoundException(accountId.toString()));
+        Wallet wallet = getWalletByAccountId(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
         wallet.commitReservation(reservedAmount);
         walletPersistencePort.save(wallet);
 
         // Invalidate balance cache
-        cacheService.invalidate("balance:account:" + accountId.toString());
-        cacheService.invalidate("balance:available:account:" + accountId.toString());
-        cacheService.invalidate("wallet:account:" + accountId.toString());
+        cacheService.invalidate("balance:account:" + accountId);
+        cacheService.invalidate("balance:available:account:" + accountId);
+        cacheService.invalidate("wallet:account:" + accountId);
         cacheService.invalidate("wallet:id:" + wallet.getId());
 
         LedgerEntry commitEntry = LedgerEntry.builder()
@@ -220,8 +220,8 @@ public class WalletService implements WalletUseCase {
 
         walletPersistencePort.saveLedgerEntry(commitEntry);
 
-        walletEventPublisher.publishReservationCommitted(accountId.toString(), reservationId, reservedAmount);
-        walletEventPublisher.publishBalanceChanged(accountId.toString(), wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishReservationCommitted(accountId, reservationId, reservedAmount);
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
 
         log.info("Committed reservation {} for account {}, amount: {}", reservationId, reservedAmount);
     }
@@ -238,17 +238,17 @@ public class WalletService implements WalletUseCase {
                 .orElseThrow(() -> new ReservationNotFoundException(reservationId));
 
         BigDecimal reservedAmount = releaseEntry.getAmount();
-        UUID accountId = releaseEntry.getAccountId();
+        String accountId = releaseEntry.getAccountId();
 
-        Wallet wallet = getWalletByAccountId(accountId.toString())
-                .orElseThrow(() -> new WalletNotFoundException(accountId.toString()));
+        Wallet wallet = getWalletByAccountId(accountId)
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
         wallet.releaseReservation(reservedAmount);
         walletPersistencePort.save(wallet);
 
         // Invalidate balance cache
-        cacheService.invalidate("balance:account:" + accountId.toString());
-        cacheService.invalidate("balance:available:account:" + accountId.toString());
-        cacheService.invalidate("wallet:account:" + accountId.toString());
+        cacheService.invalidate("balance:account:" + accountId);
+        cacheService.invalidate("balance:available:account:" + accountId);
+        cacheService.invalidate("wallet:account:" + accountId);
         cacheService.invalidate("wallet:id:" + wallet.getId());
 
         LedgerEntry creditEntry = LedgerEntry.builder()
@@ -265,8 +265,8 @@ public class WalletService implements WalletUseCase {
 
         walletPersistencePort.saveLedgerEntry(creditEntry);
 
-        walletEventPublisher.publishReservationReleased(accountId.toString(), reservationId, reservedAmount);
-        walletEventPublisher.publishBalanceChanged(accountId.toString(), wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishReservationReleased(accountId, reservationId, reservedAmount);
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
 
         log.info("Released reservation {} for account {}, amount: {}", reservationId, reservedAmount);
     }
@@ -310,7 +310,7 @@ public class WalletService implements WalletUseCase {
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .id(UUID.randomUUID())
                 .transactionId(transactionId)
-                .accountId(UUID.fromString(accountId))
+                .accountId(accountId)
                 .entryType(LedgerEntry.EntryType.CREDIT)
                 .amount(amount)
                 .currency(wallet.getCurrency())
@@ -352,7 +352,7 @@ public class WalletService implements WalletUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<LedgerEntry> getLedgerEntriesByAccountId(UUID accountId) {
+    public List<LedgerEntry> getLedgerEntriesByAccountId(String accountId) {
         log.debug("Getting ledger entries for account: {}", accountId);
         return walletPersistencePort.findByAccountIdOrderByCreatedAtDesc(accountId);
     }

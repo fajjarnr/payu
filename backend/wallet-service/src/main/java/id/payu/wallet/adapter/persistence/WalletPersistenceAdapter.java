@@ -76,7 +76,7 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
     }
 
     @Override
-    public java.util.List<LedgerEntry> findByAccountIdOrderByCreatedAtDesc(UUID accountId) {
+    public java.util.List<LedgerEntry> findByAccountIdOrderByCreatedAtDesc(String accountId) {
         return ledgerEntryRepository.findByAccountIdOrderByCreatedAtDesc(accountId)
                 .stream()
                 .map(this::toDomain)

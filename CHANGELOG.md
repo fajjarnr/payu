@@ -97,10 +97,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **XBUG-001** (cross-service): Changed frontend `StatementStatus` from `'READY'` to `'COMPLETED'` to match backend enum. Frontend was stuck in infinite polling loop.
   - **XBUG-005** (cross-service): Added `customerId` to `StatementGenerationRequest` interface. Without it, backend cannot enforce ownership validation — users could generate statements for other accounts.
 
-- **High Severity Fixes — Investment Saga, KYC Enforcement, Loyalty Balance (BUG-BE-021, 027, 065) (2026-02-24)**:
+- **High Severity Fixes — Investment Saga, KYC Enforcement, Loyalty, Wallet, Auth, and Transfers (BUG-BE-021, 027, 065, 008, 010, 011) (2026-02-24)**:
   - **BUG-BE-021** (`investment-service`): Added saga compensation to `buyDeposit` — if `saveDeposit` fails after wallet deduction, `creditBalance()` rollback is triggered automatically. Logs CRITICAL if rollback also fails for manual intervention.
   - **BUG-BE-027** (`account-service`): User status now depends on KYC result. If KYC is REJECTED, status is `PENDING_VERIFICATION` instead of `ACTIVE`. Previously all users were set to ACTIVE regardless of KYC outcome.
   - **BUG-BE-065** (`promotion-service`): Loyalty points `getBalance()` was using `.count()` (counting transaction records) instead of `.mapToInt(getPoints).sum()` (summing actual point values). Balance displayed was wildly incorrect.
+  - **BUG-BE-008** (`wallet-service`): Standardized `accountId` handling to `String` in `LedgerEntry` and adapter components to fix `IllegalArgumentException` parsing exceptions caused by non-UUID input.
+  - **BUG-BE-010** (`auth-service`): Switched `KeycloakService` blocking operations to synchronous `RestTemplate` from `Mono.block()` which was starving Tomcat threads under load.
+  - **BUG-BE-011** (`transaction-service`): Found `stringRedisTemplate.opsForValue().setIfAbsent` implementation providing distributed locking on `ScheduledTransferScheduler` to handle execution duplication across multiple pod instances.
 
 ### Changed
 

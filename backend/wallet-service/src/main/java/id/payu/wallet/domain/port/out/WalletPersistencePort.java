@@ -25,7 +25,7 @@ public interface WalletPersistencePort {
 
     LedgerEntry saveLedgerEntry(LedgerEntry entry);
 
-    List<LedgerEntry> findByAccountIdOrderByCreatedAtDesc(UUID accountId);
+    List<LedgerEntry> findByAccountIdOrderByCreatedAtDesc(String accountId);
 
     List<LedgerEntry> findByTransactionId(UUID transactionId);
 }

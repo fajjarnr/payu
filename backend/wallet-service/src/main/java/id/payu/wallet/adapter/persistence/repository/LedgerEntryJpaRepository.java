@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 public interface LedgerEntryJpaRepository extends JpaRepository<LedgerEntryEntity, UUID> {
 
     @Query("SELECT le FROM LedgerEntryEntity le WHERE le.accountId = :accountId ORDER BY le.createdAt DESC")
-    List<LedgerEntryEntity> findByAccountIdOrderByCreatedAtDesc(@Param("accountId") UUID accountId);
+    List<LedgerEntryEntity> findByAccountIdOrderByCreatedAtDesc(@Param("accountId") String accountId);
 
     @Query("SELECT le FROM LedgerEntryEntity le WHERE le.transactionId = :transactionId")
     List<LedgerEntryEntity> findByTransactionId(@Param("transactionId") UUID transactionId);

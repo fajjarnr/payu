@@ -7,7 +7,7 @@ import java.util.UUID;
 public class LedgerEntry {
     private UUID id;
     private UUID transactionId;
-    private UUID accountId;
+    private String accountId;
     private EntryType entryType;
     private BigDecimal amount;
     private String currency;
@@ -19,7 +19,7 @@ public class LedgerEntry {
     public LedgerEntry() {
     }
 
-    public LedgerEntry(UUID id, UUID transactionId, UUID accountId, EntryType entryType, BigDecimal amount, String currency, BigDecimal balanceAfter, String referenceType, String referenceId, LocalDateTime createdAt) {
+    public LedgerEntry(UUID id, UUID transactionId, String accountId, EntryType entryType, BigDecimal amount, String currency, BigDecimal balanceAfter, String referenceType, String referenceId, LocalDateTime createdAt) {
         this.id = id;
         this.transactionId = transactionId;
         this.accountId = accountId;
@@ -46,8 +46,8 @@ public class LedgerEntry {
     public void setId(UUID id) { this.id = id; }
     public UUID getTransactionId() { return transactionId; }
     public void setTransactionId(UUID transactionId) { this.transactionId = transactionId; }
-    public UUID getAccountId() { return accountId; }
-    public void setAccountId(UUID accountId) { this.accountId = accountId; }
+    public String getAccountId() { return accountId; }
+    public void setAccountId(String accountId) { this.accountId = accountId; }
     public EntryType getEntryType() { return entryType; }
     public void setEntryType(EntryType entryType) { this.entryType = entryType; }
     public BigDecimal getAmount() { return amount; }
@@ -66,7 +66,7 @@ public class LedgerEntry {
     public static class LedgerEntryBuilder {
         private UUID id;
         private UUID transactionId;
-        private UUID accountId;
+        private String accountId;
         private EntryType entryType;
         private BigDecimal amount;
         private String currency;
@@ -79,7 +79,7 @@ public class LedgerEntry {
 
         public LedgerEntryBuilder id(UUID id) { this.id = id; return this; }
         public LedgerEntryBuilder transactionId(UUID transactionId) { this.transactionId = transactionId; return this; }
-        public LedgerEntryBuilder accountId(UUID accountId) { this.accountId = accountId; return this; }
+        public LedgerEntryBuilder accountId(String accountId) { this.accountId = accountId; return this; }
         public LedgerEntryBuilder entryType(EntryType entryType) { this.entryType = entryType; return this; }
         public LedgerEntryBuilder amount(BigDecimal amount) { this.amount = amount; return this; }
         public LedgerEntryBuilder currency(String currency) { this.currency = currency; return this; }

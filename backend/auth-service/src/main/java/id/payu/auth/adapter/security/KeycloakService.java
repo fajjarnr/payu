@@ -38,6 +38,7 @@ public class KeycloakService {
     private final RiskEvaluationService riskEvaluationService;
     private final ObjectMapper objectMapper;
     private final CacheService cacheService;
+    private final org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
 
     private static final String FAILED_ATTEMPTS_KEY_PREFIX = "auth:failedAttempts:";
     private static final Duration FAILED_ATTEMPTS_TTL = Duration.ofMinutes(15);
@@ -180,8 +181,30 @@ public class KeycloakService {
      * @return true if credentials are valid, false otherwise
      */
     public Boolean validateCredentialsBlocking(String username, String password) {
-        return validateCredentials(username, password)
-                .block(); // Block until Mono completes
+        if (isAccountLocked(username)) {
+            return false;
+        }
+
+        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
+        org.springframework.http.HttpEntity<MultiValueMap<String, String>> request = 
+                new org.springframework.http.HttpEntity<>(buildLoginForm(username, password), headers);
+
+        try {
+            org.springframework.http.ResponseEntity<String> response = restTemplate
+                    .postForEntity(tokenEndpoint, request, String.class);
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            recordFailedAttemptInternal(username);
+            return false;
+        } catch (Exception e) {
+            log.error("Error validating credentials synchronously", e);
+            recordFailedAttemptInternal(username);
+            return false;
+        }
     }
 
     /**
@@ -193,9 +216,44 @@ public class KeycloakService {
      * @return LoginResponse containing access tokens
      * @throws IllegalArgumentException if login fails
      */
+    @RateLimiter(name = "loginRateLimiter", fallbackMethod = "rateLimitFallbackBlocking")
     public LoginResponse loginBlocking(String username, String password) {
-        return login(username, password)
-                .block(); // Block until Mono completes
+        if (isAccountLocked(username)) {
+            log.warn("Login attempt for locked account: {}", username);
+            throw new IllegalArgumentException("Account temporarily locked due to too many failed attempts");
+        }
+
+        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
+        org.springframework.http.HttpEntity<MultiValueMap<String, String>> request = 
+                new org.springframework.http.HttpEntity<>(buildLoginForm(username, password), headers);
+
+        try {
+            org.springframework.http.ResponseEntity<String> response = restTemplate
+                    .postForEntity(tokenEndpoint, request, String.class);
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            String accessToken = root.get("access_token").asText();
+            String refreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
+            long expiresIn = root.get("expires_in").asLong();
+            String tokenType = root.get("token_type").asText();
+
+            clearFailedAttempts(username);
+            log.info("Successful login for user: {}", maskUsername(username));
+            return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
+        } catch (Exception e) {
+            recordFailedAttemptInternal(username);
+            log.error("Login failed for user {}: {}", username, e.getMessage());
+            throw new IllegalArgumentException("Invalid credentials or login failed: " + e.getMessage());
+        }
+    }
+
+    public LoginResponse rateLimitFallbackBlocking(String username, String password, Throwable t) {
+        log.warn("Rate limit exceeded for login attempts (blocking)");
+        throw new IllegalArgumentException("Too many login attempts. Please try again later.");
     }
 
 
@@ -209,8 +267,30 @@ public class KeycloakService {
      * @throws IllegalArgumentException if refresh fails
      */
     public LoginResponse refreshTokenBlocking(String refreshToken) {
-        return refreshToken(refreshToken)
-                .block(); // Block until Mono completes
+        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
+        org.springframework.http.HttpEntity<MultiValueMap<String, String>> request = 
+                new org.springframework.http.HttpEntity<>(buildRefreshForm(refreshToken), headers);
+
+        try {
+            org.springframework.http.ResponseEntity<String> response = restTemplate
+                    .postForEntity(tokenEndpoint, request, String.class);
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            String accessToken = root.get("access_token").asText();
+            String newRefreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
+            long expiresIn = root.get("expires_in").asLong();
+            String tokenType = root.get("token_type").asText();
+
+            log.info("Token refreshed successfully (blocking)");
+            return new LoginResponse(accessToken, newRefreshToken, expiresIn, tokenType);
+        } catch (Exception e) {
+            log.error("Token refresh failed (blocking): {}", e.getMessage());
+            throw new IllegalArgumentException("Failed to parse refresh response or server error: " + e.getMessage(), e);
+        }
     }
 
     private Mono<LoginResponse> loginInternal(String username, String password) {
