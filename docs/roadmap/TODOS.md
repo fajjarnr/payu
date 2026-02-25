@@ -193,15 +193,94 @@
 | **IMP-024** | Platform             | **Backstage Software Templates** — Buat template scaffolding "New PayU Microservice" di Backstage. Auto-generate: repo structure (hexagonal), Containerfile, Helm chart, CI pipeline, `catalog-info.yaml`. Accelerate onboarding new service.                                                                                                                                                                | ✅ **No FE impact** — scaffolding tool.                     | Medium |
 | **IMP-025** | Platform             | **Backstage TechDocs Integration** — Connect existing `docs/` folder ke Backstage TechDocs plugin. Render markdown per-service documentation langsung di portal. Existing `developer-docs` Next.js tetap untuk external partner.                                                                                                                                                                             | ✅ **No FE impact** — internal docs rendering.              | Small  |
 
+##### gRPC Inter-Service Communication (Dari Diskusi Arsitektur — Feb 26, 2026)
+
+> Strategi: **gRPC untuk internal service-to-service**, **REST tetap untuk gateway→frontend/partner**.
+> Saat ini semua inter-service call pakai REST (RestTemplate/Feign) dengan JSON — overhead signifikan
+> untuk hot path seperti `wallet-service` yang dipanggil 6 service.
+>
+> **Arsitektur Target (Hybrid REST + gRPC):**
+>
+> ```
+> ┌─────────────────────────────────────────────────┐
+> │              External (REST/JSON)                │
+> │  Frontend (Next.js) ──REST──→ gateway-service    │
+> │  Partners (SNAP-BI) ──REST──→ gateway-service    │
+> │  Mobile (React Native) ──REST──→ gateway-service │
+> └────────────────────────┬────────────────────────┘
+>                          │ REST (public API)
+>                          ▼
+>                   ┌──────────────┐
+>                   │   Gateway    │
+>                   │  (Quarkus)   │
+>                   └──────┬───────┘
+>                          │ gRPC (internal)
+>           ┌──────────────┼──────────────────┐
+>           ▼              ▼                  ▼
+>     ┌──────────┐  ┌──────────────┐  ┌──────────────┐
+>     │ account  │  │ transaction  │  │   wallet     │
+>     │ service  │  │   service    │  │   service    │
+>     └──────────┘  └──────┬───────┘  └──────────────┘
+>                          │ gRPC              ▲ gRPC
+>                          ▼                   │
+>                   ┌──────────────┐     ┌─────┴────────┐
+>                   │   wallet     │     │ billing, fx  │
+>                   │   service    │     │ invest, promo│
+>                   └──────────────┘     │ statement    │
+>                                        └──────────────┘
+> ```
+>
+> **Alasan REST tetap di gateway→frontend:**
+> - Browser tidak support gRPC native (gRPC-Web menambah complexity)
+> - Partner integration (SNAP-BI) wajib REST
+> - OpenAPI docs untuk developer portal
+> - Human-readable untuk debugging
+>
+> **Alasan gRPC di internal:**
+> - Protobuf binary ~5-10x lebih compact dari JSON
+> - ~2-5x latency improvement
+> - Compile-time contract (`.proto`) = breaking change ketahuan saat build
+> - HTTP/2 multiplexing = 1 connection handle semua call
+> - Istio native gRPC-aware load balancing
+> - Spring Boot 3.4 `spring-grpc` (GA), Quarkus built-in gRPC support
+
+| ID          | Area                   | Improvement                                                                                                                                                                                                                                                                                                                                                                  | Frontend Impact                                                                                     | Effort |
+| :---------- | :--------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- | :----- |
+| **IMP-026** | `shared/grpc-starter`  | **Shared gRPC Starter Library** — Buat `backend/shared/grpc-starter` sebagai foundation: common protobuf types (`Money`, `Timestamp`, `PageRequest`, `ErrorDetail`), gRPC interceptors (tracing, auth propagation, error mapping), Spring Boot auto-configuration. Semua service depend on ini, bukan setup gRPC sendiri-sendiri.                                             | ✅ **No FE impact** — shared backend library.                                                       | Medium |
+| **IMP-027** | `wallet-service`       | **Wallet gRPC Server** — Expose `WalletService.proto` (getBalance, debit, credit, transfer, getHistory). `wallet-service` paling banyak dipanggil (6 callers) — impact terbesar. Jalankan gRPC server di port terpisah (9090) alongside existing REST. REST endpoints tetap hidup untuk backward compatibility selama migrasi.                                                | ✅ **No FE impact** — FE tetap lewat REST gateway. gRPC hanya internal.                             | Medium |
+| **IMP-028** | Multi-service          | **Migrate Wallet Callers ke gRPC Client** — Update 6 service yang call wallet: `transaction-service`, `billing-service`, `investment-service`, `fx-service`, `promotion-service`, `statement-service`. Replace `RestTemplate`/`WalletClient` adapters dengan gRPC stubs. Gunakan hexagonal port interface — hanya ganti adapter, domain logic tidak berubah.                  | ✅ **No FE impact** — internal transport change.                                                    | Large  |
+| **IMP-029** | `account-service`      | **Account gRPC Server** — Expose `AccountService.proto` (getAccount, verifyAccount, getAccountsByUser). Callers: `transaction-service` (RestTemplate), `lending-service` (Feign). Migrate kedua caller ke gRPC client.                                                                                                                                                       | ✅ **No FE impact** — internal transport change.                                                    | Medium |
+| **IMP-030** | `transaction-service`  | **Transaction gRPC Server** — Expose `TransactionService.proto` (getTransaction, getHistory, getByReference). Callers: `lending-service` (Feign), `statement-service` (RestTemplate). Migrate kedua caller ke gRPC client.                                                                                                                                                   | ✅ **No FE impact** — internal transport change.                                                    | Medium |
+| **IMP-031** | `wallet` ↔ `fx`        | **Break Circular Dependency via gRPC** — Saat ini `wallet-service` ↔ `fx-service` saling panggil (circular). Refactor: extract `FxRateProvider` interface, `fx-service` push rate updates via Kafka event, `wallet-service` consume dan cache lokal. Eliminasi synchronous circular call. gRPC hanya 1 arah: `fx-service` → `wallet-service` untuk balance ops.               | ✅ **No FE impact** — internal architecture fix.                                                    | Medium |
+| **IMP-032** | Multi-service          | **Standardize HTTP Client for External Calls** — Setelah internal call migrasi ke gRPC, konsolidasi remaining REST client usage: hapus Feign dependency yang unused, standardize ke `RestClient` (Spring 6.1+) untuk external calls saja (simulators, Keycloak, external billers). Buat `rest-client-starter` di shared/ dengan retry + circuit breaker baked in.              | ✅ **No FE impact** — internal client library cleanup.                                              | Small  |
+| **IMP-033** | `gateway-service`      | **Gateway gRPC→REST Bridge** — Gateway (Quarkus) terima REST dari frontend/partner, lalu forward ke backend services via gRPC instead of REST. Gunakan `quarkus-grpc` client. Gateway jadi translation layer: REST↔gRPC + Protobuf↔JSON. Prerequisite: IMP-027, 029, 030 (target services punya gRPC server).                                                                | ✅ **No FE impact** — gateway internal routing change. FE tetap kirim REST ke gateway.              | Medium |
+
+> **Execution Order (recommended):**
+> 1. **IMP-026** (grpc-starter) → foundation
+> 2. **IMP-027** (wallet gRPC server) → highest impact service
+> 3. **IMP-028** (migrate 6 wallet callers) → realize gRPC benefit
+> 4. **IMP-031** (break wallet↔fx circular) → architecture fix
+> 5. **IMP-029** + **IMP-030** (account + transaction gRPC) → parallel
+> 6. **IMP-033** (gateway bridge) → complete the picture
+> 7. **IMP-032** (cleanup REST clients) → final cleanup
+>
+> **Current State (Audit Feb 26, 2026):**
+> - **RestTemplate**: 8 services (transaction, billing, investment, fx, promotion, statement, wallet, auth)
+> - **OpenFeign**: 2 aktif (account, lending); 2 declared tapi unused (transaction, fx)
+> - **WebClient**: auth-service saja (Keycloak)
+> - **gRPC**: 0 (tidak ada `.proto` file atau dependency)
+> - **Circular dep**: wallet-service ↔ fx-service
+> - **Hottest service**: wallet-service (6 synchronous callers)
+
 #### Ringkasan Impact ke Web-App
 
-| Kategori                          | Count | Detail                                                                                       |
-| :-------------------------------- | :---- | :------------------------------------------------------------------------------------------- |
-| ✅ No FE impact (backend only)    | 18    | IMP-002, 003, 005, 007, 008, 009, 012, 013, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025 |
-| ⚠️ Perlu extend FE (non-breaking) | 3     | IMP-001, 006, 015                                                                            |
-| 🔴 FE-only fix (independent)      | 4     | IMP-004, 010, 011, 014                                                                       |
+| Kategori                          | Count | Detail                                                                                                          |
+| :-------------------------------- | :---- | :-------------------------------------------------------------------------------------------------------------- |
+| ✅ No FE impact (backend only)    | 26    | IMP-002, 003, 005, 007, 008, 009, 012, 013, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026–033          |
+| ⚠️ Perlu extend FE (non-breaking) | 3     | IMP-001, 006, 015                                                                                               |
+| 🔴 FE-only fix (independent)      | 4     | IMP-004, 010, 011, 014                                                                                          |
 
-> **Kesimpulan**: Mayoritas improvement (18/25) **tidak menyentuh frontend sama sekali**. 4 item adalah fix independen di FE. Hanya 3 item yang butuh koordinasi FE+BE, dan semuanya **non-breaking** (extend, bukan replace).
+> **Kesimpulan**: Mayoritas improvement (26/33) **tidak menyentuh frontend sama sekali**. gRPC migration (IMP-026–033) sepenuhnya backend — frontend tetap REST via gateway. 4 item adalah fix independen di FE. Hanya 3 item yang butuh koordinasi FE+BE, dan semuanya **non-breaking** (extend, bukan replace).
 
 ### 🔮 Deferred
 
@@ -214,4 +293,4 @@
 
 ---
 
-_Last Updated: February 26, 2026 | 25 improvement items | 13 GAPs | Partners: TokoBapak, Nobar, Dolan, Sinau, Maca | Added: Developer Hub (Backstage) items_
+_Last Updated: February 26, 2026 | 33 improvement items | 13 GAPs | Partners: TokoBapak, Nobar, Dolan, Sinau, Maca | Added: gRPC Inter-Service Communication (IMP-026–033)_
