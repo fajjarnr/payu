@@ -11,16 +11,16 @@
 | Attribute | Value |
 | :--- | :--- |
 | **Last Status Update** | February 25, 2026 |
-| **Production Readiness** | 95% (221/232 bugs fixed) |
+| **Production Readiness** | 99% (229/232 bugs fixed) |
 | **OpenShift Tag** | `v1.3.0` |
 | **Namespace** | `payu-dev` |
 | **Total Pods** | 36/36 running |
 | **Services Deployed** | 22/22 |
 | **E2E Tests** | 399/399 passing |
 
-> ✅ **Code Review Complete (Feb 24-25)**: 221 of ~232 bugs fixed (~95% resolution rate).
-> Tersisa **7 open bugs** (3× P1 mock integrations, 2× P2 cross-service, 2× P3 auth tests) dan **4 intentionally skipped**.
-> Lihat `TODOS.md` untuk detail remaining items.
+> ✅ **Code Review Complete (Feb 24-25)**: 229 of ~232 bugs fixed (~99% resolution rate).
+> **0 open bugs**. 3 intentionally skipped (low impact, future consideration).
+> Lihat `TODOS.md` untuk detail skipped items.
 
 ---
 
@@ -28,11 +28,11 @@
 
 | Category | Weight | Infra/Deploy Score | Notes |
 | :--- | :--- | :--- | :--- |
-| **Backend Services** | 25% | 22/22 deployed | 3 open P1 bugs (mock integrations) |
+| **Backend Services** | 25% | 22/22 deployed | ✅ All bugs fixed, biller-simulator added |
 | **Shared Libraries** | 10% | 7/7 starters | BUG-BE-091 skip (rate limit burst — acceptable) |
-| **Frontend Web-App** | 15% | Deployed & running | 2 open P2 cross-service gaps |
+| **Frontend Web-App** | 15% | Deployed & running | ✅ All cross-service issues resolved |
 | **Frontend Mobile** | 5% | Expo setup only | Deferred |
-| **Testing** | 15% | 399/399 E2E pass | 2 P3 auth test gaps remaining |
+| **Testing** | 15% | 399/399 E2E pass | ✅ Auth test gaps closed (useSilentRefresh) |
 | **Security** | 10% | JWT + OIDC active | ✅ BUG-BE-001 fixed (nimbus-jose-jwt) |
 | **Infrastructure** | 10% | OpenShift HA | HPA + PDB for all critical services |
 
@@ -67,10 +67,15 @@
 ### v1.4.0 (In-Progress) — February 25, 2026
 
 **Code Review Remediation:**
-- ✅ **Production Readiness 95%** — Fixed 221 of ~232 bugs across all 22 microservices + frontend. 7 remaining open, 4 intentionally skipped.
+- ✅ **Production Readiness 99%** — Fixed 229 of ~232 bugs across all 22 microservices + frontend. 0 open, 3 intentionally skipped.
 - ✅ **Core Financial Ledger** — Stabilized `wallet-service` and `investment-service` by handling data type parsing exceptions (`UUID` vs `String`) and enforcing saga compensations (`Try-Catch Rollbacks`) to maintain idempotent data flow.
 - ✅ **Concurrency Resilience** — Replaced asynchronous Reactor `Mono.block()` with fully synchronous `RestTemplate` components targeting Tomcat thread starvation in auth processing. Hardened `ScheduledTransferScheduler` clearing runs with Redis distributed locks.
 - ✅ **Data Integrity & Consistency** — Stopped lost point updates using optimistic locking & atomic sums in `promotion-service`. Status updates explicitly handle synchronous business validations (e.g. KYC approval/rejection constraint).
+- ✅ **Biller Simulator** — Created `biller-simulator` (Quarkus 3.17.5) with 14 seeded test accounts (PLN, PDAM, Telco, E-wallet). Integrated via `BillerPort`/`BillerAdapter` hexagonal pattern in `billing-service`.
+- ✅ **SMS Sender Refactor** — `SmsSender.java` refactored with configurable provider mode (`LOG`/`TWILIO`/`VONAGE`/`ZENZIVA`). LOG mode prints full OTP/message content to console for lab use.
+- ✅ **Statement Historical Balance** — Fixed `statement-service` to compute historical balances by reversing post-period transactions from current balance.
+- ✅ **API Contract Alignment** — Fixed `ScheduledTransferController` and `SplitBillController` response types (void→response object) and BFF whitelist routing.
+- ✅ **Auth Test Coverage** — Added 9 comprehensive vitest tests for `useSilentRefresh` hook.
 
 ### v1.3.0 — February 23, 2026
 
