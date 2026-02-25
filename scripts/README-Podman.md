@@ -36,7 +36,7 @@ Build a single PayU microservice using Podman.
 
 **Features:**
 - Single service builds
-- Automatic Dockerfile discovery
+- Automatic Containerfile discovery
 - Quadlet systemd service file generation
 - Build context detection
 - Multi-stage build support
@@ -173,7 +173,7 @@ sudo systemctl enable --now account-service
    - Check user is in the `podman` group: `podman ps`
 
 2. **Build Failures**
-   - Check Dockerfile syntax
+   - Check Containerfile syntax
    - Verify build context paths
    - Review build logs with `-v` flag
 

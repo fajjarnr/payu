@@ -13,7 +13,7 @@ spec:
       description: "Full image reference (registry/namespace/name:tag)"
     - name: CONTAINERFILE
       type: string
-      description: Path to Containerfile/Dockerfile
+      description: Path to Containerfile
       default: "./Containerfile"
     - name: CONTEXT
       type: string

@@ -51,8 +51,8 @@ for service_name, config in services.items():
         elif isinstance(p, int):
             port = str(p) # unlikely but handle
             
-    # Determine service root based on Dockerfile location relative to context
-    dockerfile = config['build'].get('dockerfile', 'Dockerfile')
+    # Determine service root based on Containerfile location relative to context
+    dockerfile = config['build'].get('dockerfile', 'Containerfile')
     service_root = os.path.dirname(os.path.join(abs_context, dockerfile))
     
     # Determine tech stack

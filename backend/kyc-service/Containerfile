@@ -26,8 +26,13 @@ COPY src/ /app/src/
 FROM python:3.12-slim
 
 # OCI Metadata Labels
-LABEL org.opencontainers.image.title="PayU KYC Service"
-LABEL org.opencontainers.image.vendor="PayU"
+LABEL maintainer="backend-team@payu.id"
+LABEL org.opencontainers.image.title="payu-kyc-service"
+LABEL org.opencontainers.image.description="PayU KYC Service - OCR, Liveness Detection"
+LABEL org.opencontainers.image.version="1.4.0"
+LABEL org.opencontainers.image.vendor="PayU Indonesia"
+LABEL org.opencontainers.image.source="https://github.com/payu/backend/kyc-service"
+LABEL id.payu.service.tier="core"
 
 WORKDIR /app
 
@@ -36,7 +41,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     libgomp1 \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Fix setuptools version to avoid compatibility issues
@@ -61,7 +65,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV LOG_LEVEL=INFO
 ENV PYTHONPATH="/app/src"
 
-VOLUME ["/app/models", "/app/temp", "/app/uploads", "/app/logs"]
+
 
 WORKDIR /app/src
 

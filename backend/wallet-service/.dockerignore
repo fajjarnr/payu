@@ -2,7 +2,7 @@
 .gitignore
 *.md
 README.md
-Dockerfile
+Containerfile
 .dockerignore
 node_modules/
 .env

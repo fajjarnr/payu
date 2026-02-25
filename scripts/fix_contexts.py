@@ -14,7 +14,7 @@ for service_name, config in services.items():
         if context.startswith('../../backend/'):
             service_path = context.replace('../../backend/', '')
             config['build']['context'] = '../../backend'
-            config['build']['dockerfile'] = f"{service_path}/Dockerfile"
+            config['build']['dockerfile'] = f"{service_path}/Containerfile"
         # For others, if they were already changed, we might want to revert or skip
         # Actually, let's just be explicit about which ones we want to change.
         

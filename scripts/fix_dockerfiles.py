@@ -216,7 +216,7 @@ ports = {
 }
 
 for service in services:
-    dockerfile_path = f"backend/{service}/Dockerfile"
+    dockerfile_path = f"backend/{service}/Containerfile"
     if os.path.exists(dockerfile_path):
         port = ports.get(service, 8080)
         service_name = service.split('/')[-1]

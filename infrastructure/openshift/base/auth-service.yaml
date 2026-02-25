@@ -63,22 +63,13 @@ spec:
             - name: KEYCLOAK_ADMIN_USERNAME
               value: "admin"
             - name: KEYCLOAK_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: payu-keycloak-admin
-                  key: password
+              value: "change-me"
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://payu-postgres-primary:5432/payu_auth"
             - name: SPRING_DATASOURCE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: username
+              value: "payu"
             - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: password
+              value: "change-me"
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
             - name: REDIS_HOST

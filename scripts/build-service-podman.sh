@@ -139,33 +139,23 @@ check_dependencies() {
     fi
 }
 
-# Find Containerfile/Dockerfile for service (prefers Containerfile)
+# Find Containerfile for service
 find_containerfile() {
     local service_name="$1"
     local containerfile
 
-    # Try Containerfile first (Podman standard)
+    # Find Containerfile by exact path match
     containerfile=$(find "$PROJECT_ROOT" -name "Containerfile" -path "*/${service_name}/Containerfile" -type f | head -1)
 
-    # If not found, try Dockerfile (backward compatibility)
-    if [[ -z "$containerfile" ]]; then
-        containerfile=$(find "$PROJECT_ROOT" -name "Dockerfile" -path "*/${service_name}/Dockerfile" -type f | head -1)
-    fi
-
-    # If not found, try service pattern with Containerfile
+    # If not found, try service name pattern
     if [[ -z "$containerfile" ]]; then
         containerfile=$(find "$PROJECT_ROOT" -name "Containerfile" -type f | grep -i "${service_name}" | head -1)
-    fi
-
-    # If not found, try service pattern with Dockerfile
-    if [[ -z "$containerfile" ]]; then
-        containerfile=$(find "$PROJECT_ROOT" -name "Dockerfile" -type f | grep -i "${service_name}" | head -1)
     fi
 
     # If still not found, look for partial matches
     if [[ -z "$containerfile" ]]; then
         local services
-        services=$(find "$PROJECT_ROOT" -type f \( -name "Containerfile" -o -name "Dockerfile" \) | sort)
+        services=$(find "$PROJECT_ROOT" -name "Containerfile" -type f | sort)
 
         for cf in $services; do
             if [[ "$(basename "$(dirname "$cf")" | grep -i "$service_name")" ]]; then
@@ -176,9 +166,9 @@ find_containerfile() {
     fi
 
     if [[ -z "$containerfile" ]]; then
-        log_error "Containerfile/Dockerfile not found for service: $service_name"
+        log_error "Containerfile not found for service: $service_name"
         log_error "Available services:"
-        find "$PROJECT_ROOT" -type f \( -name "Containerfile" -o -name "Dockerfile" \) | \
+        find "$PROJECT_ROOT" -name "Containerfile" -type f | \
             while read -r cf; do
                 echo "  - $(basename "$(dirname "$cf")")"
             done

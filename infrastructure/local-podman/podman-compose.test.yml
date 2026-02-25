@@ -167,7 +167,7 @@ services:
   bi-fast-simulator-test:
     build:
       context: ./backend/simulators/bi-fast-simulator
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-bifast-simulator-test
     podman_networks:
       - name: payu-test-network
@@ -193,7 +193,7 @@ services:
   dukcapil-simulator-test:
     build:
       context: ./backend/simulators/dukcapil-simulator
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-dukcapil-simulator-test
     podman_networks:
       - name: payu-test-network
@@ -219,7 +219,7 @@ services:
   qris-simulator-test:
     build:
       context: ./backend/simulators/qris-simulator
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-qris-simulator-test
     podman_networks:
       - name: payu-test-network
@@ -248,7 +248,7 @@ services:
   account-service-test:
     build:
       context: ./backend/account-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-account-service-test
     podman_networks:
       - name: payu-test-network
@@ -281,7 +281,7 @@ services:
   auth-service-test:
     build:
       context: ./backend/auth-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-auth-service-test
     podman_networks:
       - name: payu-test-network
@@ -315,7 +315,7 @@ services:
   transaction-service-test:
     build:
       context: ./backend/transaction-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-transaction-service-test
     podman_networks:
       - name: payu-test-network
@@ -348,7 +348,7 @@ services:
   wallet-service-test:
     build:
       context: ./backend/wallet-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-wallet-service-test
     podman_networks:
       - name: payu-test-network
@@ -378,7 +378,7 @@ services:
   billing-service-test:
     build:
       context: ./backend/billing-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-billing-service-test
     podman_networks:
       - name: payu-test-network
@@ -407,7 +407,7 @@ services:
   notification-service-test:
     build:
       context: ./backend/notification-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-notification-service-test
     podman_networks:
       - name: payu-test-network
@@ -435,7 +435,7 @@ services:
   gateway-service-test:
     build:
       context: ./backend/gateway-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-gateway-service-test
     podman_networks:
       - name: payu-test-network
@@ -470,7 +470,7 @@ services:
   kyc-service-test:
     build:
       context: ./backend/kyc-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-kyc-service-test
     podman_networks:
       - name: payu-test-network
@@ -498,7 +498,7 @@ services:
   analytics-service-test:
     build:
       context: ./backend/analytics-service
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-analytics-service-test
     podman_networks:
       - name: payu-test-network
@@ -528,7 +528,7 @@ services:
   web-app-test:
     build:
       context: ./frontend/web-app
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     container_name: payu-web-app-test
     podman_networks:
       - name: payu-test-network

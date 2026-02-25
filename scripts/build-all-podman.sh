@@ -132,14 +132,14 @@ check_dependencies() {
     fi
 }
 
-# Get service list with Containerfiles (prefer Containerfile, fallback to Dockerfile)
+# Get service list with Containerfiles
 get_services() {
-    find "$PROJECT_ROOT" -type f \( -name "Containerfile" -o -name "Dockerfile" \) | \
+    find "$PROJECT_ROOT" -name "Containerfile" -type f | \
         grep -E "(backend/|frontend/|tests/)" | \
         sort | \
         while read -r containerfile; do
             local service_name
-            service_name=$(echo "$containerfile" | sed 's|/Containerfile||;s|/Dockerfile||' | xargs basename)
+            service_name=$(echo "$containerfile" | sed 's|/Containerfile||' | xargs basename)
             echo "$service_name:$containerfile"
         done
 }
@@ -216,7 +216,7 @@ main() {
     services=$(get_services)
 
     if [[ -z "$services" ]]; then
-        log_error "No services found with Containerfiles or Dockerfiles"
+        log_error "No services found with Containerfiles"
         exit 1
     fi
 

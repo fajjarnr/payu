@@ -6,10 +6,10 @@ FROM registry.access.redhat.com/ubi9/nodejs-20:9.7 AS base
 # Metadata labels
 LABEL maintainer="frontend-team@payu.id"
 LABEL description="PayU Web App - Digital Banking Next.js Frontend with E2E Testing"
-LABEL version="0.2.3"
+LABEL version="1.4.0"
 LABEL org.opencontainers.image.title="payu-web-app"
 LABEL org.opencontainers.image.description="PayU Digital Banking Web Application - Next.js 16 with React 19, TypeScript, Tailwind CSS, and Playwright E2E Testing"
-LABEL org.opencontainers.image.version="0.2.3"
+LABEL org.opencontainers.image.version="1.4.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.url="https://payu.id"
 LABEL org.opencontainers.image.source="https://github.com/payu/frontend/web-app"
@@ -82,9 +82,9 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/app/.playwright
 # Create non-root user directory and set permissions
 USER root
 
-# Install curl for health checks and libraries for Playwright browsers
+# Install libraries for Playwright browsers
 # Using UBI9 compatible package names
-RUN dnf install -y curl libX11 libXcomposite libXcursor libXdamage libXext libXi libXtst cups-libs libXScrnSaver libxkbcommon at-spi2-atk alsa-lib nss mesa-libgbm --allowerasing && \
+RUN dnf install -y libX11 libXcomposite libXcursor libXdamage libXext libXi libXtst cups-libs libXScrnSaver libxkbcommon at-spi2-atk alsa-lib nss mesa-libgbm --allowerasing && \
     dnf clean all && \
     rm -rf /var/cache/dnf
 
@@ -112,15 +112,8 @@ COPY --from=builder --chown=1001:0 /app/e2e ./e2e
 # Switch to non-root user (1001 is the default node user in UBI9)
 USER 1001
 
-# Volume mounts for caching and temporary files
-VOLUME ["/app/.next/cache", "/app/tmp", "/app/.playwright"]
-
 # Expose the application port
 EXPOSE 3000
-
-# Health check for Next.js application
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Run the production server
 CMD ["node", "server.js"]

@@ -1,53 +1,27 @@
 ####
-# Build stage - Using Red Hat UBI9 OpenJDK 21 with Maven
-####
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.24-2 AS build
-
-USER root
-WORKDIR /build
-
-# Install Maven
-RUN microdnf install -y maven && microdnf clean all
-
-# Copy entire project (needed for parent POM and shared library dependencies)
-COPY . .
-
-# Build the Quarkus application (uber-jar format for simulator)
-RUN mvn clean package -DskipTests -Dquarkus.package.jar.type=uber-jar
-
-####
-# Runtime stage - Using minimal UBI9 OpenJDK 21 runtime
+# PayU dukcapil-simulator - Quarkus Runtime Container
+# Expects pre-built fast-jar: mvn -f backend/pom.xml clean package -DskipTests -pl simulators/dukcapil-simulator
 ####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
-# Metadata labels
 LABEL maintainer="backend-team@payu.id"
-LABEL description="PayU Dukcapil Simulator - NIK Verification, Face Matching"
-LABEL version="1.0.0"
 LABEL org.opencontainers.image.title="payu-dukcapil-simulator"
-LABEL org.opencontainers.image.description="PayU Dukcapil Simulator - Simulates Dukcapil NIK verification and face matching for testing"
-LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.description="PayU dukcapil-simulator - Dukcapil NIK verification simulation"
+LABEL org.opencontainers.image.version="1.4.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
 LABEL org.opencontainers.image.source="https://github.com/payu/backend/simulators/dukcapil-simulator"
-LABEL org.opencontainers.image.licenses="Proprietary"
-LABEL org.opencontainers.image.authors="PayU Backend Team"
-LABEL id.payu.service="dukcapil-simulator"
-LABEL id.payu.tier="simulator"
-LABEL id.payu.runtime="quarkus-native"
+LABEL id.payu.service.tier="simulator"
 
-# Use non-root user (185 is the default jboss user in UBI images)
 USER 185
-
 WORKDIR /deployments
 
-# Copy the uber-jar from build stage
-COPY --from=build --chown=185 /build/target/*-runner.jar /deployments/app.jar
+COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 target/quarkus-app/quarkus-run.jar /deployments/quarkus-run.jar
+COPY --chown=185 target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
 
-# Expose the service port
-EXPOSE 8091
+EXPOSE 8080
 
-# JVM configuration
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
     -XX:+UseG1GC \
@@ -55,9 +29,4 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -Dquarkus.http.host=0.0.0.0 \
     -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 
-
-# Volume mounts for temporary files and logs
-VOLUME ["/deployments/tmp", "/deployments/logs"]
-
-# Run the Quarkus application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

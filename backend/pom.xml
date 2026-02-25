@@ -51,6 +51,7 @@
 
         <!-- Simulators -->
         <module>simulators/bi-fast-simulator</module>
+        <module>simulators/biller-simulator</module>
         <module>simulators/dukcapil-simulator</module>
         <module>simulators/qris-simulator</module>
 
@@ -297,6 +298,7 @@
             <id>simulators</id>
             <modules>
                 <module>simulators/bi-fast-simulator</module>
+                <module>simulators/biller-simulator</module>
                 <module>simulators/dukcapil-simulator</module>
                 <module>simulators/qris-simulator</module>
             </modules>

@@ -166,10 +166,10 @@ get_images_to_scan() {
         fi
     else
         # Get PayU service images
-        find "$PROJECT_ROOT" -name "Dockerfile" -type f | \
-            while read -r dockerfile; do
+        find "$PROJECT_ROOT" -name "Containerfile" -type f | \
+            while read -r containerfile; do
                 local service_dir
-                service_dir=$(dirname "$dockerfile")
+                service_dir=$(dirname "$containerfile")
                 local service_name
                 service_name=$(basename "$service_dir")
 

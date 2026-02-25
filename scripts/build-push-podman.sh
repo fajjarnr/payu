@@ -46,9 +46,7 @@ for svc in "${JAVA_SERVICES[@]}"; do
     echo "SKIP: No JAR found for $svc"
     continue
   fi
-  # Use Containerfile if exists, else Dockerfile
   CF="$BACKEND/$svc/Containerfile"
-  [ ! -f "$CF" ] && CF="$BACKEND/$svc/Dockerfile"
   podman build --tls-verify=false -f "$CF" -t "$IMG" "$BACKEND/$svc" 2>&1 | tail -3
   echo "BUILT: $IMG"
 done
@@ -59,7 +57,6 @@ for svc in "${PYTHON_SERVICES[@]}"; do
   echo "--- Building $svc ---"
   IMG="$REGISTRY/$NS/$svc:$TAG"
   CF="$BACKEND/$svc/Containerfile"
-  [ ! -f "$CF" ] && CF="$BACKEND/$svc/Dockerfile"
   podman build --tls-verify=false -f "$CF" -t "$IMG" "$BACKEND/$svc" 2>&1 | tail -3
   echo "BUILT: $IMG"
 done

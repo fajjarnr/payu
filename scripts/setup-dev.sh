@@ -196,7 +196,7 @@ build_python_services() {
     for service in kyc-service analytics-service; do
         if [ -d "backend/$service" ]; then
             echo -n "Building $service... "
-            # Python services use Dockerfile, just verify requirements exist
+            # Python services use Containerfile, just verify requirements exist
             if [ -f "backend/$service/requirements.txt" ]; then
                 print_success "$service ready"
             else
