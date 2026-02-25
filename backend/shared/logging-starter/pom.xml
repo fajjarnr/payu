@@ -65,6 +65,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Kafka for MDC propagation interceptors -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

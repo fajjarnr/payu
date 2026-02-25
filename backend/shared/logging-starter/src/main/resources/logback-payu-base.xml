@@ -64,9 +64,19 @@
         </root>
     </springProfile>
 
-    <springProfile name="staging,prod">
+    <springProfile name="staging,prod,container">
         <root level="${LOG_LEVEL}">
             <appender-ref ref="ASYNC_JSON"/>
+        </root>
+    </springProfile>
+
+    <!--
+        Fallback: if no profile matches (e.g. custom profile), still log to console.
+        Without this, mismatched profiles cause silent log loss.
+    -->
+    <springProfile name="!default &amp; !dev &amp; !test &amp; !staging &amp; !prod &amp; !container">
+        <root level="${LOG_LEVEL}">
+            <appender-ref ref="TEXT_CONSOLE"/>
         </root>
     </springProfile>
 

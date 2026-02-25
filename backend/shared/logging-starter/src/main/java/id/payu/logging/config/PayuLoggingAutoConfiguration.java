@@ -1,7 +1,9 @@
 package id.payu.logging.config;
 
 import id.payu.logging.filter.CorrelationIdFilter;
+import id.payu.logging.filter.CorrelationIdWebFilter;
 import id.payu.logging.filter.TraceIdFilter;
+import id.payu.logging.filter.TraceIdWebFilter;
 import id.payu.logging.util.MdcUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -12,6 +14,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.web.server.WebFilter;
 
 /**
  * Auto-configuration for PayU standardized logging.
@@ -70,9 +73,10 @@ public class PayuLoggingAutoConfiguration {
         matchIfMissing = true
     )
     @ConditionalOnClass(name = "io.opentelemetry.api.trace.Tracer")
-    public FilterRegistrationBean<TraceIdFilter> traceIdFilter() {
+    public FilterRegistrationBean<TraceIdFilter> traceIdFilter(
+            PayuLoggingProperties properties) {
         FilterRegistrationBean<TraceIdFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new TraceIdFilter());
+        registration.setFilter(new TraceIdFilter(properties));
         registration.addUrlPatterns("/*");
         registration.setName("traceIdFilter");
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
@@ -86,5 +90,40 @@ public class PayuLoggingAutoConfiguration {
     @ConditionalOnMissingBean
     public MdcUtil mdcUtil() {
         return new MdcUtil();
+    }
+
+    // ---- Reactive WebFlux Filters ----
+
+    /**
+     * Correlation ID filter for reactive (WebFlux) applications.
+     */
+    @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    @ConditionalOnMissingBean(name = "correlationIdWebFilter")
+    @ConditionalOnProperty(
+        prefix = "payu.logging.correlation",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true
+    )
+    public WebFilter correlationIdWebFilter(PayuLoggingProperties properties) {
+        return new CorrelationIdWebFilter(properties);
+    }
+
+    /**
+     * Trace ID filter for reactive (WebFlux) applications with OpenTelemetry.
+     */
+    @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    @ConditionalOnMissingBean(name = "traceIdWebFilter")
+    @ConditionalOnProperty(
+        prefix = "payu.logging.tracing",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true
+    )
+    @ConditionalOnClass(name = "io.opentelemetry.api.trace.Tracer")
+    public WebFilter traceIdWebFilter(PayuLoggingProperties properties) {
+        return new TraceIdWebFilter(properties);
     }
 }

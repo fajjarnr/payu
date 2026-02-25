@@ -1,5 +1,6 @@
 package id.payu.logging.filter;
 
+import id.payu.logging.config.PayuLoggingProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import jakarta.servlet.*;
@@ -13,9 +14,26 @@ import java.io.IOException;
  */
 public class TraceIdFilter implements Filter {
 
-    private static final String TRACE_ID_KEY = "trace_id";
-    private static final String SPAN_ID_KEY = "span_id";
+    private static final String DEFAULT_TRACE_ID_KEY = "trace_id";
+    private static final String DEFAULT_SPAN_ID_KEY = "span_id";
     private static final String TRACE_FLAGS_KEY = "trace_flags";
+
+    private final String traceIdKey;
+    private final String spanIdKey;
+
+    public TraceIdFilter() {
+        this(null);
+    }
+
+    public TraceIdFilter(PayuLoggingProperties properties) {
+        if (properties != null && properties.getTracing() != null) {
+            this.traceIdKey = properties.getTracing().getTraceIdMdcKey();
+            this.spanIdKey = properties.getTracing().getSpanIdMdcKey();
+        } else {
+            this.traceIdKey = DEFAULT_TRACE_ID_KEY;
+            this.spanIdKey = DEFAULT_SPAN_ID_KEY;
+        }
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -26,15 +44,15 @@ public class TraceIdFilter implements Filter {
 
         try {
             if (spanContext.isValid()) {
-                MDC.put(TRACE_ID_KEY, spanContext.getTraceId());
-                MDC.put(SPAN_ID_KEY, spanContext.getSpanId());
+                MDC.put(traceIdKey, spanContext.getTraceId());
+                MDC.put(spanIdKey, spanContext.getSpanId());
                 MDC.put(TRACE_FLAGS_KEY, spanContext.getTraceFlags().toString());
             }
 
             chain.doFilter(request, response);
         } finally {
-            MDC.remove(TRACE_ID_KEY);
-            MDC.remove(SPAN_ID_KEY);
+            MDC.remove(traceIdKey);
+            MDC.remove(spanIdKey);
             MDC.remove(TRACE_FLAGS_KEY);
         }
     }
