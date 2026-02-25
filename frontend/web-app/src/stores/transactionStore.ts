@@ -46,5 +46,6 @@ export const useTransactionStore = create<TransactionState>((set) => ({
     set({ selectedTransactionId: id, isDetailOpen: id !== null }),
 
   setDetailOpen: (open) =>
-    set({ isDetailOpen: open, selectedTransactionId: open ? undefined : null }),
+    // BUG-FE-007: Use null (not undefined) to match selectedTransactionId type
+    set((state) => ({ isDetailOpen: open, selectedTransactionId: open ? state.selectedTransactionId : null })),
 }));

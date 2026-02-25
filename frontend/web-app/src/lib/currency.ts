@@ -221,6 +221,11 @@ export function numberToWords(amount: number): string {
     let scaleIndex = 0;
 
     while (n > 0) {
+      // BUG-FE-012: Guard for numbers > triliun — prevent "undefined" in output
+      if (scaleIndex >= scales.length) {
+        result = convertChunk(n % 1000) + ' (overflow)' + (result ? ' ' + result : '');
+        break;
+      }
       const chunk = n % 1000;
       if (chunk > 0) {
         let chunkText = convertChunk(chunk);
@@ -278,8 +283,9 @@ export function isValidCurrency(value: string | number): boolean {
  * @returns Rounded amount
  */
 export function roundCurrency(amount: number, decimals: number = 0): number {
-  const multiplier = Math.pow(10, decimals);
-  return Math.round(amount * multiplier) / multiplier;
+  // BUG-FE-047: Math.round(amount * multiplier) / multiplier has floating point errors
+  // e.g., Math.round(1.005 * 100) / 100 = 1.00 (not 1.01)
+  return Number(amount.toFixed(decimals));
 }
 
 /**

@@ -386,10 +386,14 @@ export function validatePassword(password: string | null | undefined): {
     errors.push('Password harus mengandung karakter spesial');
   }
 
-  // Calculate strength
-  let strength: 'weak' | 'medium' | 'strong' = 'weak';
-  const criteriaMet = 5 - errors.filter(e => e.includes('karakter')).length;
+  // BUG-FE-009: Calculate strength from boolean checks, not by filtering error strings
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const criteriaMet = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
 
+  let strength: 'weak' | 'medium' | 'strong' = 'weak';
   if (criteriaMet >= 4 && password.length >= 12) {
     strength = 'strong';
   } else if (criteriaMet >= 3 && password.length >= 8) {

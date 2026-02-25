@@ -145,7 +145,8 @@ export function relativeTime(
   const diffMinutes = Math.floor(diffSeconds / 60);
   const diffHours = Math.floor(diffMinutes / 60);
   const diffDays = Math.floor(diffHours / 24);
-  const diffMonths = Math.floor(diffDays / 30);
+  // BUG-FE-011: Use proper calendar month difference instead of 30-day approximation
+  const diffMonths = (now.getFullYear() - dateObj.getFullYear()) * 12 + (now.getMonth() - dateObj.getMonth());
   const diffYears = Math.floor(diffDays / 365);
 
   // Future

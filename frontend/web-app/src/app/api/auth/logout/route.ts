@@ -14,14 +14,21 @@ export async function POST() {
 
     logger.info({ action: 'logout', hasToken: !!token }, 'Logout initiated');
 
-    // Best-effort notify backend to invalidate session
+    // BUG-FE-014: Await backend logout with 2s timeout to invalidate session before clearing cookies
     if (token) {
-      fetch(`${GATEWAY_URL}/api/v1/auth/logout`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch((err) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      try {
+        await fetch(`${GATEWAY_URL}/api/v1/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        });
+      } catch (err) {
         logger.warn({ action: 'logout', err: err instanceof Error ? err : { message: String(err) } }, 'Backend logout notification failed');
-      });
+      } finally {
+        clearTimeout(timeoutId);
+      }
     }
 
     const response = NextResponse.json({ success: true });

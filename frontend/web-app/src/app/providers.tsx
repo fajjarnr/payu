@@ -9,8 +9,9 @@ const createQueryClient = () => new QueryClient({
   queries: {
    staleTime: 1000 * 60 * 5,
    gcTime: 1000 * 60 * 10,
-   refetchOnWindowFocus: false,
-   refetchOnReconnect: false,
+   // BUG-FE-026: Enable auto-refresh on reconnect/focus so balance stays fresh
+   refetchOnWindowFocus: true,
+   refetchOnReconnect: true,
    retry: 1,
    retryDelay: (attemptIndex) => {
     return Math.min(1000 * 2 ** attemptIndex, 30000);

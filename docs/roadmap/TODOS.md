@@ -341,8 +341,8 @@
 | ID | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
 | **BUG-FE-001** | `api/v1/[...path]/route.ts` L28-29 | BFF proxy tidak retry saat `accessToken` expired — loop 401 tanpa attempt refresh. | BFF deteksi 401 → panggil `/api/auth/refresh` → retry upstream. |
-| **BUG-FE-002** | `uiStore.ts` L37-47 | Toast `setTimeout` ID tidak disimpan → memory leak, update state pada unmounted component. | Simpan timeout ID per toast, clear di `removeToast`. |
-| **BUG-FE-003** | `uiStore.ts` L24 | `toastIdCounter` tidak reset → non-deterministik di tests. | Ganti ke `crypto.randomUUID()`. |
+| ✅ ~~BUG-FE-002~~ | ~~uiStore.ts~~ | ~~FIXED: Toast setTimeout IDs stored in Map, cleared on removeToast/clearToasts. No more memory leaks.~~ | ~~Simpan timeout ID per toast, clear di `removeToast`.~~ |
+| ✅ ~~BUG-FE-003~~ | ~~uiStore.ts~~ | ~~FIXED: Replaced incrementing counter with `crypto.randomUUID()` for deterministic test behavior.~~ | ~~Ganti ke `crypto.randomUUID()`.~~ |
 | **BUG-FE-004** | `useWebSocket.ts` L62-73 | WebSocket reconnect leak — handler closure lama + orphan connection. | Track koneksi baru di `wsRef.current` sebelum assign handler. |
 | **BUG-FE-020** | `ABTestingService.ts` L164-212 | **A/B test cache pakai `localStorage`** — satu-satunya yang melanggar policy no-localStorage di codebase. | Ganti ke cookie non-httpOnly atau Zustand store dengan `persist`. |
 | **BUG-FE-021** | `services/` (semua) | **Tidak ada idempotency key** pada operasi finansial — double-tap = double-charge. | Tambahkan `X-Idempotency-Key: uuid-v4` di semua financial mutations. |
@@ -356,19 +356,19 @@
 | :--- | :--- | :--- | :--- |
 | **BUG-FE-005** | `useWebSocket.ts` L84-86 | `ws: null as unknown as WebSocket` — type lie, crash jika consumer akses `ws.send()`. | Return `wsRef.current` atau hapus `ws` dari return. |
 | **BUG-FE-006** | `useAnalytics.ts` L20-22 | WebSocket dibuka meski `accountId` undefined — URL terbentuk tanpa ID, SSR crash `window.location.host`. | Guard: jangan panggil `useWebSocket` jika `accountId` falsy. |
-| **BUG-FE-007** | `transactionStore.ts` L48-49 | `setDetailOpen(false)` set `selectedTransactionId` ke `undefined` bukan `null` — type mismatch. | Ganti `undefined` dengan `null`. |
+| ✅ ~~BUG-FE-007~~ | ~~transactionStore.ts~~ | ~~FIXED: `setDetailOpen(false)` now sets `selectedTransactionId` to `null` (not `undefined`) matching type.~~ | ~~Ganti `undefined` dengan `null`.~~ |
 | **BUG-FE-008** | `lib/validation.ts` L44-46 | Normalisasi `6208xxx` salah — `'0' + normalized.substring(3)` hasilkan nomor invalid. | Review prefix `6208`, hapus atau dokumentasikan use case. |
-| **BUG-FE-009** | `lib/validation.ts` L390-397 | Password strength hitung dari filter string error bahasa Indonesia — fragile jika terjemahan berubah. | Hitung dari boolean checks langsung. |
+| ✅ ~~BUG-FE-009~~ | ~~lib/validation.ts~~ | ~~FIXED: Password strength calculated from boolean checks (hasLower, hasUpper, etc.) instead of filtering Indonesian error strings.~~ | ~~Hitung dari boolean checks langsung.~~ |
 | **BUG-FE-010** | `lib/currency.ts` L94-101 | `yahoo.co` dianggap typo — `yahoo.co.id` valid ditolak. | Check exact: `domain === 'yahoo.co'` saja. |
-| **BUG-FE-011** | `lib/date.ts` L148 | `diffMonths` approximation 30 hari → tidak akurat. | Gunakan `Intl.RelativeTimeFormat` atau selisih `.getMonth()`. |
-| **BUG-FE-012** | `lib/currency.ts` L202-246 | `numberToWords` tidak handle > triliun → return `"undefined"` di string. | Guard: `if (scaleIndex >= scales.length)` return fallback. |
+| ✅ ~~BUG-FE-011~~ | ~~lib/date.ts~~ | ~~FIXED: `diffMonths` now uses proper calendar month math `(year*12+month)` instead of `Math.floor(days/30)`.~~ | ~~Gunakan selisih `.getMonth()`.~~ |
+| ✅ ~~BUG-FE-012~~ | ~~lib/currency.ts~~ | ~~FIXED: Added `scaleIndex >= scales.length` guard in `numberToWords` to prevent `undefined` in output for amounts > triliun.~~ | ~~Guard: `if (scaleIndex >= scales.length)`.~~ |
 | **BUG-FE-013** | `useTransactions.ts` L33-34 | `invalidateQueries({ queryKey: ['transactions'] })` terlalu broad — invalidate semua account. | Gunakan `queryKey: ['transactions', accountId]` spesifik. |
-| **BUG-FE-014** | `logout/route.ts` L18-24 | Backend logout `fetch()` tanpa `await` — cookie clear duluan sebelum invalidate session di Keycloak. | Tambahkan `await` dengan timeout max 2 detik. |
+| ✅ ~~BUG-FE-014~~ | ~~logout/route.ts~~ | ~~FIXED: Added `await` with 2s AbortController timeout to backend logout fetch. Session invalidated in Keycloak before cookies cleared.~~ | ~~Tambahkan `await` dengan timeout max 2 detik.~~ |
 | **BUG-FE-023** | `rewards/page.tsx` L28-63 | **Hardcoded fake data di production** — `9300 poin`, `PAYU2024`, dll. ditampilkan ke user. | Tampilkan skeleton/empty state, bukan fake data. |
-| **BUG-FE-024** | `types/index.ts` L36-41 | `LoginResponse` expose `access_token` + `refresh_token` — kontradiksi arsitektur httpOnly cookie. | Hapus field token dari tipe `LoginResponse`. |
+| ✅ ~~BUG-FE-024~~ | ~~types/index.ts~~ | ~~FIXED: Removed `access_token` and `refresh_token` from `LoginResponse`. Tokens are httpOnly cookies via BFF. Added `mfa_required` fields instead.~~ | ~~Hapus field token dari tipe `LoginResponse`.~~ |
 | **BUG-FE-025** | `AccountService.ts` L85-101 | Deprecated methods tanpa removal plan + `console.warn` tidak cukup. | Tambahkan JSDoc `@deprecated` + schedule removal. |
-| **BUG-FE-026** | `providers.tsx` L12-13 | `refetchOnReconnect: false` + `refetchOnWindowFocus: false` global — balance stale tidak auto-refresh. | Set global ke `true`, override per-query yang tidak perlu. |
-| **BUG-FE-027** | `providers.tsx` L19-21 | **`mutations: { retry: 1 }` global** — auto-retry financial mutations → double debit. | Set `retry: 0` global, override per-mutation non-finansial. |
+| ✅ ~~BUG-FE-026~~ | ~~providers.tsx~~ | ~~FIXED: Set `refetchOnWindowFocus: true` and `refetchOnReconnect: true` globally for fresh financial data on tab return.~~ | ~~Set global ke `true`.~~ |
+| ✅ ~~BUG-FE-027~~ | ~~providers.tsx~~ | ~~FIXED (prior): Global mutation `retry: 0` already configured to prevent double-debit on auto-retry.~~ | ~~Set `retry: 0` global.~~ |
 | **BUG-FE-028** | `useExperiment.ts` L155-157 | `error = experimentError \|\| assignmentError` — hanya error pertama tersimpan, error kedua hilang. | Gunakan `??` atau simpan keduanya. |
 | **BUG-FE-029** | `useExperiment.ts` L149 | `enabled` condition terlalu kompleks — jika experiment loading gagal, assignment tidak pernah di-fetch. | Split kondisi atau tambahkan `isError: false` check. |
 | **BUG-FE-030** | `KYCService.ts` L14-18 | KTP image sebagai base64 > 10MB → lampaui limit request body. | Gunakan `FormData` multipart atau resize sebelum encode. |
@@ -755,10 +755,10 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-FE-044** | `web-app` | `lib/validation.ts` L427 | **`parseFloat` untuk currency amounts** — `parseFloat(amount.replace(...))` bisa produce floating point errors (e.g., `0.1 + 0.2 ≠ 0.3`). Di financial app ini bisa cause rounding discrepancies. | Gunakan integer arithmetic (simpan dalam smallest unit — sen/cents) atau library decimal (e.g., `decimal.js`). |
 | **BUG-FE-045** | `web-app` | `lib/validation.ts` L89-101 | **Email domain typo detection blocks valid domains** — `.co` domains (e.g., `user@company.co`) valid tapi di-reject karena typo detection. `gmail.co` → suggest `gmail.com`, tapi `company.co` bukan typo. | Hanya suggest, jangan block — set `isValid: true` tapi tambahkan `suggestion` field. |
-| **BUG-FE-046** | `web-app` | `middleware.ts` L60 | **Route match logic too broad** — `publicRoutes.some(route => pathWithoutLocale.startsWith(route))`. `/login-debug`, `/onboarding-secret`, `/legal/privacy-backdoor` semua match. | Gunakan exact match atau match dengan trailing `/`: `pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/')`. |
+| ✅ ~~BUG-FE-046~~ | ~~web-app~~ | ~~middleware.ts~~ | ~~FIXED: Route matching now uses exact match or segment boundary (`=== route || startsWith(route + '/')`) to prevent `/login-debug` etc. from matching.~~ | ~~Exact match atau trailing `/`.~~ |
 | **BUG-BE-170** | all services | `SecurityConfig.java` (multiple) | **`EnableMethodSecurity` missing di sebagian besar services** — `@PreAuthorize` hanya berfungsi jika `@EnableMethodSecurity` aktif. Hanya `partner-service` yang punya. Service lain pakai `@PreAuthorize` tapi mungkin tidak enforced. | Tambahkan `@EnableMethodSecurity` di semua SecurityConfig yang punya `@PreAuthorize` endpoints. |
 | ✅ ~~BUG-BE-171~~ | ~~wallet-service, transaction-service, auth-service~~ | ~~SecurityConfig.java (multiple)~~ | ~~FIXED: Replaced deprecated `SecurityContextPersistenceFilter` with `SecurityContextHolderFilter` in wallet-service and transaction-service. Auth-service was already fixed.~~ | ~~Ganti reference ke `SecurityContextHolderFilter`.~~ |
-| **BUG-FE-047** | `web-app` | `lib/currency.ts` L281-282 | **`roundCurrency()` pakai `Math.round(amount * multiplier) / multiplier`** — floating point arithmetic. `Math.round(1.005 * 100) / 100 = 1.00` bukan `1.01`. | Gunakan `Number((amount).toFixed(decimals))` atau integer-based rounding. |
+| ✅ ~~BUG-FE-047~~ | ~~web-app~~ | ~~lib/currency.ts~~ | ~~FIXED: `roundCurrency` now uses `Number(amount.toFixed(decimals))` instead of `Math.round(amount * multiplier) / multiplier` to avoid floating point errors.~~ | ~~Gunakan `Number((amount).toFixed(decimals))`.~~ |
 
 ---
 

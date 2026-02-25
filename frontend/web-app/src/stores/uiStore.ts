@@ -21,7 +21,8 @@ interface UIState {
   clearToasts: () => void;
 }
 
-let toastIdCounter = 0;
+// BUG-FE-002: Track timeout IDs per toast to clear on removal
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 export const useUIStore = create<UIState>((set) => ({
   isSidebarOpen: true,
@@ -35,20 +36,36 @@ export const useUIStore = create<UIState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
 
   addToast: (message, type, duration = 5000) => {
-    const id = `toast-${toastIdCounter++}`;
+    // BUG-FE-003: Use crypto.randomUUID() instead of incrementing counter
+    const id = crypto.randomUUID();
     const toast = { id, message, type, duration };
     
     set((state) => ({ toasts: [...state.toasts, toast] }));
 
     if (duration > 0) {
-      setTimeout(() => {
+      // BUG-FE-002: Store timeout ID so it can be cleared on manual removal
+      const timeoutId = setTimeout(() => {
+        toastTimeouts.delete(id);
         set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
       }, duration);
+      toastTimeouts.set(id, timeoutId);
     }
   },
 
-  removeToast: (id) =>
-    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+  removeToast: (id) => {
+    // BUG-FE-002: Clear stored timeout to prevent dangling state updates
+    const timeoutId = toastTimeouts.get(id);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      toastTimeouts.delete(id);
+    }
+    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+  },
 
-  clearToasts: () => set({ toasts: [] })
+  clearToasts: () => {
+    // BUG-FE-002: Clear all pending timeouts
+    toastTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
+    toastTimeouts.clear();
+    set({ toasts: [] });
+  }
 }));

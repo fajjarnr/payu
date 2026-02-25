@@ -33,11 +33,12 @@ export interface User {
   updatedAt: string;
 }
 
+// BUG-FE-024: Tokens are httpOnly cookies managed by BFF — must not be in JS response type
 export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
   expires_in: number;
   token_type: string;
+  mfa_required?: boolean;
+  mfa_challenge_id?: string;
 }
 
 export interface Pocket {

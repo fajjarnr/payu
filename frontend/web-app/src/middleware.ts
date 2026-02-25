@@ -57,8 +57,9 @@ export default function middleware(request: NextRequest) {
     '/merchant/register',
   ];
 
+  // BUG-FE-046: Use exact match or segment boundary to prevent /login-debug, /onboarding-secret matching
   const isPublicRoute = pathWithoutLocale === '/' || 
-    publicRoutes.some(route => pathWithoutLocale.startsWith(route));
+    publicRoutes.some(route => pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/'));
 
   if (!isPublicRoute && !hasSession) {
     const localeMatch = pathname.match(/^\/(en|id)/);
