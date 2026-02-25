@@ -103,19 +103,20 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
 
     @Override
     @Transactional
-    public void cancelScheduledTransfer(UUID id) {
+    public ScheduledTransferResponse cancelScheduledTransfer(UUID id) {
         ScheduledTransfer scheduledTransfer = persistencePort.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled transfer not found"));
 
         scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.CANCELLED);
-        persistencePort.save(scheduledTransfer);
+        ScheduledTransfer saved = persistencePort.save(scheduledTransfer);
 
         log.info("Scheduled transfer cancelled, id: {}", id);
+        return mapToResponse(saved);
     }
 
     @Override
     @Transactional
-    public void pauseScheduledTransfer(UUID id) {
+    public ScheduledTransferResponse pauseScheduledTransfer(UUID id) {
         ScheduledTransfer scheduledTransfer = persistencePort.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled transfer not found"));
 
@@ -124,14 +125,15 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
         }
 
         scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.PAUSED);
-        persistencePort.save(scheduledTransfer);
+        ScheduledTransfer saved = persistencePort.save(scheduledTransfer);
 
         log.info("Scheduled transfer paused, id: {}", id);
+        return mapToResponse(saved);
     }
 
     @Override
     @Transactional
-    public void resumeScheduledTransfer(UUID id) {
+    public ScheduledTransferResponse resumeScheduledTransfer(UUID id) {
         ScheduledTransfer scheduledTransfer = persistencePort.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scheduled transfer not found"));
 
@@ -140,9 +142,10 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
         }
 
         scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.ACTIVE);
-        persistencePort.save(scheduledTransfer);
+        ScheduledTransfer saved = persistencePort.save(scheduledTransfer);
 
         log.info("Scheduled transfer resumed, id: {}", id);
+        return mapToResponse(saved);
     }
 
     @Override

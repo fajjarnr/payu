@@ -22,6 +22,8 @@ const ALLOWED_PATH_PREFIXES = [
   '/api/v1/statements',
   '/api/v1/support',
   '/api/v1/transactions',
+  '/api/v1/scheduled-transfers',
+  '/api/v1/split-bills',
   '/api/v1/wallets',
   '/api/v1/users',
   '/api/v1/kyc',

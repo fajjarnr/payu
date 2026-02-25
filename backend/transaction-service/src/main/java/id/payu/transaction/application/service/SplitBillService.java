@@ -99,7 +99,7 @@ public class SplitBillService implements SplitBillUseCase {
 
     @Override
     @Transactional
-    public void cancelSplitBill(UUID splitBillId) {
+    public SplitBillResponse cancelSplitBill(UUID splitBillId) {
         SplitBill splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
@@ -109,10 +109,12 @@ public class SplitBillService implements SplitBillUseCase {
 
         splitBill.setStatus(SplitBill.SplitStatus.CANCELLED);
         splitBill.setUpdatedAt(Instant.now());
-        persistencePort.save(splitBill);
+        SplitBill saved = persistencePort.save(splitBill);
+        saved.setParticipants(persistencePort.findParticipantsBySplitBillId(saved.getId()));
 
         log.info("Split bill cancelled, id: {}", splitBillId);
-        eventPublisher.publishSplitBillCancelled(splitBill);
+        eventPublisher.publishSplitBillCancelled(saved);
+        return mapToResponse(saved);
     }
 
     @Override

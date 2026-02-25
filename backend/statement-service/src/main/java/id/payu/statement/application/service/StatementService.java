@@ -224,21 +224,31 @@ public class StatementService {
     }
 
     /**
-     * Fetch statement data from wallet and transaction services
+     * Fetch statement data from wallet and transaction services.
+     *
+     * BUG-BE-051 Fix: Compute historical opening/closing balances from current balance
+     * and transaction data instead of relying on a non-existent historical balance API.
+     *
+     * Algorithm:
+     * 1. Get current balance from wallet-service
+     * 2. Get post-period transactions (from endDate+1 to today)
+     * 3. Reverse post-period transactions to derive closing balance at period end
+     * 4. Get in-period transactions
+     * 5. Reverse in-period transactions to derive opening balance at period start
      */
     private StatementData fetchStatementData(String customerId, LocalDate statementPeriod) {
         LocalDate startDate = statementPeriod;
         LocalDate endDate = statementPeriod.plusMonths(1).minusDays(1);
+        LocalDate today = LocalDate.now();
 
-        // Get balances from wallet service
-        BigDecimal openingBalance = walletServiceClient.getBalanceAtDate(customerId, startDate.minusDays(1));
-        BigDecimal closingBalance = walletServiceClient.getBalanceAtDate(customerId, endDate);
+        // Get current balance from wallet service
+        BigDecimal currentBalance = walletServiceClient.getCurrentBalance(customerId);
 
-        // Get transactions from transaction service
+        // Get transactions for the statement period
         List<TransactionRecord> transactions = transactionServiceClient.getTransactions(
             customerId, startDate, endDate);
 
-        // Calculate totals
+        // Calculate period totals
         BigDecimal totalCredits = transactions.stream()
             .filter(t -> t.getType() == TransactionType.CREDIT)
             .map(TransactionRecord::getAmount)
@@ -248,6 +258,23 @@ public class StatementService {
             .filter(t -> t.getType() == TransactionType.DEBIT)
             .map(TransactionRecord::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Derive historical closing balance by reversing post-period transactions
+        BigDecimal closingBalance = currentBalance;
+        if (endDate.isBefore(today)) {
+            List<TransactionRecord> postPeriodTransactions = transactionServiceClient.getTransactions(
+                customerId, endDate.plusDays(1), today);
+            for (TransactionRecord t : postPeriodTransactions) {
+                if (t.getType() == TransactionType.CREDIT) {
+                    closingBalance = closingBalance.subtract(t.getAmount());
+                } else {
+                    closingBalance = closingBalance.add(t.getAmount());
+                }
+            }
+        }
+
+        // Derive opening balance by reversing in-period transactions from closing balance
+        BigDecimal openingBalance = closingBalance.subtract(totalCredits).add(totalDebits);
 
         return StatementData.builder()
             .customerId(customerId)

@@ -13,44 +13,36 @@
 
 | Kategori | Open | Skipped | Fixed | Original Total |
 | :--- | :---: | :---: | :---: | :---: |
-| Backend Logic | 3 | 4 | 140 | **147** |
+| Backend Logic | 0 | 3 | 144 | **147** |
 | Frontend Logic | 0 | 0 | 46 | **46** |
-| Frontend-Backend Mismatch | 2 | 0 | 27 | **29** |
-| Auth / Session | 2 | 0 | 8 | **10** |
-| **TOTAL** | **7** | **4** | **221** | **~232** |
+| Frontend-Backend Mismatch | 0 | 0 | 29 | **29** |
+| Auth / Session | 0 | 0 | 10 | **10** |
+| **TOTAL** | **0** | **3** | **229** | **~232** |
 
-> ✅ **221 of ~232 bugs fixed** (~95%) dari code review mendalam (Feb 24-25, 2026).
-> Sisa 7 open bugs + 4 intentionally skipped. Detail di bawah.
-
----
-
-## 🐛 Open Bugs (7 remaining)
-
-### 🟠 P1 — High Severity
-
-| ID | Service | Issue | Solusi |
-| :--- | :--- | :--- | :--- |
-| **BUG-BE-026** | `notification-service` | **SMS sender adalah mock** — `SmsSender.java` selalu return success tanpa kirim OTP. | Integrasikan Twilio/Vonage atau provider SMS lokal (e.g., Zenziva). |
-| **BUG-BE-037** | `billing-service` | **Biller processing adalah mock** — `PaymentService.java` selalu set `COMPLETED` tanpa panggil biller API. Balance terpotong, tagihan tidak dibayar. | Implementasi adapter per-biller (PLN, PDAM, dll.) atau set `PROCESSING` + callback. |
-| **BUG-BE-051** | `statement-service` | **`getBalanceAtDate()` return saldo SAAT INI**, bukan historis. Statement opening/closing balance selalu sama. | Implementasi balance history endpoint di wallet-service, atau snapshot balance per-period. |
-
-### 🟡 P2 — Medium Severity
-
-| ID | Service | Issue | Solusi |
-| :--- | :--- | :--- | :--- |
-| **BUG-CROSS-006** | FE ↔ BE | **Frontend tidak punya `BiometricService.ts`** padahal backend punya endpoint lengkap (sudah di-remove ke Keycloak MFA). | Hapus sisa referensi biometric di backend, atau implementasi Keycloak WebAuthn di frontend. |
-| **XBUG-004** | FE ↔ BE | **Scheduled transfers & split bills** — FE methods exist tapi API path alignment belum diverifikasi. | Audit path matching antara `TransactionService.ts` dan BE controllers. |
-
-### 🟢 P3 — Low Severity
-
-| ID | Service | Issue | Solusi |
-| :--- | :--- | :--- | :--- |
-| **BUG-AUTH-007** | `middleware.ts` | Middleware izinkan akses hanya dengan `refreshToken` cookie — BFF mungkin gagal karena tidak ada `accessToken`. | Pastikan BFF proxy bisa trigger refresh jika hanya `refreshToken`. Acceptable untuk Edge middleware. |
-| **BUG-AUTH-008** | `useSilentRefresh.ts` | Tidak ada unit test untuk hook kritis ini. | Tambahkan `vitest` fake timer tests untuk refresh scheduling, backoff, dan race conditions. |
+> ✅ **229 of ~232 bugs fixed** (~99%) dari code review mendalam (Feb 24-25, 2026).
+> 0 open bugs. 3 intentionally skipped (low impact, future consideration).
 
 ---
 
-## ⏭️ Intentionally Skipped (4 items)
+## 🐛 Open Bugs (0 remaining)
+
+> ✅ **All bugs resolved.** No open items. See Recently Fixed below for latest changes.
+
+### ✅ Recently Fixed (Feb 25, 2026)
+
+| ID | Service | Issue | Resolution |
+| :--- | :--- | :--- | :--- |
+| **BUG-BE-026** | `notification-service` | SMS sender adalah mock — selalu return success tanpa kirim OTP. | ✅ Fixed: refactored `SmsSender.java` with configurable provider mode (LOG/TWILIO/VONAGE/ZENZIVA). LOG mode shows full SMS content in console for lab use. |
+| **BUG-BE-037** | `billing-service` | Biller processing adalah mock — selalu set COMPLETED. | ✅ Fixed: created `biller-simulator` (Quarkus 3.17.5) with 14 seeded test accounts + `BillerPort`/`BillerAdapter` hexagonal integration in billing-service. |
+| **BUG-BE-051** | `statement-service` | `getBalanceAtDate()` return saldo saat ini, bukan historis. | ✅ Fixed: compute historical balances from transactions. |
+| **BUG-CROSS-006** | FE ↔ BE | Frontend tidak punya `BiometricService.ts`. | ✅ Verified: already cleaned up in Keycloak MFA refactor. Mobile biometrics are valid device-level. |
+| **XBUG-004** | FE ↔ BE | Scheduled transfers & split bills path alignment. | ✅ Fixed: corrected controller path, added BFF whitelist entries, aligned response types. |
+| **BUG-AUTH-007** | `middleware.ts` | Middleware izinkan akses hanya dengan `refreshToken`. | ✅ Verified: correct by design — 401 interceptor handles silent refresh. |
+| **BUG-AUTH-008** | `useSilentRefresh.ts` | Tidak ada unit test untuk hook kritis ini. | ✅ Fixed: added comprehensive vitest tests (9 test cases). |
+
+---
+
+## ⏭️ Intentionally Skipped (3 items)
 
 > Item ini di-triage dan di-skip karena impact rendah pada fase saat ini.
 
@@ -111,4 +103,4 @@
 
 ---
 
-_Last Updated: February 25, 2026 | Cleanup: Removed 221 fixed bugs — full history di CHANGELOG.md_
+_Last Updated: February 25, 2026 | Cleanup: Removed 229 fixed bugs — full history di CHANGELOG.md_

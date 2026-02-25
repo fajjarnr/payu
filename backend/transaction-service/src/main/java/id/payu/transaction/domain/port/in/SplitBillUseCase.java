@@ -19,7 +19,7 @@ public interface SplitBillUseCase {
 
     SplitBillResponse updateSplitBill(UUID splitBillId, CreateSplitBillRequest request);
 
-    void cancelSplitBill(UUID splitBillId);
+    SplitBillResponse cancelSplitBill(UUID splitBillId);
 
     SplitBillResponse activateSplitBill(UUID splitBillId);
 

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/scheduled-transfers")
+@RequestMapping("/api/v1/scheduled-transfers")
 @RequiredArgsConstructor
 @Tag(name = "Scheduled Transfers", description = "Scheduled and recurring transfer APIs")
 @SecurityRequirement(name = "bearerAuth")
@@ -162,8 +162,9 @@ public class ScheduledTransferController {
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "204",
-                    description = "Scheduled transfer cancelled successfully"
+                    responseCode = "200",
+                    description = "Scheduled transfer cancelled successfully",
+                    content = @Content(schema = @Schema(implementation = ScheduledTransferResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -178,11 +179,11 @@ public class ScheduledTransferController {
                     description = "Scheduled transfer not found"
             )
     })
-    public ResponseEntity<Void> cancelScheduledTransfer(
+    public ResponseEntity<ScheduledTransferResponse> cancelScheduledTransfer(
             @Parameter(description = "Scheduled transfer ID", required = true)
             @PathVariable UUID id) {
-        scheduledTransferUseCase.cancelScheduledTransfer(id);
-        return ResponseEntity.noContent().build();
+        ScheduledTransferResponse response = scheduledTransferUseCase.cancelScheduledTransfer(id);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/pause")
@@ -197,8 +198,9 @@ public class ScheduledTransferController {
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "204",
-                    description = "Scheduled transfer paused successfully"
+                    responseCode = "200",
+                    description = "Scheduled transfer paused successfully",
+                    content = @Content(schema = @Schema(implementation = ScheduledTransferResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -213,11 +215,11 @@ public class ScheduledTransferController {
                     description = "Scheduled transfer not found"
             )
     })
-    public ResponseEntity<Void> pauseScheduledTransfer(
+    public ResponseEntity<ScheduledTransferResponse> pauseScheduledTransfer(
             @Parameter(description = "Scheduled transfer ID", required = true)
             @PathVariable UUID id) {
-        scheduledTransferUseCase.pauseScheduledTransfer(id);
-        return ResponseEntity.noContent().build();
+        ScheduledTransferResponse response = scheduledTransferUseCase.pauseScheduledTransfer(id);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/resume")
@@ -232,8 +234,9 @@ public class ScheduledTransferController {
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "204",
-                    description = "Scheduled transfer resumed successfully"
+                    responseCode = "200",
+                    description = "Scheduled transfer resumed successfully",
+                    content = @Content(schema = @Schema(implementation = ScheduledTransferResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
@@ -248,10 +251,10 @@ public class ScheduledTransferController {
                     description = "Scheduled transfer not found"
             )
     })
-    public ResponseEntity<Void> resumeScheduledTransfer(
+    public ResponseEntity<ScheduledTransferResponse> resumeScheduledTransfer(
             @Parameter(description = "Scheduled transfer ID", required = true)
             @PathVariable UUID id) {
-        scheduledTransferUseCase.resumeScheduledTransfer(id);
-        return ResponseEntity.noContent().build();
+        ScheduledTransferResponse response = scheduledTransferUseCase.resumeScheduledTransfer(id);
+        return ResponseEntity.ok(response);
     }
 }

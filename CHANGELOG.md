@@ -11,7 +11,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **BUG-BE-026 — SMS Sender Configurable Provider (2026-02-25)**:
+  - `SmsSender.java` was a hard-coded mock that always returned `true` without sending anything.
+  - Refactored with configurable `payu.sms.provider` property supporting `LOG` (default), `TWILIO`, `VONAGE`, `ZENZIVA` modes.
+  - LOG mode prints full SMS content (including OTP) in a visible box format to console — zero-cost, ideal for lab/dev.
+  - Provider stubs (Twilio, Vonage, Zenziva) fall back to LOG mode until implemented.
+
+- **BUG-BE-037 — Biller Simulator & Hexagonal Integration (2026-02-25)**:
+  - `PaymentService.processWithBiller()` was an inline mock that always set `COMPLETED` with a fake transaction ID.
+  - Created `biller-simulator` (Quarkus 3.17.5) with inquiry/pay/status REST endpoints, 14 seeded test accounts (PLN, PDAM, Telkomsel, XL, Indosat, BPJS, GoPay, OVO, Dana, LinkAja), configurable latency (100–600ms) and failure rate (3%).
+  - Created `BillerPort` (domain port interface), `BillerClient` (REST client), `BillerAdapter` (hexagonal adapter) in billing-service.
+  - `PaymentService` now calls `billerPort.pay()` with proper response handling: success, duplicate (idempotent), or rejection with failure reason.
+
+- **BUG-BE-051 — Statement Historical Balance (2026-02-25)**:
+  - `WalletServiceClient.getBalanceAtDate()` was returning current balance for both opening and closing, making all statement balances identical.
+  - Renamed to `getCurrentBalance()` for honesty; now computes historical balances by fetching post-period transactions and reversing them from current balance.
+  - Opening balance derived as: `closingBalance - totalCredits + totalDebits`.
+
+- **XBUG-004 — Scheduled Transfers & Split Bills Path Alignment (2026-02-25)**:
+  - `ScheduledTransferController` had wrong path prefix (`/v1/`) instead of `/api/v1/`; all requests from the BFF were blocked by the whitelist.
+  - Added `/api/v1/scheduled-transfers` and `/api/v1/split-bills` to BFF proxy SSRF whitelist.
+  - Changed `cancelScheduledTransfer`, `pauseScheduledTransfer`, `resumeScheduledTransfer` from `void` (204) to return `ScheduledTransferResponse` (200) — aligns with frontend expectation of receiving updated entity state.
+  - Changed `cancelSplitBill` from `void` (204) to return `SplitBillResponse` (200) — same contract alignment.
+
+- **BUG-AUTH-008 — useSilentRefresh Unit Tests (2026-02-25)**:
+  - Added comprehensive vitest tests for the critical `useSilentRefresh` hook.
+  - Tests cover: scheduling refresh, immediate refresh on mount, logout on 401, network error resilience, concurrent call prevention, exponential backoff, eager refresh on tab focus, cleanup on unmount.
+
+- **BUG-CROSS-006 — Biometric Service Cleanup Verified (2026-02-25)**:
+  - Confirmed: backend auth-service biometric endpoints were already removed in the Keycloak MFA refactor (see Added section above). Mobile biometric hooks (`useBiometrics.ts`) are valid for device-level auth. No frontend web-app `BiometricService.ts` needed. Marked as resolved.
+
+- **BUG-AUTH-007 — Middleware refreshToken-only Access Verified (2026-02-25)**:
+  - Confirmed middleware logic is correct by design: checking `refreshToken` first is intentional since the 401 interceptor in `api.ts` handles silent refresh when `accessToken` is expired. Documented as acceptable.
+
 ### Added
+
+- **Biller Simulator — External Provider Mock (2026-02-25)**:
+  - New `backend/simulators/biller-simulator/` (Quarkus 3.17.5) following existing simulator patterns.
+  - REST API: `POST /api/v1/biller/inquiry`, `POST /api/v1/biller/pay`, `GET /api/v1/biller/status/{ref}`, `GET /api/v1/biller/health`.
+  - Supports PLN, PDAM, Telco (Telkomsel/XL/Indosat), Internet (Telkom), Insurance (BPJS), and E-wallet (GoPay/OVO/Dana/LinkAja) categories.
+  - Configurable failure simulation: latency (min/max ms), failure rate (%).
+  - Idempotent payments via reference number deduplication.
 
 - **Auth Service Refactoring — Unified Keycloak MFA (2026-02-24)**:
   - Removed internal MFA and Biometric implementations (`BiometricService`, `MFATokenService`, `BiometricController`, etc.) as PayU moves to Keycloak-native MFA for better enterprise security.

@@ -6,6 +6,7 @@ import id.payu.billing.domain.port.in.PayBillUseCase;
 import id.payu.billing.domain.port.in.PaymentQueryUseCase;
 import id.payu.billing.domain.port.in.TopUpUseCase;
 import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
+import id.payu.billing.domain.port.out.BillerPort;
 import id.payu.billing.domain.port.out.PaymentEventPort;
 import id.payu.billing.domain.port.out.WalletPort;
 import id.payu.billing.dto.CreatePaymentRequest;
@@ -30,6 +31,7 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
 
     private final BillPaymentPersistencePort persistencePort;
     private final WalletPort walletPort;
+    private final BillerPort billerPort;
     private final PaymentEventPort eventPort;
 
     @Transactional
@@ -67,11 +69,32 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
             if ("RESERVED".equals(reserveResult.status())) {
                 reservationId = reserveResult.reservationId();
                 payment.setStatus(BillPayment.PaymentStatus.PROCESSING);
-                // Process with biller (in production, call actual biller API)
-                processWithBiller(payment);
 
-                // Commit the reservation after successful biller processing
-                walletPort.commitReservation(reservationId);
+                // Process with biller via BillerPort (calls biller-simulator in dev)
+                BillerPort.PaymentResult billerResult = billerPort.pay(
+                        request.billerCode(), request.customerId(),
+                        request.amount(), payment.getReferenceNumber()
+                );
+
+                if (billerResult.isSuccess()) {
+                    payment.setStatus(BillPayment.PaymentStatus.COMPLETED);
+                    payment.setCompletedAt(LocalDateTime.now());
+                    payment.setBillerTransactionId(billerResult.billerTransactionId());
+                    // Commit the reservation after successful biller processing
+                    walletPort.commitReservation(reservationId);
+                } else if (billerResult.isDuplicate()) {
+                    // Idempotent: payment was already processed
+                    payment.setStatus(BillPayment.PaymentStatus.COMPLETED);
+                    payment.setCompletedAt(LocalDateTime.now());
+                    payment.setBillerTransactionId(billerResult.billerTransactionId());
+                    walletPort.commitReservation(reservationId);
+                    log.warn("Duplicate biller reference detected for payment {}", payment.getId());
+                } else {
+                    payment.setStatus(BillPayment.PaymentStatus.FAILED);
+                    payment.setFailureReason("Biller rejected: " + billerResult.responseMessage());
+                    walletPort.releaseReservation(reservationId);
+                    reservationId = null; // Already released
+                }
             } else {
                 payment.setStatus(BillPayment.PaymentStatus.FAILED);
                 payment.setFailureReason("Failed to reserve balance");
@@ -134,11 +157,25 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
             if ("RESERVED".equals(reserveResult.status())) {
                 reservationId = reserveResult.reservationId();
                 payment.setStatus(BillPayment.PaymentStatus.PROCESSING);
-                // Process with e-wallet provider (in production, call actual e-wallet API)
-                processWithEwalletProvider(payment);
 
-                // Commit the reservation after successful provider processing
-                walletPort.commitReservation(reservationId);
+                // Process with e-wallet provider via BillerPort (same simulator handles e-wallets)
+                BillerPort.PaymentResult providerResult = billerPort.pay(
+                        request.provider(), request.walletNumber(),
+                        request.amount(), payment.getReferenceNumber()
+                );
+
+                if (providerResult.isSuccess() || providerResult.isDuplicate()) {
+                    payment.setStatus(BillPayment.PaymentStatus.COMPLETED);
+                    payment.setCompletedAt(LocalDateTime.now());
+                    payment.setBillerTransactionId(providerResult.billerTransactionId());
+                    // Commit the reservation after successful provider processing
+                    walletPort.commitReservation(reservationId);
+                } else {
+                    payment.setStatus(BillPayment.PaymentStatus.FAILED);
+                    payment.setFailureReason("Provider rejected: " + providerResult.responseMessage());
+                    walletPort.releaseReservation(reservationId);
+                    reservationId = null;
+                }
             } else {
                 payment.setStatus(BillPayment.PaymentStatus.FAILED);
                 payment.setFailureReason("Failed to reserve balance");
@@ -172,20 +209,6 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
 
     public Optional<BillPayment> getPaymentByReference(String referenceNumber) {
         return persistencePort.findByReferenceNumber(referenceNumber);
-    }
-
-    private void processWithBiller(BillPayment payment) {
-        payment.setStatus(BillPayment.PaymentStatus.COMPLETED);
-        payment.setCompletedAt(LocalDateTime.now());
-        payment.setBillerTransactionId("BILLER-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase());
-        log.info("Payment completed: id={}", payment.getId());
-    }
-
-    private void processWithEwalletProvider(BillPayment payment) {
-        payment.setStatus(BillPayment.PaymentStatus.COMPLETED);
-        payment.setCompletedAt(LocalDateTime.now());
-        payment.setBillerTransactionId("EWALLET-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase());
-        log.info("E-wallet top-up completed: id={}", payment.getId());
     }
 
     private Optional<BillerType> getBillerType(String code) {

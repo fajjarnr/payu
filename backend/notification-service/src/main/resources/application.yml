@@ -48,7 +48,20 @@ quarkus:
     password: ${SMTP_PASSWORD:}
     mock: true # Use mock mailer in dev
   smallrye-openapi:
-    info-title: PayU Notification Service API
+# SMS provider configuration
+payu:
+  sms:
+    provider: ${SMS_PROVIDER:LOG}   # LOG | TWILIO | VONAGE | ZENZIVA
+    # twilio:
+    #   account-sid: ${TWILIO_SID:}
+    #   auth-token: ${TWILIO_TOKEN:}
+    #   from-number: ${TWILIO_FROM:}
+    # vonage:
+    #   api-key: ${VONAGE_KEY:}
+    #   api-secret: ${VONAGE_SECRET:}
+    # zenziva:
+    #   userkey: ${ZENZIVA_USERKEY:}
+    #   passkey: ${ZENZIVA_PASSKEY:}    info-title: PayU Notification Service API
     info-version: 1.0.0
     info-description: Notification API for Push, SMS, Email
   log:

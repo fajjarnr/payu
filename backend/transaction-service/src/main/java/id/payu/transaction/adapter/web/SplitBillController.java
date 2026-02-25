@@ -84,14 +84,14 @@ public class SplitBillController {
     @PostMapping("/{id}/cancel")
     @PreAuthorize("isAuthenticated() and @splitBillSecurityService.isOwner(#id, authentication.principal.userId)")
     @Operation(summary = "Cancel split bill", description = "Cancel a split bill in draft or active status")
-    @ApiResponse(responseCode = "204", description = "Split bill cancelled successfully")
+    @ApiResponse(responseCode = "200", description = "Split bill cancelled successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden - not the creator")
     @ApiResponse(responseCode = "404", description = "Split bill not found")
-    public ResponseEntity<Void> cancelSplitBill(@PathVariable UUID id) {
+    public ResponseEntity<SplitBillResponse> cancelSplitBill(@PathVariable UUID id) {
         log.info("Cancelling split bill: id={}", id);
-        splitBillUseCase.cancelSplitBill(id);
-        return ResponseEntity.noContent().build();
+        SplitBillResponse response = splitBillUseCase.cancelSplitBill(id);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/activate")

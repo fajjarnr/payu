@@ -11,8 +11,8 @@ public interface ScheduledTransferUseCase {
     ScheduledTransferResponse createScheduledTransfer(CreateScheduledTransferRequest request);
     ScheduledTransferResponse getScheduledTransfer(UUID id);
     ScheduledTransferResponse updateScheduledTransfer(UUID id, CreateScheduledTransferRequest request);
-    void cancelScheduledTransfer(UUID id);
-    void pauseScheduledTransfer(UUID id);
-    void resumeScheduledTransfer(UUID id);
+    ScheduledTransferResponse cancelScheduledTransfer(UUID id);
+    ScheduledTransferResponse pauseScheduledTransfer(UUID id);
+    ScheduledTransferResponse resumeScheduledTransfer(UUID id);
     List<ScheduledTransfer> getAccountScheduledTransfers(UUID accountId);
 }

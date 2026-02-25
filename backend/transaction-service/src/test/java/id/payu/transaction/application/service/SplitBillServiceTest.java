@@ -355,9 +355,11 @@ class SplitBillServiceTest {
 
         when(persistencePort.findById(splitBillId)).thenReturn(Optional.of(splitBill));
         when(persistencePort.save(any(SplitBill.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(persistencePort.findParticipantsBySplitBillId(splitBillId)).thenReturn(List.of());
 
-        splitBillService.cancelSplitBill(splitBillId);
+        SplitBillResponse response = splitBillService.cancelSplitBill(splitBillId);
 
+        assertThat(response).isNotNull();
         ArgumentCaptor<SplitBill> captor = ArgumentCaptor.forClass(SplitBill.class);
         verify(persistencePort).save(captor.capture());
 
