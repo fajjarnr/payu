@@ -209,7 +209,7 @@ public class InvestmentApplicationService implements
         walletServicePort.deductBalance(userId, amount);
 
         BigDecimal units = amount.divide(fund.getNavPerUnit(), 4, RoundingMode.DOWN);
-        BigDecimal fee = amount.multiply(fund.getRedemptionFee());
+        BigDecimal fee = amount.multiply(fund.getManagementFee());
 
         LocalDateTime now = LocalDateTime.now();
         InvestmentTransaction transaction = InvestmentTransaction.builder()

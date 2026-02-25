@@ -4,6 +4,7 @@ import id.payu.partner.domain.PartnerCertificate;
 import id.payu.partner.adapter.persistence.repository.PartnerCertificateRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import org.slf4j.Logger;
@@ -47,6 +48,13 @@ public class CertificateRotationService {
     @Transactional
     public void rotateCertificate(Long certificateId) {
         rotateCertificate(certificateId, DEFAULT_ROTATION_DAYS);
+    }
+
+    // BUG-BE-047: Added scheduled trigger for automatic certificate rotation
+    @Scheduled(cron = "0 0 8 * * *") // Daily at 8 AM
+    public void scheduledRotateExpiringCertificates() {
+        LOG.info("Running scheduled certificate rotation check...");
+        rotateExpiringCertificates(30);
     }
 
     @Transactional

@@ -137,7 +137,8 @@ public class StatementService {
     /**
      * Get statement by ID (with user validation)
      */
-    @Transactional(readOnly = true)
+    // BUG-BE-059: Removed readOnly=true — this method calls recordAccess() + save()
+    @Transactional
     public StatementResponse getStatement(UUID statementId, String customerId) {
         Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "Statement not found"));

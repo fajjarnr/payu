@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 @RequiredArgsConstructor
@@ -74,7 +75,14 @@ public class UserApplicationService implements RegisterUserUseCase {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        User savedUser = userPersistencePort.save(user);
+        User savedUser;
+        try {
+            savedUser = userPersistencePort.save(user);
+        } catch (DataIntegrityViolationException e) {
+            // BUG-BE-031: Handle race condition where concurrent registrations
+            // both pass existsBy checks but one fails at DB unique constraint
+            throw new IllegalStateException("Registration conflict: email or username already taken", e);
+        }
 
         log.info("User registered successfully: {}", savedUser.getId());
 

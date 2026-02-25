@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 
 /**
  * Service layer for Content management
@@ -66,7 +67,14 @@ public class ContentService {
             .updatedBy(createdBy)
             .build();
 
-        Content saved = contentRepository.save(content);
+        Content saved;
+        try {
+            saved = contentRepository.save(content);
+        } catch (DataIntegrityViolationException e) {
+            // BUG-BE-057: Handle race condition where concurrent creates both pass existsByTitle
+            throw new IllegalStateException(
+                "Content with title '" + request.getTitle() + "' already exists (concurrent conflict)", e);
+        }
         log.info("Content created with ID: {}", saved.getId());
 
         return toResponse(saved);

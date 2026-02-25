@@ -216,7 +216,8 @@ public class ExperimentService {
      * Track conversion event
      */
     @Transactional
-    @CacheEvict(value = {"experiments", "experimentsByKey"}, allEntries = true)
+    // BUG-BE-055: Removed @CacheEvict — conversion tracking fires thousands/min
+    // and was invalidating experiment cache on every event, causing constant DB fetches
     public void trackConversion(UUID experimentId, UUID userId, String variant, String eventType) {
         log.debug("Tracking conversion for experiment: {}, user: {}, variant: {}, type: {}",
                 experimentId, userId, variant, eventType);

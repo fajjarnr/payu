@@ -47,7 +47,7 @@ public class CashbackSagaContext {
         }
 
         return request.transactionAmount().multiply(BigDecimal.valueOf(percentage))
-            .setScale(2, BigDecimal.ROUND_HALF_UP);
+            .setScale(2, java.math.RoundingMode.HALF_UP);
     }
 
     // Getters and Setters

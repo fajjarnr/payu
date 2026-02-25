@@ -20,4 +20,7 @@ public interface DailyCheckinRepository extends JpaRepository<DailyCheckin, UUID
     int sumPointsEarnedSince(@Param("accountId") String accountId, @Param("startDate") LocalDate startDate);
 
     List<DailyCheckin> findByAccountIdOrderByCheckinDateDesc(String accountId);
+
+    // BUG-BE-072: COUNT at DB level instead of fetching all records
+    long countByAccountId(String accountId);
 }

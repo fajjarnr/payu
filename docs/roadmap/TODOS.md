@@ -158,10 +158,10 @@
 
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
-| **BUG-BE-028** | `investment-service` | Fee BUY mutual fund menggunakan `redemptionFee` (fee yang harusnya saat SELL). | Gunakan `subscriptionFee` saat BUY. |
-| **BUG-BE-029** | `investment-service` | `hasSufficientBalance()` baca key `"balance"` tapi field-nya `availableBalance` → always false. | Baca `"availableBalance"` dari response. |
+| ✅ ~~BUG-BE-028~~ | ~~investment-service~~ | ~~FIXED: BUY fee now uses `managementFee` instead of `redemptionFee`. Redemption fee is only for SELL.~~ | ~~Gunakan `subscriptionFee` saat BUY.~~ |
+| ✅ ~~BUG-BE-029~~ | ~~investment-service~~ | ~~FIXED (prior session): `hasSufficientBalance()` reads `availableBalance` from wallet response.~~ | ~~Baca `"availableBalance"` dari response.~~ |
 | **BUG-BE-030** | `shared/security-starter` | `DataMaskingAspect` pointcut terlalu broad — setiap method di `id.payu..service`. Overhead signifikan. | Batasi ke method dengan `@Audited` annotation. |
-| **BUG-BE-031** | `account-service` | Race condition registrasi — tanpa handler `DataIntegrityViolationException` dari `save()`. | Tangkap `DataIntegrityViolationException` → return 409. |
+| ✅ ~~BUG-BE-031~~ | ~~account-service~~ | ~~FIXED: Added `DataIntegrityViolationException` catch for race condition on concurrent registration with same email/username.~~ | ~~Tangkap `DataIntegrityViolationException` → return 409.~~ |
 | **BUG-BE-032** | `fx-service` | `fee = BigDecimal.ZERO` semua FX conversion — frontend tampilkan fee estimasi tapi backend gratis. | Dokumentasikan sebagai intentional atau implementasikan fee. |
 
 ---
@@ -204,7 +204,7 @@
 | ✅ ~~BUG-BE-044~~ | ~~partner-service~~ | ~~FIXED: Replaced thread-unsafe `SimpleDateFormat` with immutable `DateTimeFormatter` in `getCurrentTimestamp()`.~~ | ~~Ganti ke `DateTimeFormatter` (thread-safe).~~ |
 | ✅ ~~BUG-BE-045~~ | ~~billing-service~~ | ~~FIXED: Added `commitReservation()` + `releaseReservation()` to `WalletPort` interface and `WalletAdapter` implementation.~~ | ~~Tambahkan `commitReservation` + `releaseReservation` ke `WalletPort`.~~ |
 | ✅ ~~BUG-BE-046~~ | ~~outbox-starter~~ | ~~FIXED: Replaced `new ObjectMapper().findAndRegisterModules()` with constructor-injected Spring-managed `ObjectMapper` bean.~~ | ~~Inject `ObjectMapper` sebagai bean.~~ |
-| **BUG-BE-047** | `partner-service` | `rotateExpiringCertificates()` tidak ada `@Scheduled` trigger. | Tambahkan `@Scheduled(cron = "0 0 8 * * *")`. |
+| ✅ ~~BUG-BE-047~~ | ~~partner-service~~ | ~~FIXED: Added `@Scheduled(cron = "0 0 8 * * *")` trigger to auto-rotate expiring certificates daily at 8 AM.~~ | ~~Tambahkan `@Scheduled(cron = "0 0 8 * * *")`.~~ |
 | **BUG-BE-048** | `kyc-service` + `analytics-service` | Development CORS origins (`localhost:3000`) aktif di production. | Pisahkan CORS config berdasarkan `ENVIRONMENT` env var. |
 
 ---
@@ -230,9 +230,9 @@
 | ✅ ~~BUG-BE-052~~ | ~~statement-service~~ | ~~TransactionServiceClient.java L24-25~~ | ~~FIXED: Replaced `new RestTemplate()` with Spring-injected `RestTemplate` bean so timeout/resilience config applies.~~ | ~~Inject `RestTemplate` via Spring.~~ |
 | ✅ ~~BUG-BE-053~~ | ~~statement-service~~ | ~~TransactionServiceClient.java L49-52~~ | ~~FIXED: Fetch exceptions now propagated as `RuntimeException` with proper error message instead of silently returning empty list.~~ | ~~Minimal log error, throw exception agar statement gagal tegas.~~ |
 | **BUG-BE-054** | `statement-service` | `StatementService.java` L447 | **PDF max 20 transaksi saja** — 100+ transaksi di-truncate. Statement tidak lengkap. | Implementasi multi-page PDF. |
-| **BUG-BE-055** | `ab-testing-service` | `ExperimentService.java` L220-246 | `@CacheEvict` di `trackConversion()` — setiap conversion event invalidate experiment cache. Ribuan/menit = constant DB fetch. | Pisahkan metrics update, jangan evict experiment cache. |
+| ✅ ~~BUG-BE-055~~ | ~~ab-testing-service~~ | ~~FIXED: Removed `@CacheEvict` from `trackConversion()`. Conversion events fire thousands/min and were causing constant experiment cache invalidation and DB re-fetches.~~ | ~~Pisahkan metrics update, jangan evict experiment cache.~~ |
 | **BUG-BE-056** | `ab-testing-service` | `ExperimentService.java` L228-243 | **Race condition metrics update** — read-modify-write tanpa lock. Lost update pada concurrent requests. | Atomic DB update: `UPDATE SET metrics = jsonb_set(...)` atau Redis counter. |
-| **BUG-BE-057** | `cms-service` | `ContentService.java` L45-48 | Race condition unique title check — dua create concurrent bisa lolos, `DataIntegrityViolationException` tidak di-handle. | `UNIQUE` constraint di DB + tangkap `DataIntegrityViolationException` → 409. |
+| ✅ ~~BUG-BE-057~~ | ~~cms-service~~ | ~~FIXED: Added `DataIntegrityViolationException` handler for concurrent title conflict. DB unique constraint catches the race, returns proper conflict error.~~ | ~~`UNIQUE` constraint di DB + tangkap `DataIntegrityViolationException` → 409.~~ |
 
 ---
 
@@ -241,7 +241,7 @@
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
 | **BUG-BE-058** | `cms-service` | `getContentByType()` return ALL content tanpa pagination → memory-intensive jika ribuan banner. | Tambahkan pageable parameter atau limit. |
-| **BUG-BE-059** | `statement-service` | `getStatement()` dalam `@Transactional(readOnly=true)` melakukan `recordAccess()` + `save()`. | Hapus `readOnly=true` atau pisahkan `recordAccess()`. |
+| ✅ ~~BUG-BE-059~~ | ~~statement-service~~ | ~~FIXED: Removed `readOnly=true` from `getStatement()` since it calls `recordAccess()` + `save()` which require write access.~~ | ~~Hapus `readOnly=true` atau pisahkan `recordAccess()`.~~ |
 
 ---
 
@@ -280,11 +280,11 @@
 
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
-| **BUG-BE-071** | `promotion-service` | `getOrCreateUserLevel()` tidak thread-safe — duplicate `UserLevel` bisa tercipta. | `INSERT ... ON CONFLICT DO NOTHING` atau retry on `DataIntegrityViolationException`. |
-| **BUG-BE-072** | `promotion-service` | `getTotalCheckins()` fetch ALL data ke app lalu `.count()` — seharusnya `COUNT(*)` di DB. | Tambahkan `countByAccountId(String accountId)` di repository. |
+| ✅ ~~BUG-BE-071~~ | ~~promotion-service~~ | ~~FIXED: Added `DataIntegrityViolationException` catch in `getOrCreateUserLevel()`. On race condition, retries `findByAccountId()` instead of crashing.~~ | ~~`INSERT ... ON CONFLICT DO NOTHING` atau retry on `DataIntegrityViolationException`.~~ |
+| ✅ ~~BUG-BE-072~~ | ~~promotion-service~~ | ~~FIXED: `getTotalCheckins()` now uses `countByAccountId()` DB query instead of fetching all data to memory and calling `.count()`.~~ | ~~Tambahkan `countByAccountId(String accountId)` di repository.~~ |
 | **BUG-BE-073** | `promotion-service` | Kafka publish errors hanya `LOG.warn` — tidak ada alert. Events hilang diam-diam jika Kafka down. | Gunakan outbox-starter atau tambahkan metric counter + alert. |
 | **BUG-BE-074** | `shared/cache-starter` | `localCache.get(key, Object.class)` — type mismatch exception possible jika type berbeda per-key. | Tambahkan type safety check atau gunakan `ConcurrentHashMap` dengan type token. |
-| **BUG-BE-075** | `promotion-service` | `calculateRewardAmount()` pakai deprecated `BigDecimal.ROUND_HALF_UP` constant (Java 9+). | Ganti ke `RoundingMode.HALF_UP`. |
+| ✅ ~~BUG-BE-075~~ | ~~promotion-service~~ | ~~FIXED: Replaced deprecated `BigDecimal.ROUND_HALF_UP` constant with `RoundingMode.HALF_UP` enum across 3 files (CashbackSagaOrchestrator, CashbackSagaContext, PromotionService).~~ | ~~Ganti ke `RoundingMode.HALF_UP`.~~ |
 
 ---
 

@@ -119,9 +119,8 @@ public class GamificationService {
     }
 
     public Long getTotalCheckins(String accountId) {
-        return dailyCheckinRepository.findByAccountIdOrderByCheckinDateDesc(accountId)
-                .stream()
-                .count();
+        // BUG-BE-072: Use DB COUNT instead of fetching all records into memory
+        return dailyCheckinRepository.countByAccountId(accountId);
     }
 
     @Transactional
@@ -290,7 +289,13 @@ public class GamificationService {
         userLevel.setLevel(1);
         userLevel.setXp(0);
         userLevel.setLevelName("Pemula");
-        return userLevelRepository.save(userLevel);
+        try {
+            return userLevelRepository.save(userLevel);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // BUG-BE-071: Handle race condition — another thread created it first
+            return userLevelRepository.findByAccountId(accountId)
+                    .orElseThrow(() -> new IllegalStateException("Failed to create or find UserLevel for " + accountId));
+        }
     }
 
     private Integer addXp(String accountId, Integer xpToAdd, XpTransaction.SourceType sourceType, String transactionId) {
