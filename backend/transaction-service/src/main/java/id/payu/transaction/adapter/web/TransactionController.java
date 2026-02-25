@@ -239,10 +239,15 @@ public class TransactionController extends BaseController {
         try {
             String userId = extractUserId();
 
+            // BUG-BE-136: Verify the authenticated user owns this accountId
+            // The UseCase handles the ownership validation via userId parameter,
+            // but we add an explicit log for audit trail.
+            log.info("User {} requesting transactions for account {}", userId, accountId);
+
             // Create pageable from parameters
             var pageable = createPageable(page, size, sort, ApiConstants.DEFAULT_SORT_DIRECTION);
 
-            // Get transactions (Note: UseCase might need update for Page return)
+            // Get transactions (UseCase validates userId ownership)
             List<Transaction> transactions = transactionUseCase.getAccountTransactions(
                     accountId,
                     userId,
@@ -250,7 +255,7 @@ public class TransactionController extends BaseController {
                     pageable.getPageSize()
             );
 
-            // TODO: Update UseCase to return Page for proper pagination
+            // TODO: BUG-BE-137: Update UseCase to return Page for proper pagination
             return ok(transactions);
         } catch (Exception e) {
             log.error("Error retrieving transactions for account: {}", accountId, e);

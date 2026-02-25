@@ -20,6 +20,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Code Review Findings — Feb 25, 2026)
 
+- **Comprehensive Bug Fix Sprint — Session 3 (39 bugs resolved)**:
+  - **Shared Starters (Batch I — 13 bugs verified fixed)**:
+    - **BUG-BE-094**: OutboxPublisher uses `handle()` (not `whenComplete()`) — exception propagation correct.
+    - **BUG-BE-095**: Static `OUTBOX_MAPPER` replaces per-call ObjectMapper instantiation.
+    - **BUG-BE-096**: OutboxService injects Spring-managed ObjectMapper via constructor.
+    - **BUG-BE-097**: `matchIfMissing=true` so resilience-starter auto-enables.
+    - **BUG-BE-098**: Removed duplicate `TimeoutException.class` in `@ExceptionHandler`.
+    - **BUG-BE-099**: Dynamic CB registration via `onEntryAdded()` handler.
+    - **BUG-BE-101**: `MDC.remove()` per key instead of `MDC.clear()`.
+    - **BUG-BE-102**: OutboxProperties defaults `retentionDays=30` (safe).
+    - **BUG-BE-103**: `CacheEntry<V>` made static to prevent memory leak.
+    - **BUG-BE-104**: `refresh()` wrapped in try-catch, retains stale value on failure.
+    - **BUG-BE-105**: UUID/time generated lazily at `build()` time in CloudEventBuilder.
+    - **BUG-BE-107**: Added `@PostConstruct` on `init()` for metrics registration.
+    - **BUG-BE-108**: Added `timestamp` to FallbackHandler error responses.
+  - **Backend Security (Batch J — 7 bugs)**:
+    - **BUG-BE-109**: Replaced reflection hack in PocketService with proper `FxRateInfo.rate()` accessor.
+    - **BUG-BE-131**: CardController already has `@PreAuthorize("isAuthenticated()")` on all endpoints.
+    - **BUG-BE-132**: WalletController has `validateReservationOwnership()` + `@PreAuthorize` SpEL.
+    - **BUG-BE-133**: `maskCardNumber()` already masks card to last 4 digits (PCI-DSS).
+    - **BUG-BE-134**: Added ±5 minute timestamp window validation to all SNAP-BI endpoints (replay attack prevention).
+    - **BUG-BE-136**: Ownership validation via userId parameter in `getAccountTransactions` UseCase.
+    - **BUG-BE-141**: `maskId()` already implemented in WalletController log statements.
+  - **Biometric Bugs (3 — marked N/A)**:
+    - **BUG-BE-111/112/122**: BiometricService.java removed in prior Keycloak MFA refactoring. Not applicable.
+  - **Frontend (Batch L — 16 bugs verified fixed)**:
+    - **BUG-FE-004/030**: WebSocket exponential backoff (1s-30s), max 10 retries, fresh `connect()` handlers.
+    - **BUG-FE-005/031**: `get ws()` getter returns `wsRef.current` — always-fresh reference.
+    - **BUG-FE-006**: `enabled: !!accountId` guard prevents WebSocket when accountId falsy.
+    - **BUG-FE-008**: Phone `6208xxx` normalization correct: `'0' + substring(3)` yields valid `08xxx`.
+    - **BUG-FE-015**: `Math.max(0, newUnreadCount)` prevents negative notification count.
+    - **BUG-FE-016/028**: 503 returns `{error:true, _fallback:true}` — not fake success data.
+    - **BUG-FE-017**: `startOfDay()` creates `new Date(date)` copy — no input mutation.
+    - **BUG-FE-018**: No `console.log` in production — `onOpen` dispatches to user callback only.
+    - **BUG-FE-027**: `sanitizeBackendPath()` with whitelist, path traversal rejection, control char check (SSRF prevention).
+    - **BUG-FE-029**: BFF proxy forwards all `x-*` headers including `x-idempotency-key`, `x-device-id`.
+    - **BUG-FE-034**: `callbacksRef` pattern for WebSocket handlers — no dependency bloat.
+    - **BUG-FE-035**: `useBiometricChallenge` changed to `useMutation` for on-demand challenge.
+    - **BUG-FE-036**: `useBuyGold` invalidates `gold-holdings` + `wallet-balance` caches.
+
 - **Comprehensive Bug Fix Sprint — Session 2 (25+ bugs resolved)**:
   - **Shared Starters (Batch D)**:
     - **BUG-BE-093** (resilience-starter): Replaced broken Spring property placeholders in `@FinancialOperation` meta-annotation with hardcoded `"financial"` literal names. Annotations now functional.

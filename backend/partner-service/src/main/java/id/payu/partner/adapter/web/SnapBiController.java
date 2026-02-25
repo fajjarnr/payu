@@ -24,6 +24,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
+
 /**
  * REST controller for SNAP BI (BI-FAST) payment integration.
  * Implements the SNAP BI API specification for payment processing.
@@ -39,6 +43,21 @@ public class SnapBiController {
     private final SnapBiTokenService tokenService;
     private final SnapBiPaymentService paymentService;
     private final ObjectMapper objectMapper;
+
+    /**
+     * BUG-BE-134: Validates that the X-TIMESTAMP header is within ±5 minute window.
+     * Prevents replay attacks by rejecting stale or future timestamps.
+     */
+    private boolean isTimestampValid(String timestamp) {
+        try {
+            OffsetDateTime requestTime = OffsetDateTime.parse(timestamp);
+            OffsetDateTime now = OffsetDateTime.now();
+            Duration diff = Duration.between(requestTime, now).abs();
+            return diff.toMinutes() <= 5;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
 
     @PostMapping("/auth/token")
     @Operation(
@@ -64,6 +83,11 @@ public class SnapBiController {
         @Parameter(description = "Request timestamp", required = true) @RequestHeader("X-TIMESTAMP") String timestamp,
         @Parameter(description = "HMAC signature", required = true) @RequestHeader("X-SIGNATURE") String signature,
         @Valid @RequestBody TokenRequest request) {
+
+        // BUG-BE-134: Validate timestamp window to prevent replay attacks
+        if (!isTimestampValid(timestamp)) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002508", "Invalid or expired timestamp");
+        }
 
         Partner partner = partnerRepository.findByClientId(clientKey).orElse(null);
         if (partner == null) {
@@ -121,6 +145,11 @@ public class SnapBiController {
         @RequestHeader("X-SIGNATURE") String signature,
         @Valid @RequestBody PaymentRequest request) {
 
+        // BUG-BE-134: Validate timestamp window to prevent replay attacks
+        if (!isTimestampValid(timestamp)) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002508", "Invalid or expired timestamp");
+        }
+
         if (authorization == null || !authorization.startsWith("Bearer ")) {
              return errorResponse(HttpStatus.UNAUTHORIZED, "4012505", "Missing or Invalid Authorization Header");
         }
@@ -166,6 +195,11 @@ public class SnapBiController {
         @RequestHeader("X-TIMESTAMP") String timestamp,
         @RequestHeader("X-SIGNATURE") String signature,
         @PathVariable("id") String referenceNo) {
+
+        // BUG-BE-134: Validate timestamp window
+        if (!isTimestampValid(timestamp)) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002508", "Invalid or expired timestamp");
+        }
 
         if (authorization == null || !authorization.startsWith("Bearer ")) {
              return errorResponse(HttpStatus.UNAUTHORIZED, "4012505", "Missing or Invalid Authorization Header");
@@ -213,6 +247,11 @@ public class SnapBiController {
         @RequestHeader("X-SIGNATURE") String signature,
         @PathVariable("id") String referenceNo,
         @Valid @RequestBody RefundRequest request) {
+
+        // BUG-BE-134: Validate timestamp window
+        if (!isTimestampValid(timestamp)) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002508", "Invalid or expired timestamp");
+        }
 
         if (authorization == null || !authorization.startsWith("Bearer ")) {
              return errorResponse(HttpStatus.UNAUTHORIZED, "4012505", "Missing or Invalid Authorization Header");

@@ -2,6 +2,7 @@ package id.payu.wallet.application.service;
 
 import id.payu.wallet.domain.model.Pocket;
 import id.payu.wallet.domain.port.in.PocketUseCase;
+import id.payu.wallet.domain.model.FxRateInfo;
 import id.payu.wallet.domain.port.out.FxRateProviderPort;
 import id.payu.wallet.domain.port.out.PocketPersistencePort;
 import org.springframework.stereotype.Service;
@@ -153,23 +154,16 @@ public class PocketService implements PocketUseCase {
             if (pocket.getCurrency().equals(targetCurrency)) {
                 total = total.add(pocketBalance);
             } else {
-                Optional<?> rateOptional = fxRateProviderPort.getCurrentRate(
+                // BUG-BE-109: Use proper typed access instead of reflection hack
+                Optional<FxRateInfo> rateOptional = fxRateProviderPort.getCurrentRate(
                         pocket.getCurrency(), targetCurrency);
                 if (rateOptional.isEmpty()) {
                     throw new FxRateNotFoundException(
                                 "No FX rate available for " + pocket.getCurrency() + " to " + targetCurrency);
                 }
-                var rate = rateOptional.get();
-                
-                try {
-                    java.lang.reflect.Field rateField = rate.getClass().getDeclaredField("rate");
-                    rateField.setAccessible(true);
-                    BigDecimal rateValue = (BigDecimal) rateField.get(rate);
-                    BigDecimal convertedAmount = pocketBalance.multiply(rateValue);
-                    total = total.add(convertedAmount);
-                } catch (Exception e) {
-                    throw new FxRateNotFoundException("Failed to get FX rate value", e);
-                }
+                FxRateInfo fxRate = rateOptional.get();
+                BigDecimal convertedAmount = pocketBalance.multiply(fxRate.rate());
+                total = total.add(convertedAmount);
             }
         }
 
