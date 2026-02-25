@@ -16,80 +16,83 @@ namespace: payu-dev
 images:
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/auth-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/wallet-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/transaction-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/investment-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/lending-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/statement-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/notification-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/backoffice-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/partner-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/promotion-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/support-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/compliance-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/fx-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/cms-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/ab-testing-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/ab-testing-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/billing-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/api-portal-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/kyc-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/analytics-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   # web-app already uses internal registry in base, just update tag
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   # Simulators (disabled but need tag override for consistency)
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/bi-fast-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/dukcapil-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
-    newTag: "1.3.0"
+    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/qris-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
-    newTag: "1.3.0"
+    newTag: "1.4.0"
+  - name: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/biller-simulator
+    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
+    newTag: "1.4.0"
 
 # ============================================================
 # Strategic merge patches: override env vars for operator-deployed infra
@@ -129,6 +132,31 @@ patches:
     target:
       kind: Deployment
       name: qris-simulator
+
+  # biller-simulator: keep running (billing-service depends on it)
+  - target:
+      kind: Deployment
+      name: biller-simulator
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: biller-simulator
+      spec:
+        template:
+          spec:
+            containers:
+              - name: biller-simulator
+                env:
+                  - name: QUARKUS_DATASOURCE_JDBC_URL
+                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_biller_simulator"
+                  - name: QUARKUS_DATASOURCE_USERNAME
+                    value: "payu"
+                  - name: QUARKUS_DATASOURCE_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-postgres-pguser-payu
+                        key: password
 
   # ============================================================
   # Spring Boot services: DB + Kafka + Redis overrides
@@ -500,6 +528,8 @@ patches:
                     value: "payu-datagrid.payu-dev.svc"
                   - name: REDIS_PORT
                     value: "11222"
+                  - name: SPRING_WEB_CLIENT_BILLER_SERVICE_BASE_URL
+                    value: "http://biller-simulator.payu-dev.svc:8080"
 
   # ============================================================
   # Quarkus services

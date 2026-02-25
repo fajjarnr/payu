@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biller-simulator
+  labels:
+    app: biller-simulator
+    app.kubernetes.io/name: biller-simulator
+    app.kubernetes.io/component: simulator
+    app.kubernetes.io/part-of: payu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: biller-simulator
+  template:
+    metadata:
+      labels:
+        app: biller-simulator
+        app.kubernetes.io/name: biller-simulator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/q/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: biller-simulator
+          image: default-route-openshift-image-registry.apps.cluster.payu.fajjjar.my.id/payu-dev/biller-simulator:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: biller-simulator-db
+                  key: url
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: biller-simulator-db
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: biller-simulator-db
+                  key: password
+          envFrom:
+            - configMapRef:
+                name: biller-simulator-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/biller/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/biller/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: biller-simulator
+  labels:
+    app: biller-simulator
+spec:
+  selector:
+    app: biller-simulator
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: biller-simulator-config
+data:
+  SIMULATOR_LATENCY_MIN: "100"
+  SIMULATOR_LATENCY_MAX: "600"
+  SIMULATOR_FAILURE_RATE: "3"

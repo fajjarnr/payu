@@ -10,6 +10,7 @@ resources:
   - auth-service.yaml
   - backoffice-service.yaml
   - bi-fast-simulator.yaml
+  - biller-simulator.yaml
   - billing-service.yaml
   - cms-service.yaml
   - compliance-service.yaml
