@@ -103,14 +103,19 @@ public class AuthController extends BaseController {
         LoginContext context = buildLoginContext(request.username(), httpRequest);
 
         try {
-            // Validate credentials
-            Boolean isValid = keycloakService.validateCredentialsBlocking(
+            // BUG-BE-154: Removed double password call — login directly instead of
+            // validating credentials first then logging in again (was sending password twice to Keycloak)
+
+            // Evaluate risk for telemetry
+            riskEvaluationService.evaluateRisk(context);
+
+            // Direct login — returns tokens if credentials are valid, throws on failure
+            LoginResponse loginResponse = keycloakService.loginBlocking(
                     request.username(),
                     request.password()
             );
 
-            if (Boolean.FALSE.equals(isValid)) {
-                // BUG-BE-155: Record failed attempt for brute force detection before returning error
+            if (loginResponse == null) {
                 riskEvaluationService.recordFailedAttempt(request.username());
                 log.warn("Failed login attempt for user: {}", request.username());
                 return ResponseEntity.badRequest()
@@ -120,21 +125,21 @@ public class AuthController extends BaseController {
                         ));
             }
 
-            // Evaluate risk for telemetry
-            riskEvaluationService.evaluateRisk(context);
-
-            // Complete login
-            LoginResponse loginResponse = keycloakService.loginBlocking(
-                    request.username(),
-                    request.password()
-            );
-
-            // BUG-BE-155: Clear failed attempts counter on successful login
+            // Clear failed attempts counter on successful login
             riskEvaluationService.recordSuccessfulLogin(request.username(), context);
 
             log.info("Successful login for user: {}", request.username());
             return ResponseEntity.ok(ApiResponse.success(loginResponse));
 
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            // BUG-BE-154: Handle invalid credentials from loginBlocking directly
+            riskEvaluationService.recordFailedAttempt(request.username());
+            log.warn("Failed login attempt for user: {}", request.username());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(
+                            ErrorCode.AUTH_BUS_001.getCode(),
+                            ErrorCode.AUTH_BUS_001.getMessage()
+                    ));
         } catch (Exception e) {
             // SECURITY: Don't log full stack trace to prevent information disclosure
             log.error("Login failed for user: {} - {}", request.username(), e.getClass().getSimpleName());

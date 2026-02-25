@@ -151,10 +151,12 @@ export interface Biller {
   logo: string;
 }
 
+// XBUG-006: Add accountId required by backend billing service
 export interface CreatePaymentRequest {
   billerCode: string;
   customerId: string;
   amount: number;
+  accountId: string;
   referenceNumber?: string;
 }
 

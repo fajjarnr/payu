@@ -26,7 +26,8 @@ export function useCreateScheduledTransfer() {
   return useMutation({
     mutationFn: (request: CreateScheduledTransferRequest) =>
       TransactionService.createScheduledTransfer(request),
-    ...MutationPresets.nonFinancial,
+    // BUG-FE-021: Use financial preset for scheduled transfer creation (sets up money movement)
+    ...MutationPresets.financial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['scheduled-transfers'] }); },
   });
 }

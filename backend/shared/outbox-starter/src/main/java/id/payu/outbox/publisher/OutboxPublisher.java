@@ -103,8 +103,8 @@ public class OutboxPublisher {
         }
 
         try {
-            Pageable pageable = PageRequest.of(0, batchSize);
-            List<OutboxEvent> unpublishedEvents = outboxRepository.findUnpublishedEventsWithLock(maxRetries, pageable);
+            // BUG-BE-100: Pass batchSize as int for native SKIP LOCKED query
+            List<OutboxEvent> unpublishedEvents = outboxRepository.findUnpublishedEventsWithLock(maxRetries, batchSize);
 
             if (unpublishedEvents.isEmpty()) {
                 pendingEventsGauge.set(0);

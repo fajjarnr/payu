@@ -73,8 +73,8 @@ export function useSellInvestment() {
     mutationFn: (request: SellInvestmentRequest) => InvestmentService.sell(request),
     ...MutationPresets.financial,
     onSuccess: (_, vars) => { 
-      qc.invalidateQueries({ queryKey: ['investment-account', vars.userId] }); 
-      qc.invalidateQueries({ queryKey: ['gold-holdings', vars.userId] });
+      qc.invalidateQueries({ queryKey: ['investment-account', vars.accountId] }); 
+      qc.invalidateQueries({ queryKey: ['gold-holdings', vars.accountId] });
       qc.invalidateQueries({ queryKey: ['wallet-balance'] });
     },
   });

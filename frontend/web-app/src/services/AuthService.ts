@@ -168,6 +168,9 @@ export class AuthService {
     try {
       const { default: api } = await import('@/lib/api');
       await api.get('/auth/validate');
+      // BUG-FE-039: Update authenticated flag on successful validation
+      // so isAuthenticated() returns true after page refresh with valid cookies
+      this.authenticated = true;
       return true;
     } catch {
       this.authenticated = false;

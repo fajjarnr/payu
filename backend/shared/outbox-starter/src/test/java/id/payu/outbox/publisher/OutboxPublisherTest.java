@@ -121,13 +121,13 @@ class OutboxPublisherTest {
 
             publisher.pollAndPublish();
 
-            verify(outboxRepository, never()).findUnpublishedEventsWithLock(anyInt(), any(Pageable.class));
+            verify(outboxRepository, never()).findUnpublishedEventsWithLock(anyInt(), anyInt());
         }
 
         @Test
         @DisplayName("should return early when no unpublished events")
         void shouldReturnEarlyWhenEmpty() {
-            when(outboxRepository.findUnpublishedEventsWithLock(anyInt(), any(Pageable.class)))
+            when(outboxRepository.findUnpublishedEventsWithLock(anyInt(), anyInt()))
                     .thenReturn(Collections.emptyList());
 
             publisher.pollAndPublish();
@@ -142,7 +142,7 @@ class OutboxPublisherTest {
             OutboxEvent event1 = createTestEvent();
             OutboxEvent event2 = createTestEvent();
 
-            when(outboxRepository.findUnpublishedEventsWithLock(anyInt(), any(Pageable.class)))
+            when(outboxRepository.findUnpublishedEventsWithLock(anyInt(), anyInt()))
                     .thenReturn(List.of(event1, event2));
             mockSuccessfulKafkaSend();
             when(outboxRepository.markAsPublished(any(UUID.class), any(Instant.class))).thenReturn(1);
@@ -160,7 +160,7 @@ class OutboxPublisherTest {
             OutboxEvent successEvent = createTestEvent();
             OutboxEvent failEvent = createTestEvent();
 
-            when(outboxRepository.findUnpublishedEventsWithLock(anyInt(), any(Pageable.class)))
+            when(outboxRepository.findUnpublishedEventsWithLock(anyInt(), anyInt()))
                     .thenReturn(List.of(successEvent, failEvent));
 
             // First call succeeds, second fails

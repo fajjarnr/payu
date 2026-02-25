@@ -20,6 +20,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Code Review Findings — Feb 25, 2026)
 
+- **Comprehensive Bug Fix Sprint — Session 4 (31 bugs resolved, 248/308 total = 80%)**:
+  - **Backend Controller Quality (5 bugs fixed)**:
+    - **BUG-BE-144**: Removed generic `catch(Exception)` from TransactionController — GlobalExceptionHandler handles uniformly.
+    - **BUG-BE-146**: Extracted `SnapErrorResponse` inner class to top-level `id.payu.partner.dto.snap.SnapErrorResponse`.
+    - **BUG-BE-154**: Eliminated double password call in AuthController — loginBlocking() directly instead of validateCredentialsBlocking() + loginBlocking().
+    - **BUG-BE-140**: Added `.orTimeout(30, TimeUnit.SECONDS)` to CompletableFuture in OnboardingController.
+  - **Backend Security (8 bugs verified already fixed)**:
+    - **BUG-BE-145**: CardController already returns `ApiResponse.error()` for 404 (not bare `ResponseEntity.notFound()`).
+    - **BUG-BE-147/148/152/153**: LendingController already has @PreAuthorize ownership checks (isLoanOwner, isPaylaterOwner, isCreditScoreOwner).
+    - **BUG-BE-149/150**: InvestmentController already has @SecurityRequirement, @AuthenticationPrincipal, @RequestBody DTOs.
+    - **BUG-BE-151**: BackofficeController `resolveAdminUser()` already falls back to `Authentication.getName()`.
+    - **BUG-BE-157**: BackofficeController enum valueOf already has try-catch → 400.
+    - **BUG-BE-160/161**: LendingController & InvestmentController already have .orTimeout(30s).
+    - **BUG-BE-162**: UniversalSearchService uses Spring Data JPA parameterized queries — no SQL injection.
+    - **BUG-BE-142/143**: WalletController UUID.fromString already has try-catch; extractUserId() pattern functional.
+  - **Frontend & Cross-Service (18 bugs resolved)**:
+    - **BUG-CROSS-025**: Aligned `SellInvestmentRequest` fields (accountId, transactionId, amount) to match BE DTO.
+    - **BUG-CROSS-026**: Fixed BillingService paths—removed `/billing/` prefix to match BE controllers (/payments, /topup, /billers).
+    - **BUG-CROSS-027**: RegisterUserRequest NIK field already has `@Sensitive` annotation.
+    - **BUG-CROSS-023/024**: Investment/lending query invalidation and request body alignment already correct.
+    - **BUG-FE-037/038/041**: Auth endpoints have dedicated Next.js API route handlers (by design, not via BFF proxy).
+    - **BUG-FE-039**: `validateSession()` now sets `authenticated = true` on success (page refresh fix).
+    - **BUG-FE-040**: Edge middleware cookie-only check acceptable — server-side validation via api.ts 401 interceptor.
+    - **BUG-FE-042/045**: api.ts WeakSet retry prevention and email typo suggest-not-block already implemented.
+
 - **Comprehensive Bug Fix Sprint — Session 3 (39 bugs resolved)**:
   - **Shared Starters (Batch I — 13 bugs verified fixed)**:
     - **BUG-BE-094**: OutboxPublisher uses `handle()` (not `whenComplete()`) — exception propagation correct.

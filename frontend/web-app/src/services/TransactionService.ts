@@ -97,7 +97,10 @@ export class TransactionService {
   // === Scheduled Transfers (FE-GAP-007) ===
 
   async createScheduledTransfer(request: CreateScheduledTransferRequest): Promise<ScheduledTransfer> {
-    const response = await api.post<ScheduledTransfer>('/scheduled-transfers', request);
+    // BUG-FE-021: Add idempotency key for financial mutation
+    const response = await api.post<ScheduledTransfer>('/scheduled-transfers', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
@@ -179,18 +182,24 @@ export class TransactionService {
   }
 
   async makeParticipantPayment(splitBillId: string, participantId: string, amount: number): Promise<SplitBill> {
-    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/payment`, { amount });
+    // BUG-FE-021: Add idempotency key for financial mutation
+    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/payment`, { amount }, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
   async settleSplitBill(id: string): Promise<SplitBill> {
-    const response = await api.post<SplitBill>(`/split-bills/${id}/settle`);
+    const response = await api.post<SplitBill>(`/split-bills/${id}/settle`, null, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 }
 
 // === Scheduled Transfer Types ===
 
+// BUG-CROSS-019: Align frequency enum with backend ScheduleType values
 export interface ScheduledTransfer {
   id: string;
   senderAccountId: string;
@@ -198,11 +207,12 @@ export interface ScheduledTransfer {
   amount: number;
   currency: string;
   description: string;
-  frequency: 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  frequency: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
   startDate: string;
   endDate?: string;
   nextExecutionDate: string;
-  status: 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'COMPLETED';
+  status: 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'COMPLETED' | 'FAILED';
+  failureReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -213,13 +223,14 @@ export interface CreateScheduledTransferRequest {
   amount: number;
   currency?: string;
   description: string;
-  frequency: 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  frequency: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
   startDate: string;
   endDate?: string;
 }
 
 // === Split Bill Types ===
 
+// BUG-CROSS-020: Align status with backend SplitStatus (removed phantom 'SETTLED')
 export interface SplitBill {
   id: string;
   creatorAccountId: string;
@@ -227,19 +238,26 @@ export interface SplitBill {
   totalAmount: number;
   currency: string;
   splitType: 'EQUAL' | 'CUSTOM' | 'PERCENTAGE';
-  status: 'DRAFT' | 'ACTIVE' | 'IN_PROGRESS' | 'COMPLETED' | 'SETTLED' | 'CANCELLED';
+  status: 'DRAFT' | 'ACTIVE' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   participants: SplitBillParticipant[];
+  totalPaid?: number;
+  remainingAmount?: number;
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
 }
 
+// BUG-CROSS-021: Align field names with backend: name→accountName, amount→amountOwed
 export interface SplitBillParticipant {
   id?: string;
   accountId: string;
-  name: string;
-  amount: number;
-  status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'PAID';
-  paidAt?: string;
+  accountNumber?: string;
+  accountName: string;
+  amountOwed: number;
+  amountPaid?: number;
+  remainingAmount?: number;
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'PARTIALLY_PAID' | 'SETTLED';
+  settledAt?: string;
 }
 
 export interface CreateSplitBillRequest {
@@ -248,7 +266,7 @@ export interface CreateSplitBillRequest {
   totalAmount: number;
   currency?: string;
   splitType: 'EQUAL' | 'CUSTOM' | 'PERCENTAGE';
-  participants: Omit<SplitBillParticipant, 'id' | 'status' | 'paidAt'>[];
+  participants: Omit<SplitBillParticipant, 'id' | 'status' | 'settledAt' | 'amountPaid' | 'remainingAmount'>[];
 }
 
 export default TransactionService.getInstance();

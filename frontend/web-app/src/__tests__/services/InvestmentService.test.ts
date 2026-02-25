@@ -141,8 +141,8 @@ describe('InvestmentService', () => {
   describe('sell', () => {
     it('should sell an investment', async () => {
       const request: SellInvestmentRequest = {
-        userId: 'user_123',
-        investmentId: 'inv_001',
+        accountId: 'acc_123',
+        transactionId: 'inv_001',
         amount: 3000000,
       };
 

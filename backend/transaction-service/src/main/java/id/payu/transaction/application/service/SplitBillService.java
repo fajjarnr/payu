@@ -79,7 +79,7 @@ public class SplitBillService implements SplitBillUseCase {
         SplitBill existing = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
-        if (!existing.canBeCancelled()) {
+        if (!existing.canBeModified()) {
             throw new IllegalStateException("Cannot update split bill in current status");
         }
 
@@ -142,7 +142,7 @@ public class SplitBillService implements SplitBillUseCase {
         SplitBill splitBill = persistencePort.findById(splitBillId)
                 .orElseThrow(() -> new IllegalArgumentException("Split bill not found"));
 
-        if (!splitBill.canBeCancelled()) {
+        if (!splitBill.canBeModified()) {
             throw new IllegalStateException("Cannot add participants in current status");
         }
 
@@ -274,6 +274,11 @@ public class SplitBillService implements SplitBillUseCase {
         return mapToResponse(splitBill);
     }
 
+    /**
+     * BUG-BE-118: Force-closes a split bill regardless of outstanding payments.
+     * WARNING: This marks the bill as COMPLETED without processing remaining payments.
+     * Unpaid participants will be marked as-is (not auto-settled).
+     */
     @Override
     @Transactional
     public SplitBillResponse settleSplitBill(UUID splitBillId) {

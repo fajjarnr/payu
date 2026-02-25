@@ -52,14 +52,20 @@ public interface OutboxRepository extends JpaRepository<OutboxEvent, UUID> {
     /**
      * Finds unpublished events with pessimistic locking to prevent concurrent processing
      * by multiple publisher instances.
+     * <p>
+     * BUG-BE-100: Uses native query with FOR UPDATE SKIP LOCKED (PostgreSQL 9.5+)
+     * so multiple publisher pods can each grab different rows without blocking.
+     * Without SKIP LOCKED, @Lock(PESSIMISTIC_WRITE) causes all pods to contend
+     * on the same rows, defeating the purpose of multi-pod scaling.
      *
      * @param maxRetries the maximum number of retry attempts
      * @param limit the maximum number of events to fetch
      * @return a list of unpublished outbox events locked for update
      */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT o FROM OutboxEvent o WHERE o.publishedAt IS NULL AND o.retryCount < :maxRetries ORDER BY o.sequenceNum ASC")
-    List<OutboxEvent> findUnpublishedEventsWithLock(@Param("maxRetries") int maxRetries, Pageable pageable);
+    @Query(value = "SELECT * FROM outbox_events WHERE published_at IS NULL AND retry_count < :maxRetries " +
+            "ORDER BY sequence_num ASC LIMIT :limit FOR UPDATE SKIP LOCKED",
+            nativeQuery = true)
+    List<OutboxEvent> findUnpublishedEventsWithLock(@Param("maxRetries") int maxRetries, @Param("limit") int limit);
 
     /**
      * Finds events by aggregate type and aggregate ID.

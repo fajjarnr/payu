@@ -189,17 +189,15 @@ public class GamificationService {
             return Collections.emptyList();
         }
 
-        List<Badge> badges = badgeIds.stream()
-                .map(badgeRepository::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
+        // BUG-BE-067: Use findAllById(ids) for single query instead of N+1 per-badge findById
+        List<Badge> badges = badgeRepository.findAllById(badgeIds);
 
         Map<UUID, Badge> badgeMap = badges.stream()
                 .collect(Collectors.toMap(Badge::getId, b -> b));
 
         return userBadges.stream()
             .map(ub -> toEarnedBadgeResponse(ub, badgeMap.get(ub.getBadgeId())))
+            .filter(response -> response != null)
             .collect(Collectors.toList());
     }
 

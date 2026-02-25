@@ -189,12 +189,28 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                     scheduledTransfer.getId(), response.transactionId(), scheduledTransfer.getExecutedCount());
 
         } catch (Exception e) {
-            scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.FAILED);
-            scheduledTransfer.setFailureReason(e.getMessage());
-            persistencePort.save(scheduledTransfer);
-
-            log.error("Scheduled transfer execution failed, id: {}, error: {}",
-                    scheduledTransfer.getId(), e.getMessage());
+            // BUG-BE-116: For recurring transfers, don't permanently FAIL on first error.
+            // Keep ACTIVE and advance to next execution date so it retries next cycle.
+            if (scheduledTransfer.getScheduleType() != ScheduledTransfer.ScheduleType.ONE_TIME) {
+                scheduledTransfer.setFailureReason(e.getMessage());
+                Instant nextExecution = calculateNextExecutionDate(
+                        scheduledTransfer.getScheduleType(),
+                        scheduledTransfer.getNextExecutionDate(),
+                        scheduledTransfer.getFrequencyDays(),
+                        scheduledTransfer.getDayOfMonth());
+                scheduledTransfer.setNextExecutionDate(nextExecution);
+                // Keep ACTIVE status — will retry on next scheduled cycle
+                persistencePort.save(scheduledTransfer);
+                log.warn("Recurring scheduled transfer execution failed (will retry next cycle), id: {}, error: {}",
+                        scheduledTransfer.getId(), e.getMessage());
+            } else {
+                // ONE_TIME: set FAILED permanently since there's no next cycle
+                scheduledTransfer.setStatus(ScheduledTransfer.ScheduledStatus.FAILED);
+                scheduledTransfer.setFailureReason(e.getMessage());
+                persistencePort.save(scheduledTransfer);
+                log.error("One-time scheduled transfer execution failed, id: {}, error: {}",
+                        scheduledTransfer.getId(), e.getMessage());
+            }
         }
     }
 

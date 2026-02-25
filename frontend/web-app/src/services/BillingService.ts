@@ -51,31 +51,34 @@ class BillingService {
   }
 
   async createPayment(request: CreatePaymentRequest): Promise<BillPayment> {
-    const response = await api.post('/billing/payments', request, {
+    // BUG-CROSS-026: Fixed path to match BE PaymentController at /api/v1/payments
+    const response = await api.post('/payments', request, {
       headers: getFinancialMutationHeaders(),
     });
     return response.data;
   }
 
   async createTopUp(request: TopUpRequest): Promise<BillPayment> {
-    const response = await api.post('/billing/topup', request, {
+    // BUG-CROSS-026: Fixed path to match BE TopUpController at /api/v1/topup
+    const response = await api.post('/topup', request, {
       headers: getFinancialMutationHeaders(),
     });
     return response.data;
   }
 
   async getPaymentHistory(page = 0, size = 20): Promise<{ content: BillPayment[]; totalElements: number }> {
-    const response = await api.get('/billing/payments', { params: { page, size } });
+    const response = await api.get('/payments', { params: { page, size } });
     return response.data;
   }
 
   async getPayment(paymentId: string): Promise<BillPayment> {
-    const response = await api.get(`/billing/payments/${paymentId}`);
+    const response = await api.get(`/payments/${paymentId}`);
     return response.data;
   }
 
   async getBillers(category?: BillerCategory): Promise<BillerInfo[]> {
-    const response = await api.get('/billing/billers', { params: { category } });
+    // BUG-CROSS-026: Fixed path to match BE BillerController at /api/v1/billers
+    const response = await api.get('/billers', { params: { category } });
     return response.data;
   }
 }

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
@@ -42,6 +43,7 @@ public class OnboardingController {
     @ApiResponse(responseCode = "409", description = "User already exists")
     public CompletableFuture<ResponseEntity<User>> register(@Valid @RequestBody RegisterUserRequest request) {
         return registerUserUseCase.registerUser(request)
+                .orTimeout(30, TimeUnit.SECONDS) // BUG-BE-140: Prevent indefinite hang on async registration
                 .thenApply(ResponseEntity::ok);
     }
 }

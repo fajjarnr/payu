@@ -273,7 +273,7 @@ export default function SplitBillPage() {
                             onClick={() =>
                               addParticipant.mutate({
                                 id: bill.id,
-                                participant: { accountId: '', name: 'Teman Baru', amount: bill.totalAmount / 2, status: 'PENDING' } as SplitBillParticipant,
+                                participant: { accountId: '', accountName: 'Teman Baru', amountOwed: bill.totalAmount / 2, status: 'PENDING' } as SplitBillParticipant,
                               })
                             }
                             className="text-xs font-bold tracking-widest uppercase gap-1"

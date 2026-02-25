@@ -13,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -92,6 +94,9 @@ public class CardService implements CardUseCase {
         Card card = cardPersistencePort.findById(UUID.fromString(cardId))
                 .orElseThrow(() -> new IllegalArgumentException("Card not found"));
 
+        // BUG-BE-125: Check if card is already expired before allowing operations
+        validateCardNotExpired(card);
+
         card.freeze();
         cardPersistencePort.save(card);
         log.info("Card frozen: {}", cardId);
@@ -103,9 +108,31 @@ public class CardService implements CardUseCase {
         Card card = cardPersistencePort.findById(UUID.fromString(cardId))
                 .orElseThrow(() -> new IllegalArgumentException("Card not found"));
 
+        // BUG-BE-125: Check if card is already expired before allowing operations
+        validateCardNotExpired(card);
+
         card.unfreeze();
         cardPersistencePort.save(card);
         log.info("Card unfrozen: {}", cardId);
+    }
+
+    /**
+     * BUG-BE-125: Validates that a card has not expired.
+     * Parses the MM/yy expiry date and compares against current date.
+     * Expired cards should not allow state changes.
+     */
+    private void validateCardNotExpired(Card card) {
+        if (card.getExpiryDate() != null) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+                YearMonth expiry = YearMonth.parse(card.getExpiryDate(), formatter);
+                if (expiry.isBefore(YearMonth.now())) {
+                    throw new IllegalStateException("Card has expired (" + card.getExpiryDate() + "). Cannot modify expired card.");
+                }
+            } catch (DateTimeParseException e) {
+                log.warn("Could not parse card expiry date: {}", card.getExpiryDate());
+            }
+        }
     }
 
     // Simple mock generator (starts with 4 for Visa simulation)

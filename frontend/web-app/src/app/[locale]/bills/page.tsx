@@ -64,6 +64,7 @@ export default function BillsPage() {
   }
 
   const data: CreatePaymentRequest = {
+   accountId: '', // TODO: Get from auth context/wallet
    billerCode: selectedBiller.code,
    customerId,
    amount: parseFloat(amount),

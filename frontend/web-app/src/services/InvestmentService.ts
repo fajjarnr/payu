@@ -38,10 +38,9 @@ export interface BuyGoldRequest {
 }
 
 export interface SellInvestmentRequest {
-  userId: string;
-  investmentId: string;
-  units?: number;
-  amount?: number;
+  accountId: string;
+  transactionId: string;
+  amount: number;
 }
 
 export interface InvestmentOrder {

@@ -23,6 +23,9 @@ public class UniversalSearchService {
     private final FraudCaseRepository fraudCaseRepository;
     private final CustomerCaseRepository customerCaseRepository;
 
+    // BUG-BE-040: Limit results per entity type to prevent OOM on large datasets
+    private static final int MAX_RESULTS_PER_ENTITY = 200;
+
     public UniversalSearchResponse search(String query, String entityType, int page, int size) {
         log.info("Universal search: query={}, entityType={}, page={}, size={}", query, entityType, page, size);
 
@@ -43,6 +46,12 @@ public class UniversalSearchService {
         }
 
         long total = allResults.size();
+        // BUG-BE-040: Truncate results to prevent excessive memory usage
+        if (allResults.size() > MAX_RESULTS_PER_ENTITY * 3) {
+            log.warn("Search returned {} results, truncating to {}", allResults.size(), MAX_RESULTS_PER_ENTITY * 3);
+            allResults = new ArrayList<>(allResults.subList(0, MAX_RESULTS_PER_ENTITY * 3));
+            total = allResults.size();
+        }
         int fromIndex = page * size;
         int toIndex = Math.min(fromIndex + size, allResults.size());
 

@@ -1,7 +1,8 @@
 import api from '@/lib/api';
 
 export type PromotionStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
-export type RewardType = 'LOYALTY_POINTS' | 'CASHBACK' | 'VOUCHER';
+// XBUG-011: Superset of backend Reward.RewardType + Promotion.PromotionType values
+export type RewardType = 'LOYALTY_POINTS' | 'CASHBACK' | 'VOUCHER' | 'REWARD_POINTS' | 'REFERRAL_BONUS' | 'DISCOUNT' | 'PROMOTION_REWARD';
 
 export interface Promotion {
   id: string;
@@ -45,9 +46,11 @@ export interface UpdatePromotionRequest {
   categories?: string[];
 }
 
+// XBUG-016: Add transactionAmount for backend claim validation
 export interface ClaimPromotionRequest {
   accountId: string;
   transactionId?: string;
+  transactionAmount?: number;
 }
 
 export interface Reward {

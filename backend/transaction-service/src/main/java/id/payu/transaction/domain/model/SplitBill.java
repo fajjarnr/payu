@@ -102,6 +102,15 @@ public class SplitBill {
         return status == SplitStatus.DRAFT || status == SplitStatus.ACTIVE;
     }
 
+    /**
+     * BUG-BE-117: Separate modifiability check from cancellability.
+     * Updates and adding participants are allowed in DRAFT/ACTIVE,
+     * but cancellation may have stricter rules in the future.
+     */
+    public boolean canBeModified() {
+        return status == SplitStatus.DRAFT || status == SplitStatus.ACTIVE;
+    }
+
     public boolean canAddPayment() {
         return status == SplitStatus.ACTIVE || status == SplitStatus.IN_PROGRESS;
     }

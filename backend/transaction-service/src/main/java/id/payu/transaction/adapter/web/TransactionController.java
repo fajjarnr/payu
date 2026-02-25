@@ -134,14 +134,8 @@ public class TransactionController extends BaseController {
             log.warn("Transfer initiation failed: {}", e.getMessage());
             return ResponseEntity.unprocessableEntity()
                     .body(ApiResponse.error(e.getCode(), e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during transfer initiation", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(
-                            ErrorCode.INTERNAL_ERROR.getCode(),
-                            ErrorCode.INTERNAL_ERROR.getMessage()
-                    ));
         }
+        // BUG-BE-144: Removed generic Exception catch — GlobalExceptionHandler handles unexpected errors uniformly
     }
 
     /**
@@ -257,14 +251,12 @@ public class TransactionController extends BaseController {
 
             // TODO: BUG-BE-137: Update UseCase to return Page for proper pagination
             return ok(transactions);
-        } catch (Exception e) {
-            log.error("Error retrieving transactions for account: {}", accountId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(
-                            ErrorCode.INTERNAL_ERROR.getCode(),
-                            ErrorCode.INTERNAL_ERROR.getMessage()
-                    ));
+        } catch (BusinessException e) {
+            log.warn("Error retrieving transactions for account: {} - {}", accountId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
+        // BUG-BE-144: Removed generic Exception catch — GlobalExceptionHandler handles unexpected errors uniformly
     }
 
     /**
@@ -322,14 +314,8 @@ public class TransactionController extends BaseController {
             log.warn("QRIS payment failed: {}", e.getMessage());
             return ResponseEntity.unprocessableEntity()
                     .body(ApiResponse.error(e.getCode(), e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error during QRIS payment", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(
-                            ErrorCode.INTERNAL_ERROR.getCode(),
-                            ErrorCode.INTERNAL_ERROR.getMessage()
-                    ));
         }
+        // BUG-BE-144: Removed generic Exception catch — GlobalExceptionHandler handles unexpected errors uniformly
     }
 
     @Override
