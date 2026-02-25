@@ -46,8 +46,12 @@ public class CorrelationIdFilter implements Filter {
 
             chain.doFilter(request, response);
         } finally {
-            // Clean up MDC to prevent leakage between requests
-            MDC.clear();
+            // BUG-BE-101: Remove only the keys this filter set, not all MDC entries
+            // MDC.clear() would wipe entries set by Spring Security, OpenTelemetry, etc.
+            MDC.remove(properties.getCorrelation().getMdcKey());
+            MDC.remove("service");
+            MDC.remove("service_version");
+            MDC.remove("environment");
         }
     }
 

@@ -18,6 +18,7 @@ public class SnapBiSignatureService {
     // Standard Java security/crypto implementation - already Spring Service compatible
     
     public String generateSignature(String clientSecret, String httpMethod, String endpoint, String accessToken, String requestBody, String timestamp) {
+        try {
             // SNAP-BI standard: method + ":" + endpoint + ":" + accessToken + ":" + sha256hex(body) + ":" + timestamp
             String hashedBody = hashRequestBody(requestBody);
             String stringToSign = httpMethod + ":" + endpoint + ":" + accessToken + ":" + hashedBody + ":" + timestamp;
@@ -37,6 +38,7 @@ public class SnapBiSignatureService {
     }
 
     public String generateSignatureWithClientKey(String clientSecret, String httpMethod, String endpoint, String timestamp, String requestBody) {
+        try {
             // SNAP-BI standard for client-key based signature: method + ":" + endpoint + ":" + timestamp + ":" + sha256hex(body)
             String hashedBody = hashRequestBody(requestBody);
             String stringToSign = httpMethod + ":" + endpoint + ":" + timestamp + ":" + hashedBody;

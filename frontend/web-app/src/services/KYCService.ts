@@ -88,14 +88,28 @@ class KYCService {
     return response.data;
   }
 
+  // BUG-FE-030: Max base64 image size (5MB encoded ≈ 6.67MB base64)
+  private static readonly MAX_BASE64_SIZE = 7 * 1024 * 1024; // 7MB
+
+  private validateImageSize(base64Image: string, fieldName: string): void {
+    if (base64Image.length > KYCService.MAX_BASE64_SIZE) {
+      const sizeMB = (base64Image.length / (1024 * 1024)).toFixed(1);
+      throw new Error(
+        `${fieldName} is too large (${sizeMB}MB). Maximum allowed is 5MB. Please resize the image before uploading.`
+      );
+    }
+  }
+
   /** POST /kyc/verify/ktp — Upload and verify KTP document */
   async uploadKtp(request: UploadKtpRequest): Promise<KycVerificationResult> {
+    this.validateImageSize(request.ktpImage, 'KTP image');
     const response = await api.post('/kyc/verify/ktp', request);
     return response.data;
   }
 
   /** POST /kyc/verify/selfie — Upload and verify selfie */
   async uploadSelfie(request: UploadSelfieRequest): Promise<KycVerificationResult> {
+    this.validateImageSize(request.selfieImage, 'Selfie image');
     const response = await api.post('/kyc/verify/selfie', request);
     return response.data;
   }

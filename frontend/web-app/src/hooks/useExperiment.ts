@@ -155,20 +155,28 @@ export function useExperiment(
   const isError = isExperimentError || isAssignmentError;
   const error = experimentError || assignmentError;
 
+  // BUG-FE-028: Use refs to prevent infinite re-renders from unstable references
+  const contextRef = useRef(context);
+  useEffect(() => { contextRef.current = context; }, [context]);
+  const onVariantAssignedRef = useRef(onVariantAssigned);
+  useEffect(() => { onVariantAssignedRef.current = onVariantAssigned; }, [onVariantAssigned]);
+  const onErrorRef = useRef(onError);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+
   // Update context with variant
   useEffect(() => {
     if (assignment?.variantKey) {
-      context.setVariant(experimentKey, assignment.variantKey);
-      onVariantAssigned?.(assignment.variantKey);
+      contextRef.current.setVariant(experimentKey, assignment.variantKey);
+      onVariantAssignedRef.current?.(assignment.variantKey);
     }
-  }, [assignment, experimentKey, context, onVariantAssigned]);
+  }, [assignment, experimentKey]);
 
-  // Call error callback when error occurs
+  // BUG-FE-029: Call error callback when error occurs (using ref for stable reference)
   useEffect(() => {
     if (isError && error) {
-      onError?.(error);
+      onErrorRef.current?.(error);
     }
-  }, [isError, error, onError]);
+  }, [isError, error]);
 
   // Track impression on mount (once per session)
   useEffect(() => {

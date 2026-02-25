@@ -33,7 +33,8 @@ import java.util.random.RandomGenerator;
 @AutoConfiguration
 @EnableConfigurationProperties(ResilienceProperties.class)
 @ConditionalOnClass(name = "io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry")
-@ConditionalOnProperty(prefix = "payu.resilience", name = "enabled", havingValue = "true", matchIfMissing = false)
+// BUG-BE-097: Changed matchIfMissing to true so resilience is enabled by default
+@ConditionalOnProperty(prefix = "payu.resilience", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ResilienceAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(ResilienceAutoConfiguration.class);
@@ -131,13 +132,19 @@ public class ResilienceAutoConfiguration {
                 .maxAttempts(properties.getRetry().getMaxAttempts())
                 .intervalFunction(intervalFunction);
 
-        // Add retry exceptions (IO and network exceptions)
+        // BUG-BE-106: Validate isAssignableFrom(Throwable) before unchecked cast
         if (properties.getRetry().getRetryExceptionClassNames() != null) {
             for (String className : properties.getRetry().getRetryExceptionClassNames()) {
                 try {
-                    Class<? extends Throwable> exceptionClass = (Class<? extends Throwable>) Class.forName(className);
+                    Class<?> clazz = Class.forName(className);
+                    if (!Throwable.class.isAssignableFrom(clazz)) {
+                        log.error("Configured retry exception class '{}' is not a Throwable subclass, skipping", className);
+                        continue;
+                    }
+                    @SuppressWarnings("unchecked")
+                    Class<? extends Throwable> exceptionClass = (Class<? extends Throwable>) clazz;
                     builder.retryExceptions(exceptionClass);
-                } catch (ClassNotFoundException | ClassCastException e) {
+                } catch (ClassNotFoundException e) {
                     log.warn("Exception class not found for retry: {}", className);
                 }
             }
@@ -147,9 +154,15 @@ public class ResilienceAutoConfiguration {
         if (properties.getRetry().getIgnoreExceptionClassNames() != null) {
             for (String className : properties.getRetry().getIgnoreExceptionClassNames()) {
                 try {
-                    Class<? extends Throwable> exceptionClass = (Class<? extends Throwable>) Class.forName(className);
+                    Class<?> clazz = Class.forName(className);
+                    if (!Throwable.class.isAssignableFrom(clazz)) {
+                        log.error("Configured retry ignore exception class '{}' is not a Throwable subclass, skipping", className);
+                        continue;
+                    }
+                    @SuppressWarnings("unchecked")
+                    Class<? extends Throwable> exceptionClass = (Class<? extends Throwable>) clazz;
                     builder.ignoreExceptions(exceptionClass);
-                } catch (ClassNotFoundException | ClassCastException e) {
+                } catch (ClassNotFoundException e) {
                     log.warn("Exception class not found for retry ignore: {}", className);
                 }
             }

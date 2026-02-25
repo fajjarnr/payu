@@ -77,13 +77,7 @@ export default function MerchantDashboard() {
       <label className="block text-gray-500 text-sm">Client ID</label>
       <code className="block bg-gray-100 p-2 rounded mt-1">{partner.clientId || 'N/A'}</code>
      </div>
-     {partner.clientSecret && (
-       <div>
-        <label className="block text-gray-500 text-sm">Client Secret</label>
-        <code className="block bg-gray-100 p-2 rounded mt-1">{partner.clientSecret}</code>
-        <p className="text-xs text-red-500 mt-1">Keep this secret safe! It won&apos;t be shown again.</p>
-       </div>
-     )}
+     {/* Client secret is not returned in profile responses for security (BUG-FE-032) */}
      <div>
       <label className="block text-gray-500 text-sm">Public Key</label>
       <textarea 

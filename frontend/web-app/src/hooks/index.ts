@@ -7,7 +7,6 @@ export {
   useReserveBalance,
   useCommitReservation,
   useReleaseReservation,
-  useCreditWallet,
   useTransactionHistory
 } from './useWallet';
 export { useTransactions, useTransaction, useInitiateTransfer, useProcessQrisPayment, useCancelTransaction } from './useTransactions';
@@ -192,7 +191,6 @@ export {
   useUploadCertificate,
   useGenerateCertificate,
   useRotateCertificate,
-  useSnapBiAuthToken,
   useSnapBiPayment
 } from './usePartner';
 

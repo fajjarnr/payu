@@ -225,18 +225,8 @@ public class GdprAuditController extends BaseController {
         return ok(audits.map(this::toResponse), audits);
     }
 
-    @DeleteMapping("/{auditId}")
-    @Operation(summary = "Delete data access audit", description = "Delete a specific data access audit record")
-    @ApiResponse(responseCode = "204", description = "Data access audit deleted successfully")
-    @ApiResponse(responseCode = "401", description = "Unauthorized")
-    @ApiResponse(responseCode = "403", description = "Forbidden")
-    @ApiResponse(responseCode = "404", description = "Data access audit not found")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteDataAccessAudit(
-            @Parameter(description = "Audit ID", required = true) @PathVariable UUID auditId) {
-        dataAccessAuditUseCase.deleteDataAccessAudit(auditId);
-        return noContent();
-    }
+    // BUG-BE-081: DELETE endpoint removed — audit logs are immutable per compliance policy.
+    // Use soft-delete with approval workflow if data retention policy requires it.
 
     private DataAccessAuditResponse toResponse(DataAccessAudit audit) {
         return DataAccessAuditResponse.builder()

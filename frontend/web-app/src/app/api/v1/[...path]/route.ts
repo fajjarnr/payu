@@ -194,6 +194,39 @@ async function proxyRequest(
       body,
     });
 
+    // BUG-FE-001: Auto-retry on 401 by refreshing the access token via BFF
+    if (res.status === 401 && token) {
+      log.info({ action: 'proxy', path: `/api/v1/${backendPath}` }, 'Got 401 — attempting token refresh and retry');
+      try {
+        const refreshRes = await fetch(new URL('/api/auth/refresh', request.nextUrl.origin).toString(), {
+          method: 'POST',
+          headers: { Cookie: request.headers.get('cookie') || '' },
+        });
+        if (refreshRes.ok) {
+          const newCookieStore = await cookies();
+          const newToken = newCookieStore.get('accessToken')?.value;
+          if (newToken) {
+            headers['Authorization'] = `Bearer ${newToken}`;
+            const retryRes = await fetch(url.toString(), {
+              method: request.method,
+              headers,
+              body,
+            });
+            const retryBody = await retryRes.text();
+            log.info({ action: 'proxy', path: `/api/v1/${backendPath}`, status: retryRes.status, durationMs: Date.now() - startTime }, 'Proxy retry response after refresh');
+            return new NextResponse(retryBody, {
+              status: retryRes.status,
+              headers: {
+                'Content-Type': retryRes.headers.get('Content-Type') || 'application/json',
+              },
+            });
+          }
+        }
+      } catch (refreshError) {
+        log.warn({ action: 'proxy', err: refreshError instanceof Error ? refreshError : { message: String(refreshError) } }, 'Token refresh during proxy retry failed');
+      }
+    }
+
     const responseBody = await res.text();
 
     log.info({ action: 'proxy', method: request.method, path: `/api/v1/${backendPath}`, status: res.status, durationMs: Date.now() - startTime }, 'Proxy response');

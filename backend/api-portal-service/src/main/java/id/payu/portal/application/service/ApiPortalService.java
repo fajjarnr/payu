@@ -94,19 +94,29 @@ public class ApiPortalService {
         return Uni.createFrom().item(buildAggregatedResponse());
     }
 
+    // BUG-BE-088: Added per-service error tracking with partial result support
     public Uni<AggregatedOpenApiResponse> refreshCache() {
         Map<String, PortalConfig.ServiceConfig> services = config.services();
         Map<String, OpenApiSpec> newCache = new HashMap<>();
+        java.util.List<String> failedServices = new java.util.ArrayList<>();
 
         for (var entry : services.entrySet()) {
             try {
                 OpenApiSpec spec = getServiceSpec(entry.getKey()).await().atMost(Duration.ofSeconds(5));
                 if (spec != null) {
                     newCache.put(entry.getKey(), spec);
+                } else {
+                    failedServices.add(entry.getKey());
                 }
             } catch (Exception e) {
                 Log.errorf("Failed to fetch spec for %s: %s", entry.getKey(), e.getMessage());
+                failedServices.add(entry.getKey());
             }
+        }
+
+        if (!failedServices.isEmpty()) {
+            Log.warnf("OpenAPI aggregation partial result: %d/%d services failed: %s",
+                    failedServices.size(), services.size(), String.join(", ", failedServices));
         }
 
         specCache.clear();

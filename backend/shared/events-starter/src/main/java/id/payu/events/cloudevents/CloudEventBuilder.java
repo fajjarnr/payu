@@ -13,11 +13,12 @@ import java.util.UUID;
 public class CloudEventBuilder<T> {
 
     private String specVersion = "1.0";
-    private UUID id = UUID.randomUUID();
+    // BUG-BE-105: Generate id and time lazily in build() to avoid stale values
+    private UUID id;
     private URI source;
     private String type;
     private String dataContentType = "application/json";
-    private OffsetDateTime time = OffsetDateTime.now();
+    private OffsetDateTime time;
     private String subject;
     private T data;
     private String payuTraceContext;
@@ -160,11 +161,12 @@ public class CloudEventBuilder<T> {
 
         CloudEventEnvelope<T> envelope = new CloudEventEnvelope<T>();
         envelope.setSpecVersion(this.specVersion);
-        envelope.setId(this.id);
+        // BUG-BE-105: Generate defaults at build time, not construction time
+        envelope.setId(this.id != null ? this.id : UUID.randomUUID());
         envelope.setSource(this.source);
         envelope.setType(this.type);
         envelope.setDataContentType(this.dataContentType);
-        envelope.setTime(this.time);
+        envelope.setTime(this.time != null ? this.time : OffsetDateTime.now());
         envelope.setSubject(this.subject);
         envelope.setData(this.data);
         envelope.setPayuTraceContext(this.payuTraceContext);

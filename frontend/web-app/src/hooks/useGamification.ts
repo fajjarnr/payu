@@ -7,7 +7,7 @@ import PromotionService from '@/services/PromotionService';
 export function useGamificationSummary(userId: string) {
   return useQuery({
     queryKey: ['gamification-summary', userId],
-    queryFn: () => PromotionService.getGamificationSummary(),
+    queryFn: () => PromotionService.getGamificationSummary(userId),
     enabled: !!userId,
   });
 }
@@ -15,7 +15,7 @@ export function useGamificationSummary(userId: string) {
 export function useGamificationLevel(userId: string) {
   return useQuery({
     queryKey: ['gamification-level', userId],
-    queryFn: () => PromotionService.getGamificationLevel(),
+    queryFn: () => PromotionService.getGamificationLevel(userId),
     enabled: !!userId,
   });
 }
@@ -23,7 +23,7 @@ export function useGamificationLevel(userId: string) {
 export function useGamificationBadges(userId: string) {
   return useQuery({
     queryKey: ['gamification-badges', userId],
-    queryFn: () => PromotionService.getBadges(),
+    queryFn: () => PromotionService.getBadges(userId),
     enabled: !!userId,
   });
 }
@@ -31,7 +31,7 @@ export function useGamificationBadges(userId: string) {
 export function useGamificationBadgeProgress(userId: string) {
   return useQuery({
     queryKey: ['gamification-badge-progress', userId],
-    queryFn: () => PromotionService.getBadgeProgress(),
+    queryFn: () => PromotionService.getBadgeProgress(userId),
     enabled: !!userId,
   });
 }
@@ -39,7 +39,7 @@ export function useGamificationBadgeProgress(userId: string) {
 export function useGamificationStreak(userId: string) {
   return useQuery({
     queryKey: ['gamification-streak', userId],
-    queryFn: () => PromotionService.getStreak(),
+    queryFn: () => PromotionService.getStreak(userId),
     enabled: !!userId,
   });
 }
@@ -47,7 +47,7 @@ export function useGamificationStreak(userId: string) {
 export function useTodayCheckin(userId: string) {
   return useQuery({
     queryKey: ['gamification-today', userId],
-    queryFn: () => PromotionService.getTodayCheckin(),
+    queryFn: () => PromotionService.getTodayCheckin(userId),
     enabled: !!userId,
   });
 }

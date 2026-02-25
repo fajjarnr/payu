@@ -10,6 +10,8 @@ import id.payu.saga.model.SagaResult;
 import id.payu.saga.model.SagaState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -35,16 +37,19 @@ public class CashbackService {
     private final CashbackSagaOrchestrator sagaOrchestrator;
     private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
     private final String promotionEventsTopic;
+    private final MeterRegistry meterRegistry;
 
     public CashbackService(
             CashbackRepository cashbackRepository,
             CashbackSagaOrchestrator sagaOrchestrator,
             KafkaTemplate<String, Map<String, Object>> kafkaTemplate,
-            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic) {
+            @Value("${app.kafka.topics.promotion-events:promotion-events}") String promotionEventsTopic,
+            @Autowired(required = false) MeterRegistry meterRegistry) {
         this.cashbackRepository = cashbackRepository;
         this.sagaOrchestrator = sagaOrchestrator;
         this.kafkaTemplate = kafkaTemplate;
         this.promotionEventsTopic = promotionEventsTopic;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -126,6 +131,7 @@ public class CashbackService {
         );
     }
 
+    // BUG-BE-073: Added metric counter for Kafka publish failures to enable alerting
     private void publishCashbackEvent(Cashback cashback) {
         try {
             Map<String, Object> event = Map.of(
@@ -137,7 +143,13 @@ public class CashbackService {
             );
             kafkaTemplate.send(promotionEventsTopic, cashback.getAccountId(), event);
         } catch (Exception e) {
-            LOG.warn("Failed to publish cashback event: {}", e.getMessage());
+            LOG.error("Failed to publish cashback event for cashback={}: {}",
+                    cashback.getId(), e.getMessage(), e);
+            if (meterRegistry != null) {
+                meterRegistry.counter("promotion.kafka.publish.failure",
+                        "eventType", "cashback",
+                        "status", cashback.getStatus().name()).increment();
+            }
         }
     }
 

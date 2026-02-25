@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import WalletService from '@/services/WalletService';
-import type { ReserveBalanceRequest, CreditRequest } from '@/services/WalletService';
+import type { ReserveBalanceRequest } from '@/services/WalletService';
 
 export const useBalance = (accountId: string | undefined) => {
   return useQuery({
@@ -53,19 +53,7 @@ export const useReleaseReservation = () => {
   });
 };
 
-export const useCreditWallet = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ accountId, request }: { accountId: string; request: CreditRequest }) =>
-      WalletService.credit(accountId, request),
-    ...MutationPresets.financial,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    }
-  });
-};
+// XBUG-007: useCreditWallet removed — credit endpoint is internal-only and should not be called from frontend.
 
 export const useTransactionHistory = (accountId: string | undefined, page = 0, size = 20) => {
   return useQuery({

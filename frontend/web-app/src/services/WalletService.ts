@@ -76,12 +76,8 @@ export class WalletService {
     return response.data;
   }
 
-  async credit(accountId: string, request: CreditRequest): Promise<{ status: string; accountId: string }> {
-    const response = await api.post<{ status: string; accountId: string }>(`/wallets/${accountId}/credit`, request, {
-      headers: getFinancialMutationHeaders(),
-    });
-    return response.data;
-  }
+  // XBUG-007: credit() endpoint removed — this is an internal-only API
+  // Direct wallet credits must go through backend services, not client-facing UI
 
   async getTransactionHistory(accountId: string, page: number = 0, size: number = 20): Promise<WalletTransaction[]> {
     const response = await api.get<WalletTransaction[]>(`/wallets/${accountId}/transactions`, {

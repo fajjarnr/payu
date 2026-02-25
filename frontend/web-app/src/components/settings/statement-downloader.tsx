@@ -66,6 +66,7 @@ export default function StatementDownloader() {
       setSuccess(null);
 
       await StatementService.generateAndDownload({
+        customerId: '', // TODO: populate from auth context
         accountNumber: 'default', // Will be populated from user context
         year: selectedYear,
         month: selectedMonth
@@ -82,7 +83,7 @@ export default function StatementDownloader() {
   };
 
   const handleDownload = async (statement: Statement) => {
-    if (statement.status !== 'READY') {
+    if (statement.status !== 'COMPLETED') {
       setError('E-Statement belum siap untuk diunduh.');
       return;
     }
@@ -104,7 +105,7 @@ export default function StatementDownloader() {
 
   const getStatusIcon = (status: StatementStatus) => {
     switch (status) {
-      case 'READY':
+      case 'COMPLETED':
         return <CheckCircle2 className="h-4 w-4" />;
       case 'GENERATING':
         return <Clock className="h-4 w-4" />;
@@ -344,7 +345,7 @@ export default function StatementDownloader() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {statement.status === 'READY' && (
+                    {statement.status === 'COMPLETED' && (
                       <div className="text-right hidden sm:block">
                         <p className="text-sm font-bold text-foreground">
                           {statement.closingBalanceFormatted}
@@ -354,10 +355,10 @@ export default function StatementDownloader() {
                     )}
                     <button
                       onClick={() => handleDownload(statement)}
-                      disabled={statement.status !== 'READY' || isDownloading === statement.id}
+                      disabled={statement.status !== 'COMPLETED' || isDownloading === statement.id}
                       className={clsx(
                         'h-10 px-4 rounded-lg flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-all',
-                        statement.status === 'READY' && !isDownloading
+                        statement.status === 'COMPLETED' && !isDownloading
                           ? 'bg-primary text-primary-foreground hover:bg-bank-emerald shadow-md hover:shadow-lg'
                           : 'bg-muted text-muted-foreground cursor-not-allowed'
                       )}
@@ -375,7 +376,7 @@ export default function StatementDownloader() {
                 </div>
 
                 {/* Transaction Summary (expandable on mobile) */}
-                {statement.status === 'READY' && (
+                {statement.status === 'COMPLETED' && (
                   <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Saldo Awal</p>

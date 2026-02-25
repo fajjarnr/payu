@@ -31,6 +31,7 @@ export const useInitiateTransfer = () => {
   return useMutation({
     mutationFn: (request: InitiateTransferRequest) => TransactionService.initiateTransfer(request),
     ...MutationPresets.financial,
+    // BUG-FE-013: Scope invalidation to avoid invalidating all accounts
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });

@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -82,9 +81,19 @@ public class CachedFallback<T> implements FallbackProvider<T> {
      */
     public T refresh() {
         log.debug("Refreshing cached fallback value");
-        T value = supplier.get();
-        cache.set(new CacheEntry<>(value, Instant.now()));
-        return value;
+        // BUG-BE-104: Wrap supplier.get() in try-catch to retain stale value on refresh failure
+        try {
+            T value = supplier.get();
+            cache.set(new CacheEntry<>(value, Instant.now(), ttl));
+            return value;
+        } catch (Exception e) {
+            log.warn("Failed to refresh cached fallback value, retaining stale data", e);
+            CacheEntry<T> entry = cache.get();
+            if (entry != null) {
+                return entry.value;
+            }
+            throw new IllegalStateException("Cache refresh failed and no stale value available", e);
+        }
     }
 
     /**
@@ -183,18 +192,21 @@ public class CachedFallback<T> implements FallbackProvider<T> {
 
     /**
      * Internal cache entry with timestamp.
+     * BUG-BE-103: Made static to prevent implicit outer class reference causing memory leak.
      */
-    private class CacheEntry<V> {
+    private static class CacheEntry<V> {
         final V value;
         final Instant timestamp;
+        final Duration entryTtl;
 
-        CacheEntry(V value, Instant timestamp) {
+        CacheEntry(V value, Instant timestamp, Duration ttl) {
             this.value = value;
             this.timestamp = timestamp;
+            this.entryTtl = ttl;
         }
 
         boolean isExpired() {
-            return Duration.between(timestamp, Instant.now()).compareTo(ttl) > 0;
+            return Duration.between(timestamp, Instant.now()).compareTo(entryTtl) > 0;
         }
     }
 }

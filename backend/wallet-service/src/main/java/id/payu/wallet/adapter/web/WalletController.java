@@ -43,6 +43,15 @@ public class WalletController extends BaseController {
         this.walletUseCase = walletUseCase;
     }
 
+    /**
+     * Masks an account ID for safe logging.
+     * e.g., "abcd-1234-efgh" → "abcd****"
+     */
+    private String maskId(String id) {
+        if (id == null || id.length() <= 4) return "****";
+        return id.substring(0, 4) + "****";
+    }
+
     @GetMapping("/{accountId}/balance")
     @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
     @Operation(summary = "Get wallet balance", description = "Retrieve current balance, available balance, and reserved balance for an account")
@@ -53,7 +62,7 @@ public class WalletController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<BalanceResponse>> getBalance(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId) {
-        log.info("Getting balance for account: {}", accountId);
+        log.info("Getting balance for account: {}", maskId(accountId));
 
         Wallet wallet = walletUseCase.getWalletByAccountId(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
@@ -82,7 +91,7 @@ public class WalletController extends BaseController {
     public ResponseEntity<ApiResponse<ReserveBalanceResponse>> reserveBalance(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Valid @RequestBody ReserveBalanceRequest request) {
-        log.info("Reserving {} for account: {}", request.getAmount(), accountId);
+        log.info("Reserving {} for account: {}", request.getAmount(), maskId(accountId));
 
         String reservationId = walletUseCase.reserveBalance(
                 accountId,
@@ -165,7 +174,7 @@ public class WalletController extends BaseController {
     public ResponseEntity<ApiResponse<Map<String, String>>> credit(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Valid @RequestBody CreditRequest request) {
-        log.info("Crediting {} to account: {}", request.getAmount(), accountId);
+        log.info("Crediting {} to account: {}", request.getAmount(), maskId(accountId));
 
         walletUseCase.credit(
                 accountId,
@@ -186,7 +195,7 @@ public class WalletController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<List<LedgerEntry>>> getLedgerEntries(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId) {
-        log.info("Getting ledger entries for account: {}", accountId);
+        log.info("Getting ledger entries for account: {}", maskId(accountId));
         List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByAccountId(accountId);
         return ok(ledgerEntries);
     }
@@ -202,8 +211,13 @@ public class WalletController extends BaseController {
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId) {
         log.info("Getting ledger entries for transaction: {}", transactionId);
-        List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByTransactionId(UUID.fromString(transactionId));
-        return ok(ledgerEntries);
+        try {
+            List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByTransactionId(UUID.fromString(transactionId));
+            return ok(ledgerEntries);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("WALLET_001", "Invalid transaction ID format"));
+        }
     }
 
     @GetMapping("/{accountId}/transactions")
@@ -217,7 +231,7 @@ public class WalletController extends BaseController {
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Parameter(description = "Page number (default: 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default: 20)") @RequestParam(defaultValue = "20") int size) {
-        log.info("Getting transaction history for account: {}", accountId);
+        log.info("Getting transaction history for account: {}", maskId(accountId));
         List<WalletTransaction> transactions = walletUseCase.getTransactionHistory(accountId, page, size);
         return ok(transactions);
     }

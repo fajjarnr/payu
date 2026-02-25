@@ -52,7 +52,6 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
     wsRef.current = ws;
 
     ws.onopen = (event) => {
-      console.log('WebSocket connected');
       reconnectAttemptsRef.current = 0; // reset attempts
       callbacksRef.current.onOpen?.(event);
     };
@@ -72,7 +71,6 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
     };
 
     ws.onclose = (event) => {
-      console.log('WebSocket closed:', event.code, event.reason);
       callbacksRef.current.onClose?.(event);
       
       // Prevent reconnecting if explicitly closed with 1000
@@ -91,7 +89,6 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
 
         // Call connect directly to get fresh closures and handlers (BUG-FE-030)
         reconnectTimeoutRef.current = setTimeout(() => {
-          console.log(`Reconnecting WebSocket after ${backoffMs}ms...`);
           connect();
         }, backoffMs);
       }

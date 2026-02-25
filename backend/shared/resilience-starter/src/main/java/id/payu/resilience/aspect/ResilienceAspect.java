@@ -161,13 +161,28 @@ public class ResilienceAspect {
     }
 
     /**
-     * Initialize event publishers after construction
+     * Initialize event publishers after construction.
+     * BUG-BE-099: Also register dynamic entry handlers for CBs created after init.
      */
     @PostConstruct
     public void init() {
         registerCircuitBreakerEventPublisher();
         registerRetryEventPublisher();
         registerBulkheadEventPublisher();
+
+        // BUG-BE-099: Register handler for dynamically created circuit breakers
+        circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> {
+            var cb = event.getAddedEntry();
+            var ep = cb.getEventPublisher();
+            ep.onStateTransition(e -> log.info("Circuit breaker {} state transition: {} -> {}",
+                    cb.getName(), e.getStateTransition().getFromState(), e.getStateTransition().getToState()));
+            ep.onError(e -> log.error("Circuit breaker {} recorded error: {}",
+                    cb.getName(), e.getThrowable() != null ? e.getThrowable().getMessage() : "Unknown"));
+            ep.onCallNotPermitted(e -> {
+                log.warn("Circuit breaker {} is OPEN - call not permitted", cb.getName());
+                publishAlert("CIRCUIT_BREAKER_OPEN", cb.getName());
+            });
+        });
         registerTimeLimiterEventPublisher();
     }
 }

@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthState>()(
         if (authenticated) {
           set({ isAuthenticated: true });
         } else {
-          set({ user: null, accountId: null, isAuthenticated: false });
+          set({ user: null, accountId: null, isAuthenticated: false, tokenExpiresAt: null });
         }
       },
 

@@ -61,12 +61,15 @@ const processQueue = (error: unknown) => {
   failedQueue = [];
 };
 
+// Track retried requests to prevent infinite retry loops
+const retriedRequests = new WeakSet<object>();
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !retriedRequests.has(originalRequest)) {
       // Queue concurrent requests while a refresh is in-flight
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -74,7 +77,7 @@ api.interceptors.response.use(
         }).then(() => api(originalRequest));
       }
 
-      originalRequest._retry = true;
+      retriedRequests.add(originalRequest);
       isRefreshing = true;
 
       try {

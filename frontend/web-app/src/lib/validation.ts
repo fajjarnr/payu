@@ -55,6 +55,7 @@ export function validateEmail(email: string | null | undefined): {
   isValid: boolean;
   error?: string;
   normalized?: string;
+  suggestion?: string;
 } {
   if (!email) {
     return { isValid: false, error: 'Email wajib diisi' };
@@ -475,8 +476,8 @@ export function validateName(name: string | null | undefined): {
     return { isValid: false, error: 'Nama terlalu panjang (maksimal 100 karakter)' };
   }
 
-  // Check for valid characters (letters, spaces, dots, commas, hyphens)
-  if (!/^[a-zA-Z\s\.\,\-\']+$/.test(trimmed)) {
+  // Check for valid characters (letters, spaces, dots, commas, hyphens, Unicode letters)
+  if (!/^[\p{L}\s.,\-']+$/u.test(trimmed)) {
     return { isValid: false, error: 'Nama hanya boleh mengandung huruf dan karakter spesial tertentu' };
   }
 

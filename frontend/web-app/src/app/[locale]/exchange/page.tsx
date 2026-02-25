@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -68,12 +68,17 @@ export default function ExchangePage() {
     setEstimatedAmount(null);
   }, [fromCurrency, toCurrency, setValue]);
 
+  // BUG-FE-022: Use ref for estimateMutation to avoid infinite loop
+  // (mutation object is new every render, causing useEffect to re-run)
+  const estimateMutationRef = useRef(estimateMutation);
+  useEffect(() => { estimateMutationRef.current = estimateMutation; }, [estimateMutation]);
+
   // Handle amount change with debounce
   useEffect(() => {
     if (amount > 0 && fromCurrency !== toCurrency) {
       const timer = setTimeout(async () => {
         try {
-          const result = await estimateMutation.mutateAsync({
+          const result = await estimateMutationRef.current.mutateAsync({
             fromCurrency,
             toCurrency,
             amount,
@@ -88,7 +93,7 @@ export default function ExchangePage() {
     } else {
       setEstimatedAmount(null);
     }
-  }, [amount, fromCurrency, toCurrency, estimateMutation]);
+  }, [amount, fromCurrency, toCurrency]);
 
   // Calculate converted amount manually if we have the rate
   const manualConvertedAmount = useMemo(() => {

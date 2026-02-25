@@ -78,27 +78,7 @@ export class AccountService {
     return response.data;
   }
 
-  /**
-   * @deprecated Use useAuthStore hook instead to get user data
-   * This method will be removed in a future version
-   */
-  getUserFromStorage(): User | null {
-    // SECURITY: This method is deprecated and returns null
-    // User data should be retrieved from the auth store, not localStorage
-    console.warn('getUserFromStorage() is deprecated. Use useAuthStore hook instead.');
-    return null;
-  }
-
-  /**
-   * @deprecated Use useAuthStore hook instead to get current user
-   * This method will be removed in a future version
-   */
-  getCurrentUser(): User | null {
-    // SECURITY: This method is deprecated and returns null
-    // User data should be retrieved from the auth store, not localStorage
-    console.warn('getCurrentUser() is deprecated. Use useAuthStore hook instead.');
-    return null;
-  }
+  // BUG-FE-025: Deprecated methods removed — use useAuthStore hook instead
 }
 
 export default AccountService.getInstance();

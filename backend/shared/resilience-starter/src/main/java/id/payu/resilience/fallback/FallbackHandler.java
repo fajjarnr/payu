@@ -95,7 +95,8 @@ public class FallbackHandler {
      * @param ex the TimeoutException
      * @return error response map
      */
-    @ExceptionHandler({java.util.concurrent.TimeoutException.class, java.util.concurrent.TimeoutException.class})
+    // BUG-BE-098: Removed duplicate TimeoutException.class (was listed twice)
+    @ExceptionHandler({java.util.concurrent.TimeoutException.class})
     @ResponseStatus(HttpStatus.REQUEST_TIMEOUT)
     public Map<String, Object> handleTimeout(Exception ex) {
         log.warn("Request timeout: {}", ex.getMessage());
@@ -153,12 +154,14 @@ public class FallbackHandler {
      * @param serviceName the name of the service
      * @return error response map
      */
+    // BUG-BE-108: Added timestamp to error responses for debugging
     public static Map<String, Object> getCircuitBreakerOpenResponse(String serviceName) {
         Map<String, Object> response = new HashMap<>();
         response.put("error", "SERVICE_UNAVAILABLE");
         response.put("errorCode", "RES_001");
         response.put("message", "Service '" + serviceName + "' is temporarily unavailable.");
         response.put("retryAfter", "30s");
+        response.put("timestamp", java.time.Instant.now().toString());
         return response;
     }
 
@@ -174,6 +177,7 @@ public class FallbackHandler {
         response.put("errorCode", "RES_003");
         response.put("message", "Service '" + serviceName + "' is currently at capacity.");
         response.put("retryAfter", "5s");
+        response.put("timestamp", java.time.Instant.now().toString());
         return response;
     }
 }

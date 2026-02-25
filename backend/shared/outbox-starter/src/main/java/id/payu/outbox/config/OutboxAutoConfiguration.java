@@ -3,6 +3,7 @@ package id.payu.outbox.config;
 import id.payu.outbox.publisher.OutboxPublisher;
 import id.payu.outbox.repository.OutboxRepository;
 import id.payu.outbox.service.OutboxService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -76,9 +77,9 @@ public class OutboxAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public OutboxService outboxService(OutboxRepository outboxRepository) {
+    public OutboxService outboxService(OutboxRepository outboxRepository, ObjectMapper objectMapper) {
         log.info("Initializing OutboxService with auto-configuration");
-        return new OutboxService(outboxRepository);
+        return new OutboxService(outboxRepository, objectMapper);
     }
 
     /**

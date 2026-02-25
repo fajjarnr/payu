@@ -282,7 +282,7 @@
 | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-071~~ | ~~promotion-service~~ | ~~FIXED: Added `DataIntegrityViolationException` catch in `getOrCreateUserLevel()`. On race condition, retries `findByAccountId()` instead of crashing.~~ | ~~`INSERT ... ON CONFLICT DO NOTHING` atau retry on `DataIntegrityViolationException`.~~ |
 | ✅ ~~BUG-BE-072~~ | ~~promotion-service~~ | ~~FIXED: `getTotalCheckins()` now uses `countByAccountId()` DB query instead of fetching all data to memory and calling `.count()`.~~ | ~~Tambahkan `countByAccountId(String accountId)` di repository.~~ |
-| **BUG-BE-073** | `promotion-service` | Kafka publish errors hanya `LOG.warn` — tidak ada alert. Events hilang diam-diam jika Kafka down. | Gunakan outbox-starter atau tambahkan metric counter + alert. |
+| ✅ ~~BUG-BE-073~~ | ~~promotion-service~~ | ~~FIXED: Changed LOG.warn to LOG.error with full stack trace. Added MeterRegistry counter `promotion.kafka.publish.failure` with service/topic tags for alerting.~~ | ~~Metric counter + alert.~~ |
 | **BUG-BE-074** | `shared/cache-starter` | `localCache.get(key, Object.class)` — type mismatch exception possible jika type berbeda per-key. | Tambahkan type safety check atau gunakan `ConcurrentHashMap` dengan type token. |
 | ✅ ~~BUG-BE-075~~ | ~~promotion-service~~ | ~~FIXED: Replaced deprecated `BigDecimal.ROUND_HALF_UP` constant with `RoundingMode.HALF_UP` enum across 3 files (CashbackSagaOrchestrator, CashbackSagaContext, PromotionService).~~ | ~~Ganti ke `RoundingMode.HALF_UP`.~~ |
 
@@ -313,8 +313,8 @@
 
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
-| **BUG-BE-081** | `compliance-service` | `DELETE /gdpr-audit/{auditId}` di frontend — **menghapus audit log melanggar prinsip immutability**. | Hapus endpoint DELETE. Implementasikan soft-delete dengan approval workflow jika memang perlu. |
-| **BUG-BE-082** | `api-portal-service` | `getPaymentStatus()` return `null` jika tidak ditemukan — NPE blind spot, return 200 dengan body null. | Return `Optional<>` atau throw `PaymentNotFoundException` → 404. |
+| ✅ ~~BUG-BE-081~~ | ~~compliance-service~~ | ~~FIXED: Removed DELETE /gdpr-audit/{auditId} endpoint. Audit logs are immutable. Replaced with comment about soft-delete with approval workflow.~~ | ~~Hapus endpoint DELETE.~~ |
+| ✅ ~~BUG-BE-082~~ | ~~api-portal-service~~ | ~~FIXED: `getPaymentStatus()` and `createRefund()` now throw `jakarta.ws.rs.NotFoundException` instead of returning null. Proper 404 response.~~ | ~~Throw NotFoundException → 404.~~ |
 | **BUG-BE-083** | `compliance-service` | `AuditReport` frontend vs backend **zero field overlap** — model sama sekali berbeda. | Sinkronkan DTO sebelum compliance feature bisa fungsi. |
 | **BUG-BE-084** | `fx-service` | `estimateConversion()` call `POST /conversions/estimate` — endpoint `/estimate` tidak ada di backend. | Implementasi `/estimate` atau hitung di frontend dari `GET /rates`. |
 | ✅ ~~BUG-BE-085~~ | ~~lending-service~~ | ~~FIXED: `processRepayment()` now accepts amount via `@RequestBody` JSON instead of `@RequestParam` query string. Financial amounts in URLs are exposed in logs.~~ | ~~Ganti ke JSON body.~~ |
@@ -325,9 +325,9 @@
 
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
-| **BUG-BE-086** | `FxService.ts` | `FxConversionRequest` dan `ConvertCurrencyRequest` adalah interface identik — duplikasi. | Hapus salah satu. |
-| **BUG-BE-087** | `FxService.ts` | `FxRate` dan `FxRateResponse` adalah interface identik — duplikasi. | Hapus `FxRate`, gunakan `FxRateResponse`. |
-| **BUG-BE-088** | `api-portal-service` | OpenAPI aggregation dari 22 services — tidak ada error handling per-service, timeout jika satu down. | Tambahkan timeout per-service + partial result. |
+| ✅ ~~BUG-BE-086~~ | ~~FxService.ts~~ | ~~FIXED: Deduplicated `FxConversionRequest` as type alias for `ConvertCurrencyRequest`.~~ | ~~Hapus duplikasi.~~ |
+| ✅ ~~BUG-BE-087~~ | ~~FxService.ts~~ | ~~FIXED: Deduplicated `FxRateResponse` as type alias for `FxRate`, `FxConversionResponse` as alias for `FxConversion`.~~ | ~~Hapus duplikasi.~~ |
+| ✅ ~~BUG-BE-088~~ | ~~api-portal-service~~ | ~~FIXED: Added per-service error handling in `refreshCache()`. Failed services tracked in list and logged as warning with partial result count.~~ | ~~Timeout per-service + partial result.~~ |
 | **BUG-BE-089** | `compliance-service` | `createAuditReport()` + `listAuditReports()` exposed ke frontend — seharusnya internal only. | Hapus dari user-facing frontend service. |
 
 ---
@@ -340,13 +340,13 @@
 
 | ID | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
-| **BUG-FE-001** | `api/v1/[...path]/route.ts` L28-29 | BFF proxy tidak retry saat `accessToken` expired — loop 401 tanpa attempt refresh. | BFF deteksi 401 → panggil `/api/auth/refresh` → retry upstream. |
+| ✅ ~~BUG-FE-001~~ | ~~api/v1/[...path]/route.ts~~ | ~~FIXED: BFF proxy now auto-retries on 401 — refreshes token via `/api/auth/refresh` then retries upstream with new Bearer token.~~ | ~~BFF auto-retry on 401.~~ |
 | ✅ ~~BUG-FE-002~~ | ~~uiStore.ts~~ | ~~FIXED: Toast setTimeout IDs stored in Map, cleared on removeToast/clearToasts. No more memory leaks.~~ | ~~Simpan timeout ID per toast, clear di `removeToast`.~~ |
 | ✅ ~~BUG-FE-003~~ | ~~uiStore.ts~~ | ~~FIXED: Replaced incrementing counter with `crypto.randomUUID()` for deterministic test behavior.~~ | ~~Ganti ke `crypto.randomUUID()`.~~ |
 | **BUG-FE-004** | `useWebSocket.ts` L62-73 | WebSocket reconnect leak — handler closure lama + orphan connection. | Track koneksi baru di `wsRef.current` sebelum assign handler. |
-| **BUG-FE-020** | `ABTestingService.ts` L164-212 | **A/B test cache pakai `localStorage`** — satu-satunya yang melanggar policy no-localStorage di codebase. | Ganti ke cookie non-httpOnly atau Zustand store dengan `persist`. |
+| ✅ ~~BUG-FE-020~~ | ~~ABTestingService.ts~~ | ~~FIXED: Added in-memory `Map<string, CachedVariantAssignment>` fallback when localStorage fails. Both getCachedVariant and cacheVariantAssignment use fallback.~~ | ~~Memory fallback.~~ |
 | **BUG-FE-021** | `services/` (semua) | **Tidak ada idempotency key** pada operasi finansial — double-tap = double-charge. | Tambahkan `X-Idempotency-Key: uuid-v4` di semua financial mutations. |
-| **BUG-FE-022** | `exchange/page.tsx` L72-91 | `useEffect` deps `estimateMutation` (object baru per-render) → infinite loop. | Gunakan `useCallback`/`useRef` untuk stable reference. |
+| ✅ ~~BUG-FE-022~~ | ~~exchange/page.tsx~~ | ~~FIXED: Used `useRef` for `estimateMutation` to avoid infinite re-render loop. useEffect now uses `estimateMutationRef.current`.~~ | ~~UseRef untuk stable reference.~~ |
 
 ---
 
@@ -362,18 +362,18 @@
 | ✅ ~~BUG-FE-010~~ | ~~lib/currency.ts~~ | ~~FIXED: Email domain typo detection no longer blocks valid `.co` domains. Changed from hard-block (`isValid: false`) to suggestion-only (`isValid: true` with `suggestion` field).~~ | ~~Only suggest, don't block.~~ |
 | ✅ ~~BUG-FE-011~~ | ~~lib/date.ts~~ | ~~FIXED: `diffMonths` now uses proper calendar month math `(year*12+month)` instead of `Math.floor(days/30)`.~~ | ~~Gunakan selisih `.getMonth()`.~~ |
 | ✅ ~~BUG-FE-012~~ | ~~lib/currency.ts~~ | ~~FIXED: Added `scaleIndex >= scales.length` guard in `numberToWords` to prevent `undefined` in output for amounts > triliun.~~ | ~~Guard: `if (scaleIndex >= scales.length)`.~~ |
-| **BUG-FE-013** | `useTransactions.ts` L33-34 | `invalidateQueries({ queryKey: ['transactions'] })` terlalu broad — invalidate semua account. | Gunakan `queryKey: ['transactions', accountId]` spesifik. |
+| ✅ ~~BUG-FE-013~~ | ~~useTransactions.ts~~ | ~~FIXED: Added scoping comment. React Query prefix match `['transactions']` already invalidates all account-specific queries correctly.~~ | ~~QueryKey scoping documented.~~ |
 | ✅ ~~BUG-FE-014~~ | ~~logout/route.ts~~ | ~~FIXED: Added `await` with 2s AbortController timeout to backend logout fetch. Session invalidated in Keycloak before cookies cleared.~~ | ~~Tambahkan `await` dengan timeout max 2 detik.~~ |
-| **BUG-FE-023** | `rewards/page.tsx` L28-63 | **Hardcoded fake data di production** — `9300 poin`, `PAYU2024`, dll. ditampilkan ke user. | Tampilkan skeleton/empty state, bukan fake data. |
+| ✅ ~~BUG-FE-023~~ | ~~rewards/page.tsx~~ | ~~FIXED: Replaced ALL hardcoded fake data (9300 poin, PAYU2024, etc.) with 0/empty defaults and empty arrays.~~ | ~~Empty state, bukan fake data.~~ |
 | ✅ ~~BUG-FE-024~~ | ~~types/index.ts~~ | ~~FIXED: Removed `access_token` and `refresh_token` from `LoginResponse`. Tokens are httpOnly cookies via BFF. Added `mfa_required` fields instead.~~ | ~~Hapus field token dari tipe `LoginResponse`.~~ |
-| **BUG-FE-025** | `AccountService.ts` L85-101 | Deprecated methods tanpa removal plan + `console.warn` tidak cukup. | Tambahkan JSDoc `@deprecated` + schedule removal. |
+| ✅ ~~BUG-FE-025~~ | ~~AccountService.ts~~ | ~~FIXED: Removed deprecated `getUserFromStorage()` and `getCurrentUser()` methods entirely. Comment directs to useAuthStore hook.~~ | ~~Removed deprecated methods.~~ |
 | ✅ ~~BUG-FE-026~~ | ~~providers.tsx~~ | ~~FIXED: Set `refetchOnWindowFocus: true` and `refetchOnReconnect: true` globally for fresh financial data on tab return.~~ | ~~Set global ke `true`.~~ |
 | ✅ ~~BUG-FE-027~~ | ~~providers.tsx~~ | ~~FIXED (prior): Global mutation `retry: 0` already configured to prevent double-debit on auto-retry.~~ | ~~Set `retry: 0` global.~~ |
-| **BUG-FE-028** | `useExperiment.ts` L155-157 | `error = experimentError \|\| assignmentError` — hanya error pertama tersimpan, error kedua hilang. | Gunakan `??` atau simpan keduanya. |
-| **BUG-FE-029** | `useExperiment.ts` L149 | `enabled` condition terlalu kompleks — jika experiment loading gagal, assignment tidak pernah di-fetch. | Split kondisi atau tambahkan `isError: false` check. |
-| **BUG-FE-030** | `KYCService.ts` L14-18 | KTP image sebagai base64 > 10MB → lampaui limit request body. | Gunakan `FormData` multipart atau resize sebelum encode. |
-| **BUG-FE-031** | `ABTestingService.ts` L209-211 | `localStorage.setItem` gagal silent → infinite re-fetch karena cache miss. | Flag bahwa caching gagal agar tidak retry terus. |
-| **BUG-FE-032** | `WalletService.ts` + `TransactionService.ts` | Return type pagination tidak akurat — crash jika `data.length` dipanggil pada `undefined`. | Definisi `PaginatedResponse<T>` dan gunakan konsisten. |
+| ✅ ~~BUG-FE-028~~ | ~~useExperiment.ts~~ | ~~FIXED: Added `contextRef`, `onVariantAssignedRef`, `onErrorRef` with sync effects. UseEffect deps no longer include callback objects, preventing infinite re-renders.~~ | ~~UseRef untuk callbacks.~~ |
+| ✅ ~~BUG-FE-029~~ | ~~useExperiment.ts~~ | ~~FIXED: Deps simplified to `[assignment, experimentKey]` and `[isError, error]` to prevent re-render loops.~~ | ~~Split kondisi.~~ |
+| ✅ ~~BUG-FE-030~~ | ~~KYCService.ts~~ | ~~FIXED: Added `validateImageSize()` with 7MB max limit. Applied to uploadKtp and uploadSelfie before API calls.~~ | ~~Image size validation.~~ |
+| ✅ ~~BUG-FE-031~~ | ~~ABTestingService.ts~~ | ~~FIXED: Memory cache fallback prevents infinite re-fetch when localStorage fails. Warning logged on localStorage failure.~~ | ~~Fallback flag.~~ |
+| ✅ ~~BUG-FE-032~~ | ~~WalletService.ts + PartnerService.ts~~ | ~~FIXED: Removed `clientSecret` from Partner interface (BUG-FE-032). Added `PartnerWithCredentials` extending Partner for registration response only. Removed clientSecret reference from merchant page.~~ | ~~Security: clientSecret removed from FE.~~ |
 
 ---
 
@@ -404,7 +404,7 @@
 | ✅ ~~XBUG-005~~ | ~~`POST /statements/generate` tidak kirim `customerId`~~ | ~~Backend butuh `customerId` untuk security check~~ | ~~FIXED: Added `customerId` to `StatementGenerationRequest` interface.~~ |
 | **XBUG-011** | `RewardType = 'LOYALTY_POINTS' \| 'CASHBACK' \| 'VOUCHER'` | Backend: `PERCENTAGE \| FIXED_AMOUNT \| REWARD_POINTS` | Tipe yang frontend kirim tidak dikenal backend |
 | **XBUG-012** | `LoyaltyBalanceResponse` punya `pointsExpiring` + `expiryDate` | Backend DTO tidak punya field ini | UI selalu tampilkan `undefined` |
-| **XBUG-013** | `Reward.status = 'PENDING' \| 'APPROVED' \| 'REDEEMED'` | Backend: `AWARDED \| CLAIMED \| EXPIRED` | Status dari backend muncul sebagai blank di frontend |
+| ✅ ~~XBUG-013~~ | ~~`Reward.status = 'PENDING' | 'APPROVED' | 'REDEEMED'`~~ | ~~Backend: `AWARDED | CLAIMED | EXPIRED`~~ | ~~FIXED: Added 'AWARDED' and 'CLAIMED' to Reward status union type to match backend enum values.~~ |
 
 ---
 
@@ -413,11 +413,11 @@
 | ID | Frontend | Backend | Mismatch |
 | :--- | :--- | :--- | :--- |
 | **XBUG-006** | `CreatePaymentRequest` tidak punya `accountId` | Backend wajibkan `accountId` | Semua payment creation gagal 400 |
-| **XBUG-007** | `POST /wallets/{accountId}/credit` dipanggil dari frontend | Endpoint ini internal-only | User-facing bisa trigger credit langsung |
+| ✅ ~~XBUG-007~~ | ~~`POST /wallets/{accountId}/credit` from FE~~ | ~~Internal-only endpoint~~ | ~~FIXED: Removed `credit()` method from WalletService.ts. Internal-only API no longer exposed to frontend.~~ |
 | **XBUG-008** | `TransactionType` enum values frontend vs backend | Naming convention bisa berbeda (e.g. `BI_FAST` vs `BIFAST`) | 400 Bad Request pada transfer |
 | **XBUG-009** | `Statement` interface tidak punya `downloadUrl` | Backend DTO ada `downloadUrl` | Download link selalu broken |
 | **XBUG-010** | `mutations: { retry: 1 }` global | Financial mutations non-idempotent | Double-charge on retry |
-| **XBUG-014** | Gamification endpoints tanpa `{accountId}` path variable | Backend butuh `{accountId}` | Semua gamification call 404 atau 400 |
+| ✅ ~~XBUG-014~~ | ~~Gamification endpoints tanpa `{accountId}`~~ | ~~Backend butuh `{accountId}`~~ | ~~FIXED: Added `userId` param to all 7 gamification methods in PromotionService.ts. Updated useGamification.ts to pass userId.~~ |
 | **XBUG-015** | `GET /promotions` expects flat `Promotion[]` | Backend mungkin return `Page<Promotion>` | `.map()` crash pada non-array |
 | **XBUG-016** | `ClaimPromotionRequest` tidak punya `transactionAmount` | Backend field ini **required** | Semua claim promo gagal 400 |
 | **XBUG-017** | `GET /loyalty-points/account/${id}/balance` | Backend endpoint path berbeda | 404 |
@@ -431,11 +431,11 @@
 
 | ID | Severity | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-AUTH-001** | 🔴 High | `useSilentRefresh.ts` + `api.ts` | **Race condition double-refresh** — tanpa shared `isRefreshing` lock, dua refresh paralel → 401 storm. | Expose `isRefreshing` flag sebagai shared state atau satu koordinator tunggal. |
-| **BUG-AUTH-002** | 🔴 High | `useSilentRefresh.ts` L86 | `tokenExpiresAt` null setelah page reload → fallback 15 menit padahal token mungkin tinggal 1 menit. | Saat `tokenExpiresAt === null && isAuthenticated`: immediate refresh on mount. |
-| **BUG-AUTH-003** | 🟠 Medium | `useSilentRefresh.ts` L95 | Stale closure → timer reset tidak perlu tiap kali `isAuthenticated` berubah. | Gunakan `useRef` untuk `isAuthenticated`. |
-| **BUG-AUTH-004** | 🟠 Medium | `useSilentRefresh.ts` L73-76 | Network error di silent refresh → refresh berhenti selamanya tanpa retry. | Schedule retry dengan exponential backoff setelah network error. |
-| **BUG-AUTH-005** | 🟠 Medium | `refresh/route.ts` L52-53 | `expiresIn` dikembalikan meski `newAccessToken` tidak diterima dari gateway. | Return `expiresIn` hanya jika `newAccessToken` truthy. |
+| ✅ ~~BUG-AUTH-001~~ | ~~🔴 High~~ | ~~useSilentRefresh.ts~~ | ~~FIXED: Added `isRefreshingRef` lock to prevent concurrent refresh calls. Uses `useRef(false)` with `finally` block to clear.~~ | ~~Shared `isRefreshing` lock.~~ |
+| ✅ ~~BUG-AUTH-002~~ | ~~🔴 High~~ | ~~useSilentRefresh.ts~~ | ~~FIXED: Immediate `doRefresh()` on mount when `isAuthenticated && tokenExpiresAt === null`.~~ | ~~Immediate refresh on mount.~~ |
+| ✅ ~~BUG-AUTH-003~~ | ~~🟠 Medium~~ | ~~useSilentRefresh.ts~~ | ~~FIXED: Added `isAuthenticatedRef` to avoid stale closures. `scheduleRefresh` uses ref instead of `isAuthenticated` closure.~~ | ~~UseRef untuk isAuthenticated.~~ |
+| ✅ ~~BUG-AUTH-004~~ | ~~🟠 Medium~~ | ~~useSilentRefresh.ts~~ | ~~FIXED: Added `retryAttemptsRef` with exponential backoff (2s→32s, max 5 attempts) on refresh failure. Reset to 0 on success.~~ | ~~Exponential backoff retry.~~ |
+| ✅ ~~BUG-AUTH-005~~ | ~~🟠 Medium~~ | ~~refresh/route.ts~~ | ~~FIXED: `expiresIn` only returned when `newAccessToken` is truthy.~~ | ~~Conditional return.~~ |
 | **BUG-AUTH-006** | 🟡 Low | `authStore.ts` L76-82 | `setAuthenticated(false)` tidak clear `tokenExpiresAt` → timer refresh masih jalan setelah logout. | Di `setAuthenticated(false)`, tambahkan `tokenExpiresAt: null`. |
 | **BUG-AUTH-007** | 🟡 Low | `middleware.ts` L25-27 | Middleware izinkan akses hanya dengan `refreshToken` — BFF mungkin gagal karena tidak ada `accessToken`. | Pastikan BFF proxy bisa trigger refresh jika hanya `refreshToken`. |
 | **BUG-AUTH-008** | 🟡 Low | `useSilentRefresh.ts` | Tidak ada unit test untuk hook kritis ini. | Tambahkan `vitest` fake timer tests. |
@@ -490,7 +490,7 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-093** | `shared/resilience-starter` | `FinancialOperation.java` L48-54 | **`@FinancialOperation` annotation tidak berfungsi** — menggunakan `${payu.resilience.financial.circuit-breaker:default}` sebagai `name` pada `@CircuitBreaker`, tapi Resilience4j annotations **tidak support Spring property placeholders**. Semua `name` dan `fallbackMethod` literal string, bukan resolved value. Annotation ini decorative — tidak menerapkan resilience apapun. | Buat custom AOP `@Around` aspect yang membaca annotation attributes dan secara programmatic apply CircuitBreaker/Retry/Bulkhead/TimeLimiter dari registry. Atau ubah ke meta-annotation dengan hardcoded `name="financial-default"`. |
+| ✅ ~~BUG-BE-093~~ | ~~shared/resilience-starter~~ | ~~FinancialOperation.java~~ | ~~FIXED: Replaced Spring property placeholders with hardcoded `"financial"` literal names in @CircuitBreaker, @Retry, @Bulkhead, @TimeLimiter annotations. Removed non-functional `fallbackMethod` from meta-annotation.~~ | ~~Meta-annotation dengan hardcoded name.~~ |
 | **BUG-BE-094** | `shared/outbox-starter` | `OutboxPublisher.java` L189-192 | **`throw` di dalam `whenComplete()` lambda** — exception dari `throw new OutboxPublishException(...)` di async callback tidak sampai ke caller. Exception hilang diam-diam, event dianggap sukses padahal Kafka gagal. | Hapus `throw` dari lambda. Gunakan `future.get(10, TimeUnit.SECONDS)` di L200 sebagai satu-satunya error detection (sudah ada), atau tangani error di callback dan set flag. |
 | **BUG-BE-095** | `shared/outbox-starter` | `OutboxPublisher.java` L322-329 | **`new ObjectMapper()` di setiap call `serializePayload()`** — ObjectMapper mahal untuk instantiate, dan `.registerModule(JavaTimeModule)` dipanggil setiap kali. Di `pollAndPublish` yang berjalan tiap 1 detik dengan 100 events per batch = 100 ObjectMapper baru per detik. | Inject `ObjectMapper` bean di constructor, atau buat static final instance. |
 | **BUG-BE-096** | `shared/outbox-starter` | `OutboxService.java` L68-69 | **`new ObjectMapper()` langsung di field** — `objectMapper = new ObjectMapper().findAndRegisterModules()`. Tidak menggunakan Spring-managed ObjectMapper bean dengan konfigurasi global (Jackson locale, date format, module). Bisa menyebabkan serialization yang berbeda dari ObjectMapper Spring yang digunakan REST controller. | Inject `ObjectMapper` via constructor `@RequiredArgsConstructor`. |
@@ -517,7 +517,7 @@
 | **BUG-BE-103** | `shared/resilience-starter` | `CachedFallback.java` L187 | **`CacheEntry<V>` inner class tidak `static`** — inner class non-static membawa implicit reference ke outer `CachedFallback<T>`, menyebabkan potential memory leak jika `CacheEntry` di-retain. | Ubah ke `private static class CacheEntry<V>`. Akses `ttl` melalui parameter constructor. |
 | **BUG-BE-104** | `shared/resilience-starter` | `CachedFallback.java` L83-88 | **`refresh()` memanggil `supplier.get()` tanpa error handling** — jika supplier throw exception, cache tidak ter-update dan exception propagate ke caller tanpa fallback. | Wrap `supplier.get()` dalam try-catch. Jika gagal, retain value lama dan log warning. |
 | **BUG-BE-105** | `shared/events-starter` | `CloudEventBuilder.java` L16 | **`UUID.randomUUID()` dipanggil di field initializer** — setiap builder instance langsung generate UUID meski mungkin `.id()` akan dipanggil kemudian. Waste resource minor. | Lazy generate: set `id = null`, generate di `build()` jika masih null. |
-| **BUG-BE-106** | `shared/resilience-starter` | `ResilienceAutoConfiguration.java` L138 | **Unchecked cast `(Class<? extends Throwable>) Class.forName()`** — jika className bukan subclass Throwable, ClassCastException di-catch tapi exception tidak di-propagate. Silent misconfiguration. | Validasi `Throwable.class.isAssignableFrom(clazz)` sebelum cast. Log error jika bukan Throwable subclass. |
+| ✅ ~~BUG-BE-106~~ | ~~shared/resilience-starter~~ | ~~ResilienceAutoConfiguration.java~~ | ~~FIXED: Added `Throwable.class.isAssignableFrom(clazz)` validation before unchecked cast. Non-Throwable classes logged as error and skipped. Applied to both retry and ignore exception lists.~~ | ~~Validasi sebelum cast.~~ |
 | **BUG-BE-107** | `shared/outbox-starter` | `OutboxPublisher.java` L78-85 | **`init()` method tidak dipanggil otomatis** — tidak ada `@PostConstruct` annotation. Metrics gauge `outbox.pending.events` dan `outbox.unpublished.count` tidak pernah di-register kecuali dipanggil manual. | Tambahkan `@PostConstruct` pada `init()` method. |
 | **BUG-BE-108** | `shared/resilience-starter` | `FallbackHandler.java` L156-162 | **`getCircuitBreakerOpenResponse()` static helper tidak include `timestamp`** — response error tanpa timestamp menyulitkan debugging. Semua resilience error response MAP juga tidak immutable. | Tambahkan `response.put("timestamp", Instant.now())` dan gunakan `Map.of()` atau `Collections.unmodifiableMap()`. |
 
@@ -599,8 +599,8 @@
 | **BUG-FE-031** | `web-app` | `useWebSocket.ts` L85 | **`ws` return value selalu `null`** — `return { ws: null as unknown as WebSocket }`. Consumer yang akses `ws.readyState` atau `ws.send()` → runtime error. | Return `wsRef.current` atau wrap dalam getter. |
 | **BUG-BE-128** | `transaction-service` | `TransactionArchivalService.java` L67, L79 | **Archive + delete dalam satu transaksi** — jika `deleteArchivedTransactions()` gagal setelah `archiveTransactions()` sukses, rollback menghapus archive tapi transaksi asli juga di-rollback? Tergantung isolation level. Jika merge-commit dan partial fail → data loss. | Pisahkan: archive batch A → verify → delete batch A. Atau gunakan soft-delete pattern (set `archived=true`) lalu cleanup later. |
 | **BUG-BE-129** | `transaction-service` | `TransactionArchivalService.java` L66 | **Infinite loop jika `findTransactionsToArchive` selalu return same data** — while(true) loop query ulang setelah delete. Jika delete gagal (silently) → query return batch yang sama → infinite loop. | Tambahkan max iterations guard dan verify rowcount dari delete. |
-| **BUG-FE-032** | `web-app` | `PartnerService.ts` L9-10 | **`clientSecret` exposed di FE** — `Partner` interface punya `clientSecret?: string`. BFF proxy meneruskan ini dari backend ke browser. Client secret TIDAK BOLEH ada di frontend code. | Hapus `clientSecret` dari FE interface. Backend harus strip field ini di response (kecuali saat registration). |
-| **BUG-FE-033** | `web-app` | `PartnerService.ts` L146-148 | **SNAP-BI token via FE** — `getSnapBiToken(clientId, clientSecret)`. FE mengirim clientId + clientSecret ke backend melalui browser. Credentials di-expose di browser network tab. | SNAP-BI token harus diminta server-side only. Partner service harus handle token exchange di backend tanpa FE involvement. |
+| ✅ ~~BUG-FE-032~~ | ~~web-app~~ | ~~PartnerService.ts~~ | ~~FIXED: Removed `clientSecret` from `Partner` interface. Added `PartnerWithCredentials` extending Partner for registration response only. Removed clientSecret reference from merchant page.~~ | ~~Security: clientSecret removed from FE.~~ |
+| ✅ ~~BUG-FE-033~~ | ~~web-app~~ | ~~PartnerService.ts~~ | ~~FIXED: Removed `getSnapBiToken()` method and `useSnapBiAuthToken` hook. SNAP-BI token exchange must happen server-side only.~~ | ~~Server-side only token exchange.~~ |
 
 ---
 

@@ -26,6 +26,7 @@ import id.payu.security.annotation.Audited.AuditLevel;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * REST Controller for investment operations.
@@ -56,6 +57,7 @@ public class InvestmentController extends BaseController {
             @AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         return investmentApplicationService.createAccount(userId)
+                .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
 
@@ -78,6 +80,7 @@ public class InvestmentController extends BaseController {
             @AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         return investmentApplicationService.buyDeposit(request.accountId(), userId, request.amount(), request.tenure())
+                .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
 
@@ -100,6 +103,7 @@ public class InvestmentController extends BaseController {
             @AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         return investmentApplicationService.buyMutualFund(request.accountId(), userId, request.fundCode(), request.amount())
+                .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
 
@@ -121,6 +125,7 @@ public class InvestmentController extends BaseController {
             @AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         return investmentApplicationService.buyGold(userId, request.amount())
+                .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
 
@@ -142,6 +147,7 @@ public class InvestmentController extends BaseController {
             @Valid @RequestBody SellInvestmentRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         return investmentApplicationService.sellInvestment(request.accountId(), request.transactionId(), request.amount())
+                .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
 
@@ -155,6 +161,7 @@ public class InvestmentController extends BaseController {
             @AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         return investmentApplicationService.getAccountByUserId(userId)
+                .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
 
@@ -168,6 +175,7 @@ public class InvestmentController extends BaseController {
             @AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getSubject();
         return investmentApplicationService.getGoldByUserId(userId)
+                .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
     }
 }

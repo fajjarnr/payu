@@ -86,6 +86,8 @@ export class ABTestingService {
   private static instance: ABTestingService;
   private readonly CACHE_PREFIX = 'ab_test_';
   private readonly CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+  // BUG-FE-020/031: In-memory fallback when localStorage is unavailable or full
+  private readonly memoryCache = new Map<string, CachedVariantAssignment>();
 
   private constructor() {}
 
@@ -164,6 +166,11 @@ export class ABTestingService {
       const cached = localStorage.getItem(cacheKey);
 
       if (!cached) {
+        // BUG-FE-031: Check in-memory fallback
+        const memoryCached = this.memoryCache.get(cacheKey);
+        if (memoryCached && new Date(memoryCached.expiresAt) >= new Date()) {
+          return memoryCached.variantKey;
+        }
         return null;
       }
 
@@ -172,11 +179,18 @@ export class ABTestingService {
       // Check if expired
       if (new Date(assignment.expiresAt) < new Date()) {
         localStorage.removeItem(cacheKey);
+        this.memoryCache.delete(cacheKey);
         return null;
       }
 
       return assignment.variantKey;
     } catch {
+      // BUG-FE-031: Fall back to memory cache on localStorage error
+      const cacheKey = this.CACHE_PREFIX + experimentKey;
+      const memoryCached = this.memoryCache.get(cacheKey);
+      if (memoryCached && new Date(memoryCached.expiresAt) >= new Date()) {
+        return memoryCached.variantKey;
+      }
       return null;
     }
   }
@@ -206,8 +220,19 @@ export class ABTestingService {
       };
 
       localStorage.setItem(cacheKey, JSON.stringify(cached));
+      // BUG-FE-031: Also store in memory as fallback
+      this.memoryCache.set(cacheKey, cached);
     } catch (error) {
-      console.error('Failed to cache variant assignment:', error);
+      // BUG-FE-031: On localStorage failure, use memory cache to prevent infinite re-fetch
+      const cacheKey = this.CACHE_PREFIX + experimentKey;
+      const expiresAt = new Date(Date.now() + this.CACHE_TTL_MS).toISOString();
+      this.memoryCache.set(cacheKey, {
+        variantKey: assignment.variantKey,
+        experimentKey: assignment.experimentKey,
+        assignedAt: assignment.assignedAt,
+        expiresAt,
+      });
+      console.warn('localStorage unavailable for AB test cache, using in-memory fallback');
     }
   }
 

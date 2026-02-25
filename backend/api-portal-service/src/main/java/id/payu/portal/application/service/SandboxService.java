@@ -60,7 +60,7 @@ public class SandboxService {
                 SandboxPaymentResponse payment = paymentStore.get(paymentReferenceNo);
                 if (payment == null) {
                     Log.warnf("Sandbox: Payment not found: %s", paymentReferenceNo);
-                    return null;
+                    throw new jakarta.ws.rs.NotFoundException("Payment not found: " + paymentReferenceNo);
                 }
                 
                 return new SandboxPaymentStatusResponse(
@@ -80,7 +80,7 @@ public class SandboxService {
                 SandboxPaymentResponse originalPayment = paymentStore.get(paymentReferenceNo);
                 if (originalPayment == null) {
                     Log.warnf("Sandbox: Original payment not found for refund: %s", paymentReferenceNo);
-                    return null;
+                    throw new jakarta.ws.rs.NotFoundException("Original payment not found: " + paymentReferenceNo);
                 }
                 
                 String refundReferenceNo = request.refundReferenceNo();

@@ -198,7 +198,7 @@ export interface ScheduledTransfer {
   amount: number;
   currency: string;
   description: string;
-  frequency: 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  frequency: 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
   startDate: string;
   endDate?: string;
   nextExecutionDate: string;
@@ -213,7 +213,7 @@ export interface CreateScheduledTransferRequest {
   amount: number;
   currency?: string;
   description: string;
-  frequency: 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  frequency: 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
   startDate: string;
   endDate?: string;
 }
@@ -227,7 +227,7 @@ export interface SplitBill {
   totalAmount: number;
   currency: string;
   splitType: 'EQUAL' | 'CUSTOM' | 'PERCENTAGE';
-  status: 'DRAFT' | 'ACTIVE' | 'SETTLED' | 'CANCELLED';
+  status: 'DRAFT' | 'ACTIVE' | 'IN_PROGRESS' | 'COMPLETED' | 'SETTLED' | 'CANCELLED';
   participants: SplitBillParticipant[];
   createdAt: string;
   updatedAt: string;

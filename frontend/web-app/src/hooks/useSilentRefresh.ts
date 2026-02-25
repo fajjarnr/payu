@@ -40,6 +40,11 @@ export function useSilentRefresh() {
   const { setAuthenticated, setTokenExpiry, logout } = useAuthStore();
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // BUG-AUTH-001: Shared lock to prevent concurrent refresh calls
+  const isRefreshingRef = useRef(false);
+  // BUG-AUTH-003: Use ref for isAuthenticated to avoid stale closures
+  const isAuthenticatedRef = useRef(isAuthenticated);
+  useEffect(() => { isAuthenticatedRef.current = isAuthenticated; }, [isAuthenticated]);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -53,6 +58,9 @@ export function useSilentRefresh() {
    * Returns true on success, false on failure (session expired).
    */
   const doRefresh = useCallback(async (): Promise<boolean> => {
+    // BUG-AUTH-001: Prevent two concurrent refresh requests
+    if (isRefreshingRef.current) return false;
+    isRefreshingRef.current = true;
     try {
       const res = await fetch('/api/auth/refresh', {
         method: 'POST',
@@ -71,34 +79,50 @@ export function useSilentRefresh() {
       setTokenExpiry(Date.now() + expiresIn * 1000);
       return true;
     } catch {
-      // Network error — don't log out, retry will happen on next schedule
+      // Network error — don't log out, retry will happen via backoff
       return false;
+    } finally {
+      isRefreshingRef.current = false;
     }
   }, [logout, setAuthenticated, setTokenExpiry]);
+
+  // BUG-AUTH-004: Retry counter for exponential backoff on failure
+  const retryAttemptsRef = useRef(0);
+  const MAX_RETRY_ATTEMPTS = 5;
 
   /** Schedule the next proactive refresh */
   const scheduleRefresh = useCallback((expiresAt: number | null) => {
     clearTimer();
 
-    if (!isAuthenticated) return;
+    if (!isAuthenticatedRef.current) return;
 
     const now = Date.now();
     const effectiveExpiry = expiresAt ?? now + DEFAULT_TOKEN_LIFETIME_MS;
     const delay = Math.max(effectiveExpiry - now - REFRESH_MARGIN_MS, 0);
 
     timerRef.current = setTimeout(async () => {
-      await doRefresh();
-      // After refresh, the store's tokenExpiresAt will have been updated by
-      // setTokenExpiry above \u2014 the useEffect watching tokenExpiresAt will
-      // automatically reschedule the next refresh.
+      const success = await doRefresh();
+      if (success) {
+        retryAttemptsRef.current = 0;
+      } else if (isAuthenticatedRef.current && retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
+        // BUG-AUTH-004: Exponential backoff retry (2s, 4s, 8s, 16s, 32s)
+        const backoffMs = Math.min(2000 * Math.pow(2, retryAttemptsRef.current), 32000);
+        retryAttemptsRef.current += 1;
+        timerRef.current = setTimeout(() => scheduleRefresh(null), backoffMs);
+      }
     }, delay);
-  }, [clearTimer, doRefresh, isAuthenticated]);
+  }, [clearTimer, doRefresh]);
 
   // Schedule/reschedule whenever tokenExpiresAt or isAuthenticated changes
   useEffect(() => {
+    // BUG-AUTH-002: Immediate refresh on mount if authenticated but tokenExpiresAt is null
+    if (isAuthenticated && tokenExpiresAt === null) {
+      doRefresh();
+      return;
+    }
     scheduleRefresh(tokenExpiresAt);
     return clearTimer;
-  }, [tokenExpiresAt, isAuthenticated, scheduleRefresh, clearTimer]);
+  }, [tokenExpiresAt, isAuthenticated, scheduleRefresh, clearTimer, doRefresh]);
 
   // Eager refresh when the user returns to the tab
   useEffect(() => {

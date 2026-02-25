@@ -22,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -43,6 +45,21 @@ public class BackofficeController extends BaseController {
     private final FraudCaseService fraudCaseService;
     private final CustomerCaseService customerCaseService;
     private final UniversalSearchService universalSearchService;
+
+    /**
+     * Resolves admin user identity from X-Admin-User header or authenticated principal.
+     * Never falls back to "system" — requires traceable identity for audit trail.
+     */
+    private String resolveAdminUser(String headerAdminUser) {
+        if (headerAdminUser != null && !headerAdminUser.isEmpty()) {
+            return headerAdminUser;
+        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null) {
+            return auth.getName();
+        }
+        return "unknown-admin";
+    }
 
     // ==================== KYC Review Endpoints ====================
 
@@ -156,7 +173,7 @@ public class BackofficeController extends BaseController {
                     content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
             )
     })
-    public List<KycReviewResponse> listKycReviews(
+    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<List<KycReviewResponse>>> listKycReviews(
             @Parameter(
                     description = "Filter by status (PENDING, UNDER_REVIEW, APPROVED, REJECTED, REQUIRES_ADDITIONAL_INFO)",
                     example = "PENDING"
@@ -172,17 +189,24 @@ public class BackofficeController extends BaseController {
                     example = "20"
             )
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        if (status != null && !status.isEmpty()) {
-            var kycStatus = KycReview.KycStatus.valueOf(status.toUpperCase());
-            return kycReviewService.listByStatus(kycStatus, page, size)
-                    .stream()
-                    .map(KycReviewResponse::from)
-                    .toList();
+        try {
+            List<KycReviewResponse> results;
+            if (status != null && !status.isEmpty()) {
+                var kycStatus = KycReview.KycStatus.valueOf(status.toUpperCase());
+                results = kycReviewService.listByStatus(kycStatus, page, size)
+                        .stream()
+                        .map(KycReviewResponse::from)
+                        .toList();
+            } else {
+                results = kycReviewService.listAll(page, size)
+                        .stream()
+                        .map(KycReviewResponse::from)
+                        .toList();
+            }
+            return ok(results);
+        } catch (IllegalArgumentException e) {
+            return badRequest("Invalid status value: " + status);
         }
-        return kycReviewService.listAll(page, size)
-                .stream()
-                .map(KycReviewResponse::from)
-                .toList();
     }
 
     @PostMapping("/kyc-reviews/{id}/review")
@@ -222,10 +246,8 @@ public class BackofficeController extends BaseController {
                     example = "admin-123"
             )
             @RequestHeader(value = "X-Admin-User", required = false) String adminUser) {
-        if (adminUser == null || adminUser.isEmpty()) {
-            adminUser = "system";
-        }
-        var review = kycReviewService.review(id, request, adminUser);
+        var resolvedAdmin = resolveAdminUser(adminUser);
+        var review = kycReviewService.review(id, request, resolvedAdmin);
         return ok(KycReviewResponse.from(review));
     }
 
@@ -322,20 +344,26 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class)))
     })
-    public List<FraudCaseResponse> listFraudCases(
+    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<List<FraudCaseResponse>>> listFraudCases(
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "riskLevel", required = false) String riskLevel,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        if (riskLevel != null && !riskLevel.isEmpty()) {
-            var risk = FraudCase.RiskLevel.valueOf(riskLevel.toUpperCase());
-            return fraudCaseService.listByRiskLevel(risk, page, size).stream().map(FraudCaseResponse::from).toList();
+        try {
+            List<FraudCaseResponse> results;
+            if (riskLevel != null && !riskLevel.isEmpty()) {
+                var risk = FraudCase.RiskLevel.valueOf(riskLevel.toUpperCase());
+                results = fraudCaseService.listByRiskLevel(risk, page, size).stream().map(FraudCaseResponse::from).toList();
+            } else if (status != null && !status.isEmpty()) {
+                var caseStatus = FraudCase.CaseStatus.valueOf(status.toUpperCase());
+                results = fraudCaseService.listByStatus(caseStatus, page, size).stream().map(FraudCaseResponse::from).toList();
+            } else {
+                results = fraudCaseService.listAll(page, size).stream().map(FraudCaseResponse::from).toList();
+            }
+            return ok(results);
+        } catch (IllegalArgumentException e) {
+            return badRequest("Invalid filter value: " + e.getMessage());
         }
-        if (status != null && !status.isEmpty()) {
-            var caseStatus = FraudCase.CaseStatus.valueOf(status.toUpperCase());
-            return fraudCaseService.listByStatus(caseStatus, page, size).stream().map(FraudCaseResponse::from).toList();
-        }
-        return fraudCaseService.listAll(page, size).stream().map(FraudCaseResponse::from).toList();
     }
 
     @PostMapping(value = "/fraud-cases/{id}/assign", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -361,10 +389,8 @@ public class BackofficeController extends BaseController {
             @PathVariable("id") UUID id,
             @Valid @RequestBody FraudCaseDecisionRequest request,
             @RequestHeader(value = "X-Admin-User", required = false) String adminUser) {
-        if (adminUser == null || adminUser.isEmpty()) {
-            adminUser = "system";
-        }
-        var fraudCase = fraudCaseService.resolve(id, request, adminUser);
+        var resolvedAdmin = resolveAdminUser(adminUser);
+        var fraudCase = fraudCaseService.resolve(id, request, resolvedAdmin);
         return ok(FraudCaseResponse.from(fraudCase));
     }
 
@@ -412,20 +438,26 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
     })
-    public List<CustomerCaseResponse> listCustomerCases(
+    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<List<CustomerCaseResponse>>> listCustomerCases(
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "priority", required = false) String priority,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size) {
-        if (priority != null && !priority.isEmpty()) {
-            var prio = CustomerCase.Priority.valueOf(priority.toUpperCase());
-            return customerCaseService.listByPriority(prio, page, size).stream().map(CustomerCaseResponse::from).toList();
+        try {
+            List<CustomerCaseResponse> results;
+            if (priority != null && !priority.isEmpty()) {
+                var prio = CustomerCase.Priority.valueOf(priority.toUpperCase());
+                results = customerCaseService.listByPriority(prio, page, size).stream().map(CustomerCaseResponse::from).toList();
+            } else if (status != null && !status.isEmpty()) {
+                var caseStatus = CustomerCase.CaseStatus.valueOf(status.toUpperCase());
+                results = customerCaseService.listByStatus(caseStatus, page, size).stream().map(CustomerCaseResponse::from).toList();
+            } else {
+                results = customerCaseService.listAll(page, size).stream().map(CustomerCaseResponse::from).toList();
+            }
+            return ok(results);
+        } catch (IllegalArgumentException e) {
+            return badRequest("Invalid filter value: " + e.getMessage());
         }
-        if (status != null && !status.isEmpty()) {
-            var caseStatus = CustomerCase.CaseStatus.valueOf(status.toUpperCase());
-            return customerCaseService.listByStatus(caseStatus, page, size).stream().map(CustomerCaseResponse::from).toList();
-        }
-        return customerCaseService.listAll(page, size).stream().map(CustomerCaseResponse::from).toList();
     }
 
     @PostMapping(value = "/customer-cases/{id}/assign", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -451,10 +483,8 @@ public class BackofficeController extends BaseController {
             @PathVariable("id") UUID id,
             @Valid @RequestBody CustomerCaseUpdateRequest request,
             @RequestHeader(value = "X-Admin-User", required = false) String adminUser) {
-        if (adminUser == null || adminUser.isEmpty()) {
-            adminUser = "system";
-        }
-        var customerCase = customerCaseService.update(id, request, adminUser);
+        var resolvedAdmin = resolveAdminUser(adminUser);
+        var customerCase = customerCaseService.update(id, request, resolvedAdmin);
         return ok(CustomerCaseResponse.from(customerCase));
     }
 

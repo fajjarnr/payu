@@ -44,14 +44,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-// Apply Circuit Breaker with default financial services configuration
-@CircuitBreaker(name = "${payu.resilience.financial.circuit-breaker:default}", fallbackMethod = "${payu.resilience.financial.fallback-method:}")
-// Apply Bulkhead for concurrency control
-@Bulkhead(name = "${payu.resilience.financial.bulkhead:default}", fallbackMethod = "${payu.resilience.financial.fallback-method:}")
-// Apply Retry with exponential backoff
-@Retry(name = "${payu.resilience.financial.retry:default}", fallbackMethod = "${payu.resilience.financial.fallback-method:}")
-// Apply Time Limiter for timeout control
-@TimeLimiter(name = "${payu.resilience.financial.time-limiter:default}", fallbackMethod = "${payu.resilience.financial.fallback-method:}")
+// BUG-BE-093: Resilience4j annotations do NOT support Spring property placeholders.
+// Use hardcoded literal names that match configured instances in ResilienceAutoConfiguration.
+@CircuitBreaker(name = "financial")
+@Bulkhead(name = "financial")
+@Retry(name = "financial")
+@TimeLimiter(name = "financial")
 public @interface FinancialOperation {
 
     /**

@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/lending")
@@ -85,6 +86,7 @@ public class LendingController extends BaseController {
         );
 
         return lendingApplicationService.applyLoan(securedRequest)
+                .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(loan -> {
                     URI location = ServletUriComponentsBuilder
                             .fromCurrentRequest()
@@ -117,6 +119,7 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/loans/{loanId}/repayment-schedule")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isLoanOwner(#loanId, authentication.principal.userId)")
     @Operation(summary = "Create repayment schedule", description = "Generate repayment schedule for a loan")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Repayment schedule created successfully",
             content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
@@ -135,6 +138,7 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/loans/{loanId}/repayment-schedule")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isLoanOwner(#loanId, authentication.principal.userId)")
     @Operation(summary = "Get repayment schedule by loan", description = "Retrieve repayment schedule for a specific loan")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Repayment schedule retrieved successfully",
             content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
@@ -146,6 +150,7 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/repayment-schedules/{scheduleId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get repayment schedule by ID", description = "Retrieve a specific repayment schedule")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Repayment schedule found",
             content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
@@ -160,6 +165,7 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/repayment-schedules/{scheduleId}/pay")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Process repayment", description = "Make a repayment for a specific schedule")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Repayment processed successfully",
             content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
@@ -176,6 +182,7 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/paylater/activate")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Activate PayLater", description = "Activate PayLater service for a user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "PayLater activated successfully",
             content = @Content(schema = @Schema(implementation = PayLater.class)))
@@ -213,6 +220,7 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/paylater/{userId}/purchase")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, authentication.principal.userId)")
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "PayLaterTransaction",
@@ -243,6 +251,7 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/paylater/{userId}/payment")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, authentication.principal.userId)")
     @Operation(summary = "Record PayLater payment", description = "Record a payment transaction for PayLater")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Payment recorded successfully",
             content = @Content(schema = @Schema(implementation = PayLaterTransaction.class)))
@@ -278,6 +287,7 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/credit-score/calculate")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Calculate credit score", description = "Calculate credit score for a user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Credit score calculated successfully",
             content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.CreditScore.class)))
@@ -305,6 +315,7 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/pre-approval/check")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Check loan pre-approval", description = "Check if user is pre-approved for a loan")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Pre-approval check completed",
             content = @Content(schema = @Schema(implementation = LoanPreApprovalResponse.class)))
@@ -325,6 +336,7 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/pre-approval/{preApprovalId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get pre-approval by ID", description = "Retrieve pre-approval details by ID")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pre-approval found",
             content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.LoanPreApproval.class)))

@@ -208,7 +208,6 @@ export function PurchaseCompleteWithTracking() {
 export function CheckoutWithCallbacks() {
   const { variantKey, isLoading } = useExperiment('checkout_design_v3', {
     onVariantAssigned: (assignedVariant) => {
-      console.log(`User assigned to variant: ${assignedVariant}`);
       // Send to analytics
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'experiment_view', {

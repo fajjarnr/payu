@@ -11,15 +11,8 @@ export interface FxRate {
   validUntil: string;
 }
 
-export interface FxRateResponse {
-  id: string;
-  fromCurrency: string;
-  toCurrency: string;
-  rate: number;
-  inverseRate: number;
-  validFrom: string;
-  validUntil: string;
-}
+// BUG-BE-087: FxRateResponse is identical to FxRate — use FxRate directly
+export type FxRateResponse = FxRate;
 
 // FX Conversion Types
 export type FxConversionStatus = 'PENDING' | 'COMPLETED' | 'REVERSED' | 'FAILED';
@@ -38,32 +31,17 @@ export interface FxConversion {
   status: FxConversionStatus;
 }
 
-export interface FxConversionResponse {
-  id: string;
-  accountId: string;
-  fromCurrency: string;
-  toCurrency: string;
-  fromAmount: number;
-  toAmount: number;
-  exchangeRate: number;
-  fee: number;
-  effectiveAmount: number;
-  conversionDate: string;
-  status: string;
-}
+// BUG-BE-086: FxConversionResponse was identical to FxConversion — use FxConversion directly
+export type FxConversionResponse = FxConversion;
 
-// Request Types
+// BUG-BE-086: ConvertCurrencyRequest and FxConversionRequest are identical — consolidated
 export interface ConvertCurrencyRequest {
   fromCurrency: string;
   toCurrency: string;
   amount: number;
 }
 
-export interface FxConversionRequest {
-  fromCurrency: string;
-  toCurrency: string;
-  amount: number;
-}
+export type FxConversionRequest = ConvertCurrencyRequest;
 
 // Currency Info
 export interface CurrencyInfo {

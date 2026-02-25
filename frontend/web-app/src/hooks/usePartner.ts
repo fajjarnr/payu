@@ -109,13 +109,7 @@ export function useRotateCertificate() {
 }
 
 // ── SNAP-BI ──
-export function useSnapBiAuthToken() {
-  return useMutation({
-    mutationFn: (data: { clientId: string; clientSecret: string }) =>
-      PartnerService.getSnapBiToken(data.clientId, data.clientSecret),
-    ...MutationPresets.readOnly,
-  });
-}
+// BUG-FE-033: useSnapBiAuthToken removed — SNAP-BI token exchange must happen server-side only.
 
 export function useSnapBiPayment() {
   return useMutation({

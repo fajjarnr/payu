@@ -21,6 +21,8 @@ import id.payu.security.annotation.Audited.AuditLevel;
 import org.springframework.security.access.prepost.PreAuthorize;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
+import java.util.List;
+
 /**
  * REST controller for managing partners.
  * Provides CRUD operations for partner management including key regeneration.
@@ -232,8 +234,8 @@ public class PartnerController extends BaseController {
             return notFound("Partner", id);
         }
         // BUG-BE-165: Mask the client secret instead of returning it fully
-        if (partner.getClientSecret() != null && partner.getClientSecret().length() >= 4) {
-            partner.setClientSecret(partner.getClientSecret().substring(0, 4) + "***");
+        if (partner.clientSecret != null && partner.clientSecret.length() >= 4) {
+            partner.clientSecret = partner.clientSecret.substring(0, 4) + "***";
         }
         return ok(partner);
     }

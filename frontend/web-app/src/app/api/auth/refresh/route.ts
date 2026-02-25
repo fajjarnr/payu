@@ -51,7 +51,11 @@ export async function POST() {
 
     // BUG-CROSS-001: Read expires_in from Keycloak response instead of hardcoding 900s
     const ACCESS_TOKEN_MAX_AGE = data.expires_in ?? data.data?.expires_in ?? 900;
-    const response = NextResponse.json({ success: true, expiresIn: ACCESS_TOKEN_MAX_AGE });
+    // BUG-AUTH-005: Only return expiresIn if newAccessToken was actually received
+    const response = NextResponse.json({
+      success: true,
+      ...(newAccessToken ? { expiresIn: ACCESS_TOKEN_MAX_AGE } : {}),
+    });
 
     if (newAccessToken) {
       response.cookies.set('accessToken', newAccessToken, {

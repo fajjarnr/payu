@@ -37,7 +37,7 @@ export interface CreatePaymentRequest {
   amount: number;
 }
 
-export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
+export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REFUNDED' | 'EXPIRED';
 export type BillerCategory = 'ELECTRICITY' | 'WATER' | 'MOBILE' | 'INTERNET' | 'INSURANCE' | 'EWALLET';
 
 class BillingService {

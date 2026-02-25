@@ -74,7 +74,9 @@ public class OutboxPublisher {
 
     /**
      * Initializes metrics gauges on bean creation.
+     * BUG-BE-107: Added @PostConstruct so metrics are actually registered
      */
+    @jakarta.annotation.PostConstruct
     public void init() {
         Gauge.builder("outbox.pending.events", pendingEventsGauge, AtomicInteger::get)
                 .description("Number of pending outbox events waiting to be published")
@@ -321,11 +323,14 @@ public class OutboxPublisher {
      * @param payload the payload map
      * @return JSON string representation
      */
+    // BUG-BE-095: Use shared ObjectMapper instance instead of creating new one per call
+    private static final com.fasterxml.jackson.databind.ObjectMapper OUTBOX_MAPPER =
+            new com.fasterxml.jackson.databind.ObjectMapper()
+                    .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+
     private String serializePayload(Map<String, Object> payload) {
         try {
-            return new com.fasterxml.jackson.databind.ObjectMapper()
-                    .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-                    .writeValueAsString(payload);
+            return OUTBOX_MAPPER.writeValueAsString(payload);
         } catch (Exception e) {
             throw new OutboxSerializationException("Failed to serialize payload", e);
         }

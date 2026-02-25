@@ -20,6 +20,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Code Review Findings — Feb 25, 2026)
 
+- **Comprehensive Bug Fix Sprint — Session 2 (25+ bugs resolved)**:
+  - **Shared Starters (Batch D)**:
+    - **BUG-BE-093** (resilience-starter): Replaced broken Spring property placeholders in `@FinancialOperation` meta-annotation with hardcoded `"financial"` literal names. Annotations now functional.
+    - **BUG-BE-106** (resilience-starter): Added `Throwable.class.isAssignableFrom()` validation before unchecked cast in `ResilienceAutoConfiguration.retryRegistry()`.
+  - **Backend Services (Batch E)**:
+    - **BUG-BE-082** (api-portal-service): `getPaymentStatus()`/`createRefund()` now throw `NotFoundException` instead of returning null.
+    - **BUG-BE-081** (compliance-service): Removed DELETE audit endpoint — audit logs are immutable.
+    - **BUG-BE-073** (promotion-service): Kafka publish errors now LOG.error with MeterRegistry counter `promotion.kafka.publish.failure`.
+    - **BUG-BE-088** (api-portal-service): OpenAPI aggregation `refreshCache()` now tracks per-service failures and logs partial results.
+  - **Frontend Auth (Batch F)**:
+    - **BUG-AUTH-001**: Added `isRefreshingRef` lock to prevent concurrent token refresh races.
+    - **BUG-AUTH-003**: Added `isAuthenticatedRef` to avoid stale closures in refresh timer.
+    - **BUG-AUTH-004**: Added exponential backoff retry (2s→32s, max 5 attempts) on refresh failure.
+    - **BUG-AUTH-005**: `expiresIn` only returned when `newAccessToken` is truthy.
+    - **BUG-FE-001**: BFF proxy now auto-retries on 401 — refreshes token then retries upstream.
+  - **Frontend UI/Logic (Batch G)**:
+    - **BUG-FE-022** (exchange): Used `useRef` for `estimateMutation` to prevent infinite re-render loop.
+    - **BUG-FE-023** (rewards): Replaced ALL hardcoded fake data with 0/empty defaults.
+    - **BUG-FE-028/029** (useExperiment): Added refs for callbacks to prevent re-render loops.
+    - **BUG-FE-020/031** (ABTestingService): Added in-memory Map fallback when localStorage fails.
+    - **BUG-FE-030** (KYCService): Added `validateImageSize()` with 7MB max limit.
+    - **BUG-FE-025** (AccountService): Removed deprecated `getUserFromStorage()`/`getCurrentUser()`.
+  - **Cross-Service (Batch H)**:
+    - **XBUG-007**: Removed `credit()` from WalletService.ts and `useCreditWallet` hook — internal-only API.
+    - **BUG-BE-086/087**: Deduplicated FxService.ts interfaces via type aliases.
+    - **XBUG-014**: Added `userId` param to all gamification methods in PromotionService + useGamification.
+    - **XBUG-013**: Added 'AWARDED' | 'CLAIMED' to Reward status union type.
+  - **Security Fixes**:
+    - **BUG-FE-032**: Removed `clientSecret` from Partner interface; added `PartnerWithCredentials` for registration only.
+    - **BUG-FE-033**: Removed `getSnapBiToken()` and `useSnapBiAuthToken` — SNAP-BI tokens server-side only.
+  - **Build Fixes**:
+    - Fixed merchant page accessing removed `clientSecret` property.
+    - Fixed statement-downloader using removed `'READY'` status (→ `'COMPLETED'`).
+    - Fixed statement-downloader missing `customerId` in `StatementGenerationRequest`.
+
 - **Cross-Service & Security Bug Fix Sprint (10 bugs resolved)**:
   - **BUG-CROSS-001** (auth): Refresh route now reads `expires_in` from Keycloak response instead of hardcoded 900s. `LoginResponse` type updated to camelCase fields matching BFF output.
   - **BUG-CROSS-002** (transaction): Added `validateUUID`/`assertUUID` utilities to `validation.ts`. TransactionService validates `accountId` format before backend calls.

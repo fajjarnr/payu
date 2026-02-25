@@ -57,7 +57,8 @@ export interface Reward {
   promotionCode: string;
   type: RewardType;
   value: number;
-  status: 'PENDING' | 'APPROVED' | 'REDEEMED' | 'EXPIRED';
+  // XBUG-013: Aligned status values with backend (AWARDED/CLAIMED/EXPIRED)
+  status: 'PENDING' | 'APPROVED' | 'REDEEMED' | 'EXPIRED' | 'AWARDED' | 'CLAIMED';
   expiresAt: string;
   createdAt: string;
   redeemedAt?: string;
@@ -253,15 +254,17 @@ export class PromotionService {
     return response.data;
   }
 
+  // XBUG-014: Gamification endpoints now include userId for proper backend routing
+
   /** GET /gamification/checkin/today — Get today's check-in status */
-  async getTodayCheckin(): Promise<GamificationCheckin | null> {
-    const response = await api.get<GamificationCheckin | null>('/gamification/checkin/today');
+  async getTodayCheckin(userId: string): Promise<GamificationCheckin | null> {
+    const response = await api.get<GamificationCheckin | null>(`/gamification/${userId}/checkin/today`);
     return response.data;
   }
 
   /** GET /gamification/checkin/streak — Get current streak */
-  async getStreak(): Promise<GamificationStreak> {
-    const response = await api.get<GamificationStreak>('/gamification/checkin/streak');
+  async getStreak(userId: string): Promise<GamificationStreak> {
+    const response = await api.get<GamificationStreak>(`/gamification/${userId}/checkin/streak`);
     return response.data;
   }
 
@@ -271,26 +274,26 @@ export class PromotionService {
   }
 
   /** GET /gamification/level — Get user level */
-  async getGamificationLevel(): Promise<GamificationLevel> {
-    const response = await api.get<GamificationLevel>('/gamification/level');
+  async getGamificationLevel(userId: string): Promise<GamificationLevel> {
+    const response = await api.get<GamificationLevel>(`/gamification/${userId}/level`);
     return response.data;
   }
 
   /** GET /gamification/badges — Get all badges */
-  async getBadges(): Promise<GamificationBadge[]> {
-    const response = await api.get<GamificationBadge[]>('/gamification/badges');
+  async getBadges(userId: string): Promise<GamificationBadge[]> {
+    const response = await api.get<GamificationBadge[]>(`/gamification/${userId}/badges`);
     return response.data;
   }
 
   /** GET /gamification/badges/progress — Get badge progress */
-  async getBadgeProgress(): Promise<GamificationBadge[]> {
-    const response = await api.get<GamificationBadge[]>('/gamification/badges/progress');
+  async getBadgeProgress(userId: string): Promise<GamificationBadge[]> {
+    const response = await api.get<GamificationBadge[]>(`/gamification/${userId}/badges/progress`);
     return response.data;
   }
 
   /** GET /gamification/summary — Get gamification summary */
-  async getGamificationSummary(): Promise<GamificationSummary> {
-    const response = await api.get<GamificationSummary>('/gamification/summary');
+  async getGamificationSummary(userId: string): Promise<GamificationSummary> {
+    const response = await api.get<GamificationSummary>(`/gamification/${userId}/summary`);
     return response.data;
   }
 
