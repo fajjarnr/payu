@@ -20,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Code Review Findings — Feb 25, 2026)
 
+- **Cross-Service & Security Bug Fix Sprint (10 bugs resolved)**:
+  - **BUG-CROSS-001** (auth): Refresh route now reads `expires_in` from Keycloak response instead of hardcoded 900s. `LoginResponse` type updated to camelCase fields matching BFF output.
+  - **BUG-CROSS-002** (transaction): Added `validateUUID`/`assertUUID` utilities to `validation.ts`. TransactionService validates `accountId` format before backend calls.
+  - **BUG-CROSS-003** (wallet): Added Axios response interceptor in `api.ts` to auto-unwrap backend `ApiResponse<>` wrapper (`{ success, data }` → inner `data`).
+  - **BUG-CROSS-004** (transfer): Added `QRIS_PAYMENT`, `BILL_PAYMENT`, `TOP_UP` to `InitiateTransferRequest.TransactionType` DTO enum, synced with `Transaction.TransactionType`.
+  - **BUG-CROSS-005** (auth): Login route reads `expires_in` from Keycloak response; refresh route also fixed.
+  - **BUG-BE-113** (transaction-service): Moved participant DB refresh before `isFullyPaid()` check in `SplitBillService.makePayment()` to prevent stale data evaluation.
+  - **BUG-BE-119** (wallet-service): Replaced `java.util.Random` with `SecureRandom` for card number and CVV generation in `CardService`.
+  - **BUG-BE-120** (auth-service): MFA now configurable via `payu.security.risk.mfa-enabled` property instead of hardcoded `false`.
+  - **BUG-BE-121** (auth-service): Added separate `payu.security.risk.lockout-threshold` (default: 5) instead of reusing `mfaThreshold` (50) for account lockout.
+  - **BUG-BE-124** (transaction-service): EQUAL split now uses `RoundingMode.DOWN` + remainder assignment to last participant. `100/3 = 33.33 + 33.33 + 33.34` instead of `33.34 × 3 = 100.02`.
+  - **BUG-BE-155** (auth-service): `recordFailedAttempt()` now called on failed login, `recordSuccessfulLogin()` on success. Brute force detection operational.
+
 - **Batch Bug Fix Sprint (30 bugs resolved in single session)**:
   - **billing-service**: BUG-BE-039 wallet reservation commit/release; BUG-BE-045 WalletPort interface methods
   - **partner-service**: BUG-BE-041 SNAP-BI SHA-256 body hash; BUG-BE-044 thread-safe DateTimeFormatter; BUG-BE-047 @Scheduled cert rotation

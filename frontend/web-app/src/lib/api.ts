@@ -24,6 +24,25 @@ export { isAxiosError };
 // Cookies are sent automatically by the browser; the BFF proxy converts
 // the httpOnly cookie to a Bearer header on the server side.
 
+// ── Response unwrapper: auto-extract ApiResponse.data wrapper ───────
+// BUG-CROSS-003: Backend wraps responses in ApiResponse<T> = { success, data, message }.
+// Frontend services expect response.data to be T directly, not the wrapper.
+// This interceptor transparently unwraps so `response.data` always contains
+// the inner payload regardless of whether the backend wraps it.
+api.interceptors.response.use((response) => {
+  const body = response.data;
+  if (
+    body &&
+    typeof body === 'object' &&
+    !Array.isArray(body) &&
+    'success' in body &&
+    'data' in body
+  ) {
+    response.data = body.data;
+  }
+  return response;
+});
+
 // ── 401 interceptor: transparent token refresh via BFF ──────────────
 let isRefreshing = false;
 let failedQueue: Array<{

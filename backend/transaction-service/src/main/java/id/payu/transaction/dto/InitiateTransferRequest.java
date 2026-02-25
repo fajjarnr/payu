@@ -65,10 +65,14 @@ public class InitiateTransferRequest {
     @Pattern(regexp = "^[a-zA-Z0-9\\-]+$", message = "Idempotency key contains invalid characters")
     private String idempotencyKey;
 
+    // BUG-CROSS-004: Sync with Transaction.TransactionType — Frontend sends BILL_PAYMENT/TOP_UP/QRIS_PAYMENT
     public enum TransactionType {
         INTERNAL_TRANSFER,
         BIFAST_TRANSFER,
         SKN_TRANSFER,
-        RTGS_TRANSFER
+        RTGS_TRANSFER,
+        QRIS_PAYMENT,
+        BILL_PAYMENT,
+        TOP_UP
     }
 }

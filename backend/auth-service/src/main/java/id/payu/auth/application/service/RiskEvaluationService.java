@@ -26,6 +26,14 @@ public class RiskEvaluationService {
     @Value("${payu.security.risk.mfa-threshold:50}")
     private int mfaThreshold;
 
+    // BUG-BE-120: MFA enable/disable via config instead of hardcoded false
+    @Value("${payu.security.risk.mfa-enabled:false}")
+    private boolean mfaEnabled;
+
+    // BUG-BE-121: Separate lockout threshold from MFA threshold
+    @Value("${payu.security.risk.lockout-threshold:5}")
+    private int lockoutThreshold;
+
     @Value("${payu.security.risk.new-device-risk:40}")
     private int newDeviceRisk;
 
@@ -70,8 +78,8 @@ public class RiskEvaluationService {
             riskFactors.add("unusual_time");
         }
         
-        // Disabled for labs environment
-        boolean mfaRequired = false; // riskScore >= mfaThreshold;
+        // BUG-BE-120: MFA enabled/disabled via configuration property
+        boolean mfaRequired = mfaEnabled && riskScore >= mfaThreshold;
         
         log.info("Risk evaluation for user {}: score={}, mfa_required={}, factors={}",
                 context.username(), riskScore, mfaRequired, riskFactors);
@@ -163,11 +171,11 @@ public class RiskEvaluationService {
     public boolean isAccountActive(String userId) {
         return riskProfileRepository.findById(userId)
                 .map(profile -> {
-                    // Consider account inactive if failed attempts exceed threshold
-                    boolean isActive = profile.getFailedAttempts() < mfaThreshold;
+                    // BUG-BE-121: Use dedicated lockout threshold (default 5) instead of mfaThreshold (50)
+                    boolean isActive = profile.getFailedAttempts() < lockoutThreshold;
                     if (!isActive) {
-                        log.warn("Account {} is inactive due to {} failed attempts",
-                                userId, profile.getFailedAttempts());
+                        log.warn("Account {} is locked due to {} failed attempts (threshold: {})",
+                                userId, profile.getFailedAttempts(), lockoutThreshold);
                     }
                     return isActive;
                 })

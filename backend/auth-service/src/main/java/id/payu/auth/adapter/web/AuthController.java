@@ -110,6 +110,8 @@ public class AuthController extends BaseController {
             );
 
             if (Boolean.FALSE.equals(isValid)) {
+                // BUG-BE-155: Record failed attempt for brute force detection before returning error
+                riskEvaluationService.recordFailedAttempt(request.username());
                 log.warn("Failed login attempt for user: {}", request.username());
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error(
@@ -126,6 +128,9 @@ public class AuthController extends BaseController {
                     request.username(),
                     request.password()
             );
+
+            // BUG-BE-155: Clear failed attempts counter on successful login
+            riskEvaluationService.recordSuccessfulLogin(request.username(), context);
 
             log.info("Successful login for user: {}", request.username());
             return ResponseEntity.ok(ApiResponse.success(loginResponse));

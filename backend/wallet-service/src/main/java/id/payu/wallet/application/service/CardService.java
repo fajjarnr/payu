@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -25,7 +25,8 @@ public class CardService implements CardUseCase {
 
     private final CardPersistencePort cardPersistencePort;
     private final WalletPersistencePort walletPersistencePort;
-    private final Random random = new Random();
+    // BUG-BE-119: Use SecureRandom for cryptographically secure card number/CVV generation
+    private final SecureRandom secureRandom = new SecureRandom();
 
     public CardService(CardPersistencePort cardPersistencePort,
                        WalletPersistencePort walletPersistencePort) {
@@ -49,7 +50,8 @@ public class CardService implements CardUseCase {
         String expiry = LocalDateTime.now().plusYears(5).format(DateTimeFormatter.ofPattern("MM/yy"));
 
         // CVV is generated for authorization but NEVER stored (PCI-DSS compliant)
-        String cvv = String.format("%03d", random.nextInt(1000));
+        // BUG-BE-119: Use SecureRandom to prevent predictable CVV values
+        String cvv = String.format("%03d", secureRandom.nextInt(1000));
         log.debug("CVV generated for authorization only (will not be stored)");
 
         Card card = Card.builder()
@@ -107,10 +109,11 @@ public class CardService implements CardUseCase {
     }
 
     // Simple mock generator (starts with 4 for Visa simulation)
+    // BUG-BE-119: Use SecureRandom so card numbers are not predictable
     private String generateCardNumber() {
         StringBuilder sb = new StringBuilder("4"); // Visa
         for (int i = 0; i < 15; i++) {
-            sb.append(random.nextInt(10));
+            sb.append(secureRandom.nextInt(10));
         }
         return sb.toString();
     }

@@ -49,7 +49,8 @@ export async function POST() {
     const newRefreshToken =
       data.refresh_token ?? data.data?.refresh_token ?? data.data?.refreshToken;
 
-    const ACCESS_TOKEN_MAX_AGE = 900; // 15 minutes
+    // BUG-CROSS-001: Read expires_in from Keycloak response instead of hardcoding 900s
+    const ACCESS_TOKEN_MAX_AGE = data.expires_in ?? data.data?.expires_in ?? 900;
     const response = NextResponse.json({ success: true, expiresIn: ACCESS_TOKEN_MAX_AGE });
 
     if (newAccessToken) {

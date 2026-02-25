@@ -517,3 +517,36 @@ export function validateOTP(otp: string | null | undefined, length: number = 6):
 
   return { isValid: true };
 }
+
+// BUG-CROSS-002: UUID format validation for accountId and other UUID fields
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-7][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Validates that a string is a valid UUID format.
+ * Backend expects UUID format for accountId, transactionId, etc.
+ * Sending non-UUID values causes 500 errors instead of proper 400 validation errors.
+ */
+export function validateUUID(value: string | null | undefined, fieldName: string = 'ID'): {
+  isValid: boolean;
+  error?: string;
+} {
+  if (!value) {
+    return { isValid: false, error: `${fieldName} wajib diisi` };
+  }
+
+  if (!UUID_REGEX.test(value)) {
+    return { isValid: false, error: `${fieldName} format tidak valid` };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Asserts that a value is a valid UUID, throwing an error if not.
+ * Use in service methods before sending requests to backend.
+ */
+export function assertUUID(value: string, fieldName: string = 'ID'): void {
+  if (!UUID_REGEX.test(value)) {
+    throw new Error(`Invalid ${fieldName} format: expected UUID`);
+  }
+}

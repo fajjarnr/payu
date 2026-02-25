@@ -251,6 +251,10 @@ public class SplitBillService implements SplitBillUseCase {
 
         persistencePort.saveParticipant(participant);
 
+        // BUG-BE-113: Refresh participants from DB before checking isFullyPaid()
+        // The participant we just saved may be a different object than what's in splitBill.participants
+        splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBillId));
+
         if (splitBill.isFullyPaid()) {
             splitBill.setStatus(SplitBill.SplitStatus.COMPLETED);
             splitBill.setCompletedAt(Instant.now());
@@ -262,8 +266,6 @@ public class SplitBillService implements SplitBillUseCase {
             splitBill.setUpdatedAt(Instant.now());
             persistencePort.save(splitBill);
         }
-
-        splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBillId));
 
         log.info("Payment made for split bill, id: {}, participantId: {}, amount: {}",
                 splitBillId, participantId, request.getAmount());
@@ -296,13 +298,28 @@ public class SplitBillService implements SplitBillUseCase {
     }
 
     private List<SplitBillParticipant> buildParticipants(CreateSplitBillRequest request, Instant now) {
+        int participantCount = request.getParticipants().size();
+        // BUG-BE-124: Fix EQUAL split rounding error
+        // Calculate base amount per person, then assign remainder to last participant
         BigDecimal amountPerPerson = request.getTotalAmount()
-                .divide(BigDecimal.valueOf(request.getParticipants().size()), 2, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(participantCount), 2, RoundingMode.DOWN);
 
-        return request.getParticipants().stream().map(p -> {
-            BigDecimal amountOwed = request.getSplitType() == SplitBill.SplitType.EQUAL
-                    ? amountPerPerson
-                    : (p.getAmountOwed() != null ? p.getAmountOwed() : BigDecimal.ZERO);
+        // Calculate remainder: totalAmount - (amountPerPerson * (count - 1))
+        // Last participant gets the remainder to ensure total adds up exactly
+        BigDecimal lastParticipantAmount = request.getTotalAmount()
+                .subtract(amountPerPerson.multiply(BigDecimal.valueOf(participantCount - 1)));
+
+        List<CreateSplitBillRequest.ParticipantRequest> participantList = request.getParticipants();
+        return java.util.stream.IntStream.range(0, participantCount).mapToObj(i -> {
+            CreateSplitBillRequest.ParticipantRequest p = participantList.get(i);
+            boolean isLast = (i == participantCount - 1);
+
+            BigDecimal amountOwed;
+            if (request.getSplitType() == SplitBill.SplitType.EQUAL) {
+                amountOwed = isLast ? lastParticipantAmount : amountPerPerson;
+            } else {
+                amountOwed = p.getAmountOwed() != null ? p.getAmountOwed() : BigDecimal.ZERO;
+            }
 
             return SplitBillParticipant.builder()
                     .id(UUID.randomUUID())

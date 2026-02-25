@@ -34,11 +34,12 @@ export interface User {
 }
 
 // BUG-FE-024: Tokens are httpOnly cookies managed by BFF — must not be in JS response type
+// BUG-CROSS-001: Use camelCase field names matching BFF response (BFF maps snake_case → camelCase)
 export interface LoginResponse {
-  expires_in: number;
-  token_type: string;
-  mfa_required?: boolean;
-  mfa_challenge_id?: string;
+  expiresIn: number;
+  tokenType?: string;
+  mfaRequired?: boolean;
+  mfaChallengeId?: string;
 }
 
 export interface Pocket {

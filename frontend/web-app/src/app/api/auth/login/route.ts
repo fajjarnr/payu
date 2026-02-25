@@ -80,7 +80,8 @@ export async function POST(request: Request) {
 
     // Build response and set cookies directly on the NextResponse object
     // (cookies() from next/headers does NOT attach Set-Cookie to NextResponse.json())
-    const ACCESS_TOKEN_MAX_AGE = 900; // 15 minutes
+    // BUG-CROSS-005: Use expires_in from Keycloak response instead of hardcoded 900s
+    const ACCESS_TOKEN_MAX_AGE = data.expires_in ?? data.data?.expires_in ?? 900;
     const responseData = {
       ...(data.data || data),
       user: user || data.data?.user,

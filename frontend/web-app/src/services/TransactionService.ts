@@ -1,5 +1,6 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
+import { assertUUID } from '@/lib/validation';
 import type { TransactionType, TransactionStatus, TransferType } from '@/types';
 
 // Re-export types for convenience
@@ -73,6 +74,8 @@ export class TransactionService {
   }
 
   async getAccountTransactions(accountId: string, page: number = 0, size: number = 20): Promise<Transaction[]> {
+    // BUG-CROSS-002: Validate UUID format before sending to backend
+    assertUUID(accountId, 'accountId');
     const response = await api.get<Transaction[]>(`/transactions/accounts/${accountId}`, {
       params: { page, size }
     });
