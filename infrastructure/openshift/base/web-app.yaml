@@ -28,9 +28,9 @@ spec:
               protocol: TCP
           env:
             - name: NEXT_PUBLIC_GATEWAY_URL
-              value: "https://gateway-payu-dev.apps.payu.ocp.fajjjar.my.id"
+              value: "https://gateway-dev.payu.fajjjar.my.id"
             - name: NEXTAUTH_URL
-              value: "https://web-app-payu-dev.apps.payu.ocp.fajjjar.my.id"
+              value: "https://app.dev.payu.fajjjar.my.id"
             - name: NEXTAUTH_SECRET
               valueFrom:
                 secretKeyRef:

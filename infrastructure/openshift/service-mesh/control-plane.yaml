@@ -194,16 +194,18 @@ spec:
     gateways:
       istio-ingressgateway:
         # Ingress gateway configuration
+        # Handles ALL application traffic via separate LoadBalancer VIP
+        # OCP Ingress Controller (HAProxy) handles only platform routes
         enabled: true
         # Service configuration
         service:
-          type: LoadBalancer  # Use NodePort for bare metal, LoadBalancer for cloud
+          type: LoadBalancer  # Separate LB VIP from OCP Ingress Controller
           ports:
             - name: http2
-              port: 80
+              port: 8080
               targetPort: 8080
             - name: https
-              port: 443
+              port: 8443
               targetPort: 8443
             - name: status
               port: 15021
@@ -217,8 +219,23 @@ spec:
             - name: tls-webhook
               port: 15017
               targetPort: 15017
-        # Replicas for high availability
-        replicas: 2
+        # 3 replicas — one per router node
+        replicas: 3
+        # Schedule on router nodes (same nodes as OCP Ingress Controller)
+        nodeSelector:
+          node-role.kubernetes.io/router: ""
+        # Tolerate router node taint
+        tolerations:
+          - key: node-role.kubernetes.io/router
+            operator: Exists
+            effect: NoSchedule
+        # Spread across router nodes for HA
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: istio-ingressgateway
+              topologyKey: kubernetes.io/hostname
         # Pod configuration
         podAnnotations:
           prometheus.io/scrape: "true"
@@ -325,7 +342,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: istio-ingressgateway
-  minReplicas: 2
+  minReplicas: 3
   maxReplicas: 10
   metrics:
     - type: Resource

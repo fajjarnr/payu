@@ -122,7 +122,7 @@ test.describe('Wallet & Pocket CRUD', () => {
       {
         name: 'accessToken',
         value: 'mock-access-token-for-e2e-tests',
-        domain: 'payu-dev.apps.payu.ocp.fajjjar.my.id',
+        domain: 'dev.payu.fajjjar.my.id',
         path: '/',
         httpOnly: true,
         secure: true,
@@ -253,7 +253,7 @@ test.describe('Transaction CRUD', () => {
       {
         name: 'accessToken',
         value: 'mock-access-token-for-e2e-tests',
-        domain: 'payu-dev.apps.payu.ocp.fajjjar.my.id',
+        domain: 'dev.payu.fajjjar.my.id',
         path: '/',
         httpOnly: true,
         secure: true,
@@ -366,7 +366,7 @@ test.describe('Card CRUD', () => {
       {
         name: 'accessToken',
         value: 'mock-access-token-for-e2e-tests',
-        domain: 'payu-dev.apps.payu.ocp.fajjjar.my.id',
+        domain: 'dev.payu.fajjjar.my.id',
         path: '/',
         httpOnly: true,
         secure: true,
@@ -438,7 +438,7 @@ test.describe('Profile & Settings CRUD', () => {
       {
         name: 'accessToken',
         value: 'mock-access-token-for-e2e-tests',
-        domain: 'payu-dev.apps.payu.ocp.fajjjar.my.id',
+        domain: 'dev.payu.fajjjar.my.id',
         path: '/',
         httpOnly: true,
         secure: true,
@@ -526,7 +526,7 @@ test.describe('Bill Payment CRUD', () => {
       {
         name: 'accessToken',
         value: 'mock-access-token-for-e2e-tests',
-        domain: 'payu-dev.apps.payu.ocp.fajjjar.my.id',
+        domain: 'dev.payu.fajjjar.my.id',
         path: '/',
         httpOnly: true,
         secure: true,
@@ -587,7 +587,7 @@ test.describe('Investment CRUD', () => {
       {
         name: 'accessToken',
         value: 'mock-access-token-for-e2e-tests',
-        domain: 'payu-dev.apps.payu.ocp.fajjjar.my.id',
+        domain: 'dev.payu.fajjjar.my.id',
         path: '/',
         httpOnly: true,
         secure: true,
@@ -648,7 +648,7 @@ test.describe('Lending CRUD', () => {
       {
         name: 'accessToken',
         value: 'mock-access-token-for-e2e-tests',
-        domain: 'payu-dev.apps.payu.ocp.fajjjar.my.id',
+        domain: 'dev.payu.fajjjar.my.id',
         path: '/',
         httpOnly: true,
         secure: true,
@@ -682,7 +682,7 @@ test.describe('Database Consistency Tests', () => {
       {
         name: 'accessToken',
         value: 'mock-access-token-for-e2e-tests',
-        domain: 'payu-dev.apps.payu.ocp.fajjjar.my.id',
+        domain: 'dev.payu.fajjjar.my.id',
         path: '/',
         httpOnly: true,
         secure: true,

@@ -1,7 +1,7 @@
 # PayU Digital Banking - Podman Compose Test Environment
 # Isolated test environment with clean databases and test data
 
-version: '3.8'
+version: "3.8"
 services:
   # ============================================
   # DATA LAYER (Test-specific)
@@ -120,7 +120,13 @@ services:
     depends_on:
       - zookeeper-test
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9093"]
+      test:
+        [
+          "CMD",
+          "kafka-broker-api-versions",
+          "--bootstrap-server",
+          "localhost:9093",
+        ]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -270,7 +276,8 @@ services:
       - kafka-test
       - dukcapil-simulator-test
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/actuator/health/liveness"]
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8001/actuator/health/liveness"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -304,7 +311,8 @@ services:
       - postgres-test
       - keycloak-test
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/actuator/health/liveness"]
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8002/actuator/health/liveness"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -337,7 +345,8 @@ services:
       - postgres-test
       - kafka-test
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/actuator/health/liveness"]
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8003/actuator/health/liveness"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -367,7 +376,8 @@ services:
       - postgres-test
       - kafka-test
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8004/actuator/health/liveness"]
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8004/actuator/health/liveness"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -572,7 +582,15 @@ services:
     command:
       - "--collector.otlp.enabled=true"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/api/services"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:16686/api/services",
+        ]
       interval: 20s
       timeout: 10s
       retries: 3
@@ -595,12 +613,20 @@ services:
         source: prometheus_test_data
         target: /prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=1d'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=1d"
+      - "--web.enable-lifecycle"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9090/-/healthy",
+        ]
       interval: 20s
       timeout: 10s
       retries: 3

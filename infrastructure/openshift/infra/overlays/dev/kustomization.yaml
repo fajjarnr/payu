@@ -75,7 +75,7 @@ patches:
     patch: |
       - op: replace
         path: /spec/hostname
-        value: kafka-console-payu-dev.apps.payu.ocp.fajjjar.my.id
+        value: kafka-console-dev.payu.fajjjar.my.id
 
   # --------------------------------------------------------
   # Redis ExternalName: Use FQDN for DNS resolution

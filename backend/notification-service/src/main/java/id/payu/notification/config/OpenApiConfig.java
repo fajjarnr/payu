@@ -87,11 +87,11 @@ import jakarta.enterprise.context.ApplicationScoped;
         ),
         @Server(
             description = "Development Environment",
-            url = "https://notification-service-dev.apps.payu.ocp.fajjjar.my.id"
+            url = "https://notification-service-dev.payu.fajjjar.my.id"
         ),
         @Server(
             description = "Staging Environment",
-            url = "https://notification-service-staging.apps.payu.ocp.fajjjar.my.id"
+            url = "https://notification-service-staging.payu.fajjjar.my.id"
         ),
         @Server(
             description = "Production Environment",

@@ -146,10 +146,10 @@ spec:
         secret: payu-web-secret-dev-only
         redirectUris:
           - "http://localhost:3001/*"
-          - "https://payu-dev.apps.payu.ocp.fajjjar.my.id/*"
+          - "https://dev.payu.fajjjar.my.id/*"
         webOrigins:
           - "http://localhost:3001"
-          - "https://payu-dev.apps.payu.ocp.fajjjar.my.id"
+          - "https://dev.payu.fajjjar.my.id"
           - "+"
         publicClient: false
         standardFlowEnabled: true

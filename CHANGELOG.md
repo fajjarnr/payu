@@ -764,7 +764,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 5 roles: `USER`, `ADMIN`, `KYC_VERIFIED`, `PREMIUM`, `MERCHANT`
   - 4 users configured including `customer1`
   - Updated redirect URIs for OpenShift domain: `apps.payu.ocp.fajjjar.my.id`
-  - E2E Login verified: `https://payu-dev.apps.payu.ocp.fajjjar.my.id/api/auth/login` → customer1 login OK
+  - E2E Login verified: `https://dev.payu.fajjjar.my.id/api/auth/login` → customer1 login OK
 
 ### Added
 

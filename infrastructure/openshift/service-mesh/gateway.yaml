@@ -29,17 +29,23 @@ spec:
       tls:
         httpsRedirect: true  # Redirect HTTP to HTTPS
     # HTTPS Server (main ingress)
+    # Istio Ingress Gateway handles ALL application traffic
+    # OCP Ingress Controller (HAProxy) is reserved for platform-only routes
     - port:
         number: 443
         name: https
         protocol: HTTPS
       hosts:
-        - api.payu.local       # Local development
-        - api-dev.apps.payu.ocp.fajjjar.my.id         # Development environment
-        - api.payu.sit         # SIT environment
-        - api.payu.uat         # UAT environment
-        - api.payu.preprod     # Pre-production environment
-        - api.payu.fajjjar.my.id          # Production environment
+        # Local development
+        - api.payu.local
+        # Per-environment wildcard domains (Gateway API pattern)
+        - "*.dev.payu.fajjjar.my.id"       # Development
+        - "*.staging.payu.fajjjar.my.id"   # Staging
+        - "*.sit.payu.fajjjar.my.id"       # SIT
+        - "*.uat.payu.fajjjar.my.id"       # UAT
+        - "*.preprod.payu.fajjjar.my.id"   # Pre-production
+        - "*.payu.fajjjar.my.id"           # Production
+        - payu.fajjjar.my.id               # Production (apex)
       tls:
         mode: SIMPLE  # Simple TLS (server-side only)
         credentialName: payu-ingress-cert  # TLS certificate secret
@@ -57,10 +63,11 @@ metadata:
 spec:
   hosts:
     - "api.payu.local"
-    - "api-dev.apps.payu.ocp.fajjjar.my.id"
-    - "api.payu.sit"
-    - "api.payu.uat"
-    - "api.payu.preprod"
+    - "api.dev.payu.fajjjar.my.id"
+    - "api.staging.payu.fajjjar.my.id"
+    - "api.sit.payu.fajjjar.my.id"
+    - "api.uat.payu.fajjjar.my.id"
+    - "api.preprod.payu.fajjjar.my.id"
     - "api.payu.fajjjar.my.id"
   gateways:
     - payu-ingress-gateway
@@ -348,6 +355,7 @@ spec:
       when:
         - key: request.auth.claims[iss]
           values:
+            - https://sso.payu.fajjjar.my.id/auth/realms/payu
             - https://keycloak.payu.local/auth/realms/payu
 ---
 # AuthorizationPolicy for Partner API

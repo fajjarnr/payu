@@ -2,9 +2,9 @@
 // ===========================================
 
 export const BASE_URLS = {
-  gateway: 'https://gateway-payu-dev.apps.payu.ocp.fajjjar.my.id',
-  keycloak: 'https://keycloak-payu-dev.apps.payu.ocp.fajjjar.my.id',
-  webApp: 'https://payu-dev.apps.payu.ocp.fajjjar.my.id'
+  gateway: 'https://gateway-dev.payu.fajjjar.my.id',
+  keycloak: 'https://keycloak-dev.payu.fajjjar.my.id',
+  webApp: 'https://dev.payu.fajjjar.my.id'
 };
 
 // Test thresholds based on DORA Elite metrics

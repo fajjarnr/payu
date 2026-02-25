@@ -88,8 +88,8 @@ Based on DORA Elite metrics:
 Override base URLs:
 
 ```bash
-export GATEWAY_URL=https://gateway-payu-dev.apps.payu.ocp.fajjjar.my.id
-export KEYCLOAK_URL=https://keycloak-payu-dev.apps.payu.ocp.fajjjar.my.id
+export GATEWAY_URL=https://gateway-dev.payu.fajjjar.my.id
+export KEYCLOAK_URL=https://keycloak-dev.payu.fajjjar.my.id
 
 k6 run -e GATEWAY_URL=$GATEWAY_URL -e KEYCLOAK_URL=$KEYCLOAK_URL smoke-test.js
 ```

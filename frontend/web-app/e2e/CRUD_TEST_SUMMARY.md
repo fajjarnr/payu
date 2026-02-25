@@ -82,13 +82,13 @@ Comprehensive end-to-end tests verifying CRUD (Create, Read, Update, Delete) ope
 - Tests use Indonesian language selectors matching actual UI
 - Tests gracefully skip when features not implemented in UI
 - Mock authentication via cookies for authenticated routes
-- Tests run against OpenShift deployment: https://payu-dev.apps.payu.ocp.fajjjar.my.id
+- Tests run against OpenShift deployment: https://dev.payu.fajjjar.my.id
 
 ## Running Tests
 
 ```bash
 # Run comprehensive CRUD tests
-PLAYWRIGHT_BASE_URL=https://payu-dev.apps.payu.ocp.fajjjar.my.id npm run test:e2e -- comprehensive-crud.spec.ts
+PLAYWRIGHT_BASE_URL=https://dev.payu.fajjjar.my.id npm run test:e2e -- comprehensive-crud.spec.ts
 
 # Run all E2E tests
 npm run test:e2e

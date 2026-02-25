@@ -74,7 +74,7 @@ spec:
     enabled: true
     clientAuthenticatorType: client-secret
     redirectUris:
-      - "https://payu-dev.apps.payu.ocp.fajjjar.my.id/*"
+      - "https://dev.payu.fajjjar.my.id/*"
       - "http://localhost:3000/*"
     webOrigins:
       - "+"

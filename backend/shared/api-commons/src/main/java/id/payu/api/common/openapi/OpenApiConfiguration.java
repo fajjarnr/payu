@@ -101,7 +101,7 @@ public class OpenApiConfiguration {
                                 .url("https://payu.fajjjar.my.id/terms")))
                 .servers(List.of(
                         new Server().url("https://api.payu.fajjjar.my.id/v1").description("Production"),
-                        new Server().url("https://api-staging.apps.payu.ocp.fajjjar.my.id/v1").description("Staging"),
+                        new Server().url("https://api-staging.payu.fajjjar.my.id/v1").description("Staging"),
                         new Server().url("http://localhost:8080/api/v1").description("Local Development")
                 ))
                 .components(new Components()

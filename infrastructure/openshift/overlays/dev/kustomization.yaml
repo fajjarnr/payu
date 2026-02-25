@@ -692,9 +692,9 @@ patches:
               - name: web-app
                 env:
                   - name: NEXT_PUBLIC_GATEWAY_URL
-                    value: "https://gateway-payu-dev.apps.payu.ocp.fajjjar.my.id"
+                    value: "https://gateway-dev.payu.fajjjar.my.id"
                   - name: NEXTAUTH_URL
-                    value: "https://payu-dev.apps.payu.ocp.fajjjar.my.id"
+                    value: "https://dev.payu.fajjjar.my.id"
                   - name: GATEWAY_URL
                     value: "http://gateway-service:8080"
 
@@ -709,7 +709,7 @@ patches:
     patch: |-
       - op: add
         path: /spec/host
-        value: gateway-internal-payu-dev.apps.payu.ocp.fajjjar.my.id
+        value: gateway-internal.dev.payu.fajjjar.my.id
 
   - target:
       kind: Route
@@ -717,7 +717,7 @@ patches:
     patch: |-
       - op: add
         path: /spec/host
-        value: web-internal-payu-dev.apps.payu.ocp.fajjjar.my.id
+        value: app-internal.dev.payu.fajjjar.my.id
 
   # ============================================================
   # Disable deny network policies in dev (operator infra lacks payu-banking labels)

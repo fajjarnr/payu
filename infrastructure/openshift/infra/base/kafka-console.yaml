@@ -27,7 +27,7 @@ metadata:
     app.kubernetes.io/component: kafka-ui
 spec:
   replicas: 1
-  hostname: kafka-console-payu-dev.apps.payu.ocp.fajjjar.my.id
+  hostname: kafka-console-dev.payu.fajjjar.my.id
   kafkaClusters:
     - name: kafka
       namespace: payu-dev

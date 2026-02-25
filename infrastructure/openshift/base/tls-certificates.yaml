@@ -19,7 +19,7 @@ spec:
     kind: ClusterIssuer
     group: cert-manager.io
   dnsNames:
-    - gateway-payu-dev.apps.payu.ocp.fajjjar.my.id
+    - gateway-dev.payu.fajjjar.my.id
   duration: 720h     # 30 days
   renewBefore: 168h  # 7 days before expiry
 ---
@@ -35,7 +35,7 @@ spec:
     kind: ClusterIssuer
     group: cert-manager.io
   dnsNames:
-    - payu-dev.apps.payu.ocp.fajjjar.my.id
+    - dev.payu.fajjjar.my.id
   duration: 720h
   renewBefore: 168h
 ---
@@ -48,7 +48,7 @@ metadata:
     app.kubernetes.io/name: gateway-service
     app.kubernetes.io/part-of: payu-banking
 spec:
-  host: gateway-payu-dev.apps.payu.ocp.fajjjar.my.id
+  host: gateway-dev.payu.fajjjar.my.id
   to:
     kind: Service
     name: gateway-service
@@ -69,7 +69,7 @@ metadata:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu-banking
 spec:
-  host: payu-dev.apps.payu.ocp.fajjjar.my.id
+  host: dev.payu.fajjjar.my.id
   to:
     kind: Service
     name: web-app

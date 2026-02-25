@@ -180,7 +180,7 @@ metadata:
   namespace: payu-dev
 spec:
   hosts:
-    - gateway-payu-dev.apps.payu.ocp.fajjjar.my.id
+    - gateway-dev.payu.fajjjar.my.id
   http:
     - match:
         - headers:

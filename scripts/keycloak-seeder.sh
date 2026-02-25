@@ -6,7 +6,7 @@
 
 set -e
 
-KEYCLOAK_URL="https://keycloak-payu-dev.apps.payu.ocp.fajjjar.my.id"
+KEYCLOAK_URL="https://keycloak-dev.payu.fajjjar.my.id"
 ADMIN_USER="admin"
 ADMIN_PASS="EONue7dM1Zx4_Q=="
 REALM="payu"

@@ -62,7 +62,7 @@ spec:
     kind: ClusterIssuer
     group: cert-manager.io
   dnsNames:
-    - gateway-payu-dev.apps.payu.ocp.fajjjar.my.id
+    - gateway-dev.payu.fajjjar.my.id
   duration: 720h      # 30 days
   renewBefore: 168h   # Renew 7 days before expiry
 ---
@@ -78,6 +78,6 @@ spec:
     kind: ClusterIssuer
     group: cert-manager.io
   dnsNames:
-    - payu-dev.apps.payu.ocp.fajjjar.my.id
+    - dev.payu.fajjjar.my.id
   duration: 720h      # 30 days
   renewBefore: 168h   # Renew 7 days before expiry

@@ -178,10 +178,10 @@ k6 run load-test.js --out json=results.json
 ### Issue: Endpoint unreachable
 ```bash
 # Test manual
-curl -v https://gateway-payu-dev.apps.payu.ocp.fajjjar.my.id/actuator/health
+curl -v https://gateway-dev.payu.fajjjar.my.id/actuator/health
 
 # Check DNS
-nslookup gateway-payu-dev.apps.payu.ocp.fajjjar.my.id
+nslookup gateway-dev.payu.fajjjar.my.id
 ```
 
 ### Issue: K6 not found

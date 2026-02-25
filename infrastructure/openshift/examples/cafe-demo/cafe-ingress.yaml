@@ -10,10 +10,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - cafe-demo.apps.payu.ocp.fajjjar.my.id
+    - cafe-demo.dev.payu.fajjjar.my.id
     secretName: cafe-tls-secret
   rules:
-  - host: cafe-demo.apps.payu.ocp.fajjjar.my.id
+  - host: cafe-demo.dev.payu.fajjjar.my.id
     http:
       paths:
       - path: /tea

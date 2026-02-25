@@ -14,11 +14,13 @@ This directory contains TLS certificates for the PayU Digital Banking Platform S
 
 **SANs (Subject Alternative Names)**:
 - `api.payu.local` (local development)
-- `api-dev.apps.payu.ocp.fajjjar.my.id` (development)
-- `api-sit.apps.payu.ocp.fajjjar.my.id` (SIT)
-- `api-uat.apps.payu.ocp.fajjjar.my.id` (UAT)
-- `api-preprod.apps.payu.ocp.fajjjar.my.id` (pre-production)
-- `api.payu.fajjjar.my.id` (production)
+- `*.dev.payu.fajjjar.my.id` (development wildcard)
+- `*.staging.payu.fajjjar.my.id` (staging wildcard)
+- `*.sit.payu.fajjjar.my.id` (SIT wildcard)
+- `*.uat.payu.fajjjar.my.id` (UAT wildcard)
+- `*.preprod.payu.fajjjar.my.id` (pre-production wildcard)
+- `*.payu.fajjjar.my.id` (production wildcard)
+- `payu.fajjjar.my.id` (production apex)
 
 **Example with OpenSSL**:
 
@@ -32,7 +34,7 @@ openssl req -new -key tls.key -out ingress.csr -subj "/C=ID/ST=Jakarta/L=Jakarta
 # Generate self-signed certificate (for development)
 openssl x509 -req -days 365 -in ingress.csr -signkey tls.key -out tls.crt \
   -extfile <(cat <<EOF
-subjectAltName=DNS:api.payu.local,DNS:api-dev.apps.payu.ocp.fajjjar.my.id,DNS:api-sit.apps.payu.ocp.fajjjar.my.id,DNS:api-uat.apps.payu.ocp.fajjjar.my.id,DNS:api-preprod.apps.payu.ocp.fajjjar.my.id,DNS:api.payu.fajjjar.my.id
+subjectAltName=DNS:api.payu.local,DNS:*.dev.payu.fajjjar.my.id,DNS:*.staging.payu.fajjjar.my.id,DNS:*.sit.payu.fajjjar.my.id,DNS:*.uat.payu.fajjjar.my.id,DNS:*.preprod.payu.fajjjar.my.id,DNS:*.payu.fajjjar.my.id,DNS:payu.fajjjar.my.id
 EOF
 )
 
@@ -118,11 +120,13 @@ metadata:
 spec:
   secretName: payu-ingress-cert
   dnsNames:
-    - api.payu.fajjjar.my.id
-    - api-preprod.apps.payu.ocp.fajjjar.my.id
-    - api-uat.apps.payu.ocp.fajjjar.my.id
-    - api-sit.apps.payu.ocp.fajjjar.my.id
-    - api-dev.apps.payu.ocp.fajjjar.my.id
+    - payu.fajjjar.my.id
+    - "*.payu.fajjjar.my.id"
+    - "*.dev.payu.fajjjar.my.id"
+    - "*.staging.payu.fajjjar.my.id"
+    - "*.sit.payu.fajjjar.my.id"
+    - "*.uat.payu.fajjjar.my.id"
+    - "*.preprod.payu.fajjjar.my.id"
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
