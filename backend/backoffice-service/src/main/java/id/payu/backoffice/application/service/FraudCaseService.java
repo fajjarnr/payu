@@ -55,7 +55,8 @@ public class FraudCaseService {
     }
 
     public List<FraudCase> listByStatus(FraudCase.CaseStatus status, int page, int size) {
-        return repository.findByStatus(status);
+        // BUG-BE-043: Use DB-level pagination instead of ignoring page/size
+        return repository.findByStatus(status, PageRequest.of(page, size)).getContent();
     }
 
     public List<FraudCase> listByRiskLevel(FraudCase.RiskLevel riskLevel, int page, int size) {

@@ -77,17 +77,23 @@ def create_app() -> FastAPI:
     limiter = Limiter(key_func=get_remote_address)
     app.state.limiter = limiter
 
-    # CORS configuration with specific origins
+    # BUG-BE-048: CORS origins based on ENVIRONMENT env var
+    import os
+    cors_origins = [
+        "https://payu.id",
+        "https://app.payu.id",
+        "https://api.payu.id",
+        "https://backoffice.payu.id",
+    ]
+    if os.getenv("ENVIRONMENT", "production").lower() == "development":
+        cors_origins.extend([
+            "http://localhost:3000",
+            "http://localhost:8080",
+        ])
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "https://payu.id",
-            "https://app.payu.id",
-            "https://api.payu.id",
-            "https://backoffice.payu.id",
-            "http://localhost:3000",  # Development
-            "http://localhost:8080",  # Development
-        ],
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=[

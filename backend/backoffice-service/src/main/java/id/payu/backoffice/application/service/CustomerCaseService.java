@@ -58,7 +58,8 @@ public class CustomerCaseService {
     }
 
     public List<CustomerCase> listByStatus(CustomerCase.CaseStatus status, int page, int size) {
-        return repository.findByStatus(status);
+        // BUG-BE-043: Use DB-level pagination instead of ignoring page/size
+        return repository.findByStatus(status, PageRequest.of(page, size)).getContent();
     }
 
     public List<CustomerCase> listByPriority(CustomerCase.Priority priority, int page, int size) {

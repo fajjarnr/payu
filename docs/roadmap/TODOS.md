@@ -200,12 +200,12 @@
 
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
-| **BUG-BE-043** | `backoffice-service` | `listByStatus()` abaikan `page`/`size` parameter — return semua data. | Gunakan `repository.findByStatus(status, PageRequest.of(page, size))`. |
+| ✅ ~~BUG-BE-043~~ | ~~backoffice-service~~ | ~~FIXED: All 3 `listByStatus()` methods (Fraud, KYC, CustomerCase) now use `PageRequest.of(page, size)` for DB-level pagination.~~ | ~~Gunakan `repository.findByStatus(status, PageRequest.of(page, size))`.~~ |
 | ✅ ~~BUG-BE-044~~ | ~~partner-service~~ | ~~FIXED: Replaced thread-unsafe `SimpleDateFormat` with immutable `DateTimeFormatter` in `getCurrentTimestamp()`.~~ | ~~Ganti ke `DateTimeFormatter` (thread-safe).~~ |
 | ✅ ~~BUG-BE-045~~ | ~~billing-service~~ | ~~FIXED: Added `commitReservation()` + `releaseReservation()` to `WalletPort` interface and `WalletAdapter` implementation.~~ | ~~Tambahkan `commitReservation` + `releaseReservation` ke `WalletPort`.~~ |
 | ✅ ~~BUG-BE-046~~ | ~~outbox-starter~~ | ~~FIXED: Replaced `new ObjectMapper().findAndRegisterModules()` with constructor-injected Spring-managed `ObjectMapper` bean.~~ | ~~Inject `ObjectMapper` sebagai bean.~~ |
 | ✅ ~~BUG-BE-047~~ | ~~partner-service~~ | ~~FIXED: Added `@Scheduled(cron = "0 0 8 * * *")` trigger to auto-rotate expiring certificates daily at 8 AM.~~ | ~~Tambahkan `@Scheduled(cron = "0 0 8 * * *")`.~~ |
-| **BUG-BE-048** | `kyc-service` + `analytics-service` | Development CORS origins (`localhost:3000`) aktif di production. | Pisahkan CORS config berdasarkan `ENVIRONMENT` env var. |
+| ✅ ~~BUG-BE-048~~ | ~~kyc-service + analytics-service~~ | ~~FIXED: CORS origins now environment-aware. Localhost only in `ENVIRONMENT=development`, production defaults to payu.id domains only.~~ | ~~Pisahkan CORS config berdasarkan `ENVIRONMENT` env var.~~ |
 
 ---
 
@@ -240,7 +240,7 @@
 
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
-| **BUG-BE-058** | `cms-service` | `getContentByType()` return ALL content tanpa pagination → memory-intensive jika ribuan banner. | Tambahkan pageable parameter atau limit. |
+| ✅ ~~BUG-BE-058~~ | ~~cms-service~~ | ~~FIXED: Added pageable `findByContentType()` to ContentRepository for DB-level pagination.~~ | ~~Tambahkan pageable parameter atau limit.~~ |
 | ✅ ~~BUG-BE-059~~ | ~~statement-service~~ | ~~FIXED: Removed `readOnly=true` from `getStatement()` since it calls `recordAccess()` + `save()` which require write access.~~ | ~~Hapus `readOnly=true` atau pisahkan `recordAccess()`.~~ |
 
 ---
@@ -259,7 +259,7 @@
 | **BUG-BE-061** | `promotion-service` | `GamificationService.java` L442-444 | **`getTransactionAmount()` selalu return `ZERO`** — badge berbasis total amount tidak bisa diraih. | Inject `TransactionServiceClient` dan query jumlah transaksi real. |
 | ✅ ~~BUG-BE-062~~ | ~~promotion-service~~ | ~~CashbackService.java L56~~ | ~~FIXED: CashbackSagaOrchestrator credits wallet via WalletServicePort before recording cashback. Compensation on failure.~~ | ~~Panggil wallet-service credit sebelum set `CREDITED`. Wrap dengan saga.~~ |
 | ✅ ~~BUG-BE-063~~ | ~~promotion-service~~ | ~~PromotionService.java L148-149~~ | ~~FIXED: Replaced read-check-write with atomic `atomicIncrementRedemptionCount()` using UPDATE...WHERE count < max.~~ | ~~Optimistic locking `@Version` atau atomic: `UPDATE SET count = count + 1 WHERE count < max`.~~ |
-| **BUG-BE-064** | `shared/cache-starter` | `CacheService.java` L169-172 | **Stale-while-revalidate tidak async** — saat stale, hanya return data lama tanpa trigger refresh. | Inject executor + `CompletableFuture.runAsync(() -> put(key, fallback.get()))` saat stale. |
+| ✅ ~~BUG-BE-064~~ | ~~shared/cache-starter~~ | ~~FIXED: Added async background refresh via `CompletableFuture.runAsync()` with dedicated `REFRESH_EXECUTOR` when cache entry is stale. Data returned immediately, refresh happens in background.~~ | ~~Inject executor + `CompletableFuture.runAsync`.~~ |
 
 ---
 
@@ -317,7 +317,7 @@
 | **BUG-BE-082** | `api-portal-service` | `getPaymentStatus()` return `null` jika tidak ditemukan — NPE blind spot, return 200 dengan body null. | Return `Optional<>` atau throw `PaymentNotFoundException` → 404. |
 | **BUG-BE-083** | `compliance-service` | `AuditReport` frontend vs backend **zero field overlap** — model sama sekali berbeda. | Sinkronkan DTO sebelum compliance feature bisa fungsi. |
 | **BUG-BE-084** | `fx-service` | `estimateConversion()` call `POST /conversions/estimate` — endpoint `/estimate` tidak ada di backend. | Implementasi `/estimate` atau hitung di frontend dari `GET /rates`. |
-| **BUG-BE-085** | `lending-service` | `processRepayment()` kirim `amount` sebagai query param — tidak aman (log exposure). | Ganti ke JSON body. |
+| ✅ ~~BUG-BE-085~~ | ~~lending-service~~ | ~~FIXED: `processRepayment()` now accepts amount via `@RequestBody` JSON instead of `@RequestParam` query string. Financial amounts in URLs are exposed in logs.~~ | ~~Ganti ke JSON body.~~ |
 
 ---
 
@@ -739,8 +739,8 @@
 | :--- | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-166~~ | ~~auth-service~~ | ~~SecurityConfig.java L36-38~~ | ~~FIXED: Added `/api/v1/auth/mfa/verify` and `/api/v1/auth/mfa/challenge` to PUBLIC_ENDPOINTS. Users can't have JWT during MFA flow.~~ | ~~Tambahkan `/api/v1/auth/mfa/verify` ke `PUBLIC_ENDPOINTS`.~~ |
 | ✅ ~~BUG-BE-167~~ | ~~auth-service~~ | ~~SecurityConfig.java L119~~ | ~~FIXED (prior): `@Value` injection replaces `System.getenv()` for JWT config. Test profile overrides now work.~~ | ~~Gunakan `@Value`.~~ |
-| **BUG-BE-168** | `compliance-service` | `ComplianceAuditController.java` L44-46 | **Mutable service field via public setter** — `setComplianceAuditService()` public setter memungkinkan service diganti at runtime. Hapus field mutability. | Hapus setter, buat field `final`, inject via constructor. |
-| **BUG-BE-169** | `compliance-service` | `ComplianceAuditController.java` L117 | **`IllegalArgumentException` thrown tanpa `@ExceptionHandler`** — `throw new IllegalArgumentException("At least one search parameter is required")` → 500 response. | Buat custom `BadRequestException` atau handle di `@ControllerAdvice`. |
+| ✅ ~~BUG-BE-168~~ | ~~compliance-service~~ | ~~FIXED (prior): Field is `final`, no public setter. Constructor injection used.~~ | ~~Hapus setter, buat field `final`.~~ |
+| ✅ ~~BUG-BE-169~~ | ~~compliance-service~~ | ~~FIXED (prior): Uses `ResponseStatusException(HttpStatus.BAD_REQUEST)` instead of `IllegalArgumentException`.~~ | ~~Buat custom `BadRequestException` atau handle.~~ |
 | **BUG-FE-041** | `web-app` | `lib/api.ts` L63, L68 | **Refresh endpoint path mismatch** — interceptor calls `/api/auth/refresh`, tapi BFF proxy hanya handle `/api/v1/*`. Refresh always fails → redirect ke login → infinite redirect loop jika user punya valid refreshToken cookie. | Sinkronkan: `/api/v1/auth/refresh` atau buat dedicated route. Sama issue dengan BUG-FE-037/038. |
 | **BUG-FE-042** | `web-app` | `lib/api.ts` L50, L58 | **Race condition: `_retry` flag on config object** — `originalRequest._retry = true` modifies shared config. Jika axios reuses config object (interceptor re-fires), flag bisa sudah set → skip refresh → silent failure. | Gunakan WeakSet untuk track retried requests: `const retriedRequests = new WeakSet()`. |
 | **BUG-CROSS-026** | FE ↔ BE | `BillingService.ts` L53 vs `PaymentController.java` | **Billing FE path mismatch** — FE calls `/billing/payments` → BFF proxy to `/billing/payments`. BE `PaymentController` mounted di `/api/v1/payments` (tanpa `/billing/`). Requests always 404. | Sinkronkan path antara FE service dan BE controller. |

@@ -168,7 +168,9 @@ public class LendingController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<RepaymentSchedule>> processRepayment(
             @Parameter(description = "Schedule ID", required = true) @PathVariable UUID scheduleId,
-            @Parameter(description = "Repayment amount", required = true) @RequestParam BigDecimal amount) {
+            // BUG-BE-085: Changed from @RequestParam to @RequestBody — financial amounts must not be in URL
+            @RequestBody java.util.Map<String, BigDecimal> body) {
+        BigDecimal amount = body.get("amount");
         log.info("Processing repayment for schedule: {} with amount: {}", scheduleId, amount);
         return ok(loanManagementService.processRepayment(scheduleId, amount));
     }

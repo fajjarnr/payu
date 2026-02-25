@@ -8,6 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.QueryTimeoutException;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 /**
@@ -53,6 +56,13 @@ public class CacheService {
     private final DistributedCacheService distributedCache;
     private final LocalCacheService localCache;
     private final CacheProperties properties;
+
+    // BUG-BE-064: Dedicated executor for async stale-while-revalidate refresh
+    private static final Executor REFRESH_EXECUTOR = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "cache-refresh");
+        t.setDaemon(true);
+        return t;
+    });
 
     // Metrics
     private final Counter localFallbackCounter;
@@ -167,8 +177,19 @@ public class CacheService {
                 }
 
                 if (entry.isStale()) {
-                    // Data is stale but serve it and trigger async refresh
-                    // The caller is responsible for scheduling the refresh
+                    // BUG-BE-064: Trigger async background refresh for stale data
+                    final Duration sTtl = softTtl;
+                    final Duration hTtl = hardTtl;
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            T refreshed = fallback.get();
+                            if (refreshed != null) {
+                                put(key, refreshed, sTtl, hTtl);
+                            }
+                        } catch (Exception ex) {
+                            log.warn("Async cache refresh failed for key '{}': {}", key, ex.getMessage());
+                        }
+                    }, REFRESH_EXECUTOR);
                     return entry.getValue();
                 }
 

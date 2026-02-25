@@ -54,12 +54,8 @@ public class KycReviewService {
     }
 
     public List<KycReview> listByStatus(KycReview.KycStatus status, int page, int size) {
-        return repository.findByStatus(status);
-        // Note: Pagination support would require PagingAndSortingRepository properly
-        // For now, simpler implementation to match interface roughly or I should assume repo handles page?
-        // Actually, let's stick to standard findAll if possible or assume repo has pagination methods if defined.
-        // My repo def didn't have Pageable. I'll just return list for now to satisfy potential callers.
-        // Better: Update repo to extend JpaRepository which has findAll(Pageable).
+        // BUG-BE-043: Use DB-level pagination instead of ignoring page/size
+        return repository.findByStatus(status, PageRequest.of(page, size)).getContent();
     }
 
     public List<KycReview> listAll(int page, int size) {

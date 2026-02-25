@@ -4,12 +4,17 @@ import id.payu.backoffice.domain.KycReview;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface KycReviewRepository extends JpaRepository<KycReview, UUID> {
     List<KycReview> findByStatus(KycReview.KycStatus status);
+    // BUG-BE-043: Pageable version
+    Page<KycReview> findByStatus(KycReview.KycStatus status, Pageable pageable);
     List<KycReview> findByUserId(String userId);
 
     // Search methods
