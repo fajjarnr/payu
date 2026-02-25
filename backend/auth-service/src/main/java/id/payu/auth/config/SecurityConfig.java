@@ -43,7 +43,10 @@ public class SecurityConfig {
         "/api/v1/auth/register",
         "/api/v1/auth/refresh",
         "/api/v1/auth/forgot-password",
-        "/api/v1/auth/reset-password"
+        "/api/v1/auth/reset-password",
+        // BUG-BE-166: MFA endpoints must be public — user doesn't have JWT yet during MFA flow
+        "/api/v1/auth/mfa/verify",
+        "/api/v1/auth/mfa/challenge"
     };
 
     private static final String[] PUBLIC_ACTUATOR_ENDPOINTS = {

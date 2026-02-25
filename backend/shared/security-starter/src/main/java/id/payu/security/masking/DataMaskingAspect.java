@@ -51,9 +51,11 @@ public class DataMaskingAspect {
     }
 
     /**
-     * Mask sensitive data in method arguments before logging
+     * Mask sensitive data in method arguments before logging.
+     * BUG-BE-030: Narrowed pointcut from all service/controller methods to only @Audited methods.
+     * Previous broad pointcut caused significant performance overhead on every method call.
      */
-    @Around("execution(* id.payu..service..*.*(..)) || execution(* id.payu..controller..*.*(..))")
+    @Around("@annotation(id.payu.security.annotation.Audited)")
     public Object maskSensitiveData(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!properties.isMaskingEnabled()) {
             return joinPoint.proceed();

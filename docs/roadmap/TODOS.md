@@ -160,7 +160,7 @@
 | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-028~~ | ~~investment-service~~ | ~~FIXED: BUY fee now uses `managementFee` instead of `redemptionFee`. Redemption fee is only for SELL.~~ | ~~Gunakan `subscriptionFee` saat BUY.~~ |
 | ✅ ~~BUG-BE-029~~ | ~~investment-service~~ | ~~FIXED (prior session): `hasSufficientBalance()` reads `availableBalance` from wallet response.~~ | ~~Baca `"availableBalance"` dari response.~~ |
-| **BUG-BE-030** | `shared/security-starter` | `DataMaskingAspect` pointcut terlalu broad — setiap method di `id.payu..service`. Overhead signifikan. | Batasi ke method dengan `@Audited` annotation. |
+| ✅ ~~BUG-BE-030~~ | ~~shared/security-starter~~ | ~~FIXED: Narrowed `DataMaskingAspect` pointcut from `execution(* id.payu..service..*(..))` to `@annotation(Audited)` only. Eliminates masking overhead on every service method call.~~ | ~~Batasi ke method dengan `@Audited` annotation.~~ |
 | ✅ ~~BUG-BE-031~~ | ~~account-service~~ | ~~FIXED: Added `DataIntegrityViolationException` catch for race condition on concurrent registration with same email/username.~~ | ~~Tangkap `DataIntegrityViolationException` → return 409.~~ |
 | **BUG-BE-032** | `fx-service` | `fee = BigDecimal.ZERO` semua FX conversion — frontend tampilkan fee estimasi tapi backend gratis. | Dokumentasikan sebagai intentional atau implementasikan fee. |
 
@@ -303,9 +303,9 @@
 | ✅ ~~BUG-BE-078~~ | ~~fx-service~~ | ~~FxService.ts L138~~ | ~~FIXED: Changed baseUrl from `/fx-api/v1` to `/api/v1/fx` to match standard BFF routing pattern.~~ | ~~Unify ke `/api/fx/v1`, update BFF routing.~~ |
 | ✅ ~~BUG-BE-079~~ | ~~lending-service~~ | ~~LendingService.ts L130-134~~ | ~~FIXED: Moved `amount`, `merchantName` from URL query params to POST JSON body to prevent access log exposure.~~ | ~~Ubah ke POST JSON body.~~ |
 | **BUG-BE-080** | `lending-service` | `LendingService.ts` L161-173 | **Pre-approval endpoints ada di frontend, tidak ada di backend** — 404. | Expose di `LendingController.java` atau hapus dari `LendingService.ts`. |
-| **BUG-BE-090** | `shared/api-commons` | `RateLimitAspect.java` L45-50 | **Race condition rate limit** — `increment` + `expire` dua operasi Redis terpisah. Jika `expire` gagal: counter tanpa TTL → user permanently blocked. | Gunakan Redis Lua script untuk atomic increment+expire. |
+| ✅ ~~BUG-BE-090~~ | ~~shared/api-commons~~ | ~~FIXED (prior): `RateLimitAspect` already uses atomic Lua script for `INCR` + `EXPIRE`. No race condition possible.~~ | ~~Gunakan Redis Lua script untuk atomic increment+expire.~~ |
 | **BUG-BE-091** | `shared/api-commons` | `RateLimitAspect.java` L69 | **Fixed-window rate limit mudah di-burst** — 59 req/menit di detik 59 + 59 req di detik 0 next = 118 req dalam 2 detik. | Gunakan sliding window atau Token Bucket. |
-| **BUG-BE-092** | `shared/api-commons` | `WebhookProcessor.java` L226 | **`Thread.sleep()` di `@Async` retry** — meski di thread pool terpisah, pool bisa habis jika banyak webhook retry bersamaan. | Gunakan `ScheduledExecutorService.schedule()` non-blocking. |
+| ✅ ~~BUG-BE-092~~ | ~~shared/api-commons~~ | ~~FIXED: Replaced `Thread.sleep()` in `@Async` retry with `ScheduledExecutorService.schedule()` for non-blocking exponential backoff. Prevents exhaustion of async thread pool.~~ | ~~Gunakan `ScheduledExecutorService.schedule()` non-blocking.~~ |
 
 ---
 
@@ -726,9 +726,9 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-163** | `partner-service` | `SecurityConfig.java` L47 | **🔒 CORS `allowedOrigins("*")` — allow ALL origins** — wildcard CORS di payment gateway service. Any website bisa make cross-origin requests ke partner API. Combined with SNAP-BI token (yang juga vulnerable), ini critical. | Set specific allowed origins atau gunakan env config: `List.of("https://payu.co.id", "https://partner.payu.co.id")`. |
-| **BUG-BE-164** | `partner-service` | `PartnerController.java` L30, L38-63, L93-99, L140-147 | **🔒 PartnerController tanpa `@PreAuthorize`** — seluruh CRUD partner (create, read all, read by id, update, delete, regenerate keys) TANPA authorization check. `@SecurityRequirement` hanya OpenAPI decoration, bukan enforcement. Siapapun terautentikasi bisa manage semua partners. | Tambahkan `@PreAuthorize("hasRole('ADMIN')")` di setiap endpoint. |
-| **BUG-BE-165** | `partner-service` | `PartnerController.java` L226-231 | **🔒 `regenerateKeys()` return client secret di response** — setelah regenerate, DTO penuh (termasuk clientSecret) dikembalikan. Secret di-expose di network. Juga tidak ada rate limit — attacker bisa spam regenerate untuk invalidate partner credentials. | Hanya return masked secret (first 4 chars + ***). Tambahkan rate limit. |
+| ✅ ~~BUG-BE-163~~ | ~~partner-service~~ | ~~SecurityConfig.java L47~~ | ~~FIXED (prior): CORS restricted to `payu.co.id` and `partner.payu.co.id` instead of wildcard `*`.~~ | ~~Set specific allowed origins.~~ |
+| ✅ ~~BUG-BE-164~~ | ~~partner-service~~ | ~~PartnerController.java~~ | ~~FIXED (prior): Added `@PreAuthorize("hasRole('ADMIN')")` at class level on PartnerController.~~ | ~~Tambahkan `@PreAuthorize("hasRole('ADMIN')")`.~~ |
+| ✅ ~~BUG-BE-165~~ | ~~partner-service~~ | ~~PartnerController.java L226-231~~ | ~~FIXED (prior): `regenerateKeys()` now masks client secret (first 4 chars + ***) and has `@RateLimiter`.~~ | ~~Hanya return masked secret. Tambahkan rate limit.~~ |
 | **BUG-FE-040** | `web-app` | `middleware.ts` L25-27 | **🔒 Auth check HANYA berdasarkan cookie existence** — `request.cookies.has('refreshToken')`. Cookie bisa exist tapi expired/invalid. Middleware tidak validate cookie value. | Ini acceptable untuk Edge middleware (no DB access), tapi perlu tambahan server-side validation di BFF proxy. Document limitation ini. |
 
 ---
@@ -737,8 +737,8 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-BE-166** | `auth-service` | `SecurityConfig.java` L36-38 | **MFA verify endpoint TIDAK di-list sebagai public** — `PUBLIC_ENDPOINTS` hanya `login`, `register`, `refresh`, dll. Endpoint `POST /api/v1/auth/mfa/verify` require JWT (filter chain Order 3) → tapi user belum punya JWT saat MFA! Login flow broken. | Tambahkan `/api/v1/auth/mfa/verify` ke `PUBLIC_ENDPOINTS`. |
-| **BUG-BE-167** | `auth-service` | `SecurityConfig.java` L119 | **JwtDecoder pakai `System.getenv()` bukan `@Value`** — tidak bisa override di `application.yml` test profiles. Environment-specific config hardcoded. | Gunakan `@Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")`. |
+| ✅ ~~BUG-BE-166~~ | ~~auth-service~~ | ~~SecurityConfig.java L36-38~~ | ~~FIXED: Added `/api/v1/auth/mfa/verify` and `/api/v1/auth/mfa/challenge` to PUBLIC_ENDPOINTS. Users can't have JWT during MFA flow.~~ | ~~Tambahkan `/api/v1/auth/mfa/verify` ke `PUBLIC_ENDPOINTS`.~~ |
+| ✅ ~~BUG-BE-167~~ | ~~auth-service~~ | ~~SecurityConfig.java L119~~ | ~~FIXED (prior): `@Value` injection replaces `System.getenv()` for JWT config. Test profile overrides now work.~~ | ~~Gunakan `@Value`.~~ |
 | **BUG-BE-168** | `compliance-service` | `ComplianceAuditController.java` L44-46 | **Mutable service field via public setter** — `setComplianceAuditService()` public setter memungkinkan service diganti at runtime. Hapus field mutability. | Hapus setter, buat field `final`, inject via constructor. |
 | **BUG-BE-169** | `compliance-service` | `ComplianceAuditController.java` L117 | **`IllegalArgumentException` thrown tanpa `@ExceptionHandler`** — `throw new IllegalArgumentException("At least one search parameter is required")` → 500 response. | Buat custom `BadRequestException` atau handle di `@ControllerAdvice`. |
 | **BUG-FE-041** | `web-app` | `lib/api.ts` L63, L68 | **Refresh endpoint path mismatch** — interceptor calls `/api/auth/refresh`, tapi BFF proxy hanya handle `/api/v1/*`. Refresh always fails → redirect ke login → infinite redirect loop jika user punya valid refreshToken cookie. | Sinkronkan: `/api/v1/auth/refresh` atau buat dedicated route. Sama issue dengan BUG-FE-037/038. |
@@ -757,7 +757,7 @@
 | **BUG-FE-045** | `web-app` | `lib/validation.ts` L89-101 | **Email domain typo detection blocks valid domains** — `.co` domains (e.g., `user@company.co`) valid tapi di-reject karena typo detection. `gmail.co` → suggest `gmail.com`, tapi `company.co` bukan typo. | Hanya suggest, jangan block — set `isValid: true` tapi tambahkan `suggestion` field. |
 | **BUG-FE-046** | `web-app` | `middleware.ts` L60 | **Route match logic too broad** — `publicRoutes.some(route => pathWithoutLocale.startsWith(route))`. `/login-debug`, `/onboarding-secret`, `/legal/privacy-backdoor` semua match. | Gunakan exact match atau match dengan trailing `/`: `pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/')`. |
 | **BUG-BE-170** | all services | `SecurityConfig.java` (multiple) | **`EnableMethodSecurity` missing di sebagian besar services** — `@PreAuthorize` hanya berfungsi jika `@EnableMethodSecurity` aktif. Hanya `partner-service` yang punya. Service lain pakai `@PreAuthorize` tapi mungkin tidak enforced. | Tambahkan `@EnableMethodSecurity` di semua SecurityConfig yang punya `@PreAuthorize` endpoints. |
-| **BUG-BE-171** | `wallet-service`, `transaction-service`, `auth-service` | `SecurityConfig.java` (multiple) | **`SecurityContextPersistenceFilter` deprecated** — `addFilterBefore(..., SecurityContextPersistenceFilter.class)`. Filter ini deprecated sejak Spring Security 6.0. Gunakan `SecurityContextHolderFilter.class`. | Ganti reference ke `SecurityContextHolderFilter`. |
+| ✅ ~~BUG-BE-171~~ | ~~wallet-service, transaction-service, auth-service~~ | ~~SecurityConfig.java (multiple)~~ | ~~FIXED: Replaced deprecated `SecurityContextPersistenceFilter` with `SecurityContextHolderFilter` in wallet-service and transaction-service. Auth-service was already fixed.~~ | ~~Ganti reference ke `SecurityContextHolderFilter`.~~ |
 | **BUG-FE-047** | `web-app` | `lib/currency.ts` L281-282 | **`roundCurrency()` pakai `Math.round(amount * multiplier) / multiplier`** — floating point arithmetic. `Math.round(1.005 * 100) / 100 = 1.00` bukan `1.01`. | Gunakan `Number((amount).toFixed(decimals))` atau integer-based rounding. |
 
 ---

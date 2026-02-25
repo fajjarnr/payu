@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,6 +46,15 @@ public class WebhookProcessor {
     private final StringRedisTemplate redisTemplate;
     private final KafkaTemplate<String, WebhookEvent> kafkaTemplate;
     private final WebhookConfig config;
+
+    // BUG-BE-092: Dedicated scheduler for non-blocking retry delays
+    private static final ScheduledExecutorService RETRY_SCHEDULER = Executors.newScheduledThreadPool(2,
+            r -> {
+                Thread t = new Thread(r, "webhook-retry");
+                t.setDaemon(true);
+                return t;
+            }
+    );
 
     /**
      * Checks if a webhook has already been processed.
@@ -222,16 +233,14 @@ public class WebhookProcessor {
                 log.warn("Webhook processing failed, will retry: id={}, attempt={}, delay={}ms",
                         webhookId, attempt + 1, delayMs, e);
 
-                try {
-                    Thread.sleep(delayMs);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    markFailed(webhookId, "Interrupted during retry delay");
-                    handler.onError(webhookId, ie);
-                    return;
-                }
-
-                processWithRetry(webhookId, payload, handler, attempt + 1);
+                // BUG-BE-092: Non-blocking retry delay using ScheduledExecutorService
+                // instead of Thread.sleep which would block the @Async thread pool
+                final int nextAttempt = attempt + 1;
+                RETRY_SCHEDULER.schedule(
+                        () -> processWithRetry(webhookId, payload, handler, nextAttempt),
+                        delayMs,
+                        TimeUnit.MILLISECONDS
+                );
             } else {
                 log.error("Webhook processing failed after all retries: id={}", webhookId, e);
                 markFailed(webhookId, "Max retries exceeded: " + e.getMessage());
