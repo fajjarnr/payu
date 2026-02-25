@@ -218,17 +218,20 @@ describe('validation.ts - validateEmail', () => {
   });
 
   describe('Common typo detection', () => {
+    // BUG-FE-010: Typo detection now suggests instead of blocking (.co is valid)
     it('should suggest correction for gmail.co', () => {
       expect(validateEmail('test@gmail.co')).toEqual({
-        isValid: false,
-        error: 'Apakah Anda maksud gmail.com?',
+        isValid: true,
+        normalized: 'test@gmail.co',
+        suggestion: 'Apakah Anda maksud gmail.com?',
       });
     });
 
     it('should suggest correction for yahoo.co', () => {
       expect(validateEmail('test@yahoo.co')).toEqual({
-        isValid: false,
-        error: 'Apakah Anda maksud yahoo.com?',
+        isValid: true,
+        normalized: 'test@yahoo.co',
+        suggestion: 'Apakah Anda maksud yahoo.com?',
       });
     });
   });
@@ -753,11 +756,24 @@ describe('validation.ts - Edge Cases and Error Handling', () => {
       expect(validateName('John 😀').isValid).toBe(false);
     });
 
-    it('should handle unicode characters', () => {
+    // BUG-FE-019: Unicode letters (accents, diacritics) must be accepted
+    it('should accept unicode accented characters', () => {
       expect(validateName('Jöhn Döe')).toEqual({
-        isValid: false,
-        error: 'Nama hanya boleh mengandung huruf dan karakter spesial tertentu',
+        isValid: true,
+        normalized: 'Jöhn Döe',
       });
+    });
+
+    it('should accept names with diacritics and accents', () => {
+      expect(validateName('André François').isValid).toBe(true);
+      expect(validateName('María García').isValid).toBe(true);
+      expect(validateName('Müller Straße').isValid).toBe(true);
+      expect(validateName('Nguyễn Văn').isValid).toBe(true);
+    });
+
+    it('should accept Arabic and CJK names', () => {
+      expect(validateName('محمد علي').isValid).toBe(true);
+      expect(validateName('田中太郎').isValid).toBe(true);
     });
   });
 

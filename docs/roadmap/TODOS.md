@@ -385,7 +385,7 @@
 | ✅ ~~BUG-FE-016~~ | ~~FIXED: 503 returns error:true, _fallback:true not fake success~~ |
 | ✅ ~~BUG-FE-017~~ | ~~FIXED: startOfDay creates new Date(date) copy, no mutation~~ |
 | ✅ ~~BUG-FE-018~~ | ~~FIXED: No console.log in production, onOpen dispatches to callback~~ |
-| ✅ **BUG-FE-019** | `lib/validation.ts` L471 | Regex nama tidak support Unicode — nama Indonesia/asing dengan aksen ditolak. | Ganti ke `/^[\p{L}\s\.\,\-\']+$/u`. |
+| ✅ ~~BUG-FE-019~~ | ~~lib/validation.ts L471~~ | ~~FIXED: Regex nama changed from ASCII-only `[a-zA-Z]` to Unicode `[\p{L}]` with `u` flag. Names with accents (André, María, Müller, Nguyễn) now accepted. Test updated to verify.~~ | ~~Ganti ke `/^[\p{L}\s\.,\-\']+$/u`.~~ |
 
 ---
 
@@ -504,7 +504,7 @@
 | ✅ ~~BUG-BE-097~~ | ~~FIXED: Changed matchIfMissing to true for default-on~~ |
 | ✅ ~~BUG-BE-098~~ | ~~FIXED: Removed duplicate TimeoutException class~~ |
 | ✅ ~~BUG-BE-099~~ | ~~FIXED: Added onEntryAdded handler for dynamic CB registration~~ |
-| ✅ **BUG-BE-100** | `shared/outbox-starter` | `OutboxPublisher.java` L95-96 | **`@Scheduled` + `@Transactional` tanpa distributed lock** — di multi-pod deployment, semua pod poll outbox table bersamaan. `findUnpublishedEventsWithLock` pakai pessimistic lock, tapi lock hanya efektif per-DB-connection. Dua pod bisa process batch yang sama jika menggunakan different DB connections. | Tambahkan `ShedLock` atau Redis distributed lock sebelum poll. Atau gunakan `SELECT FOR UPDATE SKIP LOCKED` di repository query (PostgreSQL 9.5+). |
+| ✅ ~~BUG-BE-100~~ | ~~shared/outbox-starter~~ | ~~OutboxPublisher.java L95-96~~ | ~~FIXED: Replaced `@Lock(PESSIMISTIC_WRITE)` with native `SELECT ... FOR UPDATE SKIP LOCKED` query. Multi-pod deployments now each grab different rows without blocking — pod A locks rows 1-100, pod B skips those and gets 101-200. No ShedLock needed.~~ | ~~Use `SELECT FOR UPDATE SKIP LOCKED`.~~ |
 | ✅ ~~BUG-BE-101~~ | ~~FIXED: Changed MDC.clear() to MDC.remove() per key~~ |
 | ✅ ~~BUG-BE-102~~ | ~~FIXED: OutboxProperties defaults retentionDays=30 (safe)~~ |
 
