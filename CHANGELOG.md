@@ -13,6 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Logging-Starter Best Practice Overhaul (2026-02-25)**:
+  - **CRITICAL**: Added `container` profile to `logback-payu-base.xml` — pods on OpenShift with `SPRING_PROFILES_ACTIVE=container` had **NO root appender active**, causing silent log loss (no errors visible in `oc logs`). Now routes to `ASYNC_JSON` appender.
+  - Added fallback appender block for unknown profiles to prevent future silent failures.
+  - `TraceIdFilter` now uses configurable MDC keys from `PayuLoggingProperties.TracingProperties` instead of hardcoded constants.
+  - Added `CorrelationIdWebFilter` and `TraceIdWebFilter` for reactive WebFlux applications (conditional on `@ConditionalOnWebApplication(REACTIVE)`).
+  - Added `MdcKafkaProducerInterceptor` and `MdcKafkaConsumerInterceptor` for `correlation_id` propagation through Kafka record headers.
+  - Added `kafka-clients` as optional dependency in `logging-starter/pom.xml`.
+  - Registered reactive WebFlux filter beans in `PayuLoggingAutoConfiguration`.
+
+- **Containerfile Standardization (2026-02-25)**:
+  - Unified all 27 `Containerfile`s across 4 categories: Spring Boot (16), Quarkus (3), Simulator (4), Python (2), Frontend (1).
+  - Deleted all 25 `Dockerfile`s — single `Containerfile` per service.
+  - Fixed 15/22 Java services with WRONG ports (8001-8092 → 8080).
+  - Added `HeapDumpOnOutOfMemoryError` to all Java Containerfiles.
+  - Removed redundant `HEALTHCHECK`, `VOLUME`, `curl` install (OpenShift manages probes natively).
+  - Updated 6 build scripts, 2 infrastructure files, 27 `.dockerignore` files.
+  - Net: 86 files changed, -1764 lines, +418 lines.
+
 - **BUG-BE-026 — SMS Sender Configurable Provider (2026-02-25)**:
   - `SmsSender.java` was a hard-coded mock that always returned `true` without sending anything.
   - Refactored with configurable `payu.sms.provider` property supporting `LOG` (default), `TWILIO`, `VONAGE`, `ZENZIVA` modes.

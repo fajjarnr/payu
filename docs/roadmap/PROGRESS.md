@@ -12,7 +12,7 @@
 | :--- | :--- |
 | **Last Status Update** | February 25, 2026 |
 | **Production Readiness** | 99% (229/232 bugs fixed) |
-| **OpenShift Tag** | `v1.3.0` |
+| **OpenShift Tag** | `v1.4.0` (in-progress) |
 | **Namespace** | `payu-dev` |
 | **Total Pods** | 36/36 running |
 | **Services Deployed** | 22/22 |
@@ -76,6 +76,9 @@
 - ✅ **Statement Historical Balance** — Fixed `statement-service` to compute historical balances by reversing post-period transactions from current balance.
 - ✅ **API Contract Alignment** — Fixed `ScheduledTransferController` and `SplitBillController` response types (void→response object) and BFF whitelist routing.
 - ✅ **Auth Test Coverage** — Added 9 comprehensive vitest tests for `useSilentRefresh` hook.
+- ✅ **Containerfile Standardization** — Unified 27 Containerfiles, deleted 25 Dockerfiles. Fixed wrong ports (8001-8092 → 8080), added HeapDump, removed redundant HEALTHCHECK/VOLUME/curl. 86 files changed, -1764/+418 lines.
+- ✅ **Logging-Starter Overhaul** — CRITICAL: added `container` profile to logback (fixes silent log loss on OpenShift). Added reactive WebFlux filters, Kafka MDC interceptors, configurable TraceIdFilter. 8 files changed, +305 lines.
+- ✅ **RHSSO → RHBK Migration** — Upgraded to Red Hat Build of Keycloak v26.4.9. Realm imported, OIDC tokens verified.
 
 ### v1.3.0 — February 23, 2026
 
