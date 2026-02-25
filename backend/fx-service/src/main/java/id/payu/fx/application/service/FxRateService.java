@@ -86,6 +86,10 @@ public class FxRateService implements FxRateUseCase {
         FxRate rate = getCurrentRate(fromCurrency, toCurrency);
         BigDecimal toAmount = amount.multiply(rate.getRate());
         
+        // BUG-BE-032: Calculate actual fee (0.5% of source amount) instead of always ZERO
+        BigDecimal feePercentage = new BigDecimal("0.005"); // 0.5%
+        BigDecimal fee = amount.multiply(feePercentage).setScale(2, java.math.RoundingMode.HALF_UP);
+        
         FxConversion conversion = FxConversion.builder()
                 .id(UUID.randomUUID())
                 .accountId(accountId)
@@ -94,7 +98,7 @@ public class FxRateService implements FxRateUseCase {
                 .fromAmount(amount)
                 .toAmount(toAmount)
                 .exchangeRate(rate.getRate())
-                .fee(BigDecimal.ZERO)
+                .fee(fee)
                 .conversionDate(LocalDateTime.now())
                 .status(FxConversion.ConversionStatus.COMPLETED)
                 .build();

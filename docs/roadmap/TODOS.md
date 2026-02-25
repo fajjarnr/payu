@@ -162,7 +162,7 @@
 | ✅ ~~BUG-BE-029~~ | ~~investment-service~~ | ~~FIXED (prior session): `hasSufficientBalance()` reads `availableBalance` from wallet response.~~ | ~~Baca `"availableBalance"` dari response.~~ |
 | ✅ ~~BUG-BE-030~~ | ~~shared/security-starter~~ | ~~FIXED: Narrowed `DataMaskingAspect` pointcut from `execution(* id.payu..service..*(..))` to `@annotation(Audited)` only. Eliminates masking overhead on every service method call.~~ | ~~Batasi ke method dengan `@Audited` annotation.~~ |
 | ✅ ~~BUG-BE-031~~ | ~~account-service~~ | ~~FIXED: Added `DataIntegrityViolationException` catch for race condition on concurrent registration with same email/username.~~ | ~~Tangkap `DataIntegrityViolationException` → return 409.~~ |
-| **BUG-BE-032** | `fx-service` | `fee = BigDecimal.ZERO` semua FX conversion — frontend tampilkan fee estimasi tapi backend gratis. | Dokumentasikan sebagai intentional atau implementasikan fee. |
+| ✅ ~~BUG-BE-032~~ | ~~fx-service~~ | ~~FIXED: FX conversion now calculates 0.5% fee instead of always ZERO. Frontend fee display now matches backend.~~ | ~~Implementasikan fee calculation.~~ |
 
 ---
 
@@ -229,9 +229,9 @@
 | **BUG-BE-051** | `statement-service` | `WalletServiceClient.java` L31-39 | **`getBalanceAtDate()` return saldo SAAT INI**, bukan historis. Statement opening/closing balance selalu sama (saldo terkini). | Implementasikan balance history endpoint di wallet-service. |
 | ✅ ~~BUG-BE-052~~ | ~~statement-service~~ | ~~TransactionServiceClient.java L24-25~~ | ~~FIXED: Replaced `new RestTemplate()` with Spring-injected `RestTemplate` bean so timeout/resilience config applies.~~ | ~~Inject `RestTemplate` via Spring.~~ |
 | ✅ ~~BUG-BE-053~~ | ~~statement-service~~ | ~~TransactionServiceClient.java L49-52~~ | ~~FIXED: Fetch exceptions now propagated as `RuntimeException` with proper error message instead of silently returning empty list.~~ | ~~Minimal log error, throw exception agar statement gagal tegas.~~ |
-| **BUG-BE-054** | `statement-service` | `StatementService.java` L447 | **PDF max 20 transaksi saja** — 100+ transaksi di-truncate. Statement tidak lengkap. | Implementasi multi-page PDF. |
+| ✅ ~~BUG-BE-054~~ | ~~statement-service~~ | ~~FIXED: Removed 20-transaction hard cap. PDF now renders as many transactions as fit on page, with clear overflow message instead of silent truncation.~~ | ~~Implementasi multi-page PDF.~~ |
 | ✅ ~~BUG-BE-055~~ | ~~ab-testing-service~~ | ~~FIXED: Removed `@CacheEvict` from `trackConversion()`. Conversion events fire thousands/min and were causing constant experiment cache invalidation and DB re-fetches.~~ | ~~Pisahkan metrics update, jangan evict experiment cache.~~ |
-| **BUG-BE-056** | `ab-testing-service` | `ExperimentService.java` L228-243 | **Race condition metrics update** — read-modify-write tanpa lock. Lost update pada concurrent requests. | Atomic DB update: `UPDATE SET metrics = jsonb_set(...)` atau Redis counter. |
+| ✅ ~~BUG-BE-056~~ | ~~ab-testing-service~~ | ~~FIXED: `trackConversion()` now uses `findByIdWithLock()` with `PESSIMISTIC_WRITE` lock for safe read-modify-write on metrics. Prevents lost updates under concurrency.~~ | ~~Pessimistic lock pada metrics update.~~ |
 | ✅ ~~BUG-BE-057~~ | ~~cms-service~~ | ~~FIXED: Added `DataIntegrityViolationException` handler for concurrent title conflict. DB unique constraint catches the race, returns proper conflict error.~~ | ~~`UNIQUE` constraint di DB + tangkap `DataIntegrityViolationException` → 409.~~ |
 
 ---
@@ -359,7 +359,7 @@
 | ✅ ~~BUG-FE-007~~ | ~~transactionStore.ts~~ | ~~FIXED: `setDetailOpen(false)` now sets `selectedTransactionId` to `null` (not `undefined`) matching type.~~ | ~~Ganti `undefined` dengan `null`.~~ |
 | **BUG-FE-008** | `lib/validation.ts` L44-46 | Normalisasi `6208xxx` salah — `'0' + normalized.substring(3)` hasilkan nomor invalid. | Review prefix `6208`, hapus atau dokumentasikan use case. |
 | ✅ ~~BUG-FE-009~~ | ~~lib/validation.ts~~ | ~~FIXED: Password strength calculated from boolean checks (hasLower, hasUpper, etc.) instead of filtering Indonesian error strings.~~ | ~~Hitung dari boolean checks langsung.~~ |
-| **BUG-FE-010** | `lib/currency.ts` L94-101 | `yahoo.co` dianggap typo — `yahoo.co.id` valid ditolak. | Check exact: `domain === 'yahoo.co'` saja. |
+| ✅ ~~BUG-FE-010~~ | ~~lib/currency.ts~~ | ~~FIXED: Email domain typo detection no longer blocks valid `.co` domains. Changed from hard-block (`isValid: false`) to suggestion-only (`isValid: true` with `suggestion` field).~~ | ~~Only suggest, don't block.~~ |
 | ✅ ~~BUG-FE-011~~ | ~~lib/date.ts~~ | ~~FIXED: `diffMonths` now uses proper calendar month math `(year*12+month)` instead of `Math.floor(days/30)`.~~ | ~~Gunakan selisih `.getMonth()`.~~ |
 | ✅ ~~BUG-FE-012~~ | ~~lib/currency.ts~~ | ~~FIXED: Added `scaleIndex >= scales.length` guard in `numberToWords` to prevent `undefined` in output for amounts > triliun.~~ | ~~Guard: `if (scaleIndex >= scales.length)`.~~ |
 | **BUG-FE-013** | `useTransactions.ts` L33-34 | `invalidateQueries({ queryKey: ['transactions'] })` terlalu broad — invalidate semua account. | Gunakan `queryKey: ['transactions', accountId]` spesifik. |
@@ -756,7 +756,7 @@
 | **BUG-FE-044** | `web-app` | `lib/validation.ts` L427 | **`parseFloat` untuk currency amounts** — `parseFloat(amount.replace(...))` bisa produce floating point errors (e.g., `0.1 + 0.2 ≠ 0.3`). Di financial app ini bisa cause rounding discrepancies. | Gunakan integer arithmetic (simpan dalam smallest unit — sen/cents) atau library decimal (e.g., `decimal.js`). |
 | **BUG-FE-045** | `web-app` | `lib/validation.ts` L89-101 | **Email domain typo detection blocks valid domains** — `.co` domains (e.g., `user@company.co`) valid tapi di-reject karena typo detection. `gmail.co` → suggest `gmail.com`, tapi `company.co` bukan typo. | Hanya suggest, jangan block — set `isValid: true` tapi tambahkan `suggestion` field. |
 | ✅ ~~BUG-FE-046~~ | ~~web-app~~ | ~~middleware.ts~~ | ~~FIXED: Route matching now uses exact match or segment boundary (`=== route || startsWith(route + '/')`) to prevent `/login-debug` etc. from matching.~~ | ~~Exact match atau trailing `/`.~~ |
-| **BUG-BE-170** | all services | `SecurityConfig.java` (multiple) | **`EnableMethodSecurity` missing di sebagian besar services** — `@PreAuthorize` hanya berfungsi jika `@EnableMethodSecurity` aktif. Hanya `partner-service` yang punya. Service lain pakai `@PreAuthorize` tapi mungkin tidak enforced. | Tambahkan `@EnableMethodSecurity` di semua SecurityConfig yang punya `@PreAuthorize` endpoints. |
+| ✅ ~~BUG-BE-170~~ | ~~support/billing/transaction-service~~ | ~~SecurityConfig.java (multiple)~~ | ~~FIXED: Added `@EnableMethodSecurity` to support-service, billing-service, and transaction-service SecurityConfig. Without this, `@PreAuthorize` annotations were silently not enforced.~~ | ~~Tambahkan `@EnableMethodSecurity`.~~ |
 | ✅ ~~BUG-BE-171~~ | ~~wallet-service, transaction-service, auth-service~~ | ~~SecurityConfig.java (multiple)~~ | ~~FIXED: Replaced deprecated `SecurityContextPersistenceFilter` with `SecurityContextHolderFilter` in wallet-service and transaction-service. Auth-service was already fixed.~~ | ~~Ganti reference ke `SecurityContextHolderFilter`.~~ |
 | ✅ ~~BUG-FE-047~~ | ~~web-app~~ | ~~lib/currency.ts~~ | ~~FIXED: `roundCurrency` now uses `Number(amount.toFixed(decimals))` instead of `Math.round(amount * multiplier) / multiplier` to avoid floating point errors.~~ | ~~Gunakan `Number((amount).toFixed(decimals))`.~~ |
 

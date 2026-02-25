@@ -222,7 +222,8 @@ public class ExperimentService {
         log.debug("Tracking conversion for experiment: {}, user: {}, variant: {}, type: {}",
                 experimentId, userId, variant, eventType);
 
-        Experiment experiment = getExperimentById(experimentId);
+        Experiment experiment = experimentRepository.findByIdWithLock(experimentId)
+                .orElseThrow(() -> new IllegalArgumentException("Experiment not found: " + experimentId));
 
         // Update metrics
         @SuppressWarnings("unchecked")

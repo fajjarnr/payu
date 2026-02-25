@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +20,11 @@ import java.util.UUID;
  */
 @Repository
 public interface ExperimentRepository extends JpaRepository<Experiment, UUID> {
+
+    // BUG-BE-056: Pessimistic lock for safe read-modify-write on metrics
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT e FROM Experiment e WHERE e.id = :id")
+    Optional<Experiment> findByIdWithLock(@Param("id") UUID id);
 
     /**
      * Find experiment by unique key

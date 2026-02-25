@@ -84,9 +84,10 @@ export function validateEmail(email: string | null | undefined): {
     return { isValid: false, error: 'Email terlalu panjang (maksimal 254 karakter)' };
   }
 
-  // Check for common typos in popular domains
+  // BUG-FE-010: Check for common typos — but only suggest, don't block
+  // yahoo.co.id is valid but yahoo.co alone is likely a typo for yahoo.com
   const domain = trimmed.split('@')[1].toLowerCase();
-  const commonDomains = {
+  const typoSuggestions: Record<string, string> = {
     'gmail.co': 'gmail.com',
     'yahoo.co': 'yahoo.com',
     'outlook.co': 'outlook.com',
@@ -94,10 +95,13 @@ export function validateEmail(email: string | null | undefined): {
     'ymail.co': 'ymail.com',
   };
 
-  if (commonDomains[domain as keyof typeof commonDomains]) {
+  // Only match exact domain (not subdomains like yahoo.co.id)  
+  const suggestion = typoSuggestions[domain];
+  if (suggestion) {
     return {
-      isValid: false,
-      error: `Apakah Anda maksud ${commonDomains[domain as keyof typeof commonDomains]}?`,
+      isValid: true, // Don't block — it might be intentional
+      normalized: trimmed.toLowerCase(),
+      suggestion: `Apakah Anda maksud ${suggestion}?`,
     };
   }
 
