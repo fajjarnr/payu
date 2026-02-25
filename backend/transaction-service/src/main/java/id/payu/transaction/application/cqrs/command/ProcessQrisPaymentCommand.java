@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Command to process a QRIS payment.
@@ -20,6 +21,7 @@ import java.util.Objects;
  *   <li>qrisCode: Required, valid QRIS code format</li>
  *   <li>amount: Required, positive amount (validated by Money)</li>
  *   <li>userId: Required</li>
+ *   <li>accountId: Required, the wallet account UUID to debit</li>
  * </ul>
  */
 public record ProcessQrisPaymentCommand(
@@ -32,7 +34,10 @@ public record ProcessQrisPaymentCommand(
         Money amount,
 
         @NotBlank(message = "User ID is required")
-        String userId
+        String userId,
+
+        @NotNull(message = "Account ID is required")
+        UUID accountId
 ) implements Command<Void> {
 
     /**
@@ -41,6 +46,7 @@ public record ProcessQrisPaymentCommand(
     public ProcessQrisPaymentCommand {
         Objects.requireNonNull(amount, "Amount cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(accountId, "Account ID cannot be null");
 
         // Additional validation for Money positivity
         if (amount.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
@@ -59,7 +65,8 @@ public record ProcessQrisPaymentCommand(
         return new ProcessQrisPaymentCommand(
                 request.getQrisCode(),
                 money,
-                userId
+                userId,
+                request.getAccountId()
         );
     }
 }

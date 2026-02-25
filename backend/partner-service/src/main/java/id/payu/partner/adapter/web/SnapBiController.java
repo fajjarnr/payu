@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.partner.domain.Partner;
 import id.payu.partner.dto.snap.*;
-import id.payu.partner.adapter.persistence.repository.PartnerRepository;
+import id.payu.partner.application.service.PartnerService;
 import id.payu.partner.application.service.SnapBiPaymentService;
 import id.payu.partner.application.service.SnapBiSignatureService;
 import id.payu.partner.application.service.SnapBiTokenService;
@@ -31,6 +31,9 @@ import java.time.format.DateTimeParseException;
 /**
  * REST controller for SNAP BI (BI-FAST) payment integration.
  * Implements the SNAP BI API specification for payment processing.
+ *
+ * BUG-BE-138 FIX: Uses PartnerService instead of direct PartnerRepository access.
+ * BUG-BE-139 FIX: Uses raw request body for signature validation instead of re-serialization.
  */
 @RestController
 @RequestMapping("/v1/partner")
@@ -38,7 +41,8 @@ import java.time.format.DateTimeParseException;
 @RequiredArgsConstructor
 public class SnapBiController {
 
-    private final PartnerRepository partnerRepository;
+    // BUG-BE-138 FIX: Use service instead of repository
+    private final PartnerService partnerService;
     private final SnapBiSignatureService signatureService;
     private final SnapBiTokenService tokenService;
     private final SnapBiPaymentService paymentService;
@@ -82,14 +86,15 @@ public class SnapBiController {
         @Parameter(description = "Partner client key", required = true) @RequestHeader("X-CLIENT-KEY") String clientKey,
         @Parameter(description = "Request timestamp", required = true) @RequestHeader("X-TIMESTAMP") String timestamp,
         @Parameter(description = "HMAC signature", required = true) @RequestHeader("X-SIGNATURE") String signature,
-        @Valid @RequestBody TokenRequest request) {
+        @Valid @RequestBody String rawBody) {
 
         // BUG-BE-134: Validate timestamp window to prevent replay attacks
         if (!isTimestampValid(timestamp)) {
             return errorResponse(HttpStatus.BAD_REQUEST, "4002508", "Invalid or expired timestamp");
         }
 
-        Partner partner = partnerRepository.findByClientId(clientKey).orElse(null);
+        // BUG-BE-138: Use service layer instead of repository
+        Partner partner = partnerService.findByClientId(clientKey).orElse(null);
         if (partner == null) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012502", "Invalid Client Key");
         }
@@ -99,19 +104,28 @@ public class SnapBiController {
         }
 
         try {
-            String requestBody = objectMapper.writeValueAsString(request);
+            // BUG-BE-139 FIX: Use raw request body for signature validation
+            // instead of re-serialized JSON (which may change field ordering/whitespace)
             boolean signatureValid = signatureService.validateSignatureWithClientKey(
                 partner.getClientSecret(),
                 "POST",
                 "/v1/partner/auth/token",
                 timestamp,
-                requestBody,
+                rawBody,
                 signature
             );
 
             if (!signatureValid) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "4012504", "Invalid Signature");
             }
+        } catch (Exception e) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
+        }
+
+        // Parse raw body to extract grant_type if needed
+        TokenRequest request;
+        try {
+            request = objectMapper.readValue(rawBody, TokenRequest.class);
         } catch (Exception e) {
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
@@ -143,7 +157,7 @@ public class SnapBiController {
         @RequestHeader("X-EXTERNAL-ID") String externalId,
         @RequestHeader("X-TIMESTAMP") String timestamp,
         @RequestHeader("X-SIGNATURE") String signature,
-        @Valid @RequestBody PaymentRequest request) {
+        @RequestBody String rawBody) {
 
         // BUG-BE-134: Validate timestamp window to prevent replay attacks
         if (!isTimestampValid(timestamp)) {
@@ -161,19 +175,20 @@ public class SnapBiController {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012506", "Invalid or Expired Token");
         }
 
-        Partner partner = partnerRepository.findByClientId(clientId).orElse(null);
+        // BUG-BE-138: Use service layer
+        Partner partner = partnerService.findByClientId(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "Partner not found or inactive");
         }
 
         try {
-            String requestBody = objectMapper.writeValueAsString(request);
+            // BUG-BE-139 FIX: Use raw body for signature validation
             boolean signatureValid = signatureService.validateSignature(
                 partner.getClientSecret(),
                 "POST",
                 "/v1/partner/payments",
                 token,
-                requestBody,
+                rawBody,
                 timestamp,
                 signature
             );
@@ -181,6 +196,14 @@ public class SnapBiController {
             if (!signatureValid) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "4012504", "Invalid Signature");
             }
+        } catch (Exception e) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
+        }
+
+        // Parse raw body to PaymentRequest
+        PaymentRequest request;
+        try {
+            request = objectMapper.readValue(rawBody, PaymentRequest.class);
         } catch (Exception e) {
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
@@ -212,7 +235,8 @@ public class SnapBiController {
              return errorResponse(HttpStatus.UNAUTHORIZED, "4012506", "Invalid or Expired Token");
         }
 
-        Partner partner = partnerRepository.findByClientId(clientId).orElse(null);
+        // BUG-BE-138: Use service layer
+        Partner partner = partnerService.findByClientId(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "Partner not found or inactive");
         }
@@ -246,7 +270,7 @@ public class SnapBiController {
         @RequestHeader("X-TIMESTAMP") String timestamp,
         @RequestHeader("X-SIGNATURE") String signature,
         @PathVariable("id") String referenceNo,
-        @Valid @RequestBody RefundRequest request) {
+        @RequestBody String rawBody) {
 
         // BUG-BE-134: Validate timestamp window
         if (!isTimestampValid(timestamp)) {
@@ -264,19 +288,20 @@ public class SnapBiController {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012506", "Invalid or Expired Token");
         }
 
-        Partner partner = partnerRepository.findByClientId(clientId).orElse(null);
+        // BUG-BE-138: Use service layer
+        Partner partner = partnerService.findByClientId(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "Partner not found or inactive");
         }
 
         try {
-            String requestBody = objectMapper.writeValueAsString(request);
+            // BUG-BE-139 FIX: Use raw body for signature validation
             boolean signatureValid = signatureService.validateSignature(
                 partner.getClientSecret(),
                 "POST",
                 "/v1/partner/payments/" + referenceNo + "/refund",
                 token,
-                requestBody,
+                rawBody,
                 timestamp,
                 signature
             );
@@ -284,6 +309,14 @@ public class SnapBiController {
             if (!signatureValid) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "4012504", "Invalid Signature");
             }
+        } catch (Exception e) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
+        }
+
+        // Parse raw body to RefundRequest
+        RefundRequest request;
+        try {
+            request = objectMapper.readValue(rawBody, RefundRequest.class);
         } catch (Exception e) {
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }

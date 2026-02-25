@@ -139,11 +139,40 @@ public class LoyaltyPointsService {
             .mapToInt(p -> Math.abs(p.getPoints()))
             .sum();
 
+        // XBUG-012 FIX: Compute pointsExpiring and nearest expiryDate
+        // Points that are EARNED, not yet expired, and have an expiry date in the future
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime expiryWindow = now.plusDays(30); // 30-day look-ahead
+
+        // Find the nearest expiry date among earned, non-expired points  
+        java.time.LocalDateTime nearestExpiry = allPoints.stream()
+            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EARNED)
+            .filter(p -> p.getExpiryDate() != null)
+            .filter(p -> p.getExpiryDate().isAfter(now))
+            .filter(p -> p.getExpiryDate().isBefore(expiryWindow))
+            .map(LoyaltyPoints::getExpiryDate)
+            .min(java.time.LocalDateTime::compareTo)
+            .orElse(null);
+
+        // Sum points expiring within the 30-day window
+        int pointsExpiring = nearestExpiry == null ? 0 : allPoints.stream()
+            .filter(p -> p.getTransactionType() == LoyaltyPoints.TransactionType.EARNED)
+            .filter(p -> p.getExpiryDate() != null)
+            .filter(p -> p.getExpiryDate().isAfter(now) && p.getExpiryDate().isBefore(expiryWindow))
+            .mapToInt(LoyaltyPoints::getPoints)
+            .sum();
+
+        java.time.Instant expiryInstant = nearestExpiry != null
+            ? nearestExpiry.atZone(java.time.ZoneId.systemDefault()).toInstant()
+            : null;
+
         return new LoyaltyBalanceResponse(
             currentBalance != null ? currentBalance : 0,
             (int) totalEarned,
             (int) totalRedeemed,
-            (int) expiredPointsCount
+            (int) expiredPointsCount,
+            pointsExpiring,
+            expiryInstant
         );
     }
 

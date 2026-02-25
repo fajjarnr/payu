@@ -3,13 +3,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import ComplianceService from '@/services/ComplianceService';
-import type { CreateAuditReportRequest, CreateGdprAuditRequest, GdprSearchCriteria } from '@/services/ComplianceService';
+import type { CreateAuditReportRequest, CreateGdprAuditRequest, GdprSearchCriteria, ComplianceStandard } from '@/services/ComplianceService';
 
 // ── Audit Reports ──
-export function useAuditReports() {
+export function useAuditReports(params?: {
+  transactionId?: string;
+  merchantId?: string;
+  standard?: ComplianceStandard;
+}) {
   return useQuery({
-    queryKey: ['audit-reports'],
-    queryFn: () => ComplianceService.listAuditReports(),
+    queryKey: ['audit-reports', params],
+    queryFn: () => ComplianceService.searchAuditReports(params ?? {}),
   });
 }
 

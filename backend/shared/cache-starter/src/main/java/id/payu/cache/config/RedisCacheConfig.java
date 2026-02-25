@@ -37,12 +37,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Auto-configuration for Redis cache with support for:
+ * Auto-configuration for Redis/Red Hat Data Grid cache with support for:
  * - Standalone, Sentinel, and Cluster modes
  * - Stale-while-revalidate pattern
  * - Custom TTL per cache
  * - Connection pooling
  * - Automatic reconnection
+ *
+ * <p><b>Red Hat Data Grid Compatibility:</b> This configuration uses the Lettuce client
+ * which communicates via the RESP (Redis Serialization Protocol). Red Hat Data Grid
+ * supports RESP mode, making it a drop-in replacement. All serialization uses
+ * {@code GenericJackson2JsonRedisSerializer} (JSON-based) ensuring cross-platform
+ * portability — no Java-specific serialization that would break with Data Grid.</p>
  */
 @Slf4j
 @AutoConfiguration

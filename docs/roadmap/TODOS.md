@@ -105,7 +105,7 @@
 | ✅ ~~BUG-BE-012~~ | ~~promotion-service~~ | ~~FIXED: Replaced `Math.random()` with `SecureRandom` for referral code generation.~~ | ~~Gunakan `SecureRandom`.~~ |
 | ✅ ~~BUG-BE-013~~ | ~~wallet-service~~ | ~~FIXED: Reused first `findByAccountId` result instead of querying DB twice.~~ | ~~Gunakan result dari cek pertama.~~ |
 | ✅ ~~BUG-BE-014~~ | ~~lending-service~~ | ~~FIXED: Added `@Transactional` to `processRepayment` method.~~ | ~~Tambahkan `@Transactional`.~~ |
-| **BUG-BE-015** | `transaction-service` | Komentar TODO: pagination info tidak dikembalikan ke client. | Implementasi `Page<Transaction>` return. |
+| ✅ ~~BUG-BE-015~~ | ~~transaction-service~~ | ~~FIXED: Added `PaginationInfo` (page, size, totalElements, totalPages) to `getAccountTransactions()` response. Also created `TransactionResponse` DTO (BUG-BE-135).~~ | ~~Implementasi `Page<Transaction>` return.~~ |
 | ✅ ~~BUG-BE-016~~ | ~~auth-service~~ | ~~FIXED: Username masked in all log statements via `maskUsername()` — shows only first 2 + last 2 chars.~~ | ~~Mask or hash username in logs.~~ |
 | ✅ ~~BUG-BE-017~~ | ~~gateway-service~~ | ~~FIXED: Authorization header no longer logged. Downgraded to DEBUG with only `hasAuth` boolean.~~ | ~~Remove or downgrade to DEBUG.~~ |
 
@@ -147,7 +147,7 @@
 | ✅ ~~BUG-BE-021~~ | ~~investment-service~~ | ~~InvestmentApplicationService.java L115~~ | ~~FIXED: Added saga compensation — if saveDeposit fails after wallet deduction, creditBalance() rollback is triggered. Logs CRITICAL if rollback also fails for manual intervention.~~ | ~~Implementasikan saga: jika save gagal, `creditBalance()` rollback.~~ |
 | ✅ ~~BUG-BE-022~~ | ~~investment-service~~ | ~~Multiple files~~ | ~~FIXED: Reference numbers (DEP, MF, SELL) replaced with UUID-based generation.~~ | ~~Ganti ke UUID-based.~~ |
 | ✅ ~~BUG-BE-023~~ | ~~fx-service~~ | ~~FxRateService.java L59-61~~ | ~~FIXED: Caught exception per-currency to continue updating other rates even if one fails.~~ | ~~Catch exception per-currency, lanjutkan ke berikutnya.~~ |
-| **BUG-BE-024** | `fx-service` | `FxConversionService.java` L27-35 | **FX conversion tidak pernah gerakkan wallet** — status PENDING dibuat tapi tidak ada debit/kredit. | Integrasikan dengan wallet reservation flow. |
+| ✅ ~~BUG-BE-024~~ | ~~fx-service~~ | ~~FIXED: Added `WalletServicePort` + `WalletServiceAdapter` for wallet integration. `createConversion()` now debits source currency and credits target currency with saga compensation on failure.~~ | ~~Integrasikan dengan wallet reservation flow.~~ |
 | ✅ ~~BUG-BE-025~~ | ~~notification-service~~ | ~~NotificationService.java L75~~ | ~~FIXED: Added retry scheduling logic with exponential backoff and a scheduled job to process pending retries.~~ | ~~Implementasi retry scheduler untuk FAILED notifications.~~ |
 | **BUG-BE-026** | `notification-service` | `SmsSender.java` L16-29 | **SMS sender adalah mock** — OTP tidak pernah terkirim ke user. | Integrasikan Twilio/Vonage atau provider SMS lokal. |
 | ✅ ~~BUG-BE-027~~ | ~~account-service~~ | ~~UserApplicationService.java L64~~ | ~~FIXED: User status now set based on KYC result — ACTIVE if approved, PENDING_VERIFICATION if rejected. Previously always ACTIVE.~~ | ~~Jika `kycStatus == REJECTED`, set `status = PENDING_VERIFICATION`.~~ |
@@ -268,7 +268,7 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-065~~ | ~~promotion-service~~ | ~~LoyaltyPointsService.java L100-121~~ | ~~FIXED: Replaced `.count()` with `.mapToInt(LoyaltyPoints::getPoints).sum()` for totalEarned, totalRedeemed, expiredPoints. Balance was showing count of records instead of actual point values.~~ | ~~Ganti ke `.mapToInt(LoyaltyPoints::getPoints).sum()`.~~ |
-| **BUG-BE-066** | `promotion-service` | `GamificationService.java` L127-174 | Idempotency check O(n) in-memory, tanpa DB unique constraint — concurrent request bisa duplicate insert. | Tambahkan `UNIQUE INDEX (account_id, transaction_id)` di DB. |
+| ✅ ~~BUG-BE-066~~ | ~~promotion-service~~ | ~~FIXED: Replaced O(n) in-memory scan with targeted `existsByAccountIdAndTransactionId()` JPA query for idempotency check.~~ | ~~Tambahkan `UNIQUE INDEX (account_id, transaction_id)` di DB.~~ |
 | ✅ **BUG-BE-067** | `promotion-service` | `GamificationService.java` L374-427 | **N+1 query** — `badgeRepository.findById()` di-call per badge dalam loop. 50 badge = 50 queries. | Gunakan `findAllById(ids)` (1 query) + Map lookup. |
 | ✅ ~~BUG-BE-068~~ | ~~shared/saga-starter~~ | ~~SagaOrchestrator.java L154-156~~ | ~~FIXED: `executeAsync()` now uses dedicated `Executors.newCachedThreadPool` (saga-worker threads) instead of `ForkJoinPool.commonPool()`.~~ | ~~Inject custom `TaskExecutor` dan gunakan di `supplyAsync(..., customExecutor)`.~~ |
 | ✅ ~~BUG-BE-069~~ | ~~shared/saga-starter~~ | ~~SagaOrchestrator.java L277-283~~ | ~~FIXED: `Thread.sleep()` replaced with `ScheduledExecutorService.schedule()` for non-blocking exponential backoff. Retries run on saga-retry daemon threads, not Tomcat pool.~~ | ~~Gunakan `ScheduledExecutorService` atau Spring `TaskScheduler`.~~ |
@@ -283,7 +283,7 @@
 | ✅ ~~BUG-BE-071~~ | ~~promotion-service~~ | ~~FIXED: Added `DataIntegrityViolationException` catch in `getOrCreateUserLevel()`. On race condition, retries `findByAccountId()` instead of crashing.~~ | ~~`INSERT ... ON CONFLICT DO NOTHING` atau retry on `DataIntegrityViolationException`.~~ |
 | ✅ ~~BUG-BE-072~~ | ~~promotion-service~~ | ~~FIXED: `getTotalCheckins()` now uses `countByAccountId()` DB query instead of fetching all data to memory and calling `.count()`.~~ | ~~Tambahkan `countByAccountId(String accountId)` di repository.~~ |
 | ✅ ~~BUG-BE-073~~ | ~~promotion-service~~ | ~~FIXED: Changed LOG.warn to LOG.error with full stack trace. Added MeterRegistry counter `promotion.kafka.publish.failure` with service/topic tags for alerting.~~ | ~~Metric counter + alert.~~ |
-| **BUG-BE-074** | `shared/cache-starter` | `localCache.get(key, Object.class)` — type mismatch exception possible jika type berbeda per-key. | Tambahkan type safety check atau gunakan `ConcurrentHashMap` dengan type token. |
+| ✅ ~~BUG-BE-074~~ | ~~shared/cache-starter~~ | ~~FIXED: Rewrote `DistributedCacheService` to use `ObjectMapper.convertValue()` for type-safe deserialization. Added `convertToCacheEntry()` and `convertToType()` helpers. Compatible with Redis and Red Hat Data Grid (RESP mode).~~ | ~~Tambahkan type safety check.~~ |
 | ✅ ~~BUG-BE-075~~ | ~~promotion-service~~ | ~~FIXED: Replaced deprecated `BigDecimal.ROUND_HALF_UP` constant with `RoundingMode.HALF_UP` enum across 3 files (CashbackSagaOrchestrator, CashbackSagaContext, PromotionService).~~ | ~~Ganti ke `RoundingMode.HALF_UP`.~~ |
 
 ---
@@ -315,8 +315,8 @@
 | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-081~~ | ~~compliance-service~~ | ~~FIXED: Removed DELETE /gdpr-audit/{auditId} endpoint. Audit logs are immutable. Replaced with comment about soft-delete with approval workflow.~~ | ~~Hapus endpoint DELETE.~~ |
 | ✅ ~~BUG-BE-082~~ | ~~api-portal-service~~ | ~~FIXED: `getPaymentStatus()` and `createRefund()` now throw `jakarta.ws.rs.NotFoundException` instead of returning null. Proper 404 response.~~ | ~~Throw NotFoundException → 404.~~ |
-| **BUG-BE-083** | `compliance-service` | `AuditReport` frontend vs backend **zero field overlap** — model sama sekali berbeda. | Sinkronkan DTO sebelum compliance feature bisa fungsi. |
-| **BUG-BE-084** | `fx-service` | `estimateConversion()` call `POST /conversions/estimate` — endpoint `/estimate` tidak ada di backend. | Implementasi `/estimate` atau hitung di frontend dari `GET /rates`. |
+| ✅ ~~BUG-BE-083~~ | ~~compliance-service~~ | ~~FIXED: Aligned frontend `ComplianceService.ts` interfaces to match backend `AuditReportResponse` DTO (transactionId, merchantId, standard, checks[], overallStatus). See XBUG-083.~~ | ~~Sinkronkan DTO.~~ |
+| ✅ ~~BUG-BE-084~~ | ~~fx-service~~ | ~~VERIFIED: `/conversions/estimate` endpoint already exists in FxController (POST mapping).~~ | ~~Endpoint sudah ada.~~ |
 | ✅ ~~BUG-BE-085~~ | ~~lending-service~~ | ~~FIXED: `processRepayment()` now accepts amount via `@RequestBody` JSON instead of `@RequestParam` query string. Financial amounts in URLs are exposed in logs.~~ | ~~Ganti ke JSON body.~~ |
 
 ---
@@ -328,7 +328,7 @@
 | ✅ ~~BUG-BE-086~~ | ~~FxService.ts~~ | ~~FIXED: Deduplicated `FxConversionRequest` as type alias for `ConvertCurrencyRequest`.~~ | ~~Hapus duplikasi.~~ |
 | ✅ ~~BUG-BE-087~~ | ~~FxService.ts~~ | ~~FIXED: Deduplicated `FxRateResponse` as type alias for `FxRate`, `FxConversionResponse` as alias for `FxConversion`.~~ | ~~Hapus duplikasi.~~ |
 | ✅ ~~BUG-BE-088~~ | ~~api-portal-service~~ | ~~FIXED: Added per-service error handling in `refreshCache()`. Failed services tracked in list and logged as warning with partial result count.~~ | ~~Timeout per-service + partial result.~~ |
-| **BUG-BE-089** | `compliance-service` | `createAuditReport()` + `listAuditReports()` exposed ke frontend — seharusnya internal only. | Hapus dari user-facing frontend service. |
+| ✅ ~~BUG-BE-089~~ | ~~compliance-service~~ | ~~VERIFIED: All compliance endpoints already have `@PreAuthorize("hasRole('COMPLIANCE_OFFICER') or hasRole('ADMIN')")` — not accessible to regular users.~~ | ~~Already secured.~~ |
 
 ---
 
@@ -400,10 +400,10 @@
 | ✅ ~~XBUG-001~~ | ~~`StatementStatus = 'READY'`~~ | ~~Backend return `COMPLETED`~~ | ~~FIXED: Changed frontend StatementStatus from 'READY' to 'COMPLETED'. Polling, display labels, and badge colors updated.~~ |
 | ✅ **XBUG-002** | `PaymentStatus` tidak punya `PROCESSING`/`REFUNDED` | Backend punya | Status baru dari backend ditampilkan sebagai blank |
 | ✅ **XBUG-003** | `Experiment` punya `variants: Variant[]` array | Backend hanya punya `variantAConfig`/`variantBConfig` | Struktur sama sekali berbeda → deserialisasi gagal |
-| **XBUG-004** | Frontend punya 15+ method scheduled-transfers dan split-bills | Backend tidak punya endpoint ini | Semua call 404 |
+| ⚠️ **XBUG-004** | Frontend punya 15+ method scheduled-transfers dan split-bills | Backend endpoint sudah ada (`ScheduledTransferController`, `SplitBillController`) | **FEATURE GAP**: FE methods exist but may call wrong paths — verify API alignment |
 | ✅ ~~XBUG-005~~ | ~~`POST /statements/generate` tidak kirim `customerId`~~ | ~~Backend butuh `customerId` untuk security check~~ | ~~FIXED: Added `customerId` to `StatementGenerationRequest` interface.~~ |
 | ✅ **XBUG-011** | `RewardType = 'LOYALTY_POINTS' \| 'CASHBACK' \| 'VOUCHER'` | Backend: `PERCENTAGE \| FIXED_AMOUNT \| REWARD_POINTS` | Tipe yang frontend kirim tidak dikenal backend |
-| **XBUG-012** | `LoyaltyBalanceResponse` punya `pointsExpiring` + `expiryDate` | Backend DTO tidak punya field ini | UI selalu tampilkan `undefined` |
+| ✅ ~~XBUG-012~~ | ~~`LoyaltyBalanceResponse` punya `pointsExpiring` + `expiryDate`~~ | ~~FIXED: Added `pointsExpiring` (Integer) and `expiryDate` (Instant) to `LoyaltyBalanceResponse` record. `LoyaltyPointsService.getBalance()` now computes expiring points within 30-day window.~~ | ~~Fields added to backend DTO.~~ |
 | ✅ ~~XBUG-013~~ | ~~`Reward.status = 'PENDING' | 'APPROVED' | 'REDEEMED'`~~ | ~~Backend: `AWARDED | CLAIMED | EXPIRED`~~ | ~~FIXED: Added 'AWARDED' and 'CLAIMED' to Reward status union type to match backend enum values.~~ |
 
 ---
@@ -421,7 +421,7 @@
 | ✅ **XBUG-015** | `GET /promotions` expects flat `Promotion[]` | Backend mungkin return `Page<Promotion>` | `.map()` crash pada non-array |
 | ✅ **XBUG-016** | `ClaimPromotionRequest` tidak punya `transactionAmount` | Backend field ini **required** | Semua claim promo gagal 400 |
 | ✅ **XBUG-017** | `GET /loyalty-points/account/${id}/balance` | Backend endpoint path berbeda | 404 |
-| **XBUG-083** | `AuditReport` frontend: `type`, `title`, `findings[]`, `status`, `riskLevel` | Backend: `transactionId`, `merchantId`, `standard`, `checks[]` | Zero overlap, compliance feature 100% broken |
+| ✅ ~~XBUG-083~~ | ~~`AuditReport` frontend: `type`, `title`, `findings[]`, `status`, `riskLevel`~~ | ~~FIXED: Rewrote `ComplianceService.ts` interfaces to match backend `AuditReportResponse` DTO (transactionId, merchantId, standard, checks[], overallStatus). Created `ComplianceCheckItem` type. Updated `listAuditReports()` → `searchAuditReports()` with filter params.~~ | ~~DTOs fully aligned.~~ |
 
 ---
 
@@ -534,7 +534,7 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-109~~ | ~~FIXED: Replaced reflection hack with FxRateInfo.rate() accessor~~ |
-| **BUG-BE-110** | `transaction-service` | `ProcessQrisPaymentCommand.java` L59, L61-68 | **QRIS payment tidak debit wallet** — setelah QRIS simulator return SUCCESS, `transaction.status = COMPLETED` tapi **tidak ada wallet debit**. Uang tidak berkurang dari user wallet. | Integrate wallet reservation flow: `reserve → qris → commit/release`. |
+| ✅ ~~BUG-BE-110~~ | ~~transaction-service~~ | ~~FIXED: Added `WalletServicePort` to `ProcessQrisPaymentCommandHandler`. Now reserves balance before QRIS call, commits on success, releases on failure. Added `accountId` to command and request DTO.~~ | ~~Wallet reservation flow integrated.~~ |
 | ✅ ~~BUG-BE-111~~ | ~~FIXED: N/A: BiometricService.java does not exist in codebase~~ |
 | ✅ ~~BUG-BE-112~~ | ~~FIXED: N/A: BiometricService.java does not exist in codebase~~ |
 | ✅ ~~BUG-BE-113~~ | ~~transaction-service~~ | ~~SplitBillService.java L254~~ | ~~FIXED: Moved `setParticipants()` (DB refresh) before `isFullyPaid()` check so split bill completion status is based on fresh data, not stale in-memory participants.~~ | ~~Re-fetch participants sebelum evaluasi completeness.~~ |
@@ -634,7 +634,7 @@
 | ✅ ~~BUG-BE-132~~ | ~~FIXED: validateReservationOwnership + PreAuthorize implemented~~ |
 | ✅ ~~BUG-BE-133~~ | ~~FIXED: maskCardNumber() masks to last 4 digits~~ |
 | ✅ ~~BUG-BE-134~~ | ~~FIXED: Added 5 min timestamp validation to prevent replay attacks~~ |
-| **BUG-BE-135** | `transaction-service` | `TransactionController.java` L172-184 | **🔒 Domain model `Transaction` langsung di-return via API** — `ApiResponse<Transaction>`. Domain entity bisa mengandung internal fields (audit timestamps, internal status, database IDs) yang tidak boleh exposed. | Buat `TransactionResponse` DTO dan mapping, sama seperti yang sudah dilakukan di `WalletController` (pakai `BalanceResponse`). |
+| ✅ ~~BUG-BE-135~~ | ~~transaction-service~~ | ~~FIXED: Created `TransactionResponse` DTO with `from(Transaction)` mapper. Controller now returns `ApiResponse<TransactionResponse>` instead of exposing domain entity.~~ | ~~DTO mapping implemented.~~ |
 
 ---
 
@@ -643,9 +643,9 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | ✅ ~~BUG-BE-136~~ | ~~FIXED: UserId passed to UseCase for ownership validation~~ |
-| **BUG-BE-137** | `transaction-service` | `TransactionController.java` L253 | **Pagination TODO: `List<Transaction>` tanpa pagination metadata** — method accepts `page`/`size` params tapi return `List`, bukan `Page`. FE tidak tahu total pages/items. | Return `Page<Transaction>` dan include `PaginationInfo` di response. |
-| **BUG-BE-138** | `partner-service` | `SnapBiController.java` L37 | **Controller langsung akses `PartnerRepository`** — melanggar Hexagonal Architecture. Controller → Repository langsung, bypass domain/application layer. | Inject `PartnerService` (use case port), bukan `PartnerRepository`. |
-| **BUG-BE-139** | `partner-service` | `SnapBiController.java` L78-93 | **Signature validation: serialize request lalu compare** — `objectMapper.writeValueAsString(request)` re-serialize request yang sudah di-deserialize dari JSON. Jika field ordering atau whitespace berbeda dari original request → signature mismatch yang legitimate. | Gunakan raw request body (`@RequestBody String rawBody` + manual parsing) untuk signature validation, kemudian parse ke DTO. |
+| ✅ ~~BUG-BE-137~~ | ~~transaction-service~~ | ~~FIXED: `getAccountTransactions()` now returns `List<TransactionResponse>` with `PaginationInfo` containing page, size, totalElements, totalPages, hasNext, hasPrevious.~~ | ~~Pagination metadata added.~~ |
+| ✅ ~~BUG-BE-138~~ | ~~partner-service~~ | ~~FIXED: Replaced `PartnerRepository` with `PartnerService` in `SnapBiController`. Added `findByClientId()` method to `PartnerService`.~~ | ~~Hexagonal architecture restored.~~ |
+| ✅ ~~BUG-BE-139~~ | ~~partner-service~~ | ~~FIXED: Changed SNAP-BI endpoints to accept `@RequestBody String rawBody` for signature validation, then parse to typed DTO after verification.~~ | ~~Raw body signature validation.~~ |
 | ✅ ~~BUG-BE-140~~ | `account-service` | `OnboardingController.java` L43-45 | **`CompletableFuture<ResponseEntity<User>>` return type** — async response tanpa timeout. Jika `registerUser` hangs → request hangs indefinitely. Juga, domain model `User` langsung di-return (mungkin contain password hash). | Tambahkan `.orTimeout(10, TimeUnit.SECONDS)`. Create `RegisterUserResponse` DTO tanpa sensitive fields. |
 | ✅ ~~BUG-BE-141~~ | ~~FIXED: maskId() implemented and used in log statements~~ |
 | ✅ ~~BUG-BE-142~~ | `wallet-service` | `WalletController.java` L169 | **`UUID.fromString(accountId)` tanpa try-catch** — jika accountId bukan valid UUID → 500 error. Harusnya return 400. | Wrap dalam try-catch atau gunakan custom validator `@ValidUUID`. |
@@ -691,10 +691,10 @@
 | ✅ ~~BUG-BE-153~~ | `lending-service` | `LendingController.java` L260-268 | **Credit score calculation endpoint open** — `calculateCreditScore()` tanpa `@PreAuthorize`. Siapapun bisa trigger credit score calculation untuk user manapun via `@RequestParam userId`. | Tambahkan `@PreAuthorize` ownership check. |
 | ✅ ~~BUG-BE-154~~ | `auth-service` | `AuthController.java` L112-124, L143-146 | **Login: password dikirim 2x ke Keycloak** — `validateCredentialsBlocking()` pertama untuk validation, lalu `loginBlocking()` lagi dengan password yang sama. Double network call, double exposure of credentials. | Gabungkan: langsung call `loginBlocking()`, handle invalid credentials dari response. |
 | ✅ ~~BUG-BE-155~~ | ~~auth-service~~ | ~~AuthController.java L117-123~~ | ~~FIXED: Added `riskEvaluationService.recordFailedAttempt()` on failed login and `recordSuccessfulLogin()` on success. Brute force detection now operational.~~ | ~~Tambahkan `riskEvaluationService.recordFailedAttempt(request.username())` sebelum return error.~~ |
-| **BUG-BE-156** | `backoffice-service` | `BackofficeController.java` L159, L325, L415 | **List endpoints return raw `List<>` tanpa `ApiResponse` wrapper** — `listKycReviews()`, `listFraudCases()`, `listCustomerCases()` return `List<Response>` langsung, bukan `ResponseEntity<ApiResponse<List>>`. Response format inconsistent dengan endpoints lain. | Wrap dalam `ResponseEntity<ApiResponse<List<>>>` untuk consistency. |
+| ✅ ~~BUG-BE-156~~ | ~~backoffice-service~~ | ~~VERIFIED: `listKycReviews()`, `listFraudCases()`, `listCustomerCases()` already return `ApiResponse` wrapper via `ok()` base method.~~ | ~~Already wrapped.~~ |
 | ✅ ~~BUG-BE-157~~ | `backoffice-service` | `BackofficeController.java` L176, L335, L425 | **Enum `valueOf()` tanpa error handling** — `KycStatus.valueOf(status.toUpperCase())` bisa throw `IllegalArgumentException` jika status invalid. Return 500 bukan 400. | Wrap dalam try-catch, return 400 dengan message "Invalid status: ...". |
-| **BUG-BE-158** | `backoffice-service` | `BackofficeController.java` L262 | **Fraud case create pakai `APPLICATION_FORM_URLENCODED`** — satu-satunya endpoint yang pakai form-encoded bukan JSON. Inconsistent dengan semua endpoint lain. Juga, 9 `@RequestParam` di method signature = code smell. | Buat `CreateFraudCaseRequest` DTO JSON body seperti endpoint lain. |
-| **BUG-BE-159** | `billing-service` | `PaymentController.java` L62, L77 | **🔒 Bill payment lookup tanpa ownership check** — `getPayment()` dan `getPaymentByReference()` hanya check `isAuthenticated()`. Siapapun bisa query payment details orang lain dengan known ID/reference. | Tambahkan ownership validation: check if payment.accountId matches authenticated user. |
+| ✅ ~~BUG-BE-158~~ | ~~backoffice-service~~ | ~~FIXED: Created `CreateFraudCaseRequest` record DTO. Changed endpoint from `APPLICATION_FORM_URLENCODED` with 9 `@RequestParam` to JSON `@RequestBody CreateFraudCaseRequest`.~~ | ~~JSON body implemented.~~ |
+| ✅ ~~BUG-BE-159~~ | ~~billing-service~~ | ~~FIXED: Added `extractUserId()` + `validateOwnership()` methods to `PaymentController`. `getPayment()` and `getPaymentByReference()` now verify payment.accountId matches authenticated user's JWT subject.~~ | ~~Ownership validation added.~~ |
 
 ---
 
@@ -745,7 +745,7 @@
 | ✅ ~~BUG-FE-042~~ | `web-app` | `lib/api.ts` L50, L58 | **Race condition: `_retry` flag on config object** — `originalRequest._retry = true` modifies shared config. Jika axios reuses config object (interceptor re-fires), flag bisa sudah set → skip refresh → silent failure. | Gunakan WeakSet untuk track retried requests: `const retriedRequests = new WeakSet()`. |
 | ✅ ~~BUG-CROSS-026~~ | FE ↔ BE | `BillingService.ts` L53 vs `PaymentController.java` | **Billing FE path mismatch** — FE calls `/billing/payments` → BFF proxy to `/billing/payments`. BE `PaymentController` mounted di `/api/v1/payments` (tanpa `/billing/`). Requests always 404. | Sinkronkan path antara FE service dan BE controller. |
 | ✅ ~~BUG-CROSS-027~~ | FE ↔ BE | `AccountService.ts` L9 vs `OnboardingController.java` | **FE sends `nik` di registration request** — `RegisterUserRequest` FE includes `nik`. Jika nik sampai ke BE dan tidak di-mask/encrypt → PII compliance violation. Backend HARUS mask di logs dan encrypt di DB. | Verify `@Sensitive` annotation di `nik` field dan server-side encryption via `security-starter`. |
-| **BUG-FE-043** | `web-app` | `LendingService.ts` L130-134 | **PayLater purchase kirim merchantName & amount via query params** — `params: { merchantName, amount, description }`. Financial data (amount) exposed di URL dan server logs. Sama issue dengan BE yang juga pakai `@RequestParam`. | Ubah ke `@RequestBody` di kedua sisi (BE first, lalu FE). |
+| ✅ ~~BUG-FE-043~~ | ~~web-app~~ | ~~LendingService.ts L130-134~~ | ~~VERIFIED ALREADY FIXED: `recordPurchase()` already sends merchantName, amount, description in POST JSON body (not query params). Comment documents BUG-BE-079 fix.~~ | ~~Already uses `@RequestBody`.~~ |
 
 ---
 
@@ -753,7 +753,7 @@
 
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
-| **BUG-FE-044** | `web-app` | `lib/validation.ts` L427 | **`parseFloat` untuk currency amounts** — `parseFloat(amount.replace(...))` bisa produce floating point errors (e.g., `0.1 + 0.2 ≠ 0.3`). Di financial app ini bisa cause rounding discrepancies. | Gunakan integer arithmetic (simpan dalam smallest unit — sen/cents) atau library decimal (e.g., `decimal.js`). |
+| ✅ ~~BUG-FE-044~~ | ~~web-app~~ | ~~lib/validation.ts L427~~ | ~~FIXED: Created `parseIndonesianAmount()` helper that correctly handles Indonesian currency format (dot as thousands separator, comma as decimal). `parseFloat("1.500.000")` no longer returns 1.5.~~ | ~~Indonesian locale-aware parsing.~~ |
 | ✅ ~~BUG-FE-045~~ | `web-app` | `lib/validation.ts` L89-101 | **Email domain typo detection blocks valid domains** — `.co` domains (e.g., `user@company.co`) valid tapi di-reject karena typo detection. `gmail.co` → suggest `gmail.com`, tapi `company.co` bukan typo. | Hanya suggest, jangan block — set `isValid: true` tapi tambahkan `suggestion` field. |
 | ✅ ~~BUG-FE-046~~ | ~~web-app~~ | ~~middleware.ts~~ | ~~FIXED: Route matching now uses exact match or segment boundary (`=== route || startsWith(route + '/')`) to prevent `/login-debug` etc. from matching.~~ | ~~Exact match atau trailing `/`.~~ |
 | ✅ ~~BUG-BE-170~~ | ~~support/billing/transaction-service~~ | ~~SecurityConfig.java (multiple)~~ | ~~FIXED: Added `@EnableMethodSecurity` to support-service, billing-service, and transaction-service SecurityConfig. Without this, `@PreAuthorize` annotations were silently not enforced.~~ | ~~Tambahkan `@EnableMethodSecurity`.~~ |

@@ -413,6 +413,46 @@ export function validatePassword(password: string | null | undefined): {
 }
 
 /**
+ * Parse Indonesian-formatted currency string to number.
+ * Indonesian locale uses dot (.) as thousands separator and comma (,) as decimal.
+ * e.g., "Rp 1.500.000" → 1500000, "1.500.000,50" → 1500000.50
+ *
+ * Handles:
+ * - Multiple dots = thousands separators: "1.500.000" → 1500000
+ * - Dot + comma = thousands + decimal: "1.500,50" → 1500.50
+ * - Single comma = decimal: "1500,50" → 1500.50
+ * - Single dot with 3 trailing digits = thousands: "1.500" → 1500
+ * - Plain numbers: "1500000" → 1500000
+ */
+function parseIndonesianAmount(value: string): number {
+  // Strip everything except digits, dots, commas, minus
+  let cleaned = value.replace(/[^\d.,-]/g, '');
+  if (!cleaned) return NaN;
+
+  const dotCount = (cleaned.match(/\./g) || []).length;
+  const commaCount = (cleaned.match(/,/g) || []).length;
+
+  if (dotCount > 1 || (dotCount >= 1 && commaCount >= 1)) {
+    // Multiple dots → dots are thousands separators
+    // Dots AND commas → dots are thousands, comma is decimal
+    cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+  } else if (commaCount === 1 && dotCount === 0) {
+    // Single comma, no dots → comma is decimal separator
+    cleaned = cleaned.replace(',', '.');
+  } else if (dotCount === 1 && commaCount === 0) {
+    // Single dot — check if it's a thousands separator
+    const afterDot = cleaned.split('.')[1];
+    if (afterDot && afterDot.length === 3) {
+      // "1.500" likely means 1500 in Indonesian format
+      cleaned = cleaned.replace('.', '');
+    }
+    // Otherwise keep dot as decimal point (e.g., "1.5")
+  }
+
+  return parseFloat(cleaned);
+}
+
+/**
  * Amount validation for transactions
  */
 export function validateAmount(
@@ -433,7 +473,10 @@ export function validateAmount(
     return { isValid: false, error: 'Nominal wajib diisi' };
   }
 
-  const parsed = typeof amount === 'string' ? parseFloat(amount.replace(/[^\d.,-]/g, '')) : amount;
+  // Indonesian locale: dot (.) = thousands separator, comma (,) = decimal separator
+  // e.g., "Rp 1.500.000" = 1500000, "1.500.000,50" = 1500000.50
+  // parseFloat("1.500.000") would wrongly return 1.5 — must handle locale properly.
+  const parsed = typeof amount === 'string' ? parseIndonesianAmount(amount) : amount;
 
   if (isNaN(parsed)) {
     return { isValid: false, error: 'Nominal tidak valid' };

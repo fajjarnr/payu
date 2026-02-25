@@ -21,6 +21,10 @@ public class ProcessQrisPaymentRequest {
     @NotNull(message = "Customer account ID is required")
     private Long customerId;
 
+    /** The UUID of the user's wallet account to debit for this QRIS payment. */
+    @NotNull(message = "Account ID is required")
+    private java.util.UUID accountId;
+
     private String transactionPin;
     private String deviceId;
 }

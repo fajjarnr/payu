@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,14 @@ public class PartnerService {
 
     public PartnerDTO getPartnerById(Long id) {
         return partnerRepository.findById(id).map(this::toDTO).orElse(null);
+    }
+
+    /**
+     * BUG-BE-138 FIX: Lookup partner by clientId via service layer.
+     * Allows SnapBiController to use service instead of direct repository access.
+     */
+    public Optional<Partner> findByClientId(String clientId) {
+        return partnerRepository.findByClientId(clientId);
     }
 
     @Transactional

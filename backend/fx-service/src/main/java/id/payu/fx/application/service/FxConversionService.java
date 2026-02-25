@@ -5,6 +5,8 @@ import id.payu.fx.domain.model.FxRate;
 import id.payu.fx.domain.port.in.FxConversionUseCase;
 import id.payu.fx.domain.port.in.FxRateUseCase;
 import id.payu.fx.domain.port.out.FxConversionRepositoryPort;
+import id.payu.fx.domain.port.out.WalletServicePort;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -12,15 +14,25 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * FX Conversion application service.
+ * BUG-BE-024 FIX: Now integrates with wallet-service to debit source currency
+ * and credit target currency upon conversion.
+ */
+@Slf4j
 @Service
 public class FxConversionService implements FxConversionUseCase {
 
     private final FxConversionRepositoryPort conversionRepository;
     private final FxRateUseCase fxRateUseCase;
+    private final WalletServicePort walletServicePort;
 
-    public FxConversionService(FxConversionRepositoryPort conversionRepository, FxRateUseCase fxRateUseCase) {
+    public FxConversionService(FxConversionRepositoryPort conversionRepository,
+                               FxRateUseCase fxRateUseCase,
+                               WalletServicePort walletServicePort) {
         this.conversionRepository = conversionRepository;
         this.fxRateUseCase = fxRateUseCase;
+        this.walletServicePort = walletServicePort;
     }
 
     @Override
@@ -32,7 +44,38 @@ public class FxConversionService implements FxConversionUseCase {
         conversion.setExchangeRate(rate.getRate());
         conversion.setStatus(FxConversion.ConversionStatus.PENDING);
         
-        return conversionRepository.save(conversion);
+        FxConversion saved = conversionRepository.save(conversion);
+        String txId = saved.getId().toString();
+
+        // BUG-BE-024 FIX: Debit source currency from wallet
+        boolean debited = walletServicePort.debit(
+                saved.getAccountId(), txId, saved.getFromAmount(), saved.getFromCurrency());
+
+        if (!debited) {
+            log.warn("FX conversion {} failed: unable to debit {} {} from account {}",
+                    txId, saved.getFromAmount(), saved.getFromCurrency(), saved.getAccountId());
+            saved.markFailed();
+            conversionRepository.save(saved);
+            throw new IllegalStateException("Insufficient balance or wallet debit failed");
+        }
+
+        // Credit target currency to wallet
+        boolean credited = walletServicePort.credit(
+                saved.getAccountId(), txId, saved.getToAmount(), saved.getToCurrency());
+
+        if (!credited) {
+            // Compensate: reverse the debit since credit failed
+            log.error("FX conversion {} credit failed, reversing debit of {} {}",
+                    txId, saved.getFromAmount(), saved.getFromCurrency());
+            walletServicePort.reverseDebit(
+                    saved.getAccountId(), txId, saved.getFromAmount(), saved.getFromCurrency());
+            saved.markFailed();
+            conversionRepository.save(saved);
+            throw new IllegalStateException("Wallet credit failed for target currency");
+        }
+
+        saved.markCompleted();
+        return conversionRepository.save(saved);
     }
 
     @Override

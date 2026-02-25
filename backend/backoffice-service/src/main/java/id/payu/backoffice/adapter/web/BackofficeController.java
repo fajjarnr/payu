@@ -281,7 +281,8 @@ public class BackofficeController extends BaseController {
 
     // ==================== Fraud Case Endpoints ====================
 
-    @PostMapping(value = "/fraud-cases", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    // BUG-BE-158 FIX: Changed from form-encoded @RequestParam to JSON @RequestBody
+    @PostMapping(value = "/fraud-cases")
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
     @Operation(
             summary = "Create fraud case",
@@ -300,28 +301,12 @@ public class BackofficeController extends BaseController {
             )
     })
     public ResponseEntity<id.payu.backoffice.dto.ApiResponse<FraudCaseResponse>> createFraudCase(
-            @Parameter(description = "User ID", example = "user-123", required = true)
-            @RequestParam("userId") String userId,
-            @Parameter(description = "Account number", example = "1234567890")
-            @RequestParam(value = "accountNumber", required = false) String accountNumber,
-            @Parameter(description = "Transaction ID (UUID)", example = "123e4567-e89b-12d3-a456-426614174000")
-            @RequestParam(value = "transactionId", required = false) String transactionId,
-            @Parameter(description = "Transaction type", example = "TRANSFER")
-            @RequestParam(value = "transactionType", required = false) String transactionType,
-            @Parameter(description = "Transaction amount", example = "1000000.00")
-            @RequestParam(value = "amount", required = false) BigDecimal amount,
-            @Parameter(description = "Type of fraud", example = "account_takeover", required = true)
-            @RequestParam("fraudType") String fraudType,
-            @Parameter(description = "Risk level (LOW, MEDIUM, HIGH, CRITICAL)", example = "HIGH")
-            @RequestParam(value = "riskLevel", required = false) String riskLevel,
-            @Parameter(description = "Description of the fraud case", example = "Suspicious login from unusual location")
-            @RequestParam(value = "description", required = false) String description,
-            @Parameter(description = "Evidence in JSON format", example = "{\"ip\": \"192.168.1.1\", \"device\": \"unknown\"}")
-            @RequestParam(value = "evidence", required = false) String evidence) {
-        var risk = riskLevel != null ? FraudCase.RiskLevel.valueOf(riskLevel.toUpperCase()) : FraudCase.RiskLevel.MEDIUM;
-        var txId = transactionId != null ? UUID.fromString(transactionId) : null;
-        var fraudCase = fraudCaseService.create(userId, accountNumber, txId, transactionType,
-                amount, fraudType, risk, description, evidence);
+            @Valid @RequestBody CreateFraudCaseRequest request) {
+        var risk = request.riskLevel() != null ?
+                FraudCase.RiskLevel.valueOf(request.riskLevel().toUpperCase()) : FraudCase.RiskLevel.MEDIUM;
+        var fraudCase = fraudCaseService.create(request.userId(), request.accountNumber(),
+                request.transactionId(), request.transactionType(),
+                request.amount(), request.fraudType(), risk, request.description(), request.evidence());
         return created(FraudCaseResponse.from(fraudCase), "/api/v1/backoffice/fraud-cases/" + fraudCase.getId());
     }
 

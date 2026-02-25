@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -54,8 +55,8 @@ public class CacheAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public DistributedCacheService distributedCacheService(
-            RedisConnectionFactory connectionFactory) {
-        return new DistributedCacheService(connectionFactory, properties);
+            RedisTemplate<String, Object> redisTemplate) {
+        return new DistributedCacheService(redisTemplate, properties);
     }
 
     @Bean

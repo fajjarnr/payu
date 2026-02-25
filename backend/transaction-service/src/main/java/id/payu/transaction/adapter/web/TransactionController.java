@@ -18,6 +18,7 @@ import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.InitiateTransferResponse;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
+import id.payu.transaction.dto.TransactionResponse;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -150,7 +151,7 @@ public class TransactionController extends BaseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "Transaction found",
-                    content = @Content(schema = @Schema(implementation = Transaction.class))
+                    content = @Content(schema = @Schema(implementation = TransactionResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "401",
@@ -163,14 +164,15 @@ public class TransactionController extends BaseController {
             )
     })
     @PreAuthorize("hasAuthority('read:transaction')")
-    public ResponseEntity<ApiResponse<Transaction>> getTransaction(
+    public ResponseEntity<ApiResponse<TransactionResponse>> getTransaction(
             @Parameter(description = "Transaction ID", required = true)
             @PathVariable UUID transactionId
     ) {
         try {
             String userId = extractUserId();
             Transaction transaction = transactionUseCase.getTransaction(transactionId, userId);
-            return ok(transaction);
+            // BUG-BE-135 FIX: Return DTO instead of domain entity
+            return ok(TransactionResponse.from(transaction));
         } catch (BusinessException e) {
             log.warn("Transaction not found: {}", transactionId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -200,7 +202,7 @@ public class TransactionController extends BaseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
                     description = "Transactions retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = Transaction.class))
+                    content = @Content(schema = @Schema(implementation = TransactionResponse.class))
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "401",
@@ -208,7 +210,7 @@ public class TransactionController extends BaseController {
             )
     })
     @PreAuthorize("hasAuthority('read:transaction')")
-    public ResponseEntity<ApiResponse<List<Transaction>>> getAccountTransactions(
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getAccountTransactions(
             @Parameter(description = "Account ID", required = true)
             @PathVariable UUID accountId,
 
@@ -249,8 +251,20 @@ public class TransactionController extends BaseController {
                     pageable.getPageSize()
             );
 
-            // TODO: BUG-BE-137: Update UseCase to return Page for proper pagination
-            return ok(transactions);
+            // BUG-BE-135 + BUG-BE-137 FIX: Map to DTOs and include pagination info
+            List<TransactionResponse> responseList = transactions.stream()
+                    .map(TransactionResponse::from)
+                    .toList();
+            PaginationInfo pagination = PaginationInfo.builder()
+                    .page(pageable.getPageNumber())
+                    .size(pageable.getPageSize())
+                    .totalElements((long) transactions.size())
+                    .totalPages(transactions.size() < pageable.getPageSize() ? 1 :
+                            (int) Math.ceil((double) transactions.size() / pageable.getPageSize()))
+                    .hasNext(transactions.size() >= pageable.getPageSize())
+                    .hasPrevious(pageable.getPageNumber() > 0)
+                    .build();
+            return ResponseEntity.ok(ApiResponse.success(responseList, pagination));
         } catch (BusinessException e) {
             log.warn("Error retrieving transactions for account: {} - {}", accountId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

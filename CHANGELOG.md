@@ -20,6 +20,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Code Review Findings — Feb 25, 2026)
 
+- **Bug Fix Sprint — Session 5 (20 bugs resolved across 20+ files)**:
+  - **Cache Type Safety & Red Hat Data Grid Compatibility (BUG-BE-074)**:
+    - Rewrote `DistributedCacheService` to use `ObjectMapper.convertValue()` for type-safe deserialization from Redis/Data Grid.
+    - Added `convertToCacheEntry()` and `convertToType()` helpers for safe JSON→Java conversion.
+    - Changed DI to accept `RedisTemplate<String, Object>` (pre-configured with JSON serializers).
+    - Updated `CacheProperties` and `RedisCacheConfig` Javadoc with Red Hat Data Grid RESP mode config examples.
+  - **QRIS Wallet Integration (BUG-BE-110)** — Critical financial integrity fix:
+    - Added `WalletServicePort` injection to `ProcessQrisPaymentCommandHandler`.
+    - QRIS payments now reserve balance before QRIS call, commit on success, release on failure.
+    - Added `accountId` (UUID) to `ProcessQrisPaymentCommand` and `ProcessQrisPaymentRequest`.
+  - **FX Conversion Wallet Integration (BUG-BE-024)** — Critical financial integrity fix:
+    - Created `WalletServicePort` and `WalletServiceAdapter` in fx-service for wallet REST calls.
+    - `FxConversionService.createConversion()` now debits source currency and credits target currency.
+    - Saga compensation: reverses debit if credit fails.
+  - **Transaction API Quality (BUG-BE-135, BUG-BE-137, BUG-BE-015)**:
+    - Created `TransactionResponse` DTO — domain entity no longer exposed via API.
+    - Added `PaginationInfo` (page, size, totalElements, totalPages) to paginated responses.
+  - **SNAP-BI Architecture (BUG-BE-138, BUG-BE-139)**:
+    - Replaced `PartnerRepository` with `PartnerService` in `SnapBiController` (hexagonal fix).
+    - Changed SNAP-BI endpoints to accept raw body for signature validation.
+  - **Backoffice & Billing Security (BUG-BE-158, BUG-BE-159)**:
+    - Created `CreateFraudCaseRequest` DTO — replaced form-encoded with JSON body.
+    - Added ownership validation to billing `getPayment()` and `getPaymentByReference()`.
+  - **Gamification Idempotency (BUG-BE-066)**:
+    - Replaced O(n) in-memory scan with targeted `existsByAccountIdAndTransactionId()` JPA query.
+  - **Frontend — Indonesian Currency Parsing (BUG-FE-044)**:
+    - Created `parseIndonesianAmount()` — handles dot-as-thousands-separator correctly.
+    - `parseFloat("1.500.000")` no longer incorrectly returns 1.5.
+  - **Cross-Service Alignment (XBUG-083, XBUG-012)**:
+    - Aligned `ComplianceService.ts` interfaces with backend `AuditReportResponse` DTO.
+    - Added `pointsExpiring` + `expiryDate` to `LoyaltyBalanceResponse` backend DTO.
+  - **Verified Already Fixed**: BUG-BE-084 (/estimate endpoint exists), BUG-BE-089 (PreAuthorize secured), BUG-BE-156 (ApiResponse wrapper), BUG-FE-043 (POST body).
+
 - **Comprehensive Bug Fix Sprint — Session 4 (31 bugs resolved, 248/308 total = 80%)**:
   - **Backend Controller Quality (5 bugs fixed)**:
     - **BUG-BE-144**: Removed generic `catch(Exception)` from TransactionController — GlobalExceptionHandler handles uniformly.

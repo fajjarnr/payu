@@ -1,25 +1,36 @@
 import api from '@/lib/api';
 
 // --- Interfaces matching backend ComplianceAuditController + GdprAuditController ---
+// XBUG-083 FIX: Aligned with actual backend DTOs (AuditReportResponse, AuditReportRequest)
+
+export type ComplianceStandard = 'PCI_DSS' | 'OJK' | 'AML' | 'CFT' | 'GDPR';
+export type ComplianceCheckResult = 'PASS' | 'FAIL' | 'WARNING' | 'NOT_APPLICABLE';
+
+export interface ComplianceCheckItem {
+  checkId: string;
+  standard: ComplianceStandard;
+  description: string;
+  status: ComplianceCheckResult;
+  details?: string;
+  checkedAt: string;
+}
 
 export interface AuditReport {
   id: string;
-  type: string;
-  title: string;
-  description: string;
-  findings: string[];
-  status: 'DRAFT' | 'SUBMITTED' | 'REVIEWED' | 'CLOSED';
-  riskLevel: RiskLevel;
-  createdBy: string;
+  transactionId: string;
+  merchantId: string;
+  standard: ComplianceStandard;
+  checks: ComplianceCheckItem[];
+  overallStatus: ComplianceCheckResult;
   createdAt: string;
-  updatedAt: string;
+  createdBy: string;
 }
 
 export interface CreateAuditReportRequest {
-  type: string;
-  title: string;
-  description: string;
-  findings: string[];
+  transactionId: string;
+  merchantId: string;
+  standard: ComplianceStandard;
+  checks: Omit<ComplianceCheckItem, 'checkedAt'>[];
 }
 
 export interface GdprAudit {
@@ -55,8 +66,8 @@ export interface GdprSearchCriteria {
   endDate?: string;
 }
 
-// Legacy types preserved for compat
-export interface ComplianceCheck {
+// Legacy types preserved for compat (renamed to avoid collision with ComplianceCheckItem)
+export interface LegacyComplianceCheck {
   id: string;
   userId: string;
   type: ComplianceCheckType;
@@ -109,9 +120,15 @@ class ComplianceService {
     return response.data;
   }
 
-  /** GET /compliance/audit-report — List all audit reports */
-  async listAuditReports(): Promise<AuditReport[]> {
-    const response = await api.get('/compliance/audit-report');
+  /** GET /compliance/audit-report — Search audit reports (requires at least one filter) */
+  async searchAuditReports(params: {
+    transactionId?: string;
+    merchantId?: string;
+    standard?: ComplianceStandard;
+    fromDate?: string;
+    toDate?: string;
+  }): Promise<AuditReport[]> {
+    const response = await api.get('/compliance/audit-report', { params });
     return response.data;
   }
 

@@ -108,4 +108,24 @@ public class CacheEntry<T> implements Serializable {
     public static <T> CacheEntry<T> create(T value, long ttlSeconds) {
         return create(value, ttlSeconds, ttlSeconds);
     }
+
+    /**
+     * Create a cache entry with pre-computed TTL instants.
+     * Used for re-wrapping entries with converted inner value types (BUG-BE-074).
+     */
+    public static <T> CacheEntry<T> create(T value, Instant softTtl, Instant hardTtl, Instant createdAt) {
+        return new CacheEntry<>(value, createdAt, softTtl, hardTtl, 0);
+    }
+
+    public Instant getSoftTtl() {
+        return softTtl;
+    }
+
+    public Instant getHardTtl() {
+        return hardTtl;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

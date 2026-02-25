@@ -12,7 +12,12 @@ import java.util.Map;
 /**
  * Configuration properties for PayU Cache Starter.
  *
- * <p>Configuration example:</p>
+ * <p>Supports both <b>Redis</b> and <b>Red Hat Data Grid</b> (Infinispan) in RESP protocol mode.
+ * Data Grid operates as a drop-in replacement for Redis when configured in RESP mode —
+ * simply point {@code payu.cache.redis.host} and {@code payu.cache.redis.port} to your
+ * Data Grid endpoint.</p>
+ *
+ * <p>Configuration example (Redis):</p>
  * <pre>
  * payu:
  *   cache:
@@ -39,6 +44,20 @@ import java.util.Map;
  *         ttl: 30s
  *         stale-while-revalidate: true
  * </pre>
+ *
+ * <p>Configuration example (Red Hat Data Grid in RESP mode):</p>
+ * <pre>
+ * payu:
+ *   cache:
+ *     enabled: true
+ *     redis:
+ *       host: datagrid-resp.payu-infra.svc.cluster.local  # Data Grid RESP endpoint
+ *       port: 11222                                        # Data Grid default port
+ *       password: ${DATAGRID_PASSWORD}
+ *       ssl: true                                          # Recommended for Data Grid
+ *       timeout: 5s
+ *     default-ttl: 5m
+ * </pre>
  */
 @Data
 @ConfigurationProperties(prefix = "payu.cache")
@@ -50,7 +69,9 @@ public class CacheProperties {
     private boolean enabled = true;
 
     /**
-     * Redis connection configuration.
+     * Redis / Red Hat Data Grid connection configuration.
+     * Uses Lettuce client which communicates via RESP protocol — compatible with both
+     * Redis and Data Grid. Point host/port to either Redis or Data Grid RESP endpoint.
      */
     private Redis redis = new Redis();
 

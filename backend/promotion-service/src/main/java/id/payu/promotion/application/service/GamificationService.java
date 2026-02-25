@@ -129,10 +129,10 @@ public class GamificationService {
         String transactionId = request.transactionId();
         BigDecimal amount = request.amount();
 
-        List<XpTransaction> existingTx = xpTransactionRepository
-                .findByAccountIdOrderByCreatedAtDesc(accountId);
-        boolean alreadyProcessed = existingTx.stream()
-                .anyMatch(tx -> transactionId.equals(tx.getTransactionId()));
+        // BUG-BE-066 FIX: Use targeted DB query for idempotency check
+        // instead of loading ALL XP transactions and scanning O(n) in-memory
+        boolean alreadyProcessed = xpTransactionRepository
+                .existsByAccountIdAndTransactionId(accountId, transactionId);
 
         if (alreadyProcessed) {
             LOG.info("Transaction already processed: {}", transactionId);

@@ -1,5 +1,6 @@
 package id.payu.cache.service;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.cache.model.CacheEntry;
 import id.payu.cache.properties.CacheProperties;
@@ -7,24 +8,28 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
-import java.util.Objects;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
- * Distributed cache service using Redis with stale-while-revalidate support.
+ * Distributed cache service using Redis/Red Hat Data Grid with stale-while-revalidate support.
+ *
+ * <p>Compatible with both Redis and Red Hat Data Grid (Infinispan) in RESP protocol mode.
+ * Uses Lettuce client with JSON serialization for portable, cross-platform caching.</p>
  *
  * <p>Features:</p>
  * <ul>
- *   <li>Redis-based distributed caching</li>
+ *   <li>Redis/Data Grid distributed caching via RESP protocol</li>
  *   <li>Stale-while-revalidate pattern</li>
- *   <li>Metrics tracking</li>
- *   <li>Automatic JSON serialization</li>
+ *   <li>Type-safe deserialization via ObjectMapper.convertValue()</li>
+ *   <li>Metrics tracking with Micrometer</li>
+ *   <li>Automatic JSON serialization (GenericJackson2JsonRedisSerializer)</li>
  *   <li>Connection failure handling</li>
  * </ul>
  */
@@ -44,19 +49,25 @@ public class DistributedCacheService {
     private final Timer getTimer;
     private final Timer putTimer;
 
+    /**
+     * Creates DistributedCacheService with a pre-configured RedisTemplate.
+     * The template should use GenericJackson2JsonRedisSerializer for DataGrid/Redis compatibility.
+     *
+     * @param redisTemplate pre-configured template (from RedisCacheConfig)
+     * @param properties    cache configuration properties
+     */
     public DistributedCacheService(
-            RedisConnectionFactory connectionFactory,
+            RedisTemplate<String, Object> redisTemplate,
             CacheProperties properties) {
         this.properties = properties;
 
-        // Create ObjectMapper for JSON serialization
+        // ObjectMapper for type-safe deserialization (BUG-BE-074 fix)
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModules(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
-        // Create RedisTemplate
-        this.redisTemplate = new RedisTemplate<>();
-        this.redisTemplate.setConnectionFactory(connectionFactory);
-        this.redisTemplate.afterPropertiesSet();
+        // Use the pre-configured RedisTemplate with JSON serializers
+        // This ensures consistency with RedisCacheConfig and DataGrid compatibility
+        this.redisTemplate = redisTemplate;
         this.valueOps = redisTemplate.opsForValue();
 
         // Initialize metrics
@@ -80,6 +91,9 @@ public class DistributedCacheService {
 
     /**
      * Get value from cache with fallback supplier.
+     * BUG-BE-074 FIX: Uses ObjectMapper.convertValue() for type-safe deserialization
+     * instead of unsafe casts. GenericJackson2JsonRedisSerializer deserializes to
+     * LinkedHashMap — convertValue properly converts to target type.
      */
     public <T> T get(String key, Class<T> type, Supplier<T> fallback) {
         Timer.Sample sample = Timer.start();
@@ -101,10 +115,11 @@ public class DistributedCacheService {
                 return null;
             }
 
-            // Check if it's a CacheEntry (with TTL metadata)
-            if (value instanceof CacheEntry) {
-                CacheEntry<T> entry = (CacheEntry<T>) value;
+            // BUG-BE-074: Type-safe deserialization via ObjectMapper
+            // GenericJackson2JsonRedisSerializer may return LinkedHashMap instead of CacheEntry
+            CacheEntry<T> entry = convertToCacheEntry(value, type);
 
+            if (entry != null) {
                 if (entry.isExpired()) {
                     missCounter.increment();
                     log.debug("Cache entry expired for key: {}", key);
@@ -128,10 +143,10 @@ public class DistributedCacheService {
                 return entry.getValue();
             }
 
-            // Direct value without CacheEntry wrapper
+            // Direct value without CacheEntry wrapper — convert safely
             hitCounter.increment();
             log.debug("Cache hit for key: {}", key);
-            return type.cast(value);
+            return convertToType(value, type);
 
         } catch (Exception e) {
             errorCounter.increment();
@@ -166,9 +181,10 @@ public class DistributedCacheService {
                 return fallbackValue;
             }
 
-            if (value instanceof CacheEntry) {
-                CacheEntry<T> entry = (CacheEntry<T>) value;
+            // BUG-BE-074: Type-safe conversion
+            CacheEntry<T> entry = convertToCacheEntry(value, type);
 
+            if (entry != null) {
                 if (entry.isExpired()) {
                     missCounter.increment();
                     log.debug("Cache entry expired for key: {}", key);
@@ -190,7 +206,7 @@ public class DistributedCacheService {
             }
 
             hitCounter.increment();
-            return type.cast(value);
+            return convertToType(value, type);
 
         } catch (Exception e) {
             errorCounter.increment();
@@ -205,9 +221,8 @@ public class DistributedCacheService {
     public <T> CacheEntry<T> getEntry(String key, Class<T> type) {
         try {
             Object value = valueOps.get(key);
-            if (value instanceof CacheEntry) {
-                return (CacheEntry<T>) value;
-            }
+            // BUG-BE-074: Type-safe conversion from deserialized JSON
+            return convertToCacheEntry(value, type);
         } catch (Exception e) {
             log.error("Error getting cache entry for key {}: {}", key, e.getMessage());
         }
@@ -289,5 +304,80 @@ public class DistributedCacheService {
      */
     public RedisTemplate<String, Object> getRedisTemplate() {
         return redisTemplate;
+    }
+
+    // --- BUG-BE-074: Type-safe conversion helpers ---
+
+    /**
+     * Safely convert a deserialized value to CacheEntry.
+     * GenericJackson2JsonRedisSerializer may deserialize CacheEntry as LinkedHashMap.
+     * This method handles both cases for Redis and Red Hat Data Grid compatibility.
+     *
+     * @param value the raw deserialized value from Redis/DataGrid
+     * @param innerType the expected type of CacheEntry.value
+     * @return CacheEntry if convertible, null otherwise
+     */
+    @SuppressWarnings("unchecked")
+    private <T> CacheEntry<T> convertToCacheEntry(Object value, Class<T> innerType) {
+        if (value == null) {
+            return null;
+        }
+
+        // Case 1: Already a CacheEntry (JDK serialization or properly typed)
+        if (value instanceof CacheEntry) {
+            CacheEntry<T> entry = (CacheEntry<T>) value;
+            // Ensure inner value is properly typed
+            Object innerValue = entry.getValue();
+            if (innerValue != null && !innerType.isInstance(innerValue)) {
+                T converted = convertToType(innerValue, innerType);
+                return CacheEntry.create(converted, entry.getSoftTtl(), entry.getHardTtl(), entry.getCreatedAt());
+            }
+            return entry;
+        }
+
+        // Case 2: LinkedHashMap from GenericJackson2JsonRedisSerializer
+        if (value instanceof Map) {
+            try {
+                Map<String, Object> map = (Map<String, Object>) value;
+                // Check if map looks like a CacheEntry (has value, createdAt, softTtl, hardTtl)
+                if (map.containsKey("value") && map.containsKey("createdAt")) {
+                    // Convert the entire map to CacheEntry using ObjectMapper
+                    JavaType cacheEntryType = objectMapper.getTypeFactory()
+                            .constructParametricType(CacheEntry.class, innerType);
+                    return objectMapper.convertValue(value, cacheEntryType);
+                }
+            } catch (Exception e) {
+                log.debug("Value is not a CacheEntry map for type {}: {}", innerType.getSimpleName(), e.getMessage());
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Safely convert a deserialized value to the target type.
+     * Handles LinkedHashMap from JSON serialization and direct type matches.
+     *
+     * @param value the raw deserialized value
+     * @param type  the target type
+     * @return converted value
+     */
+    private <T> T convertToType(Object value, Class<T> type) {
+        if (value == null) {
+            return null;
+        }
+
+        // Direct type match — no conversion needed
+        if (type.isInstance(value)) {
+            return type.cast(value);
+        }
+
+        // Convert via ObjectMapper (handles LinkedHashMap → POJO, number conversions, etc.)
+        try {
+            return objectMapper.convertValue(value, type);
+        } catch (IllegalArgumentException e) {
+            log.warn("Failed to convert cached value to type {}: {}", type.getSimpleName(), e.getMessage());
+            return null;
+        }
     }
 }

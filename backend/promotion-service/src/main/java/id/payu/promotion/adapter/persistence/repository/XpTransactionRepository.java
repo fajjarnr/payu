@@ -13,4 +13,9 @@ public interface XpTransactionRepository extends JpaRepository<XpTransaction, UU
     List<XpTransaction> findByAccountIdOrderByCreatedAtDesc(String accountId);
 
     List<XpTransaction> findTop50ByAccountIdOrderByCreatedAtDesc(String accountId);
+
+    /**
+     * BUG-BE-066 FIX: Targeted DB query for idempotency check instead of O(n) in-memory scan.
+     */
+    boolean existsByAccountIdAndTransactionId(String accountId, String transactionId);
 }

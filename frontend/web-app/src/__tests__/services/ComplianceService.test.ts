@@ -18,15 +18,13 @@ vi.mock('@/lib/api', () => ({
 
 const mockAuditReport: AuditReport = {
   id: 'audit_001',
-  type: 'QUARTERLY',
-  title: 'Q1 2026 Compliance Audit',
-  description: 'Quarterly compliance review',
-  findings: ['Finding 1', 'Finding 2'],
-  status: 'DRAFT',
-  riskLevel: 'LOW',
+  transactionId: 'tx_001',
+  merchantId: 'merchant_001',
+  standard: 'PCI_DSS',
+  checks: [{ checkId: 'chk_001', standard: 'PCI_DSS', description: 'Finding 1', status: 'PASS', checkedAt: '2026-02-18T10:00:00Z' }],
+  overallStatus: 'PASS',
   createdBy: 'auditor_001',
   createdAt: '2026-02-18T10:00:00Z',
-  updatedAt: '2026-02-18T10:00:00Z',
 };
 
 const mockGdprAudit: GdprAudit = {
@@ -51,10 +49,10 @@ describe('ComplianceService', () => {
   describe('createAuditReport', () => {
     it('should create an audit report', async () => {
       const request: CreateAuditReportRequest = {
-        type: 'QUARTERLY',
-        title: 'Q1 2026 Compliance Audit',
-        description: 'Quarterly compliance review',
-        findings: ['Finding 1'],
+        transactionId: 'tx_001',
+        merchantId: 'merchant_001',
+        standard: 'PCI_DSS',
+        checks: [{ checkId: 'chk_001', standard: 'PCI_DSS', description: 'Check 1', status: 'PASS' }],
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockAuditReport });
@@ -63,7 +61,7 @@ describe('ComplianceService', () => {
 
       expect(api.post).toHaveBeenCalledWith('/compliance/audit-report', request);
       expect(result.id).toBe('audit_001');
-      expect(result.status).toBe('DRAFT');
+      expect(result.overallStatus).toBe('PASS');
     });
   });
 
@@ -74,17 +72,17 @@ describe('ComplianceService', () => {
       const result = await ComplianceService.getAuditReport('audit_001');
 
       expect(api.get).toHaveBeenCalledWith('/compliance/audit-report/audit_001');
-      expect(result.title).toBe('Q1 2026 Compliance Audit');
+      expect(result.standard).toBe('PCI_DSS');
     });
   });
 
-  describe('listAuditReports', () => {
-    it('should list all audit reports', async () => {
+  describe('searchAuditReports', () => {
+    it('should search audit reports with filters', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: [mockAuditReport] });
 
-      const result = await ComplianceService.listAuditReports();
+      const result = await ComplianceService.searchAuditReports({ merchantId: 'merchant_001' });
 
-      expect(api.get).toHaveBeenCalledWith('/compliance/audit-report');
+      expect(api.get).toHaveBeenCalledWith('/compliance/audit-report', { params: { merchantId: 'merchant_001' } });
       expect(result).toHaveLength(1);
     });
   });
