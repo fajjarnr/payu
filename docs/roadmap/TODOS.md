@@ -1418,7 +1418,6 @@
 
 ---
 
-
 ---
 
 ## 🟦 E-20 — Code Health & Technical Hygiene
@@ -1428,16 +1427,16 @@
 >
 > **Source**: Deep architecture audit (Feb 26, 2026)
 
-| Key     | Type  | Summary                              | Priority   | SP  | Component(s)           | Labels                  | Status   |
-| :------ | :---- | :----------------------------------- | :--------- | :-: | :--------------------- | :---------------------- | :------- |
-| IMP-056 | Bug   | In-Memory Reservation Map            | 🔴 Highest |  2  | `transaction-service`  | `backend` `bug`         | 📋 To Do |
-| IMP-057 | Task  | Remove Dead CloudEventPublisher      | 🟠 High    |  1  | `shared/events-starter` | `backend` `cleanup`    | 📋 To Do |
-| IMP-058 | Bug   | Gateway Query Parameter Loss         | 🔴 Highest |  1  | `gateway-service`      | `gateway` `bug`         | 📋 To Do |
-| IMP-059 | Task  | Deduplicate InsufficientFundsException | 🟠 High  |  1  | `shared/api-commons`   | `backend` `cleanup`     | 📋 To Do |
-| IMP-060 | Task  | Consume archunit-starter in Services | 🟡 Medium  |  2  | All Spring Boot services | `backend` `quality`   | 📋 To Do |
-| IMP-061 | Task  | Disable open-in-view Universally     | 🔴 Highest |  1  | All Spring Boot services | `backend` `performance` | 📋 To Do |
-| IMP-062 | Bug   | Fix Kafka Config Path in txn-service | 🔴 Highest |  1  | `transaction-service`  | `backend` `bug`         | 📋 To Do |
-| IMP-063 | Bug   | WalletEntity Missing tenantId in Constructor | 🟠 High | 1 | `wallet-service`    | `backend` `bug`         | 📋 To Do |
+| Key     | Type | Summary                                      | Priority   | SP  | Component(s)             | Labels                  | Status   |
+| :------ | :--- | :------------------------------------------- | :--------- | :-: | :----------------------- | :---------------------- | :------- |
+| IMP-056 | Bug  | In-Memory Reservation Map                    | 🔴 Highest |  2  | `transaction-service`    | `backend` `bug`         | 📋 To Do |
+| IMP-057 | Task | Remove Dead CloudEventPublisher              | 🟠 High    |  1  | `shared/events-starter`  | `backend` `cleanup`     | 📋 To Do |
+| IMP-058 | Bug  | Gateway Query Parameter Loss                 | 🔴 Highest |  1  | `gateway-service`        | `gateway` `bug`         | 📋 To Do |
+| IMP-059 | Task | Deduplicate InsufficientFundsException       | 🟠 High    |  1  | `shared/api-commons`     | `backend` `cleanup`     | 📋 To Do |
+| IMP-060 | Task | Consume archunit-starter in Services         | 🟡 Medium  |  2  | All Spring Boot services | `backend` `quality`     | 📋 To Do |
+| IMP-061 | Task | Disable open-in-view Universally             | 🔴 Highest |  1  | All Spring Boot services | `backend` `performance` | 📋 To Do |
+| IMP-062 | Bug  | Fix Kafka Config Path in txn-service         | 🔴 Highest |  1  | `transaction-service`    | `backend` `bug`         | 📋 To Do |
+| IMP-063 | Bug  | WalletEntity Missing tenantId in Constructor | 🟠 High    |  1  | `wallet-service`         | `backend` `bug`         | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1565,10 +1564,10 @@
 >
 > **Source**: Deep architecture audit (Feb 26, 2026)
 
-| Key     | Type  | Summary                             | Priority   | SP  | Component(s)             | Labels               | Status   |
-| :------ | :---- | :---------------------------------- | :--------- | :-: | :----------------------- | :------------------- | :------- |
-| IMP-064 | Story | Security Auto-Config Fail-Closed    | 🔴 Highest |  3  | `shared/security-starter` | `backend` `security` | 📋 To Do |
-| IMP-065 | Story | AuditAspect Use SecurityContext     | 🟠 High    |  2  | `shared/security-starter` | `backend` `security` | 📋 To Do |
+| Key     | Type  | Summary                          | Priority   | SP  | Component(s)              | Labels               | Status   |
+| :------ | :---- | :------------------------------- | :--------- | :-: | :------------------------ | :------------------- | :------- |
+| IMP-064 | Story | Security Auto-Config Fail-Closed | 🔴 Highest |  3  | `shared/security-starter` | `backend` `security` | 📋 To Do |
+| IMP-065 | Story | AuditAspect Use SecurityContext  | 🟠 High    |  2  | `shared/security-starter` | `backend` `security` | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1614,10 +1613,10 @@
 >
 > **Source**: Deep architecture audit (Feb 26, 2026)
 
-| Key     | Type  | Summary                              | Priority   | SP  | Component(s)      | Labels                    | Status   |
-| :------ | :---- | :----------------------------------- | :--------- | :-: | :---------------- | :------------------------ | :------- |
-| IMP-066 | Story | Remove @Blocking from Gateway Proxy  | 🟠 High    |  3  | `gateway-service` | `gateway` `performance`   | 📋 To Do |
-| IMP-067 | Story | Wire Circuit Breaker to proxy()      | 🔴 Highest |  3  | `gateway-service` | `gateway` `resilience`    | 📋 To Do |
+| Key     | Type  | Summary                             | Priority   | SP  | Component(s)      | Labels                  | Status   |
+| :------ | :---- | :---------------------------------- | :--------- | :-: | :---------------- | :---------------------- | :------- |
+| IMP-066 | Story | Remove @Blocking from Gateway Proxy | 🟠 High    |  3  | `gateway-service` | `gateway` `performance` | 📋 To Do |
+| IMP-067 | Story | Wire Circuit Breaker to proxy()     | 🔴 Highest |  3  | `gateway-service` | `gateway` `resilience`  | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1666,10 +1665,10 @@
 >
 > **Source**: Deep architecture audit (Feb 26, 2026)
 
-| Key     | Type  | Summary                             | Priority  | SP  | Component(s)                    | Labels                  | Status   |
-| :------ | :---- | :---------------------------------- | :-------- | :-: | :------------------------------ | :---------------------- | :------- |
-| IMP-068 | Story | Spring-Managed Thread Pools         | 🟠 High   |  3  | `shared/saga-starter` + `cache` | `backend` `reliability` | 📋 To Do |
-| IMP-069 | Story | MapStruct Entity-Domain Mapping     | 🟡 Medium |  8  | New `shared/mapper-starter`     | `backend` `quality`     | 📋 To Do |
+| Key     | Type  | Summary                         | Priority  | SP  | Component(s)                    | Labels                  | Status   |
+| :------ | :---- | :------------------------------ | :-------- | :-: | :------------------------------ | :---------------------- | :------- |
+| IMP-068 | Story | Spring-Managed Thread Pools     | 🟠 High   |  3  | `shared/saga-starter` + `cache` | `backend` `reliability` | 📋 To Do |
+| IMP-069 | Story | MapStruct Entity-Domain Mapping | 🟡 Medium |  8  | New `shared/mapper-starter`     | `backend` `quality`     | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1786,19 +1785,19 @@
 
 | Label      | Total SP |
 | :--------- | :------: |
-| `backend`     |   131    |
-| `partner`     |    80    |
-| `gateway`     |    54    |
-| `platform`    |    29    |
-| `frontend`    |    25    |
-| `dx`          |    21    |
-| `security`    |     5    |
-| `mobile`      |     2    |
+| `backend`  |   131    |
+| `partner`  |    80    |
+| `gateway`  |    54    |
+| `platform` |    29    |
+| `frontend` |    25    |
+| `dx`       |    21    |
+| `security` |    5     |
+| `mobile`   |    2     |
 
 ### FE Impact Summary
 
-| Kategori                       | Count | Keys                                                                |
-| :----------------------------- | :---: | :------------------------------------------------------------------ |
+| Kategori                       | Count | Keys                                                                        |
+| :----------------------------- | :---: | :-------------------------------------------------------------------------- |
 | ✅ No FE impact (backend only) |  51   | IMP-002,003,005,007–009,012,013,016–033,040–042,044–048,050,052,053,056–069 |
 | ⚠️ Extend FE (non-breaking)    |  12   | IMP-001,006,015,034–039,049,051,054,055                                     |
 | 🔴 FE-only (independent)       |   4   | IMP-004, IMP-010, IMP-011, IMP-014                                          |
