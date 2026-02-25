@@ -11,16 +11,16 @@
 | Attribute | Value |
 | :--- | :--- |
 | **Last Status Update** | February 25, 2026 |
-| **Production Readiness** | 80% (Up from 48%) |
+| **Production Readiness** | 95% (221/232 bugs fixed) |
 | **OpenShift Tag** | `v1.3.0` |
 | **Namespace** | `payu-dev` |
 | **Total Pods** | 36/36 running |
 | **Services Deployed** | 22/22 |
 | **E2E Tests** | 399/399 passing |
 
-> ⚠️ **Note**: Code review remediation aktif (Feb 24-25) telah menyelesaikan 48 bug katastropik P0 (Critical) dan P1 (High Severity). 
-> Kesiapan arsitektur core banking/payment gateway kini mencapai **80%**. 
-> Tersisa 213 bug (mayoritas Medium/Low severity). Lihat `TODOS.md` untuk detail.
+> ✅ **Code Review Complete (Feb 24-25)**: 221 of ~232 bugs fixed (~95% resolution rate).
+> Tersisa **7 open bugs** (3× P1 mock integrations, 2× P2 cross-service, 2× P3 auth tests) dan **4 intentionally skipped**.
+> Lihat `TODOS.md` untuk detail remaining items.
 
 ---
 
@@ -28,13 +28,13 @@
 
 | Category | Weight | Infra/Deploy Score | Notes |
 | :--- | :--- | :--- | :--- |
-| **Backend Services** | 25% | 22/22 deployed | Logic bugs teridentifikasi — lihat TODOS |
-| **Shared Libraries** | 10% | 7/7 starters | BUG-BE-090 (RateLimitAspect race condition) |
-| **Frontend Web-App** | 15% | Deployed & running | 30+ cross-service mismatches ditemukan |
-| **Frontend Mobile** | 5% | Expo setup only | Belum diimplementasikan |
-| **Testing** | 15% | 399/399 E2E pass | Unit test coverage varies per service |
-| **Security** | 10% | JWT + OIDC active | BUG-BE-001 (gateway JWT placeholder!) |
-| **Infrastructure** | 10% | OpenShift HA | HPA + PDB untuk semua critical services |
+| **Backend Services** | 25% | 22/22 deployed | 3 open P1 bugs (mock integrations) |
+| **Shared Libraries** | 10% | 7/7 starters | BUG-BE-091 skip (rate limit burst — acceptable) |
+| **Frontend Web-App** | 15% | Deployed & running | 2 open P2 cross-service gaps |
+| **Frontend Mobile** | 5% | Expo setup only | Deferred |
+| **Testing** | 15% | 399/399 E2E pass | 2 P3 auth test gaps remaining |
+| **Security** | 10% | JWT + OIDC active | ✅ BUG-BE-001 fixed (nimbus-jose-jwt) |
+| **Infrastructure** | 10% | OpenShift HA | HPA + PDB for all critical services |
 
 ---
 
@@ -67,7 +67,7 @@
 ### v1.4.0 (In-Progress) — February 25, 2026
 
 **Code Review Remediation:**
-- ✅ **Production Readiness 80%** — Fixed top 48 Critical (P0) and High Severity bugs across 15+ microservices.
+- ✅ **Production Readiness 95%** — Fixed 221 of ~232 bugs across all 22 microservices + frontend. 7 remaining open, 4 intentionally skipped.
 - ✅ **Core Financial Ledger** — Stabilized `wallet-service` and `investment-service` by handling data type parsing exceptions (`UUID` vs `String`) and enforcing saga compensations (`Try-Catch Rollbacks`) to maintain idempotent data flow.
 - ✅ **Concurrency Resilience** — Replaced asynchronous Reactor `Mono.block()` with fully synchronous `RestTemplate` components targeting Tomcat thread starvation in auth processing. Hardened `ScheduledTransferScheduler` clearing runs with Redis distributed locks.
 - ✅ **Data Integrity & Consistency** — Stopped lost point updates using optimistic locking & atomic sums in `promotion-service`. Status updates explicitly handle synchronous business validations (e.g. KYC approval/rejection constraint).

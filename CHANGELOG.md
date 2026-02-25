@@ -18,344 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Simplified `AuthController` and removed biometric/MFA endpoints.
   - Updated `LoginRequest` validation to be more lenient, as password complexity is now managed by Keycloak.
 
-### Fixed (Code Review Findings — Feb 25, 2026)
-
-- **Bug Fix Sprint — Session 5 (20 bugs resolved across 20+ files)**:
-  - **Cache Type Safety & Red Hat Data Grid Compatibility (BUG-BE-074)**:
-    - Rewrote `DistributedCacheService` to use `ObjectMapper.convertValue()` for type-safe deserialization from Redis/Data Grid.
-    - Added `convertToCacheEntry()` and `convertToType()` helpers for safe JSON→Java conversion.
-    - Changed DI to accept `RedisTemplate<String, Object>` (pre-configured with JSON serializers).
-    - Updated `CacheProperties` and `RedisCacheConfig` Javadoc with Red Hat Data Grid RESP mode config examples.
-  - **QRIS Wallet Integration (BUG-BE-110)** — Critical financial integrity fix:
-    - Added `WalletServicePort` injection to `ProcessQrisPaymentCommandHandler`.
-    - QRIS payments now reserve balance before QRIS call, commit on success, release on failure.
-    - Added `accountId` (UUID) to `ProcessQrisPaymentCommand` and `ProcessQrisPaymentRequest`.
-  - **FX Conversion Wallet Integration (BUG-BE-024)** — Critical financial integrity fix:
-    - Created `WalletServicePort` and `WalletServiceAdapter` in fx-service for wallet REST calls.
-    - `FxConversionService.createConversion()` now debits source currency and credits target currency.
-    - Saga compensation: reverses debit if credit fails.
-  - **Transaction API Quality (BUG-BE-135, BUG-BE-137, BUG-BE-015)**:
-    - Created `TransactionResponse` DTO — domain entity no longer exposed via API.
-    - Added `PaginationInfo` (page, size, totalElements, totalPages) to paginated responses.
-  - **SNAP-BI Architecture (BUG-BE-138, BUG-BE-139)**:
-    - Replaced `PartnerRepository` with `PartnerService` in `SnapBiController` (hexagonal fix).
-    - Changed SNAP-BI endpoints to accept raw body for signature validation.
-  - **Backoffice & Billing Security (BUG-BE-158, BUG-BE-159)**:
-    - Created `CreateFraudCaseRequest` DTO — replaced form-encoded with JSON body.
-    - Added ownership validation to billing `getPayment()` and `getPaymentByReference()`.
-  - **Gamification Idempotency (BUG-BE-066)**:
-    - Replaced O(n) in-memory scan with targeted `existsByAccountIdAndTransactionId()` JPA query.
-  - **Frontend — Indonesian Currency Parsing (BUG-FE-044)**:
-    - Created `parseIndonesianAmount()` — handles dot-as-thousands-separator correctly.
-    - `parseFloat("1.500.000")` no longer incorrectly returns 1.5.
-  - **Cross-Service Alignment (XBUG-083, XBUG-012)**:
-    - Aligned `ComplianceService.ts` interfaces with backend `AuditReportResponse` DTO.
-    - Added `pointsExpiring` + `expiryDate` to `LoyaltyBalanceResponse` backend DTO.
-  - **Verified Already Fixed**: BUG-BE-084 (/estimate endpoint exists), BUG-BE-089 (PreAuthorize secured), BUG-BE-156 (ApiResponse wrapper), BUG-FE-043 (POST body).
-
-- **Comprehensive Bug Fix Sprint — Session 4 (31 bugs resolved, 248/308 total = 80%)**:
-  - **Backend Controller Quality (5 bugs fixed)**:
-    - **BUG-BE-144**: Removed generic `catch(Exception)` from TransactionController — GlobalExceptionHandler handles uniformly.
-    - **BUG-BE-146**: Extracted `SnapErrorResponse` inner class to top-level `id.payu.partner.dto.snap.SnapErrorResponse`.
-    - **BUG-BE-154**: Eliminated double password call in AuthController — loginBlocking() directly instead of validateCredentialsBlocking() + loginBlocking().
-    - **BUG-BE-140**: Added `.orTimeout(30, TimeUnit.SECONDS)` to CompletableFuture in OnboardingController.
-  - **Backend Security (8 bugs verified already fixed)**:
-    - **BUG-BE-145**: CardController already returns `ApiResponse.error()` for 404 (not bare `ResponseEntity.notFound()`).
-    - **BUG-BE-147/148/152/153**: LendingController already has @PreAuthorize ownership checks (isLoanOwner, isPaylaterOwner, isCreditScoreOwner).
-    - **BUG-BE-149/150**: InvestmentController already has @SecurityRequirement, @AuthenticationPrincipal, @RequestBody DTOs.
-    - **BUG-BE-151**: BackofficeController `resolveAdminUser()` already falls back to `Authentication.getName()`.
-    - **BUG-BE-157**: BackofficeController enum valueOf already has try-catch → 400.
-    - **BUG-BE-160/161**: LendingController & InvestmentController already have .orTimeout(30s).
-    - **BUG-BE-162**: UniversalSearchService uses Spring Data JPA parameterized queries — no SQL injection.
-    - **BUG-BE-142/143**: WalletController UUID.fromString already has try-catch; extractUserId() pattern functional.
-  - **Frontend & Cross-Service (18 bugs resolved)**:
-    - **BUG-CROSS-025**: Aligned `SellInvestmentRequest` fields (accountId, transactionId, amount) to match BE DTO.
-    - **BUG-CROSS-026**: Fixed BillingService paths—removed `/billing/` prefix to match BE controllers (/payments, /topup, /billers).
-    - **BUG-CROSS-027**: RegisterUserRequest NIK field already has `@Sensitive` annotation.
-    - **BUG-CROSS-023/024**: Investment/lending query invalidation and request body alignment already correct.
-    - **BUG-FE-037/038/041**: Auth endpoints have dedicated Next.js API route handlers (by design, not via BFF proxy).
-    - **BUG-FE-039**: `validateSession()` now sets `authenticated = true` on success (page refresh fix).
-    - **BUG-FE-040**: Edge middleware cookie-only check acceptable — server-side validation via api.ts 401 interceptor.
-    - **BUG-FE-042/045**: api.ts WeakSet retry prevention and email typo suggest-not-block already implemented.
-
-- **Comprehensive Bug Fix Sprint — Session 3 (39 bugs resolved)**:
-  - **Shared Starters (Batch I — 13 bugs verified fixed)**:
-    - **BUG-BE-094**: OutboxPublisher uses `handle()` (not `whenComplete()`) — exception propagation correct.
-    - **BUG-BE-095**: Static `OUTBOX_MAPPER` replaces per-call ObjectMapper instantiation.
-    - **BUG-BE-096**: OutboxService injects Spring-managed ObjectMapper via constructor.
-    - **BUG-BE-097**: `matchIfMissing=true` so resilience-starter auto-enables.
-    - **BUG-BE-098**: Removed duplicate `TimeoutException.class` in `@ExceptionHandler`.
-    - **BUG-BE-099**: Dynamic CB registration via `onEntryAdded()` handler.
-    - **BUG-BE-101**: `MDC.remove()` per key instead of `MDC.clear()`.
-    - **BUG-BE-102**: OutboxProperties defaults `retentionDays=30` (safe).
-    - **BUG-BE-103**: `CacheEntry<V>` made static to prevent memory leak.
-    - **BUG-BE-104**: `refresh()` wrapped in try-catch, retains stale value on failure.
-    - **BUG-BE-105**: UUID/time generated lazily at `build()` time in CloudEventBuilder.
-    - **BUG-BE-107**: Added `@PostConstruct` on `init()` for metrics registration.
-    - **BUG-BE-108**: Added `timestamp` to FallbackHandler error responses.
-  - **Backend Security (Batch J — 7 bugs)**:
-    - **BUG-BE-109**: Replaced reflection hack in PocketService with proper `FxRateInfo.rate()` accessor.
-    - **BUG-BE-131**: CardController already has `@PreAuthorize("isAuthenticated()")` on all endpoints.
-    - **BUG-BE-132**: WalletController has `validateReservationOwnership()` + `@PreAuthorize` SpEL.
-    - **BUG-BE-133**: `maskCardNumber()` already masks card to last 4 digits (PCI-DSS).
-    - **BUG-BE-134**: Added ±5 minute timestamp window validation to all SNAP-BI endpoints (replay attack prevention).
-    - **BUG-BE-136**: Ownership validation via userId parameter in `getAccountTransactions` UseCase.
-    - **BUG-BE-141**: `maskId()` already implemented in WalletController log statements.
-  - **Biometric Bugs (3 — marked N/A)**:
-    - **BUG-BE-111/112/122**: BiometricService.java removed in prior Keycloak MFA refactoring. Not applicable.
-  - **Frontend (Batch L — 16 bugs verified fixed)**:
-    - **BUG-FE-004/030**: WebSocket exponential backoff (1s-30s), max 10 retries, fresh `connect()` handlers.
-    - **BUG-FE-005/031**: `get ws()` getter returns `wsRef.current` — always-fresh reference.
-    - **BUG-FE-006**: `enabled: !!accountId` guard prevents WebSocket when accountId falsy.
-    - **BUG-FE-008**: Phone `6208xxx` normalization correct: `'0' + substring(3)` yields valid `08xxx`.
-    - **BUG-FE-015**: `Math.max(0, newUnreadCount)` prevents negative notification count.
-    - **BUG-FE-016/028**: 503 returns `{error:true, _fallback:true}` — not fake success data.
-    - **BUG-FE-017**: `startOfDay()` creates `new Date(date)` copy — no input mutation.
-    - **BUG-FE-018**: No `console.log` in production — `onOpen` dispatches to user callback only.
-    - **BUG-FE-027**: `sanitizeBackendPath()` with whitelist, path traversal rejection, control char check (SSRF prevention).
-    - **BUG-FE-029**: BFF proxy forwards all `x-*` headers including `x-idempotency-key`, `x-device-id`.
-    - **BUG-FE-034**: `callbacksRef` pattern for WebSocket handlers — no dependency bloat.
-    - **BUG-FE-035**: `useBiometricChallenge` changed to `useMutation` for on-demand challenge.
-    - **BUG-FE-036**: `useBuyGold` invalidates `gold-holdings` + `wallet-balance` caches.
-
-- **Comprehensive Bug Fix Sprint — Session 2 (25+ bugs resolved)**:
-  - **Shared Starters (Batch D)**:
-    - **BUG-BE-093** (resilience-starter): Replaced broken Spring property placeholders in `@FinancialOperation` meta-annotation with hardcoded `"financial"` literal names. Annotations now functional.
-    - **BUG-BE-106** (resilience-starter): Added `Throwable.class.isAssignableFrom()` validation before unchecked cast in `ResilienceAutoConfiguration.retryRegistry()`.
-  - **Backend Services (Batch E)**:
-    - **BUG-BE-082** (api-portal-service): `getPaymentStatus()`/`createRefund()` now throw `NotFoundException` instead of returning null.
-    - **BUG-BE-081** (compliance-service): Removed DELETE audit endpoint — audit logs are immutable.
-    - **BUG-BE-073** (promotion-service): Kafka publish errors now LOG.error with MeterRegistry counter `promotion.kafka.publish.failure`.
-    - **BUG-BE-088** (api-portal-service): OpenAPI aggregation `refreshCache()` now tracks per-service failures and logs partial results.
-  - **Frontend Auth (Batch F)**:
-    - **BUG-AUTH-001**: Added `isRefreshingRef` lock to prevent concurrent token refresh races.
-    - **BUG-AUTH-003**: Added `isAuthenticatedRef` to avoid stale closures in refresh timer.
-    - **BUG-AUTH-004**: Added exponential backoff retry (2s→32s, max 5 attempts) on refresh failure.
-    - **BUG-AUTH-005**: `expiresIn` only returned when `newAccessToken` is truthy.
-    - **BUG-FE-001**: BFF proxy now auto-retries on 401 — refreshes token then retries upstream.
-  - **Frontend UI/Logic (Batch G)**:
-    - **BUG-FE-022** (exchange): Used `useRef` for `estimateMutation` to prevent infinite re-render loop.
-    - **BUG-FE-023** (rewards): Replaced ALL hardcoded fake data with 0/empty defaults.
-    - **BUG-FE-028/029** (useExperiment): Added refs for callbacks to prevent re-render loops.
-    - **BUG-FE-020/031** (ABTestingService): Added in-memory Map fallback when localStorage fails.
-    - **BUG-FE-030** (KYCService): Added `validateImageSize()` with 7MB max limit.
-    - **BUG-FE-025** (AccountService): Removed deprecated `getUserFromStorage()`/`getCurrentUser()`.
-  - **Cross-Service (Batch H)**:
-    - **XBUG-007**: Removed `credit()` from WalletService.ts and `useCreditWallet` hook — internal-only API.
-    - **BUG-BE-086/087**: Deduplicated FxService.ts interfaces via type aliases.
-    - **XBUG-014**: Added `userId` param to all gamification methods in PromotionService + useGamification.
-    - **XBUG-013**: Added 'AWARDED' | 'CLAIMED' to Reward status union type.
-  - **Security Fixes**:
-    - **BUG-FE-032**: Removed `clientSecret` from Partner interface; added `PartnerWithCredentials` for registration only.
-    - **BUG-FE-033**: Removed `getSnapBiToken()` and `useSnapBiAuthToken` — SNAP-BI tokens server-side only.
-  - **Build Fixes**:
-    - Fixed merchant page accessing removed `clientSecret` property.
-    - Fixed statement-downloader using removed `'READY'` status (→ `'COMPLETED'`).
-    - Fixed statement-downloader missing `customerId` in `StatementGenerationRequest`.
-
-- **Cross-Service & Security Bug Fix Sprint (10 bugs resolved)**:
-  - **BUG-CROSS-001** (auth): Refresh route now reads `expires_in` from Keycloak response instead of hardcoded 900s. `LoginResponse` type updated to camelCase fields matching BFF output.
-  - **BUG-CROSS-002** (transaction): Added `validateUUID`/`assertUUID` utilities to `validation.ts`. TransactionService validates `accountId` format before backend calls.
-  - **BUG-CROSS-003** (wallet): Added Axios response interceptor in `api.ts` to auto-unwrap backend `ApiResponse<>` wrapper (`{ success, data }` → inner `data`).
-  - **BUG-CROSS-004** (transfer): Added `QRIS_PAYMENT`, `BILL_PAYMENT`, `TOP_UP` to `InitiateTransferRequest.TransactionType` DTO enum, synced with `Transaction.TransactionType`.
-  - **BUG-CROSS-005** (auth): Login route reads `expires_in` from Keycloak response; refresh route also fixed.
-  - **BUG-BE-113** (transaction-service): Moved participant DB refresh before `isFullyPaid()` check in `SplitBillService.makePayment()` to prevent stale data evaluation.
-  - **BUG-BE-119** (wallet-service): Replaced `java.util.Random` with `SecureRandom` for card number and CVV generation in `CardService`.
-  - **BUG-BE-120** (auth-service): MFA now configurable via `payu.security.risk.mfa-enabled` property instead of hardcoded `false`.
-  - **BUG-BE-121** (auth-service): Added separate `payu.security.risk.lockout-threshold` (default: 5) instead of reusing `mfaThreshold` (50) for account lockout.
-  - **BUG-BE-124** (transaction-service): EQUAL split now uses `RoundingMode.DOWN` + remainder assignment to last participant. `100/3 = 33.33 + 33.33 + 33.34` instead of `33.34 × 3 = 100.02`.
-  - **BUG-BE-155** (auth-service): `recordFailedAttempt()` now called on failed login, `recordSuccessfulLogin()` on success. Brute force detection operational.
-
-- **Batch Bug Fix Sprint (30 bugs resolved in single session)**:
-  - **billing-service**: BUG-BE-039 wallet reservation commit/release; BUG-BE-045 WalletPort interface methods
-  - **partner-service**: BUG-BE-041 SNAP-BI SHA-256 body hash; BUG-BE-044 thread-safe DateTimeFormatter; BUG-BE-047 @Scheduled cert rotation
-  - **outbox-starter**: BUG-BE-042 async exception propagation via handle(); BUG-BE-046 ObjectMapper Spring bean injection
-  - **saga-starter**: BUG-BE-068 dedicated thread pool; BUG-BE-069 non-blocking retry
-  - **compliance-service**: BUG-BE-070 role-based auth with @EnableMethodSecurity
-  - **statement-service**: BUG-BE-052 RestTemplate injection; BUG-BE-053 exception propagation; BUG-BE-059 readOnly=true fix
-  - **investment-service**: BUG-BE-028 BUY fee using managementFee
-  - **account-service**: BUG-BE-031 registration race condition
-  - **promotion-service**: BUG-BE-055 CacheEvict removal; BUG-BE-071 thread-safe UserLevel; BUG-BE-072 DB COUNT; BUG-BE-075 RoundingMode
-  - **cms-service**: BUG-BE-057 title uniqueness race condition
-  - **security-starter**: BUG-BE-030 DataMaskingAspect pointcut narrowed to @Audited
-  - **auth-service**: BUG-BE-166 MFA endpoints in PUBLIC_ENDPOINTS
-  - **api-commons**: BUG-BE-092 WebhookProcessor non-blocking retry
-  - **wallet/transaction-service**: BUG-BE-171 deprecated SecurityContextPersistenceFilter
-  - **Verified already fixed**: BUG-BE-029, 090, 163, 164, 165, 167
-
-### Fixed (Code Review Findings)
-
-- **auth-service: Test Suite Green-up (2026-02-24)**:
-  - Fixed `SecurityConfigTest` by converting it to a minimal context test with inner `@Configuration`. This resolves the "no database connection" and "no redis connection" issues during test execution without requiring containers.
-  - Fixed `VaultConfigurationTest` by converting it to a plain unit test, eliminating unnecessary application context loading.
-  - Rewrote `LoginRequestValidationTest` to reflect updated validation rules (removal of strict complexity checks in DTO).
-  - Fixed `TooManyActualInvocations` in `RefreshTokenService` by refining Redis operations and TTL.
-  - Adjusted error handling in `AuthController` to return `BAD_REQUEST` (400) for authentication errors instead of `INTERNAL_SERVER_ERROR` (500).
-  - Re-stabilized the entire auth-service unit test suite (65 tests now passing).
-
-
-- **Documentation Restructuring — Roadmap Split (2026-02-24)**:
-  - **Split `TODOS.md` (749 baris) menjadi 3 dokumen terpisah** untuk eliminasi kontradiksi dan improve navigasi:
-    - `docs/roadmap/TODOS.md` — Pure bug backlog & open actionable items (~117 bugs terdokumentasi)
-    - `docs/roadmap/PROGRESS.md` — Deployment history, scorecard, DORA metrics, completed milestones
-    - `docs/roadmap/GATEWAY_ARCH.md` — Architecture review, gap analysis, integration roadmap (TokoBapak/Nobar)
-  - Updated `docs/INDEX.md` untuk mencerminkan struktur baru
-
-- **Documentation Consolidation & Cleanup (2026-02-24)**:
-  - Merged redundant onboarding guides into a single comprehensive `docs/guides/ONBOARDING.md`.
-  - Unified general and container-specific troubleshooting into `docs/TROUBLESHOOTING.md` at the root for easier access.
-  - Consolidated API Standards and Spectral Validation guides into `docs/api/API_STANDARDS.md`.
-  - Integrated infrastructure summary into a unified `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md`.
-  - Relocated `USAGE.md` to `docs/guides/` for structural consistency.
-  - Archived obsolete remediation playbooks and backup files to `docs/archive/`.
-  - Updated `docs/INDEX.md` with the new documentation structure and removed stale references.
-  - Ensured `docs/guides/GEMINI.md` clearly marks the root `GEMINI.md` as the source of truth.
-
-- **Reference Number Collision Fix — UUID Migration (BUG-BE-003, 022, 038, 077, 114, 115, 123) (2026-02-24)**:
-  - **Problem**: Reference numbers generated via `currentTimeMillis() + random(1000)` are collision-prone under concurrent load. Same pattern existed in 12 locations across 5 services.
-  - **Solution**: Replaced all collision-prone generators with UUID-based format: `PREFIX-` + 16-char uppercase hex from `UUID.randomUUID()`.
-  - **Services Fixed**:
-    - `transaction-service`: TXN, QRI, SPL, SCH reference numbers (4 files)
-    - `billing-service`: BILL reference number + BILLER/EWALLET transaction IDs (2 files)
-    - `investment-service`: DEP, MF, SELL reference numbers (1 file, 3 locations)
-    - `api-portal-service`: PAY, REF reference numbers (1 file, 2 locations)
-  - **Format**: `TXN-A1B2C3D4E5F6G7H8`, `BILL-9A0B1C2D3E4F5G6H`, etc.
-  - **Test Results**: All related unit tests pass (ScheduledTransferServiceTest 13/13, SplitBillServiceTest 11/11, TransactionServiceTest 5/5)
-
-- **Security Hardening — Credential/PII Leak Prevention & CORS Lockdown (BUG-BE-005, 006, 016, 017, 019, 033) (2026-02-24)**:
-  - **BUG-BE-005** (`auth-service`): Removed plaintext token logging from `KeycloakService`. Only success/failure status logged.
-  - **BUG-BE-006** (`gateway-service`): Narrowed `/api/v1/accounts` public prefix to `/api/v1/accounts/register` only. All other account endpoints now require JWT.
-  - **BUG-BE-016** (`auth-service`): Added `maskUsername()` helper — PII now shows only first 2 + last 2 chars (e.g., `jo***oe`).
-  - **BUG-BE-017** (`gateway-service`): Downgraded Authorization header log from INFO to DEBUG, logging only `hasAuth=true/false` instead of full Bearer token.
-  - **BUG-BE-019** (`shared/security-starter`): PBKDF2 salt now configurable via `payu.security.encryption.salt` property. Default fallback preserved for backward compatibility.
-  - **BUG-BE-033** (`backoffice-service`): CORS origins restricted from `*` to `backoffice.payu.id`, `backoffice.payu.co.id`, `admin.payu.id`. Headers restricted. AllowCredentials enabled.
-  - **Test Results**: auth-service 65/65, security-starter 30/30 — all pass.
-
-- **Multi-Service Bug Fixes — Cache, Security, Data Integrity (BUG-BE-004, 012, 013, 014, 034) (2026-02-24)**:
-  - **BUG-BE-004** (`wallet-service`): Added `wallet:id:` cache key invalidation to all mutation methods — balance, reserve, commit, release, and credit now all invalidate 4 cache keys.
-  - **BUG-BE-012** (`promotion-service`): Replaced insecure `Math.random()` with `SecureRandom` for referral code generation.
-  - **BUG-BE-013** (`wallet-service`): Eliminated redundant `findByAccountId` DB call in `createWallet` — reuses first query result.
-  - **BUG-BE-014** (`lending-service`): Added missing `@Transactional` to `processRepayment` to prevent partial updates.
-  - **BUG-BE-034** (`support-service`): Added `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` to all write endpoints (createAgent, updateStatus, createModule, assignTraining).
-  - **Test Results**: wallet-service WalletServiceTest 21/21, lending-service all pass.
-
-- **Multi-Service Bug Fixes — Business Logic & Concurrency (BUG-BE-007, 009, 020, 023, 025) (2026-02-24)**:
-  - **BUG-BE-007** (`transaction-service`): Processed non-BIFAST transfers (INTERNAL, SKN, RTGS). Internal transfers complete immediately with balance commit, while inter-bank transfers queue as PENDING. Addressed type mismatch in Transaction entity where `completedAt` expects `Instant`. Added `creditBalance` API integration.
-  - **BUG-BE-009** (`lending-service`): Re-calculated repayment schedule for the last installment. `installmentAmount = outstandingPrincipal + interestAmount` to resolve accumulation rounding errors.
-  - **BUG-BE-020** (`account-service`): Removed `@Async` from `registerUser` that conflicted with `@Transactional`. Database operations and sequence must run synchronously for integrity before resolving future. 
-  - **BUG-BE-023** (`fx-service`): Prevented FX rate update from aborting fully upon encountering a single rate retrieval fault. Uses isolated try-catch to allow other currencies to continue updating.
-  - **BUG-BE-025** (`notification-service`): Replaced simple incrementer with scheduled retry implementation. Failed notifications execute a dynamic schedule with exponential backoff strategy (up to 3 limits) managed by a scheduled job.
-  - **Test Results**: lending-service all pass, notification-service all pass, transaction-service compiles properly without `Instant` conversion error.
-
-- **P0 Critical Bug Fixes — Investment & Promotion Race Conditions (BUG-BE-018, 029, 063) (2026-02-24)**:
-  - **BUG-BE-018** (`investment-service`): Rewrote `WalletServiceAdapter` to use wallet-service's actual API endpoints. `deductBalance` now uses reserve→commit flow instead of non-existent `/deduct`. `creditBalance` calls `/credit`. Added circuit breaker and retry resilience patterns.
-  - **BUG-BE-029** (`investment-service`): `hasSufficientBalance` now reads `availableBalance` from wallet response instead of `balance`, which was always returning false.
-  - **BUG-BE-063** (`promotion-service`): Replaced race-prone read-check-write pattern in `claimPromotion` with atomic `atomicIncrementRedemptionCount()` — a single `UPDATE...WHERE count < max` query that prevents concurrent claims from exceeding quota.
-  - **Verified Already Fixed**: BUG-BE-002 (auth uses Redis CacheService), BUG-BE-060 (pg_advisory_xact_lock), BUG-BE-062 (cashback saga), BUG-BE-090 (Lua script), BUG-FE-021 (idempotency headers), BUG-FE-027 (retry=0).
-  - **Test Results**: investment-service 14/15 pass (1 pre-existing Mockito stub issue), promotion-service CashbackServiceTest 11/11, CashbackSagaTest 6/6 pass.
-
-- **P0 Critical Fixes — Statement, FX, Lending, Cross-Service (BUG-BE-049, 050, 078, 079, XBUG-001, 005) (2026-02-24)**:
-  - **BUG-BE-049** (`statement-service`): Removed `@Transactional` from `@Async generateStatement()`. The annotation has no effect on async threads — each `repository.save()` now runs in its own implicit transaction, preventing statements from being stuck in GENERATING.
-  - **BUG-BE-050** (`statement-service`): Created `S3StorageAdapter` for persistent PDF storage via AWS S3/MinIO. Replaces ephemeral `/tmp` storage that is lost on pod restart. Falls back to local filesystem when S3 is not configured (dev mode).
-  - **BUG-BE-078** (`fx-service` frontend): Changed FX API base URL from `/fx-api/v1` to `/api/v1/fx` to match standard BFF routing. The old prefix didn't match any route, causing all FX calls to 404.
-  - **BUG-BE-079** (`lending-service` frontend): Moved financial data (`amount`, `merchantName`) from URL query params to POST JSON body in `recordPurchase`/`recordPayment`. Query params get logged in server access logs and browser history.
-  - **XBUG-001** (cross-service): Changed frontend `StatementStatus` from `'READY'` to `'COMPLETED'` to match backend enum. Frontend was stuck in infinite polling loop.
-  - **XBUG-005** (cross-service): Added `customerId` to `StatementGenerationRequest` interface. Without it, backend cannot enforce ownership validation — users could generate statements for other accounts.
-
-- **High Severity Fixes — Investment Saga, KYC Enforcement, Loyalty, Wallet, Auth, and Transfers (BUG-BE-021, 027, 065, 008, 010, 011) (2026-02-24)**:
-  - **BUG-BE-021** (`investment-service`): Added saga compensation to `buyDeposit` — if `saveDeposit` fails after wallet deduction, `creditBalance()` rollback is triggered automatically. Logs CRITICAL if rollback also fails for manual intervention.
-  - **BUG-BE-027** (`account-service`): User status now depends on KYC result. If KYC is REJECTED, status is `PENDING_VERIFICATION` instead of `ACTIVE`. Previously all users were set to ACTIVE regardless of KYC outcome.
-  - **BUG-BE-065** (`promotion-service`): Loyalty points `getBalance()` was using `.count()` (counting transaction records) instead of `.mapToInt(getPoints).sum()` (summing actual point values). Balance displayed was wildly incorrect.
-  - **BUG-BE-008** (`wallet-service`): Standardized `accountId` handling to `String` in `LedgerEntry` and adapter components to fix `IllegalArgumentException` parsing exceptions caused by non-UUID input.
-  - **BUG-BE-010** (`auth-service`): Switched `KeycloakService` blocking operations to synchronous `RestTemplate` from `Mono.block()` which was starving Tomcat threads under load.
-  - **BUG-BE-011** (`transaction-service`): Found `stringRedisTemplate.opsForValue().setIfAbsent` implementation providing distributed locking on `ScheduledTransferScheduler` to handle execution duplication across multiple pod instances.
-
-### Changed
-
-- **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:
-  - Re-evaluasi platform PayU dari standalone digital banking → core banking/payment gateway
-  - Identifikasi 10 critical architecture gaps (GAP-001 s/d GAP-010):
-    - **P0**: Outbound Webhook, Multi-Tenancy, Idempotency, Escrow (TokoBapak), Recurring Billing (Nobar)
-    - **P1**: Settlement & Reconciliation, Rate Card per Partner, Refund & Dispute
-    - **P2**: API Key Management, Multi-Currency Settlement
-  - Revisi evaluasi service: `partner-service`, `api-portal-service`, `compliance-service`, `saga-starter` dikonfirmasi sebagai **essential** untuk gateway role (sebelumnya dievaluasi sebagai overkill)
-  - Rekomendasi hapus/simplify: `ab-testing-service`, Gamification XP/Badge, Robo-Advisory
-
-### Fixed (Code Review Findings)
-
-- **Backend Code Review — 90+ Bugs Teridentifikasi (2026-02-24)**:
-  - **P0 Critical** (14 bugs): Gateway JWT placeholder (BUG-BE-001), auth in-memory state (BUG-BE-002),
-    cashback tidak credit wallet (BUG-BE-062), loyalty points race condition (BUG-BE-060),
-    `RateLimitAspect` race condition non-atomic (BUG-BE-090), dan lainnya
-
-- **promotion-service: Cashback Wallet Credit Fix (BUG-BE-062) (2026-02-24)**:
-  - **Problem**: Cashback status di-set `CREDITED` tanpa memanggil wallet-service untuk credit ke user.
-    Ini menyebabkan cashback tercatat tapi saldo wallet tidak bertambah.
-  - **Solution**: Implementasi Saga Pattern untuk atomicity antara wallet credit dan cashback record:
-    - `CashbackSagaOrchestrator`: Orchestrates 2-step saga (CREDIT_WALLET → RECORD_CASHBACK)
-    - `WalletClient`: REST client ke wallet-service dengan circuit breaker dan retry
-    - `CashbackSagaContext`: Context object untuk menyimpan state saga
-    - Status `CREDITED` hanya di-set setelah wallet credit berhasil
-    - Compensation logic untuk rollback jika terjadi failure
-  - **Files Changed**:
-    - `application/service/CashbackService.java` — Refactored untuk menggunakan saga pattern
-    - `application/saga/CashbackSagaOrchestrator.java` — New saga orchestrator
-    - `application/saga/CashbackSagaContext.java` — New saga context
-    - `adapter/client/WalletClient.java` — New wallet service client
-    - `domain/port/out/WalletServicePort.java` — New output port
-    - `config/RestTemplateConfig.java` — New REST template configuration
-    - `PromotionServiceApplication.java` — Added `@EnableSaga` annotation
-    - `pom.xml` — Added saga-starter dependency
-    - `application.yml` — Added wallet service URL configuration
-  - **Tests**: 17 unit tests covering success, failure, and compensation scenarios
-
-- **gateway-service: JWT Placeholder Fix (BUG-BE-001) (2026-02-24)**:
-  - **Problem**: `AuthorizationFilter.validateToken()` hanya cek `token.length() < 10` (PLACEHOLDER).
-    Siapapun dengan token >=10 karakter bisa bypass autentikasi.
-  - **Solution**: Implementasi JWT validation yang lengkap menggunakan nimbus-jose-jwt:
-    - Signature verification menggunakan RS256 dan JWKS dari Keycloak
-    - Expiration validation (exp claim)
-    - Issuer validation (iss claim)
-    - Audience validation (aud claim)
-    - Required claims validation (sub, exp, iat)
-  - **Changes**:
-    - `AuthorizationFilter.java`: Replaced placeholder validation with full JWT processor
-    - Added `initJwtProcessor()` untuk load JWKS dari Keycloak OIDC discovery
-    - Added `extractAccountId()` dan `extractRoles()` untuk parsing Keycloak claims
-    - `pom.xml`: Added explicit dependency `com.nimbusds:nimbus-jose-jwt:9.40`
-    - `application.yaml`: Added `quarkus.oidc.token.audience` configuration
-    - Added `AuthorizationFilterTest.java`: 11 integration tests untuk JWT validation
-
-### Fixed
-
-- **partner-service: SNAP-BI Token Store Redis Migration (BUG-BE-035, BUG-BE-036) (2026-02-24)**:
-  - **Problem**: In-memory `tokenStore` caused tokens generated on pod A to not be recognized on pod B.
-    Revoke operation did not work cross-pod, breaking HPA/scaling.
-  - **Solution**: Migrated token storage to Redis with proper TTL matching token expiry time.
-  - **Changes**:
-    - `SnapBiTokenService.java`: Replaced `ConcurrentHashMap` with `RedisTemplate<String, TokenInfo>`
-    - Redis key pattern: `snapbi:token:{clientId}` with TTL from `partner.jwt.expiration-ms`
-    - Added `@Scheduled(fixedRate = 60000)` for `cleanupExpiredTokens()` to run every minute
-    - Added `@EnableScheduling` to `PartnerServiceApplication.java`
-    - Added Redis configuration to `application.yml`
-  - **Shared `api-commons` findings**: `RateLimitAspect` burst window vulnerability (BUG-BE-091),
-    `WebhookProcessor` Thread.sleep blocking (BUG-BE-092)
-  - **Frontend** (26 bugs): No idempotency keys (BUG-FE-021), global mutation retry=1 (BUG-FE-027),
-    localStorage use di ABTestingService (BUG-FE-020), dan lainnya
-  - **Cross-service mismatches** (18 bugs): Statement status enum mismatch, scheduled-transfers 404,
-    PaymentStatus missing PROCESSING/REFUNDED, dan lainnya
-  - Detail lengkap: `docs/roadmap/TODOS.md`
-
----
-
-### Fixed
-
-- **Token Refresh & Authentication Loop Issues**:
-  - `auth-service`: Fixed HTTP 500 error in `/api/v1/auth/refresh` by reverting to Keycloak direct token refresh without local token rotation mapping.
-  - `wallet-service`: Fixed connection pool errors where Hikari was configured with `auto-commit: true` instead of `false` in `application-container.yml`, resolving JPA transaction exceptions.
-  - `wallet-service`, `transaction-service`, `account-service`, `investment-service`: Corrected `OIDC_ISSUER` OpenShift environment variable to point to the Keycloak discovery endpoint, resolving HTTP 401 Unauthorized for valid Keycloak JWTs.
-
-### Added
 
 - **K6 Baseline Performance Tests (LOAD-001)**:
   - **Comprehensive CRUD Test Suite** (`tests/performance/k6-baseline/`):
@@ -545,13 +207,355 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `TestContainersConfig`: Shared test configuration with mock JWT decoder
   - `fx-service`: Added `FxConversionFlowIntegrationTest` for currency conversion flows
 
+
+### Changed
+
+- **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:
+  - Re-evaluasi platform PayU dari standalone digital banking → core banking/payment gateway
+  - Identifikasi 10 critical architecture gaps (GAP-001 s/d GAP-010):
+    - **P0**: Outbound Webhook, Multi-Tenancy, Idempotency, Escrow (TokoBapak), Recurring Billing (Nobar)
+    - **P1**: Settlement & Reconciliation, Rate Card per Partner, Refund & Dispute
+    - **P2**: API Key Management, Multi-Currency Settlement
+  - Revisi evaluasi service: `partner-service`, `api-portal-service`, `compliance-service`, `saga-starter` dikonfirmasi sebagai **essential** untuk gateway role (sebelumnya dievaluasi sebagai overkill)
+  - Rekomendasi hapus/simplify: `ab-testing-service`, Gamification XP/Badge, Robo-Advisory
+
+
 ### Fixed
+
+- **Documentation Cleanup & Final Bug Closure (2026-02-25)**:
+  - Closed BUG-BE-100 (`resilience-starter` MDC cleanup) and BUG-FE-019 (Unicode name validation) with verification test updates in TODOS.md.
+  - Fixed 13 pre-existing TypeScript test compilation errors across AccountService, PartnerService, StatementService, and WalletService test files.
+  - Complete TODOS.md rewrite: archived 221 fixed bugs, retained only 7 open + 4 skipped items (778 → 108 lines).
+  - Consolidated CHANGELOG.md `[Unreleased]` section: merged duplicate `### Fixed` headers into single section per Keep a Changelog format.
+
+- **Bug Fix Sprint — Session 5 (20 bugs resolved across 20+ files)**:
+  - **Cache Type Safety & Red Hat Data Grid Compatibility (BUG-BE-074)**:
+    - Rewrote `DistributedCacheService` to use `ObjectMapper.convertValue()` for type-safe deserialization from Redis/Data Grid.
+    - Added `convertToCacheEntry()` and `convertToType()` helpers for safe JSON→Java conversion.
+    - Changed DI to accept `RedisTemplate<String, Object>` (pre-configured with JSON serializers).
+    - Updated `CacheProperties` and `RedisCacheConfig` Javadoc with Red Hat Data Grid RESP mode config examples.
+  - **QRIS Wallet Integration (BUG-BE-110)** — Critical financial integrity fix:
+    - Added `WalletServicePort` injection to `ProcessQrisPaymentCommandHandler`.
+    - QRIS payments now reserve balance before QRIS call, commit on success, release on failure.
+    - Added `accountId` (UUID) to `ProcessQrisPaymentCommand` and `ProcessQrisPaymentRequest`.
+  - **FX Conversion Wallet Integration (BUG-BE-024)** — Critical financial integrity fix:
+    - Created `WalletServicePort` and `WalletServiceAdapter` in fx-service for wallet REST calls.
+    - `FxConversionService.createConversion()` now debits source currency and credits target currency.
+    - Saga compensation: reverses debit if credit fails.
+  - **Transaction API Quality (BUG-BE-135, BUG-BE-137, BUG-BE-015)**:
+    - Created `TransactionResponse` DTO — domain entity no longer exposed via API.
+    - Added `PaginationInfo` (page, size, totalElements, totalPages) to paginated responses.
+  - **SNAP-BI Architecture (BUG-BE-138, BUG-BE-139)**:
+    - Replaced `PartnerRepository` with `PartnerService` in `SnapBiController` (hexagonal fix).
+    - Changed SNAP-BI endpoints to accept raw body for signature validation.
+  - **Backoffice & Billing Security (BUG-BE-158, BUG-BE-159)**:
+    - Created `CreateFraudCaseRequest` DTO — replaced form-encoded with JSON body.
+    - Added ownership validation to billing `getPayment()` and `getPaymentByReference()`.
+  - **Gamification Idempotency (BUG-BE-066)**:
+    - Replaced O(n) in-memory scan with targeted `existsByAccountIdAndTransactionId()` JPA query.
+  - **Frontend — Indonesian Currency Parsing (BUG-FE-044)**:
+    - Created `parseIndonesianAmount()` — handles dot-as-thousands-separator correctly.
+    - `parseFloat("1.500.000")` no longer incorrectly returns 1.5.
+  - **Cross-Service Alignment (XBUG-083, XBUG-012)**:
+    - Aligned `ComplianceService.ts` interfaces with backend `AuditReportResponse` DTO.
+    - Added `pointsExpiring` + `expiryDate` to `LoyaltyBalanceResponse` backend DTO.
+  - **Verified Already Fixed**: BUG-BE-084 (/estimate endpoint exists), BUG-BE-089 (PreAuthorize secured), BUG-BE-156 (ApiResponse wrapper), BUG-FE-043 (POST body).
+
+- **Comprehensive Bug Fix Sprint — Session 4 (31 bugs resolved, 248/308 total = 80%)**:
+  - **Backend Controller Quality (5 bugs fixed)**:
+    - **BUG-BE-144**: Removed generic `catch(Exception)` from TransactionController — GlobalExceptionHandler handles uniformly.
+    - **BUG-BE-146**: Extracted `SnapErrorResponse` inner class to top-level `id.payu.partner.dto.snap.SnapErrorResponse`.
+    - **BUG-BE-154**: Eliminated double password call in AuthController — loginBlocking() directly instead of validateCredentialsBlocking() + loginBlocking().
+    - **BUG-BE-140**: Added `.orTimeout(30, TimeUnit.SECONDS)` to CompletableFuture in OnboardingController.
+  - **Backend Security (8 bugs verified already fixed)**:
+    - **BUG-BE-145**: CardController already returns `ApiResponse.error()` for 404 (not bare `ResponseEntity.notFound()`).
+    - **BUG-BE-147/148/152/153**: LendingController already has @PreAuthorize ownership checks (isLoanOwner, isPaylaterOwner, isCreditScoreOwner).
+    - **BUG-BE-149/150**: InvestmentController already has @SecurityRequirement, @AuthenticationPrincipal, @RequestBody DTOs.
+    - **BUG-BE-151**: BackofficeController `resolveAdminUser()` already falls back to `Authentication.getName()`.
+    - **BUG-BE-157**: BackofficeController enum valueOf already has try-catch → 400.
+    - **BUG-BE-160/161**: LendingController & InvestmentController already have .orTimeout(30s).
+    - **BUG-BE-162**: UniversalSearchService uses Spring Data JPA parameterized queries — no SQL injection.
+    - **BUG-BE-142/143**: WalletController UUID.fromString already has try-catch; extractUserId() pattern functional.
+  - **Frontend & Cross-Service (18 bugs resolved)**:
+    - **BUG-CROSS-025**: Aligned `SellInvestmentRequest` fields (accountId, transactionId, amount) to match BE DTO.
+    - **BUG-CROSS-026**: Fixed BillingService paths—removed `/billing/` prefix to match BE controllers (/payments, /topup, /billers).
+    - **BUG-CROSS-027**: RegisterUserRequest NIK field already has `@Sensitive` annotation.
+    - **BUG-CROSS-023/024**: Investment/lending query invalidation and request body alignment already correct.
+    - **BUG-FE-037/038/041**: Auth endpoints have dedicated Next.js API route handlers (by design, not via BFF proxy).
+    - **BUG-FE-039**: `validateSession()` now sets `authenticated = true` on success (page refresh fix).
+    - **BUG-FE-040**: Edge middleware cookie-only check acceptable — server-side validation via api.ts 401 interceptor.
+    - **BUG-FE-042/045**: api.ts WeakSet retry prevention and email typo suggest-not-block already implemented.
+
+- **Comprehensive Bug Fix Sprint — Session 3 (39 bugs resolved)**:
+  - **Shared Starters (Batch I — 13 bugs verified fixed)**:
+    - **BUG-BE-094**: OutboxPublisher uses `handle()` (not `whenComplete()`) — exception propagation correct.
+    - **BUG-BE-095**: Static `OUTBOX_MAPPER` replaces per-call ObjectMapper instantiation.
+    - **BUG-BE-096**: OutboxService injects Spring-managed ObjectMapper via constructor.
+    - **BUG-BE-097**: `matchIfMissing=true` so resilience-starter auto-enables.
+    - **BUG-BE-098**: Removed duplicate `TimeoutException.class` in `@ExceptionHandler`.
+    - **BUG-BE-099**: Dynamic CB registration via `onEntryAdded()` handler.
+    - **BUG-BE-101**: `MDC.remove()` per key instead of `MDC.clear()`.
+    - **BUG-BE-102**: OutboxProperties defaults `retentionDays=30` (safe).
+    - **BUG-BE-103**: `CacheEntry<V>` made static to prevent memory leak.
+    - **BUG-BE-104**: `refresh()` wrapped in try-catch, retains stale value on failure.
+    - **BUG-BE-105**: UUID/time generated lazily at `build()` time in CloudEventBuilder.
+    - **BUG-BE-107**: Added `@PostConstruct` on `init()` for metrics registration.
+    - **BUG-BE-108**: Added `timestamp` to FallbackHandler error responses.
+  - **Backend Security (Batch J — 7 bugs)**:
+    - **BUG-BE-109**: Replaced reflection hack in PocketService with proper `FxRateInfo.rate()` accessor.
+    - **BUG-BE-131**: CardController already has `@PreAuthorize("isAuthenticated()")` on all endpoints.
+    - **BUG-BE-132**: WalletController has `validateReservationOwnership()` + `@PreAuthorize` SpEL.
+    - **BUG-BE-133**: `maskCardNumber()` already masks card to last 4 digits (PCI-DSS).
+    - **BUG-BE-134**: Added ±5 minute timestamp window validation to all SNAP-BI endpoints (replay attack prevention).
+    - **BUG-BE-136**: Ownership validation via userId parameter in `getAccountTransactions` UseCase.
+    - **BUG-BE-141**: `maskId()` already implemented in WalletController log statements.
+  - **Biometric Bugs (3 — marked N/A)**:
+    - **BUG-BE-111/112/122**: BiometricService.java removed in prior Keycloak MFA refactoring. Not applicable.
+  - **Frontend (Batch L — 16 bugs verified fixed)**:
+    - **BUG-FE-004/030**: WebSocket exponential backoff (1s-30s), max 10 retries, fresh `connect()` handlers.
+    - **BUG-FE-005/031**: `get ws()` getter returns `wsRef.current` — always-fresh reference.
+    - **BUG-FE-006**: `enabled: !!accountId` guard prevents WebSocket when accountId falsy.
+    - **BUG-FE-008**: Phone `6208xxx` normalization correct: `'0' + substring(3)` yields valid `08xxx`.
+    - **BUG-FE-015**: `Math.max(0, newUnreadCount)` prevents negative notification count.
+    - **BUG-FE-016/028**: 503 returns `{error:true, _fallback:true}` — not fake success data.
+    - **BUG-FE-017**: `startOfDay()` creates `new Date(date)` copy — no input mutation.
+    - **BUG-FE-018**: No `console.log` in production — `onOpen` dispatches to user callback only.
+    - **BUG-FE-027**: `sanitizeBackendPath()` with whitelist, path traversal rejection, control char check (SSRF prevention).
+    - **BUG-FE-029**: BFF proxy forwards all `x-*` headers including `x-idempotency-key`, `x-device-id`.
+    - **BUG-FE-034**: `callbacksRef` pattern for WebSocket handlers — no dependency bloat.
+    - **BUG-FE-035**: `useBiometricChallenge` changed to `useMutation` for on-demand challenge.
+    - **BUG-FE-036**: `useBuyGold` invalidates `gold-holdings` + `wallet-balance` caches.
+
+- **Comprehensive Bug Fix Sprint — Session 2 (25+ bugs resolved)**:
+  - **Shared Starters (Batch D)**:
+    - **BUG-BE-093** (resilience-starter): Replaced broken Spring property placeholders in `@FinancialOperation` meta-annotation with hardcoded `"financial"` literal names. Annotations now functional.
+    - **BUG-BE-106** (resilience-starter): Added `Throwable.class.isAssignableFrom()` validation before unchecked cast in `ResilienceAutoConfiguration.retryRegistry()`.
+  - **Backend Services (Batch E)**:
+    - **BUG-BE-082** (api-portal-service): `getPaymentStatus()`/`createRefund()` now throw `NotFoundException` instead of returning null.
+    - **BUG-BE-081** (compliance-service): Removed DELETE audit endpoint — audit logs are immutable.
+    - **BUG-BE-073** (promotion-service): Kafka publish errors now LOG.error with MeterRegistry counter `promotion.kafka.publish.failure`.
+    - **BUG-BE-088** (api-portal-service): OpenAPI aggregation `refreshCache()` now tracks per-service failures and logs partial results.
+  - **Frontend Auth (Batch F)**:
+    - **BUG-AUTH-001**: Added `isRefreshingRef` lock to prevent concurrent token refresh races.
+    - **BUG-AUTH-003**: Added `isAuthenticatedRef` to avoid stale closures in refresh timer.
+    - **BUG-AUTH-004**: Added exponential backoff retry (2s→32s, max 5 attempts) on refresh failure.
+    - **BUG-AUTH-005**: `expiresIn` only returned when `newAccessToken` is truthy.
+    - **BUG-FE-001**: BFF proxy now auto-retries on 401 — refreshes token then retries upstream.
+  - **Frontend UI/Logic (Batch G)**:
+    - **BUG-FE-022** (exchange): Used `useRef` for `estimateMutation` to prevent infinite re-render loop.
+    - **BUG-FE-023** (rewards): Replaced ALL hardcoded fake data with 0/empty defaults.
+    - **BUG-FE-028/029** (useExperiment): Added refs for callbacks to prevent re-render loops.
+    - **BUG-FE-020/031** (ABTestingService): Added in-memory Map fallback when localStorage fails.
+    - **BUG-FE-030** (KYCService): Added `validateImageSize()` with 7MB max limit.
+    - **BUG-FE-025** (AccountService): Removed deprecated `getUserFromStorage()`/`getCurrentUser()`.
+  - **Cross-Service (Batch H)**:
+    - **XBUG-007**: Removed `credit()` from WalletService.ts and `useCreditWallet` hook — internal-only API.
+    - **BUG-BE-086/087**: Deduplicated FxService.ts interfaces via type aliases.
+    - **XBUG-014**: Added `userId` param to all gamification methods in PromotionService + useGamification.
+    - **XBUG-013**: Added 'AWARDED' | 'CLAIMED' to Reward status union type.
+  - **Security Fixes**:
+    - **BUG-FE-032**: Removed `clientSecret` from Partner interface; added `PartnerWithCredentials` for registration only.
+    - **BUG-FE-033**: Removed `getSnapBiToken()` and `useSnapBiAuthToken` — SNAP-BI tokens server-side only.
+  - **Build Fixes**:
+    - Fixed merchant page accessing removed `clientSecret` property.
+    - Fixed statement-downloader using removed `'READY'` status (→ `'COMPLETED'`).
+    - Fixed statement-downloader missing `customerId` in `StatementGenerationRequest`.
+
+- **Cross-Service & Security Bug Fix Sprint (10 bugs resolved)**:
+  - **BUG-CROSS-001** (auth): Refresh route now reads `expires_in` from Keycloak response instead of hardcoded 900s. `LoginResponse` type updated to camelCase fields matching BFF output.
+  - **BUG-CROSS-002** (transaction): Added `validateUUID`/`assertUUID` utilities to `validation.ts`. TransactionService validates `accountId` format before backend calls.
+  - **BUG-CROSS-003** (wallet): Added Axios response interceptor in `api.ts` to auto-unwrap backend `ApiResponse<>` wrapper (`{ success, data }` → inner `data`).
+  - **BUG-CROSS-004** (transfer): Added `QRIS_PAYMENT`, `BILL_PAYMENT`, `TOP_UP` to `InitiateTransferRequest.TransactionType` DTO enum, synced with `Transaction.TransactionType`.
+  - **BUG-CROSS-005** (auth): Login route reads `expires_in` from Keycloak response; refresh route also fixed.
+  - **BUG-BE-113** (transaction-service): Moved participant DB refresh before `isFullyPaid()` check in `SplitBillService.makePayment()` to prevent stale data evaluation.
+  - **BUG-BE-119** (wallet-service): Replaced `java.util.Random` with `SecureRandom` for card number and CVV generation in `CardService`.
+  - **BUG-BE-120** (auth-service): MFA now configurable via `payu.security.risk.mfa-enabled` property instead of hardcoded `false`.
+  - **BUG-BE-121** (auth-service): Added separate `payu.security.risk.lockout-threshold` (default: 5) instead of reusing `mfaThreshold` (50) for account lockout.
+  - **BUG-BE-124** (transaction-service): EQUAL split now uses `RoundingMode.DOWN` + remainder assignment to last participant. `100/3 = 33.33 + 33.33 + 33.34` instead of `33.34 × 3 = 100.02`.
+  - **BUG-BE-155** (auth-service): `recordFailedAttempt()` now called on failed login, `recordSuccessfulLogin()` on success. Brute force detection operational.
+
+- **Batch Bug Fix Sprint (30 bugs resolved in single session)**:
+  - **billing-service**: BUG-BE-039 wallet reservation commit/release; BUG-BE-045 WalletPort interface methods
+  - **partner-service**: BUG-BE-041 SNAP-BI SHA-256 body hash; BUG-BE-044 thread-safe DateTimeFormatter; BUG-BE-047 @Scheduled cert rotation
+  - **outbox-starter**: BUG-BE-042 async exception propagation via handle(); BUG-BE-046 ObjectMapper Spring bean injection
+  - **saga-starter**: BUG-BE-068 dedicated thread pool; BUG-BE-069 non-blocking retry
+  - **compliance-service**: BUG-BE-070 role-based auth with @EnableMethodSecurity
+  - **statement-service**: BUG-BE-052 RestTemplate injection; BUG-BE-053 exception propagation; BUG-BE-059 readOnly=true fix
+  - **investment-service**: BUG-BE-028 BUY fee using managementFee
+  - **account-service**: BUG-BE-031 registration race condition
+  - **promotion-service**: BUG-BE-055 CacheEvict removal; BUG-BE-071 thread-safe UserLevel; BUG-BE-072 DB COUNT; BUG-BE-075 RoundingMode
+  - **cms-service**: BUG-BE-057 title uniqueness race condition
+  - **security-starter**: BUG-BE-030 DataMaskingAspect pointcut narrowed to @Audited
+  - **auth-service**: BUG-BE-166 MFA endpoints in PUBLIC_ENDPOINTS
+  - **api-commons**: BUG-BE-092 WebhookProcessor non-blocking retry
+  - **wallet/transaction-service**: BUG-BE-171 deprecated SecurityContextPersistenceFilter
+  - **Verified already fixed**: BUG-BE-029, 090, 163, 164, 165, 167
+
+
+- **auth-service: Test Suite Green-up (2026-02-24)**:
+  - Fixed `SecurityConfigTest` by converting it to a minimal context test with inner `@Configuration`. This resolves the "no database connection" and "no redis connection" issues during test execution without requiring containers.
+  - Fixed `VaultConfigurationTest` by converting it to a plain unit test, eliminating unnecessary application context loading.
+  - Rewrote `LoginRequestValidationTest` to reflect updated validation rules (removal of strict complexity checks in DTO).
+  - Fixed `TooManyActualInvocations` in `RefreshTokenService` by refining Redis operations and TTL.
+  - Adjusted error handling in `AuthController` to return `BAD_REQUEST` (400) for authentication errors instead of `INTERNAL_SERVER_ERROR` (500).
+  - Re-stabilized the entire auth-service unit test suite (65 tests now passing).
+
+
+- **Documentation Restructuring — Roadmap Split (2026-02-24)**:
+  - **Split `TODOS.md` (749 baris) menjadi 3 dokumen terpisah** untuk eliminasi kontradiksi dan improve navigasi:
+    - `docs/roadmap/TODOS.md` — Pure bug backlog & open actionable items (~117 bugs terdokumentasi)
+    - `docs/roadmap/PROGRESS.md` — Deployment history, scorecard, DORA metrics, completed milestones
+    - `docs/roadmap/GATEWAY_ARCH.md` — Architecture review, gap analysis, integration roadmap (TokoBapak/Nobar)
+  - Updated `docs/INDEX.md` untuk mencerminkan struktur baru
+
+- **Documentation Consolidation & Cleanup (2026-02-24)**:
+  - Merged redundant onboarding guides into a single comprehensive `docs/guides/ONBOARDING.md`.
+  - Unified general and container-specific troubleshooting into `docs/TROUBLESHOOTING.md` at the root for easier access.
+  - Consolidated API Standards and Spectral Validation guides into `docs/api/API_STANDARDS.md`.
+  - Integrated infrastructure summary into a unified `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md`.
+  - Relocated `USAGE.md` to `docs/guides/` for structural consistency.
+  - Archived obsolete remediation playbooks and backup files to `docs/archive/`.
+  - Updated `docs/INDEX.md` with the new documentation structure and removed stale references.
+  - Ensured `docs/guides/GEMINI.md` clearly marks the root `GEMINI.md` as the source of truth.
+
+- **Reference Number Collision Fix — UUID Migration (BUG-BE-003, 022, 038, 077, 114, 115, 123) (2026-02-24)**:
+  - **Problem**: Reference numbers generated via `currentTimeMillis() + random(1000)` are collision-prone under concurrent load. Same pattern existed in 12 locations across 5 services.
+  - **Solution**: Replaced all collision-prone generators with UUID-based format: `PREFIX-` + 16-char uppercase hex from `UUID.randomUUID()`.
+  - **Services Fixed**:
+    - `transaction-service`: TXN, QRI, SPL, SCH reference numbers (4 files)
+    - `billing-service`: BILL reference number + BILLER/EWALLET transaction IDs (2 files)
+    - `investment-service`: DEP, MF, SELL reference numbers (1 file, 3 locations)
+    - `api-portal-service`: PAY, REF reference numbers (1 file, 2 locations)
+  - **Format**: `TXN-A1B2C3D4E5F6G7H8`, `BILL-9A0B1C2D3E4F5G6H`, etc.
+  - **Test Results**: All related unit tests pass (ScheduledTransferServiceTest 13/13, SplitBillServiceTest 11/11, TransactionServiceTest 5/5)
+
+- **Security Hardening — Credential/PII Leak Prevention & CORS Lockdown (BUG-BE-005, 006, 016, 017, 019, 033) (2026-02-24)**:
+  - **BUG-BE-005** (`auth-service`): Removed plaintext token logging from `KeycloakService`. Only success/failure status logged.
+  - **BUG-BE-006** (`gateway-service`): Narrowed `/api/v1/accounts` public prefix to `/api/v1/accounts/register` only. All other account endpoints now require JWT.
+  - **BUG-BE-016** (`auth-service`): Added `maskUsername()` helper — PII now shows only first 2 + last 2 chars (e.g., `jo***oe`).
+  - **BUG-BE-017** (`gateway-service`): Downgraded Authorization header log from INFO to DEBUG, logging only `hasAuth=true/false` instead of full Bearer token.
+  - **BUG-BE-019** (`shared/security-starter`): PBKDF2 salt now configurable via `payu.security.encryption.salt` property. Default fallback preserved for backward compatibility.
+  - **BUG-BE-033** (`backoffice-service`): CORS origins restricted from `*` to `backoffice.payu.id`, `backoffice.payu.co.id`, `admin.payu.id`. Headers restricted. AllowCredentials enabled.
+  - **Test Results**: auth-service 65/65, security-starter 30/30 — all pass.
+
+- **Multi-Service Bug Fixes — Cache, Security, Data Integrity (BUG-BE-004, 012, 013, 014, 034) (2026-02-24)**:
+  - **BUG-BE-004** (`wallet-service`): Added `wallet:id:` cache key invalidation to all mutation methods — balance, reserve, commit, release, and credit now all invalidate 4 cache keys.
+  - **BUG-BE-012** (`promotion-service`): Replaced insecure `Math.random()` with `SecureRandom` for referral code generation.
+  - **BUG-BE-013** (`wallet-service`): Eliminated redundant `findByAccountId` DB call in `createWallet` — reuses first query result.
+  - **BUG-BE-014** (`lending-service`): Added missing `@Transactional` to `processRepayment` to prevent partial updates.
+  - **BUG-BE-034** (`support-service`): Added `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` to all write endpoints (createAgent, updateStatus, createModule, assignTraining).
+  - **Test Results**: wallet-service WalletServiceTest 21/21, lending-service all pass.
+
+- **Multi-Service Bug Fixes — Business Logic & Concurrency (BUG-BE-007, 009, 020, 023, 025) (2026-02-24)**:
+  - **BUG-BE-007** (`transaction-service`): Processed non-BIFAST transfers (INTERNAL, SKN, RTGS). Internal transfers complete immediately with balance commit, while inter-bank transfers queue as PENDING. Addressed type mismatch in Transaction entity where `completedAt` expects `Instant`. Added `creditBalance` API integration.
+  - **BUG-BE-009** (`lending-service`): Re-calculated repayment schedule for the last installment. `installmentAmount = outstandingPrincipal + interestAmount` to resolve accumulation rounding errors.
+  - **BUG-BE-020** (`account-service`): Removed `@Async` from `registerUser` that conflicted with `@Transactional`. Database operations and sequence must run synchronously for integrity before resolving future. 
+  - **BUG-BE-023** (`fx-service`): Prevented FX rate update from aborting fully upon encountering a single rate retrieval fault. Uses isolated try-catch to allow other currencies to continue updating.
+  - **BUG-BE-025** (`notification-service`): Replaced simple incrementer with scheduled retry implementation. Failed notifications execute a dynamic schedule with exponential backoff strategy (up to 3 limits) managed by a scheduled job.
+  - **Test Results**: lending-service all pass, notification-service all pass, transaction-service compiles properly without `Instant` conversion error.
+
+- **P0 Critical Bug Fixes — Investment & Promotion Race Conditions (BUG-BE-018, 029, 063) (2026-02-24)**:
+  - **BUG-BE-018** (`investment-service`): Rewrote `WalletServiceAdapter` to use wallet-service's actual API endpoints. `deductBalance` now uses reserve→commit flow instead of non-existent `/deduct`. `creditBalance` calls `/credit`. Added circuit breaker and retry resilience patterns.
+  - **BUG-BE-029** (`investment-service`): `hasSufficientBalance` now reads `availableBalance` from wallet response instead of `balance`, which was always returning false.
+  - **BUG-BE-063** (`promotion-service`): Replaced race-prone read-check-write pattern in `claimPromotion` with atomic `atomicIncrementRedemptionCount()` — a single `UPDATE...WHERE count < max` query that prevents concurrent claims from exceeding quota.
+  - **Verified Already Fixed**: BUG-BE-002 (auth uses Redis CacheService), BUG-BE-060 (pg_advisory_xact_lock), BUG-BE-062 (cashback saga), BUG-BE-090 (Lua script), BUG-FE-021 (idempotency headers), BUG-FE-027 (retry=0).
+  - **Test Results**: investment-service 14/15 pass (1 pre-existing Mockito stub issue), promotion-service CashbackServiceTest 11/11, CashbackSagaTest 6/6 pass.
+
+- **P0 Critical Fixes — Statement, FX, Lending, Cross-Service (BUG-BE-049, 050, 078, 079, XBUG-001, 005) (2026-02-24)**:
+  - **BUG-BE-049** (`statement-service`): Removed `@Transactional` from `@Async generateStatement()`. The annotation has no effect on async threads — each `repository.save()` now runs in its own implicit transaction, preventing statements from being stuck in GENERATING.
+  - **BUG-BE-050** (`statement-service`): Created `S3StorageAdapter` for persistent PDF storage via AWS S3/MinIO. Replaces ephemeral `/tmp` storage that is lost on pod restart. Falls back to local filesystem when S3 is not configured (dev mode).
+  - **BUG-BE-078** (`fx-service` frontend): Changed FX API base URL from `/fx-api/v1` to `/api/v1/fx` to match standard BFF routing. The old prefix didn't match any route, causing all FX calls to 404.
+  - **BUG-BE-079** (`lending-service` frontend): Moved financial data (`amount`, `merchantName`) from URL query params to POST JSON body in `recordPurchase`/`recordPayment`. Query params get logged in server access logs and browser history.
+  - **XBUG-001** (cross-service): Changed frontend `StatementStatus` from `'READY'` to `'COMPLETED'` to match backend enum. Frontend was stuck in infinite polling loop.
+  - **XBUG-005** (cross-service): Added `customerId` to `StatementGenerationRequest` interface. Without it, backend cannot enforce ownership validation — users could generate statements for other accounts.
+
+- **High Severity Fixes — Investment Saga, KYC Enforcement, Loyalty, Wallet, Auth, and Transfers (BUG-BE-021, 027, 065, 008, 010, 011) (2026-02-24)**:
+  - **BUG-BE-021** (`investment-service`): Added saga compensation to `buyDeposit` — if `saveDeposit` fails after wallet deduction, `creditBalance()` rollback is triggered automatically. Logs CRITICAL if rollback also fails for manual intervention.
+  - **BUG-BE-027** (`account-service`): User status now depends on KYC result. If KYC is REJECTED, status is `PENDING_VERIFICATION` instead of `ACTIVE`. Previously all users were set to ACTIVE regardless of KYC outcome.
+  - **BUG-BE-065** (`promotion-service`): Loyalty points `getBalance()` was using `.count()` (counting transaction records) instead of `.mapToInt(getPoints).sum()` (summing actual point values). Balance displayed was wildly incorrect.
+  - **BUG-BE-008** (`wallet-service`): Standardized `accountId` handling to `String` in `LedgerEntry` and adapter components to fix `IllegalArgumentException` parsing exceptions caused by non-UUID input.
+  - **BUG-BE-010** (`auth-service`): Switched `KeycloakService` blocking operations to synchronous `RestTemplate` from `Mono.block()` which was starving Tomcat threads under load.
+  - **BUG-BE-011** (`transaction-service`): Found `stringRedisTemplate.opsForValue().setIfAbsent` implementation providing distributed locking on `ScheduledTransferScheduler` to handle execution duplication across multiple pod instances.
+
+
+- **Backend Code Review — 90+ Bugs Teridentifikasi (2026-02-24)**:
+  - **P0 Critical** (14 bugs): Gateway JWT placeholder (BUG-BE-001), auth in-memory state (BUG-BE-002),
+    cashback tidak credit wallet (BUG-BE-062), loyalty points race condition (BUG-BE-060),
+    `RateLimitAspect` race condition non-atomic (BUG-BE-090), dan lainnya
+
+- **promotion-service: Cashback Wallet Credit Fix (BUG-BE-062) (2026-02-24)**:
+  - **Problem**: Cashback status di-set `CREDITED` tanpa memanggil wallet-service untuk credit ke user.
+    Ini menyebabkan cashback tercatat tapi saldo wallet tidak bertambah.
+  - **Solution**: Implementasi Saga Pattern untuk atomicity antara wallet credit dan cashback record:
+    - `CashbackSagaOrchestrator`: Orchestrates 2-step saga (CREDIT_WALLET → RECORD_CASHBACK)
+    - `WalletClient`: REST client ke wallet-service dengan circuit breaker dan retry
+    - `CashbackSagaContext`: Context object untuk menyimpan state saga
+    - Status `CREDITED` hanya di-set setelah wallet credit berhasil
+    - Compensation logic untuk rollback jika terjadi failure
+  - **Files Changed**:
+    - `application/service/CashbackService.java` — Refactored untuk menggunakan saga pattern
+    - `application/saga/CashbackSagaOrchestrator.java` — New saga orchestrator
+    - `application/saga/CashbackSagaContext.java` — New saga context
+    - `adapter/client/WalletClient.java` — New wallet service client
+    - `domain/port/out/WalletServicePort.java` — New output port
+    - `config/RestTemplateConfig.java` — New REST template configuration
+    - `PromotionServiceApplication.java` — Added `@EnableSaga` annotation
+    - `pom.xml` — Added saga-starter dependency
+    - `application.yml` — Added wallet service URL configuration
+  - **Tests**: 17 unit tests covering success, failure, and compensation scenarios
+
+- **gateway-service: JWT Placeholder Fix (BUG-BE-001) (2026-02-24)**:
+  - **Problem**: `AuthorizationFilter.validateToken()` hanya cek `token.length() < 10` (PLACEHOLDER).
+    Siapapun dengan token >=10 karakter bisa bypass autentikasi.
+  - **Solution**: Implementasi JWT validation yang lengkap menggunakan nimbus-jose-jwt:
+    - Signature verification menggunakan RS256 dan JWKS dari Keycloak
+    - Expiration validation (exp claim)
+    - Issuer validation (iss claim)
+    - Audience validation (aud claim)
+    - Required claims validation (sub, exp, iat)
+  - **Changes**:
+    - `AuthorizationFilter.java`: Replaced placeholder validation with full JWT processor
+    - Added `initJwtProcessor()` untuk load JWKS dari Keycloak OIDC discovery
+    - Added `extractAccountId()` dan `extractRoles()` untuk parsing Keycloak claims
+    - `pom.xml`: Added explicit dependency `com.nimbusds:nimbus-jose-jwt:9.40`
+    - `application.yaml`: Added `quarkus.oidc.token.audience` configuration
+    - Added `AuthorizationFilterTest.java`: 11 integration tests untuk JWT validation
+
+
+- **partner-service: SNAP-BI Token Store Redis Migration (BUG-BE-035, BUG-BE-036) (2026-02-24)**:
+  - **Problem**: In-memory `tokenStore` caused tokens generated on pod A to not be recognized on pod B.
+    Revoke operation did not work cross-pod, breaking HPA/scaling.
+  - **Solution**: Migrated token storage to Redis with proper TTL matching token expiry time.
+  - **Changes**:
+    - `SnapBiTokenService.java`: Replaced `ConcurrentHashMap` with `RedisTemplate<String, TokenInfo>`
+    - Redis key pattern: `snapbi:token:{clientId}` with TTL from `partner.jwt.expiration-ms`
+    - Added `@Scheduled(fixedRate = 60000)` for `cleanupExpiredTokens()` to run every minute
+    - Added `@EnableScheduling` to `PartnerServiceApplication.java`
+    - Added Redis configuration to `application.yml`
+  - **Shared `api-commons` findings**: `RateLimitAspect` burst window vulnerability (BUG-BE-091),
+    `WebhookProcessor` Thread.sleep blocking (BUG-BE-092)
+  - **Frontend** (26 bugs): No idempotency keys (BUG-FE-021), global mutation retry=1 (BUG-FE-027),
+    localStorage use di ABTestingService (BUG-FE-020), dan lainnya
+  - **Cross-service mismatches** (18 bugs): Statement status enum mismatch, scheduled-transfers 404,
+    PaymentStatus missing PROCESSING/REFUNDED, dan lainnya
+  - Detail lengkap: `docs/roadmap/TODOS.md`
+
+
+
+- **Token Refresh & Authentication Loop Issues**:
+  - `auth-service`: Fixed HTTP 500 error in `/api/v1/auth/refresh` by reverting to Keycloak direct token refresh without local token rotation mapping.
+  - `wallet-service`: Fixed connection pool errors where Hikari was configured with `auto-commit: true` instead of `false` in `application-container.yml`, resolving JPA transaction exceptions.
+  - `wallet-service`, `transaction-service`, `account-service`, `investment-service`: Corrected `OIDC_ISSUER` OpenShift environment variable to point to the Keycloak discovery endpoint, resolving HTTP 401 Unauthorized for valid Keycloak JWTs.
+
 
 - **E2E Test Fixes (Frontend)**:
   - Fixed settings-flow.spec.ts: Updated 14 test cases to match actual UI
   - Removed domicile field tests (field removed from settings page)
   - Updated placeholders: `Nama lengkap`, `email@contoh.com`
   - Fixed button assertions: Use `toBeAttached()` instead of `toBeEnabled()`
+
+
+---
 
 ## [1.3.0] - 2026-02-18
 
