@@ -189,10 +189,10 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-037** | `billing-service` | `PaymentService.java` L69 | **Biller processing adalah mock** — selalu set `COMPLETED` tanpa panggil biller API. Balance terpotong, tagihan tidak dibayar. | Implementasi adapter per-biller (PLN, PDAM, dll.) atau set `PROCESSING` + callback. |
 | ✅ ~~BUG-BE-038~~ | ~~billing-service~~ | ~~BillPayment.java L85~~ | ~~FIXED: Reference number + biller transaction IDs replaced with UUID-based generation.~~ | ~~Ganti ke UUID-based.~~ |
-| **BUG-BE-039** | `billing-service` | `PaymentService.java` L61-78 | **Balance reserved tapi tidak di-commit** — `reserveBalance()` dipanggil, `commitReservation()` tidak pernah dipanggil. Balance stuck di "reserved" selamanya. | Setelah biller sukses: `walletPort.commitReservation(reservationId)`. Jika gagal: `releaseReservation()`. |
+| ✅ ~~BUG-BE-039~~ | ~~billing-service~~ | ~~PaymentService.java L61-78~~ | ~~FIXED: Added `commitReservation()` after biller success and `releaseReservation()` in catch block. Prevents permanent fund lock.~~ | ~~Setelah biller sukses: `walletPort.commitReservation(reservationId)`. Jika gagal: `releaseReservation()`.~~ |
 | **BUG-BE-040** | `backoffice-service` | `UniversalSearchService.java` L26-55 | **Search load semua hasil ke memory** — fetch ALL records, paginate di Java `subList()`. OOM risk untuk data besar. | Implementasi pagination di repository dengan `Pageable`. |
-| **BUG-BE-041** | `partner-service` | `SnapBiSignatureService.java` L19-22 | **Format SNAP-BI signature salah** — tidak menggunakan `SHA-256 hex(body)` sesuai standar BI. Signature verifikasi di BI akan gagal. | Ikuti spesifikasi SNAP-BI: `method + ":" + sha256hex(body) + ":" + timestamp`. |
-| **BUG-BE-042** | `outbox-starter` | `OutboxPublisher.java` L192 | `throw` dalam `whenComplete` lambda tidak sampai ke caller — exception hilang. | Gunakan `exceptionally()` atau flag ke outer try-catch. |
+| ✅ ~~BUG-BE-041~~ | ~~partner-service~~ | ~~SnapBiSignatureService.java L19-22~~ | ~~FIXED: `generateSignature` now hashes body with SHA-256 hex before signing per SNAP-BI spec: `method + ":" + endpoint + ":" + accessToken + ":" + sha256hex(body) + ":" + timestamp`.~~ | ~~Ikuti spesifikasi SNAP-BI: `method + ":" + sha256hex(body) + ":" + timestamp`.~~ |
+| ✅ ~~BUG-BE-042~~ | ~~outbox-starter~~ | ~~OutboxPublisher.java L192~~ | ~~FIXED: Replaced `whenComplete` with `handle()` that wraps errors in `CompletionException`, which is properly thrown by `future.get()`.~~ | ~~Gunakan `exceptionally()` atau flag ke outer try-catch.~~ |
 
 ---
 
@@ -201,9 +201,9 @@
 | ID | Service | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- |
 | **BUG-BE-043** | `backoffice-service` | `listByStatus()` abaikan `page`/`size` parameter — return semua data. | Gunakan `repository.findByStatus(status, PageRequest.of(page, size))`. |
-| **BUG-BE-044** | `partner-service` | `SimpleDateFormat` tidak thread-safe di `getCurrentTimestamp()`. | Ganti ke `DateTimeFormatter` (thread-safe). |
-| **BUG-BE-045** | `billing-service` | `WalletAdapter` hanya punya `reserveBalance`, tidak ada `commit`/`release`. | Tambahkan `commitReservation` + `releaseReservation` ke `WalletPort`. |
-| **BUG-BE-046** | `outbox-starter` | `new ObjectMapper()` setiap call `serializePayload()` — sangat expensive. | Inject `ObjectMapper` sebagai bean. |
+| ✅ ~~BUG-BE-044~~ | ~~partner-service~~ | ~~FIXED: Replaced thread-unsafe `SimpleDateFormat` with immutable `DateTimeFormatter` in `getCurrentTimestamp()`.~~ | ~~Ganti ke `DateTimeFormatter` (thread-safe).~~ |
+| ✅ ~~BUG-BE-045~~ | ~~billing-service~~ | ~~FIXED: Added `commitReservation()` + `releaseReservation()` to `WalletPort` interface and `WalletAdapter` implementation.~~ | ~~Tambahkan `commitReservation` + `releaseReservation` ke `WalletPort`.~~ |
+| ✅ ~~BUG-BE-046~~ | ~~outbox-starter~~ | ~~FIXED: Replaced `new ObjectMapper().findAndRegisterModules()` with constructor-injected Spring-managed `ObjectMapper` bean.~~ | ~~Inject `ObjectMapper` sebagai bean.~~ |
 | **BUG-BE-047** | `partner-service` | `rotateExpiringCertificates()` tidak ada `@Scheduled` trigger. | Tambahkan `@Scheduled(cron = "0 0 8 * * *")`. |
 | **BUG-BE-048** | `kyc-service` + `analytics-service` | Development CORS origins (`localhost:3000`) aktif di production. | Pisahkan CORS config berdasarkan `ENVIRONMENT` env var. |
 
@@ -227,8 +227,8 @@
 | ID | Service | File | Bug / Logic Issue | Solusi |
 | :--- | :--- | :--- | :--- | :--- |
 | **BUG-BE-051** | `statement-service` | `WalletServiceClient.java` L31-39 | **`getBalanceAtDate()` return saldo SAAT INI**, bukan historis. Statement opening/closing balance selalu sama (saldo terkini). | Implementasikan balance history endpoint di wallet-service. |
-| **BUG-BE-052** | `statement-service` | `TransactionServiceClient.java` L24-25 | `new RestTemplate()` — tidak pakai Spring bean, timeout/resilience config tidak berlaku. | Inject `RestTemplate` via Spring. |
-| **BUG-BE-053** | `statement-service` | `TransactionServiceClient.java` L49-52 | Exception fetch transactions di-swallow diam-diam → statement kosong tanpa error. | Minimal log error, throw exception agar statement gagal tegas. |
+| ✅ ~~BUG-BE-052~~ | ~~statement-service~~ | ~~TransactionServiceClient.java L24-25~~ | ~~FIXED: Replaced `new RestTemplate()` with Spring-injected `RestTemplate` bean so timeout/resilience config applies.~~ | ~~Inject `RestTemplate` via Spring.~~ |
+| ✅ ~~BUG-BE-053~~ | ~~statement-service~~ | ~~TransactionServiceClient.java L49-52~~ | ~~FIXED: Fetch exceptions now propagated as `RuntimeException` with proper error message instead of silently returning empty list.~~ | ~~Minimal log error, throw exception agar statement gagal tegas.~~ |
 | **BUG-BE-054** | `statement-service` | `StatementService.java` L447 | **PDF max 20 transaksi saja** — 100+ transaksi di-truncate. Statement tidak lengkap. | Implementasi multi-page PDF. |
 | **BUG-BE-055** | `ab-testing-service` | `ExperimentService.java` L220-246 | `@CacheEvict` di `trackConversion()` — setiap conversion event invalidate experiment cache. Ribuan/menit = constant DB fetch. | Pisahkan metrics update, jangan evict experiment cache. |
 | **BUG-BE-056** | `ab-testing-service` | `ExperimentService.java` L228-243 | **Race condition metrics update** — read-modify-write tanpa lock. Lost update pada concurrent requests. | Atomic DB update: `UPDATE SET metrics = jsonb_set(...)` atau Redis counter. |
@@ -270,9 +270,9 @@
 | ✅ ~~BUG-BE-065~~ | ~~promotion-service~~ | ~~LoyaltyPointsService.java L100-121~~ | ~~FIXED: Replaced `.count()` with `.mapToInt(LoyaltyPoints::getPoints).sum()` for totalEarned, totalRedeemed, expiredPoints. Balance was showing count of records instead of actual point values.~~ | ~~Ganti ke `.mapToInt(LoyaltyPoints::getPoints).sum()`.~~ |
 | **BUG-BE-066** | `promotion-service` | `GamificationService.java` L127-174 | Idempotency check O(n) in-memory, tanpa DB unique constraint — concurrent request bisa duplicate insert. | Tambahkan `UNIQUE INDEX (account_id, transaction_id)` di DB. |
 | **BUG-BE-067** | `promotion-service` | `GamificationService.java` L374-427 | **N+1 query** — `badgeRepository.findById()` di-call per badge dalam loop. 50 badge = 50 queries. | Gunakan `findAllById(ids)` (1 query) + Map lookup. |
-| **BUG-BE-068** | `shared/saga-starter` | `SagaOrchestrator.java` L154-156 | **`executeAsync()` pakai `ForkJoinPool.commonPool()`** — kompete dengan HTTP workers, risk starvation. | Inject custom `TaskExecutor` dan gunakan di `supplyAsync(..., customExecutor)`. |
-| **BUG-BE-069** | `shared/saga-starter` | `SagaOrchestrator.java` L277-283 | **`Thread.sleep()` di retry** — blocking Tomcat thread pool. | Gunakan `ScheduledExecutorService` atau Spring `TaskScheduler`. |
-| **BUG-BE-070** | `compliance-service` | `SecurityConfig.java` | **No role-based authorization** — `.authenticated()` saja, user biasa bisa akses compliance endpoints. | `@PreAuthorize("hasAnyRole('COMPLIANCE_OFFICER', 'ADMIN')")` pada semua endpoints. |
+| ✅ ~~BUG-BE-068~~ | ~~shared/saga-starter~~ | ~~SagaOrchestrator.java L154-156~~ | ~~FIXED: `executeAsync()` now uses dedicated `Executors.newCachedThreadPool` (saga-worker threads) instead of `ForkJoinPool.commonPool()`.~~ | ~~Inject custom `TaskExecutor` dan gunakan di `supplyAsync(..., customExecutor)`.~~ |
+| ✅ ~~BUG-BE-069~~ | ~~shared/saga-starter~~ | ~~SagaOrchestrator.java L277-283~~ | ~~FIXED: `Thread.sleep()` replaced with `ScheduledExecutorService.schedule()` for non-blocking exponential backoff. Retries run on saga-retry daemon threads, not Tomcat pool.~~ | ~~Gunakan `ScheduledExecutorService` atau Spring `TaskScheduler`.~~ |
+| ✅ ~~BUG-BE-070~~ | ~~compliance-service~~ | ~~SecurityConfig.java~~ | ~~FIXED: Added `@EnableMethodSecurity` + `hasAnyRole('COMPLIANCE_OFFICER', 'ADMIN')` matcher on `/api/v1/compliance/**`. Controller also has `@PreAuthorize` on all endpoints.~~ | ~~`@PreAuthorize("hasAnyRole('COMPLIANCE_OFFICER', 'ADMIN')")` pada semua endpoints.~~ |
 
 ---
 

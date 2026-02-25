@@ -65,8 +65,7 @@ import java.util.UUID;
 public class OutboxService {
 
     private final OutboxRepository outboxRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .findAndRegisterModules();
+    private final ObjectMapper objectMapper;
 
     /**
      * Creates a new outbox event.

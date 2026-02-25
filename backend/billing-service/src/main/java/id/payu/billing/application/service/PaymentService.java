@@ -58,23 +58,37 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         log.info("Payment created: id={}, reference={}", payment.getId(), payment.getReferenceNumber());
 
         // Reserve balance from wallet
+        String reservationId = null;
         try {
             WalletPort.ReserveResult reserveResult = walletPort.reserveBalance(
                     request.accountId(), payment.getTotalAmount(), payment.getReferenceNumber()
             );
 
             if ("RESERVED".equals(reserveResult.status())) {
+                reservationId = reserveResult.reservationId();
                 payment.setStatus(BillPayment.PaymentStatus.PROCESSING);
-                // Simulate biller processing (in production, call actual biller API)
+                // Process with biller (in production, call actual biller API)
                 processWithBiller(payment);
+
+                // Commit the reservation after successful biller processing
+                walletPort.commitReservation(reservationId);
             } else {
                 payment.setStatus(BillPayment.PaymentStatus.FAILED);
                 payment.setFailureReason("Failed to reserve balance");
             }
         } catch (Exception e) {
-            log.error("Failed to reserve balance: {}", e.getMessage());
+            log.error("Payment processing failed: {}", e.getMessage());
             payment.setStatus(BillPayment.PaymentStatus.FAILED);
-            payment.setFailureReason("Wallet service unavailable");
+            payment.setFailureReason("Payment processing failed: " + e.getMessage());
+            // Release the reservation if it was acquired
+            if (reservationId != null) {
+                try {
+                    walletPort.releaseReservation(reservationId);
+                    log.info("Released reservation {} after payment failure", reservationId);
+                } catch (Exception releaseEx) {
+                    log.error("CRITICAL: Failed to release reservation {} — manual intervention required", reservationId, releaseEx);
+                }
+            }
         }
 
         payment = persistencePort.save(payment);
@@ -111,23 +125,37 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         log.info("Top-up created: id={}, reference={}", payment.getId(), payment.getReferenceNumber());
 
         // Reserve balance from wallet
+        String reservationId = null;
         try {
             WalletPort.ReserveResult reserveResult = walletPort.reserveBalance(
                     request.accountId(), payment.getTotalAmount(), payment.getReferenceNumber()
             );
 
             if ("RESERVED".equals(reserveResult.status())) {
+                reservationId = reserveResult.reservationId();
                 payment.setStatus(BillPayment.PaymentStatus.PROCESSING);
-                // Simulate e-wallet provider processing (in production, call actual e-wallet API)
+                // Process with e-wallet provider (in production, call actual e-wallet API)
                 processWithEwalletProvider(payment);
+
+                // Commit the reservation after successful provider processing
+                walletPort.commitReservation(reservationId);
             } else {
                 payment.setStatus(BillPayment.PaymentStatus.FAILED);
                 payment.setFailureReason("Failed to reserve balance");
             }
         } catch (Exception e) {
-            log.error("Failed to reserve balance: {}", e.getMessage());
+            log.error("Top-up processing failed: {}", e.getMessage());
             payment.setStatus(BillPayment.PaymentStatus.FAILED);
-            payment.setFailureReason("Wallet service unavailable");
+            payment.setFailureReason("Top-up processing failed: " + e.getMessage());
+            // Release the reservation if it was acquired
+            if (reservationId != null) {
+                try {
+                    walletPort.releaseReservation(reservationId);
+                    log.info("Released reservation {} after top-up failure", reservationId);
+                } catch (Exception releaseEx) {
+                    log.error("CRITICAL: Failed to release reservation {} — manual intervention required", reservationId, releaseEx);
+                }
+            }
         }
 
         payment = persistencePort.save(payment);

@@ -23,4 +23,14 @@ public class WalletAdapter implements WalletPort {
         );
         return new ReserveResult(response.reservationId(), response.status());
     }
+
+    @Override
+    public void commitReservation(String reservationId) {
+        walletClient.commitReservation(reservationId);
+    }
+
+    @Override
+    public void releaseReservation(String reservationId) {
+        walletClient.releaseReservation(reservationId);
+    }
 }

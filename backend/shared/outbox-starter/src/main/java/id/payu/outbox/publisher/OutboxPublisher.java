@@ -186,13 +186,15 @@ public class OutboxPublisher {
             // Send to Kafka with callback
             CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(record);
 
-            future.whenComplete((result, ex) -> {
+            future = future.handle((result, ex) -> {
                 if (ex != null) {
                     log.error("Failed to publish outbox event {} to topic {}", event.getId(), topic, ex);
-                    throw new OutboxPublishException("Failed to publish event " + event.getId(), ex);
+                    throw new java.util.concurrent.CompletionException(
+                            new OutboxPublishException("Failed to publish event " + event.getId(), ex));
                 } else {
                     log.debug("Successfully published outbox event {} to topic {} at offset {}",
                             event.getId(), topic, result.getRecordMetadata().offset());
+                    return result;
                 }
             });
 

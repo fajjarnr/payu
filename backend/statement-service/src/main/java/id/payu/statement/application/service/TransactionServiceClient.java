@@ -21,18 +21,18 @@ public class TransactionServiceClient {
     @Value("${services.transaction.url:http://transaction-service:8003}")
     private String transactionServiceUrl;
 
-    public TransactionServiceClient() {
-        this.restTemplate = new RestTemplate();
+    public TransactionServiceClient(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 
     /**
      * Get transactions for a user within a date range
      */
     public List<StatementService.TransactionRecord> getTransactions(String customerId, LocalDate startDate, LocalDate endDate) {
-        try {
-            String url = transactionServiceUrl + "/api/v1/transactions/customer/" + customerId
-                + "?startDate=" + startDate + "&endDate=" + endDate;
+        String url = transactionServiceUrl + "/api/v1/transactions/customer/" + customerId
+            + "?startDate=" + startDate + "&endDate=" + endDate;
 
+        try {
             TransactionListResponse response = restTemplate.getForObject(url, TransactionListResponse.class);
 
             if (response != null && response.getTransactions() != null) {
@@ -46,11 +46,11 @@ public class TransactionServiceClient {
                     .toList();
             }
 
+            return new ArrayList<>();
         } catch (Exception e) {
-            // Return empty list on error
+            // BUG-BE-053: Do NOT silently swallow — log and propagate so statement fails explicitly
+            throw new RuntimeException("Failed to fetch transactions for customer " + customerId + ": " + e.getMessage(), e);
         }
-
-        return new ArrayList<>();
     }
 
     @Data

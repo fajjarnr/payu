@@ -18,6 +18,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -37,6 +41,24 @@ public abstract class SagaOrchestrator<T> {
 
     private final List<SagaStep<T>> steps = new ArrayList<>();
     private String sagaType;
+
+    // BUG-BE-068: Dedicated executor instead of ForkJoinPool.commonPool()
+    private static final ExecutorService SAGA_EXECUTOR = Executors.newCachedThreadPool(
+            r -> {
+                Thread t = new Thread(r, "saga-worker");
+                t.setDaemon(true);
+                return t;
+            }
+    );
+
+    // BUG-BE-069: Non-blocking retry scheduler
+    private static final ScheduledExecutorService RETRY_SCHEDULER = Executors.newScheduledThreadPool(2,
+            r -> {
+                Thread t = new Thread(r, "saga-retry");
+                t.setDaemon(true);
+                return t;
+            }
+    );
 
     /**
      * Initialize the orchestrator with saga type and steps.
@@ -152,14 +174,14 @@ public abstract class SagaOrchestrator<T> {
      * Execute saga asynchronously.
      */
     public CompletableFuture<SagaResult<T>> executeAsync(T initialData) {
-        return CompletableFuture.supplyAsync(() -> execute(initialData));
+        return CompletableFuture.supplyAsync(() -> execute(initialData), SAGA_EXECUTOR);
     }
 
     /**
      * Execute saga asynchronously with specific ID.
      */
     public CompletableFuture<SagaResult<T>> executeAsyncWithId(String sagaId, T initialData) {
-        return CompletableFuture.supplyAsync(() -> executeWithId(sagaId, initialData));
+        return CompletableFuture.supplyAsync(() -> executeWithId(sagaId, initialData), SAGA_EXECUTOR);
     }
 
     /**
@@ -273,11 +295,13 @@ public abstract class SagaOrchestrator<T> {
                     return StepResult.failure(data, "Max retries exceeded: " + e.getMessage(), e);
                 }
 
-                // Wait before retry
+                // BUG-BE-069: Non-blocking wait using ScheduledExecutorService
                 try {
-                    Thread.sleep(delay.toMillis());
+                    CompletableFuture<Void> waitFuture = new CompletableFuture<>();
+                    RETRY_SCHEDULER.schedule(() -> waitFuture.complete(null), delay.toMillis(), TimeUnit.MILLISECONDS);
+                    waitFuture.get(); // blocks this saga worker thread, NOT Tomcat threads
                     delay = delay.multipliedBy(2); // Exponential backoff
-                } catch (InterruptedException ie) {
+                } catch (Exception ie) {
                     Thread.currentThread().interrupt();
                     return StepResult.failure(data, "Retry interrupted", ie);
                 }

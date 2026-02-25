@@ -3,22 +3,24 @@ package id.payu.partner.application.service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
-import java.util.Date;
-import java.util.TimeZone;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SnapBiSignatureService {
 
     private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+    private static final DateTimeFormatter ISO_UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     // Standard Java security/crypto implementation - already Spring Service compatible
     
     public String generateSignature(String clientSecret, String httpMethod, String endpoint, String accessToken, String requestBody, String timestamp) {
-        try {
-            String stringToSign = httpMethod + ":" + endpoint + ":" + accessToken + ":" + requestBody + ":" + timestamp;
+            // SNAP-BI standard: method + ":" + endpoint + ":" + accessToken + ":" + sha256hex(body) + ":" + timestamp
+            String hashedBody = hashRequestBody(requestBody);
+            String stringToSign = httpMethod + ":" + endpoint + ":" + accessToken + ":" + hashedBody + ":" + timestamp;
             
             byte[] secretKeyBytes = clientSecret.getBytes(StandardCharsets.UTF_8);
             byte[] stringToSignBytes = stringToSign.getBytes(StandardCharsets.UTF_8);
@@ -35,8 +37,9 @@ public class SnapBiSignatureService {
     }
 
     public String generateSignatureWithClientKey(String clientSecret, String httpMethod, String endpoint, String timestamp, String requestBody) {
-        try {
-            String stringToSign = httpMethod + ":" + endpoint + ":" + timestamp + ":" + requestBody;
+            // SNAP-BI standard for client-key based signature: method + ":" + endpoint + ":" + timestamp + ":" + sha256hex(body)
+            String hashedBody = hashRequestBody(requestBody);
+            String stringToSign = httpMethod + ":" + endpoint + ":" + timestamp + ":" + hashedBody;
             
             byte[] secretKeyBytes = clientSecret.getBytes(StandardCharsets.UTF_8);
             byte[] stringToSignBytes = stringToSign.getBytes(StandardCharsets.UTF_8);
@@ -63,9 +66,7 @@ public class SnapBiSignatureService {
     }
 
     public String getCurrentTimestamp() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return sdf.format(new Date());
+        return ZonedDateTime.now(ZoneOffset.UTC).format(ISO_UTC_FORMATTER);
     }
 
     public String hashRequestBody(String requestBody) {
