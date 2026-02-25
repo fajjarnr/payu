@@ -20,7 +20,7 @@ const mockStatement: Statement = {
   totalCredits: 8000000,
   totalDebits: 3000000,
   transactionCount: 25,
-  status: 'READY',
+  status: 'COMPLETED',
   generatedAt: '2026-02-01T10:00:00Z',
   createdAt: '2026-02-01T10:00:00Z',
   periodFormatted: 'Januari 2026',
@@ -48,6 +48,7 @@ describe('StatementService', () => {
   describe('generateStatement', () => {
     it('should generate a statement for given period', async () => {
       const request: StatementGenerationRequest = {
+        customerId: 'cust_123',
         accountNumber: '1234567890',
         year: 2026,
         month: 1,
@@ -59,7 +60,7 @@ describe('StatementService', () => {
 
       expect(api.post).toHaveBeenCalledWith('/statements/generate', request);
       expect(result.id).toBe('stmt_001');
-      expect(result.status).toBe('READY');
+      expect(result.status).toBe('COMPLETED');
     });
   });
 
@@ -171,8 +172,8 @@ describe('StatementService', () => {
       expect(service.formatStatementStatus('GENERATING')).toBe('Sedang Dibuat');
     });
 
-    it('should format READY status', () => {
-      expect(service.formatStatementStatus('READY')).toBe('Siap Diunduh');
+    it('should format COMPLETED status', () => {
+      expect(service.formatStatementStatus('COMPLETED')).toBe('Siap Diunduh');
     });
 
     it('should format FAILED status', () => {
@@ -186,8 +187,8 @@ describe('StatementService', () => {
       expect(color).toContain('warning');
     });
 
-    it('should return primary colors for READY', () => {
-      const color = service.getStatusColor('READY');
+    it('should return primary colors for COMPLETED', () => {
+      const color = service.getStatusColor('COMPLETED');
       expect(color).toContain('primary');
     });
 

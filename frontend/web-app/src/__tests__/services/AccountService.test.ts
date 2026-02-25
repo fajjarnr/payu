@@ -197,35 +197,9 @@ describe('AccountService', () => {
     });
   });
 
-  describe('getUserFromStorage', () => {
-    it('should return null and warn about deprecation', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      const result = service.getUserFromStorage();
-
-      expect(result).toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'getUserFromStorage() is deprecated. Use useAuthStore hook instead.'
-      );
-
-      consoleWarnSpy.mockRestore();
-    });
-  });
-
-  describe('getCurrentUser', () => {
-    it('should return null and warn about deprecation', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      const result = service.getCurrentUser();
-
-      expect(result).toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'getCurrentUser() is deprecated. Use useAuthStore hook instead.'
-      );
-
-      consoleWarnSpy.mockRestore();
-    });
-  });
+  // BUG-FE-025: getUserFromStorage() and getCurrentUser() tests removed —
+  // methods were deprecated and removed from AccountService.
+  // Use useAuthStore hook instead.
 
   describe('KYC Status handling', () => {
     it('should handle all KYC status types', async () => {

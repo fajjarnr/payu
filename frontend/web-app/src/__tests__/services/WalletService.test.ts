@@ -4,7 +4,6 @@ import {
   type BalanceResponse,
   type ReserveBalanceRequest,
   type ReserveBalanceResponse,
-  type CreditRequest,
   type WalletTransaction,
 } from '@/services/WalletService';
 import api from '@/lib/api';
@@ -101,46 +100,8 @@ describe('WalletService', () => {
     });
   });
 
-  describe('credit', () => {
-    it('should credit amount to wallet', async () => {
-      const mockRequest: CreditRequest = {
-        amount: 100000,
-        referenceId: 'ref_123',
-        description: 'Test credit',
-      };
-
-      const mockResponse = {
-        status: 'CREDITED',
-        accountId: 'acc_123',
-      };
-
-      vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
-
-      const result = await WalletService.getInstance().credit('acc_123', mockRequest);
-
-      expect(api.post).toHaveBeenCalledWith('/wallets/acc_123/credit', mockRequest);
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('should credit amount without description', async () => {
-      const mockRequest: CreditRequest = {
-        amount: 50000,
-        referenceId: 'ref_456',
-      };
-
-      const mockResponse = {
-        status: 'CREDITED',
-        accountId: 'acc_123',
-      };
-
-      vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
-
-      const result = await WalletService.getInstance().credit('acc_123', mockRequest);
-
-      expect(api.post).toHaveBeenCalledWith('/wallets/acc_123/credit', mockRequest);
-      expect(result).toEqual(mockResponse);
-    });
-  });
+  // XBUG-007: credit() tests removed — endpoint is internal-only API.
+  // Direct wallet credits must go through backend services, not client-facing UI.
 
   describe('getTransactionHistory', () => {
     it('should fetch transaction history with default pagination', async () => {

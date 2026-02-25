@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PartnerService, type Partner } from '@/services/PartnerService';
+import { PartnerService, type Partner, type PartnerWithCredentials } from '@/services/PartnerService';
 import api from '@/lib/api';
 
 vi.mock('@/lib/api', () => ({
@@ -26,7 +26,7 @@ describe('PartnerService', () => {
         publicKey: 'ssh-rsa AAAAB3NzaC1yc2E...',
       };
 
-      const mockPartner: Partner = {
+      const mockPartner: PartnerWithCredentials = {
         id: 1,
         name: 'Test Partner',
         email: 'partner@example.com',
@@ -140,7 +140,6 @@ describe('PartnerService', () => {
         type: 'MERCHANT',
         phone: '+628123456789',
         clientId: 'client_abc123',
-        clientSecret: 'secret_xyz789',
         publicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC...',
         active: true,
       };
@@ -152,7 +151,7 @@ describe('PartnerService', () => {
       expect(api.get).toHaveBeenCalledWith('/partners/123');
       expect(result).toEqual(mockPartner);
       expect(result.clientId).toBe('client_abc123');
-      expect(result.clientSecret).toBe('secret_xyz789');
+      // BUG-FE-032: clientSecret removed from Partner type — only on PartnerWithCredentials
     });
 
     it('should fetch partner profile without credentials', async () => {
@@ -170,7 +169,7 @@ describe('PartnerService', () => {
       const result = await PartnerService.getProfile(456);
 
       expect(result.clientId).toBeUndefined();
-      expect(result.clientSecret).toBeUndefined();
+      // BUG-FE-032: clientSecret not on Partner type
       expect(result.publicKey).toBeUndefined();
     });
 
@@ -240,7 +239,7 @@ describe('PartnerService', () => {
         publicKey: 'ssh-rsa full-public-key',
       };
 
-      const mockPartner: Partner = {
+      const mockPartner: PartnerWithCredentials = {
         id: 200,
         name: 'Full Partner',
         email: 'full@example.com',
