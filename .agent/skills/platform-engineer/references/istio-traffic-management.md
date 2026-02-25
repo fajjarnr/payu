@@ -118,5 +118,5 @@ spec:
         mode: SIMPLE
         credentialName: payu-tls-cert
       hosts:
-        - "api.payu.com"
+        - "api.payu.fajjjar.my.id"
 ```

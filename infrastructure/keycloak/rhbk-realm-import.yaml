@@ -59,7 +59,7 @@ spec:
       - username: customer1
         enabled: true
         emailVerified: true
-        email: customer1@payu.id
+        email: customer1@payu.fajjjar.my.id
         firstName: Customer
         lastName: One
         attributes:
@@ -81,7 +81,7 @@ spec:
       - username: customer2
         enabled: true
         emailVerified: true
-        email: customer2@payu.id
+        email: customer2@payu.fajjjar.my.id
         firstName: Customer
         lastName: Two
         attributes:
@@ -101,7 +101,7 @@ spec:
       - username: admin
         enabled: true
         emailVerified: true
-        email: admin@payu.id
+        email: admin@payu.fajjjar.my.id
         firstName: System
         lastName: Administrator
         attributes:
@@ -120,7 +120,7 @@ spec:
       - username: backoffice
         enabled: true
         emailVerified: true
-        email: backoffice@payu.id
+        email: backoffice@payu.fajjjar.my.id
         firstName: Backoffice
         lastName: Staff
         attributes:

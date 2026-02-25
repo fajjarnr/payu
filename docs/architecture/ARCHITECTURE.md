@@ -56,6 +56,7 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 | **Service Mesh**          | OpenShift Service Mesh               | Istio, Linkerd             |
 | **Logging**               | OpenShift Logging (LokiStack)        | Grafana Loki               |
 | **Monitoring**            | OpenShift Monitoring                 | Prometheus/Grafana         |
+| **Developer Hub**         | Red Hat Developer Hub                | Backstage.io (CNCF)        |
 | **Shared Libraries**      | Security, Resilience, Cache Starters | Spring Boot Starters       |
 
 > **Portability Note**: All components use standard APIs (OIDC, RESP, Kafka Protocol, SQL, AMQP).
@@ -493,30 +494,30 @@ CREATE TABLE ledger_entries (
 
 #### 3.2.13 Backoffice Service
 
-| Attribute            | Value                                         |
-| -------------------- | --------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                    |
-| **Database**         | PostgreSQL                                    |
-| **Port**             | 8013                                          |
+| Attribute            | Value                                            |
+| -------------------- | ------------------------------------------------ |
+| **Technology**       | Java 21, Spring Boot 3.4.x                       |
+| **Database**         | PostgreSQL                                       |
+| **Port**             | 8013                                             |
 | **Responsibilities** | Internal admin dashboard, audit, user management |
 
 #### 3.2.14 Partner Service
 
-| Attribute            | Value                                          |
-| -------------------- | ---------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                     |
-| **Database**         | PostgreSQL                                     |
-| **Port**             | 8014                                           |
+| Attribute            | Value                                             |
+| -------------------- | ------------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                        |
+| **Database**         | PostgreSQL                                        |
+| **Port**             | 8014                                              |
 | **Responsibilities** | Partner integration, API key management, webhooks |
 
 #### 3.2.15 Promotion Service
 
-| Attribute            | Value                                          |
-| -------------------- | ---------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                     |
-| **Database**         | PostgreSQL                                     |
-| **Port**             | 8015                                           |
-| **Responsibilities** | Promo campaigns, vouchers, rewards, cashback   |
+| Attribute            | Value                                        |
+| -------------------- | -------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                   |
+| **Database**         | PostgreSQL                                   |
+| **Port**             | 8015                                         |
+| **Responsibilities** | Promo campaigns, vouchers, rewards, cashback |
 
 #### 3.2.16 Support Service
 
@@ -529,11 +530,11 @@ CREATE TABLE ledger_entries (
 
 #### 3.2.17 Compliance Service
 
-| Attribute            | Value                                           |
-| -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                      |
-| **Database**         | PostgreSQL                                      |
-| **Port**             | 8017                                            |
+| Attribute            | Value                                                 |
+| -------------------- | ----------------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                            |
+| **Database**         | PostgreSQL                                            |
+| **Port**             | 8017                                                  |
 | **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
 
 ### 3.3 Shared Libraries (Common Components)
@@ -1389,7 +1390,7 @@ Response:
 {
   "payment_id": "pay_abc123xyz",
   "status": "PENDING",
-  "payment_url": "https://pay.payu.id/checkout/pay_abc123xyz",
+  "payment_url": "https://pay.payu.fajjjar.my.id/checkout/pay_abc123xyz",
   "expires_at": "2026-01-18T21:00:00Z"
 }
 ```
@@ -1679,12 +1680,12 @@ Features:
 
 ### 11.2 Technology Stack
 
-| Platform             | Technology                          | Purpose           | Directory               |
-| -------------------- | ----------------------------------- | ----------------- | ----------------------- |
-| **Web App**          | Next.js 15 + Tailwind CSS 4         | Customer portal   | `frontend/web-app/`     |
-| **Developer Portal** | Next.js 15 + shadcn/ui              | Partner API docs  | `frontend/developer-docs/` |
-| **Mobile App**       | Expo (React Native)                 | iOS/Android/Web   | `frontend/mobile/`      |
-| **Shared**           | TypeScript, Zustand, TanStack Query | Cross-platform    | -                       |
+| Platform             | Technology                          | Purpose          | Directory                  |
+| -------------------- | ----------------------------------- | ---------------- | -------------------------- |
+| **Web App**          | Next.js 15 + Tailwind CSS 4         | Customer portal  | `frontend/web-app/`        |
+| **Developer Portal** | Next.js 15 + shadcn/ui              | Partner API docs | `frontend/developer-docs/` |
+| **Mobile App**       | Expo (React Native)                 | iOS/Android/Web  | `frontend/mobile/`         |
+| **Shared**           | TypeScript, Zustand, TanStack Query | Cross-platform   | -                          |
 
 > **Note:** Admin Dashboard functionality is provided by `backoffice-service` backend with a separate admin UI.
 

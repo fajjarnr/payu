@@ -109,16 +109,16 @@ mvn gatling:test -Pbalance
 
 **Specify custom base URL:**
 ```bash
-mvn gatling:test -DbaseUrl=https://api.payu.id
+mvn gatling:test -DbaseUrl=https://api.payu.fajjjar.my.id
 ```
 
 **Specify individual service URLs:**
 ```bash
 mvn gatling:test \
-  -DbaseUrl=https://api.payu.id \
-  -DauthUrl=https://auth.payu.id \
-  -DtransactionUrl=https://transaction.payu.id \
-  -DwalletUrl=https://wallet.payu.id
+  -DbaseUrl=https://api.payu.fajjjar.my.id \
+  -DauthUrl=https://auth.payu.fajjjar.my.id \
+  -DtransactionUrl=https://transaction.payu.fajjjar.my.id \
+  -DwalletUrl=https://wallet.payu.fajjjar.my.id
 ```
 
 **Run with custom simulation:**
@@ -360,8 +360,8 @@ mvn gatling:test
 | Environment | Base URL | Purpose |
 |-------------|----------|---------|
 | **Local** | `http://localhost:8080` | Development testing |
-| **Staging** | `https://staging-api.payu.id` | Pre-production validation |
-| **Load Test** | `https://loadtest-api.payu.id` | Dedicated performance testing |
+| **Staging** | `https://staging-api.payu.fajjjar.my.id` | Pre-production validation |
+| **Load Test** | `https://loadtest-api.payu.fajjjar.my.id` | Dedicated performance testing |
 
 ## Metrics to Monitor
 
@@ -388,9 +388,9 @@ During performance tests, monitor:
 ## Support
 
 For questions or issues:
-- **Performance Issues:** performance-team@payu.id
-- **Test Infrastructure:** qa-team@payu.id
-- **Application Issues:** backend-team@payu.id
+- **Performance Issues:** performance-team@payu.fajjjar.my.id
+- **Test Infrastructure:** qa-team@payu.fajjjar.my.id
+- **Application Issues:** backend-team@payu.fajjjar.my.id
 
 ## References
 

@@ -34,10 +34,10 @@ public class ContentResponse {
     @Schema(description = "Content description", example = "Get 20% cashback on all transactions")
     private String description;
 
-    @Schema(description = "Image URL", example = "https://cdn.payu.id/images/promo-jan2026.png")
+    @Schema(description = "Image URL", example = "https://cdn.payu.fajjjar.my.id/images/promo-jan2026.png")
     private String imageUrl;
 
-    @Schema(description = "Action URL", example = "https://payu.id/promos/january-2026")
+    @Schema(description = "Action URL", example = "https://payu.fajjjar.my.id/promos/january-2026")
     private String actionUrl;
 
     @Schema(description = "Action type", example = "LINK")
@@ -74,10 +74,10 @@ public class ContentResponse {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
-    @Schema(description = "Creator", example = "admin@payu.id")
+    @Schema(description = "Creator", example = "admin@payu.fajjjar.my.id")
     private String createdBy;
 
-    @Schema(description = "Last updater", example = "admin@payu.id")
+    @Schema(description = "Last updater", example = "admin@payu.fajjjar.my.id")
     private String updatedBy;
 
     @Schema(description = "Is currently active", example = "true")

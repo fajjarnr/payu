@@ -239,9 +239,9 @@ EOF
     print_success "Seed data initialization complete!"
     echo ""
     echo "Test Credentials:"
-    echo "  customer1 | P@ssw0rd123 | customer1@payu.id"
-    echo "  customer2 | P@ssw0rd123 | customer2@payu.id"
-    echo "  admin     | P@ssw0rd123 | admin@payu.id"
+    echo "  customer1 | P@ssw0rd123 | customer1@payu.fajjjar.my.id"
+    echo "  customer2 | P@ssw0rd123 | customer2@payu.fajjjar.my.id"
+    echo "  admin     | P@ssw0rd123 | admin@payu.fajjjar.my.id"
 }
 
 main "$@"

@@ -67,10 +67,10 @@ def create_app() -> FastAPI:
     # BUG-BE-048: CORS origins based on ENVIRONMENT env var
     import os
     cors_origins = [
-        "https://payu.id",
-        "https://app.payu.id",
-        "https://api.payu.id",
-        "https://backoffice.payu.id",
+        "https://payu.fajjjar.my.id",
+        "https://app.payu.fajjjar.my.id",
+        "https://api.payu.fajjjar.my.id",
+        "https://backoffice.payu.fajjjar.my.id",
     ]
     if os.getenv("ENVIRONMENT", "production").lower() == "development":
         cors_origins.extend([

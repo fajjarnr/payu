@@ -28,11 +28,11 @@ class CorsFilterTest {
         @DisplayName("should allow requests from allowed origin")
         void shouldAllowRequestsFromAllowedOrigin() {
             given()
-                .header("Origin", "https://payu.id")
+                .header("Origin", "https://payu.fajjjar.my.id")
             .when()
                 .get("/api/v1/partners")
             .then()
-                .header("Access-Control-Allow-Origin", "https://payu.id")
+                .header("Access-Control-Allow-Origin", "https://payu.fajjjar.my.id")
                 .statusCode(anyOf(is(200), is(404), is(500), is(503)));
         }
 
@@ -69,7 +69,7 @@ class CorsFilterTest {
         @DisplayName("should include all required CORS headers")
         void shouldIncludeAllRequiredCorsHeaders() {
             given()
-                .header("Origin", "https://payu.id")
+                .header("Origin", "https://payu.fajjjar.my.id")
             .when()
                 .options("/api/v1/partners")
             .then()
@@ -84,7 +84,7 @@ class CorsFilterTest {
         @DisplayName("should include allow credentials header")
         void shouldIncludeAllowCredentialsHeader() {
             given()
-                .header("Origin", "https://payu.id")
+                .header("Origin", "https://payu.fajjjar.my.id")
             .when()
                 .get("/api/v1/partners")
             .then()
@@ -95,12 +95,12 @@ class CorsFilterTest {
         @DisplayName("should handle preflight requests")
         void shouldHandlePreflightRequests() {
             given()
-                .header("Origin", "https://payu.id")
+                .header("Origin", "https://payu.fajjjar.my.id")
                 .header("Access-Control-Request-Method", "POST")
             .when()
                 .options("/api/v1/partners")
             .then()
-                .header("Access-Control-Allow-Origin", "https://payu.id")
+                .header("Access-Control-Allow-Origin", "https://payu.fajjjar.my.id")
                 .header("Access-Control-Allow-Methods", containsString("POST"));
         }
     }

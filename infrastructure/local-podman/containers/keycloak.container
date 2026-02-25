@@ -5,7 +5,7 @@ Requires=postgres.target container.service
 PartOf=podman-payu.service
 
 [Container]
-Image=quay.io/keycloak/keycloak:latest
+Image=quay.io/keycloak/keycloak:26.1
 ContainerName=payu-keycloak
 PodmanArgs=--pod=payu-identity-pod --net=payu-network
 Network=payu-network

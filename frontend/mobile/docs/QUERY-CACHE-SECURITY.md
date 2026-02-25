@@ -290,8 +290,8 @@ if (__DEV__) {
 ## Contact
 
 For questions or security concerns:
-- **Security Team**: security@payu.id
-- **Architecture**: arch@payu.id
+- **Security Team**: security@payu.fajjjar.my.id
+- **Architecture**: arch@payu.fajjjar.my.id
 - **Documentation**: `/home/ubuntu/payu/frontend/mobile/docs/`
 
 ---

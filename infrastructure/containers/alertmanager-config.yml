@@ -1,7 +1,7 @@
 global:
   resolve_timeout: 5m
   smtp_smarthost: 'localhost:25'
-  smtp_from: 'alertmanager@payu.com'
+  smtp_from: 'alertmanager@payu.fajjjar.my.id'
   smtp_require_tls: false
 route:
   group_by: ['alertname', 'cluster', 'service']
@@ -38,7 +38,7 @@ route:
 receivers:
   - name: 'default-receiver'
     email_configs:
-      - to: 'platform@payu.com'
+      - to: 'platform@payu.fajjjar.my.id'
         headers:
           Subject: '[PayU Alert] {{ .GroupLabels.alertname }}'
   - name: 'critical-alerts'

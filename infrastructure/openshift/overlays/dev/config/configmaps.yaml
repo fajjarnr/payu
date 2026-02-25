@@ -52,7 +52,7 @@ data:
   QUARKUS_PROFILE: "dev"
   QUARKUS_LOG_LEVEL: "DEBUG"
   QUARKUS_LOG_CATEGORY__ID_PAYU__LEVEL: "DEBUG"
-  QUARKUS_HTTP_CORS_ORIGINS: "https://dev.payu.id,http://localhost:3000,http://localhost:3001"
+  QUARKUS_HTTP_CORS_ORIGINS: "https://dev.payu.fajjjar.my.id,http://localhost:3000,http://localhost:3001"
   QUARKUS_HTTP_CORS_METHODS: "GET,POST,PUT,DELETE,PATCH,OPTIONS"
   QUARKUS_HTTP_CORS_HEADERS: "Authorization,Content-Type,Accept,Origin,X-Requested-With"
   QUARKUS_HTTP_CORS_CREDENTIALS: "true"

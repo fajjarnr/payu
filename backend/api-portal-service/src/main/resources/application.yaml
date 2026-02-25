@@ -19,7 +19,7 @@ quarkus:
     info-version: 1.0.0
     info-description: Centralized API Portal for all PayU services
     info-contact-name: PayU Engineering Team
-    info-contact-email: engineering@payu.id
+    info-contact-email: engineering@payu.fajjjar.my.id
     path: /q/openapi
   smallrye-health:
     ui:

@@ -21,7 +21,7 @@ PayU takes security seriously. This document outlines our security policy and ho
 
 If you discover a security vulnerability within PayU, please follow these steps:
 
-1. **Email**: Send a detailed report to **security@payu.id**
+1. **Email**: Send a detailed report to **security@payu.fajjjar.my.id**
 2. **Subject**: Use the format `[SECURITY] Brief description`
 3. **Include**:
    - Description of the vulnerability

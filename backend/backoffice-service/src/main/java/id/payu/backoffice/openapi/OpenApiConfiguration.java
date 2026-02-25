@@ -39,15 +39,15 @@ public class OpenApiConfiguration {
                                 """)
                         .contact(new Contact()
                                 .name("PayU API Support")
-                                .email("api-support@payu.id")
-                                .url("https://payu.id"))
+                                .email("api-support@payu.fajjjar.my.id")
+                                .url("https://payu.fajjjar.my.id"))
                         .license(new License()
                                 .name("Proprietary")
-                                .url("https://payu.id/terms")))
+                                .url("https://payu.fajjjar.my.id/terms")))
                 .servers(List.of(
                         new Server().url("http://localhost:8011").description("Local Development"),
-                        new Server().url("https://staging-api.payu.id/backoffice").description("Staging"),
-                        new Server().url("https://api.payu.id/backoffice").description("Production")
+                        new Server().url("https://staging-api.payu.fajjjar.my.id/backoffice").description("Staging"),
+                        new Server().url("https://api.payu.fajjjar.my.id/backoffice").description("Production")
                 ))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()

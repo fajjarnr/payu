@@ -93,10 +93,10 @@ payu-platform/
 
 ```bash
 # Download OpenVPN config
-# Connect to: vpn.payu.id
+# Connect to: vpn.payu.fajjjar.my.id
 
 # Verify internal access
-curl https://api-internal.payu.id/health
+curl https://api-internal.payu.fajjjar.my.id/health
 ```
 
 ---
@@ -246,7 +246,7 @@ Hexagonal Architecture patterns."
 ### Documentation
 
 - **Architecture**: `docs/architecture/`
-- **API Reference**: https://docs.payu.id/api
+- **API Reference**: https://docs.payu.fajjjar.my.id/api
 - **Runbooks**: `docs/operations/`
 - **AI Skills Guide**: `.agent/skills/REGISTRY.yaml`
 

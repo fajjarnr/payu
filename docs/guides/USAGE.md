@@ -57,7 +57,7 @@ Gunakan akun berikut untuk login ke aplikasi PayU:
 |:-------|:-------|
 | **Username/Phone** | `customer1` |
 | **Password** | `P@ssw0rd123` ✅ (Updated Feb 6, 2026) |
-| **Email** | `customer1@payu.id` |
+| **Email** | `customer1@payu.fajjjar.my.id` |
 
 > **Note**: Password standar untuk semua dummy user adalah `P@ssw0rd123`.
 

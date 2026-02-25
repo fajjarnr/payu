@@ -42,7 +42,7 @@ class SupportResourceTest {
             {
                 "employeeId": "EMP9999",
                 "name": "Integration Test Agent",
-                "email": "integration@payu.id",
+                "email": "integration@payu.fajjjar.my.id",
                 "department": "QA",
                 "level": "JUNIOR"
             }

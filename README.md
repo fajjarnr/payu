@@ -126,9 +126,9 @@ cd frontend/web-app && npm run dev
 
 ## 📞 Contact
 
-- **Architecture**: architect@payu.id
-- **Engineering**: backend-team@payu.id
-- **Platform**: platform-team@payu.id
+- **Architecture**: architect@payu.fajjjar.my.id
+- **Engineering**: backend-team@payu.fajjjar.my.id
+- **Platform**: platform-team@payu.fajjjar.my.id
 
 ---
 

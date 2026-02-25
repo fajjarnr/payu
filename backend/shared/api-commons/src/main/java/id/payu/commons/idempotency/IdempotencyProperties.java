@@ -9,12 +9,12 @@ import java.util.List;
 /**
  * Configuration properties for Idempotency support.
  * <p>
- * Properties are prefixed with <code>payu.idempotency</code>.
+ * Properties are prefixed with <code>payu.fajjjar.my.idempotency</code>.
  *
  * @see IdempotencyAutoConfiguration
  */
 @Data
-@ConfigurationProperties(prefix = "payu.idempotency")
+@ConfigurationProperties(prefix = "payu.fajjjar.my.idempotency")
 public class IdempotencyProperties {
 
     /**

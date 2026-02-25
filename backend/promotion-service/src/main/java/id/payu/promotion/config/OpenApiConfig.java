@@ -20,11 +20,11 @@ import org.springframework.context.annotation.Configuration;
         description = "APIs for managing promotions, cashbacks, rewards, referrals, and loyalty points in the PayU platform",
         contact = @Contact(
             name = "PayU Platform Team",
-            email = "platform@payu.id"
+            email = "platform@payu.fajjjar.my.id"
         ),
         license = @License(
             name = "Proprietary",
-            url = "https://payu.id/license"
+            url = "https://payu.fajjjar.my.id/license"
         )
     ),
     servers = {
@@ -34,11 +34,11 @@ import org.springframework.context.annotation.Configuration;
         ),
         @Server(
             description = "Development Environment",
-            url = "https://promotion-dev.payu.id"
+            url = "https://promotion-dev.payu.fajjjar.my.id"
         ),
         @Server(
             description = "Production Environment",
-            url = "https://production.payu.id"
+            url = "https://production.payu.fajjjar.my.id"
         )
     },
     security = {

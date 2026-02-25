@@ -49,8 +49,8 @@ function generateKycData() {
   return {
     idType: 'KTP',
     idNumber: `3175${Math.floor(1000000000 + Math.random() * 9000000000)}`,
-    idPhotoUrl: 'https://storage.payu.id/kyc/id-photo.jpg',
-    selfiePhotoUrl: 'https://storage.payu.id/kyc/selfie.jpg'
+    idPhotoUrl: 'https://storage.payu.fajjjar.my.id/kyc/id-photo.jpg',
+    selfiePhotoUrl: 'https://storage.payu.fajjjar.my.id/kyc/selfie.jpg'
   };
 }
 

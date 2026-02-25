@@ -32,7 +32,7 @@ mvn clean install
 ./run-performance-tests.sh -s balance
 
 # Run against different environment
-./run-performance-tests.sh -u https://staging-api.payu.id
+./run-performance-tests.sh -u https://staging-api.payu.fajjjar.my.id
 ```
 
 ### Option 2: Using Maven
@@ -48,7 +48,7 @@ mvn gatling:test -Pqris
 mvn gatling:test -Pbalance
 
 # With custom URL
-mvn gatling:test -DbaseUrl=https://api.payu.id
+mvn gatling:test -DbaseUrl=https://api.payu.fajjjar.my.id
 ```
 
 ### Option 3: Using Gradle
@@ -141,8 +141,8 @@ pkill -f gatling
 
 ## Support
 
-- **Performance Issues:** performance-team@payu.id
-- **Test Infrastructure:** qa-team@payu.id
+- **Performance Issues:** performance-team@payu.fajjjar.my.id
+- **Test Infrastructure:** qa-team@payu.fajjjar.my.id
 
 ---
 

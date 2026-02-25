@@ -29,7 +29,7 @@ class AgentServiceTest {
         CreateAgentRequest request = new CreateAgentRequest(
                 "EMP999",
                 "Test Agent",
-                "test@payu.id",
+                "test@payu.fajjjar.my.id",
                 "Customer Support",
                 SupportAgent.AgentLevel.JUNIOR
         );
@@ -39,7 +39,7 @@ class AgentServiceTest {
         assertNotNull(response);
         assertEquals("EMP999", response.employeeId());
         assertEquals("Test Agent", response.name());
-        assertEquals("test@payu.id", response.email());
+        assertEquals("test@payu.fajjjar.my.id", response.email());
         assertEquals(SupportAgent.AgentLevel.JUNIOR, response.level());
         assertTrue(response.active());
     }
@@ -49,7 +49,7 @@ class AgentServiceTest {
         CreateAgentRequest request = new CreateAgentRequest(
                 "EMP998",
                 "Test Agent 2",
-                "test2@payu.id",
+                "test2@payu.fajjjar.my.id",
                 "Customer Support",
                 SupportAgent.AgentLevel.SENIOR
         );
@@ -67,7 +67,7 @@ class AgentServiceTest {
         CreateAgentRequest request = new CreateAgentRequest(
                 "EMP997",
                 "Test Agent 3",
-                "test3@payu.id",
+                "test3@payu.fajjjar.my.id",
                 "Customer Support",
                 SupportAgent.AgentLevel.JUNIOR
         );
@@ -85,7 +85,7 @@ class AgentServiceTest {
         CreateAgentRequest request1 = new CreateAgentRequest(
                 "EMP996",
                 "Active Agent",
-                "active@payu.id",
+                "active@payu.fajjjar.my.id",
                 "Customer Support",
                 SupportAgent.AgentLevel.JUNIOR
         );
@@ -93,7 +93,7 @@ class AgentServiceTest {
         CreateAgentRequest request2 = new CreateAgentRequest(
                 "EMP995",
                 "Inactive Agent",
-                "inactive@payu.id",
+                "inactive@payu.fajjjar.my.id",
                 "Customer Support",
                 SupportAgent.AgentLevel.JUNIOR
         );

@@ -26,7 +26,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *   <li>WebMvc configuration for interceptor registration</li>
  * </ul>
  * <p>
- * Configuration properties (prefix: <code>payu.idempotency</code>):
+ * Configuration properties (prefix: <code>payu.fajjjar.my.idempotency</code>):
  * <pre>
  * payu:
  *   idempotency:
@@ -41,7 +41,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * <p>
  * To disable auto-configuration:
  * <pre>
- * payu.idempotency.enabled=false
+ * payu.fajjjar.my.idempotency.enabled=false
  * </pre>
  *
  * @see IdempotencyProperties
@@ -51,7 +51,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Slf4j
 @AutoConfiguration(after = RedisAutoConfiguration.class)
 @ConditionalOnClass({StringRedisTemplate.class, ObjectMapper.class})
-@ConditionalOnProperty(prefix = "payu.idempotency", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "payu.fajjjar.my.idempotency", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(IdempotencyProperties.class)
 public class IdempotencyAutoConfiguration {
 

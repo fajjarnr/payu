@@ -35,7 +35,7 @@ RUN mvn package -DskipTests -Dspring-boot.build-image.skip=true -pl :{service_na
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
-LABEL maintainer="backend-team@payu.id"
+LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL description="PayU {service_name}"
 LABEL version="1.0.0"
 LABEL id.payu.service.tier="core"
@@ -100,7 +100,7 @@ RUN mvn package -DskipTests -Dquarkus.package.jar.type={package_type} -pl :{serv
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
-LABEL maintainer="backend-team@payu.id"
+LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL description="PayU {service_name}"
 LABEL version="1.0.0"
 

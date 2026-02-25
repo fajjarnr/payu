@@ -501,7 +501,7 @@ export const options = {
   },
 };
 
-const BASE_URL = __ENV.BASE_URL || 'https://api.payu.id';
+const BASE_URL = __ENV.BASE_URL || 'https://api.payu.fajjjar.my.id';
 
 export function setup() {
   const loginRes = http.post(`${BASE_URL}/auth/token`, JSON.stringify({

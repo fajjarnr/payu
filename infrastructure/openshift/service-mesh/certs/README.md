@@ -10,15 +10,15 @@ This directory contains TLS certificates for the PayU Digital Banking Platform S
 
 **Purpose**: TLS termination at the ingress gateway
 
-**CN (Common Name)**: `api.payu.id`
+**CN (Common Name)**: `api.payu.fajjjar.my.id`
 
 **SANs (Subject Alternative Names)**:
 - `api.payu.local` (local development)
-- `api.payu.dev` (development)
-- `api.payu.sit` (SIT)
-- `api.payu.uat` (UAT)
-- `api.payu.preprod` (pre-production)
-- `api.payu.id` (production)
+- `api-dev.apps.payu.ocp.fajjjar.my.id` (development)
+- `api-sit.apps.payu.ocp.fajjjar.my.id` (SIT)
+- `api-uat.apps.payu.ocp.fajjjar.my.id` (UAT)
+- `api-preprod.apps.payu.ocp.fajjjar.my.id` (pre-production)
+- `api.payu.fajjjar.my.id` (production)
 
 **Example with OpenSSL**:
 
@@ -27,12 +27,12 @@ This directory contains TLS certificates for the PayU Digital Banking Platform S
 openssl genrsa -out tls.key 2048
 
 # Generate CSR
-openssl req -new -key tls.key -out ingress.csr -subj "/C=ID/ST=Jakarta/L=Jakarta/O=PayU/CN=api.payu.id"
+openssl req -new -key tls.key -out ingress.csr -subj "/C=ID/ST=Jakarta/L=Jakarta/O=PayU/CN=api.payu.fajjjar.my.id"
 
 # Generate self-signed certificate (for development)
 openssl x509 -req -days 365 -in ingress.csr -signkey tls.key -out tls.crt \
   -extfile <(cat <<EOF
-subjectAltName=DNS:api.payu.local,DNS:api.payu.dev,DNS:api.payu.sit,DNS:api.payu.uat,DNS:api.payu.preprod,DNS:api.payu.id
+subjectAltName=DNS:api.payu.local,DNS:api-dev.apps.payu.ocp.fajjjar.my.id,DNS:api-sit.apps.payu.ocp.fajjjar.my.id,DNS:api-uat.apps.payu.ocp.fajjjar.my.id,DNS:api-preprod.apps.payu.ocp.fajjjar.my.id,DNS:api.payu.fajjjar.my.id
 EOF
 )
 
@@ -79,7 +79,7 @@ oc create secret tls payu-ingress-cert \
 oc rollout restart deployment/istio-ingressgateway -n istio-system
 
 # 4. Verify new certificate
-openssl s_client -connect api.payu.id:443 -servername api.payu.id
+openssl s_client -connect api.payu.fajjjar.my.id:443 -servername api.payu.fajjjar.my.id
 ```
 
 ## Using Let's Encrypt for Production
@@ -99,7 +99,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@payu.id
+    email: admin@payu.fajjjar.my.id
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
@@ -118,11 +118,11 @@ metadata:
 spec:
   secretName: payu-ingress-cert
   dnsNames:
-    - api.payu.id
-    - api.payu.preprod
-    - api.payu.uat
-    - api.payu.sit
-    - api.payu.dev
+    - api.payu.fajjjar.my.id
+    - api-preprod.apps.payu.ocp.fajjjar.my.id
+    - api-uat.apps.payu.ocp.fajjjar.my.id
+    - api-sit.apps.payu.ocp.fajjjar.my.id
+    - api-dev.apps.payu.ocp.fajjjar.my.id
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer

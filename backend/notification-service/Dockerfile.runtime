@@ -4,7 +4,7 @@
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels
-LABEL maintainer="backend-team@payu.id"
+LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL description="PayU notification-service"
 LABEL version="1.0.0"
 LABEL id.payu.service.tier="core"

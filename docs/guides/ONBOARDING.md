@@ -62,7 +62,7 @@ cd payu
 ### 2.2 Konfigurasi Git
 ```bash
 git config --global user.name "Nama Kamu"
-git config --global user.email "email.kamu@payu.id"
+git config --global user.email "email.kamu@payu.fajjjar.my.id"
 git config --global init.defaultBranch main
 ```
 

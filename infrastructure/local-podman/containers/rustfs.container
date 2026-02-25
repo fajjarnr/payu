@@ -5,7 +5,7 @@ Requires=network.target container.service
 PartOf=podman-payu.service
 
 [Container]
-Image=rustfs/rustfs:latest
+Image=rustfs/rustfs:0.3.0
 ContainerName=payu-rustfs
 PodmanArgs=--pod=payu-data-pod --net=payu-network
 Network=payu-network

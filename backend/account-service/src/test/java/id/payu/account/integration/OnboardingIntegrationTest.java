@@ -64,7 +64,7 @@ class OnboardingIntegrationTest {
         RegisterUserRequest request = new RegisterUserRequest(
                 UUID.randomUUID().toString(),
                 "integration-user",
-                "integration@payu.id",
+                "integration@payu.fajjjar.my.id",
                 "+628123456789",
                 "Integration Test User",
                 "3201234567890001"
@@ -95,7 +95,7 @@ class OnboardingIntegrationTest {
         // Verify direct DB persistence
         id.payu.account.entity.User userFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
         assertThat(userFromDb.getUsername()).isEqualTo("integration-user");
-        assertThat(userFromDb.getEmail()).isEqualTo("integration@payu.id");
+        assertThat(userFromDb.getEmail()).isEqualTo("integration@payu.fajjjar.my.id");
         assertThat(userFromDb.getKycStatus().name()).isEqualTo(User.KycStatus.APPROVED.name());
     }
 

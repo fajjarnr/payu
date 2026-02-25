@@ -46,7 +46,7 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
                 {tNav('sdk')}
               </Link>
               <a 
-                href="https://api-portal.payu.id" 
+                href="https://api-portal.payu.fajjjar.my.id" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"

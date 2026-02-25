@@ -37,7 +37,7 @@ public class OpenApiConfig {
                 .version(applicationVersion)
                 .license(new License()
                     .name("Proprietary")
-                    .url("https://payu.id")))
+                    .url("https://payu.fajjjar.my.id")))
             .servers(List.of(
                 new Server()
                     .url("http://localhost:8082")
@@ -46,7 +46,7 @@ public class OpenApiConfig {
                     .url("https://cms-service.payu.svc.cluster.local:8080")
                     .description("OpenShift internal cluster"),
                 new Server()
-                    .url("https://api.payu.id/cms")
+                    .url("https://api.payu.fajjjar.my.id/cms")
                     .description("Production API Gateway")))
             .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
             .components(new Components()

@@ -124,7 +124,7 @@ class TestCriticalFinancialFlows:
             "pin": TEST_USER_PIN,
             "confirm_pin": TEST_USER_PIN,
             "full_name": "Test User",
-            "email": f"test{int(time.time())}@payu.id",
+            "email": f"test{int(time.time())}@payu.fajjjar.my.id",
             "nik": "3201234567890001"
         }
 

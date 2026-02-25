@@ -51,8 +51,8 @@ metadata:
 data:
   QUARKUS_PROFILE: "prod"
   QUARKUS_LOG_LEVEL: "DEBUG"
-  QUARKUS_HTTP_CORS_ORIGINS: "https://staging.payu.id,http://localhost:3000"
-  OIDC_AUTH_SERVER_URL: "https://sso-staging.payu.id/realms/payu"
+  QUARKUS_HTTP_CORS_ORIGINS: "https://staging.payu.fajjjar.my.id,http://localhost:3000"
+  OIDC_AUTH_SERVER_URL: "https://sso-staging.payu.fajjjar.my.id/realms/payu"
   OIDC_CLIENT_ID: "payu-gateway"
   ACCOUNT_SERVICE_URL: "http://account-service:8080"
   AUTH_SERVICE_URL: "http://auth-service:8080"

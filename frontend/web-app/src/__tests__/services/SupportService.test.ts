@@ -25,7 +25,7 @@ const mockAgent: SupportAgent = {
   id: 'agent_001',
   employeeId: 'EMP001',
   fullName: 'Siti Nurhaliza',
-  email: 'siti@payu.id',
+  email: 'siti@payu.fajjjar.my.id',
   specialization: 'ACCOUNT',
   status: 'ACTIVE',
   createdAt: '2026-02-18T10:00:00Z',
@@ -100,7 +100,7 @@ describe('SupportService', () => {
       const request: CreateAgentRequest = {
         employeeId: 'EMP001',
         fullName: 'Siti Nurhaliza',
-        email: 'siti@payu.id',
+        email: 'siti@payu.fajjjar.my.id',
         specialization: 'ACCOUNT',
       };
 

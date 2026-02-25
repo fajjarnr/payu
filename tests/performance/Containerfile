@@ -47,6 +47,6 @@ RUN mkdir -p /gatling/results
 CMD ["sh", "-c", "java $JAVA_OPTS -cp lib/*:$(find . -name '*.jar' | tr '\n' ':') io.gatling.app.Gatling -s id.payu.simulations.AllServicesSimulation -rf /gatling/results"]
 
 # Labels
-LABEL maintainer="qa-team@payu.id"
+LABEL maintainer="qa-team@payu.fajjjar.my.id"
 LABEL description="PayU Performance Load Testing with Gatling"
 LABEL version="1.0.0"

@@ -42,7 +42,7 @@ describe('TermsPage', () => {
 
   it('renders contact email in footer', () => {
     render(<TermsPage />);
-    expect(screen.getByText(/support@payu.id/)).toBeInTheDocument();
+    expect(screen.getByText(/support@payu.fajjjar.my.id/)).toBeInTheDocument();
   });
 
   it('uses DashboardLayout wrapper', () => {

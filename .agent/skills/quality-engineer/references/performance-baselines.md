@@ -227,7 +227,7 @@ export function handleSummary(data) {
 mvn gatling:test -Dgatling.simulationClass=simulations.WalletServiceSimulation
 
 # Run with environment variables
-USERS=200 DURATION=600 BASE_URL=https://staging.payu.id mvn gatling:test
+USERS=200 DURATION=600 BASE_URL=https://staging.payu.fajjjar.my.id mvn gatling:test
 ```
 
 ### k6 (CI/CD)

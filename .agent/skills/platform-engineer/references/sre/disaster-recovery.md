@@ -46,7 +46,7 @@ Prosedur pemulihan bencana untuk PayU Platform dengan target:
 
 ```bash
 # 1. Verify primary site status
-curl -s https://api.payu.id/health || echo "PRIMARY DOWN"
+curl -s https://api.payu.fajjjar.my.id/health || echo "PRIMARY DOWN"
 
 # 2. Check replication lag
 psql -h dr-postgres.payu-dr.svc -c "SELECT pg_last_wal_receive_lsn() - pg_last_wal_replay_lsn() AS lag_bytes;"
@@ -72,7 +72,7 @@ oc scale deployment --all --replicas=3 -n payu-prod
 
 # 4. Verify services healthy
 for svc in account wallet transaction; do
-  curl -s https://api-dr.payu.id/$svc/health
+  curl -s https://api-dr.payu.fajjjar.my.id/$svc/health
 done
 ```
 
@@ -83,17 +83,17 @@ done
 ./scripts/dr-smoke-tests.sh
 
 # 2. Verify critical flows
-curl -X POST https://api-dr.payu.id/v1/transfers/validate \
+curl -X POST https://api-dr.payu.fajjjar.my.id/v1/transfers/validate \
   -H "X-Test-Mode: true" \
   -d '{"amount": 10000}'
 
 # 3. Check monitoring
-open https://grafana-dr.payu.id/d/payu-overview
+open https://grafana-dr.payu.fajjjar.my.id/d/payu-overview
 ```
 
 ### Phase 4: Communication
 
-- [ ] Status page updated: status.payu.id
+- [ ] Status page updated: status.payu.fajjjar.my.id
 - [ ] Customer notification sent
 - [ ] Regulator (OJK) notified if outage > 2 hours
 - [ ] Internal Slack announcement

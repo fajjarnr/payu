@@ -480,7 +480,7 @@ Semua container image PayU **WAJIB** memiliki metadata standar untuk auditabilit
 ```dockerfile
 # Standard OCI Labels
 LABEL org.opencontainers.image.vendor="PayU Digital Banking" \
-      org.opencontainers.image.authors="platform@payu.id" \
+      org.opencontainers.image.authors="platform@payu.fajjjar.my.id" \
       org.opencontainers.image.title="Wallet Service" \
       org.opencontainers.image.description="Core ledger and balance management service" \
       org.opencontainers.image.licenses="Proprietary" \
@@ -506,8 +506,8 @@ metadata:
     image.openshift.io/triggers: "[{'from':{'kind':'ImageStreamTag','name':'wallet-service:latest'},'fieldPath':'spec.template.spec.containers[?(@.name==\"app\")].image'}]"
     
     # Ownership & Contact
-    start.payu.id/owner: "Wallet Team <wallet@payu.id>"
-    start.payu.id/slack-channel: "#dev-wallet"
+    start.payu.fajjjar.my.id/owner: "Wallet Team <wallet@payu.fajjjar.my.id>"
+    start.payu.fajjjar.my.id/slack-channel: "#dev-wallet"
     
     # Operational Metadata
     prometheus.io/scrape: "true"

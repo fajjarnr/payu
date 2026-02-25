@@ -669,8 +669,8 @@ import FastImage from 'react-native-fast-image';
 
 // Preload important images
 FastImage.preload([
-  { uri: 'https://cdn.payu.id/assets/logo.png' },
-  { uri: 'https://cdn.payu.id/assets/promo-banner.jpg' },
+  { uri: 'https://cdn.payu.fajjjar.my.id/assets/logo.png' },
+  { uri: 'https://cdn.payu.fajjjar.my.id/assets/promo-banner.jpg' },
 ]);
 
 // Usage with caching

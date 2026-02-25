@@ -495,7 +495,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **BUG-BE-016** (`auth-service`): Added `maskUsername()` helper — PII now shows only first 2 + last 2 chars (e.g., `jo***oe`).
   - **BUG-BE-017** (`gateway-service`): Downgraded Authorization header log from INFO to DEBUG, logging only `hasAuth=true/false` instead of full Bearer token.
   - **BUG-BE-019** (`shared/security-starter`): PBKDF2 salt now configurable via `payu.security.encryption.salt` property. Default fallback preserved for backward compatibility.
-  - **BUG-BE-033** (`backoffice-service`): CORS origins restricted from `*` to `backoffice.payu.id`, `backoffice.payu.co.id`, `admin.payu.id`. Headers restricted. AllowCredentials enabled.
+  - **BUG-BE-033** (`backoffice-service`): CORS origins restricted from `*` to `backoffice.payu.fajjjar.my.id`, `backoffice.payu.co.id`, `admin.payu.fajjjar.my.id`. Headers restricted. AllowCredentials enabled.
   - **Test Results**: auth-service 65/65, security-starter 30/30 — all pass.
 
 - **Multi-Service Bug Fixes — Cache, Security, Data Integrity (BUG-BE-004, 012, 013, 014, 034) (2026-02-24)**:
@@ -897,7 +897,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Deployment template enhanced**: Zero-downtime `RollingUpdate` (maxUnavailable: 0), `revisionHistoryLimit: 5`, `terminationGracePeriodSeconds`, per-service liveness/readiness probe overrides, shared ConfigMap injection, OTEL env vars
   - **New Helm templates**: `configmaps.yaml` (shared + per-service ConfigMaps), `pdb.yaml` (PodDisruptionBudget for all multi-replica services)
   - **Route template enhanced**: Route hostname support, HAProxy timeout annotations, rate limiting annotations
-  - **values.yaml overhauled**: All 22 services now have correct `springProfile: container` (15 Spring Boot), `quarkusProfile: prod` (3 Quarkus), or no profile (2 Python, 1 Next.js). Quarkus/Python services have correct health probe paths (`/q/health/live`, `/health`). Gateway and webApp Routes have production hostnames (`api.payu.id`, `app.payu.id`)
+  - **values.yaml overhauled**: All 22 services now have correct `springProfile: container` (15 Spring Boot), `quarkusProfile: prod` (3 Quarkus), or no profile (2 Python, 1 Next.js). Quarkus/Python services have correct health probe paths (`/q/health/live`, `/health`). Gateway and webApp Routes have production hostnames (`api.payu.fajjjar.my.id`, `app.payu.fajjjar.my.id`)
   - **ConfigMap values**: notification-service (Kafka, DB, OIDC), api-portal-service (12 service URLs + OIDC), kyc-service (DB, Kafka, Dukcapil), analytics-service (DB, Kafka), webApp (API URL, WS URL, NODE_ENV)
   - **billing-service `application-container.yml`** created — was the only Spring Boot service missing container profile (overrides Kafka, wallet-service URL, Redis, OIDC)
   - **Staging overlay** created: `kustomization.yaml` (1 replica, debug logging), `config/configmaps.yaml` (Postgres, Redis, Kafka, gateway staging URLs), `secrets/secrets-template.yaml`

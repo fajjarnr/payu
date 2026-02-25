@@ -99,7 +99,7 @@ export default function PrivacyPage() {
 
                 <div className="pt-8 border-t border-border relative z-10">
                   <p className="text-xs text-muted-foreground font-medium text-center">
-                    Untuk pertanyaan atau permintaan terkait privasi, hubungi privacy@payu.id
+                    Untuk pertanyaan atau permintaan terkait privasi, hubungi privacy@payu.fajjjar.my.id
                   </p>
                 </div>
               </div>

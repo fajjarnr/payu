@@ -445,4 +445,4 @@ data:
 
     notifications:
       slack_webhook: "https://hooks.slack.com/services/XXX"
-      email_recipients: ["ops-team@payu.id"]
+      email_recipients: ["ops-team@payu.fajjjar.my.id"]

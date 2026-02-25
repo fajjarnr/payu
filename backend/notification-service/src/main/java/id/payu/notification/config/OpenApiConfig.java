@@ -68,15 +68,15 @@ import jakarta.enterprise.context.ApplicationScoped;
             - `429 Too Many Requests` - Rate limit exceeded
             - `500 Internal Server Error` - Server error
             """,
-        termsOfService = "https://payu.id/terms",
+        termsOfService = "https://payu.fajjjar.my.id/terms",
         contact = @Contact(
             name = "PayU Platform Team",
-            email = "platform@payu.id",
-            url = "https://payu.id"
+            email = "platform@payu.fajjjar.my.id",
+            url = "https://payu.fajjjar.my.id"
         ),
         license = @License(
             name = "Proprietary License",
-            url = "https://payu.id/license",
+            url = "https://payu.fajjjar.my.id/license",
             identifier = "PROPRIETARY"
         )
     ),
@@ -87,15 +87,15 @@ import jakarta.enterprise.context.ApplicationScoped;
         ),
         @Server(
             description = "Development Environment",
-            url = "https://notification-service.dev.payu.id"
+            url = "https://notification-service-dev.apps.payu.ocp.fajjjar.my.id"
         ),
         @Server(
             description = "Staging Environment",
-            url = "https://notification-service.staging.payu.id"
+            url = "https://notification-service-staging.apps.payu.ocp.fajjjar.my.id"
         ),
         @Server(
             description = "Production Environment",
-            url = "https://notification-service.payu.id"
+            url = "https://notification-service.payu.fajjjar.my.id"
         )
     },
     tags = {

@@ -1,0 +1,732 @@
+# Backstage / Red Hat Developer Hub — Root Catalog
+# OSS: Backstage.io (CNCF Incubating)
+# Red Hat: Red Hat Developer Hub (included in OpenShift Platform Plus)
+#
+# This file registers the PayU platform and all its components.
+# Import this single file in Backstage to discover the entire ecosystem.
+#
+# Backstage version compatibility: 1.25+ / RHDH 1.2+
+# Spec: https://backstage.io/docs/features/software-catalog/descriptor-format
+
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: payu
+  title: PayU Digital Banking Platform
+  description: |
+    Core banking & payment gateway platform built with microservices architecture
+    on Red Hat OpenShift 4.20+. Serves as payment infrastructure for TokoBapak,
+    Nobar, Dolan, Sinau, and Maca.
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/source-location: url:https://github.com/sumbermakmur/payu
+  tags:
+    - java
+    - spring-boot
+    - quarkus
+    - python
+    - typescript
+    - openshift
+    - payment-gateway
+    - core-banking
+  links:
+    - url: https://payu.fajjjar.my.id
+      title: PayU Web App
+    - url: https://developer.payu.fajjjar.my.id
+      title: Developer Docs (Partner Portal)
+    - url: https://api-portal.payu.fajjjar.my.id
+      title: API Portal & Sandbox
+spec:
+  owner: group:payu-engineering
+  domain: digital-banking
+
+---
+# ============================================================
+# CORE BANKING SERVICES (Spring Boot 3.4 / Red Hat Runtimes)
+# ============================================================
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: account-service
+  title: Account Service
+  description: User accounts, profile management, multi-pocket wallets
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/account-service
+    backstage.io/kubernetes-id: account-service
+    argocd/app-name: account-service
+    tektonci/build-namespace: payu-ci
+  tags: [java, spring-boot, core-banking]
+  links:
+    - url: http://account-service:8001/v3/api-docs
+      title: OpenAPI Spec
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  providesApis:
+    - account-api
+  dependsOn:
+    - resource:accounts-db
+    - resource:data-grid
+    - component:auth-service
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: auth-service
+  title: Auth Service
+  description: Authentication, risk-based MFA, biometrics, OAuth2/OIDC
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/auth-service
+    backstage.io/kubernetes-id: auth-service
+  tags: [java, spring-boot, security, core-banking]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  providesApis:
+    - auth-api
+  dependsOn:
+    - resource:auth-db
+    - resource:data-grid
+    - resource:keycloak
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: transaction-service
+  title: Transaction Service
+  description: Transfers, BI-FAST, QRIS, transaction sharding
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/transaction-service
+    backstage.io/kubernetes-id: transaction-service
+  tags: [java, spring-boot, core-banking, high-volume]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  providesApis:
+    - transaction-api
+  dependsOn:
+    - resource:transactions-db
+    - resource:kafka
+    - component:wallet-service
+    - component:account-service
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: wallet-service
+  title: Wallet Service
+  description: Double-entry ledger, balance management, escrow, pockets
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/wallet-service
+    backstage.io/kubernetes-id: wallet-service
+  tags: [java, spring-boot, core-banking, ledger]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  providesApis:
+    - wallet-api
+  dependsOn:
+    - resource:wallet-db
+    - resource:data-grid
+    - resource:kafka
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: investment-service
+  title: Investment Service
+  description: Mutual funds, gold investment, deposits
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/investment-service
+    backstage.io/kubernetes-id: investment-service
+  tags: [java, spring-boot, core-banking]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  providesApis:
+    - investment-api
+  dependsOn:
+    - resource:investment-db
+    - component:wallet-service
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: lending-service
+  title: Lending Service
+  description: Loans, PayLater, credit scoring, installments
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/lending-service
+    backstage.io/kubernetes-id: lending-service
+  tags: [java, spring-boot, core-banking]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  providesApis:
+    - lending-api
+  dependsOn:
+    - resource:lending-db
+    - component:wallet-service
+    - component:account-service
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: fx-service
+  title: FX Service
+  description: Currency exchange rates & conversion (critical for Dolan/Maca)
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/fx-service
+    backstage.io/kubernetes-id: fx-service
+  tags: [java, spring-boot, core-banking, fx]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  providesApis:
+    - fx-api
+  dependsOn:
+    - resource:fx-db
+    - resource:data-grid
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: statement-service
+  title: Statement Service
+  description: PDF E-Statement generation, historical balance
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/statement-service
+    backstage.io/kubernetes-id: statement-service
+  tags: [java, spring-boot]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  providesApis:
+    - statement-api
+  dependsOn:
+    - resource:statement-db
+    - component:transaction-service
+
+# ============================================================
+# SUPPORTING SERVICES (Spring Boot 3.4)
+# ============================================================
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backoffice-service
+  title: Backoffice Service
+  description: Internal admin dashboard, audit, user management
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/backoffice-service
+    backstage.io/kubernetes-id: backoffice-service
+  tags: [java, spring-boot, admin]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - backoffice-api
+  dependsOn:
+    - resource:backoffice-db
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: partner-service
+  title: Partner Service
+  description: Partner integration, API key management, SNAP-BI, webhooks
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/partner-service
+    backstage.io/kubernetes-id: partner-service
+  tags: [java, spring-boot, gateway, snap-bi]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - partner-api
+  dependsOn:
+    - resource:partner-db
+    - resource:data-grid
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: promotion-service
+  title: Promotion Service
+  description: Promo campaigns, vouchers, rewards, cashback, loyalty points
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/promotion-service
+    backstage.io/kubernetes-id: promotion-service
+  tags: [java, spring-boot]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - promotion-api
+  dependsOn:
+    - resource:promotion-db
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: support-service
+  title: Support Service
+  description: Customer support, ticketing, FAQ
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/support-service
+    backstage.io/kubernetes-id: support-service
+  tags: [java, spring-boot]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - support-api
+  dependsOn:
+    - resource:support-db
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: compliance-service
+  title: Compliance Service
+  description: Regulatory compliance, AML/CFT, transaction screening (OJK required)
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/compliance-service
+    backstage.io/kubernetes-id: compliance-service
+  tags: [java, spring-boot, security, compliance]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - compliance-api
+  dependsOn:
+    - resource:compliance-db
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cms-service
+  title: CMS Service
+  description: Banners, promos, dynamic content management
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/cms-service
+    backstage.io/kubernetes-id: cms-service
+  tags: [java, spring-boot]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - cms-api
+  dependsOn:
+    - resource:cms-db
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ab-testing-service
+  title: A/B Testing Service
+  description: UI/Feature experimentation — CANDIDATE FOR REMOVAL (SIMP-001)
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/ab-testing-service
+    backstage.io/kubernetes-id: ab-testing-service
+  tags: [java, spring-boot, deprecated]
+spec:
+  type: service
+  lifecycle: deprecated
+  owner: group:platform-team
+  system: payu
+
+# ============================================================
+# NATIVE SERVICES (Red Hat Build of Quarkus 3.x)
+# ============================================================
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: gateway-service
+  title: Gateway Service
+  description: API Gateway — rate limiting, JWT validation, routing, idempotency, HMAC signing
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/gateway-service
+    backstage.io/kubernetes-id: gateway-service
+  tags: [java, quarkus, gateway, native]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  dependsOn:
+    - resource:data-grid
+    - resource:keycloak
+  dependencyOf:
+    - component:account-service
+    - component:auth-service
+    - component:transaction-service
+    - component:wallet-service
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: billing-service
+  title: Billing Service
+  description: Bill payments (PLN, PDAM, Telkom, etc.) — Quarkus Native
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/billing-service
+    backstage.io/kubernetes-id: billing-service
+  tags: [java, quarkus, native]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - billing-api
+  dependsOn:
+    - resource:billing-db
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: notification-service
+  title: Notification Service
+  description: Push, SMS, Email, WhatsApp notifications — Quarkus Native
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/notification-service
+    backstage.io/kubernetes-id: notification-service
+  tags: [java, quarkus, native, messaging]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - notification-api
+  dependsOn:
+    - resource:notification-db
+    - resource:amq-broker
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: api-portal-service
+  title: API Portal Service
+  description: Centralized OpenAPI docs, Swagger UI, partner sandbox
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/api-portal-service
+    backstage.io/kubernetes-id: api-portal-service
+  tags: [java, quarkus, native, developer-portal]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+  providesApis:
+    - portal-api
+
+# ============================================================
+# ML / DATA SERVICES (Python 3.12 on UBI)
+# ============================================================
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: kyc-service
+  title: KYC Service
+  description: OCR, liveness detection, identity verification — Python FastAPI
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/kyc-service
+    backstage.io/kubernetes-id: kyc-service
+  tags: [python, fastapi, ml, ocr]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:data-team
+  system: payu
+  providesApis:
+    - kyc-api
+  dependsOn:
+    - resource:kyc-db
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: analytics-service
+  title: Analytics Service
+  description: Fraud scoring, user insights, ML models — Python FastAPI
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/analytics-service
+    backstage.io/kubernetes-id: analytics-service
+  tags: [python, fastapi, ml, fraud]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:data-team
+  system: payu
+  providesApis:
+    - analytics-api
+  dependsOn:
+    - resource:analytics-db
+    - resource:kafka
+
+# ============================================================
+# FRONTEND APPLICATIONS
+# ============================================================
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: web-app
+  title: PayU Web App
+  description: Digital Banking UI — Next.js 15+, React, Premium Emerald design
+  annotations:
+    backstage.io/techdocs-ref: dir:frontend/web-app
+    backstage.io/kubernetes-id: web-app
+  tags: [typescript, nextjs, react, frontend]
+spec:
+  type: website
+  lifecycle: production
+  owner: group:frontend-team
+  system: payu
+  dependsOn:
+    - component:gateway-service
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: developer-docs
+  title: Developer Documentation Portal
+  description: Partner-facing documentation — Next.js 16, i18n, SDK samples
+  annotations:
+    backstage.io/techdocs-ref: dir:frontend/developer-docs
+    backstage.io/kubernetes-id: developer-docs
+  tags: [typescript, nextjs, documentation, partner-portal]
+spec:
+  type: website
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: mobile-app
+  title: PayU Mobile App
+  description: Mobile banking — Expo / React Native
+  annotations:
+    backstage.io/techdocs-ref: dir:frontend/mobile
+  tags: [typescript, react-native, expo, mobile]
+spec:
+  type: mobile-app
+  lifecycle: experimental
+  owner: group:frontend-team
+  system: payu
+  dependsOn:
+    - component:gateway-service
+
+# ============================================================
+# SHARED LIBRARIES
+# ============================================================
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: security-starter
+  title: Security Starter
+  description: PII field encryption, data masking, audit logging
+  tags: [java, spring-boot, shared-library, security]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: resilience-starter
+  title: Resilience Starter
+  description: Circuit breaker, retry, bulkhead (Resilience4j)
+  tags: [java, spring-boot, shared-library, resilience]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cache-starter
+  title: Cache Starter
+  description: Multi-layer caching (Redis + Caffeine)
+  tags: [java, spring-boot, shared-library, caching]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+# ============================================================
+# INFRASTRUCTURE RESOURCES
+# ============================================================
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: kafka
+  title: AMQ Streams (Kafka)
+  description: Event streaming — Apache Kafka 3.7 via AMQ Streams
+  tags: [kafka, event-streaming, amq-streams]
+spec:
+  type: message-broker
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: amq-broker
+  title: AMQ Broker (Artemis)
+  description: Point-to-point messaging — AMQP 1.0
+  tags: [artemis, amqp, amq-broker]
+spec:
+  type: message-broker
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: data-grid
+  title: Red Hat Data Grid
+  description: Multi-layer caching — Redis RESP protocol
+  tags: [redis, caching, data-grid]
+spec:
+  type: cache
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: keycloak
+  title: Red Hat SSO (Keycloak 24+)
+  description: Identity & access management — OIDC/SAML
+  tags: [keycloak, sso, oidc, security]
+spec:
+  type: identity-provider
+  owner: group:platform-team
+  system: payu
+
+---
+# Database resources (one per service — database-per-service pattern)
+# Only listing representative DBs. Each service has its own PostgreSQL 16 instance.
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: accounts-db
+  title: Accounts Database
+  description: Crunchy PostgreSQL 16 — user accounts, pockets, profiles
+  tags: [postgresql, crunchy, database]
+spec:
+  type: database
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: transactions-db
+  title: Transactions Database
+  description: Crunchy PostgreSQL 16 + Event Store — transaction records, events, sharding
+  tags: [postgresql, crunchy, database, event-store]
+spec:
+  type: database
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: wallet-db
+  title: Wallet Database
+  description: Crunchy PostgreSQL 16 — double-entry ledger
+  tags: [postgresql, crunchy, database, ledger]
+spec:
+  type: database
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: analytics-db
+  title: Analytics Database
+  description: TimescaleDB — time-series analytics, fraud data
+  tags: [timescaledb, postgresql, database, analytics]
+spec:
+  type: database
+  owner: group:data-team
+  system: payu

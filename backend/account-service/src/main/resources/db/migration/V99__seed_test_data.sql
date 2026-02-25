@@ -9,9 +9,9 @@ DELETE FROM users WHERE username IN ('customer1', 'customer2', 'admin');
 
 -- Insert test users
 INSERT INTO users (id, external_id, username, email, phone_number, status, kyc_status, created_at, updated_at) VALUES
-    ('550e8400-e29b-41d4-a716-446655440001', 'EXT-CUST-001', 'customer1', 'customer1@payu.id', '+6281234567890', 'ACTIVE', 'VERIFIED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('550e8400-e29b-41d4-a716-446655440002', 'EXT-CUST-002', 'customer2', 'customer2@payu.id', '+6281234567891', 'ACTIVE', 'PENDING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('550e8400-e29b-41d4-a716-446655440003', 'EXT-ADMIN-001', 'admin', 'admin@payu.id', '+628111111111', 'ACTIVE', 'VERIFIED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    ('550e8400-e29b-41d4-a716-446655440001', 'EXT-CUST-001', 'customer1', 'customer1@payu.fajjjar.my.id', '+6281234567890', 'ACTIVE', 'VERIFIED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('550e8400-e29b-41d4-a716-446655440002', 'EXT-CUST-002', 'customer2', 'customer2@payu.fajjjar.my.id', '+6281234567891', 'ACTIVE', 'PENDING', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('550e8400-e29b-41d4-a716-446655440003', 'EXT-ADMIN-001', 'admin', 'admin@payu.fajjjar.my.id', '+628111111111', 'ACTIVE', 'VERIFIED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert profiles for test users
 INSERT INTO profiles (id, user_id, full_name, nik, date_of_birth, address, created_at, updated_at) VALUES

@@ -4,7 +4,7 @@
 
 set -e
 
-TARGET_URL="${1:-https://staging-api.payu.id}"
+TARGET_URL="${1:-https://staging-api.payu.fajjjar.my.id}"
 REPORT_DIR="${2:-target/zap-reports}"
 ZAP_PORT="${ZAP_PORT:-8080}"
 ZAP_HOST="${ZAP_HOST:-localhost}"

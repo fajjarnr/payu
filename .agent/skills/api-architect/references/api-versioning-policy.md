@@ -11,15 +11,15 @@ Kebijakan versioning dan deprecation untuk semua PayU REST APIs.
 ### URL Path Versioning (Primary)
 
 ```
-https://api.payu.id/v1/accounts
-https://api.payu.id/v2/accounts
+https://api.payu.fajjjar.my.id/v1/accounts
+https://api.payu.fajjjar.my.id/v2/accounts
 ```
 
 ### Version Header (Secondary)
 
 ```http
 GET /accounts HTTP/1.1
-Host: api.payu.id
+Host: api.payu.fajjjar.my.id
 Accept: application/json
 X-API-Version: 2024-01-15
 ```
@@ -65,7 +65,7 @@ X-API-Version: 2024-01-15
 HTTP/1.1 200 OK
 Deprecation: Sun, 30 Jun 2026 23:59:59 GMT
 Sunset: Mon, 30 Dec 2026 23:59:59 GMT
-Link: <https://api.payu.id/v2/accounts>; rel="successor-version"
+Link: <https://api.payu.fajjjar.my.id/v2/accounts>; rel="successor-version"
 X-Deprecation-Notice: "v1 accounts API deprecated. Migrate to v2 by 2026-12-30"
 ```
 
@@ -78,7 +78,7 @@ X-Deprecation-Notice: "v1 accounts API deprecated. Migrate to v2 by 2026-12-30"
     "deprecation": {
       "message": "This API version is deprecated",
       "sunset": "2026-12-30T23:59:59Z",
-      "migration_guide": "https://docs.payu.id/migration/accounts-v1-to-v2"
+      "migration_guide": "https://docs.payu.fajjjar.my.id/migration/accounts-v1-to-v2"
     }
   }
 }
@@ -200,7 +200,7 @@ paths:
         ⚠️ **Deprecated**: This endpoint will be removed on 2026-06-30.
         Please migrate to `/v2/accounts/{id}`.
         
-        See [Migration Guide](https://docs.payu.id/migration/accounts-v1-to-v2)
+        See [Migration Guide](https://docs.payu.fajjjar.my.id/migration/accounts-v1-to-v2)
 ```
 
 ---

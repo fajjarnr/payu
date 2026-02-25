@@ -54,7 +54,7 @@ public class AuthIntegrationTest {
     private static final String CLIENT_SECRET = "test-client-secret";
     private static final String TEST_USERNAME = "testuser";
     private static final String TEST_PASSWORD = "TestPass123!";
-    private static final String TEST_EMAIL = "testuser@payu.id";
+    private static final String TEST_EMAIL = "testuser@payu.fajjjar.my.id";
 
     static KeycloakContainer keycloak;
     private static RestTemplate restTemplate = new RestTemplate();
@@ -320,7 +320,7 @@ public class AuthIntegrationTest {
         
         Map<String, Object> userConfig = new HashMap<>();
         userConfig.put("username", lockedUsername);
-        userConfig.put("email", lockedUsername + "@payu.id");
+        userConfig.put("email", lockedUsername + "@payu.fajjjar.my.id");
         userConfig.put("enabled", true);
         userConfig.put("emailVerified", true);
         userConfig.put("requiredActions", List.of());

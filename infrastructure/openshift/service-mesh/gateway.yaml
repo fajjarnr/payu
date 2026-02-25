@@ -35,11 +35,11 @@ spec:
         protocol: HTTPS
       hosts:
         - api.payu.local       # Local development
-        - api.payu.dev         # Development environment
+        - api-dev.apps.payu.ocp.fajjjar.my.id         # Development environment
         - api.payu.sit         # SIT environment
         - api.payu.uat         # UAT environment
         - api.payu.preprod     # Pre-production environment
-        - api.payu.id          # Production environment
+        - api.payu.fajjjar.my.id          # Production environment
       tls:
         mode: SIMPLE  # Simple TLS (server-side only)
         credentialName: payu-ingress-cert  # TLS certificate secret
@@ -57,11 +57,11 @@ metadata:
 spec:
   hosts:
     - "api.payu.local"
-    - "api.payu.dev"
+    - "api-dev.apps.payu.ocp.fajjjar.my.id"
     - "api.payu.sit"
     - "api.payu.uat"
     - "api.payu.preprod"
-    - "api.payu.id"
+    - "api.payu.fajjjar.my.id"
   gateways:
     - payu-ingress-gateway
   http:

@@ -134,7 +134,7 @@ LABEL org.opencontainers.image.title="PayU Gateway Service"
 LABEL org.opencontainers.image.description="API Gateway with rate limiting, circuit breaker, and routing"
 LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
+LABEL org.opencontainers.image.url="https://payu.fajjjar.my.id"
 LABEL org.opencontainers.image.source="https://github.com/payu/backend/gateway-service"
 LABEL org.opencontainers.image.authors="PayU Backend Team"
 LABEL org.opencontainers.image.licenses="Proprietary"
@@ -521,7 +521,7 @@ cosign sign --key cosign.key payu/account-service:1.0.0
 # Sign with annotations
 cosign sign --key cosign.key \
     -a "commit=$(git rev-parse HEAD)" \
-    -a "build_url=https://ci.payu.id/build/123" \
+    -a "build_url=https://ci.payu.fajjjar.my.id/build/123" \
     payu/account-service:1.0.0
 ```
 

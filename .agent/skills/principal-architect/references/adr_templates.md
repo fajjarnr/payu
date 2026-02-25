@@ -350,7 +350,7 @@ We will use **URL Path Versioning** with the following conventions:
     "api_version": "v1",
     "deprecated": true,
     "sunset_date": "2026-06-01",
-    "migration_guide": "https://docs.payu.id/api/migration/v1-to-v2"
+    "migration_guide": "https://docs.payu.fajjjar.my.id/api/migration/v1-to-v2"
   }
 }
 ```

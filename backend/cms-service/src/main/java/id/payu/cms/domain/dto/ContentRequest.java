@@ -51,14 +51,14 @@ public class ContentRequest {
 
     @Schema(
         description = "Image URL for banner/promo",
-        example = "https://cdn.payu.id/images/promo-jan2026.png"
+        example = "https://cdn.payu.fajjjar.my.id/images/promo-jan2026.png"
     )
     @Size(max = 500, message = "Image URL must not exceed 500 characters")
     private String imageUrl;
 
     @Schema(
         description = "Action URL when content is clicked",
-        example = "https://payu.id/promos/january-2026"
+        example = "https://payu.fajjjar.my.id/promos/january-2026"
     )
     @Size(max = 500, message = "Action URL must not exceed 500 characters")
     private String actionUrl;

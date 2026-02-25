@@ -44,9 +44,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "https://backoffice.payu.id",
+                "https://backoffice.payu.fajjjar.my.id",
                 "https://backoffice.payu.co.id",
-                "https://admin.payu.id"
+                "https://admin.payu.fajjjar.my.id"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Admin-User", "X-Correlation-Id"));

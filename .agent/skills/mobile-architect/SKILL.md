@@ -301,7 +301,7 @@ Expo supports environment variables with the `EXPO_PUBLIC_` prefix. These are in
 
 ```ts
 // .env
-EXPO_PUBLIC_API_URL=https://api.payu.id/v1
+EXPO_PUBLIC_API_URL=https://api.payu.fajjjar.my.id/v1
 EXPO_PUBLIC_API_KEY=your_public_key
 
 // src/types/env.d.ts

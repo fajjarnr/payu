@@ -160,7 +160,7 @@ lineage:
   "description": "Double-entry accounting ledger for all wallet movements",
   "domain": "Transaction",
   "owner": "wallet-service-team",
-  "steward": "finance-ops@payu.id",
+  "steward": "finance-ops@payu.fajjjar.my.id",
   "classification": "L3-Internal",
   "pii_fields": ["account_id"],
   "schema": {

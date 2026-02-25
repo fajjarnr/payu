@@ -212,7 +212,7 @@ oc expose svc/cms-service
   "priority": 100,
   "targetingRules": {},
   "publishedAt": "2026-01-24T10:00:00",
-  "publishedBy": "admin@payu.id"
+  "publishedBy": "admin@payu.fajjjar.my.id"
 }
 ```
 

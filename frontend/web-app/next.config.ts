@@ -12,11 +12,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '*.payu.id',
+        hostname: '*.payu.fajjjar.my.id',
       },
       {
         protocol: 'https',
-        hostname: 'cdn.payu.id',
+        hostname: 'cdn.payu.fajjjar.my.id',
       },
       {
         protocol: 'https',
@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://*.payu.id https://cdn.payu.id https://images.unsplash.com; font-src 'self'; connect-src 'self' https://*.payu.id; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://*.payu.fajjjar.my.id https://cdn.payu.fajjjar.my.id https://images.unsplash.com; font-src 'self'; connect-src 'self' https://*.payu.fajjjar.my.id; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
           },
           {
             key: 'X-Frame-Options',

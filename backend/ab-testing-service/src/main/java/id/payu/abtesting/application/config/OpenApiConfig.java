@@ -30,13 +30,13 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("PayU Backend Team")
-                                .email("backend-team@payu.id"))
+                                .email("backend-team@payu.fajjjar.my.id"))
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0.html")))
                 .servers(List.of(
                         new Server().url("http://localhost:8080").description("Local Development"),
-                        new Server().url("https://api.payu.id").description("Production")
+                        new Server().url("https://api.payu.fajjjar.my.id").description("Production")
                 ))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new io.swagger.v3.oas.models.Components()

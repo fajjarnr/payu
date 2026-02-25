@@ -374,6 +374,6 @@ git branch -d feature/PAYU-123-description
 
 ## Questions?
 
-- **Backend Team**: backend-team@payu.id
-- **DevOps Team**: devops-team@payu.id
-- **Architecture**: architect@payu.id
+- **Backend Team**: backend-team@payu.fajjjar.my.id
+- **DevOps Team**: devops-team@payu.fajjjar.my.id
+- **Architecture**: architect@payu.fajjjar.my.id

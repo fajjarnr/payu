@@ -46,7 +46,7 @@
   "users": [
     {
       "username": "testuser",
-      "email": "testuser@payu.id",
+      "email": "testuser@payu.fajjjar.my.id",
       "enabled": true,
       "emailVerified": true,
       "firstName": "Test",
@@ -62,7 +62,7 @@
     },
     {
       "username": "adminuser",
-      "email": "admin@payu.id",
+      "email": "admin@payu.fajjjar.my.id",
       "enabled": true,
       "emailVerified": true,
       "firstName": "Admin",

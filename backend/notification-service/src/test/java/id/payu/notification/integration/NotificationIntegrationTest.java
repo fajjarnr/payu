@@ -178,7 +178,7 @@ public class NotificationIntegrationTest {
         // Given - Create a transaction completed event
         String transactionId = UUID.randomUUID().toString();
         String eventPayload = String.format(
-                "{\"eventType\":\"transaction-completed\",\"transactionId\":\"%s\",\"userId\":\"user123\",\"email\":\"test@payu.id\",\"amount\":\"50000\",\"currency\":\"IDR\",\"type\":\"TRANSFER\",\"timestamp\":\"%s\"}",
+                "{\"eventType\":\"transaction-completed\",\"transactionId\":\"%s\",\"userId\":\"user123\",\"email\":\"test@payu.fajjjar.my.id\",\"amount\":\"50000\",\"currency\":\"IDR\",\"type\":\"TRANSFER\",\"timestamp\":\"%s\"}",
                 transactionId,
                 java.time.Instant.now().toString()
         );
@@ -196,7 +196,7 @@ public class NotificationIntegrationTest {
                 foundTransactionEvent = true;
                 assertThat(record.value()).contains("transaction-completed");
                 assertThat(record.value()).contains(transactionId);
-                assertThat(record.value()).contains("test@payu.id");
+                assertThat(record.value()).contains("test@payu.fajjjar.my.id");
                 break;
             }
         }
@@ -302,7 +302,7 @@ public class NotificationIntegrationTest {
         // Given - Create a direct notification event
         String notificationId = UUID.randomUUID().toString();
         String eventPayload = String.format(
-                "{\"notificationId\":\"%s\",\"userId\":\"user789\",\"channel\":\"EMAIL\",\"recipient\":\"user789@payu.id\",\"title\":\"Account Verified\",\"body\":\"Your account has been verified successfully\",\"timestamp\":\"%s\"}",
+                "{\"notificationId\":\"%s\",\"userId\":\"user789\",\"channel\":\"EMAIL\",\"recipient\":\"user789@payu.fajjjar.my.id\",\"title\":\"Account Verified\",\"body\":\"Your account has been verified successfully\",\"timestamp\":\"%s\"}",
                 notificationId,
                 java.time.Instant.now().toString()
         );
@@ -492,7 +492,7 @@ public class NotificationIntegrationTest {
         // Given - Email notification event
         String emailId = UUID.randomUUID().toString();
         String emailEvent = String.format(
-                "{\"eventType\":\"email-notification\",\"userId\":\"user003\",\"email\":\"customer@payu.id\",\"subject\":\"Monthly Statement Available\",\"body\":\"Your monthly statement is now available for download\",\"templateId\":\"monthly-statement\",\"data\":{\"month\":\"January\",\"year\":\"2026\"},\"timestamp\":\"%s\"}",
+                "{\"eventType\":\"email-notification\",\"userId\":\"user003\",\"email\":\"customer@payu.fajjjar.my.id\",\"subject\":\"Monthly Statement Available\",\"body\":\"Your monthly statement is now available for download\",\"templateId\":\"monthly-statement\",\"data\":{\"month\":\"January\",\"year\":\"2026\"},\"timestamp\":\"%s\"}",
                 java.time.Instant.now().toString()
         );
 
@@ -559,7 +559,7 @@ public class NotificationIntegrationTest {
 
         String eventId = UUID.randomUUID().toString();
         String largeEvent = String.format(
-                "{\"eventType\":\"email-notification\",\"userId\":\"user005\",\"email\":\"user005@payu.id\",\"subject\":\"Transaction History\",\"body\":\"%s\",\"timestamp\":\"%s\"}",
+                "{\"eventType\":\"email-notification\",\"userId\":\"user005\",\"email\":\"user005@payu.fajjjar.my.id\",\"subject\":\"Transaction History\",\"body\":\"%s\",\"timestamp\":\"%s\"}",
                 largeBody.toString().replace("\"", "\\\""), // Escape quotes
                 java.time.Instant.now().toString()
         );

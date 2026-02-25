@@ -21,4 +21,4 @@
 
 ## 🛡️ Frontend Security
 *   **JWT Protection**: Strictly use **httpOnly cookies** via a BFF (Backend-for-Frontend).
-*   **CSP & SSRF**: Restrict `next.config.ts` `remotePatterns` to known domains (e.g., `*.payu.id`). Avoid `hostname: '**'` in production.
+*   **CSP & SSRF**: Restrict `next.config.ts` `remotePatterns` to known domains (e.g., `*.payu.fajjjar.my.id`). Avoid `hostname: '**'` in production.

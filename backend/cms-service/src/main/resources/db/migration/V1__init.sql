@@ -124,8 +124,8 @@ INSERT INTO cms_contents (
     'BANNER',
     'Welcome Bonus Promo',
     'Get Rp 50.000 bonus on your first transaction',
-    'https://cdn.payu.id/images/welcome-bonus.png',
-    'https://payu.id/promos/welcome-bonus',
+    'https://cdn.payu.fajjjar.my.id/images/welcome-bonus.png',
+    'https://payu.fajjjar.my.id/promos/welcome-bonus',
     'LINK',
     CURRENT_DATE,
     CURRENT_DATE + INTERVAL '30 days',
@@ -133,15 +133,15 @@ INSERT INTO cms_contents (
     'ACTIVE',
     '{"segment": "NEW_USER", "location": "ALL", "device": "ALL"}'::jsonb,
     '{"campaign": "WELCOME_2026", "abTest": "A"}'::jsonb,
-    'admin@payu.id',
-    'admin@payu.id'
+    'admin@payu.fajjjar.my.id',
+    'admin@payu.fajjjar.my.id'
 ),
 (
     'PROMO',
     'Weekend Cashback',
     '20% cashback on all transactions this weekend',
-    'https://cdn.payu.id/images/weekend-cashback.png',
-    'https://payu.id/promos/weekend',
+    'https://cdn.payu.fajjjar.my.id/images/weekend-cashback.png',
+    'https://payu.fajjjar.my.id/promos/weekend',
     'DEEP_LINK',
     CURRENT_DATE,
     CURRENT_DATE + INTERVAL '7 days',
@@ -149,8 +149,8 @@ INSERT INTO cms_contents (
     'ACTIVE',
     '{"segment": "ALL", "location": "ALL", "device": "MOBILE"}'::jsonb,
     '{"campaign": "WEEKEND_2026"}'::jsonb,
-    'admin@payu.id',
-    'admin@payu.id'
+    'admin@payu.fajjjar.my.id',
+    'admin@payu.fajjjar.my.id'
 ),
 (
     'ALERT',
@@ -165,8 +165,8 @@ INSERT INTO cms_contents (
     'SCHEDULED',
     '{"segment": "ALL", "location": "ALL", "device": "ALL"}'::jsonb,
     '{"type": "SYSTEM_ALERT"}'::jsonb,
-    'admin@payu.id',
-    'admin@payu.id'
+    'admin@payu.fajjjar.my.id',
+    'admin@payu.fajjjar.my.id'
 );
 
 -- Create view for active content (for easy querying)

@@ -30,13 +30,13 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("PayU API Team")
-                                .email("api@payu.id"))
+                                .email("api@payu.fajjjar.my.id"))
                         .license(new License()
                                 .name("Proprietary")
-                                .url("https://payu.id")))
+                                .url("https://payu.fajjjar.my.id")))
                 .servers(List.of(
                         new Server().url("http://localhost:8085").description("Local Development"),
-                        new Server().url("https://billing-service.payu.id").description("Production")
+                        new Server().url("https://billing-service.payu.fajjjar.my.id").description("Production")
                 ))
                 .addSecurityItem(new io.swagger.v3.oas.models.security.SecurityRequirement()
                         .addList("bearerAuth"))

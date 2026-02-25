@@ -42,7 +42,7 @@ describe('PrivacyPage', () => {
 
   it('renders contact email in footer', () => {
     render(<PrivacyPage />);
-    expect(screen.getByText(/privacy@payu.id/)).toBeInTheDocument();
+    expect(screen.getByText(/privacy@payu.fajjjar.my.id/)).toBeInTheDocument();
   });
 
   it('uses DashboardLayout wrapper', () => {

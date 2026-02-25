@@ -26,11 +26,11 @@ spec:
   # Penyesuaian konfigurasi TLS (Uncomment jika menggunakan Sertifikat)
   tls:
   - hosts:
-    - payu.apps.fajjjar.my.id
+    - web-app-payu-dev.apps.payu.ocp.fajjjar.my.id
     secretName: wildcard-apps-tls-secret
       
   rules:
-  - host: payu.apps.fajjjar.my.id
+  - host: web-app-payu-dev.apps.payu.ocp.fajjjar.my.id
     http:
       paths:
       - path: /

@@ -346,7 +346,7 @@ app/
 
 **Base URL Configuration:**
 - Development: `http://localhost:8080/api`
-- Production: `https://api.payu.id/api`
+- Production: `https://api.payu.fajjjar.my.id/api`
 
 **Services:**
 - `auth.service.ts` - Authentication

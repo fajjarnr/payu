@@ -457,9 +457,9 @@ oc apply -f backup-mesh-config.yaml
 
 For issues or questions:
 
-- **Platform Issues**: platform-team@payu.id
-- **Architecture**: architect@payu.id
-- **Security**: security@payu.id
+- **Platform Issues**: platform-team@payu.fajjjar.my.id
+- **Architecture**: architect@payu.fajjjar.my.id
+- **Security**: security@payu.fajjjar.my.id
 
 ---
 

@@ -4,14 +4,14 @@
 FROM registry.access.redhat.com/ubi9/nodejs-20:9.7 AS base
 
 # Metadata labels
-LABEL maintainer="frontend-team@payu.id"
+LABEL maintainer="frontend-team@payu.fajjjar.my.id"
 LABEL description="PayU Web App - Digital Banking Next.js Frontend with E2E Testing"
 LABEL version="1.4.0"
 LABEL org.opencontainers.image.title="payu-web-app"
 LABEL org.opencontainers.image.description="PayU Digital Banking Web Application - Next.js 16 with React 19, TypeScript, Tailwind CSS, and Playwright E2E Testing"
 LABEL org.opencontainers.image.version="1.4.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
-LABEL org.opencontainers.image.url="https://payu.id"
+LABEL org.opencontainers.image.url="https://payu.fajjjar.my.id"
 LABEL org.opencontainers.image.source="https://github.com/payu/frontend/web-app"
 LABEL org.opencontainers.image.licenses="Proprietary"
 LABEL org.opencontainers.image.authors="PayU Frontend Team"

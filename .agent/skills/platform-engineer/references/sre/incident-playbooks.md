@@ -159,7 +159,7 @@ public TransferResult transfer(TransferRequest request) {
 ### Immediate Actions
 ```bash
 # 1. Check certificate expiry
-openssl s_client -connect api.payu.id:443 2>/dev/null | openssl x509 -noout -dates
+openssl s_client -connect api.payu.fajjjar.my.id:443 2>/dev/null | openssl x509 -noout -dates
 
 # 2. Check cert-manager status
 oc get certificates -A

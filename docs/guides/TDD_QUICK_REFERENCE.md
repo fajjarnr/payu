@@ -175,7 +175,7 @@ verify(eventPublisher, never()).publish(any());
 // Capture argument
 ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
 verify(accountRepo).save(captor.capture());
-assertThat(captor.getValue().getEmail()).isEqualTo("test@payu.id");
+assertThat(captor.getValue().getEmail()).isEqualTo("test@payu.fajjjar.my.id");
 ```
 
 ### pytest (Python)

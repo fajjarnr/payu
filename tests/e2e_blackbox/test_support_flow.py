@@ -62,7 +62,7 @@ class TestSupportFlow:
         response = api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
-            "email": f"agent_{fake.uuid4()}@payu.id",
+            "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
             "department": "Customer Support",
             "active": True
         })
@@ -97,7 +97,7 @@ class TestSupportFlow:
         response = api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
-            "email": f"agent_{fake.uuid4()}@payu.id",
+            "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
             "department": "Customer Support",
             "active": True
         })
@@ -124,7 +124,7 @@ class TestSupportFlow:
         response = api.post("/api/v1/support/agents", json={
             "employeeId": employee_id,
             "name": fake.name(),
-            "email": f"agent_{fake.uuid4()}@payu.id",
+            "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
             "department": "Customer Support",
             "active": True
         })
@@ -149,7 +149,7 @@ class TestSupportFlow:
         response = api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
-            "email": f"agent_{fake.uuid4()}@payu.id",
+            "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
             "department": "Customer Support",
             "active": True
         })
@@ -249,7 +249,7 @@ class TestSupportFlow:
         response = api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
-            "email": f"agent_{fake.uuid4()}@payu.id",
+            "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
             "department": "Customer Support",
             "active": True
         })
@@ -298,7 +298,7 @@ class TestSupportFlow:
         response = api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
-            "email": f"agent_{fake.uuid4()}@payu.id",
+            "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
             "department": "Customer Support",
             "active": True
         })
@@ -326,7 +326,7 @@ class TestSupportFlow:
         response = api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
-            "email": f"agent_{fake.uuid4()}@payu.id",
+            "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
             "department": "Customer Support",
             "active": True
         })

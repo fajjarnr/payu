@@ -85,9 +85,9 @@ create_user() {
 }
 
 # Create test users
-create_user "customer1" "customer1@payu.id" "Customer" "One" "password123"
-create_user "customer2" "customer2@payu.id" "Customer" "Two" "password123"
-create_user "admin" "admin@payu.id" "System" "Administrator" "admin123"
+create_user "customer1" "customer1@payu.fajjjar.my.id" "Customer" "One" "password123"
+create_user "customer2" "customer2@payu.fajjjar.my.id" "Customer" "Two" "password123"
+create_user "admin" "admin@payu.fajjjar.my.id" "System" "Administrator" "admin123"
 
 echo ""
 echo "=========================================="

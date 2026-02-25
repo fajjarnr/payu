@@ -16,25 +16,25 @@ data:
         business_unit: "core_banking"
         cost_center: "CC-1001"
         environment: "production"
-        owner: "platform-team@payu.id"
+        owner: "platform-team@payu.fajjjar.my.id"
 
       payu-staging:
         business_unit: "platform"
         cost_center: "CC-2001"
         environment: "staging"
-        owner: "platform-team@payu.id"
+        owner: "platform-team@payu.fajjjar.my.id"
 
       payu-dev:
         business_unit: "platform"
         cost_center: "CC-3001"
         environment: "development"
-        owner: "platform-team@payu.id"
+        owner: "platform-team@payu.fajjjar.my.id"
 
       payu-ml:
         business_unit: "data_science"
         cost_center: "CC-4001"
         environment: "production"
-        owner: "ml-team@payu.id"
+        owner: "ml-team@payu.fajjjar.my.id"
 
     service_cost_allocation:
       account-service:
@@ -122,9 +122,9 @@ data:
       frequency: "monthly"
       day_of_month: 1
       recipients:
-        - "finance@payu.id"
-        - "platform-team@payu.id"
-        - "cto@payu.id"
+        - "finance@payu.fajjjar.my.id"
+        - "platform-team@payu.fajjjar.my.id"
+        - "cto@payu.fajjjar.my.id"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -181,8 +181,8 @@ data:
 
         - type: email
           recipients:
-            - "finance@payu.id"
-            - "platform-team@payu.id"
+            - "finance@payu.fajjjar.my.id"
+            - "platform-team@payu.fajjjar.my.id"
 
     cost_categories:
       - name: compute
@@ -297,7 +297,7 @@ spec:
               curl -X POST "$MAILGUN_API_URL" \
                 -u "api:$MAILGUN_API_KEY" \
                 -F from="cost-reports@payu.internal" \
-                -F to="finance@payu.id,platform-team@payu.id" \
+                -F to="finance@payu.fajjjar.my.id,platform-team@payu.fajjjar.my.id" \
                 -F subject="Monthly Cost Report - ${REPORT_DATE}" \
                 -F text="Cost report is available at https://s3.amazonaws.com/payu-cost-reports/monthly/cost-report-${REPORT_DATE}.json"
 

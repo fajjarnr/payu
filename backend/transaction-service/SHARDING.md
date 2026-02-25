@@ -336,9 +336,9 @@ HAVING COUNT(*) > 1;
 
 ## Support
 
-- **Backend Team**: backend-team@payu.id
-- **Database Team**: dba-team@payu.id
-- **Architecture**: architect@payu.id
+- **Backend Team**: backend-team@payu.fajjjar.my.id
+- **Database Team**: dba-team@payu.fajjjar.my.id
+- **Architecture**: architect@payu.fajjjar.my.id
 
 ---
 

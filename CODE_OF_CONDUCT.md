@@ -32,7 +32,7 @@ Kode etik ini berlaku dalam semua ruang proyek, dan juga berlaku ketika seseoran
 
 ## Enforcement
 
-Contoh perilaku yang kasar, melecehkan, atau tidak dapat diterima dapat dilaporkan ke tim proyek di **conduct@payu.id**. Semua keluhan akan ditinjau dan diselidiki dan akan menghasilkan respons yang dianggap perlu dan sesuai dengan keadaan.
+Contoh perilaku yang kasar, melecehkan, atau tidak dapat diterima dapat dilaporkan ke tim proyek di **conduct@payu.fajjjar.my.id**. Semua keluhan akan ditinjau dan diselidiki dan akan menghasilkan respons yang dianggap perlu dan sesuai dengan keadaan.
 
 ## Attribution
 

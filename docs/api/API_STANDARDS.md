@@ -15,15 +15,15 @@ This document defines the API standards that all PayU services must follow to en
 | Environment | Base URL Pattern |
 |-------------|-------------------|
 | **Local** | `http://localhost:8080/api/v1` |
-| **Development** | `https://api-dev.payu.id/api/v1` |
-| **SIT** | `https://api-sit.payu.id/api/v1` |
-| **UAT** | `https://api-uat.payu.id/api/v1` |
-| **Production** | `https://api.payu.id/api/v1` |
+| **Development** | `https://api-dev.payu.fajjjar.my.id/api/v1` |
+| **SIT** | `https://api-sit.payu.fajjjar.my.id/api/v1` |
+| **UAT** | `https://api-uat.payu.fajjjar.my.id/api/v1` |
+| **Production** | `https://api.payu.fajjjar.my.id/api/v1` |
 
 ### URL Pattern
 
 ```
-https://{environment}.payu.id/api/v{version}/{service}/{resource}[/{id}][/{sub-resource}]
+https://{environment}.payu.fajjjar.my.id/api/v{version}/{service}/{resource}[/{id}][/{sub-resource}]
 ```
 
 ---

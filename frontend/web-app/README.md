@@ -279,7 +279,7 @@ Production (set in deployment platform):
 
 ```bash
 NODE_ENV=production
-NEXT_PUBLIC_API_URL=https://api.payu.id
+NEXT_PUBLIC_API_URL=https://api.payu.fajjjar.my.id
 ```
 
 ---

@@ -510,8 +510,8 @@ oc scale deployment/account-service --replicas=3 -n payu-prod
 ## Support
 
 For issues or questions:
-- Platform Team: platform-team@payu.id
-- Architecture: architect@payu.id
+- Platform Team: platform-team@payu.fajjjar.my.id
+- Architecture: architect@payu.fajjjar.my.id
 - On-Call: +62-21-XXXX-XXXX
 
 ---

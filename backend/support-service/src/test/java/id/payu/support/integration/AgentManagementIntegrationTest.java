@@ -27,7 +27,7 @@ class AgentManagementIntegrationTest {
             {
                 "employeeId": "%s",
                 "name": "Integration Test Agent",
-                "email": "integration.test@payu.id",
+                "email": "integration.test@payu.fajjjar.my.id",
                 "department": "Customer Support",
                 "level": "SENIOR"
             }
@@ -42,7 +42,7 @@ class AgentManagementIntegrationTest {
                 .statusCode(201)
                 .body("employeeId", equalTo(testEmployeeId))
                 .body("name", equalTo("Integration Test Agent"))
-                .body("email", equalTo("integration.test@payu.id"))
+                .body("email", equalTo("integration.test@payu.fajjjar.my.id"))
                 .body("department", equalTo("Customer Support"))
                 .body("level", equalTo("SENIOR"))
                 .body("active", equalTo(true))
@@ -162,7 +162,7 @@ class AgentManagementIntegrationTest {
             {
                 "employeeId": "%s",
                 "name": "Duplicate Agent",
-                "email": "duplicate@payu.id",
+                "email": "duplicate@payu.fajjjar.my.id",
                 "department": "Support",
                 "level": "JUNIOR"
             }

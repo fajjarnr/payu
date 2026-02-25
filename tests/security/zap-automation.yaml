@@ -29,7 +29,7 @@ env:
       users:
         - name: "test-user"
           credentials:
-            username: "${ZAP_TEST_USER:-test@payu.id}"
+            username: "${ZAP_TEST_USER:-test@payu.fajjjar.my.id}"
             password: "${ZAP_TEST_PASSWORD}"
 
 jobs:

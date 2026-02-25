@@ -23,7 +23,7 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .license(new License()
                                 .name("Proprietary")
-                                .url("https://payu.id")))
+                                .url("https://payu.fajjjar.my.id")))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEME_NAME,

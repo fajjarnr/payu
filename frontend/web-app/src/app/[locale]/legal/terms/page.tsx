@@ -99,7 +99,7 @@ export default function TermsPage() {
 
                 <div className="pt-8 border-t border-border">
                   <p className="text-xs text-muted-foreground font-medium text-center">
-                    Untuk pertanyaan lebih lanjut, hubungi tim dukungan kami di support@payu.id
+                    Untuk pertanyaan lebih lanjut, hubungi tim dukungan kami di support@payu.fajjjar.my.id
                   </p>
                 </div>
               </div>

@@ -18,5 +18,5 @@
 ## 🛡️ API Security & Gateway
 *   **Rate Limiting**: Apply `@RateLimit` annotations to public endpoints (login, register). 
 *   **Standard Port (8080)**: All backend services MUST expose port 8080. Gateway routes MUST point to port 8080 of the target service for internal discovery.
-*   **CORS**: Configure CORS at the Gateway level, not individual services. Allow only trusted origins (`https://*.payu.id`).
+*   **CORS**: Configure CORS at the Gateway level, not individual services. Allow only trusted origins (`https://*.payu.fajjjar.my.id`).
 *   **Auth Propagation**: Ensure the Gateway propagates the `Authorization` bearer token to downstream services.

@@ -55,14 +55,14 @@ VALUES
 -- Insert initial support agents
 INSERT INTO support_agents (employee_id, name, email, department, level, active)
 VALUES 
-    ('EMP001', 'Budi Santoso', 'budi.santoso@payu.id', 'Customer Support', 'TEAM_LEAD', true),
-    ('EMP002', 'Siti Rahayu', 'siti.rahayu@payu.id', 'Customer Support', 'SENIOR', true),
-    ('EMP003', 'Ahmad Faisal', 'ahmad.faisal@payu.id', 'Customer Support', 'JUNIOR', true),
-    ('EMP004', 'Dewi Lestari', 'dewi.lestari@payu.id', 'Customer Support', 'SENIOR', true),
-    ('EMP005', 'Rudi Hartono', 'rudi.hartono@payu.id', 'Customer Support', 'JUNIOR', true),
-    ('EMP006', 'Maya Sari', 'maya.sari@payu.id', 'Customer Support', 'JUNIOR', true),
-    ('EMP007', 'Andi Wijaya', 'andi.wijaya@payu.id', 'Customer Support', 'MANAGER', true),
-    ('EMP008', 'Rina Kusuma', 'rina.kusuma@payu.id', 'Customer Support', 'SENIOR', true);
+    ('EMP001', 'Budi Santoso', 'budi.santoso@payu.fajjjar.my.id', 'Customer Support', 'TEAM_LEAD', true),
+    ('EMP002', 'Siti Rahayu', 'siti.rahayu@payu.fajjjar.my.id', 'Customer Support', 'SENIOR', true),
+    ('EMP003', 'Ahmad Faisal', 'ahmad.faisal@payu.fajjjar.my.id', 'Customer Support', 'JUNIOR', true),
+    ('EMP004', 'Dewi Lestari', 'dewi.lestari@payu.fajjjar.my.id', 'Customer Support', 'SENIOR', true),
+    ('EMP005', 'Rudi Hartono', 'rudi.hartono@payu.fajjjar.my.id', 'Customer Support', 'JUNIOR', true),
+    ('EMP006', 'Maya Sari', 'maya.sari@payu.fajjjar.my.id', 'Customer Support', 'JUNIOR', true),
+    ('EMP007', 'Andi Wijaya', 'andi.wijaya@payu.fajjjar.my.id', 'Customer Support', 'MANAGER', true),
+    ('EMP008', 'Rina Kusuma', 'rina.kusuma@payu.fajjjar.my.id', 'Customer Support', 'SENIOR', true);
 
 -- Mark initial agents as trained for all mandatory modules
 INSERT INTO agent_training (agent_id, training_module_id, status, score, started_at, completed_at)

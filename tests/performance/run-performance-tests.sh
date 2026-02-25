@@ -61,10 +61,10 @@ Examples:
     $0 -s login
 
     # Run against staging environment
-    $0 -u https://staging-api.payu.id
+    $0 -u https://staging-api.payu.fajjjar.my.id
 
     # Run transfer simulation against staging
-    $0 -s transfer -u https://staging-api.payu.id
+    $0 -s transfer -u https://staging-api.payu.fajjjar.my.id
 
 Available Simulations:
     login       - Authentication service performance test

@@ -122,7 +122,7 @@ Provides reusable components for all simulations:
 ### Option 1: Convenience Script (Recommended)
 ```bash
 ./run-performance-tests.sh
-./run-performance-tests.sh -s login -u https://staging-api.payu.id
+./run-performance-tests.sh -s login -u https://staging-api.payu.fajjjar.my.id
 ```
 
 ### Option 2: Maven
@@ -172,8 +172,8 @@ performance-test:
 | Environment | Base URL | Usage |
 |-------------|----------|-------|
 | Local | http://localhost:8080 | Development |
-| Staging | https://staging-api.payu.id | Pre-production |
-| Load Test | https://loadtest-api.payu.id | Dedicated performance testing |
+| Staging | https://staging-api.payu.fajjjar.my.id | Pre-production |
+| Load Test | https://loadtest-api.payu.fajjjar.my.id | Dedicated performance testing |
 
 ## Performance Targets
 
@@ -215,9 +215,9 @@ performance-test:
 
 ## Support Contacts
 
-- **Performance Team**: performance-team@payu.id
-- **QA Team**: qa-team@payu.id
-- **Backend Team**: backend-team@payu.id
+- **Performance Team**: performance-team@payu.fajjjar.my.id
+- **QA Team**: qa-team@payu.fajjjar.my.id
+- **Backend Team**: backend-team@payu.fajjjar.my.id
 
 ## Documentation
 

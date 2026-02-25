@@ -124,7 +124,7 @@ export const test = base.extend<{ authenticatedPage: Page }>({
   authenticatedPage: async ({ page }, use) => {
     // Login via API (faster than UI login)
     const response = await page.request.post('/api/v1/auth/login', {
-      data: { username: 'test@payu.id', password: 'TestPass123!' }
+      data: { username: 'test@payu.fajjjar.my.id', password: 'TestPass123!' }
     });
     const { accessToken } = await response.json();
     

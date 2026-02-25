@@ -2,7 +2,7 @@ export const API_CONFIG = {
   // Update this for your environment
   BASE_URL: __DEV__
     ? 'http://localhost:8080/api'
-    : 'https://api.payu.id/api',
+    : 'https://api.payu.fajjjar.my.id/api',
   TIMEOUT: 30000,
 } as const;
 

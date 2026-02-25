@@ -216,7 +216,7 @@ describe('feedbackService', () => {
 
   describe('uploadScreenshot', () => {
     const mockUri = 'file:///path/to/screenshot.jpg';
-    const mockUploadResponse = { url: 'https://cdn.payu.com/screenshots/abc123.jpg' };
+    const mockUploadResponse = { url: 'https://cdn.payu.fajjjar.my.id/screenshots/abc123.jpg' };
 
     it('should upload screenshot successfully', async () => {
       const apiResponse: ApiResponse<typeof mockUploadResponse> = {

@@ -94,14 +94,14 @@ public class OpenApiConfiguration {
                         .description(API_DESCRIPTION)
                         .contact(new Contact()
                                 .name("PayU API Support")
-                                .email("api-support@payu.id")
-                                .url("https://payu.id"))
+                                .email("api-support@payu.fajjjar.my.id")
+                                .url("https://payu.fajjjar.my.id"))
                         .license(new License()
                                 .name("Proprietary")
-                                .url("https://payu.id/terms")))
+                                .url("https://payu.fajjjar.my.id/terms")))
                 .servers(List.of(
-                        new Server().url("https://api.payu.id/v1").description("Production"),
-                        new Server().url("https://api.staging.payu.id/v1").description("Staging"),
+                        new Server().url("https://api.payu.fajjjar.my.id/v1").description("Production"),
+                        new Server().url("https://api-staging.apps.payu.ocp.fajjjar.my.id/v1").description("Staging"),
                         new Server().url("http://localhost:8080/api/v1").description("Local Development")
                 ))
                 .components(new Components()

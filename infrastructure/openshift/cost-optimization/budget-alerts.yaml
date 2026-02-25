@@ -181,5 +181,5 @@ metadata:
     type: budget-alerts
 stringData:
   SLACK_WEBHOOK_URL: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
-  EMAIL_RECIPIENTS: "finance@payu.id,platform-team@payu.id,cto@payu.id"
+  EMAIL_RECIPIENTS: "finance@payu.fajjjar.my.id,platform-team@payu.fajjjar.my.id,cto@payu.fajjjar.my.id"
 type: Opaque

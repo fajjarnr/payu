@@ -485,7 +485,7 @@ public class AnalyticsEndpointsIntegrationTest {
     void testAnalyticsDifferentOrigins() {
         String[] origins = {
             "http://localhost:3000",
-            "https://payu.id",
+            "https://payu.fajjjar.my.id",
             "http://localhost:8081"
         };
 

@@ -52,7 +52,7 @@ flags:
         conditions:
           - attribute: user.email
             operator: endsWith
-            value: "@payu.id"
+            value: "@payu.fajjjar.my.id"
         serve: true
         
       # Rule 2: Beta users
@@ -205,7 +205,7 @@ echo "📦 Deploying $SERVICE $NEW_VERSION to $NEW_COLOR..."
 
 # 1. Deploy new version to inactive color
 oc set image deployment/${SERVICE}-${NEW_COLOR} \
-  $SERVICE=registry.payu.id/$SERVICE:$NEW_VERSION \
+  $SERVICE=registry.payu.fajjjar.my.id/$SERVICE:$NEW_VERSION \
   -n $NAMESPACE
 
 # 2. Wait for rollout
@@ -299,7 +299,7 @@ spec:
     spec:
       containers:
         - name: wallet-service
-          image: registry.payu.id/wallet-service:v1.2.4
+          image: registry.payu.fajjjar.my.id/wallet-service:v1.2.4
           ports:
             - containerPort: 8080
   strategy:

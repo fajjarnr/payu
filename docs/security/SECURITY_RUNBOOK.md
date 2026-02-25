@@ -377,11 +377,11 @@ curl -X POST $JIRA_API_URL/rest/api/2/issue \
 
 | Role | Name | Email | Phone | Slack |
 |------|------|-------|-------|-------|
-| CISO | [Name] | ciso@payu.id | +62-XXX | @ciso |
-| Security Lead | [Name] | security-lead@payu.id | +62-XXX | @sec-lead |
-| On-Call Engineer | [Rotating] | oncall@payu.id | +62-XXX | @oncall |
-| Compliance Officer | [Name] | compliance@payu.id | +62-XXX | @compliance |
-| Legal Counsel | [Name] | legal@payu.id | +62-XXX | @legal |
+| CISO | [Name] | ciso@payu.fajjjar.my.id | +62-XXX | @ciso |
+| Security Lead | [Name] | security-lead@payu.fajjjar.my.id | +62-XXX | @sec-lead |
+| On-Call Engineer | [Rotating] | oncall@payu.fajjjar.my.id | +62-XXX | @oncall |
+| Compliance Officer | [Name] | compliance@payu.fajjjar.my.id | +62-XXX | @compliance |
+| Legal Counsel | [Name] | legal@payu.fajjjar.my.id | +62-XXX | @legal |
 
 ---
 

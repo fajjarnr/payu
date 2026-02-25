@@ -370,8 +370,8 @@ mvn flyway:info
 
 ## Support
 
-- **Backend Team**: backend-team@payu.id
-- **Architecture**: architect@payu.id
+- **Backend Team**: backend-team@payu.fajjjar.my.id
+- **Architecture**: architect@payu.fajjjar.my.id
 - **Issues**: https://github.com/payu/ab-testing-service/issues
 
 ## License

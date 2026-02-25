@@ -64,7 +64,7 @@ PayU uses RFC 9457 for errors to provide a standardized, machine-readable format
 
 ```json
 {
-    "type": "https://api.payu.id/errors/insufficient-funds",
+    "type": "https://api.payu.fajjjar.my.id/errors/insufficient-funds",
     "title": "Insufficient Funds",
     "status": 422,
     "detail": "Your wallet balance (Rp 5.000) is less than the requested transfer amount (Rp 10.000).",

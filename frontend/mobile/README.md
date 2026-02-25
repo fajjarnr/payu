@@ -208,7 +208,7 @@ Update `constants/config.ts` for your environment:
 ```typescript
 export const API_CONFIG = {
   BASE_URL: 'http://localhost:8080/api', // Development
-  // BASE_URL: 'https://api.payu.id/api', // Production
+  // BASE_URL: 'https://api.payu.fajjjar.my.id/api', // Production
   TIMEOUT: 30000,
 };
 ```

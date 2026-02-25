@@ -101,17 +101,17 @@ kind: Deployment
 metadata:
   name: wallet-service
   labels:
-    payu.id/environment: prod
-    payu.id/service: wallet-service
-    payu.id/team: payments
-    payu.id/cost-center: CC-PAYMENTS-001
-    payu.id/product: digital-banking
+    payu.fajjjar.my.id/environment: prod
+    payu.fajjjar.my.id/service: wallet-service
+    payu.fajjjar.my.id/team: payments
+    payu.fajjjar.my.id/cost-center: CC-PAYMENTS-001
+    payu.fajjjar.my.id/product: digital-banking
 spec:
   template:
     metadata:
       labels:
-        payu.id/environment: prod
-        payu.id/service: wallet-service
+        payu.fajjjar.my.id/environment: prod
+        payu.fajjjar.my.id/service: wallet-service
 ```
 
 ### Terraform
@@ -211,7 +211,7 @@ GROUP BY 1, 2;
 package kubernetes.admission
 
 deny[msg] {
-  required_tags := ["payu.id/environment", "payu.id/service", "payu.id/team", "payu.id/cost-center"]
+  required_tags := ["payu.fajjjar.my.id/environment", "payu.fajjjar.my.id/service", "payu.fajjjar.my.id/team", "payu.fajjjar.my.id/cost-center"]
   provided_tags := {tag | input.request.object.metadata.labels[tag]}
   missing := required_tags - provided_tags
   count(missing) > 0
