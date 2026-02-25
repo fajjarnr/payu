@@ -13,8 +13,8 @@
 
 | Status          | Count | Breakdown                                            |
 | :-------------- | :---: | :--------------------------------------------------- |
-| **Epics**       |  19   | 14 improvement, 4 partner/gateway, 1 infra           |
-| **Stories**     |  55   | IMP-001 – IMP-055                                    |
+| **Epics**       |  23   | 18 improvement, 4 partner/gateway, 1 infra           |
+| **Stories**     |  69   | IMP-001 – IMP-069                                    |
 | **GAP Stories** |  13   | GAP-001 – GAP-013                                    |
 | **Tech Debt**   |   3   | SIMP-001 – SIMP-003                                  |
 | **Spikes**      |   4   | ARCH-001 – ARCH-004                                  |
@@ -67,6 +67,10 @@
 | E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |  6  | Q2 2026 | 📋 To Do |
 | E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | 📋 To Do |
 | E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |  2  | Q2 2026 | 📋 To Do |
+| E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    | 10  | Q1 2026 | 📋 To Do |
+| E-21 | Security Hardening                | 🔴 Highest |    2    |  5  | Q1 2026 | 📋 To Do |
+| E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |  6  | Q1 2026 | 📋 To Do |
+| E-23 | Shared Library Lifecycle          | 🟠 High    |    2    | 11  | Q2 2026 | 📋 To Do |
 
 > **Story Points**: XS=1, S=2, M=3, L=5, XL=8
 > **Labels**: `backend`, `frontend`, `gateway`, `platform`, `partner`, `security`, `grpc`, `dx`, `mobile`
@@ -935,14 +939,14 @@
 >
 > **Referensi**: BCA Digital (blu), Jago, GoPay, OVO, DANA
 
-| Key     | Type  | Summary                          | Priority  | SP  | Component(s)                  | Labels                    | Status   |
-| :------ | :---- | :------------------------------- | :-------- | :-: | :---------------------------- | :------------------------ | :------- |
-| IMP-034 | Story | Transaction Notes / Memo         | 🟠 High   |  1  | `transaction-service`         | `backend` `frontend`      | 📋 To Do |
-| IMP-035 | Story | Beneficiary Management           | 🟠 High   |  2  | `account-service`             | `backend` `frontend`      | 📋 To Do |
-| IMP-036 | Story | P2P Transfer via Phone Lookup    | 🟠 High   |  2  | `account-svc` + `txn-svc`    | `backend` `frontend`      | 📋 To Do |
-| IMP-037 | Story | Transaction Tagging              | 🟡 Medium |  2  | `transaction-svc` + `analytics` | `backend` `frontend`   | 📋 To Do |
-| IMP-038 | Story | QR Pay (P2P Scan-to-Transfer)    | 🟡 Medium |  2  | `account-svc` + `txn-svc`    | `backend` `frontend`      | 📋 To Do |
-| IMP-039 | Story | Savings Goals (Target Tabungan)  | 🟡 Medium |  3  | `wallet-service`              | `backend` `frontend`      | 📋 To Do |
+| Key     | Type  | Summary                         | Priority  | SP  | Component(s)                    | Labels               | Status   |
+| :------ | :---- | :------------------------------ | :-------- | :-: | :------------------------------ | :------------------- | :------- |
+| IMP-034 | Story | Transaction Notes / Memo        | 🟠 High   |  1  | `transaction-service`           | `backend` `frontend` | 📋 To Do |
+| IMP-035 | Story | Beneficiary Management          | 🟠 High   |  2  | `account-service`               | `backend` `frontend` | 📋 To Do |
+| IMP-036 | Story | P2P Transfer via Phone Lookup   | 🟠 High   |  2  | `account-svc` + `txn-svc`       | `backend` `frontend` | 📋 To Do |
+| IMP-037 | Story | Transaction Tagging             | 🟡 Medium |  2  | `transaction-svc` + `analytics` | `backend` `frontend` | 📋 To Do |
+| IMP-038 | Story | QR Pay (P2P Scan-to-Transfer)   | 🟡 Medium |  2  | `account-svc` + `txn-svc`       | `backend` `frontend` | 📋 To Do |
+| IMP-039 | Story | Savings Goals (Target Tabungan) | 🟡 Medium |  3  | `wallet-service`                | `backend` `frontend` | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1052,15 +1056,15 @@
 >
 > **Referensi**: Xendit, Midtrans, GoPay, OVO
 
-| Key     | Type  | Summary                       | Priority   | SP  | Component(s)          | Labels                     | Status   |
-| :------ | :---- | :---------------------------- | :--------- | :-: | :-------------------- | :------------------------- | :------- |
-| IMP-040 | Story | Payment Link / Invoice        | 🔴 Highest |  3  | `partner-service`     | `partner` `gateway`        | 📋 To Do |
-| IMP-041 | Story | Payment Method Selection API  | 🟠 High    |  3  | `gateway-service`     | `gateway` `partner`        | 📋 To Do |
-| IMP-042 | Story | Virtual Account (VA) Payment  | 🟠 High    |  5  | `transaction-service` | `backend` `gateway`        | 📋 To Do |
-| IMP-043 | Story | Hosted Checkout Page          | 🟠 High    |  5  | `gateway-svc` + FE    | `gateway` `frontend`       | 📋 To Do |
-| IMP-044 | Story | Payment Expiry & Auto-Cancel  | 🟠 High    |  2  | `transaction-service` | `backend` `gateway`        | 📋 To Do |
-| IMP-045 | Story | Dynamic QR for Merchants      | 🟡 Medium  |  5  | `partner-service`     | `partner` `gateway`        | 📋 To Do |
-| IMP-046 | Story | Checkout Deeplink             | 🟡 Medium  |  2  | `gateway-svc` + mobile | `gateway` `mobile`        | 📋 To Do |
+| Key     | Type  | Summary                      | Priority   | SP  | Component(s)           | Labels               | Status   |
+| :------ | :---- | :--------------------------- | :--------- | :-: | :--------------------- | :------------------- | :------- |
+| IMP-040 | Story | Payment Link / Invoice       | 🔴 Highest |  3  | `partner-service`      | `partner` `gateway`  | 📋 To Do |
+| IMP-041 | Story | Payment Method Selection API | 🟠 High    |  3  | `gateway-service`      | `gateway` `partner`  | 📋 To Do |
+| IMP-042 | Story | Virtual Account (VA) Payment | 🟠 High    |  5  | `transaction-service`  | `backend` `gateway`  | 📋 To Do |
+| IMP-043 | Story | Hosted Checkout Page         | 🟠 High    |  5  | `gateway-svc` + FE     | `gateway` `frontend` | 📋 To Do |
+| IMP-044 | Story | Payment Expiry & Auto-Cancel | 🟠 High    |  2  | `transaction-service`  | `backend` `gateway`  | 📋 To Do |
+| IMP-045 | Story | Dynamic QR for Merchants     | 🟡 Medium  |  5  | `partner-service`      | `partner` `gateway`  | 📋 To Do |
+| IMP-046 | Story | Checkout Deeplink            | 🟡 Medium  |  2  | `gateway-svc` + mobile | `gateway` `mobile`   | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1190,11 +1194,11 @@
 >
 > **Referensi**: Xendit, Flip, DANA
 
-| Key     | Type  | Summary                     | Priority | SP  | Component(s)          | Labels                | Status   |
-| :------ | :---- | :-------------------------- | :------- | :-: | :-------------------- | :-------------------- | :------- |
-| IMP-047 | Story | Disbursement / Payout API   | 🟠 High  |  5  | `transaction-service` | `backend` `gateway`   | 📋 To Do |
-| IMP-048 | Story | Bulk/Batch Disbursement     | 🟡 Medium |  5  | `transaction-service` | `backend` `gateway`   | 📋 To Do |
-| IMP-049 | Story | Transfer Fee Optimization   | 🟡 Medium |  2  | `transaction-service` | `backend` `frontend`  | 📋 To Do |
+| Key     | Type  | Summary                   | Priority  | SP  | Component(s)          | Labels               | Status   |
+| :------ | :---- | :------------------------ | :-------- | :-: | :-------------------- | :------------------- | :------- |
+| IMP-047 | Story | Disbursement / Payout API | 🟠 High   |  5  | `transaction-service` | `backend` `gateway`  | 📋 To Do |
+| IMP-048 | Story | Bulk/Batch Disbursement   | 🟡 Medium |  5  | `transaction-service` | `backend` `gateway`  | 📋 To Do |
+| IMP-049 | Story | Transfer Fee Optimization | 🟡 Medium |  2  | `transaction-service` | `backend` `frontend` | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1262,10 +1266,10 @@
 >
 > **Referensi**: OVO, GoPay, DANA, ShopeePay
 
-| Key     | Type  | Summary                              | Priority | SP  | Component(s)        | Labels                    | Status   |
-| :------ | :---- | :----------------------------------- | :------- | :-: | :------------------ | :------------------------ | :------- |
-| IMP-050 | Story | Checkout Promo Code Redemption       | 🟠 High  |  3  | `promotion-service` | `backend` `partner`       | 📋 To Do |
-| IMP-051 | Story | Cashback Auto-Apply after Transaction | 🟠 High  |  3  | `promotion-service` | `backend` `partner`       | 📋 To Do |
+| Key     | Type  | Summary                               | Priority | SP  | Component(s)        | Labels              | Status   |
+| :------ | :---- | :------------------------------------ | :------- | :-: | :------------------ | :------------------ | :------- |
+| IMP-050 | Story | Checkout Promo Code Redemption        | 🟠 High  |  3  | `promotion-service` | `backend` `partner` | 📋 To Do |
+| IMP-051 | Story | Cashback Auto-Apply after Transaction | 🟠 High  |  3  | `promotion-service` | `backend` `partner` | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1314,11 +1318,11 @@
 >
 > **Referensi**: Xendit, Midtrans, Flip (semua punya SDK + sandbox)
 
-| Key     | Type  | Summary                    | Priority  | SP  | Component(s)             | Labels              | Status   |
-| :------ | :---- | :------------------------- | :-------- | :-: | :----------------------- | :------------------ | :------- |
-| IMP-052 | Story | Sandbox Test Environment   | 🟠 High   |  3  | `api-portal` + `partner` | `platform` `dx`     | 📋 To Do |
-| IMP-053 | Story | Partner SDK Generation     | 🟡 Medium |  5  | New `sdk/` module        | `platform` `dx`     | 📋 To Do |
-| IMP-054 | Story | Spending Limits / Budget   | 🟡 Medium |  3  | `account` + `txn`        | `backend` `frontend` | 📋 To Do |
+| Key     | Type  | Summary                  | Priority  | SP  | Component(s)             | Labels               | Status   |
+| :------ | :---- | :----------------------- | :-------- | :-: | :----------------------- | :------------------- | :------- |
+| IMP-052 | Story | Sandbox Test Environment | 🟠 High   |  3  | `api-portal` + `partner` | `platform` `dx`      | 📋 To Do |
+| IMP-053 | Story | Partner SDK Generation   | 🟡 Medium |  5  | New `sdk/` module        | `platform` `dx`      | 📋 To Do |
+| IMP-054 | Story | Spending Limits / Budget | 🟡 Medium |  3  | `account` + `txn`        | `backend` `frontend` | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1386,9 +1390,9 @@
 >
 > **Referensi**: BCA Digital (blu), GoPay, OVO, semua bank
 
-| Key     | Type  | Summary                    | Priority | SP  | Component(s)        | Labels                | Status   |
-| :------ | :---- | :------------------------- | :------- | :-: | :------------------ | :-------------------- | :------- |
-| IMP-055 | Story | Transaction Receipt (Bukti Transfer) | 🟠 High  |  2  | `statement-service` | `backend` `frontend`  | 📋 To Do |
+| Key     | Type  | Summary                              | Priority | SP  | Component(s)        | Labels               | Status   |
+| :------ | :---- | :----------------------------------- | :------- | :-: | :------------------ | :------------------- | :------- |
+| IMP-055 | Story | Transaction Receipt (Bukti Transfer) | 🟠 High  |  2  | `statement-service` | `backend` `frontend` | 📋 To Do |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1414,7 +1418,298 @@
 
 ---
 
-## �🔧 Tech Debt
+
+---
+
+## 🟦 E-20 — Code Health & Technical Hygiene
+
+> **Goal**: Fix bug arsitektur, dead code, dan inkonsistensi konfigurasi yang ditemukan saat deep audit.
+> Semua Quick Win — bisa dikerjakan per-item tanpa design besar.
+>
+> **Source**: Deep architecture audit (Feb 26, 2026)
+
+| Key     | Type  | Summary                              | Priority   | SP  | Component(s)           | Labels                  | Status   |
+| :------ | :---- | :----------------------------------- | :--------- | :-: | :--------------------- | :---------------------- | :------- |
+| IMP-056 | Bug   | In-Memory Reservation Map            | 🔴 Highest |  2  | `transaction-service`  | `backend` `bug`         | 📋 To Do |
+| IMP-057 | Task  | Remove Dead CloudEventPublisher      | 🟠 High    |  1  | `shared/events-starter` | `backend` `cleanup`    | 📋 To Do |
+| IMP-058 | Bug   | Gateway Query Parameter Loss         | 🔴 Highest |  1  | `gateway-service`      | `gateway` `bug`         | 📋 To Do |
+| IMP-059 | Task  | Deduplicate InsufficientFundsException | 🟠 High  |  1  | `shared/api-commons`   | `backend` `cleanup`     | 📋 To Do |
+| IMP-060 | Task  | Consume archunit-starter in Services | 🟡 Medium  |  2  | All Spring Boot services | `backend` `quality`   | 📋 To Do |
+| IMP-061 | Task  | Disable open-in-view Universally     | 🔴 Highest |  1  | All Spring Boot services | `backend` `performance` | 📋 To Do |
+| IMP-062 | Bug   | Fix Kafka Config Path in txn-service | 🔴 Highest |  1  | `transaction-service`  | `backend` `bug`         | 📋 To Do |
+| IMP-063 | Bug   | WalletEntity Missing tenantId in Constructor | 🟠 High | 1 | `wallet-service`    | `backend` `bug`         | 📋 To Do |
+
+<details>
+<summary>📄 Story Details</summary>
+
+**IMP-056 — In-Memory Reservation Map** `S` `2 SP` 🔴
+
+> `WalletServiceAdapter` di transaction-service simpan `transactionId→reservationId` di
+> `ConcurrentHashMap`. Multi-instance deployment = commit/release gagal kalau ke-route ke
+> pod berbeda. Harus persist ke DB atau carry via saga context (`TransferSagaContext`).
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Remove `ConcurrentHashMap` reservation mapping
+> - [ ] Persist reservation ID di `Transaction` entity atau `SagaInstance` context
+> - [ ] Verify commit/release works across different pods
+> - [ ] Unit test: reservation created on pod A, committed on pod B
+>
+> ✅ No FE impact
+
+**IMP-057 — Remove Dead CloudEventPublisher** `XS` `1 SP`
+
+> `events-starter` define `CloudEventPublisher<T>` interface tapi **tidak ada implementasi**.
+> Services bypass langsung ke outbox-starter. Interface dead code — implement
+> `KafkaCloudEventPublisher` atau hapus interface yang misleading.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Either: implement `KafkaCloudEventPublisher` bridging to outbox
+> - [ ] Or: remove `CloudEventPublisher` interface entirely
+> - [ ] Update imports di services yang reference it
+>
+> ✅ No FE impact
+
+**IMP-058 — Gateway Query Parameter Loss** `XS` `1 SP` 🔴
+
+> Gateway proxy build downstream URL dari `@PathParam("path")` saja.
+> Query parameters (`?page=1&size=10`) **tidak di-forward** ke downstream service.
+> Semua paginated/filtered GET via gateway return unfiltered results.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Forward `UriInfo.getQueryParameters()` ke downstream request
+> - [ ] Verify: `GET /api/v1/transactions?page=2&size=10` → downstream receives query params
+> - [ ] Integration test with pagination
+>
+> ✅ No FE impact — tapi fix ini **unblock** semua FE pagination yang lewat gateway
+
+**IMP-059 — Deduplicate InsufficientFundsException** `XS` `1 SP`
+
+> Dua class exist: `api.common.exception.InsufficientFundsException` dan
+> `api.common.money.InsufficientFundsException`. Services bisa import yang salah →
+> `GlobalExceptionHandler` tidak handle karena beda class.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Keep satu, hapus satu (prefer `api.common.exception`)
+> - [ ] Update all imports across services
+> - [ ] Verify `GlobalExceptionHandler` handles it correctly
+>
+> ✅ No FE impact
+
+**IMP-060 — Consume archunit-starter in Services** `S` `2 SP`
+
+> `archunit-starter` punya 10+ reusable rules (`HexagonalArchitectureRules`) tapi **0 service
+> konsumsi**. Semua 18 service tulis ArchUnit rules sendiri → inkonsistensi enforcement.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Add `archunit-starter` dependency ke all Spring Boot services
+> - [ ] Replace custom rules dengan shared `HexagonalArchitectureRules`
+> - [ ] Keep service-specific rules yang unique
+> - [ ] All architecture tests pass
+>
+> ✅ No FE impact
+
+**IMP-061 — Disable open-in-view Universally** `XS` `1 SP` 🔴
+
+> Hanya 3/16 Spring Boot services set `spring.jpa.open-in-view: false`.
+> Default Spring Boot = `true` → Hibernate session tetap open selama request rendering →
+> N+1 query risk, unexpected lazy loading di REST controller.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Add `spring.jpa.open-in-view: false` ke semua Spring Boot services
+> - [ ] Fix any `LazyInitializationException` yang muncul (fetch join atau DTO projection)
+> - [ ] Verify no regression
+>
+> ✅ No FE impact
+
+**IMP-062 — Fix Kafka Config Path in txn-service** `XS` `1 SP` 🔴
+
+> Transaction-service pakai `kafka:` bukan `spring.kafka:` di application.yml.
+> Spring Boot auto-config baca dari `spring.kafka.*` → properties silently ignored,
+> fallback ke default (no `acks=all`, no `enable.idempotence`). **Data loss risk**.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Rename `kafka:` → `spring.kafka:` di application.yml
+> - [ ] Verify Kafka producer config applied (`acks=all`, `enable.idempotence=true`)
+> - [ ] Verify consumer config applied (group.id, auto-offset-reset)
+>
+> ✅ No FE impact
+
+**IMP-063 — WalletEntity Missing tenantId in Constructor** `XS` `1 SP`
+
+> `WalletEntity` all-args constructor **tidak include `tenantId`** tapi kolom
+> `@Column(nullable = false)`. Saat multi-tenancy enforced (GAP-002) → persistence failure.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Add `tenantId` parameter ke all-args constructor
+> - [ ] Or: use `@Builder` pattern yang include all fields
+> - [ ] Verify entity creation with tenant context
+>
+> ✅ No FE impact
+
+</details>
+
+---
+
+## 🟦 E-21 — Security Hardening (Defaults & Audit)
+
+> **Goal**: Perbaiki security defaults di shared libraries agar banking-grade.
+> Fail-closed, bukan fail-open.
+>
+> **Source**: Deep architecture audit (Feb 26, 2026)
+
+| Key     | Type  | Summary                             | Priority   | SP  | Component(s)             | Labels               | Status   |
+| :------ | :---- | :---------------------------------- | :--------- | :-: | :----------------------- | :------------------- | :------- |
+| IMP-064 | Story | Security Auto-Config Fail-Closed    | 🔴 Highest |  3  | `shared/security-starter` | `backend` `security` | 📋 To Do |
+| IMP-065 | Story | AuditAspect Use SecurityContext     | 🟠 High    |  2  | `shared/security-starter` | `backend` `security` | 📋 To Do |
+
+<details>
+<summary>📄 Story Details</summary>
+
+**IMP-064 — Security Auto-Config Fail-Closed** `M` `3 SP`
+
+> `SecurityAutoConfiguration` pakai `matchIfMissing = false` untuk semua features
+> (encryption, masking, audit). Artinya tambah dependency `security-starter` **tidak
+> aktifkan apapun** tanpa config eksplisit. Banking platform harus fail-closed —
+> at minimum `data-masking` dan `audit-logging` harus default `true`.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] `payu.security.data-masking-enabled` default → `true`
+> - [ ] `payu.security.audit-enabled` default → `true`
+> - [ ] `payu.security.encryption-enabled` tetap `false` (butuh key config)
+> - [ ] Update all services yang override: verify no regression
+> - [ ] Document breaking change di CHANGELOG
+>
+> ✅ No FE impact
+
+**IMP-065 — AuditAspect Use SecurityContext** `S` `2 SP`
+
+> `AuditAspect.extractUserId()` baca `X-User-Id` header dan `request.getAttribute("principal")`
+> tapi **tidak cek** `SecurityContextHolder.getContext().getAuthentication()`.
+> Audit entries show "anonymous" untuk JWT-authenticated users.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Check `SecurityContextHolder` first (JWT subject/preferred_username)
+> - [ ] Fallback chain: SecurityContext → X-User-Id header → "anonymous"
+> - [ ] Unit test: verify audit log contains correct userId from JWT
+>
+> ✅ No FE impact
+
+</details>
+
+---
+
+## 🟦 E-22 — Gateway Reactive & Resilience
+
+> **Goal**: Fix gateway agar leverage arsitektur reactive Quarkus + protect dari downstream failures.
+>
+> **Source**: Deep architecture audit (Feb 26, 2026)
+
+| Key     | Type  | Summary                              | Priority   | SP  | Component(s)      | Labels                    | Status   |
+| :------ | :---- | :----------------------------------- | :--------- | :-: | :---------------- | :------------------------ | :------- |
+| IMP-066 | Story | Remove @Blocking from Gateway Proxy  | 🟠 High    |  3  | `gateway-service` | `gateway` `performance`   | 📋 To Do |
+| IMP-067 | Story | Wire Circuit Breaker to proxy()      | 🔴 Highest |  3  | `gateway-service` | `gateway` `resilience`    | 📋 To Do |
+
+<details>
+<summary>📄 Story Details</summary>
+
+**IMP-066 — Remove @Blocking from Gateway Proxy** `M` `3 SP`
+
+> `ApiGatewayResource` di-annotasi `@Blocking` → force semua request ke worker thread pool
+> (bukan Vert.x event loop). Negate arsitektur reactive Quarkus. Vert.x WebClient calls
+> sudah reactive (`Uni<Response>`) tapi `@Blocking` force context switch per request.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Remove `@Blocking` dari `ApiGatewayResource`
+> - [ ] Ensure all handler methods return `Uni<Response>` (reactive)
+> - [ ] Verify filters compatible dengan non-blocking execution
+> - [ ] Load test: compare throughput before/after
+>
+> ✅ No FE impact
+
+**IMP-067 — Wire Circuit Breaker to proxy() Method** `M` `3 SP`
+
+> Gateway `proxy()` method **tidak ada circuit breaker protection**. Kalau downstream
+> service mati → setiap request timeout 30 detik (TCP timeout). `@CircuitBreaker` dan
+> `@Retry` annotations ada di class tapi tidak applied ke `proxy()`.
+>
+> **Note**: Terkait IMP-003 (Wire Circuit Breaker) tapi IMP-003 tentang konsolidasi
+> RetryAndTimeoutService — ini tentang actual proxy method protection.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Apply `@CircuitBreaker` per downstream service (bukan global)
+> - [ ] Fallback: return 503 Service Unavailable dengan retry-after header
+> - [ ] Health endpoint reflects circuit state per service
+> - [ ] Config: failure threshold 50%, wait 30s, sliding window 10 calls
+>
+> ✅ No FE impact
+
+</details>
+
+---
+
+## 🟦 E-23 — Shared Library Lifecycle Management
+
+> **Goal**: Improve shared libraries agar production-grade — managed thread pools,
+> compile-time type safety, proper Spring lifecycle integration.
+>
+> **Source**: Deep architecture audit (Feb 26, 2026)
+
+| Key     | Type  | Summary                             | Priority  | SP  | Component(s)                    | Labels                  | Status   |
+| :------ | :---- | :---------------------------------- | :-------- | :-: | :------------------------------ | :---------------------- | :------- |
+| IMP-068 | Story | Spring-Managed Thread Pools         | 🟠 High   |  3  | `shared/saga-starter` + `cache` | `backend` `reliability` | 📋 To Do |
+| IMP-069 | Story | MapStruct Entity-Domain Mapping     | 🟡 Medium |  8  | New `shared/mapper-starter`     | `backend` `quality`     | 📋 To Do |
+
+<details>
+<summary>📄 Story Details</summary>
+
+**IMP-068 — Spring-Managed Thread Pools** `M` `3 SP`
+
+> `SagaOrchestrator.SAGA_EXECUTOR` dan `CacheService.REFRESH_EXECUTOR` pakai static
+> `Executors.newCachedThreadPool()`. Tidak di-manage Spring lifecycle, tidak bisa
+> di-monitor via Micrometer, tidak shutdown graceful → thread leak saat pod restart.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Replace static executors dengan `@Bean TaskExecutor` (Spring-managed)
+> - [ ] Configure `ThreadPoolTaskExecutor` dengan bounded pool (core=4, max=16, queue=100)
+> - [ ] Register executor metrics di Micrometer (`executor.pool.size`, `executor.active`)
+> - [ ] Verify graceful shutdown: pending tasks complete before pod termination
+>
+> ✅ No FE impact
+
+**IMP-069 — MapStruct Entity-Domain Mapping** `XL` `8 SP`
+
+> `WalletPersistenceAdapter` punya ~100 baris manual `toEntity()`/`toDomain()` mapping.
+> 22 services × multiple entities = maintenance burden + risiko missed field saat
+> entity berubah. MapStruct generate compile-time type-safe mapping.
+>
+> **Acceptance Criteria**:
+>
+> - [ ] Add MapStruct dependency ke parent POM (`dependencyManagement`)
+> - [ ] Create `shared/mapper-starter` dengan base mapper config
+> - [ ] Migrate wallet-service adapters ke MapStruct (pilot)
+> - [ ] Document pattern untuk other services
+> - [ ] Annotation processor config di maven-compiler-plugin (alongside Lombok)
+>
+> ✅ No FE impact
+
+</details>
+
+---
+
+## 🔧 Tech Debt
 
 | Key      | Type      | Summary                                | Priority  | SP  | Component(s)         | Status   |
 | :------- | :-------- | :------------------------------------- | :-------- | :-: | :------------------- | :------- |
@@ -1446,13 +1741,13 @@
 
 ## 🔮 Deferred (Icebox)
 
-| Key       | Type  | Summary                               | Notes                                           |
-| :-------- | :---- | :------------------------------------ | :---------------------------------------------- |
-| P2-FE-003 | Story | Mobile App Feature Parity (Expo/RN)   | ❄️ Deferred                                     |
-| OCP-007   | Story | Service Mesh mTLS enforcement         | ❄️ Planned                                      |
-| OCP-010   | Story | API versioning headers                | ❄️ Planned                                      |
-| DR-001    | Story | Disaster Recovery live test execution | ❄️ Scripts ready                                |
-| DEFER-001 | Story | Card Tokenization & 3DS              | ❄️ Requires PCI-DSS scope + card network kontrak |
+| Key       | Type  | Summary                               | Notes                                            |
+| :-------- | :---- | :------------------------------------ | :----------------------------------------------- |
+| P2-FE-003 | Story | Mobile App Feature Parity (Expo/RN)   | ❄️ Deferred                                      |
+| OCP-007   | Story | Service Mesh mTLS enforcement         | ❄️ Planned                                       |
+| OCP-010   | Story | API versioning headers                | ❄️ Planned                                       |
+| DR-001    | Story | Disaster Recovery live test execution | ❄️ Scripts ready                                 |
+| DEFER-001 | Story | Card Tokenization & 3DS               | ❄️ Requires PCI-DSS scope + card network kontrak |
 
 ---
 
@@ -1460,52 +1755,57 @@
 
 ### Story Points by Epic
 
-| Epic | Name                       | Stories |   SP    |
-| :--- | :------------------------- | :-----: | :-----: |
-| E-01 | Core Banking Ledger        |    3    |   13    |
-| E-02 | Gateway Hardening          |    5    |   13    |
-| E-03 | Frontend Quality           |    5    |    7    |
-| E-04 | API Management & Analytics |    5    |   19    |
-| E-05 | Product Catalog            |    1    |    5    |
-| E-06 | Developer Hub (Backstage)  |    5    |   13    |
-| E-07 | gRPC Inter-Service Comm.   |    8    |   25    |
-| E-08 | Legacy Integration         |    1    |    5    |
-| E-09 | Partner Foundation         |    4    |   18    |
-| E-10 | Escrow & Marketplace       |    2    |   10    |
-| E-11 | Subscription & Billing     |    2    |    8    |
-| E-12 | Settlement & FinOps        |    4    |   16    |
-| E-13 | Dispute Resolution         |    1    |    5    |
-| E-14 | Consumer Banking Experience |   6    |   12    |
-| E-15 | Payment Gateway Features   |    7    |   25    |
-| E-16 | Disbursement & Smart Routing |  3    |   12    |
-| E-17 | Promotion Engine Wiring    |    2    |    6    |
-| E-18 | Developer Experience (Partner) | 3   |   11    |
-| E-19 | Transaction Proof & Receipts |  1    |    2    |
-|      | **TOTAL**                  | **68**  | **225** |
+| Epic | Name                           | Stories |   SP    |
+| :--- | :----------------------------- | :-----: | :-----: |
+| E-01 | Core Banking Ledger            |    3    |   13    |
+| E-02 | Gateway Hardening              |    5    |   13    |
+| E-03 | Frontend Quality               |    5    |    7    |
+| E-04 | API Management & Analytics     |    5    |   19    |
+| E-05 | Product Catalog                |    1    |    5    |
+| E-06 | Developer Hub (Backstage)      |    5    |   13    |
+| E-07 | gRPC Inter-Service Comm.       |    8    |   25    |
+| E-08 | Legacy Integration             |    1    |    5    |
+| E-09 | Partner Foundation             |    4    |   18    |
+| E-10 | Escrow & Marketplace           |    2    |   10    |
+| E-11 | Subscription & Billing         |    2    |    8    |
+| E-12 | Settlement & FinOps            |    4    |   16    |
+| E-13 | Dispute Resolution             |    1    |    5    |
+| E-14 | Consumer Banking Experience    |    6    |   12    |
+| E-15 | Payment Gateway Features       |    7    |   25    |
+| E-16 | Disbursement & Smart Routing   |    3    |   12    |
+| E-17 | Promotion Engine Wiring        |    2    |    6    |
+| E-18 | Developer Experience (Partner) |    3    |   11    |
+| E-19 | Transaction Proof & Receipts   |    1    |    2    |
+| E-20 | Code Health & Tech Hygiene     |    8    |   10    |
+| E-21 | Security Hardening             |    2    |    5    |
+| E-22 | Gateway Reactive & Resilience  |    2    |    6    |
+| E-23 | Shared Library Lifecycle       |    2    |   11    |
+|      | **TOTAL**                      | **82**  | **257** |
 
 ### Story Points by Label
 
 | Label      | Total SP |
 | :--------- | :------: |
-| `backend`  |   111    |
-| `partner`  |    80    |
-| `gateway`  |    47    |
-| `platform` |    29    |
-| `frontend` |    25    |
-| `dx`       |    21    |
-| `mobile`   |     2    |
+| `backend`     |   131    |
+| `partner`     |    80    |
+| `gateway`     |    54    |
+| `platform`    |    29    |
+| `frontend`    |    25    |
+| `dx`          |    21    |
+| `security`    |     5    |
+| `mobile`      |     2    |
 
 ### FE Impact Summary
 
-| Kategori                       | Count | Keys                                                              |
-| :----------------------------- | :---: | :---------------------------------------------------------------- |
-| ✅ No FE impact (backend only) |  37   | IMP-002,003,005,007–009,012,013,016–033,040–042,044–048,050,052,053 |
-| ⚠️ Extend FE (non-breaking)    |  12   | IMP-001,006,015,034–039,049,051,054,055                           |
-| 🔴 FE-only (independent)       |   4   | IMP-004, IMP-010, IMP-011, IMP-014                                |
-| 📱 Mobile impact               |   2   | IMP-046 (deeplink), IMP-043 (checkout page)                       |
+| Kategori                       | Count | Keys                                                                |
+| :----------------------------- | :---: | :------------------------------------------------------------------ |
+| ✅ No FE impact (backend only) |  51   | IMP-002,003,005,007–009,012,013,016–033,040–042,044–048,050,052,053,056–069 |
+| ⚠️ Extend FE (non-breaking)    |  12   | IMP-001,006,015,034–039,049,051,054,055                                     |
+| 🔴 FE-only (independent)       |   4   | IMP-004, IMP-010, IMP-011, IMP-014                                          |
+| 📱 Mobile impact               |   2   | IMP-046 (deeplink), IMP-043 (checkout page)                                 |
 
 ---
 
-_Last Updated: February 26, 2026 | 19 Epics · 68 Stories · 225 SP · 3 Tech Debt · 4 Spikes · 5 Deferred_
+_Last Updated: February 26, 2026 | 23 Epics · 82 Stories · 257 SP · 3 Tech Debt · 4 Spikes · 5 Deferred_
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 _Referensi: BCA Digital (blu), Xendit, Midtrans, GoPay, OVO, DANA, Flip, Jago_
