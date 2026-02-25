@@ -43,8 +43,8 @@ metadata:
     app.kubernetes.io/name: oidc-config
     app.kubernetes.io/part-of: payu
 data:
-  OIDC_AUTH_SERVER_URL: "http://keycloak-discovery:8080/auth/realms/payu"
-  OIDC_ISSUER: "http://keycloak-discovery:8080/auth/realms/payu"
+  OIDC_AUTH_SERVER_URL: "http://payu-keycloak-service:8080/realms/payu"
+  OIDC_ISSUER: "http://payu-keycloak-service:8080/realms/payu"
   OIDC_REALM: "payu"
   OIDC_CLIENT_ID: "payu-backend"
   OIDC_ENABLED: "true"

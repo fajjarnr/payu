@@ -1,7 +1,6 @@
 # PayU Digital Banking - Podman Compose Test Environment
 # Isolated test environment with clean databases and test data
 
-version: "3.8"
 services:
   # ============================================
   # DATA LAYER (Test-specific)

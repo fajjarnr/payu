@@ -296,7 +296,7 @@ spec:
               # Send email notification
               curl -X POST "$MAILGUN_API_URL" \
                 -u "api:$MAILGUN_API_KEY" \
-                -F from="cost-reports@payu.internal" \
+                -F from="cost-reports@payu.fajjjar.my.id" \
                 -F to="finance@payu.fajjjar.my.id,platform-team@payu.fajjjar.my.id" \
                 -F subject="Monthly Cost Report - ${REPORT_DATE}" \
                 -F text="Cost report is available at https://s3.amazonaws.com/payu-cost-reports/monthly/cost-report-${REPORT_DATE}.json"

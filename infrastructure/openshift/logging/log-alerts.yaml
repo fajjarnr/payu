@@ -27,7 +27,7 @@ data:
             annotations:
               summary: "Critical error rate spike in {{ $labels.service }}"
               description: "Error rate has exceeded 5% for service {{ $labels.service }}"
-              runbook: "https://docs.payu.internal/runbooks/error-rate-spike"
+              runbook: "https://docs.payu.fajjjar.my.id/runbooks/error-rate-spike"
 
           # Security Alert: Authentication Failures
           - alert: AuthenticationFailureSpike
@@ -40,7 +40,7 @@ data:
             annotations:
               summary: "High rate of authentication failures"
               description: "More than 100 authentication failures per minute detected"
-              runbook: "https://docs.payu.internal/runbooks/auth-failures"
+              runbook: "https://docs.payu.fajjjar.my.id/runbooks/auth-failures"
 
           # Security Alert: Authorization Failures
           - alert: AuthorizationFailureSpike

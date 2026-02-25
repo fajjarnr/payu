@@ -9,25 +9,28 @@
 Berikut adalah status dan endpoint infrastruktur yang berjalan di namespace `payu-dev`.
 
 ### Deployed Components
-| Component | Technology | Version | Status |
-|-----------|------------|---------|--------|
-| PostgreSQL | Crunchy Postgres | 16 (ubi8) | ✅ Running |
-| Cache/Data Grid | Red Hat Data Grid | 8.5.5 | ✅ Running |
-| Message Broker | AMQ Streams (Kafka)| 4.0.0 (KRaft) | ✅ Running |
-| Identity/SSO | Red Hat Build of Keycloak (RHBK) | 26.1 | ✅ Running |
-| Kafka UI | AMQ Streams Console | 3.1.0 | ✅ Running |
+
+| Component       | Technology                       | Version       | Status     |
+| --------------- | -------------------------------- | ------------- | ---------- |
+| PostgreSQL      | Crunchy Postgres                 | 16 (ubi8)     | ✅ Running |
+| Cache/Data Grid | Red Hat Data Grid                | 8.5.5         | ✅ Running |
+| Message Broker  | AMQ Streams (Kafka)              | 4.0.0 (KRaft) | ✅ Running |
+| Identity/SSO    | Red Hat Build of Keycloak (RHBK) | 26.1          | ✅ Running |
+| Kafka UI        | AMQ Streams Console              | 3.1.0         | ✅ Running |
 
 ### Access Endpoints
-| Service | URL / Endpoint | Port | Purpose |
-|---------|----------------|------|---------|
-| **Web App** | https://web-app-payu-dev.apps.... | 443 | Consumer UI |
-| **Keycloak Admin** | https://keycloak-payu-dev.apps... | 443 | IAM Console |
-| **Kafka Console** | https://kafka-console-payu-dev... | 443 | Kafka UI |
-| **Postgres (Internal)** | `payu-postgres-primary` | 5432 | Primary DB |
-| **Kafka (Internal)** | `kafka:9092` | 9092 | Event Bus |
-| **Redis (Internal)** | `redis:6379` | 6379| Cache (RESP) |
+
+| Service                 | URL / Endpoint                    | Port | Purpose      |
+| ----------------------- | --------------------------------- | ---- | ------------ |
+| **Web App**             | https://web-app-payu-dev.apps.... | 443  | Consumer UI  |
+| **Keycloak Admin**      | https://keycloak-payu-dev.apps... | 443  | IAM Console  |
+| **Kafka Console**       | https://kafka-console-payu-dev... | 443  | Kafka UI     |
+| **Postgres (Internal)** | `payu-postgres-primary`           | 5432 | Primary DB   |
+| **Kafka (Internal)**    | `kafka:9092`                      | 9092 | Event Bus    |
+| **Redis (Internal)**    | `redis:6379`                      | 6379 | Cache (RESP) |
 
 ### Credentials Access
+
 - **Postgres**: `oc get secret payu-postgres-pguser-payu -o jsonpath='{.data.password}' | base64 -d`
 - **Keycloak Admin**: `oc get secret credential-payu-keycloak -o jsonpath='{.data.ADMIN_PASSWORD}' | base64 -d`
 
@@ -52,21 +55,29 @@ oc apply -f infrastructure/openshift/examples/
 ## 🏗️ Detailed Component Configuration
 
 ### 1. Crunchy Postgres (PostgreSQL 16)
+
 Enterprise PostgreSQL dengan HA (High Availability) dan backup terintegrasi via pgBackRest.
+
 - **Verification**: `oc get postgrescluster payu-postgres`
 - **Primary Service**: `payu-postgres-primary`
 
 ### 2. Red Hat Data Grid (Infinispan)
+
 Digunakan sebagai caching layer dengan kompatibilitas protokol Redis (RESP).
+
 - **Service Alias**: `redis:6379` dipetakan ke endpoint RESP Data Grid.
 
 ### 3. AMQ Streams (Kafka 4.0)
+
 Event streaming dalam mode **KRaft** (tanpa Zookeeper).
+
 - **Bootstrap Servers**: `kafka:9092` (Plain), `kafka:9093` (TLS).
 - **Verification**: `oc get kafka kafka`.
 
 ### 4. Red Hat Build of Keycloak (RHBK 26.1)
+
 Sistem Identity & Access Management.
+
 - **Realm**: `payu`
 - **Auth Server URL**: `http://payu-keycloak-service.payu-dev.svc:8080/realms/payu` (Internal)
 - **Note**: RHBK 26+ tidak menggunakan `/auth` prefix (berbeda dari RHSSO 7.x)
@@ -98,6 +109,7 @@ Sistem Identity & Access Management.
 ## 🛠️ Performance & Scalability (Production)
 
 Untuk deployment produksi, pastikan hal berikut dikonfigurasi:
+
 - **HA**: Minimal 3 replica untuk Postgres, Data Grid, dan Kafka.
 - **Backup**: Aktifkan pgBackRest S3 backups.
 - **Monitoring**: Sambungkan ke Prometheus/Grafana via OpenShift Monitoring.
@@ -112,4 +124,5 @@ Untuk deployment produksi, pastikan hal berikut dikonfigurasi:
 - **Keycloak 404**: RHBK 26+ tidak menggunakan `/auth` prefix. URL langsung ke `/realms/payu`. Jika migrasi dari RHSSO, pastikan path sudah diperbarui.
 
 ---
+
 _Last Updated: February 24, 2026_

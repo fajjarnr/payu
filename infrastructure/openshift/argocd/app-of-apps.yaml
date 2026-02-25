@@ -124,12 +124,12 @@ data:
       name: bitnami
 
   # URL configuration
-  url: https://argocd.payu.internal
+  url: https://argocd.dev.payu.fajjjar.my.id
 
   # OIDC configuration
   oidc.config: |
     name: PayU SSO
-    issuer: https://sso.payu.internal/auth/realms/payu
+    issuer: https://sso.dev.payu.fajjjar.my.id/realms/payu
     clientId: argocd
     clientSecret: $oidc.clientSecret
     requestedScopes: ["openid", "profile", "email", "groups"]

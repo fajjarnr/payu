@@ -57,7 +57,7 @@ data:
   QUARKUS_HTTP_CORS_HEADERS: "Authorization,Content-Type,Accept,Origin,X-Requested-With"
   QUARKUS_HTTP_CORS_CREDENTIALS: "true"
   QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: "10M"
-  OIDC_AUTH_SERVER_URL: "http://keycloak-discovery.payu-dev.svc:8080/auth/realms/payu"
+  OIDC_AUTH_SERVER_URL: "http://payu-keycloak-service.payu-dev.svc:8080/realms/payu"
   OIDC_CLIENT_ID: "payu-backend"
   OIDC_ENABLED: "true"
   ACCOUNT_SERVICE_URL: "http://account-service:8080"

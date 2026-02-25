@@ -556,8 +556,8 @@ spec:
     matchLabels:
       app: account-service
   jwtRules:
-    - issuer: "https://keycloak.payu.local/auth/realms/payu"
-      jwksUri: https://keycloak.payu.local/auth/realms/payu/protocol/openid-connect/certs
+    - issuer: "https://keycloak.payu.local/realms/payu"
+      jwksUri: https://keycloak.payu.local/realms/payu/protocol/openid-connect/certs
       forwardOriginalToken: true
       fromHeaders:
         - name: Authorization
@@ -575,8 +575,8 @@ spec:
     matchLabels:
       app: transaction-service
   jwtRules:
-    - issuer: "https://keycloak.payu.local/auth/realms/payu"
-      jwksUri: https://keycloak.payu.local/auth/realms/payu/protocol/openid-connect/certs
+    - issuer: "https://keycloak.payu.local/realms/payu"
+      jwksUri: https://keycloak.payu.local/realms/payu/protocol/openid-connect/certs
       forwardOriginalToken: true
       fromHeaders:
         - name: Authorization
@@ -594,8 +594,8 @@ spec:
     matchLabels:
       app: wallet-service
   jwtRules:
-    - issuer: "https://keycloak.payu.local/auth/realms/payu"
-      jwksUri: https://keycloak.payu.local/auth/realms/payu/protocol/openid-connect/certs
+    - issuer: "https://keycloak.payu.local/realms/payu"
+      jwksUri: https://keycloak.payu.local/realms/payu/protocol/openid-connect/certs
       forwardOriginalToken: true
       fromHeaders:
         - name: Authorization

@@ -2,7 +2,7 @@
 # This file enables systemd management of the gateway-service container
 
 [Container]
-Image=registry.payu.internal/payu/gateway-service:latest
+Image=registry.payu.fajjjar.my.id/payu/gateway-service:latest
 ContainerName=payu-gateway-service
 AutoUpdate=registry
 Network=payu-network

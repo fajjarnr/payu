@@ -27,7 +27,7 @@ data:
             annotations:
               summary: "Monthly budget exceeded"
               description: "Estimated monthly cost (${{ $value | humanize }}) has exceeded the budget of $15,000"
-              runbook: "https://docs.payu.internal/runbooks/budget-exceeded"
+              runbook: "https://docs.payu.fajjjar.my.id/runbooks/budget-exceeded"
 
           # Budget warning at 80%
           - alert: BudgetWarning80
@@ -136,7 +136,7 @@ data:
             annotations:
               summary: "Idle resources detected"
               description: "More than 10 CPU cores are allocated but not used. Consider scaling down."
-              runbook: "https://docs.payu.internal/runbooks/idle-resources"
+              runbook: "https://docs.payu.fajjjar.my.id/runbooks/idle-resources"
 
       - name: payu_forecast_alerts
         interval: 6h
@@ -169,7 +169,7 @@ data:
             annotations:
               summary: "Budget will be exhausted in less than 7 days"
               description: "At current burn rate, the monthly budget will be exhausted in {{ $value | humanize }} days"
-              runbook: "https://docs.payu.internal/runbooks/budget-exhaustion"
+              runbook: "https://docs.payu.fajjjar.my.id/runbooks/budget-exhaustion"
 ---
 apiVersion: v1
 kind: Secret

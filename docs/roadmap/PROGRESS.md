@@ -8,15 +8,15 @@
 
 ## 🏁 Current Status Snapshot
 
-| Attribute | Value |
-| :--- | :--- |
-| **Last Status Update** | February 25, 2026 |
+| Attribute                | Value                    |
+| :----------------------- | :----------------------- |
+| **Last Status Update**   | February 25, 2026        |
 | **Production Readiness** | 99% (229/232 bugs fixed) |
-| **OpenShift Tag** | `v1.4.0` (in-progress) |
-| **Namespace** | `payu-dev` |
-| **Total Pods** | 36/36 running |
-| **Services Deployed** | 22/22 |
-| **E2E Tests** | 399/399 passing |
+| **OpenShift Tag**        | `v1.4.0` (in-progress)   |
+| **Namespace**            | `payu-dev`               |
+| **Total Pods**           | 36/36 running            |
+| **Services Deployed**    | 22/22                    |
+| **E2E Tests**            | 399/399 passing          |
 
 > ✅ **Code Review Complete (Feb 24-25)**: 229 of ~232 bugs fixed (~99% resolution rate).
 > **0 open bugs**. 3 intentionally skipped (low impact, future consideration).
@@ -26,39 +26,39 @@
 
 ## 🎯 Platform Maturity Scorecard
 
-| Category | Weight | Infra/Deploy Score | Notes |
-| :--- | :--- | :--- | :--- |
-| **Backend Services** | 25% | 22/22 deployed | ✅ All bugs fixed, biller-simulator added |
-| **Shared Libraries** | 10% | 7/7 starters | BUG-BE-091 skip (rate limit burst — acceptable) |
-| **Frontend Web-App** | 15% | Deployed & running | ✅ All cross-service issues resolved |
-| **Frontend Mobile** | 5% | Expo setup only | Deferred |
-| **Testing** | 15% | 399/399 E2E pass | ✅ Auth test gaps closed (useSilentRefresh) |
-| **Security** | 10% | JWT + OIDC active | ✅ BUG-BE-001 fixed (nimbus-jose-jwt) |
-| **Infrastructure** | 10% | OpenShift HA | HPA + PDB for all critical services |
+| Category             | Weight | Infra/Deploy Score | Notes                                           |
+| :------------------- | :----- | :----------------- | :---------------------------------------------- |
+| **Backend Services** | 25%    | 22/22 deployed     | ✅ All bugs fixed, biller-simulator added       |
+| **Shared Libraries** | 10%    | 7/7 starters       | BUG-BE-091 skip (rate limit burst — acceptable) |
+| **Frontend Web-App** | 15%    | Deployed & running | ✅ All cross-service issues resolved            |
+| **Frontend Mobile**  | 5%     | Expo setup only    | Deferred                                        |
+| **Testing**          | 15%    | 399/399 E2E pass   | ✅ Auth test gaps closed (useSilentRefresh)     |
+| **Security**         | 10%    | JWT + OIDC active  | ✅ BUG-BE-001 fixed (nimbus-jose-jwt)           |
+| **Infrastructure**   | 10%    | OpenShift HA       | HPA + PDB for all critical services             |
 
 ---
 
 ## 📈 DORA Metrics (Current Target)
 
-| Metric | Target | Current | Alignment |
-| :--- | :--- | :--- | :--- |
-| **Deployment Frequency** | ≥ 1/day | Multiple/day (CI) | 🟢 **Elite** |
-| **Lead Time for Changes** | < 4 hours | ~30 mins | 🟢 **Elite** |
-| **Mean Time to Recovery** | < 30 mins | ~15 mins | 🟢 **Elite** |
-| **Change Failure Rate** | < 10% | ~8% | 🟢 **Elite** |
+| Metric                    | Target    | Current           | Alignment    |
+| :------------------------ | :-------- | :---------------- | :----------- |
+| **Deployment Frequency**  | ≥ 1/day   | Multiple/day (CI) | 🟢 **Elite** |
+| **Lead Time for Changes** | < 4 hours | ~30 mins          | 🟢 **Elite** |
+| **Mean Time to Recovery** | < 30 mins | ~15 mins          | 🟢 **Elite** |
+| **Change Failure Rate**   | < 10%     | ~8%               | 🟢 **Elite** |
 
 ---
 
 ## 🏗️ Architectural Compliance
 
-| Standard | Status | Detail |
-| :--- | :--- | :--- |
-| **Hexagonal Architecture** | ✅ 19/19 services | All Java/Quarkus services |
-| **Event-First** | ✅ Active | `outbox-starter`, `events-starter`, `saga-starter` |
-| **ArchUnit Governance** | ✅ 18/19 | 1 service exempt with documented reason |
-| **Zero Trust** | ✅ Per-service | JWT + OIDC validation per endpoint |
-| **API-First** | ✅ 22/22 | OpenAPI spec per service |
-| **Doc-as-Code** | ✅ 13 ADRs | `/docs/adr/` |
+| Standard                   | Status            | Detail                                             |
+| :------------------------- | :---------------- | :------------------------------------------------- |
+| **Hexagonal Architecture** | ✅ 19/19 services | All Java/Quarkus services                          |
+| **Event-First**            | ✅ Active         | `outbox-starter`, `events-starter`, `saga-starter` |
+| **ArchUnit Governance**    | ✅ 18/19          | 1 service exempt with documented reason            |
+| **Zero Trust**             | ✅ Per-service    | JWT + OIDC validation per endpoint                 |
+| **API-First**              | ✅ 22/22          | OpenAPI spec per service                           |
+| **Doc-as-Code**            | ✅ 13 ADRs        | `/docs/adr/`                                       |
 
 ---
 
@@ -67,6 +67,7 @@
 ### v1.4.0 (In-Progress) — February 25, 2026
 
 **Code Review Remediation:**
+
 - ✅ **Production Readiness 99%** — Fixed 229 of ~232 bugs across all 22 microservices + frontend. 0 open, 3 intentionally skipped.
 - ✅ **Core Financial Ledger** — Stabilized `wallet-service` and `investment-service` by handling data type parsing exceptions (`UUID` vs `String`) and enforcing saga compensations (`Try-Catch Rollbacks`) to maintain idempotent data flow.
 - ✅ **Concurrency Resilience** — Replaced asynchronous Reactor `Mono.block()` with fully synchronous `RestTemplate` components targeting Tomcat thread starvation in auth processing. Hardened `ScheduledTransferScheduler` clearing runs with Redis distributed locks.
@@ -83,6 +84,7 @@
 ### v1.3.0 — February 23, 2026
 
 **Infrastructure:**
+
 - ✅ **22/22 Services Running** — All services deployed and healthy on OpenShift
 - ✅ **Auth Refresh Fixed** — Resolved 500 errors in refresh token endpoint (delegated to Keycloak)
 - ✅ **OIDC Config & JPA Fixed** — Updated `OIDC_ISSUER` across core services, fixed auto-commit DB issues in `wallet-service`
@@ -98,6 +100,7 @@
 ### v1.2.0 — February 20, 2026
 
 **Initial OpenShift Deployment:**
+
 - ✅ **OpenShift Deployed** — 22 services + web-app on OCP 4.20+ (`payu-dev` namespace)
 - ✅ **Infrastructure via Operators** — Crunchy PGO, AMQ Streams (KRaft), DataGrid, RHBK, Vault, cert-manager
 - ✅ **Kustomize IaC** — Complete manifests (`operators/` + `infra/` + `overlays/`) for reproducible deployments
@@ -115,18 +118,18 @@
 
 > Previously tracked as P0-P3 blockers, all resolved prior to Feb 20 deployment.
 
-| # | Item | Resolution |
-| :--- | :--- | :--- |
-| 1 | Gateway JWT Validation (BUG-BE-001) | ✅ Done — Fixed with `nimbus-jose-jwt` |
-| 2 | Auth in-memory state | ✅ Done — Fully moved to Redis |
-| 3 | Transaction reference number collision | ✅ Done — Migrated to UUID generation |
-| 4 | Wallet cache invalidation | ✅ Done — Exhaustive key eviction applied |
-| 5 | HPA + PDB enabled | ✅ Done — All 22 services |
-| 6 | Keycloak realm configured | ✅ Done — `payu` realm live |
-| 7 | E2E test suite | ✅ Done — 399/399 passing |
-| 8 | TLS certificates | ✅ Done — cert-manager + Let's Encrypt |
-| 9 | Image registry | ✅ Done — All images pushed `v1.3.0` |
-| 10–19 | Infrastructure (PGO, KRaft, DataGrid, etc.) | ✅ Done — All operators running |
+| #     | Item                                        | Resolution                                |
+| :---- | :------------------------------------------ | :---------------------------------------- |
+| 1     | Gateway JWT Validation (BUG-BE-001)         | ✅ Done — Fixed with `nimbus-jose-jwt`    |
+| 2     | Auth in-memory state                        | ✅ Done — Fully moved to Redis            |
+| 3     | Transaction reference number collision      | ✅ Done — Migrated to UUID generation     |
+| 4     | Wallet cache invalidation                   | ✅ Done — Exhaustive key eviction applied |
+| 5     | HPA + PDB enabled                           | ✅ Done — All 22 services                 |
+| 6     | Keycloak realm configured                   | ✅ Done — `payu` realm live               |
+| 7     | E2E test suite                              | ✅ Done — 399/399 passing                 |
+| 8     | TLS certificates                            | ✅ Done — cert-manager + Let's Encrypt    |
+| 9     | Image registry                              | ✅ Done — All images pushed `v1.3.0`      |
+| 10–19 | Infrastructure (PGO, KRaft, DataGrid, etc.) | ✅ Done — All operators running           |
 
 > Items 1-4 were marked complete but code review (Feb 24) found underlying issues still present.
 > They have been re-opened and documented in `TODOS.md`.
@@ -152,11 +155,11 @@ Data Layer:
 
 ## 📊 Test Coverage Summary
 
-| Layer | Framework | Status |
-| :--- | :--- | :--- |
-| E2E | Playwright | ✅ 399/399 |
-| Performance | Gatling | ✅ Configured |
-| Contract | Pact | ✅ Configured |
-| Integration | Testcontainers | ✅ Per service |
-| Architecture | ArchUnit | ✅ 18/19 services |
-| Unit | JUnit 5 + Mockito | Varies (see TODOS for coverage gaps) |
+| Layer        | Framework         | Status                               |
+| :----------- | :---------------- | :----------------------------------- |
+| E2E          | Playwright        | ✅ 399/399                           |
+| Performance  | Gatling           | ✅ Configured                        |
+| Contract     | Pact              | ✅ Configured                        |
+| Integration  | Testcontainers    | ✅ Per service                       |
+| Architecture | ArchUnit          | ✅ 18/19 services                    |
+| Unit         | JUnit 5 + Mockito | Varies (see TODOS for coverage gaps) |

@@ -71,7 +71,7 @@ data:
             severity: 'critical'
             description: '{{ .GroupLabels.alertname }}'
             client: 'PayU Platform'
-            client_url: 'https://monitoring.payu.internal'
+            client_url: 'https://monitoring.payu.fajjjar.my.id'
             details:
               firing: '{{ template "pagerduty.default.instances" .Alerts.Firing }}'
               resolved: '{{ template "pagerduty.default.instances" .Alerts.Resolved }}'
@@ -84,7 +84,7 @@ data:
             severity: 'error'
             description: 'SLO Breach: {{ .GroupLabels.alertname }}'
             client: 'PayU Platform'
-            client_url: 'https://monitoring.payu.internal'
+            client_url: 'https://monitoring.payu.fajjjar.my.id'
 
       - name: 'pagerduty-platform'
         pagerduty_configs:

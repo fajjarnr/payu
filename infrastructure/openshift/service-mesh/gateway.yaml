@@ -355,8 +355,8 @@ spec:
       when:
         - key: request.auth.claims[iss]
           values:
-            - https://sso.payu.fajjjar.my.id/auth/realms/payu
-            - https://keycloak.payu.local/auth/realms/payu
+            - https://sso.payu.fajjjar.my.id/realms/payu
+            - https://keycloak.payu.local/realms/payu
 ---
 # AuthorizationPolicy for Partner API
 apiVersion: security.istio.io/v1beta1
@@ -448,7 +448,7 @@ spec:
     matchLabels:
       app: istio-ingressgateway
   jwtRules:
-    - issuer: "https://keycloak.payu.local/auth/realms/payu"
+    - issuer: "https://keycloak.payu.local/realms/payu"
       jwks: |
         {
           "keys": [

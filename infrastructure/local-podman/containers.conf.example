@@ -56,7 +56,7 @@ signature_policy = "/etc/containers/policy.json"
 namespace = ""
 insecure_registries = []
 registries = [
-    "registry.payu.internal",
+    "registry.payu.fajjjar.my.id",
     "docker.io",
     "registry.access.redhat.com",
     "registry.redhat.io",
@@ -78,13 +78,13 @@ compatibility_layer = true
 # Registry mirror configuration for Red Hat
 [engine.registry_mirrors."https://registry.access.redhat.com"]
 endpoint = [
-    "https://registry.payu.internal/redhat",
+    "https://registry.payu.fajjjar.my.id/redhat",
     "https://registry-proxy.redhat.com",
 ]
 
 [engine.registry_mirrors."https://registry.redhat.io"]
 endpoint = [
-    "https://registry.payu.internal/redhat",
+    "https://registry.payu.fajjjar.my.id/redhat",
     "https://registry-proxy.redhat.com",
 ]
 
@@ -313,7 +313,7 @@ signature_policy = "/etc/containers/policy.json"
 additionalimagestores = []
 insecure_registries = []
 registries = [
-    "registry.payu.internal",
+    "registry.payu.fajjjar.my.id",
     "docker.io",
     "registry.access.redhat.com",
     "registry.redhat.io",

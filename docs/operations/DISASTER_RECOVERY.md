@@ -39,13 +39,13 @@ This Disaster Recovery (DR) Runbook provides comprehensive procedures for recove
 
 ### DR Scenarios Covered
 
-| Scenario | Impact | Recovery Method | Target RTO |
-|----------|--------|-----------------|------------|
-| PostgreSQL Primary Failure | Data layer down | Patroni failover | 2 min |
-| Kafka Broker Failure | Event streaming down | KRaft auto-recovery | 5 min |
-| Vault Unseal Issue | Secret access blocked | Auto-unseal / manual | 10 min |
-| Complete Namespace Loss | Full platform down | Backup restore | 30 min |
-| Multi-AZ Failure | Regional outage | DR region failover | 15 min |
+| Scenario                   | Impact                | Recovery Method      | Target RTO |
+| -------------------------- | --------------------- | -------------------- | ---------- |
+| PostgreSQL Primary Failure | Data layer down       | Patroni failover     | 2 min      |
+| Kafka Broker Failure       | Event streaming down  | KRaft auto-recovery  | 5 min      |
+| Vault Unseal Issue         | Secret access blocked | Auto-unseal / manual | 10 min     |
+| Complete Namespace Loss    | Full platform down    | Backup restore       | 30 min     |
+| Multi-AZ Failure           | Regional outage       | DR region failover   | 15 min     |
 
 ---
 
@@ -58,24 +58,24 @@ This Disaster Recovery (DR) Runbook provides comprehensive procedures for recove
 
 ### Per-Component RTO/RPO
 
-| Component | RTO | RPO | Data Loss Window | Notes |
-|-----------|-----|-----|------------------|-------|
-| **PostgreSQL (Critical DBs)** | 2 min | 0 min | None | Patroni synchronous replication |
-| **PostgreSQL (Standard DBs)** | 5 min | < 1 min | < 1 min | Asynchronous replication acceptable |
-| **Kafka Topics** | 5 min | < 5 min | < 5 min | KRaft metadata + topic replication |
-| **Vault Secrets** | 10 min | 0 min | None | Raft storage + auto-unseal |
-| **DataGrid Cache** | 3 min | 5 min | Session data only | Cache can be rebuilt |
-| **Keycloak** | 5 min | 0 min | None | DB-backed state |
-| **Application Services** | 10 min | N/A | N/A | Stateless, redeploy from images |
+| Component                     | RTO    | RPO     | Data Loss Window  | Notes                               |
+| ----------------------------- | ------ | ------- | ----------------- | ----------------------------------- |
+| **PostgreSQL (Critical DBs)** | 2 min  | 0 min   | None              | Patroni synchronous replication     |
+| **PostgreSQL (Standard DBs)** | 5 min  | < 1 min | < 1 min           | Asynchronous replication acceptable |
+| **Kafka Topics**              | 5 min  | < 5 min | < 5 min           | KRaft metadata + topic replication  |
+| **Vault Secrets**             | 10 min | 0 min   | None              | Raft storage + auto-unseal          |
+| **DataGrid Cache**            | 3 min  | 5 min   | Session data only | Cache can be rebuilt                |
+| **Keycloak**                  | 5 min  | 0 min   | None              | DB-backed state                     |
+| **Application Services**      | 10 min | N/A     | N/A               | Stateless, redeploy from images     |
 
 ### Service-Level Recovery Priorities
 
-| Priority | Services | RTO | Business Impact |
-|----------|----------|-----|-----------------|
-| **P0 - Critical** | auth-service, transaction-service, wallet-service, account-service | 5 min | Complete service halt |
-| **P1 - High** | gateway-service, notification-service, compliance-service | 10 min | Degraded functionality |
-| **P2 - Medium** | billing-service, investment-service, lending-service | 15 min | Limited feature impact |
-| **P3 - Low** | analytics-service, backoffice-service, cms-service | 30 min | Reporting/admin only |
+| Priority          | Services                                                           | RTO    | Business Impact        |
+| ----------------- | ------------------------------------------------------------------ | ------ | ---------------------- |
+| **P0 - Critical** | auth-service, transaction-service, wallet-service, account-service | 5 min  | Complete service halt  |
+| **P1 - High**     | gateway-service, notification-service, compliance-service          | 10 min | Degraded functionality |
+| **P2 - Medium**   | billing-service, investment-service, lending-service               | 15 min | Limited feature impact |
+| **P3 - Low**      | analytics-service, backoffice-service, cms-service                 | 30 min | Reporting/admin only   |
 
 ---
 
@@ -119,13 +119,13 @@ This Disaster Recovery (DR) Runbook provides comprehensive procedures for recove
 
 ### Backup Architecture
 
-| Component | Backup Method | Frequency | Storage Location |
-|-----------|--------------|-----------|------------------|
-| PostgreSQL | pgBackRest (full) + WAL archiving | Continuous | S3-compatible object storage |
-| PostgreSQL | pg_dump (logical) | Daily | S3 + offsite |
-| Kafka | Topic replication + MM2 | Continuous | Secondary cluster |
-| Vault | Raft snapshot | Hourly | S3 + encrypted volume |
-| Config/Secrets | GitOps + VSO | On change | Git + Vault |
+| Component      | Backup Method                     | Frequency  | Storage Location             |
+| -------------- | --------------------------------- | ---------- | ---------------------------- |
+| PostgreSQL     | pgBackRest (full) + WAL archiving | Continuous | S3-compatible object storage |
+| PostgreSQL     | pg_dump (logical)                 | Daily      | S3 + offsite                 |
+| Kafka          | Topic replication + MM2           | Continuous | Secondary cluster            |
+| Vault          | Raft snapshot                     | Hourly     | S3 + encrypted volume        |
+| Config/Secrets | GitOps + VSO                      | On change  | Git + Vault                  |
 
 ---
 
@@ -133,12 +133,12 @@ This Disaster Recovery (DR) Runbook provides comprehensive procedures for recove
 
 ### Incident Classification
 
-| Severity | Criteria | Response Time | Escalation |
-|----------|----------|---------------|------------|
-| **P0 - Critical** | Complete platform outage; all services unavailable; data loss confirmed | 5 minutes | CTO, VP Engineering |
-| **P1 - High** | Core banking services down (auth, transaction, wallet); partial data unavailability | 15 minutes | Engineering Manager |
-| **P2 - Medium** | Single component failure; non-critical services affected | 30 minutes | Tech Lead |
-| **P3 - Low** | Degraded performance; monitoring/alerting issues | 2 hours | DevOps Team |
+| Severity          | Criteria                                                                            | Response Time | Escalation          |
+| ----------------- | ----------------------------------------------------------------------------------- | ------------- | ------------------- |
+| **P0 - Critical** | Complete platform outage; all services unavailable; data loss confirmed             | 5 minutes     | CTO, VP Engineering |
+| **P1 - High**     | Core banking services down (auth, transaction, wallet); partial data unavailability | 15 minutes    | Engineering Manager |
+| **P2 - Medium**   | Single component failure; non-critical services affected                            | 30 minutes    | Tech Lead           |
+| **P3 - Low**      | Degraded performance; monitoring/alerting issues                                    | 2 hours       | DevOps Team         |
 
 ### Response Workflow
 
@@ -208,6 +208,7 @@ oc get pvc -n payu-dev
 #### Overview
 
 PayU uses Crunchy PostgreSQL Operator (PGO) with Patroni for HA. The cluster consists of:
+
 - **Primary**: Read-write instance
 - **Standby**: Hot standby for failover
 - **pgBouncer**: Connection pooling
@@ -216,6 +217,7 @@ PayU uses Crunchy PostgreSQL Operator (PGO) with Patroni for HA. The cluster con
 #### Scenario 1: Primary Database Failure
 
 **Symptoms**:
+
 - Applications report connection failures
 - `oc get pods` shows postgres-primary pod in Error/CrashLoopBackOff
 - Patroni failover not automatic
@@ -271,6 +273,7 @@ fi
 #### Scenario 2: Complete Database Restore from pgBackRest
 
 **When to use**:
+
 - Data corruption across all databases
 - Need to restore to specific point in time
 - Complete cluster rebuild
@@ -402,6 +405,7 @@ oc exec -n payu-dev payu-postgres-repo-host-0 -- pgbackrest info
 #### Overview
 
 PayU uses AMQ Streams (Apache Kafka 4.0) with KRaft mode (no ZooKeeper):
+
 - **KafkaNodePool (controller)**: 1 replica (metadata quorum)
 - **KafkaNodePool (broker)**: 1 replica (data handling)
 - **Entity Operator**: Topic and user management
@@ -410,6 +414,7 @@ PayU uses AMQ Streams (Apache Kafka 4.0) with KRaft mode (no ZooKeeper):
 #### Scenario 1: Kafka Broker Failure
 
 **Symptoms**:
+
 - Services report Kafka connection errors
 - `oc get pods` shows kafka-broker pod failing
 - Event publishing/consumption stopped
@@ -545,6 +550,7 @@ oc exec -n payu-dev kafka-controller-1 -- cat /tmp/strimzi.properties | grep pro
 #### Overview
 
 PayU uses HashiCorp Vault with Vault Secrets Operator (VSO):
+
 - **Vault**: Dev mode (single instance) - production should use HA Raft
 - **VSO**: Syncs secrets to Kubernetes secrets
 - **Auth**: Kubernetes auth method
@@ -553,6 +559,7 @@ PayU uses HashiCorp Vault with Vault Secrets Operator (VSO):
 #### Scenario 1: Vault Unseal/Availability Issues
 
 **Symptoms**:
+
 - Pods report missing secrets
 - VSO cannot sync secrets
 - Vault pod in CrashLoopBackOff
@@ -677,6 +684,7 @@ echo "Secret sync recovery complete."
 #### Overview
 
 PayU uses Red Hat Data Grid (Infinispan) for caching:
+
 - **Mode**: DataGrid (distributed)
 - **Protocol**: RESP (Redis-compatible)
 - **Replicas**: 1 (dev), 3+ (prod)
@@ -738,6 +746,7 @@ echo "DataGrid recovery complete."
 #### Overview
 
 PayU uses Red Hat Build of Keycloak (RHBK 26.1):
+
 - **Database**: PostgreSQL (payu-keycloak db)
 - **Realm**: payu
 - **Clients**: web-app, mobile-app, api-gateway, admin-cli
@@ -794,12 +803,12 @@ echo "Keycloak recovery complete."
 
 ### Gradual Degradation Response
 
-| Degradation Level | Symptoms | Response |
-|-------------------|----------|----------|
-| **Level 1** | Latency > 500ms, Error rate < 1% | Monitor, investigate root cause |
-| **Level 2** | Latency > 1s, Error rate 1-5% | Enable circuit breakers, scale up |
-| **Level 3** | Latency > 5s, Error rate 5-20% | Partial outage, failover to standby |
-| **Level 4** | Error rate > 20% | Full DR activation |
+| Degradation Level | Symptoms                         | Response                            |
+| ----------------- | -------------------------------- | ----------------------------------- |
+| **Level 1**       | Latency > 500ms, Error rate < 1% | Monitor, investigate root cause     |
+| **Level 2**       | Latency > 1s, Error rate 1-5%    | Enable circuit breakers, scale up   |
+| **Level 3**       | Latency > 5s, Error rate 5-20%   | Partial outage, failover to standby |
+| **Level 4**       | Error rate > 20%                 | Full DR activation                  |
 
 ### Circuit Breaker Activation
 
@@ -821,11 +830,13 @@ oc patch route <route-name> -n payu-dev -p '{"spec":{"to":{"name":"fallback-serv
 ### Scenario: Complete Namespace Deletion Recovery
 
 **When to use**:
+
 - Entire namespace accidentally deleted
 - Complete cluster rebuild
 - DR region activation
 
 **Prerequisites**:
+
 - OpenShift cluster access
 - Backup storage accessible (S3)
 - Container images available in registry
@@ -931,14 +942,14 @@ echo ""
 
 ### DR Test Schedule
 
-| Test Type | Frequency | Scope | Owner |
-|-----------|-----------|-------|-------|
-| Backup Verification | Daily | Automated | CI/CD |
-| PostgreSQL Failover | Weekly | Manual | DBA |
-| Kafka Broker Recovery | Weekly | Manual | Platform Team |
-| Vault Rotation | Monthly | Manual | Security Team |
-| Full DR Simulation | Quarterly | Scheduled | DR Team |
-| Multi-Region Failover | Bi-annually | Scheduled | SRE Team |
+| Test Type             | Frequency   | Scope     | Owner         |
+| --------------------- | ----------- | --------- | ------------- |
+| Backup Verification   | Daily       | Automated | CI/CD         |
+| PostgreSQL Failover   | Weekly      | Manual    | DBA           |
+| Kafka Broker Recovery | Weekly      | Manual    | Platform Team |
+| Vault Rotation        | Monthly     | Manual    | Security Team |
+| Full DR Simulation    | Quarterly   | Scheduled | DR Team       |
+| Multi-Region Failover | Bi-annually | Scheduled | SRE Team      |
 
 ### Running DR Tests
 
@@ -962,25 +973,30 @@ echo ""
 ## DR Test Report - [Date]
 
 ### Test Information
+
 - **Test Type**: [PostgreSQL Failover / Kafka Recovery / Full Restore]
 - **Executed By**: [Name]
 - **Start Time**: [Timestamp]
 - **End Time**: [Timestamp]
 
 ### Test Results
-| Component | Expected RTO | Actual RTO | Status |
-|-----------|--------------|------------|--------|
-| PostgreSQL | 2 min | [X] min | [PASS/FAIL] |
-| Kafka | 5 min | [X] min | [PASS/FAIL] |
-| Services | 10 min | [X] min | [PASS/FAIL] |
+
+| Component  | Expected RTO | Actual RTO | Status      |
+| ---------- | ------------ | ---------- | ----------- |
+| PostgreSQL | 2 min        | [X] min    | [PASS/FAIL] |
+| Kafka      | 5 min        | [X] min    | [PASS/FAIL] |
+| Services   | 10 min       | [X] min    | [PASS/FAIL] |
 
 ### Issues Encountered
+
 - [List any issues]
 
 ### Lessons Learned
+
 - [Document improvements needed]
 
 ### Action Items
+
 - [ ] [Action item 1]
 - [ ] [Action item 2]
 ```
@@ -991,19 +1007,19 @@ echo ""
 
 ### On-Call Escalation
 
-| Level | Role | Contact | Response Time |
-|-------|------|---------|---------------|
-| **L1** | Platform Engineer | On-call rotation | 5 minutes |
-| **L2** | Senior Platform Engineer | Secondary on-call | 15 minutes |
-| **L3** | Engineering Manager | EM Contact | 30 minutes |
-| **L4** | VP Engineering / CTO | Executive contact | 1 hour |
+| Level  | Role                     | Contact           | Response Time |
+| ------ | ------------------------ | ----------------- | ------------- |
+| **L1** | Platform Engineer        | On-call rotation  | 5 minutes     |
+| **L2** | Senior Platform Engineer | Secondary on-call | 15 minutes    |
+| **L3** | Engineering Manager      | EM Contact        | 30 minutes    |
+| **L4** | VP Engineering / CTO     | Executive contact | 1 hour        |
 
 ### External Escalation
 
-| Service | Provider | Support Channel | SLA |
-|---------|----------|-----------------|-----|
-| OpenShift | Red Hat | Customer Portal | 1 hour |
-| PostgreSQL | Crunchy Data | Support ticket | 4 hours |
+| Service              | Provider      | Support Channel    | SLA        |
+| -------------------- | ------------- | ------------------ | ---------- |
+| OpenShift            | Red Hat       | Customer Portal    | 1 hour     |
+| PostgreSQL           | Crunchy Data  | Support ticket     | 4 hours    |
 | Cloud Infrastructure | AWS/Azure/GCP | Enterprise support | 15 minutes |
 
 ---
@@ -1048,26 +1064,26 @@ oc get routes -n payu-dev
 
 ### C. DR Scripts Index
 
-| Script | Purpose | Location |
-|--------|---------|----------|
-| `dr-postgres-primary-failure.sh` | PostgreSQL primary failover | `scripts/` |
-| `dr-postgres-full-restore.sh` | PostgreSQL complete restore | `scripts/` |
-| `dr-kafka-broker-failure.sh` | Kafka broker recovery | `scripts/` |
-| `dr-vault-recovery.sh` | Vault unseal/rotation | `scripts/` |
-| `dr-vso-sync-recovery.sh` | VSO secret sync recovery | `scripts/` |
-| `dr-datagrid-recovery.sh` | DataGrid recovery | `scripts/` |
-| `dr-keycloak-recovery.sh` | Keycloak recovery | `scripts/` |
-| `dr-complete-platform-restore.sh` | Full platform restore | `scripts/` |
-| `dr-test-postgres-failover.sh` | Test PostgreSQL HA | `scripts/` |
-| `dr-test-kafka-failover.sh` | Test Kafka recovery | `scripts/` |
-| `dr-test-complete-restore.sh` | Test full restore | `scripts/` |
+| Script                            | Purpose                     | Location   |
+| --------------------------------- | --------------------------- | ---------- |
+| `dr-postgres-primary-failure.sh`  | PostgreSQL primary failover | `scripts/` |
+| `dr-postgres-full-restore.sh`     | PostgreSQL complete restore | `scripts/` |
+| `dr-kafka-broker-failure.sh`      | Kafka broker recovery       | `scripts/` |
+| `dr-vault-recovery.sh`            | Vault unseal/rotation       | `scripts/` |
+| `dr-vso-sync-recovery.sh`         | VSO secret sync recovery    | `scripts/` |
+| `dr-datagrid-recovery.sh`         | DataGrid recovery           | `scripts/` |
+| `dr-keycloak-recovery.sh`         | Keycloak recovery           | `scripts/` |
+| `dr-complete-platform-restore.sh` | Full platform restore       | `scripts/` |
+| `dr-test-postgres-failover.sh`    | Test PostgreSQL HA          | `scripts/` |
+| `dr-test-kafka-failover.sh`       | Test Kafka recovery         | `scripts/` |
+| `dr-test-complete-restore.sh`     | Test full restore           | `scripts/` |
 
 ### D. Document History
 
-| Version | Date | Changes | Author |
-|---------|------|---------|--------|
-| 1.0 | 2025-01-22 | Initial DR plan | Platform Team |
-| 2.0 | 2026-02-20 | OpenShift-specific procedures, DR test scripts | Platform Team |
+| Version | Date       | Changes                                        | Author        |
+| ------- | ---------- | ---------------------------------------------- | ------------- |
+| 1.0     | 2025-01-22 | Initial DR plan                                | Platform Team |
+| 2.0     | 2026-02-20 | OpenShift-specific procedures, DR test scripts | Platform Team |
 
 ---
 
