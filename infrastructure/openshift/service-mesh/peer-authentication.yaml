@@ -20,7 +20,7 @@ spec:
       # Apply to all namespaces in the mesh
       app: istio-ingressgateway
   mtls:
-    mode: STRICT  # Enforce mTLS for all service-to-service communication
+    mode: STRICT # Enforce mTLS for all service-to-service communication
 ---
 # Namespace-wide STRICT mTLS for Production
 apiVersion: security.istio.io/v1beta1
@@ -34,7 +34,7 @@ spec:
       # Apply to all pods in the namespace
       app.kubernetes.io/part-of: payu
   mtls:
-    mode: STRICT  # Only allow mTLS connections
+    mode: STRICT # Only allow mTLS connections
 ---
 # Namespace-wide PERMISSIVE mTLS for Development
 apiVersion: security.istio.io/v1beta1
@@ -47,7 +47,7 @@ spec:
     matchLabels:
       app.kubernetes.io/part-of: payu
   mtls:
-    mode: PERMISSIVE  # Allow both mTLS and plain text (for debugging)
+    mode: PERMISSIVE # Allow both mTLS and plain text (for debugging)
 ---
 # Namespace-wide PERMISSIVE mTLS for SIT
 apiVersion: security.istio.io/v1beta1
@@ -252,7 +252,7 @@ spec:
     matchLabels:
       app: bi-fast-simulator
   mtls:
-    mode: DISABLE  # External simulators don't support mTLS
+    mode: DISABLE # External simulators don't support mTLS
 ---
 apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication

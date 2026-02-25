@@ -180,7 +180,7 @@ data:
     g, auditors, role:readonly
 
   policy.default: role:''
-  scopes: '[groups,cn]'
+  scopes: "[groups,cn]"
 ---
 apiVersion: v1
 kind: Secret
@@ -192,7 +192,7 @@ metadata:
     type: argocd-secret
 stringData:
   # Admin password (bcrypt hash of "admin" - change this!)
-  admin.password: '$2a$10$do6.sI1x.pUYx1XiQMj0qexX9c0R8nIX0v/v8jG0.3QK9yGYQUcVS'
+  admin.password: "$2a$10$do6.sI1x.pUYx1XiQMj0qexX9c0R8nIX0v/v8jG0.3QK9yGYQUcVS"
   # OIDC client secret
-  oidc.clientSecret: 'your-client-secret-here'
+  oidc.clientSecret: "your-client-secret-here"
 type: Opaque

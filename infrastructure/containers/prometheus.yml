@@ -2,155 +2,155 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'payu-local'
-    environment: 'development'
+    cluster: "payu-local"
+    environment: "development"
 scrape_configs:
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
   # Core Banking Services (Spring Boot)
-  - job_name: 'account-service'
-    metrics_path: '/actuator/prometheus'
+  - job_name: "account-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['account-service:8001']
+      - targets: ["account-service:8001"]
         labels:
-          service: 'account-service'
-          tier: 'core'
-  - job_name: 'auth-service'
-    metrics_path: '/actuator/prometheus'
+          service: "account-service"
+          tier: "core"
+  - job_name: "auth-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['auth-service:8002']
+      - targets: ["auth-service:8002"]
         labels:
-          service: 'auth-service'
-          tier: 'core'
-  - job_name: 'transaction-service'
-    metrics_path: '/actuator/prometheus'
+          service: "auth-service"
+          tier: "core"
+  - job_name: "transaction-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['transaction-service:8003']
+      - targets: ["transaction-service:8003"]
         labels:
-          service: 'transaction-service'
-          tier: 'core'
-  - job_name: 'wallet-service'
-    metrics_path: '/actuator/prometheus'
+          service: "transaction-service"
+          tier: "core"
+  - job_name: "wallet-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['wallet-service:8004']
+      - targets: ["wallet-service:8004"]
         labels:
-          service: 'wallet-service'
-          tier: 'core'
+          service: "wallet-service"
+          tier: "core"
   # Supporting Services (Quarkus)
-  - job_name: 'billing-service'
-    metrics_path: '/q/metrics'
+  - job_name: "billing-service"
+    metrics_path: "/q/metrics"
     static_configs:
-      - targets: ['billing-service:8080']
+      - targets: ["billing-service:8080"]
         labels:
-          service: 'billing-service'
-          tier: 'supporting'
-  - job_name: 'notification-service'
-    metrics_path: '/q/metrics'
+          service: "billing-service"
+          tier: "supporting"
+  - job_name: "notification-service"
+    metrics_path: "/q/metrics"
     static_configs:
-      - targets: ['notification-service:8080']
+      - targets: ["notification-service:8080"]
         labels:
-          service: 'notification-service'
-          tier: 'supporting'
-  - job_name: 'gateway-service'
-    metrics_path: '/q/metrics'
+          service: "notification-service"
+          tier: "supporting"
+  - job_name: "gateway-service"
+    metrics_path: "/q/metrics"
     static_configs:
-      - targets: ['gateway-service:8080']
+      - targets: ["gateway-service:8080"]
         labels:
-          service: 'gateway-service'
-          tier: 'gateway'
+          service: "gateway-service"
+          tier: "gateway"
   # ML/Analytics Services (FastAPI)
-  - job_name: 'kyc-service'
-    metrics_path: '/metrics'
+  - job_name: "kyc-service"
+    metrics_path: "/metrics"
     static_configs:
-      - targets: ['kyc-service:8007']
+      - targets: ["kyc-service:8007"]
         labels:
-          service: 'kyc-service'
-          tier: 'ml'
-  - job_name: 'analytics-service'
-    metrics_path: '/metrics'
+          service: "kyc-service"
+          tier: "ml"
+  - job_name: "analytics-service"
+    metrics_path: "/metrics"
     static_configs:
-      - targets: ['analytics-service:8008']
+      - targets: ["analytics-service:8008"]
         labels:
-          service: 'analytics-service'
-          tier: 'ml'
+          service: "analytics-service"
+          tier: "ml"
   # Business & Operations Services
-  - job_name: 'investment-service'
-    metrics_path: '/actuator/prometheus'
+  - job_name: "investment-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['investment-service:8080']
+      - targets: ["investment-service:8080"]
         labels:
-          service: 'investment-service'
-          tier: 'business'
-  - job_name: 'lending-service'
-    metrics_path: '/actuator/prometheus'
+          service: "investment-service"
+          tier: "business"
+  - job_name: "lending-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['lending-service:8087']
+      - targets: ["lending-service:8087"]
         labels:
-          service: 'lending-service'
-          tier: 'business'
-  - job_name: 'backoffice-service'
-    metrics_path: '/q/metrics'
+          service: "lending-service"
+          tier: "business"
+  - job_name: "backoffice-service"
+    metrics_path: "/q/metrics"
     static_configs:
-      - targets: ['backoffice-service:8080']
+      - targets: ["backoffice-service:8080"]
         labels:
-          service: 'backoffice-service'
-          tier: 'operations'
-  - job_name: 'partner-service'
-    metrics_path: '/q/metrics'
+          service: "backoffice-service"
+          tier: "operations"
+  - job_name: "partner-service"
+    metrics_path: "/q/metrics"
     static_configs:
-      - targets: ['partner-service:8080']
+      - targets: ["partner-service:8080"]
         labels:
-          service: 'partner-service'
-          tier: 'operations'
-  - job_name: 'promotion-service'
-    metrics_path: '/q/metrics'
+          service: "partner-service"
+          tier: "operations"
+  - job_name: "promotion-service"
+    metrics_path: "/q/metrics"
     static_configs:
-      - targets: ['promotion-service:8080']
+      - targets: ["promotion-service:8080"]
         labels:
-          service: 'promotion-service'
-          tier: 'operations'
-  - job_name: 'support-service'
-    metrics_path: '/q/metrics'
+          service: "promotion-service"
+          tier: "operations"
+  - job_name: "support-service"
+    metrics_path: "/q/metrics"
     static_configs:
-      - targets: ['support-service:8080']
+      - targets: ["support-service:8080"]
         labels:
-          service: 'support-service'
-          tier: 'operations'
+          service: "support-service"
+          tier: "operations"
   # Infrastructure Components
-  - job_name: 'postgres'
+  - job_name: "postgres"
     static_configs:
-      - targets: ['postgres:5432']
+      - targets: ["postgres:5432"]
         labels:
-          service: 'postgres'
-          tier: 'data'
+          service: "postgres"
+          tier: "data"
     metrics_path: /metrics
-  - job_name: 'redis'
+  - job_name: "redis"
     static_configs:
-      - targets: ['redis:6379']
+      - targets: ["redis:6379"]
         labels:
-          service: 'redis'
-          tier: 'cache'
+          service: "redis"
+          tier: "cache"
     metrics_path: /metrics
-  - job_name: 'kafka'
+  - job_name: "kafka"
     static_configs:
-      - targets: ['kafka:29092']
+      - targets: ["kafka:29092"]
         labels:
-          service: 'kafka'
-          tier: 'messaging'
+          service: "kafka"
+          tier: "messaging"
     metrics_path: /metrics
   # Alertmanager
-  - job_name: 'alertmanager'
+  - job_name: "alertmanager"
     static_configs:
-      - targets: ['alertmanager:9093']
+      - targets: ["alertmanager:9093"]
         labels:
-          service: 'alertmanager'
-          tier: 'monitoring'
+          service: "alertmanager"
+          tier: "monitoring"
 # Alerting Configuration
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: ['alertmanager:9093']
+        - targets: ["alertmanager:9093"]
 # Rule Files
 rule_files:
-  - '/etc/prometheus/prometheus-alerts.yml'
+  - "/etc/prometheus/prometheus-alerts.yml"
