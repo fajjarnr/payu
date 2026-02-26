@@ -10,7 +10,7 @@
 
 | Attribute                | Value                    |
 | :----------------------- | :----------------------- |
-| **Last Status Update**   | February 25, 2026        |
+| **Last Status Update**   | February 26, 2026        |
 | **Production Readiness** | 99% (229/232 bugs fixed) |
 | **OpenShift Tag**        | `v1.4.0` (in-progress)   |
 | **Namespace**            | `payu-dev`               |
@@ -64,7 +64,13 @@
 
 ## 📦 Deployment Log
 
-### v1.4.0 (In-Progress) — February 25, 2026
+### v1.4.0 (In-Progress) — February 25-26, 2026
+
+**Epic Implementation (Feb 26):**
+
+- ✅ **E-01 — Core Banking Ledger** (3 stories, 13 SP) — True double-entry ledger with `JournalEntry`/`LedgerEntry` domain models, Chart of Accounts (18 PSAK-based categories, 22 seed accounts), GL Engine with balance sheet, income statement, and daily settlement endpoints. 51 unit tests.
+- ✅ **E-02 — Gateway Hardening** (5 stories, 11 SP) — Circuit breaker/retry with Resilience4j (`@CircuitBreaker`, `@Retry`, `@Bulkhead`), Redis-based sliding-window rate limiting, dynamic routing via config, request validation filter with body-size/SQL-injection/XSS checks, response PII masking filter for card/account/phone numbers.
+- ✅ **E-20 — Code Health & Tech Hygiene** (8 stories, 10 SP) — Gateway query-param forwarding via `UriInfo`, Kafka config namespace fix, `open-in-view: false` across 12 services, removed in-memory `ConcurrentHashMap` reservation map (multi-pod unsafe), removed dead `CloudEventPublisher`, deduplicated `InsufficientFundsException`, `WalletEntity.tenantId` builder fix, `archunit-starter` added to reactor + 6 service POMs.
 
 **Code Review Remediation:**
 

@@ -20,7 +20,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `WalletPersistenceAdapter` mappers for new `journalEntryId` and `coaCode` fields.
   - 51 unit tests passing (14 new tests for JournalEntry, JournalService, GeneralLedgerService).
 
+- **E-02 — Gateway Hardening (2026-02-26)**:
+  - **IMP-003 — Circuit Breaker & Retry** (3 SP): Resilience4j integration in `gateway-service` with `@CircuitBreaker`, `@Retry`, `@Bulkhead` annotations on proxy method. Configurable sliding-window (10 calls, 50% failure threshold, 30s wait), retry (3 attempts, 500ms delay), and bulkhead (20 concurrent, 500ms max wait). Fallback returns 503 Service Unavailable.
+  - **IMP-005 — Rate Limiting** (3 SP): Redis-based sliding-window rate limiter in `gateway-service`. `RateLimitFilter` with configurable limits per endpoint category (auth: 30/min, OTP: 5/min, default: 100/min). `RateLimitService` using Redis sorted sets for distributed rate tracking. Returns 429 with `Retry-After` header.
+  - **IMP-007 — Dynamic Routing** (1 SP): Configuration-driven route table via `application.yml` properties. `RouteConfig` bean loads `payu.gateway.routes` map with service-name → URL mappings. `ApiGatewayResource.proxy()` resolves target URL from config instead of hardcoded values.
+  - **IMP-008 — Request Validation** (2 SP): `RequestValidationFilter` JAX-RS filter with content-length limit (1MB default), SQL injection pattern detection, XSS/script-tag detection, null-byte detection. Rejects malicious requests with 400 Bad Request before reaching backend services.
+  - **IMP-009 — Response Masking** (2 SP): `ResponseMaskingFilter` JAX-RS filter that masks PII in response bodies — card numbers (`****-****-****-1234`), account numbers (last 4 visible), phone numbers (`+62****1234`). Configurable via `payu.gateway.masking.enabled` property.
+
+### Changed
+
+- **E-20 — Code Health & Tech Hygiene (2026-02-26)**:
+  - **IMP-058 — Gateway Query Param Forwarding**: Injected `UriInfo` into `ApiGatewayResource.proxy()` to capture and forward query parameters that were being silently dropped by JAX-RS `@Path("{path: .+}")`.
+  - **IMP-061 — Disable JPA open-in-view**: Added `spring.jpa.open-in-view: false` to 12 service `application.yml` files to prevent lazy-loading outside transactions (anti-pattern for production).
+  - **IMP-062 — Kafka Config Namespace Fix**: Moved top-level `kafka:` block under `spring:` namespace in `transaction-service/application.yml` — Spring Boot was silently ignoring the config.
+  - **IMP-063 — WalletEntity tenantId Fix**: Added `tenantId` parameter to `WalletEntity` constructor, builder fields, and `build()` method — was always `null` despite being set.
+  - **IMP-060 — ArchUnit Starter in Reactor**: Added `archunit-starter` module to parent POM `<modules>`, fixed parent reference, added as test dependency to 6 core services (account, auth, transaction, wallet, investment, lending).
+
 ### Fixed
+
+- **E-20 — Code Health & Tech Hygiene (2026-02-26)**:
+  - **IMP-056 — Remove In-Memory ConcurrentHashMap**: Removed `ConcurrentHashMap<String, ReservationInfo>` from `WalletServiceAdapter` — unsafe in multi-pod deployments. `reservationId` now passed through method signatures via already-persisted `TransferSagaContext.reservationId`.
+  - **IMP-057 — Remove Dead CloudEventPublisher**: Deleted `CloudEventPublisher.java` and its test — unused dead code in `events-starter` with zero references.
+  - **IMP-059 — Deduplicate InsufficientFundsException**: Removed duplicate `InsufficientFundsException` from `money` package. Canonical version in `api-commons` (`id.payu.api.common.exception`) is now the single source. Updated `Money.java` and `MoneyTest.java` imports.
+  - Created missing `AccountServicePort` interface required by `account-service` hexagonal architecture.
 
 - **Logging-Starter Best Practice Overhaul (2026-02-25)**:
   - **CRITICAL**: Added `container` profile to `logback-payu-base.xml` — pods on OpenShift with `SPRING_PROFILES_ACTIVE=container` had **NO root appender active**, causing silent log loss (no errors visible in `oc logs`). Now routes to `ASYNC_JSON` appender.

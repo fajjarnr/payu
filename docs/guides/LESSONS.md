@@ -162,6 +162,25 @@ podAntiAffinity:
 
 ---
 
+### L-008: Code Health Anti-Patterns in Multi-Pod Microservices
+
+**Date**: February 26, 2026 | **Severity**: High | **Domain**: Backend / Architecture
+
+Three critical anti-patterns discovered during E-20 Code Health & Tech Hygiene epic:
+
+**1. In-Memory State (ConcurrentHashMap) in Stateless Services**
+`WalletServiceAdapter` used a `ConcurrentHashMap<String, ReservationInfo>` to store reservation data between `reserveBalance()` and `commitBalance()` calls. This fails catastrophically in multi-pod deployments because the commit call may hit a different pod than the reserve call. **Fix**: Pass `reservationId` through method signatures; the saga context (persisted in DB as JSONB) already had this field.
+
+**2. Spring Boot Config Namespace Gotcha**
+`transaction-service/application.yml` had a top-level `kafka:` block. Spring Boot silently ignores this — the correct path is `spring.kafka.*`. No error, no warning, just silent misconfiguration. **Rule**: Always verify config properties are under the correct Spring namespace. Use `@ConfigurationProperties` binding validation.
+
+**3. `.gitignore` Pattern Matching `port/out/` Directories**
+A root `.gitignore` entry `out/` matched any path containing `out/`, including valid hexagonal architecture paths like `domain/port/out/AccountServicePort.java`. Required `git add -f` to force-add. **Rule**: Use more specific patterns like `/out/` (root only) instead of `out/` (recursive match).
+
+**Bonus**: `spring.jpa.open-in-view` defaults to `true` in Spring Boot, which keeps DB sessions open during HTTP response rendering — an anti-pattern that causes lazy-loading surprises and connection pool exhaustion. Always set `spring.jpa.open-in-view: false` explicitly.
+
+---
+
 ## 🚀 How to use these patterns
 
 1. **AI Agents**: Should read the `SKILL.md` of their respective domain. The reference documents are explicitly linked in the "Reference Implementation Patterns" section of the skill.

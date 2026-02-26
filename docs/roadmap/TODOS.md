@@ -48,8 +48,8 @@
 
 | Epic | Name                              | Priority   | Stories | SP  | Quarter | Status   |
 | :--- | :-------------------------------- | :--------- | :-----: | :-: | :------ | :------- |
-| E-01 | Core Banking Ledger               | 🔴 Highest |    3    | 13  | Q1 2026 | 📋 To Do |
-| E-02 | Gateway Hardening                 | 🔴 Highest |    5    | 11  | Q1 2026 | 📋 To Do |
+| E-01 | Core Banking Ledger               | 🔴 Highest |    3    | 13  | Q1 2026 | ✅ Done  |
+| E-02 | Gateway Hardening                 | 🔴 Highest |    5    | 11  | Q1 2026 | ✅ Done  |
 | E-03 | Frontend Quality                  | 🟠 High    |    5    |  7  | Q1 2026 | 📋 To Do |
 | E-04 | API Management & Analytics        | 🟠 High    |    5    | 19  | Q2 2026 | 📋 To Do |
 | E-05 | Product Catalog                   | 🟠 High    |    1    |  5  | Q2 2026 | 📋 To Do |
@@ -67,7 +67,7 @@
 | E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |  6  | Q2 2026 | 📋 To Do |
 | E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | 📋 To Do |
 | E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |  2  | Q2 2026 | 📋 To Do |
-| E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    | 10  | Q1 2026 | 📋 To Do |
+| E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    | 10  | Q1 2026 | ✅ Done  |
 | E-21 | Security Hardening                | 🔴 Highest |    2    |  5  | Q1 2026 | 📋 To Do |
 | E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |  6  | Q1 2026 | 📋 To Do |
 | E-23 | Shared Library Lifecycle          | 🟠 High    |    2    | 11  | Q2 2026 | 📋 To Do |
@@ -148,11 +148,11 @@
 
 | Key     | Type  | Summary                      | Priority   | SP  | Component(s)      | Labels              | Status   |
 | :------ | :---- | :--------------------------- | :--------- | :-: | :---------------- | :------------------ | :------- |
-| IMP-003 | Story | Wire Circuit Breaker + Retry | 🔴 Highest |  2  | `gateway-service` | `backend` `gateway` | 📋 To Do |
-| IMP-005 | Story | Konsolidasi Rate Limiting    | 🔴 Highest |  3  | `gateway-service` | `backend` `gateway` | 📋 To Do |
-| IMP-007 | Story | Dynamic Route Registry       | 🟠 High    |  3  | `gateway-service` | `backend` `gateway` | 📋 To Do |
-| IMP-008 | Story | Request Validation (Schema)  | 🟠 High    |  3  | `gateway-service` | `backend` `gateway` | 📋 To Do |
-| IMP-009 | Story | Response Masking             | 🟠 High    |  2  | `gateway-service` | `backend` `gateway` | 📋 To Do |
+| IMP-003 | Story | Wire Circuit Breaker + Retry | 🔴 Highest |  2  | `gateway-service` | `backend` `gateway` | ✅ Done  |
+| IMP-005 | Story | Konsolidasi Rate Limiting    | 🔴 Highest |  3  | `gateway-service` | `backend` `gateway` | ✅ Done  |
+| IMP-007 | Story | Dynamic Route Registry       | 🟠 High    |  3  | `gateway-service` | `backend` `gateway` | ✅ Done  |
+| IMP-008 | Story | Request Validation (Schema)  | 🟠 High    |  3  | `gateway-service` | `backend` `gateway` | ✅ Done  |
+| IMP-009 | Story | Response Masking             | 🟠 High    |  2  | `gateway-service` | `backend` `gateway` | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1429,14 +1429,14 @@
 
 | Key     | Type | Summary                                      | Priority   | SP  | Component(s)             | Labels                  | Status   |
 | :------ | :--- | :------------------------------------------- | :--------- | :-: | :----------------------- | :---------------------- | :------- |
-| IMP-056 | Bug  | In-Memory Reservation Map                    | 🔴 Highest |  2  | `transaction-service`    | `backend` `bug`         | 📋 To Do |
-| IMP-057 | Task | Remove Dead CloudEventPublisher              | 🟠 High    |  1  | `shared/events-starter`  | `backend` `cleanup`     | 📋 To Do |
-| IMP-058 | Bug  | Gateway Query Parameter Loss                 | 🔴 Highest |  1  | `gateway-service`        | `gateway` `bug`         | 📋 To Do |
-| IMP-059 | Task | Deduplicate InsufficientFundsException       | 🟠 High    |  1  | `shared/api-commons`     | `backend` `cleanup`     | 📋 To Do |
-| IMP-060 | Task | Consume archunit-starter in Services         | 🟡 Medium  |  2  | All Spring Boot services | `backend` `quality`     | 📋 To Do |
-| IMP-061 | Task | Disable open-in-view Universally             | 🔴 Highest |  1  | All Spring Boot services | `backend` `performance` | 📋 To Do |
-| IMP-062 | Bug  | Fix Kafka Config Path in txn-service         | 🔴 Highest |  1  | `transaction-service`    | `backend` `bug`         | 📋 To Do |
-| IMP-063 | Bug  | WalletEntity Missing tenantId in Constructor | 🟠 High    |  1  | `wallet-service`         | `backend` `bug`         | 📋 To Do |
+| IMP-056 | Bug  | In-Memory Reservation Map                    | 🔴 Highest |  2  | `transaction-service`    | `backend` `bug`         | ✅ Done  |
+| IMP-057 | Task | Remove Dead CloudEventPublisher              | 🟠 High    |  1  | `shared/events-starter`  | `backend` `cleanup`     | ✅ Done  |
+| IMP-058 | Bug  | Gateway Query Parameter Loss                 | 🔴 Highest |  1  | `gateway-service`        | `gateway` `bug`         | ✅ Done  |
+| IMP-059 | Task | Deduplicate InsufficientFundsException       | 🟠 High    |  1  | `shared/api-commons`     | `backend` `cleanup`     | ✅ Done  |
+| IMP-060 | Task | Consume archunit-starter in Services         | 🟡 Medium  |  2  | All Spring Boot services | `backend` `quality`     | ✅ Done  |
+| IMP-061 | Task | Disable open-in-view Universally             | 🔴 Highest |  1  | All Spring Boot services | `backend` `performance` | ✅ Done  |
+| IMP-062 | Bug  | Fix Kafka Config Path in txn-service         | 🔴 Highest |  1  | `transaction-service`    | `backend` `bug`         | ✅ Done  |
+| IMP-063 | Bug  | WalletEntity Missing tenantId in Constructor | 🟠 High    |  1  | `wallet-service`         | `backend` `bug`         | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
