@@ -14,20 +14,62 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Filter to validate incoming requests against JSON schemas.
- * Performs schema validation for POST/PUT/PATCH requests.
+ * Filter to validate incoming requests against JSON schemas (IMP-008).
+ * <p>
+ * Loads JSON Schema files from classpath (schemas/ directory) and validates
+ * POST/PUT/PATCH request bodies against them.
+ * <p>
+ * Schema naming convention:
+ *   schemas/{service-prefix}-{operation}.json
+ * Example:
+ *   schemas/accounts-create.json       → POST /api/v1/accounts
+ *   schemas/transactions-create.json   → POST /api/v1/transactions
+ *   schemas/auth-login.json            → POST /api/v1/auth/login
  */
 @Provider
 @ApplicationScoped
 public class RequestValidationFilter implements ContainerRequestFilter {
 
     private static final Set<String> VALIDATABLE_METHODS = Set.of("POST", "PUT", "PATCH");
+    private static final String SCHEMA_BASE_PATH = "schemas/";
+
+    /**
+     * Maps path patterns to schema file names.
+     * First match wins (longest prefix match).
+     */
+    private static final Map<String, String> PATH_SCHEMA_MAP;
+
+    static {
+        Map<String, String> map = new java.util.LinkedHashMap<>();
+        // Auth endpoints
+        map.put("/api/v1/auth/login", "auth-login.json");
+        map.put("/api/v1/auth/register", "auth-register.json");
+        map.put("/api/v1/auth/refresh", "auth-refresh.json");
+
+        // Account endpoints
+        map.put("/api/v1/accounts", "accounts-create.json");
+
+        // Transaction endpoints
+        map.put("/api/v1/transactions/transfer", "transactions-transfer.json");
+        map.put("/api/v1/transactions", "transactions-create.json");
+
+        // Payment endpoints
+        map.put("/api/v1/payments", "payments-create.json");
+
+        // Partner endpoints
+        map.put("/api/v1/partners", "partners-create.json");
+
+        PATH_SCHEMA_MAP = Map.copyOf(map);
+    }
 
     @Inject
     GatewayConfig config;
@@ -37,9 +79,15 @@ public class RequestValidationFilter implements ContainerRequestFilter {
 
     private JsonSchemaFactory schemaFactory;
 
+    /**
+     * Cache loaded schemas to avoid re-parsing on every request.
+     */
+    private final ConcurrentHashMap<String, JsonSchema> schemaCache = new ConcurrentHashMap<>();
+
     @jakarta.annotation.PostConstruct
     void init() {
         this.schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+        preloadSchemas();
     }
 
     @Override
@@ -48,13 +96,12 @@ public class RequestValidationFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Skip health and metrics endpoints
         String path = requestContext.getUriInfo().getPath();
-        if (path.startsWith("/q/") || path.equals("/health")) {
+        if (path.startsWith("/q/") || path.equals("/health") || path.equals("/status")
+                || path.equals("/version")) {
             return;
         }
 
-        // Only validate write operations
         String method = requestContext.getMethod();
         if (!VALIDATABLE_METHODS.contains(method)) {
             return;
@@ -85,34 +132,61 @@ public class RequestValidationFilter implements ContainerRequestFilter {
     private void validateSchema(ContainerRequestContext requestContext, String path) {
         try {
             // Read request body
-            String requestBody = new String(requestContext.getEntityStream().readAllBytes());
+            byte[] bodyBytes = requestContext.getEntityStream().readAllBytes();
+            String requestBody = new String(bodyBytes);
+
+            // Always reset stream for downstream processing
+            requestContext.setEntityStream(new java.io.ByteArrayInputStream(bodyBytes));
 
             if (requestBody.isBlank()) {
-                // Empty body is allowed for some endpoints
                 return;
             }
 
-            // Parse JSON
-            JsonNode jsonNode = objectMapper.readTree(requestBody);
+            // Parse JSON first
+            JsonNode jsonNode;
+            try {
+                jsonNode = objectMapper.readTree(requestBody);
+            } catch (Exception e) {
+                if (config.validation().strictMode()) {
+                    requestContext.abortWith(
+                        Response.status(Response.Status.BAD_REQUEST)
+                            .entity(Map.of(
+                                "error", "INVALID_JSON",
+                                "message", "Request body contains invalid JSON",
+                                "status", 400
+                            ))
+                            .build()
+                    );
+                }
+                return;
+            }
 
-            // Get schema for this endpoint
+            // Look up and validate against schema
             JsonSchema schema = getSchemaForPath(path);
-
             if (schema != null) {
                 Set<ValidationMessage> validationResult = schema.validate(jsonNode);
 
                 if (!validationResult.isEmpty()) {
-                    String errors = validationResult.stream()
-                        .map(ValidationMessage::getMessage)
-                        .collect(Collectors.joining(", "));
+                    var errors = validationResult.stream()
+                        .map(vm -> Map.of(
+                                "field", vm.getInstanceLocation() != null
+                                        ? vm.getInstanceLocation().toString() : "",
+                                "message", vm.getMessage()
+                        ))
+                        .collect(Collectors.toList());
 
-                    Log.warnf("Schema validation failed for %s: %s", path, errors);
+                    String errorSummary = validationResult.stream()
+                        .map(ValidationMessage::getMessage)
+                        .collect(Collectors.joining("; "));
+
+                    Log.warnf("Schema validation failed for %s: %s", path, errorSummary);
                     requestContext.abortWith(
                         Response.status(Response.Status.BAD_REQUEST)
                             .entity(Map.of(
                                 "error", "SCHEMA_VALIDATION_FAILED",
                                 "message", "Request does not match expected schema",
-                                "details", errors
+                                "status", 400,
+                                "validationErrors", errors
                             ))
                             .build()
                     );
@@ -120,18 +194,15 @@ public class RequestValidationFilter implements ContainerRequestFilter {
                     Log.debugf("Schema validation passed for %s", path);
                 }
             }
-
-            // Reset stream for downstream filters
-            requestContext.setEntityStream(new java.io.ByteArrayInputStream(requestBody.getBytes()));
-
         } catch (Exception e) {
             if (config.validation().strictMode()) {
                 Log.errorf(e, "Request validation failed for %s", path);
                 requestContext.abortWith(
                     Response.status(Response.Status.BAD_REQUEST)
                         .entity(Map.of(
-                            "error", "INVALID_JSON",
-                            "message", "Request body contains invalid JSON"
+                            "error", "VALIDATION_ERROR",
+                            "message", "Request validation failed: " + e.getMessage(),
+                            "status", 400
                         ))
                         .build()
                 );
@@ -141,10 +212,63 @@ public class RequestValidationFilter implements ContainerRequestFilter {
         }
     }
 
-    private JsonSchema getSchemaForPath(String path) {
-        // TODO: Implement schema retrieval based on path
-        // This could load schemas from a database or filesystem
-        // For now, return null to skip validation
-        return null;
+    /**
+     * Look up JSON schema for a given request path.
+     * Uses longest prefix match from PATH_SCHEMA_MAP, then loads from classpath cache.
+     */
+    JsonSchema getSchemaForPath(String path) {
+        // Find best matching schema path (longest prefix match)
+        String bestMatch = null;
+        String bestSchemaFile = null;
+
+        for (Map.Entry<String, String> entry : PATH_SCHEMA_MAP.entrySet()) {
+            String pattern = entry.getKey();
+            if (path.equals(pattern) || path.startsWith(pattern + "/")) {
+                if (bestMatch == null || pattern.length() > bestMatch.length()) {
+                    bestMatch = pattern;
+                    bestSchemaFile = entry.getValue();
+                }
+            }
+        }
+
+        if (bestSchemaFile == null) {
+            return null;
+        }
+
+        return schemaCache.get(bestSchemaFile);
+    }
+
+    /**
+     * Pre-load all schema files from classpath at startup.
+     */
+    private void preloadSchemas() {
+        int loaded = 0;
+        for (String schemaFile : PATH_SCHEMA_MAP.values()) {
+            if (schemaCache.containsKey(schemaFile)) {
+                continue; // already loaded (deduplication for shared schemas)
+            }
+            try {
+                String resourcePath = SCHEMA_BASE_PATH + schemaFile;
+                InputStream is = Thread.currentThread().getContextClassLoader()
+                        .getResourceAsStream(resourcePath);
+                if (is == null) {
+                    // Fallback to class classloader (works in Surefire tests)
+                    is = RequestValidationFilter.class.getClassLoader()
+                            .getResourceAsStream(resourcePath);
+                }
+                if (is != null) {
+                    JsonSchema schema = schemaFactory.getSchema(is);
+                    schemaCache.put(schemaFile, schema);
+                    loaded++;
+                    Log.debugf("Loaded validation schema: %s", resourcePath);
+                } else {
+                    Log.debugf("Schema file not found (validation will be skipped): %s", resourcePath);
+                }
+            } catch (Exception e) {
+                Log.warnf(e, "Failed to load schema: %s", schemaFile);
+            }
+        }
+        Log.infof("RequestValidationFilter initialized: %d schemas loaded, %d mappings configured",
+                loaded, PATH_SCHEMA_MAP.size());
     }
 }

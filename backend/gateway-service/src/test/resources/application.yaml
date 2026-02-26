@@ -16,6 +16,10 @@ quarkus:
 
 # Gateway test overrides
 gateway:
+  # Disable authorization in tests (AuthorizationFilterTest has its own @TestProfile)
+  authorization:
+    enabled: false
+
   # Disable rate limiting in tests (requires Redis)
   rate-limit:
     enabled: false

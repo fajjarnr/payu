@@ -12,10 +12,15 @@ import java.time.Duration;
 import java.util.Map;
 
 /**
- * Simplified rate limiting filter using local token bucket algorithm.
- * This is a simplified version that doesn't require external bucket4j library.
+ * DEPRECATED: In-memory token bucket rate limiter.
+ * <p>
+ * Superseded by {@link RateLimitFilter} which uses Redis sorted sets
+ * for a proper distributed sliding window algorithm (IMP-005).
+ * <p>
+ * This filter is disabled (@Provider removed) but kept for reference.
+ * The in-memory approach does NOT work across pods and resets on restart.
  */
-@Provider
+// @Provider — DISABLED: consolidated into RateLimitFilter (IMP-005)
 @ApplicationScoped
 public class RateLimitV2Filter implements ContainerRequestFilter {
 

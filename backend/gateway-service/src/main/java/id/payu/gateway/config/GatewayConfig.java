@@ -117,6 +117,18 @@ public interface GatewayConfig {
     @WithName("authorization")
     AuthorizationConfig authorization();
 
+    /**
+     * Dynamic route registry configuration (IMP-007).
+     */
+    @WithName("routes")
+    Map<String, RouteConfig> routes();
+
+    /**
+     * Response masking configuration (IMP-009).
+     */
+    @WithName("response-masking")
+    ResponseMaskingConfig responseMasking();
+
     interface ServiceConfig {
         String url();
 
@@ -478,5 +490,57 @@ public interface GatewayConfig {
         @WithName("jwt-secret")
         @WithDefault("dGVzdC1qd3Qtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC0xMjM0NTY3ODkw")
         String jwtSecret();
+    }
+
+    /**
+     * Route configuration for dynamic route registry (IMP-007).
+     */
+    interface RouteConfig {
+        /**
+         * Target backend service name (must match a key in gateway.services).
+         */
+        String service();
+
+        /**
+         * Target path prefix on the backend service.
+         * For example: "/api/v1/accounts" or "/partners"
+         */
+        @WithName("target-prefix")
+        @WithDefault("")
+        String targetPrefix();
+
+        /**
+         * Allowed HTTP methods for this route.
+         */
+        @WithDefault("GET,POST,PUT,DELETE,PATCH")
+        List<String> methods();
+
+        /**
+         * Whether this route is enabled.
+         */
+        @WithDefault("true")
+        boolean enabled();
+    }
+
+    /**
+     * Response masking configuration (IMP-009).
+     */
+    interface ResponseMaskingConfig {
+        @WithDefault("true")
+        boolean enabled();
+
+        /**
+         * Fields to strip from responses on partner/external API paths.
+         */
+        @WithName("blacklisted-fields")
+        @WithDefault("stackTrace,internalErrorCode,traceId,spanId,debugInfo,internalId,serverHost,dbQuery")
+        List<String> blacklistedFields();
+
+        /**
+         * Path patterns that trigger response masking.
+         */
+        @WithName("masked-paths")
+        @WithDefault("/api/v1/partners,/api/v1/v1/partner,/v1/partner")
+        List<String> maskedPaths();
     }
 }

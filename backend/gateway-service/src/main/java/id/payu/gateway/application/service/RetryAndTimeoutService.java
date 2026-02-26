@@ -28,7 +28,7 @@ public class RetryAndTimeoutService {
     }
 
     /**
-     * Execute a Uni with retry logic.
+     * Execute a Uni with retry logic using exponential backoff and jitter.
      */
     public <T> Uni<T> executeWithRetry(String serviceName, Uni<T> operation) {
         if (!config.retry().enabled()) {
@@ -38,18 +38,15 @@ public class RetryAndTimeoutService {
         GatewayConfig.RetryConfig.RetryPolicyConfig policy = getRetryPolicy(serviceName);
 
         return operation
-            .onFailure().recoverWithUni(throwable -> {
-                // Check if the error is retryable
-                if (!isRetryable(throwable)) {
-                    return Uni.createFrom().failure(throwable);
-                }
-
-                // For simplicity, just fail. In production, implement proper retry logic
-                // with exponential backoff and jitter
-                Log.warnf("Service %s call failed, should retry (retries: %d)",
-                    serviceName, policy.maxRetries());
-                return Uni.createFrom().failure(throwable);
-            });
+            .onFailure(this::isRetryable)
+            .retry()
+            .withBackOff(policy.initialInterval(), policy.maxInterval())
+            .withJitter(policy.jitter())
+            .atMost(policy.maxRetries())
+            .onFailure().invoke(throwable ->
+                Log.warnf("Service %s call failed after %d retries: %s",
+                    serviceName, policy.maxRetries(), throwable.getMessage())
+            );
     }
 
     /**

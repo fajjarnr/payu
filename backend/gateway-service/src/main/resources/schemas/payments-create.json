@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://payu.id/schemas/payments-create.json",
+  "title": "Create Payment Request",
+  "description": "Schema for bill payment requests",
+  "type": "object",
+  "properties": {
+    "billerId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Biller identifier"
+    },
+    "customerNumber": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "description": "Customer number at the biller"
+    },
+    "amount": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Payment amount"
+    },
+    "sourceAccountId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "period": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Billing period (e.g., 202601)"
+    }
+  },
+  "required": ["billerId", "customerNumber", "amount", "sourceAccountId"],
+  "additionalProperties": false
+}

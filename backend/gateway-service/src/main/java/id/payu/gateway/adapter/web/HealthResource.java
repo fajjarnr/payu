@@ -1,10 +1,14 @@
 package id.payu.gateway.adapter.web;
 
+import id.payu.gateway.application.service.CircuitBreakerService;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Health and status endpoints for the gateway.
@@ -15,18 +19,38 @@ public class HealthResource {
 
     private static final Instant START_TIME = Instant.now();
 
+    @Inject
+    CircuitBreakerService circuitBreakerService;
+
     /**
      * Root health check.
      */
     @GET
     @Path("/health")
     public Response health() {
-        return Response.ok(Map.of(
-            "status", "UP",
-            "service", "gateway-service",
-            "version", "1.0.0",
-            "timestamp", Instant.now()
-        )).build();
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "UP");
+        response.put("service", "gateway-service");
+        response.put("version", "1.0.0");
+        response.put("timestamp", Instant.now());
+
+        // Include circuit breaker states
+        Map<String, CircuitBreakerService.CircuitBreakerInfo> circuitStates =
+                circuitBreakerService.getCircuitStates();
+        if (!circuitStates.isEmpty()) {
+            Map<String, Object> cbSummary = circuitStates.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            e -> Map.of(
+                                    "state", e.getValue().state().name(),
+                                    "failureCount", e.getValue().failureCount(),
+                                    "totalCount", e.getValue().totalCount()
+                            )
+                    ));
+            response.put("circuitBreakers", cbSummary);
+        }
+
+        return Response.ok(response).build();
     }
 
     /**

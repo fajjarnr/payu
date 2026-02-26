@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://payu.id/schemas/transactions-transfer.json",
+  "title": "Transfer Request",
+  "description": "Schema for fund transfer requests",
+  "type": "object",
+  "properties": {
+    "sourceAccountId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Source account ID"
+    },
+    "destinationAccountId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Destination account ID"
+    },
+    "amount": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Transfer amount (must be positive)"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "default": "IDR"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Transfer description/note"
+    },
+    "transferType": {
+      "type": "string",
+      "enum": ["INTERNAL", "BI_FAST", "RTGS", "SKN"],
+      "description": "Transfer type"
+    },
+    "beneficiaryName": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "beneficiaryBank": {
+      "type": "string",
+      "maxLength": 100
+    }
+  },
+  "required": ["sourceAccountId", "destinationAccountId", "amount"],
+  "additionalProperties": false
+}

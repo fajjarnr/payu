@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://payu.id/schemas/accounts-create.json",
+  "title": "Create Account Request",
+  "description": "Schema for account creation requests",
+  "type": "object",
+  "properties": {
+    "accountType": {
+      "type": "string",
+      "enum": ["SAVINGS", "CHECKING", "BUSINESS", "POCKET"],
+      "description": "Type of account"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "default": "IDR",
+      "description": "ISO 4217 currency code"
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 50,
+      "description": "Custom account label"
+    },
+    "initialDeposit": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Initial deposit amount"
+    }
+  },
+  "required": ["accountType"],
+  "additionalProperties": false
+}

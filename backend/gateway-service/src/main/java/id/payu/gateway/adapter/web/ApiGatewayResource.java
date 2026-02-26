@@ -1,5 +1,8 @@
 package id.payu.gateway.adapter.web;
 
+import id.payu.gateway.application.service.CircuitBreakerService;
+import id.payu.gateway.application.service.RetryAndTimeoutService;
+import id.payu.gateway.application.service.RouteRegistry;
 import id.payu.gateway.config.GatewayConfig;
 import id.payu.gateway.adapter.filter.TenantFilter;
 import io.quarkus.logging.Log;
@@ -17,12 +20,10 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
 
 import java.net.URI;
-import java.time.temporal.ChronoUnit;
+import java.time.Duration;
+import java.util.Optional;
 
 @Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
@@ -36,6 +37,15 @@ public class ApiGatewayResource {
 
     @Inject
     Vertx vertx;
+
+    @Inject
+    CircuitBreakerService circuitBreakerService;
+
+    @Inject
+    RetryAndTimeoutService retryAndTimeoutService;
+
+    @Inject
+    RouteRegistry routeRegistry;
 
     private WebClient webClient;
 
@@ -400,6 +410,41 @@ public class ApiGatewayResource {
         return proxy("cms-service", "/api/v1/public/contents", "GET", body, headers);
     }
 
+    // ==================== Dynamic Route (IMP-007) ====================
+    // Catch-all endpoint for routes not explicitly defined above.
+    // Uses RouteRegistry to match path prefix → backend service dynamically.
+    // This allows adding new routes via YAML config without code changes.
+
+    /**
+     * Dynamic route resolution for any path registered in RouteRegistry.
+     * Falls back to 404 if no route matches.
+     */
+    private Uni<Response> dynamicRoute(String path, String method, String body, HttpHeaders headers) {
+        Optional<RouteRegistry.ResolvedRoute> resolved = routeRegistry.resolve(path);
+        if (resolved.isEmpty()) {
+            return Uni.createFrom().item(
+                    Response.status(404)
+                            .entity("{\"error\":\"NOT_FOUND\",\"message\":\"No route found for path: /api/v1/" + path + "\",\"status\":404}")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+
+        RouteRegistry.ResolvedRoute route = resolved.get();
+
+        // Check if HTTP method is allowed
+        if (!route.definition().methods().contains(method)) {
+            return Uni.createFrom().item(
+                    Response.status(405)
+                            .entity("{\"error\":\"METHOD_NOT_ALLOWED\",\"message\":\"Method " + method + " not allowed\",\"status\":405}")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+
+        return proxy(route.serviceName(), route.targetPath(), method, body, headers);
+    }
+
     // ==================== Proxy Logic ====================
     private Uni<Response> proxy(String serviceName, String path, String method,
                                  String body, HttpHeaders headers) {
@@ -410,6 +455,27 @@ public class ApiGatewayResource {
             Log.error(errorMsg);
             return Uni.createFrom().item(Response.status(502).entity(errorMsg).build());
         }
+
+        // Wrap the actual call with circuit breaker + retry + timeout
+        return circuitBreakerService.execute(serviceName, () -> {
+            Uni<Response> call = doProxy(serviceName, serviceConfig, path, method, body, headers);
+
+            // Apply retry with backoff
+            call = retryAndTimeoutService.executeWithRetry(serviceName, call);
+
+            // Apply timeout
+            Duration timeout = retryAndTimeoutService.getTimeout(serviceName);
+            call = call.ifNoItem().after(timeout).fail();
+
+            return call;
+        });
+    }
+
+    /**
+     * Performs the actual HTTP proxy call via Vert.x WebClient.
+     */
+    private Uni<Response> doProxy(String serviceName, GatewayConfig.ServiceConfig serviceConfig,
+                                   String path, String method, String body, HttpHeaders headers) {
 
         String baseUrl = serviceConfig.url();
         URI targetUri = URI.create(baseUrl);

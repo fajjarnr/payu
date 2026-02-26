@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://payu.id/schemas/auth-login.json",
+  "title": "Login Request",
+  "description": "Schema for authentication login requests",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100,
+      "description": "Username or email"
+    },
+    "password": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "description": "User password"
+    },
+    "deviceId": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Device identifier"
+    },
+    "deviceType": {
+      "type": "string",
+      "enum": ["WEB", "ANDROID", "IOS"],
+      "description": "Device type"
+    }
+  },
+  "required": ["username", "password"],
+  "additionalProperties": false
+}

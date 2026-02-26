@@ -91,13 +91,14 @@ class ArchitectureTest {
         }
 
         @Test
-        @DisplayName("application services should have Service suffix")
+        @DisplayName("application services should have Service or Registry suffix")
         void servicesShouldHaveServiceSuffix() {
             classes()
                     .that().resideInAPackage("..application.service..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Service")
+                        .orShould().haveSimpleNameEndingWith("Registry")
                     .because("Application service classes should follow naming convention")
                     .check(importedClasses);
         }

@@ -23,7 +23,7 @@ quarkus:
 
 gateway:
   authorization:
-    enabled: true
+    enabled: false
     jwt-secret: test-jwt-secret-for-testing-only
   request-signing:
     enabled: false

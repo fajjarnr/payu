@@ -429,3 +429,114 @@ gateway:
       - "PUT"
       - "PATCH"
       - "DELETE"
+
+  # Dynamic Route Registry (IMP-007)
+  # Maps gateway path prefixes to backend services
+  routes:
+    accounts:
+      service: "account-service"
+      target-prefix: "/api/v1/accounts"
+      methods: ["GET", "POST", "PUT", "DELETE"]
+    wallets:
+      service: "wallet-service"
+      target-prefix: "/api/v1/wallets"
+      methods: ["GET", "POST", "PUT"]
+    cards:
+      service: "wallet-service"
+      target-prefix: "/api/v1/cards"
+      methods: ["GET", "POST", "PUT"]
+    transactions:
+      service: "transaction-service"
+      target-prefix: "/api/v1/transactions"
+      methods: ["GET", "POST"]
+    billers:
+      service: "billing-service"
+      target-prefix: "/api/v1/billers"
+      methods: ["GET"]
+    payments:
+      service: "billing-service"
+      target-prefix: "/api/v1/payments"
+      methods: ["GET", "POST"]
+    notifications:
+      service: "notification-service"
+      target-prefix: "/api/v1/notifications"
+      methods: ["GET", "POST"]
+    auth:
+      service: "auth-service"
+      target-prefix: "/api/v1/auth"
+      methods: ["GET", "POST"]
+    partners:
+      service: "partner-service"
+      target-prefix: "/partners"
+      methods: ["GET", "POST", "PUT", "DELETE"]
+    "v1/partner":
+      service: "partner-service"
+      target-prefix: "/v1/partner"
+      methods: ["GET", "POST"]
+    promotions:
+      service: "promotion-service"
+      target-prefix: "/api/v1/promotions"
+      methods: ["GET", "POST", "PUT"]
+    cashbacks:
+      service: "promotion-service"
+      target-prefix: "/api/v1/cashbacks"
+      methods: ["GET", "POST"]
+    loyalty-points:
+      service: "promotion-service"
+      target-prefix: "/api/v1/loyalty-points"
+      methods: ["GET", "POST"]
+    rewards:
+      service: "promotion-service"
+      target-prefix: "/api/v1/rewards"
+      methods: ["GET"]
+    referrals:
+      service: "promotion-service"
+      target-prefix: "/api/v1/referrals"
+      methods: ["GET", "POST"]
+    lending:
+      service: "lending-service"
+      target-prefix: "/api/v1/lending"
+      methods: ["GET", "POST"]
+    investments:
+      service: "investment-service"
+      target-prefix: "/api/v1/investments"
+      methods: ["GET", "POST"]
+    compliance:
+      service: "compliance-service"
+      target-prefix: "/api/v1/compliance"
+      methods: ["GET", "POST"]
+    backoffice:
+      service: "backoffice-service"
+      target-prefix: "/api/v1/backoffice"
+      methods: ["GET", "POST", "PUT", "DELETE"]
+    support:
+      service: "support-service"
+      target-prefix: "/api/v1/support"
+      methods: ["GET", "POST", "PATCH"]
+    contents:
+      service: "cms-service"
+      target-prefix: "/api/v1/contents"
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+    "public/contents":
+      service: "cms-service"
+      target-prefix: "/api/v1/public/contents"
+      methods: ["GET"]
+
+  # Response Masking (IMP-009)
+  response-masking:
+    enabled: true
+    blacklisted-fields:
+      - "stackTrace"
+      - "internalErrorCode"
+      - "traceId"
+      - "spanId"
+      - "debugInfo"
+      - "internalId"
+      - "serverHost"
+      - "dbQuery"
+      - "sqlState"
+      - "internalMessage"
+    masked-paths:
+      - "/api/v1/partners"
+      - "/api/v1/v1/partner"
+      - "/v1/partner"

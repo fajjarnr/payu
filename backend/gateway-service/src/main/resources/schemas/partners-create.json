@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://payu.id/schemas/partners-create.json",
+  "title": "Create Partner Request",
+  "description": "Schema for partner registration",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 100,
+      "description": "Partner company name"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Partner contact email"
+    },
+    "callbackUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Webhook callback URL"
+    },
+    "partnerType": {
+      "type": "string",
+      "enum": ["E_COMMERCE", "SUBSCRIPTION", "MARKETPLACE", "FINTECH"],
+      "description": "Partner business type"
+    },
+    "ipWhitelist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Allowed IP addresses"
+    }
+  },
+  "required": ["name", "email", "partnerType"],
+  "additionalProperties": false
+}
