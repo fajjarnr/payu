@@ -57,7 +57,7 @@
 | E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    | 25  | Q2 2026 | 📋 To Do |
 | E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |  5  | Future  | 📋 To Do |
 | E-09 | Partner Integration Foundation    | 🔴 Highest |    4    | 18  | Q1 2026 | ✅ Done  |
-| E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    | 10  | Q1 2026 | 📋 To Do |
+| E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    | 10  | Q1 2026 | ✅ Done  |
 | E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |  8  | Q1 2026 | 📋 To Do |
 | E-12 | Settlement & Financial Operations | 🟠 High    |    4    | 16  | Q2 2026 | 📋 To Do |
 | E-13 | Dispute Resolution                | 🟠 High    |    1    |  5  | Q2 2026 | 📋 To Do |
@@ -750,41 +750,45 @@
 
 ---
 
-## 🟦 E-10 — Escrow & Marketplace Payments
+## 🟦 E-10 — Escrow & Marketplace Payments ✅
 
 > **Goal**: Payment holding dan split payment untuk marketplace-style partners.
 
 | Key     | Type  | Summary                        | Priority   | SP  | Component(s)      | Labels                    | Status   |
 | :------ | :---- | :----------------------------- | :--------- | :-: | :---------------- | :------------------------ | :------- |
-| GAP-007 | Story | Escrow / Payment Holding       | 🔴 Highest |  5  | `wallet-service`  | `partner` `core` `escrow` | 📋 To Do |
-| GAP-011 | Story | Split Payment (Multi-merchant) | 🟠 High    |  5  | `transaction-svc` | `partner` `marketplace`   | 📋 To Do |
+| GAP-007 | Story | Escrow / Payment Holding       | 🔴 Highest |  5  | `wallet-service`  | `partner` `core` `escrow` | ✅ Done  |
+| GAP-011 | Story | Split Payment (Multi-merchant) | 🟠 High    |  5  | `wallet-service`  | `partner` `marketplace`   | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
 
-**GAP-007 — Escrow / Payment Holding** `L` `5 SP`
+**GAP-007 — Escrow / Payment Holding** `L` `5 SP` ✅
 
 > Hold payment sampai condition terpenuhi (barang diterima, event selesai).
 > Release/refund flow. Escrow wallet account type.
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Escrow wallet (LIABILITY account in CoA)
-> - [ ] Hold → Release → Settle flow
-> - [ ] Hold → Refund flow
-> - [ ] Expiry timeout (auto-refund)
+> - [x] Escrow wallet (LIABILITY account in CoA — 2100 Escrow Holdings)
+> - [x] Hold → Release → Settle flow
+> - [x] Hold → Refund flow
+> - [x] Expiry timeout (auto-refund via @Scheduled every 5 min)
+>
+> **Implementation**: 14 files, 24 unit tests. Domain model `EscrowTransaction` (CREATED→HELD→RELEASED→SETTLED or REFUNDED/EXPIRED). `EscrowService` with wallet reserve/commit/credit lifecycle + 4 balanced journal patterns. `EscrowController` REST at `/api/v1/escrow` (8 endpoints). Flyway V9.
 >
 > **Relevan untuk**: TokoBapak, Dolan
 
-**GAP-011 — Split Payment** `L` `5 SP`
+**GAP-011 — Split Payment** `L` `5 SP` ✅
 
 > Multi-merchant dalam 1 checkout. Split amount ke multiple wallets atomically.
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Split config (merchant list + percentage/fixed)
-> - [ ] Atomic multi-wallet debit/credit
-> - [ ] Settlement per merchant
+> - [x] Split config (merchant list + percentage/fixed/mixed with largest-remainder rounding)
+> - [x] Atomic multi-wallet debit/credit (reserve→commit→credit each recipient)
+> - [x] Settlement per merchant (per-leg tracking with LegStatus)
+>
+> **Implementation**: 22 files, 34 unit tests. Domain: `SplitPaymentRule` (reusable rule), `SplitRecipient`, `SplitPaymentExecution` (one-time), `SplitPaymentLeg`. `SplitPaymentService` with idempotency, full reversal support, double-entry journals (DR payer 1100 / CR each recipient 1100). `SplitPaymentController` REST at `/api/v1/split-payments` (8 endpoints). Flyway V10 (4 tables).
 >
 > **Relevan untuk**: Dolan
 
