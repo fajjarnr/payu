@@ -124,6 +124,31 @@ class CircuitBreakerServiceTest {
         }
 
         @Test
+        @DisplayName("should include Retry-After header when circuit is OPEN")
+        void shouldIncludeRetryAfterHeaderWhenOpen() {
+            // Force circuit open by sending many failures
+            for (int i = 0; i < 12; i++) {
+                service.execute("test-service", () ->
+                        Uni.createFrom().item(Response.status(503).entity("error").build())
+                ).await().atMost(Duration.ofSeconds(5));
+            }
+
+            Response response = service.execute("test-service", () ->
+                    Uni.createFrom().item(Response.ok("should not reach here").build())
+            ).await().atMost(Duration.ofSeconds(5));
+
+            assertEquals(503, response.getStatus());
+            assertNotNull(response.getHeaderString("Retry-After"), "Should have Retry-After header");
+            int retryAfter = Integer.parseInt(response.getHeaderString("Retry-After"));
+            assertTrue(retryAfter > 0, "Retry-After should be positive");
+            assertTrue(retryAfter <= 30, "Retry-After should not exceed delay duration");
+
+            // Body should also contain retryAfterSeconds
+            String body = response.readEntity(String.class);
+            assertTrue(body.contains("retryAfterSeconds"));
+        }
+
+        @Test
         @DisplayName("should handle exceptions and record as failures")
         void shouldHandleExceptionsAsFailures() {
             Response response = service.execute("test-service", () ->
@@ -208,6 +233,36 @@ class CircuitBreakerServiceTest {
             CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
             assertEquals(CircuitBreakerService.State.CLOSED, info.state());
             assertEquals(0, info.failureCount());
+        }
+
+        @Test
+        @DisplayName("should include openedAt and retryAfterSeconds in info when OPEN")
+        void shouldIncludeOpenedAtAndRetryAfterInInfo() {
+            // Force circuit open
+            for (int i = 0; i < 12; i++) {
+                service.execute("test-service", () ->
+                        Uni.createFrom().item(Response.status(503).entity("error").build())
+                ).await().atMost(Duration.ofSeconds(5));
+            }
+
+            CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
+            assertEquals(CircuitBreakerService.State.OPEN, info.state());
+            assertNotNull(info.openedAt(), "openedAt should be set when OPEN");
+            assertTrue(info.retryAfterSeconds() > 0, "retryAfterSeconds should be positive when OPEN");
+            assertTrue(info.retryAfterSeconds() <= 30, "retryAfterSeconds should not exceed delay");
+        }
+
+        @Test
+        @DisplayName("should have zero retryAfterSeconds when CLOSED")
+        void shouldHaveZeroRetryAfterWhenClosed() {
+            service.execute("test-service", () ->
+                    Uni.createFrom().item(Response.ok().build())
+            ).await().atMost(Duration.ofSeconds(5));
+
+            CircuitBreakerService.CircuitBreakerInfo info = service.getCircuitState("test-service");
+            assertEquals(CircuitBreakerService.State.CLOSED, info.state());
+            assertEquals(0, info.retryAfterSeconds());
+            assertNull(info.openedAt());
         }
     }
 }

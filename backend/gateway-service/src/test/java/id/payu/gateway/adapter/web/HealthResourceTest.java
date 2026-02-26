@@ -89,4 +89,48 @@ class HealthResourceTest {
                     .statusCode(anyOf(is(200), is(404), is(400)));  // Accept various responses
         }
     }
+
+    @Nested
+    @DisplayName("Circuit Breaker Endpoints")
+    class CircuitBreakerEndpoints {
+
+        @Test
+        @DisplayName("should return circuit breaker states from /health/circuits")
+        void shouldReturnCircuitBreakerStates() {
+            given()
+                .when()
+                    .get("/health/circuits")
+                .then()
+                    .statusCode(200)
+                    .body("services", notNullValue())
+                    .body("timestamp", notNullValue());
+        }
+
+        @Test
+        @DisplayName("should return circuit state for specific service")
+        void shouldReturnCircuitStateForService() {
+            given()
+                .when()
+                    .get("/health/circuits/account-service")
+                .then()
+                    .statusCode(200)
+                    .body("service", equalTo("account-service"))
+                    .body("state", equalTo("CLOSED"))
+                    .body("failureCount", equalTo(0))
+                    .body("timestamp", notNullValue());
+        }
+
+        @Test
+        @DisplayName("should reset circuit breaker for specific service")
+        void shouldResetCircuitBreaker() {
+            given()
+                .when()
+                    .post("/health/circuits/test-service/reset")
+                .then()
+                    .statusCode(200)
+                    .body("service", equalTo("test-service"))
+                    .body("state", equalTo("CLOSED"))
+                    .body("message", equalTo("Circuit breaker reset successfully"));
+        }
+    }
 }

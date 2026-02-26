@@ -38,6 +38,11 @@ public class AuditEvent {
     private String userId;
 
     /**
+     * Tenant/partner ID for multi-tenancy audit isolation
+     */
+    private String tenantId;
+
+    /**
      * Session ID
      */
     private String sessionId;

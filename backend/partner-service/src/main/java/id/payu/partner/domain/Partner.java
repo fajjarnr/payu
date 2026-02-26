@@ -1,10 +1,8 @@
 package id.payu.partner.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,7 +11,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "partners")
+@Table(name = "partners",
+       indexes = @Index(name = "idx_partner_tenant_id", columnList = "tenant_id"))
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class Partner {
 
     @Id
@@ -41,6 +42,13 @@ public class Partner {
     private String publicKey;
 
     private boolean active;
+
+    /**
+     * Tenant identifier for multi-tenancy data isolation.
+     * Each partner belongs to a tenant scope (typically their own clientId or org grouping).
+     */
+    @Column(name = "tenant_id", length = 64)
+    private String tenantId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -79,6 +87,8 @@ public class Partner {
     public void setPublicKey(String publicKey) { this.publicKey = publicKey; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public String getTenantId() { return tenantId; }
+    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

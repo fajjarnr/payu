@@ -56,7 +56,7 @@
 | E-06 | Developer Hub (Backstage)         | 🟡 Medium  |    5    | 13  | Q2 2026 | 📋 To Do |
 | E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    | 25  | Q2 2026 | 📋 To Do |
 | E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |  5  | Future  | 📋 To Do |
-| E-09 | Partner Integration Foundation    | 🔴 Highest |    4    | 18  | Q1 2026 | 📋 To Do |
+| E-09 | Partner Integration Foundation    | 🔴 Highest |    4    | 18  | Q1 2026 | ✅ Done  |
 | E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    | 10  | Q1 2026 | 📋 To Do |
 | E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |  8  | Q1 2026 | 📋 To Do |
 | E-12 | Settlement & Financial Operations | 🟠 High    |    4    | 16  | Q2 2026 | 📋 To Do |
@@ -69,7 +69,7 @@
 | E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |  2  | Q2 2026 | 📋 To Do |
 | E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    | 10  | Q1 2026 | ✅ Done  |
 | E-21 | Security Hardening                | 🔴 Highest |    2    |  5  | Q1 2026 | ✅ Done  |
-| E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |  6  | Q1 2026 | 📋 To Do |
+| E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |  6  | Q1 2026 | ✅ Done  |
 | E-23 | Shared Library Lifecycle          | 🟠 High    |    2    | 11  | Q2 2026 | 📋 To Do |
 
 > **Story Points**: XS=1, S=2, M=3, L=5, XL=8
@@ -687,10 +687,10 @@
 
 | Key     | Type  | Summary                                 | Priority   | SP  | Component(s)         | Labels               | Status   |
 | :------ | :---- | :-------------------------------------- | :--------- | :-: | :------------------- | :------------------- | :------- |
-| GAP-001 | Story | Outbound Webhook Service                | 🔴 Highest |  5  | New module           | `partner` `gateway`  | 📋 To Do |
-| GAP-002 | Story | Multi-tenancy / Data Isolation          | 🔴 Highest |  5  | Multi-service        | `partner` `security` | 📋 To Do |
-| GAP-006 | Story | Idempotency Key (All Payment Endpoints) | 🔴 Highest |  3  | `gateway` + services | `partner` `core`     | 📋 To Do |
-| GAP-005 | Story | API Key Management                      | 🟠 High    |  5  | `partner-service`    | `partner` `security` | 📋 To Do |
+| GAP-001 | Story | Outbound Webhook Service                | 🔴 Highest |  5  | New module           | `partner` `gateway`  | ✅ Done |
+| GAP-002 | Story | Multi-tenancy / Data Isolation          | 🔴 Highest |  5  | Multi-service        | `partner` `security` | ✅ Done |
+| GAP-006 | Story | Idempotency Key (All Payment Endpoints) | 🔴 Highest |  3  | `gateway` + services | `partner` `core`     | ✅ Done |
+| GAP-005 | Story | API Key Management                      | 🟠 High    |  5  | `partner-service`    | `partner` `security` | ✅ Done |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -702,10 +702,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Webhook registration API (URL, events, secret)
-> - [ ] HMAC signature on payload
-> - [ ] Retry with exponential backoff (max 5 attempts)
-> - [ ] Delivery log + dashboard
+> - [x] Webhook registration API (URL, events, secret)
+> - [x] HMAC signature on payload
+> - [x] Retry with exponential backoff (max 5 attempts)
+> - [x] Delivery log + dashboard
 >
 > **Relevan untuk**: Semua partner
 
@@ -715,9 +715,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Tenant context propagation via JWT/header
-> - [ ] Row-level filtering pada semua queries
-> - [ ] Audit log per tenant
+> - [x] Tenant context propagation via JWT/header
+> - [x] Row-level filtering pada semua queries
+> - [x] Audit log per tenant
 >
 > **Relevan untuk**: Semua partner
 
@@ -728,9 +728,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Idempotency filter di gateway
-> - [ ] Redis-backed dedup store (TTL 24h)
-> - [ ] Return cached response for duplicate keys
+> - [x] Idempotency filter di gateway
+> - [x] Redis-backed dedup store (TTL 24h)
+> - [x] Return cached response for duplicate keys
 >
 > **Relevan untuk**: Semua partner
 
@@ -740,9 +740,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] API key generation + rotation
-> - [ ] Key → Partner → Rate Plan mapping
-> - [ ] Revocation support
+> - [x] API key generation + rotation
+> - [x] Key → Partner → Rate Plan mapping
+> - [x] Revocation support
 >
 > **Relevan untuk**: Semua partner
 
@@ -1615,8 +1615,8 @@
 
 | Key     | Type  | Summary                             | Priority   | SP  | Component(s)      | Labels                  | Status   |
 | :------ | :---- | :---------------------------------- | :--------- | :-: | :---------------- | :---------------------- | :------- |
-| IMP-066 | Story | Remove @Blocking from Gateway Proxy | 🟠 High    |  3  | `gateway-service` | `gateway` `performance` | 📋 To Do |
-| IMP-067 | Story | Wire Circuit Breaker to proxy()     | 🔴 Highest |  3  | `gateway-service` | `gateway` `resilience`  | 📋 To Do |
+| IMP-066 | Story | Remove @Blocking from Gateway Proxy | 🟠 High    |  3  | `gateway-service` | `gateway` `performance` | ✅ Done  |
+| IMP-067 | Story | Wire Circuit Breaker to proxy()     | 🔴 Highest |  3  | `gateway-service` | `gateway` `resilience`  | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1629,9 +1629,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Remove `@Blocking` dari `ApiGatewayResource`
-> - [ ] Ensure all handler methods return `Uni<Response>` (reactive)
-> - [ ] Verify filters compatible dengan non-blocking execution
+> - [x] Remove `@Blocking` dari `ApiGatewayResource`
+> - [x] Ensure all handler methods return `Uni<Response>` (reactive)
+> - [x] Verify filters compatible dengan non-blocking execution
 > - [ ] Load test: compare throughput before/after
 >
 > ✅ No FE impact
@@ -1647,10 +1647,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Apply `@CircuitBreaker` per downstream service (bukan global)
-> - [ ] Fallback: return 503 Service Unavailable dengan retry-after header
-> - [ ] Health endpoint reflects circuit state per service
-> - [ ] Config: failure threshold 50%, wait 30s, sliding window 10 calls
+> - [x] Apply `@CircuitBreaker` per downstream service (bukan global)
+> - [x] Fallback: return 503 Service Unavailable dengan retry-after header
+> - [x] Health endpoint reflects circuit state per service
+> - [x] Config: failure threshold 50%, wait 30s, sliding window 10 calls
 >
 > ✅ No FE impact
 

@@ -10,27 +10,34 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import java.time.Duration;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Filter to handle idempotency for write operations.
  * Ensures that duplicate requests with the same idempotency key return the same response.
  *
+ * Implements both request and response filters:
+ * - Request: checks Redis for existing cached response, aborts with cached result if found.
+ * - Response: stores the response in Redis for future duplicate detection.
+ *
  * Supports both standard "Idempotency-Key" header and legacy "X-Idempotency-Key" header
  * for backward compatibility.
  *
- * For financial operations (transfers, payments), idempotency key is REQUIRED.
+ * For financial operations (transfers, payments, wallet debit/credit), idempotency key is REQUIRED.
  */
 @Provider
 @ApplicationScoped
-public class IdempotencyFilter implements ContainerRequestFilter {
+public class IdempotencyFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     private static final Set<String> IDEMPOTENT_METHODS = Set.of("POST", "PUT", "PATCH", "DELETE");
     private static final String IDEMPOTENCY_PREFIX = "idempotency:";
+    private static final String IDEMPOTENCY_KEY_PROPERTY = "idempotency-key";
+    private static final String IDEMPOTENCY_REDIS_KEY_PROPERTY = "idempotency-redis-key";
 
     // Standard header name as per RFC 7239 and industry best practices
     private static final String STANDARD_IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
@@ -43,6 +50,9 @@ public class IdempotencyFilter implements ContainerRequestFilter {
         "/api/v1/payments",
         "/api/v1/wallets/debit",
         "/api/v1/wallets/credit",
+        "/api/v1/transactions/transfer",
+        "/api/v1/transactions/qris",
+        "/api/v1/billing/payments",
         "/v1/transfers",
         "/v1/payments"
     );
@@ -54,12 +64,11 @@ public class IdempotencyFilter implements ContainerRequestFilter {
     ReactiveRedisDataSource redisDataSource;
 
     private ReactiveValueCommands<String, String> valueCommands;
-    private final ConcurrentHashMap<String, CachedResponse> localCache = new ConcurrentHashMap<>();
 
     @PostConstruct
     void init() {
         this.valueCommands = redisDataSource.value(String.class);
-        Log.infof("Idempotency filter initialized (enabled: %s)", config.idempotency().enabled());
+        Log.infof("Idempotency filter initialized (enabled: %s, ttl: %s)", config.idempotency().enabled(), config.idempotency().ttl());
     }
 
     @Override
@@ -143,9 +152,9 @@ public class IdempotencyFilter implements ContainerRequestFilter {
                             .build()
                     );
                 } else {
-                    // Store request context for later caching
-                    requestContext.setProperty("idempotency-key", finalIdempotencyKey);
-                    requestContext.setProperty("idempotency-redis-key", finalRedisKey);
+                    // Store request context for later caching in response filter
+                    requestContext.setProperty(IDEMPOTENCY_KEY_PROPERTY, finalIdempotencyKey);
+                    requestContext.setProperty(IDEMPOTENCY_REDIS_KEY_PROPERTY, finalRedisKey);
                     Log.debugf("Idempotency key registered: %s", finalIdempotencyKey);
                 }
             }, failure -> {
@@ -155,8 +164,36 @@ public class IdempotencyFilter implements ContainerRequestFilter {
     }
 
     /**
+     * Response filter: store the response in Redis for future duplicate detection.
+     * Only stores if the request had an idempotency key registered.
+     */
+    @Override
+    public void filter(ContainerRequestContext requestContext,
+                       ContainerResponseContext responseContext) {
+        if (!config.idempotency().enabled()) {
+            return;
+        }
+
+        String idempotencyKey = (String) requestContext.getProperty(IDEMPOTENCY_KEY_PROPERTY);
+        if (idempotencyKey == null) {
+            return; // No idempotency key on this request
+        }
+
+        int status = responseContext.getStatus();
+        Object entity = responseContext.getEntity();
+
+        // Only cache successful responses and client errors (don't cache 5xx server errors)
+        if (status >= 500) {
+            Log.debugf("Not caching server error response (status %d) for idempotency key: %s", status, idempotencyKey);
+            return;
+        }
+
+        storeResponse(idempotencyKey, status, entity);
+    }
+
+    /**
      * Store response for idempotency.
-     * This should be called from the response filter.
+     * Called from the response filter after proxy returns.
      */
     public void storeResponse(String idempotencyKey, int status, Object body) {
         if (!config.idempotency().enabled()) {
@@ -164,30 +201,79 @@ public class IdempotencyFilter implements ContainerRequestFilter {
         }
 
         String redisKey = IDEMPOTENCY_PREFIX + idempotencyKey;
-        CachedResponse response = new CachedResponse(status, body != null ? body.toString() : null);
-
-        // Store in Redis with TTL
-        String responseJson = toJson(response);
+        String bodyStr = body != null ? body.toString() : "";
+        String responseJson = serializeCachedResponse(status, bodyStr);
         long ttlSeconds = config.idempotency().ttl().toSeconds();
 
         valueCommands.setex(redisKey, ttlSeconds, responseJson)
             .subscribe()
             .with(
-                unused -> Log.debugf("Stored idempotent response for key: %s", idempotencyKey),
+                unused -> Log.debugf("Stored idempotent response for key: %s (status: %d)", idempotencyKey, status),
                 failure -> Log.warnf(failure, "Failed to store idempotent response for key: %s", idempotencyKey)
             );
     }
 
+    /**
+     * Deserialize cached response from Redis JSON.
+     * Format: {"status":200,"body":"...escaped..."}
+     */
     private CachedResponse parseCachedResponse(String json) {
-        // Simple JSON parsing
-        String[] parts = json.split("\",\"", 3);
-        int status = Integer.parseInt(parts[0].replace("{\"status\":", "").replace(",", ""));
-        String body = parts.length > 1 ? parts[1].replace("\"body\":\"", "") : null;
-        return new CachedResponse(status, body);
+        try {
+            // Parse status
+            int statusStart = json.indexOf("\"status\":") + 9;
+            int statusEnd = json.indexOf(",", statusStart);
+            if (statusEnd == -1) statusEnd = json.indexOf("}", statusStart);
+            int status = Integer.parseInt(json.substring(statusStart, statusEnd).trim());
+
+            // Parse body
+            String body = null;
+            int bodyStart = json.indexOf("\"body\":");
+            if (bodyStart != -1) {
+                bodyStart += 7;
+                if (json.charAt(bodyStart) == '"') {
+                    // String body — find matching close quote (handle escapes)
+                    bodyStart++;
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = bodyStart; i < json.length(); i++) {
+                        char c = json.charAt(i);
+                        if (c == '\\' && i + 1 < json.length()) {
+                            char next = json.charAt(i + 1);
+                            if (next == '"') { sb.append('"'); i++; }
+                            else if (next == '\\') { sb.append('\\'); i++; }
+                            else if (next == 'n') { sb.append('\n'); i++; }
+                            else if (next == 'r') { sb.append('\r'); i++; }
+                            else { sb.append(c); }
+                        } else if (c == '"') {
+                            break;
+                        } else {
+                            sb.append(c);
+                        }
+                    }
+                    body = sb.toString();
+                } else if (json.substring(bodyStart).startsWith("null")) {
+                    body = null;
+                }
+            }
+            return new CachedResponse(status, body);
+        } catch (Exception e) {
+            Log.warnf("Failed to parse cached response JSON: %s", json);
+            return new CachedResponse(200, json);
+        }
     }
 
-    private String toJson(CachedResponse response) {
-        return String.format("{\"status\":%d,\"body\":\"%s\"}", response.status, response.body);
+    /**
+     * Serialize response to JSON for Redis storage.
+     * Escapes special characters in body.
+     */
+    private String serializeCachedResponse(int status, String body) {
+        if (body == null || body.isEmpty()) {
+            return "{\"status\":" + status + ",\"body\":null}";
+        }
+        String escaped = body.replace("\\", "\\\\")
+                             .replace("\"", "\\\"")
+                             .replace("\n", "\\n")
+                             .replace("\r", "\\r");
+        return "{\"status\":" + status + ",\"body\":\"" + escaped + "\"}";
     }
 
     private static class CachedResponse {

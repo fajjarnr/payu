@@ -1,1 +1,2 @@
 id.payu.security.config.SecurityAutoConfiguration
+id.payu.security.multitenancy.TenantConfiguration

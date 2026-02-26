@@ -68,11 +68,15 @@ public class CircuitBreakerService {
                 cb.transitionTo(State.HALF_OPEN);
                 Log.infof("Circuit breaker for '%s' transitioning to HALF_OPEN", serviceName);
             } else {
-                Log.warnf("Circuit breaker for '%s' is OPEN — failing fast", serviceName);
+                long retryAfterSeconds = cb.getRetryAfterSeconds();
+                Log.warnf("Circuit breaker for '%s' is OPEN — failing fast (retry-after: %ds)", serviceName, retryAfterSeconds);
                 return Uni.createFrom().item(
                         jakarta.ws.rs.core.Response.status(503)
+                                .header("Retry-After", String.valueOf(retryAfterSeconds))
                                 .entity("{\"error\":\"CIRCUIT_OPEN\",\"message\":\"Service " +
-                                        serviceName + " is temporarily unavailable\",\"status\":503}")
+                                        serviceName + " is temporarily unavailable. Retry after " +
+                                        retryAfterSeconds + " seconds.\",\"status\":503,\"retryAfterSeconds\":" +
+                                        retryAfterSeconds + "}")
                                 .type("application/json")
                                 .build()
                 );
@@ -117,7 +121,7 @@ public class CircuitBreakerService {
     public CircuitBreakerInfo getCircuitState(String serviceName) {
         ServiceCircuitBreaker cb = breakers.get(serviceName);
         if (cb == null) {
-            return new CircuitBreakerInfo(State.CLOSED, 0, 0, 0, null);
+            return new CircuitBreakerInfo(State.CLOSED, 0, 0, 0, null, null, 0);
         }
         return cb.toInfo();
     }
@@ -181,7 +185,9 @@ public class CircuitBreakerService {
             int failureCount,
             int successCount,
             int totalCount,
-            Instant lastFailureTime
+            Instant lastFailureTime,
+            Instant openedAt,
+            long retryAfterSeconds
     ) {}
 
     /**
@@ -243,6 +249,19 @@ public class CircuitBreakerService {
                     Instant.now().isAfter(openedAt.plus(delay));
         }
 
+        /**
+         * Calculate remaining seconds until the circuit breaker may attempt reset.
+         * Used for the Retry-After HTTP header.
+         */
+        long getRetryAfterSeconds() {
+            if (openedAt == null) {
+                return delay.getSeconds();
+            }
+            Instant resetAt = openedAt.plus(delay);
+            long remaining = java.time.Duration.between(Instant.now(), resetAt).getSeconds();
+            return Math.max(1, remaining); // at least 1 second
+        }
+
         boolean isFailureThresholdExceeded() {
             int total = totalCount.get();
             if (total < VOLUME_THRESHOLD) {
@@ -270,7 +289,9 @@ public class CircuitBreakerService {
                     failureCount.get(),
                     successCount.get(),
                     totalCount.get(),
-                    lastFailureTime
+                    lastFailureTime,
+                    openedAt,
+                    state.get() == State.OPEN ? getRetryAfterSeconds() : 0
             );
         }
     }

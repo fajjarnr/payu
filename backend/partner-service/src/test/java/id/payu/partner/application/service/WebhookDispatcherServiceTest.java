@@ -1,0 +1,416 @@
+package id.payu.partner.application.service;
+
+import id.payu.partner.adapter.persistence.repository.WebhookDeliveryRepository;
+import id.payu.partner.adapter.persistence.repository.WebhookSubscriptionRepository;
+import id.payu.partner.domain.Partner;
+import id.payu.partner.domain.WebhookDelivery;
+import id.payu.partner.domain.WebhookSubscription;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class WebhookDispatcherServiceTest {
+
+    @Mock
+    private WebhookSubscriptionRepository subscriptionRepository;
+
+    @Mock
+    private WebhookDeliveryRepository deliveryRepository;
+
+    @Mock
+    private HttpClient httpClient;
+
+    private WebhookDispatcherService dispatcher;
+    private Partner partner;
+    private WebhookSubscription subscription;
+
+    @BeforeEach
+    void setUp() {
+        dispatcher = new WebhookDispatcherService(subscriptionRepository, deliveryRepository, httpClient);
+
+        partner = new Partner();
+        partner.setId(1L);
+        partner.setName("TokoBapak");
+        partner.setActive(true);
+
+        subscription = new WebhookSubscription(
+                partner,
+                "https://api.tokobapak.com/webhooks",
+                "payment.completed,payment.failed",
+                "whsec_test_secret_123"
+        );
+        subscription.setId(10L);
+        subscription.setMaxRetries(3);
+    }
+
+    @Nested
+    @DisplayName("HMAC Signature Generation")
+    class HmacSignature {
+
+        @Test
+        @DisplayName("should compute consistent HMAC-SHA256 signature")
+        void shouldComputeConsistentHmac() {
+            String secret = "test_secret";
+            String data = "2024-01-01T00:00:00Z.{\"id\":\"evt_123\",\"type\":\"test\"}";
+
+            String sig1 = dispatcher.computeHmac(secret, data);
+            String sig2 = dispatcher.computeHmac(secret, data);
+
+            assertNotNull(sig1);
+            assertEquals(64, sig1.length(), "HMAC-SHA256 should produce 64 hex chars");
+            assertEquals(sig1, sig2, "Same input must produce same signature");
+        }
+
+        @Test
+        @DisplayName("should produce different signatures for different payloads")
+        void shouldProduceDifferentSignaturesForDifferentData() {
+            String secret = "test_secret";
+            String sig1 = dispatcher.computeHmac(secret, "payload_1");
+            String sig2 = dispatcher.computeHmac(secret, "payload_2");
+
+            assertNotEquals(sig1, sig2);
+        }
+
+        @Test
+        @DisplayName("should produce different signatures for different secrets")
+        void shouldProduceDifferentSignaturesForDifferentSecrets() {
+            String sig1 = dispatcher.computeHmac("secret_a", "same_data");
+            String sig2 = dispatcher.computeHmac("secret_b", "same_data");
+
+            assertNotEquals(sig1, sig2);
+        }
+    }
+
+    @Nested
+    @DisplayName("Event Dispatch")
+    class EventDispatch {
+
+        @Test
+        @DisplayName("should skip dispatch when no subscriptions match")
+        void shouldSkipWhenNoSubscriptions() {
+            when(subscriptionRepository.findActiveByEventType("payment.refunded"))
+                    .thenReturn(List.of());
+
+            dispatcher.dispatch("payment.refunded", "evt_123", Map.of("amount", 1000));
+
+            verify(deliveryRepository, never()).save(any());
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should create delivery record and attempt delivery")
+        void shouldCreateDeliveryAndAttempt() throws Exception {
+            when(subscriptionRepository.findActiveByEventType("payment.completed"))
+                    .thenReturn(List.of(subscription));
+            when(deliveryRepository.save(any(WebhookDelivery.class)))
+                    .thenAnswer(inv -> {
+                        WebhookDelivery d = inv.getArgument(0);
+                        d.setId(200L);
+                        return d;
+                    });
+
+            HttpResponse<String> mockResponse = mock(HttpResponse.class);
+            when(mockResponse.statusCode()).thenReturn(200);
+            when(mockResponse.body()).thenReturn("OK");
+            when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                    .thenReturn(mockResponse);
+
+            dispatcher.dispatch("payment.completed", "evt_test001",
+                    Map.of("amount", 50000, "currency", "IDR"));
+
+            // Verify delivery was saved (initial + after attempt)
+            ArgumentCaptor<WebhookDelivery> captor =
+                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            verify(deliveryRepository, atLeast(2)).save(captor.capture());
+
+            List<WebhookDelivery> saved = captor.getAllValues();
+            // First save = PENDING, second = DELIVERING, third = DELIVERED
+            WebhookDelivery finalState = saved.get(saved.size() - 1);
+            assertEquals(WebhookDelivery.Status.DELIVERED, finalState.getStatus());
+            assertEquals(200, finalState.getResponseCode());
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should mark delivery as FAILED on non-2xx response")
+        void shouldMarkFailedOnNon2xx() throws Exception {
+            when(subscriptionRepository.findActiveByEventType("payment.completed"))
+                    .thenReturn(List.of(subscription));
+            when(deliveryRepository.save(any(WebhookDelivery.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            HttpResponse<String> mockResponse = mock(HttpResponse.class);
+            when(mockResponse.statusCode()).thenReturn(500);
+            when(mockResponse.body()).thenReturn("Internal Server Error");
+            when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                    .thenReturn(mockResponse);
+
+            dispatcher.dispatch("payment.completed", "evt_fail001", Map.of("test", true));
+
+            ArgumentCaptor<WebhookDelivery> captor =
+                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            verify(deliveryRepository, atLeast(2)).save(captor.capture());
+
+            WebhookDelivery finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertEquals(WebhookDelivery.Status.FAILED, finalState.getStatus());
+            assertEquals(500, finalState.getResponseCode());
+            assertNotNull(finalState.getNextRetryAt(), "Should schedule retry");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should mark delivery as FAILED on connection error")
+        void shouldMarkFailedOnConnectionError() throws Exception {
+            when(subscriptionRepository.findActiveByEventType("payment.completed"))
+                    .thenReturn(List.of(subscription));
+            when(deliveryRepository.save(any(WebhookDelivery.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+            when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                    .thenThrow(new java.io.IOException("Connection refused"));
+
+            dispatcher.dispatch("payment.completed", "evt_err001", Map.of("test", true));
+
+            ArgumentCaptor<WebhookDelivery> captor =
+                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            verify(deliveryRepository, atLeast(2)).save(captor.capture());
+
+            WebhookDelivery finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertEquals(WebhookDelivery.Status.FAILED, finalState.getStatus());
+            assertNotNull(finalState.getErrorMessage());
+            assertTrue(finalState.getErrorMessage().contains("Connection refused"));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should include correct headers in webhook request")
+        void shouldIncludeCorrectHeaders() throws Exception {
+            when(subscriptionRepository.findActiveByEventType("payment.completed"))
+                    .thenReturn(List.of(subscription));
+            when(deliveryRepository.save(any(WebhookDelivery.class)))
+                    .thenAnswer(inv -> {
+                        WebhookDelivery d = inv.getArgument(0);
+                        d.setId(300L);
+                        return d;
+                    });
+
+            HttpResponse<String> mockResponse = mock(HttpResponse.class);
+            when(mockResponse.statusCode()).thenReturn(200);
+            when(mockResponse.body()).thenReturn("OK");
+            when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                    .thenReturn(mockResponse);
+
+            dispatcher.dispatch("payment.completed", "evt_hdr001", Map.of("test", true));
+
+            ArgumentCaptor<HttpRequest> requestCaptor =
+                    ArgumentCaptor.forClass(HttpRequest.class);
+            verify(httpClient).send(requestCaptor.capture(), any());
+
+            HttpRequest request = requestCaptor.getValue();
+            assertEquals("https://api.tokobapak.com/webhooks",
+                    request.uri().toString());
+            assertTrue(request.headers().firstValue("Content-Type")
+                    .orElse("").contains("application/json"));
+            assertTrue(request.headers().firstValue("X-PayU-Event")
+                    .orElse("").equals("payment.completed"));
+            assertTrue(request.headers().firstValue("X-PayU-Signature")
+                    .orElse("").startsWith("sha256="));
+            assertTrue(request.headers().firstValue("X-PayU-Event-Id")
+                    .orElse("").equals("evt_hdr001"));
+            assertTrue(request.headers().firstValue("X-PayU-Timestamp")
+                    .isPresent());
+            assertEquals("PayU-Webhook/1.0",
+                    request.headers().firstValue("User-Agent").orElse(""));
+        }
+    }
+
+    @Nested
+    @DisplayName("Retry Processing")
+    class RetryProcessing {
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should retry failed deliveries that are due")
+        void shouldRetryFailedDeliveries() throws Exception {
+            WebhookDelivery failedDelivery = new WebhookDelivery(
+                    subscription, "evt_retry001", "payment.completed", "{\"retry\":true}");
+            failedDelivery.setId(500L);
+            failedDelivery.setStatus(WebhookDelivery.Status.FAILED);
+            failedDelivery.setAttemptCount(1);
+            failedDelivery.setNextRetryAt(LocalDateTime.now().minusMinutes(1));
+
+            when(deliveryRepository.findRetryableDeliveries(any(LocalDateTime.class)))
+                    .thenReturn(List.of(failedDelivery));
+            when(deliveryRepository.save(any(WebhookDelivery.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            HttpResponse<String> mockResponse = mock(HttpResponse.class);
+            when(mockResponse.statusCode()).thenReturn(200);
+            when(mockResponse.body()).thenReturn("OK");
+            when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                    .thenReturn(mockResponse);
+
+            dispatcher.retryFailedDeliveries();
+
+            ArgumentCaptor<WebhookDelivery> captor =
+                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            verify(deliveryRepository, atLeast(2)).save(captor.capture());
+
+            WebhookDelivery finalState = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            assertEquals(WebhookDelivery.Status.DELIVERED, finalState.getStatus());
+        }
+
+        @Test
+        @DisplayName("should mark EXHAUSTED for deactivated subscriptions during retry")
+        void shouldExhaustForDeactivatedSubscription() {
+            subscription.setActive(false);
+
+            WebhookDelivery failedDelivery = new WebhookDelivery(
+                    subscription, "evt_deact001", "payment.completed", "{\"test\":true}");
+            failedDelivery.setId(600L);
+            failedDelivery.setStatus(WebhookDelivery.Status.FAILED);
+            failedDelivery.setAttemptCount(1);
+            failedDelivery.setNextRetryAt(LocalDateTime.now().minusMinutes(1));
+
+            when(deliveryRepository.findRetryableDeliveries(any(LocalDateTime.class)))
+                    .thenReturn(List.of(failedDelivery));
+            when(deliveryRepository.save(any(WebhookDelivery.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            dispatcher.retryFailedDeliveries();
+
+            ArgumentCaptor<WebhookDelivery> captor =
+                    ArgumentCaptor.forClass(WebhookDelivery.class);
+            verify(deliveryRepository).save(captor.capture());
+            assertEquals(WebhookDelivery.Status.EXHAUSTED, captor.getValue().getStatus());
+        }
+
+        @Test
+        @DisplayName("should skip retry when no deliveries are due")
+        void shouldSkipRetryWhenNoneAvailable() {
+            when(deliveryRepository.findRetryableDeliveries(any(LocalDateTime.class)))
+                    .thenReturn(List.of());
+
+            dispatcher.retryFailedDeliveries();
+
+            verify(deliveryRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Delivery Cleanup")
+    class DeliveryCleanup {
+
+        @Test
+        @DisplayName("should clean up old delivery records")
+        void shouldCleanupOldDeliveries() {
+            when(deliveryRepository.deleteOldDeliveries(any(LocalDateTime.class))).thenReturn(42);
+
+            dispatcher.cleanupOldDeliveries();
+
+            verify(deliveryRepository).deleteOldDeliveries(any(LocalDateTime.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("Domain Model - WebhookDelivery")
+    class DeliveryDomainModel {
+
+        @Test
+        @DisplayName("should transition through delivery lifecycle")
+        void shouldTransitionThroughLifecycle() {
+            WebhookDelivery delivery = new WebhookDelivery(
+                    subscription, "evt_lc001", "payment.completed", "{\"test\":true}");
+
+            assertEquals(WebhookDelivery.Status.PENDING, delivery.getStatus());
+            assertEquals(0, delivery.getAttemptCount());
+
+            delivery.markDelivering();
+            assertEquals(WebhookDelivery.Status.DELIVERING, delivery.getStatus());
+
+            delivery.markDelivered(200, "OK");
+            assertEquals(WebhookDelivery.Status.DELIVERED, delivery.getStatus());
+            assertEquals(200, delivery.getResponseCode());
+            assertNotNull(delivery.getDeliveredAt());
+            assertEquals(1, delivery.getAttemptCount());
+        }
+
+        @Test
+        @DisplayName("should calculate exponential backoff for retries")
+        void shouldCalculateExponentialBackoff() {
+            WebhookDelivery delivery = new WebhookDelivery(
+                    subscription, "evt_bo001", "payment.completed", "{\"test\":true}");
+
+            // First failure: 30s backoff
+            delivery.markFailed(500, "Error", "Server Error");
+            assertEquals(WebhookDelivery.Status.FAILED, delivery.getStatus());
+            assertEquals(1, delivery.getAttemptCount());
+            assertNotNull(delivery.getNextRetryAt());
+            assertTrue(delivery.canRetry());
+        }
+
+        @Test
+        @DisplayName("should mark EXHAUSTED when max attempts exceeded")
+        void shouldExhaustAfterMaxAttempts() {
+            WebhookDelivery delivery = new WebhookDelivery(
+                    subscription, "evt_ex001", "payment.completed", "{\"test\":true}");
+            delivery.setMaxAttempts(2);
+
+            delivery.markFailed(500, "Error 1", "Server Error");
+            assertEquals(WebhookDelivery.Status.FAILED, delivery.getStatus());
+            assertTrue(delivery.canRetry());
+
+            delivery.markFailed(500, "Error 2", "Server Error");
+            assertEquals(WebhookDelivery.Status.EXHAUSTED, delivery.getStatus());
+            assertFalse(delivery.canRetry());
+            assertNull(delivery.getNextRetryAt());
+        }
+    }
+
+    @Nested
+    @DisplayName("Domain Model - WebhookSubscription")
+    class SubscriptionDomainModel {
+
+        @Test
+        @DisplayName("should match specific event types")
+        void shouldMatchSpecificEvents() {
+            assertTrue(subscription.matchesEvent("payment.completed"));
+            assertTrue(subscription.matchesEvent("payment.failed"));
+            assertFalse(subscription.matchesEvent("payment.refunded"));
+        }
+
+        @Test
+        @DisplayName("should match wildcard subscription")
+        void shouldMatchWildcard() {
+            WebhookSubscription wildcardSub = new WebhookSubscription(
+                    partner, "https://example.com/wh", "*", "secret");
+            wildcardSub.setId(20L);
+
+            assertTrue(wildcardSub.matchesEvent("payment.completed"));
+            assertTrue(wildcardSub.matchesEvent("any.random.event"));
+        }
+
+        @Test
+        @DisplayName("should not match when inactive")
+        void shouldNotMatchWhenInactive() {
+            subscription.setActive(false);
+            assertFalse(subscription.matchesEvent("payment.completed"));
+        }
+    }
+}

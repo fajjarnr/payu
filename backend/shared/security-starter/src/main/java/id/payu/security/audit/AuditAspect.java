@@ -2,6 +2,7 @@ package id.payu.security.audit;
 
 import id.payu.security.annotation.Audited;
 import id.payu.security.config.SecurityProperties;
+import id.payu.security.multitenancy.TenantContext;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -84,6 +85,11 @@ public class AuditAspect {
         context.put("className", joinPoint.getTarget().getClass().getSimpleName());
         context.put("methodName", method.getName());
         eventBuilder.context(context);
+
+        // Add tenant context for multi-tenancy audit isolation
+        if (TenantContext.isSet()) {
+            eventBuilder.tenantId(TenantContext.getTenantId());
+        }
 
         AuditEvent event = eventBuilder.build();
 

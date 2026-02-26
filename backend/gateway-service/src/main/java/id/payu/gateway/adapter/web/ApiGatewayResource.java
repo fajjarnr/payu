@@ -6,7 +6,7 @@ import id.payu.gateway.application.service.RouteRegistry;
 import id.payu.gateway.config.GatewayConfig;
 import id.payu.gateway.adapter.filter.TenantFilter;
 import io.quarkus.logging.Log;
-import io.smallrye.common.annotation.Blocking;
+import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
@@ -30,7 +30,7 @@ import java.util.Optional;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
-@Blocking
+@NonBlocking
 public class ApiGatewayResource {
 
     @Inject
