@@ -27,9 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **IMP-008 — Request Validation** (2 SP): `RequestValidationFilter` JAX-RS filter with content-length limit (1MB default), SQL injection pattern detection, XSS/script-tag detection, null-byte detection. Rejects malicious requests with 400 Bad Request before reaching backend services.
   - **IMP-009 — Response Masking** (2 SP): `ResponseMaskingFilter` JAX-RS filter that masks PII in response bodies — card numbers (`****-****-****-1234`), account numbers (last 4 visible), phone numbers (`+62****1234`). Configurable via `payu.gateway.masking.enabled` property.
 
+- **E-21 — Security Hardening (2026-02-26)**:
+  - **IMP-064 — Security Auto-Config Fail-Closed** (3 SP): Changed `SecurityAutoConfiguration` `matchIfMissing` defaults to `true` for `payu.security.enabled`, `masking-enabled`, and `audit-enabled` — banking platform must be fail-closed. `encryption-enabled` stays `false` (requires key config). Removed `@Component` from `AuditAspect` and `AuditLogPublisher` to prevent component scanning conflict. Used `ObjectProvider<AuditLogPublisher>` for optional Kafka dependency — audit logs fall back to SLF4J when Kafka unavailable. Added `@ConditionalOnBean(name = "kafkaTemplate")` to prevent `AuditLogPublisher` creation when no Kafka bean exists. Fixed `SecurityProperties.encryptionEnabled` default from `true` to `false` to match actual auto-config behavior.
+  - **IMP-065 — AuditAspect Use SecurityContext** (2 SP): Rewrote `extractUserId()` with correct fallback chain: (1) `SecurityContextHolder.getContext().getAuthentication()` for JWT subject/preferred_username, (2) `X-User-Id` header, (3) `"anonymous"`. Previously read `request.getAttribute("principal")` which is never set by Spring Security. Added `spring-security-core` as optional dependency. Filters out Spring's default `"anonymousUser"` principal.
+  - 8 new unit tests: fail-closed defaults (masking activates by default, encryption stays off), explicit opt-out override, SecurityContext user extraction (4 scenarios), SLF4J fallback without Kafka, audit disabled skip.
+
 ### Changed
 
-- **E-20 — Code Health & Tech Hygiene (2026-02-26)**:
+- **E-20 — Code Health & Tech Hygiene (2026-02-26):
   - **IMP-058 — Gateway Query Param Forwarding**: Injected `UriInfo` into `ApiGatewayResource.proxy()` to capture and forward query parameters that were being silently dropped by JAX-RS `@Path("{path: .+}")`.
   - **IMP-061 — Disable JPA open-in-view**: Added `spring.jpa.open-in-view: false` to 12 service `application.yml` files to prevent lazy-loading outside transactions (anti-pattern for production).
   - **IMP-062 — Kafka Config Namespace Fix**: Moved top-level `kafka:` block under `spring:` namespace in `transaction-service/application.yml` — Spring Boot was silently ignoring the config.

@@ -68,7 +68,7 @@
 | E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | 📋 To Do |
 | E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |  2  | Q2 2026 | 📋 To Do |
 | E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    | 10  | Q1 2026 | ✅ Done  |
-| E-21 | Security Hardening                | 🔴 Highest |    2    |  5  | Q1 2026 | 📋 To Do |
+| E-21 | Security Hardening                | 🔴 Highest |    2    |  5  | Q1 2026 | ✅ Done  |
 | E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |  6  | Q1 2026 | 📋 To Do |
 | E-23 | Shared Library Lifecycle          | 🟠 High    |    2    | 11  | Q2 2026 | 📋 To Do |
 
@@ -1566,8 +1566,8 @@
 
 | Key     | Type  | Summary                          | Priority   | SP  | Component(s)              | Labels               | Status   |
 | :------ | :---- | :------------------------------- | :--------- | :-: | :------------------------ | :------------------- | :------- |
-| IMP-064 | Story | Security Auto-Config Fail-Closed | 🔴 Highest |  3  | `shared/security-starter` | `backend` `security` | 📋 To Do |
-| IMP-065 | Story | AuditAspect Use SecurityContext  | 🟠 High    |  2  | `shared/security-starter` | `backend` `security` | 📋 To Do |
+| IMP-064 | Story | Security Auto-Config Fail-Closed | 🔴 Highest |  3  | `shared/security-starter` | `backend` `security` | ✅ Done |
+| IMP-065 | Story | AuditAspect Use SecurityContext  | 🟠 High    |  2  | `shared/security-starter` | `backend` `security` | ✅ Done |
 
 <details>
 <summary>📄 Story Details</summary>

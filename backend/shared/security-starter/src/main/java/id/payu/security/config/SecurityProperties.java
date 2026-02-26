@@ -15,9 +15,9 @@ import java.util.List;
 public class SecurityProperties {
 
     /**
-     * Enable field-level encryption
+     * Enable field-level encryption (requires encryption.password config)
      */
-    private boolean encryptionEnabled = true;
+    private boolean encryptionEnabled = false;
 
     /**
      * Enable data masking in logs

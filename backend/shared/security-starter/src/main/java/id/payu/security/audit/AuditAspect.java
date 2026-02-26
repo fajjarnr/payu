@@ -3,13 +3,14 @@ package id.payu.security.audit;
 import id.payu.security.annotation.Audited;
 import id.payu.security.config.SecurityProperties;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.stereotype.Component;
+import org.springframework.lang.Nullable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -19,16 +20,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Aspect for auditing sensitive operations
+ * Aspect for auditing sensitive operations.
+ * Bean creation managed by SecurityAutoConfiguration — do NOT add @Component.
+ *
+ * <p>If {@link AuditLogPublisher} is unavailable (e.g. no Kafka on classpath),
+ * audit events are logged via SLF4J as a fallback.</p>
  */
 @Slf4j
 @Aspect
-@Component
-@RequiredArgsConstructor
 public class AuditAspect {
 
     private final SecurityProperties properties;
+    @Nullable
     private final AuditLogPublisher auditLogPublisher;
+
+    public AuditAspect(SecurityProperties properties, @Nullable AuditLogPublisher auditLogPublisher) {
+        this.properties = properties;
+        this.auditLogPublisher = auditLogPublisher;
+    }
 
     @Around("@annotation(id.payu.security.annotation.Audited)")
     public Object auditOperation(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -85,8 +94,8 @@ public class AuditAspect {
             // Mark as successful
             event.setSuccess(true);
 
-            // Publish audit event
-            auditLogPublisher.publishSafe(event);
+            // Publish audit event (Kafka or SLF4J fallback)
+            publishAuditEvent(event);
 
             return result;
         } catch (Exception e) {
@@ -94,10 +103,26 @@ public class AuditAspect {
             event.setSuccess(false);
             event.setErrorMessage(e.getMessage());
 
-            // Publish audit event
-            auditLogPublisher.publishSafe(event);
+            // Publish audit event (Kafka or SLF4J fallback)
+            publishAuditEvent(event);
 
             throw e;
+        }
+    }
+
+    private void publishAuditEvent(AuditEvent event) {
+        if (auditLogPublisher != null) {
+            auditLogPublisher.publishSafe(event);
+        } else {
+            // Fallback: log audit event via SLF4J when Kafka publisher is unavailable
+            log.info("AUDIT [{}] user={} op={} entity={}:{} success={} ip={}",
+                    event.getEventType(),
+                    event.getUserId(),
+                    event.getOperation(),
+                    event.getEntityType(),
+                    event.getEntityId(),
+                    event.isSuccess(),
+                    event.getIpAddress());
         }
     }
 
@@ -117,14 +142,27 @@ public class AuditAspect {
         return ip;
     }
 
-    private String extractUserId(HttpServletRequest request) {
-        // Try to get from security context
-        Object principal = request.getAttribute("principal");
-        if (principal != null) {
-            return principal.toString();
+    /**
+     * Extract user ID with priority: SecurityContext (JWT) → X-User-Id header → "anonymous".
+     * SecurityContext is the authoritative source for authenticated users via Spring Security / Keycloak.
+     */
+    private String extractUserId(@Nullable HttpServletRequest request) {
+        // Priority 1: Spring Security SecurityContext (JWT subject / preferred_username)
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()
+                    && !"anonymousUser".equals(authentication.getPrincipal())) {
+                return authentication.getName(); // Returns JWT 'sub' or 'preferred_username'
+            }
+        } catch (Exception e) {
+            log.trace("SecurityContextHolder not available: {}", e.getMessage());
         }
 
-        // Try from header
+        if (request == null) {
+            return "anonymous";
+        }
+
+        // Priority 2: X-User-Id header (gateway-injected, validated by upstream)
         String userId = request.getHeader("X-User-Id");
         if (userId != null && !userId.isEmpty()) {
             return userId;

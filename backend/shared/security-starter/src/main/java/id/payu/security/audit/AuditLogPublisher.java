@@ -6,17 +6,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Publisher for audit events
- * Sends audit events to Kafka for storage and analysis
+ * Publisher for audit events.
+ * Sends audit events to Kafka for storage and analysis.
+ * Bean creation managed by SecurityAutoConfiguration — do NOT add @Component.
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class AuditLogPublisher {
 
@@ -24,7 +23,7 @@ public class AuditLogPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    @Async("auditExecutor")
+    @Async
     public void publish(AuditEvent event) {
         try {
             if (!properties.getAudit().isEnabled()) {
@@ -68,7 +67,7 @@ public class AuditLogPublisher {
     /**
      * Publish audit event with masked sensitive data
      */
-    @Async("auditExecutor")
+    @Async
     public void publishSafe(AuditEvent event) {
         // Mask sensitive data in context before publishing
         if (event.getContext() != null) {

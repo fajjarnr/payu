@@ -11,6 +11,7 @@ import id.payu.security.converter.EncryptedStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,7 +32,7 @@ import java.util.Collections;
 @AutoConfiguration
 @EnableConfigurationProperties(SecurityProperties.class)
 @EnableAspectJAutoProxy
-@ConditionalOnProperty(prefix = "payu.security", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "payu.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SecurityAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityAutoConfiguration.class);
@@ -79,7 +80,7 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security", name = "masking-enabled", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "payu.security", name = "masking-enabled", havingValue = "true", matchIfMissing = true)
     public DataMaskingAspect dataMaskingAspect() {
         log.info("Initializing Data Masking Aspect");
         return new DataMaskingAspect(properties);
@@ -87,18 +88,19 @@ public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = false)
-    @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
+    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = true)
     public AuditAspect auditAspect(
-            AuditLogPublisher auditLogPublisher) {
-        log.info("Initializing Audit Aspect");
-        return new AuditAspect(properties, auditLogPublisher);
+            org.springframework.beans.factory.ObjectProvider<AuditLogPublisher> auditLogPublisherProvider) {
+        AuditLogPublisher publisher = auditLogPublisherProvider.getIfAvailable();
+        log.info("Initializing Audit Aspect (publisher {})", publisher != null ? "available" : "unavailable — fallback to SLF4J");
+        return new AuditAspect(properties, publisher);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "payu.security", name = "audit-enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
+    @ConditionalOnBean(name = "kafkaTemplate")
     public AuditLogPublisher auditLogPublisher(
             org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate,
             com.fasterxml.jackson.databind.ObjectMapper objectMapper) {

@@ -71,6 +71,13 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
+        <!-- Spring Security Core for SecurityContextHolder (audit user extraction) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Kafka for audit event publishing (optional) -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
