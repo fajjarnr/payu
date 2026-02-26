@@ -2,6 +2,7 @@ package id.payu.lending.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.lending.application.security.LendingSecurityService;
+import id.payu.lending.application.service.InstallmentService;
 import id.payu.lending.application.service.LendingApplicationService;
 import id.payu.lending.application.service.LoanManagementService;
 import id.payu.lending.application.service.PayLaterTransactionService;
@@ -13,6 +14,10 @@ import id.payu.lending.dto.LoanApplicationCommand;
 import id.payu.lending.dto.LoanApplicationRequest;
 import id.payu.lending.dto.LoanPreApprovalResponse;
 import id.payu.lending.dto.PayLaterLimitRequest;
+import id.payu.lending.dto.InstallmentCheckoutRequest;
+import id.payu.lending.dto.InstallmentCheckoutResponse;
+import id.payu.lending.dto.TenorOptionResponse;
+import id.payu.lending.dto.TenorOptionsRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -53,6 +58,7 @@ public class LendingController extends BaseController {
     private final PayLaterTransactionService payLaterTransactionService;
     private final id.payu.lending.application.service.LoanPreApprovalService preApprovalService;
     private final LendingSecurityService lendingSecurityService;
+    private final InstallmentService installmentService;
 
     @PostMapping("/loans")
     @PreAuthorize("isAuthenticated()")
@@ -364,5 +370,79 @@ public class LendingController extends BaseController {
         return preApprovalService.getActivePreApprovalByUserId(userId)
                 .map(this::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Installment / PayLater Checkout (GAP-012)
+    // ═══════════════════════════════════════════════════════
+
+    @PostMapping("/installments/tenor-options")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get installment tenor options",
+            description = "Returns available tenor options (3x/6x/12x) with simulated monthly payment")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tenor options returned")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Insufficient credit or invalid request")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<List<TenorOptionResponse>>> getTenorOptions(
+            @Valid @RequestBody TenorOptionsRequest request) {
+        log.info("Tenor options requested: userId={}, amount={}", request.userId(), request.amount());
+        List<TenorOptionResponse> options = installmentService
+                .getTenorOptions(request.userId(), request.amount())
+                .stream()
+                .map(TenorOptionResponse::from)
+                .toList();
+        return ok(options);
+    }
+
+    @PostMapping("/installments/checkout")
+    @PreAuthorize("isAuthenticated()")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
+            entityType = "InstallmentCheckout",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
+    @Operation(summary = "Create installment checkout",
+            description = "Convert a purchase into an installment loan via PayLater credit")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Checkout created and disbursed",
+            content = @Content(schema = @Schema(implementation = InstallmentCheckoutResponse.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Insufficient credit or invalid request")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    public ResponseEntity<ApiResponse<InstallmentCheckoutResponse>> checkout(
+            @Valid @RequestBody InstallmentCheckoutRequest request) {
+        log.info("Installment checkout: userId={}, partner={}, amount={}, tenor={}x",
+                request.userId(), request.partnerId(), request.amount(), request.tenor());
+        id.payu.lending.domain.model.InstallmentCheckout result = installmentService.checkout(
+                request.userId(), request.partnerId(), request.externalOrderId(),
+                request.amount(), request.tenor());
+        return created(InstallmentCheckoutResponse.from(result),
+                "/api/v1/lending/installments/" + result.getId());
+    }
+
+    @GetMapping("/installments/{checkoutId}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get installment checkout by ID")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Checkout found",
+            content = @Content(schema = @Schema(implementation = InstallmentCheckoutResponse.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Checkout not found")
+    public ResponseEntity<ApiResponse<InstallmentCheckoutResponse>> getCheckout(
+            @Parameter(description = "Checkout UUID") @PathVariable UUID checkoutId) {
+        id.payu.lending.domain.model.InstallmentCheckout checkout = installmentService.getCheckout(checkoutId);
+        return ok(InstallmentCheckoutResponse.from(checkout));
+    }
+
+    @GetMapping("/installments/user/{userId}")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, authentication.principal.userId)")
+    @Operation(summary = "Get installment checkouts for a user")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Checkouts returned")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    public ResponseEntity<ApiResponse<List<InstallmentCheckoutResponse>>> getCheckoutsByUser(
+            @Parameter(description = "User ID") @PathVariable UUID userId) {
+        List<InstallmentCheckoutResponse> checkouts = installmentService.getCheckoutsByUser(userId)
+                .stream()
+                .map(InstallmentCheckoutResponse::from)
+                .toList();
+        return ok(checkouts);
     }
 }

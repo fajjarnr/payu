@@ -50,6 +50,9 @@ class LendingControllerSecurityTest {
     @Mock
     private LendingSecurityService lendingSecurityService;
 
+    @Mock
+    private id.payu.lending.application.service.InstallmentService installmentService;
+
     private LendingController lendingController;
 
     @BeforeEach
@@ -59,7 +62,8 @@ class LendingControllerSecurityTest {
                 loanManagementService,
                 payLaterTransactionService,
                 preApprovalService,
-                lendingSecurityService
+                lendingSecurityService,
+                installmentService
         );
     }
 

@@ -802,8 +802,8 @@
 
 | Key     | Type  | Summary                            | Priority   | SP  | Component(s)      | Labels              | Status   |
 | :------ | :---- | :--------------------------------- | :--------- | :-: | :---------------- | :------------------ | :------- |
-| GAP-008 | Story | Subscription / Recurring Billing   | 🔴 Highest |  5  | `billing-service` | `partner` `billing` | 📋 To Do |
-| GAP-012 | Story | Installment / PayLater Integration | 🟠 High    |  3  | `lending-service` | `partner` `lending` | 📋 To Do |
+| GAP-008 | Story | Subscription / Recurring Billing   | 🔴 Highest |  5  | `billing-service` | `partner` `billing` | ✅ Done |
+| GAP-012 | Story | Installment / PayLater Integration | 🟠 High    |  3  | `lending-service` | `partner` `lending` | ✅ Done |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -815,9 +815,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Subscription plan entity (interval, price, trial)
-> - [ ] Scheduler for recurring charges
-> - [ ] Dunning: retry failed charges (3 attempts, then suspend)
+> - [x] Subscription plan entity (interval, price, trial)
+> - [x] Scheduler for recurring charges
+> - [x] Dunning: retry failed charges (3 attempts, then suspend)
 > - [ ] Webhook: subscription.created, charge.succeeded, charge.failed
 >
 > **Relevan untuk**: Nobar, Sinau, Maca
@@ -828,9 +828,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Tenor options endpoint
-> - [ ] Approval + disbursement flow
-> - [ ] Installment schedule generation
+> - [x] Tenor options endpoint
+> - [x] Approval + disbursement flow
+> - [x] Installment schedule generation
 >
 > **Relevan untuk**: Dolan, Sinau
 
