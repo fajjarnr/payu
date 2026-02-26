@@ -1,8 +1,8 @@
 package id.payu.wallet.adapter.persistence.repository;
 
 import id.payu.wallet.adapter.persistence.entity.LedgerEntryEntity;
-import id.payu.wallet.domain.model.LedgerEntry;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +18,13 @@ public interface LedgerEntryJpaRepository extends JpaRepository<LedgerEntryEntit
 
     @Query("SELECT le FROM LedgerEntryEntity le WHERE le.transactionId = :transactionId")
     List<LedgerEntryEntity> findByTransactionId(@Param("transactionId") UUID transactionId);
+
+    @Query("SELECT le FROM LedgerEntryEntity le WHERE le.coaCode = :coaCode ORDER BY le.createdAt")
+    List<LedgerEntryEntity> findByCoaCode(@Param("coaCode") String coaCode);
+
+    @Query("SELECT le FROM LedgerEntryEntity le WHERE le.coaCode = :coaCode AND le.createdAt BETWEEN :from AND :to ORDER BY le.createdAt")
+    List<LedgerEntryEntity> findByCoaCodeAndCreatedAtBetween(
+            @Param("coaCode") String coaCode,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to);
 }

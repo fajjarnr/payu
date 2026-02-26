@@ -7,7 +7,9 @@ import java.util.UUID;
 public class LedgerEntry {
     private UUID id;
     private UUID transactionId;
+    private UUID journalEntryId;
     private String accountId;
+    private String coaCode;
     private EntryType entryType;
     private BigDecimal amount;
     private String currency;
@@ -19,10 +21,15 @@ public class LedgerEntry {
     public LedgerEntry() {
     }
 
-    public LedgerEntry(UUID id, UUID transactionId, String accountId, EntryType entryType, BigDecimal amount, String currency, BigDecimal balanceAfter, String referenceType, String referenceId, LocalDateTime createdAt) {
+    public LedgerEntry(UUID id, UUID transactionId, UUID journalEntryId, String accountId,
+                       String coaCode, EntryType entryType, BigDecimal amount, String currency,
+                       BigDecimal balanceAfter, String referenceType, String referenceId,
+                       LocalDateTime createdAt) {
         this.id = id;
         this.transactionId = transactionId;
+        this.journalEntryId = journalEntryId;
         this.accountId = accountId;
+        this.coaCode = coaCode;
         this.entryType = entryType;
         this.amount = amount;
         this.currency = currency;
@@ -46,8 +53,12 @@ public class LedgerEntry {
     public void setId(UUID id) { this.id = id; }
     public UUID getTransactionId() { return transactionId; }
     public void setTransactionId(UUID transactionId) { this.transactionId = transactionId; }
+    public UUID getJournalEntryId() { return journalEntryId; }
+    public void setJournalEntryId(UUID journalEntryId) { this.journalEntryId = journalEntryId; }
     public String getAccountId() { return accountId; }
     public void setAccountId(String accountId) { this.accountId = accountId; }
+    public String getCoaCode() { return coaCode; }
+    public void setCoaCode(String coaCode) { this.coaCode = coaCode; }
     public EntryType getEntryType() { return entryType; }
     public void setEntryType(EntryType entryType) { this.entryType = entryType; }
     public BigDecimal getAmount() { return amount; }
@@ -66,7 +77,9 @@ public class LedgerEntry {
     public static class LedgerEntryBuilder {
         private UUID id;
         private UUID transactionId;
+        private UUID journalEntryId;
         private String accountId;
+        private String coaCode;
         private EntryType entryType;
         private BigDecimal amount;
         private String currency;
@@ -79,7 +92,10 @@ public class LedgerEntry {
 
         public LedgerEntryBuilder id(UUID id) { this.id = id; return this; }
         public LedgerEntryBuilder transactionId(UUID transactionId) { this.transactionId = transactionId; return this; }
+        public LedgerEntryBuilder journalEntryId(UUID journalEntryId) { this.journalEntryId = journalEntryId; return this; }
         public LedgerEntryBuilder accountId(String accountId) { this.accountId = accountId; return this; }
+        public LedgerEntryBuilder accountId(UUID accountId) { this.accountId = accountId != null ? accountId.toString() : null; return this; }
+        public LedgerEntryBuilder coaCode(String coaCode) { this.coaCode = coaCode; return this; }
         public LedgerEntryBuilder entryType(EntryType entryType) { this.entryType = entryType; return this; }
         public LedgerEntryBuilder amount(BigDecimal amount) { this.amount = amount; return this; }
         public LedgerEntryBuilder currency(String currency) { this.currency = currency; return this; }
@@ -89,7 +105,8 @@ public class LedgerEntry {
         public LedgerEntryBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
 
         public LedgerEntry build() {
-            return new LedgerEntry(id, transactionId, accountId, entryType, amount, currency, balanceAfter, referenceType, referenceId, createdAt);
+            return new LedgerEntry(id, transactionId, journalEntryId, accountId, coaCode,
+                    entryType, amount, currency, balanceAfter, referenceType, referenceId, createdAt);
         }
     }
 }

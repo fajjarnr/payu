@@ -10,7 +10,9 @@ import java.util.UUID;
 @Table(name = "ledger_entries", indexes = {
     @Index(name = "idx_ledger_account_id", columnList = "account_id"),
     @Index(name = "idx_ledger_transaction_id", columnList = "transaction_id"),
-    @Index(name = "idx_ledger_created_at", columnList = "account_id, created_at")
+    @Index(name = "idx_ledger_created_at", columnList = "account_id, created_at"),
+    @Index(name = "idx_ledger_journal_id", columnList = "journal_entry_id"),
+    @Index(name = "idx_ledger_coa_code", columnList = "coa_code")
 })
 @NamedEntityGraph
 public class LedgerEntryEntity {
@@ -23,8 +25,15 @@ public class LedgerEntryEntity {
     @Column(name = "transaction_id", nullable = false)
     private UUID transactionId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "journal_entry_id")
+    private JournalEntryEntity journalEntry;
+
     @Column(name = "account_id", nullable = false, updatable = false)
     private String accountId;
+
+    @Column(name = "coa_code", length = 20)
+    private String coaCode;
 
     @Column(name = "type", nullable = false, length = 10)
     private String entryType;
@@ -50,10 +59,14 @@ public class LedgerEntryEntity {
     public LedgerEntryEntity() {
     }
 
-    public LedgerEntryEntity(UUID id, UUID transactionId, String accountId, String entryType, BigDecimal amount, String currency, BigDecimal balanceAfter, String referenceType, String referenceId, LocalDateTime createdAt) {
+    public LedgerEntryEntity(UUID id, UUID transactionId, String accountId, String coaCode,
+                             String entryType, BigDecimal amount, String currency,
+                             BigDecimal balanceAfter, String referenceType, String referenceId,
+                             LocalDateTime createdAt) {
         this.id = id;
         this.transactionId = transactionId;
         this.accountId = accountId;
+        this.coaCode = coaCode;
         this.entryType = entryType;
         this.amount = amount;
         this.currency = currency;
@@ -98,6 +111,22 @@ public class LedgerEntryEntity {
 
     public void setAccountId(String accountId) {
         this.accountId = accountId;
+    }
+
+    public String getCoaCode() {
+        return coaCode;
+    }
+
+    public void setCoaCode(String coaCode) {
+        this.coaCode = coaCode;
+    }
+
+    public JournalEntryEntity getJournalEntry() {
+        return journalEntry;
+    }
+
+    public void setJournalEntry(JournalEntryEntity journalEntry) {
+        this.journalEntry = journalEntry;
     }
 
     public String getEntryType() {
@@ -160,6 +189,7 @@ public class LedgerEntryEntity {
         private UUID id;
         private UUID transactionId;
         private String accountId;
+        private String coaCode;
         private String entryType;
         private BigDecimal amount;
         private String currency;
@@ -183,6 +213,11 @@ public class LedgerEntryEntity {
 
         public LedgerEntryEntityBuilder accountId(String accountId) {
             this.accountId = accountId;
+            return this;
+        }
+
+        public LedgerEntryEntityBuilder coaCode(String coaCode) {
+            this.coaCode = coaCode;
             return this;
         }
 
@@ -222,11 +257,11 @@ public class LedgerEntryEntity {
         }
 
         public LedgerEntryEntity build() {
-            return new LedgerEntryEntity(id, transactionId, accountId, entryType, amount, currency, balanceAfter, referenceType, referenceId, createdAt);
+            return new LedgerEntryEntity(id, transactionId, accountId, coaCode, entryType, amount, currency, balanceAfter, referenceType, referenceId, createdAt);
         }
 
         public String toString() {
-            return "LedgerEntryEntity.LedgerEntryEntityBuilder(id=" + this.id + ", transactionId=" + this.transactionId + ", accountId=" + this.accountId + ", entryType=" + this.entryType + ", amount=" + this.amount + ", currency=" + this.currency + ", balanceAfter=" + this.balanceAfter + ", referenceType=" + this.referenceType + ", referenceId=" + this.referenceId + ", createdAt=" + this.createdAt + ")";
+            return "LedgerEntryEntity.LedgerEntryEntityBuilder(id=" + this.id + ", transactionId=" + this.transactionId + ", accountId=" + this.accountId + ", coaCode=" + this.coaCode + ", entryType=" + this.entryType + ", amount=" + this.amount + ", currency=" + this.currency + ", balanceAfter=" + this.balanceAfter + ", referenceType=" + this.referenceType + ", referenceId=" + this.referenceId + ", createdAt=" + this.createdAt + ")";
         }
     }
 }

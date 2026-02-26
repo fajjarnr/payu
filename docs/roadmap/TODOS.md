@@ -83,11 +83,11 @@
 > system dengan Chart of Accounts dan General Ledger. Foundation untuk settlement, reconciliation,
 > dan regulatory reporting OJK.
 
-| Key     | Type  | Summary                  | Priority   | SP  | Component(s)     | Labels             | Status   |
-| :------ | :---- | :----------------------- | :--------- | :-: | :--------------- | :----------------- | :------- |
-| IMP-001 | Story | True Double-Entry Ledger | 🔴 Highest |  5  | `wallet-service` | `backend` `core`   | 📋 To Do |
-| IMP-002 | Story | Chart of Accounts (CoA)  | 🔴 Highest |  3  | `wallet-service` | `backend` `core`   | 📋 To Do |
-| IMP-012 | Story | GL Engine Ringan         | 🟡 Medium  |  5  | new `gl-service` | `backend` `finops` | 📋 To Do |
+| Key     | Type  | Summary                  | Priority   | SP  | Component(s)     | Labels             | Status    |
+| :------ | :---- | :----------------------- | :--------- | :-: | :--------------- | :----------------- | :-------- |
+| IMP-001 | Story | True Double-Entry Ledger | 🔴 Highest |  5  | `wallet-service` | `backend` `core`   | ✅ Done   |
+| IMP-002 | Story | Chart of Accounts (CoA)  | 🔴 Highest |  3  | `wallet-service` | `backend` `core`   | ✅ Done   |
+| IMP-012 | Story | GL Engine Ringan         | 🟡 Medium  |  5  | `wallet-service` | `backend` `finops` | ✅ Done   |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -100,11 +100,11 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `JournalEntry` entity dengan paired debit+credit `LedgerEntry`
-> - [ ] Constraint: sum(debit) == sum(credit) per journal
-> - [ ] Trial balance endpoint (`GET /wallets/trial-balance`)
-> - [ ] Migration script Flyway untuk existing data
-> - [ ] Unit tests + integration tests
+> - [x] `JournalEntry` entity dengan paired debit+credit `LedgerEntry`
+> - [x] Constraint: sum(debit) == sum(credit) per journal
+> - [x] Trial balance endpoint (`GET /wallets/trial-balance`)
+> - [x] Migration script Flyway untuk existing data
+> - [x] Unit tests + integration tests
 >
 > ⚠️ **FE Impact**: `WalletService.ts` perlu tambah `journalId` field + trial balance endpoint
 
@@ -115,25 +115,25 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `ChartOfAccount` entity dengan hierarchical code structure
-> - [ ] Seed data untuk standard banking CoA
-> - [ ] Link `LedgerEntry` → `ChartOfAccount`
+> - [x] `ChartOfAccount` entity dengan hierarchical code structure
+> - [x] Seed data untuk standard banking CoA
+> - [x] Link `LedgerEntry` → `ChartOfAccount`
 >
 > ✅ No FE impact — backend/backoffice only
 
 **IMP-012 — GL Engine Ringan** `L` `5 SP`
 
 > General Ledger untuk settlement reconciliation (neraca, laba-rugi).
-> Bisa di `wallet-service` atau service baru `gl-service`.
+> Implemented in `wallet-service` (not a separate service).
 > Enabler untuk daily settlement report TokoBapak.
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Balance sheet generation
-> - [ ] Income statement generation
-> - [ ] Daily settlement report endpoint
+> - [x] Balance sheet generation
+> - [x] Income statement generation
+> - [x] Daily settlement report endpoint
 >
-> **Blocked by**: IMP-001, IMP-002
+> **Blocked by**: IMP-001, IMP-002 (resolved)
 >
 > ✅ No FE impact — backoffice/reporting only
 

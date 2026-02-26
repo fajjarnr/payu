@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **E-01 — Core Banking Ledger (2026-02-26)**:
+  - **IMP-001 — True Double-Entry Ledger** (5 SP): `JournalEntry` domain model as parent entity grouping paired DEBIT+CREDIT `LedgerEntry` rows. Enforced sum(debit)==sum(credit) constraint at domain level with `isBalanced()`, `hasMatchingPairs()`, `post()` methods. Added `JournalEntryEntity` JPA entity, `JournalEntryJpaRepository`, `JournalPersistencePort` output port, `JournalUseCase` input port, `JournalService` application service, `JournalController` REST controller. Trial balance endpoint: `GET /api/v1/wallets/trial-balance`. Flyway V8 migration for `journal_entries` table.
+  - **IMP-002 — Chart of Accounts** (3 SP): `ChartOfAccount` domain model with PSAK-based hierarchical code structure (ASSET 1xxx, LIABILITY 2xxx, EQUITY 3xxx, REVENUE 4xxx, EXPENSE 5xxx). 18 account categories. `ChartOfAccountEntity` JPA entity, `ChartOfAccountJpaRepository`, `ChartOfAccountUseCase` input port, `ChartOfAccountService`, `ChartOfAccountController` REST endpoints. Seed data with 22 standard banking accounts. Linked `LedgerEntry` to CoA via `coa_code` column.
+  - **IMP-012 — GL Engine Ringan** (5 SP): `GeneralLedgerService` with balance sheet (`GET /api/v1/wallets/gl/balance-sheet`), income statement (`GET /api/v1/wallets/gl/income-statement`), and daily settlement report (`GET /api/v1/wallets/gl/daily-settlement`) endpoints. Proper normal-balance-side computation for DEBIT/CREDIT accounts. `GeneralLedgerController` REST controller. DTOs: `BalanceSheetResponse`, `IncomeStatementResponse`, `DailySettlementResponse`, `TrialBalanceResponse`.
+  - Updated `WalletPersistenceAdapter` mappers for new `journalEntryId` and `coaCode` fields.
+  - 51 unit tests passing (14 new tests for JournalEntry, JournalService, GeneralLedgerService).
+
 ### Fixed
 
 - **Logging-Starter Best Practice Overhaul (2026-02-25)**:

@@ -305,7 +305,7 @@ class WalletServiceTest {
     @Test
     @DisplayName("Should get ledger entries by account ID")
     void shouldGetLedgerEntriesByAccountId() {
-        UUID accountId = UUID.fromString(testWallet.getAccountId());
+        String accountId = testWallet.getAccountId();
         when(walletPersistencePort.findByAccountIdOrderByCreatedAtDesc(accountId)).thenReturn(List.of(testLedgerEntry));
 
         List<LedgerEntry> result = walletService.getLedgerEntriesByAccountId(accountId);

@@ -129,6 +129,7 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
                 .balanceAfter(entry.getBalanceAfter())
                 .referenceType(entry.getReferenceType())
                 .referenceId(entry.getReferenceId())
+                .coaCode(entry.getCoaCode())
                 .createdAt(entry.getCreatedAt())
                 .build();
     }
@@ -179,6 +180,8 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
                 .balanceAfter(entity.getBalanceAfter())
                 .referenceType(entity.getReferenceType())
                 .referenceId(entity.getReferenceId())
+                .journalEntryId(entity.getJournalEntry() != null ? entity.getJournalEntry().getId() : null)
+                .coaCode(entity.getCoaCode())
                 .createdAt(entity.getCreatedAt())
                 .build();
     }
