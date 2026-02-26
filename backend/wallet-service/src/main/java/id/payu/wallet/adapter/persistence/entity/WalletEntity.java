@@ -60,8 +60,9 @@ public class WalletEntity {
     public WalletEntity() {
     }
 
-    public WalletEntity(UUID id, String accountId, BigDecimal balance, BigDecimal reservedBalance, String currency, WalletStatus status, Long version, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public WalletEntity(UUID id, String tenantId, String accountId, BigDecimal balance, BigDecimal reservedBalance, String currency, WalletStatus status, Long version, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        this.tenantId = tenantId;
         this.accountId = accountId;
         this.balance = balance;
         this.reservedBalance = reservedBalance;
@@ -85,6 +86,8 @@ public class WalletEntity {
     // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
+    public String getTenantId() { return tenantId; }
+    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
     public String getAccountId() { return accountId; }
     public void setAccountId(String accountId) { this.accountId = accountId; }
     public BigDecimal getBalance() { return balance; }
@@ -104,6 +107,7 @@ public class WalletEntity {
 
     public static class WalletEntityBuilder {
         private UUID id;
+        private String tenantId;
         private String accountId;
         private BigDecimal balance;
         private BigDecimal reservedBalance;
@@ -116,6 +120,7 @@ public class WalletEntity {
         WalletEntityBuilder() {}
 
         public WalletEntityBuilder id(UUID id) { this.id = id; return this; }
+        public WalletEntityBuilder tenantId(String tenantId) { this.tenantId = tenantId; return this; }
         public WalletEntityBuilder accountId(String accountId) { this.accountId = accountId; return this; }
         public WalletEntityBuilder balance(BigDecimal balance) { this.balance = balance; return this; }
         public WalletEntityBuilder reservedBalance(BigDecimal reservedBalance) { this.reservedBalance = reservedBalance; return this; }
@@ -126,7 +131,7 @@ public class WalletEntity {
         public WalletEntityBuilder updatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; return this; }
 
         public WalletEntity build() {
-            return new WalletEntity(id, accountId, balance, reservedBalance, currency, status, version, createdAt, updatedAt);
+            return new WalletEntity(id, tenantId, accountId, balance, reservedBalance, currency, status, version, createdAt, updatedAt);
         }
     }
 }

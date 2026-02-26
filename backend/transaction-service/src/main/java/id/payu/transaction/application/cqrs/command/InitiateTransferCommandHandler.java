@@ -72,14 +72,16 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
             throw new IllegalStateException("Insufficient balance");
         }
 
+        String reservationId = balanceResponse.getReservationId();
+
         transaction.setStatus(Transaction.TransactionStatus.VALIDATING);
         transactionPersistencePort.save(transaction);
 
         // Process based on transfer type (BUG-BE-007: handle all types, not just BIFAST)
         switch (command.type()) {
-            case BIFAST_TRANSFER -> processBiFastTransfer(transaction, command);
-            case INTERNAL_TRANSFER -> processInternalTransfer(transaction, command);
-            case SKN_TRANSFER, RTGS_TRANSFER -> processInterBankTransfer(transaction, command);
+            case BIFAST_TRANSFER -> processBiFastTransfer(transaction, command, reservationId);
+            case INTERNAL_TRANSFER -> processInternalTransfer(transaction, command, reservationId);
+            case SKN_TRANSFER, RTGS_TRANSFER -> processInterBankTransfer(transaction, command, reservationId);
             default -> {
                 transaction.setStatus(Transaction.TransactionStatus.FAILED);
                 transaction.setFailureReason("Unsupported transfer type: " + command.type());
@@ -126,7 +128,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         );
     }
 
-    private void processBiFastTransfer(Transaction transaction, InitiateTransferCommand command) {
+    private void processBiFastTransfer(Transaction transaction, InitiateTransferCommand command, String reservationId) {
         try {
             BifastTransferRequest bifastRequest = BifastTransferRequest.builder()
                     .referenceNumber(transaction.getReferenceNumber())
@@ -152,6 +154,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 walletServicePort.releaseBalance(
                         command.senderAccountId(),
                         transaction.getId().toString(),
+                        reservationId,
                         command.amount().getAmount()
                 );
                 log.info("Balance released successfully for transaction: {}", transaction.getId());
@@ -174,12 +177,13 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
      * Process internal transfer — immediately completes by committing the reserved balance.
      * BUG-BE-007 fix: Previously, INTERNAL_TRANSFER was left stuck in VALIDATING status.
      */
-    private void processInternalTransfer(Transaction transaction, InitiateTransferCommand command) {
+    private void processInternalTransfer(Transaction transaction, InitiateTransferCommand command, String reservationId) {
         try {
             // For internal transfers, commit the reservation immediately
             walletServicePort.commitBalance(
                     command.senderAccountId(),
                     transaction.getId().toString(),
+                    reservationId,
                     command.amount().getAmount()
             );
 
@@ -201,6 +205,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 walletServicePort.releaseBalance(
                         command.senderAccountId(),
                         transaction.getId().toString(),
+                        reservationId,
                         command.amount().getAmount()
                 );
                 log.info("Balance released successfully for transaction: {}", transaction.getId());
@@ -221,7 +226,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
      * Process inter-bank transfer (SKN/RTGS) — sets to PENDING for downstream clearing.
      * BUG-BE-007 fix: Previously, SKN and RTGS were left stuck in VALIDATING status.
      */
-    private void processInterBankTransfer(Transaction transaction, InitiateTransferCommand command) {
+    private void processInterBankTransfer(Transaction transaction, InitiateTransferCommand command, String reservationId) {
         // SKN/RTGS transfers are queued for batch/real-time clearing
         // The actual clearing is handled by the downstream clearing system
         transaction.setStatus(Transaction.TransactionStatus.PENDING);

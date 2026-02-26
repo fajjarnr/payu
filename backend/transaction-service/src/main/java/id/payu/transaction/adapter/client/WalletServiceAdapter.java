@@ -17,7 +17,6 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Adapter for calling wallet-service REST API.
@@ -32,9 +31,6 @@ public class WalletServiceAdapter implements WalletServicePort {
     private String walletServiceUrl;
 
     private final RestTemplate restTemplate;
-
-    // Store reservationId mapping for commit/release
-    private final Map<String, String> reservationMapping = new ConcurrentHashMap<>();
 
     @Override
     @CircuitBreaker(name = "walletService", fallbackMethod = "reserveBalanceFallback")
@@ -56,8 +52,6 @@ public class WalletServiceAdapter implements WalletServicePort {
             ReserveBalanceResponse response = restTemplate.postForObject(url, entity, ReserveBalanceResponse.class);
             
             if (response != null && response.getReservationId() != null) {
-                // Store reservation mapping for later commit/release
-                reservationMapping.put(transactionId, response.getReservationId());
                 log.info("Balance reserved successfully: reservationId={}", response.getReservationId());
             }
             
@@ -71,10 +65,9 @@ public class WalletServiceAdapter implements WalletServicePort {
     @Override
     @CircuitBreaker(name = "walletService", fallbackMethod = "commitBalanceFallback")
     @Retry(name = "walletService")
-    public void commitBalance(UUID accountId, String transactionId, BigDecimal amount) {
-        String reservationId = reservationMapping.get(transactionId);
+    public void commitBalance(UUID accountId, String transactionId, String reservationId, BigDecimal amount) {
         if (reservationId == null) {
-            log.warn("No reservation found for transactionId={}, skipping commit", transactionId);
+            log.warn("No reservation ID provided for transactionId={}, skipping commit", transactionId);
             return;
         }
 
@@ -83,7 +76,6 @@ public class WalletServiceAdapter implements WalletServicePort {
 
         try {
             restTemplate.postForObject(url, null, Map.class);
-            reservationMapping.remove(transactionId);
             log.info("Reservation committed successfully: reservationId={}", reservationId);
         } catch (Exception e) {
             log.error("Failed to commit reservation: {}", e.getMessage());
@@ -94,10 +86,9 @@ public class WalletServiceAdapter implements WalletServicePort {
     @Override
     @CircuitBreaker(name = "walletService", fallbackMethod = "releaseBalanceFallback")
     @Retry(name = "walletService")
-    public void releaseBalance(UUID accountId, String transactionId, BigDecimal amount) {
-        String reservationId = reservationMapping.get(transactionId);
+    public void releaseBalance(UUID accountId, String transactionId, String reservationId, BigDecimal amount) {
         if (reservationId == null) {
-            log.warn("No reservation found for transactionId={}, skipping release", transactionId);
+            log.warn("No reservation ID provided for transactionId={}, skipping release", transactionId);
             return;
         }
 
@@ -106,7 +97,6 @@ public class WalletServiceAdapter implements WalletServicePort {
 
         try {
             restTemplate.postForObject(url, null, Map.class);
-            reservationMapping.remove(transactionId);
             log.info("Reservation released successfully: reservationId={}", reservationId);
         } catch (Exception e) {
             log.error("Failed to release reservation: {}", e.getMessage());
@@ -123,12 +113,12 @@ public class WalletServiceAdapter implements WalletServicePort {
                 .build();
     }
 
-    private void commitBalanceFallback(UUID accountId, String transactionId, BigDecimal amount, Exception e) {
+    private void commitBalanceFallback(UUID accountId, String transactionId, String reservationId, BigDecimal amount, Exception e) {
         log.warn("Circuit breaker fallback for commitBalance: {}", e.getMessage());
         // In production, this should trigger a compensation/retry mechanism
     }
 
-    private void releaseBalanceFallback(UUID accountId, String transactionId, BigDecimal amount, Exception e) {
+    private void releaseBalanceFallback(UUID accountId, String transactionId, String reservationId, BigDecimal amount, Exception e) {
         log.warn("Circuit breaker fallback for releaseBalance: {}", e.getMessage());
         // In production, this should trigger a compensation/retry mechanism
     }

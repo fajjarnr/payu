@@ -1,5 +1,6 @@
 package id.payu.api.common.money;
 
+import id.payu.api.common.exception.InsufficientFundsException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

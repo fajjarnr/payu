@@ -61,6 +61,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                 transaction.getId().toString(),
                 command.amount().getAmount()
         );
+        String reservationId = balanceResponse.getReservationId();
 
         if (!balanceResponse.isSuccess()) {
             transaction.setStatus(Transaction.TransactionStatus.FAILED);
@@ -86,6 +87,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                 walletServicePort.commitBalance(
                         command.accountId(),
                         transaction.getId().toString(),
+                        reservationId,
                         command.amount().getAmount()
                 );
                 transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
@@ -96,6 +98,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                 walletServicePort.releaseBalance(
                         command.accountId(),
                         transaction.getId().toString(),
+                        reservationId,
                         command.amount().getAmount()
                 );
                 transaction.setStatus(Transaction.TransactionStatus.FAILED);
@@ -108,6 +111,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
             walletServicePort.releaseBalance(
                     command.accountId(),
                     transaction.getId().toString(),
+                    reservationId,
                     command.amount().getAmount()
             );
             transaction.setStatus(Transaction.TransactionStatus.FAILED);

@@ -20,6 +20,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.net.URI;
 import java.time.Duration;
@@ -37,6 +38,9 @@ public class ApiGatewayResource {
 
     @Inject
     Vertx vertx;
+
+    @Context
+    UriInfo uriInfo;
 
     @Inject
     CircuitBreakerService circuitBreakerService;
@@ -456,9 +460,15 @@ public class ApiGatewayResource {
             return Uni.createFrom().item(Response.status(502).entity(errorMsg).build());
         }
 
+        // Capture query string from the incoming request and append to downstream path
+        String queryString = (uriInfo != null) ? uriInfo.getRequestUri().getRawQuery() : null;
+        String fullPath = (queryString != null && !queryString.isEmpty())
+                ? path + "?" + queryString
+                : path;
+
         // Wrap the actual call with circuit breaker + retry + timeout
         return circuitBreakerService.execute(serviceName, () -> {
-            Uni<Response> call = doProxy(serviceName, serviceConfig, path, method, body, headers);
+            Uni<Response> call = doProxy(serviceName, serviceConfig, fullPath, method, body, headers);
 
             // Apply retry with backoff
             call = retryAndTimeoutService.executeWithRetry(serviceName, call);

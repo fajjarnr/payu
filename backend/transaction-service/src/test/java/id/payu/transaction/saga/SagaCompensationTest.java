@@ -182,7 +182,7 @@ class SagaCompensationTest {
             commandHandler.handle(command);
 
             // Then - Balance release should NOT be called
-            verify(walletServicePort, never()).releaseBalance(any(), any(), any());
+            verify(walletServicePort, never()).releaseBalance(any(), any(), any(), any());
         }
     }
 
@@ -301,6 +301,7 @@ class SagaCompensationTest {
             verify(walletServicePort).releaseBalance(
                     eq(senderAccountId),
                     anyString(),
+                    any(),
                     eq(transferAmount.getAmount())
             );
 
@@ -377,8 +378,8 @@ class SagaCompensationTest {
             commandHandler.handle(command);
 
             // Then - Commit should NOT be called, release should be called
-            verify(walletServicePort, never()).commitBalance(any(), any(), any());
-            verify(walletServicePort).releaseBalance(any(), any(), any());
+            verify(walletServicePort, never()).commitBalance(any(), any(), any(), any());
+            verify(walletServicePort).releaseBalance(any(), any(), any(), any());
         }
     }
 
@@ -406,7 +407,7 @@ class SagaCompensationTest {
                     .hasMessageContaining("Wallet service timeout");
 
             // Verify no balance release is attempted (nothing to release)
-            verify(walletServicePort, never()).releaseBalance(any(), any(), any());
+            verify(walletServicePort, never()).releaseBalance(any(), any(), any(), any());
         }
 
         @Test
@@ -439,6 +440,7 @@ class SagaCompensationTest {
             verify(walletServicePort).releaseBalance(
                     eq(senderAccountId),
                     anyString(),
+                    any(),
                     eq(transferAmount.getAmount())
             );
         }

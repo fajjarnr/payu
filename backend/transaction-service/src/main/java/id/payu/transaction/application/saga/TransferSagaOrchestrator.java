@@ -83,6 +83,10 @@ public class TransferSagaOrchestrator extends SagaOrchestrator<TransferSagaConte
                                 ctx.getAmount()
                         );
                         ctx.setBalanceReserved(true);
+                        // Store reservationId in saga context for multi-pod safety
+                        if (response != null && response.getReservationId() != null) {
+                            ctx.setReservationId(response.getReservationId());
+                        }
                         return StepResult.success(ctx, "Balance reserved")
                                 .withMetadata("reservationResponse", response);
                     } catch (Exception e) {
@@ -97,6 +101,7 @@ public class TransferSagaOrchestrator extends SagaOrchestrator<TransferSagaConte
                             walletService.releaseBalance(
                                     ctx.getSenderAccountId(),
                                     ctx.getTransactionId().toString(),
+                                    ctx.getReservationId(),
                                     ctx.getAmount()
                             );
                             ctx.setBalanceReserved(false);
@@ -161,6 +166,7 @@ public class TransferSagaOrchestrator extends SagaOrchestrator<TransferSagaConte
                 walletService.commitBalance(
                         ctx.getSenderAccountId(),
                         ctx.getTransactionId().toString(),
+                        ctx.getReservationId(),
                         ctx.getAmount()
                 );
                 return StepResult.success(ctx, "Balance committed");
