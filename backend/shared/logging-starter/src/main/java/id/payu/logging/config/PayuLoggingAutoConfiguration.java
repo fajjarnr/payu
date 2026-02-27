@@ -2,6 +2,7 @@ package id.payu.logging.config;
 
 import id.payu.logging.filter.CorrelationIdFilter;
 import id.payu.logging.filter.CorrelationIdWebFilter;
+import id.payu.logging.filter.RequestLoggingFilter;
 import id.payu.logging.filter.TraceIdFilter;
 import id.payu.logging.filter.TraceIdWebFilter;
 import id.payu.logging.util.MdcUtil;
@@ -90,6 +91,28 @@ public class PayuLoggingAutoConfiguration {
     @ConditionalOnMissingBean
     public MdcUtil mdcUtil() {
         return new MdcUtil();
+    }
+
+    /**
+     * Request/response logging filter for servlet-based applications.
+     * Logs HTTP method, URI, status, duration, and optionally payload.
+     */
+    @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    @ConditionalOnMissingBean(name = "requestLoggingFilter")
+    @ConditionalOnProperty(
+        prefix = "payu.logging.request-logging",
+        name = "enabled",
+        havingValue = "true"
+    )
+    public FilterRegistrationBean<RequestLoggingFilter> requestLoggingFilter(
+            PayuLoggingProperties properties) {
+        FilterRegistrationBean<RequestLoggingFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new RequestLoggingFilter(properties));
+        registration.addUrlPatterns("/*");
+        registration.setName("requestLoggingFilter");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
+        return registration;
     }
 
     // ---- Reactive WebFlux Filters ----
