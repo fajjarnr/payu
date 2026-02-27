@@ -62,7 +62,7 @@
 | E-12 | Settlement & Financial Operations | 🟠 High    |    4    | 16  | Q2 2026 | 📋 To Do |
 | E-13 | Dispute Resolution                | 🟠 High    |    1    |  5  | Q2 2026 | 📋 To Do |
 | E-14 | Consumer Banking Experience       | 🟠 High    |    6    | 12  | Q2 2026 | 📋 To Do |
-| E-15 | Payment Gateway Features          | 🔴 Highest |    7    | 25  | Q2 2026 | 📋 To Do |
+| E-15 | Payment Gateway Features          | 🔴 Highest |    7    | 25  | Q2 2026 | � In Progress |
 | E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    | 12  | Q3 2026 | 📋 To Do |
 | E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |  6  | Q2 2026 | 📋 To Do |
 | E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | 📋 To Do |
@@ -1062,13 +1062,13 @@
 
 | Key     | Type  | Summary                      | Priority   | SP  | Component(s)           | Labels               | Status   |
 | :------ | :---- | :--------------------------- | :--------- | :-: | :--------------------- | :------------------- | :------- |
-| IMP-040 | Story | Payment Link / Invoice       | 🔴 Highest |  3  | `partner-service`      | `partner` `gateway`  | 📋 To Do |
-| IMP-041 | Story | Payment Method Selection API | 🟠 High    |  3  | `gateway-service`      | `gateway` `partner`  | 📋 To Do |
-| IMP-042 | Story | Virtual Account (VA) Payment | 🟠 High    |  5  | `transaction-service`  | `backend` `gateway`  | 📋 To Do |
-| IMP-043 | Story | Hosted Checkout Page         | 🟠 High    |  5  | `gateway-svc` + FE     | `gateway` `frontend` | 📋 To Do |
-| IMP-044 | Story | Payment Expiry & Auto-Cancel | 🟠 High    |  2  | `transaction-service`  | `backend` `gateway`  | 📋 To Do |
-| IMP-045 | Story | Dynamic QR for Merchants     | 🟡 Medium  |  5  | `partner-service`      | `partner` `gateway`  | 📋 To Do |
-| IMP-046 | Story | Checkout Deeplink            | 🟡 Medium  |  2  | `gateway-svc` + mobile | `gateway` `mobile`   | 📋 To Do |
+| IMP-040 | Story | Payment Link / Invoice       | 🔴 Highest |  3  | `partner-service`      | `partner` `gateway`  | ✅ Done  |
+| IMP-041 | Story | Payment Method Selection API | 🟠 High    |  3  | `gateway-service`      | `gateway` `partner`  | ✅ Done  |
+| IMP-042 | Story | Virtual Account (VA) Payment | 🟠 High    |  5  | `transaction-service`  | `backend` `gateway`  | ✅ Done  |
+| IMP-043 | Story | Hosted Checkout Page         | 🟠 High    |  5  | `gateway-svc` + FE     | `gateway` `frontend` | ✅ Done  |
+| IMP-044 | Story | Payment Expiry & Auto-Cancel | 🟠 High    |  2  | `transaction-service`  | `backend` `gateway`  | ✅ Done  |
+| IMP-045 | Story | Dynamic QR for Merchants     | 🟡 Medium  |  5  | `partner-service`      | `partner` `gateway`  | ✅ Done  |
+| IMP-046 | Story | Checkout Deeplink            | 🟡 Medium  |  2  | `gateway-svc` + mobile | `gateway` `mobile`   | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1082,10 +1082,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `PaymentLink` entity (slug, amount, description, expiry, status)
-> - [ ] `POST /partners/{id}/payment-links` → generate unique URL
-> - [ ] `GET /pay/{slug}` → public endpoint for payer
-> - [ ] Status: ACTIVE → PAID / EXPIRED
+> - [x] `PaymentLink` entity (slug, amount, description, expiry, status)
+> - [x] `POST /partners/{id}/payment-links` → generate unique URL
+> - [x] `GET /pay/{slug}` → public endpoint for payer
+> - [x] Status: ACTIVE → PAID / EXPIRED
 > - [ ] Webhook notification on payment completion
 >
 > ✅ No FE impact (web-app) — partner-facing API. Checkout page di IMP-043.
@@ -1099,10 +1099,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `GET /payments/{id}/methods` → list available methods
-> - [ ] Eligibility check per method (balance, KYC status, limits)
-> - [ ] Fee calculation per method
-> - [ ] Estimated settlement time
+> - [x] `GET /payments/{id}/methods` → list available methods
+> - [x] Eligibility check per method (balance, KYC status, limits)
+> - [x] Fee calculation per method
+> - [x] Estimated settlement time
 >
 > ✅ No FE impact (web-app) — partner/checkout API
 
@@ -1115,11 +1115,11 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `VirtualAccount` entity (vaNumber, bankCode, amount, status, expiry)
-> - [ ] `POST /payments/va` → create VA with generated number
-> - [ ] Bank callback endpoint for payment confirmation (simulated)
+> - [x] `VirtualAccount` entity (vaNumber, bankCode, amount, status, expiry)
+> - [x] `POST /payments/va` → create VA with generated number
+> - [x] Bank callback endpoint for payment confirmation (simulated)
 > - [ ] VA simulator in `simulators/` directory
-> - [ ] Auto-expire unpaid VA after TTL
+> - [x] Auto-expire unpaid VA after TTL
 >
 > ✅ No FE impact (web-app) — partner API + simulator
 
@@ -1133,10 +1133,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `POST /checkout/tokens` → generate checkout token
-> - [ ] Checkout HTML page listing available payment methods
-> - [ ] Select method → initiate payment → redirect callback
-> - [ ] Embeddable via iframe atau redirect
+> - [x] `POST /checkout/tokens` → generate checkout token
+> - [x] Checkout HTML page listing available payment methods
+> - [x] Select method → initiate payment → redirect callback
+> - [x] Embeddable via iframe atau redirect
 >
 > ⚠️ **FE Impact**: Halaman checkout **baru** (bukan di web-app consumer, tapi di gateway/checkout context)
 
@@ -1149,8 +1149,8 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `expiresAt` field di payment entity
-> - [ ] Scheduler job (Quartz/cron) scan & cancel expired payments
+> - [x] `expiresAt` field di payment entity
+> - [x] Scheduler job (Quartz/cron) scan & cancel expired payments
 > - [ ] Release any reserved balance
 > - [ ] Kafka event `payment.expired` → webhook notification
 >
@@ -1165,9 +1165,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Merchant entity + onboarding API
-> - [ ] `POST /merchants/{id}/qr` → dynamic QR with amount
-> - [ ] Payment acceptance flow via QRIS simulator
+> - [x] Merchant entity + onboarding API
+> - [x] `POST /merchants/{id}/qr` → dynamic QR with amount
+> - [x] Payment acceptance flow via QRIS simulator
 > - [ ] Settlement to merchant wallet
 >
 > ✅ No FE impact (web-app) — merchant/partner-facing
@@ -1181,8 +1181,8 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] URL scheme definition: `payu://pay`, `payu://topup`, `payu://transfer`
-> - [ ] `POST /deeplinks` → generate signed deeplink URL
+> - [x] URL scheme definition: `payu://pay`, `payu://topup`, `payu://transfer`
+> - [x] `POST /deeplinks` → generate signed deeplink URL
 > - [ ] Mobile app URL handler (Expo Linking)
 >
 > ✅ No FE impact (web-app) — mobile app handler

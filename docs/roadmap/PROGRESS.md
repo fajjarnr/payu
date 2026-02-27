@@ -10,7 +10,7 @@
 
 | Attribute                | Value                    |
 | :----------------------- | :----------------------- |
-| **Last Status Update**   | February 26, 2026        |
+| **Last Status Update**   | February 27, 2026        |
 | **Production Readiness** | 99% (229/232 bugs fixed) |
 | **OpenShift Tag**        | `v1.4.0` (in-progress)   |
 | **Namespace**            | `payu-dev`               |
@@ -64,7 +64,18 @@
 
 ## 📦 Deployment Log
 
-### v1.4.0 (In-Progress) — February 25-26, 2026
+### v1.4.0 (In-Progress) — February 25-27, 2026
+
+**E-15 — Payment Gateway Features (Feb 27):**
+
+- ✅ **IMP-040 — Payment Link / Invoice** (3 SP) — `PaymentLink` entity with slug-based URLs, partner-scoped CRUD, public payer endpoint, auto-expire scheduler. 24 unit tests.
+- ✅ **IMP-041 — Payment Method Selection API** (3 SP) — Catalog of 6 payment methods (wallet, VA, QRIS, bank transfer, credit card, PayLater) with eligibility, fees, settlement time.
+- ✅ **IMP-042 — Virtual Account (VA) Payment** (5 SP) — VA lifecycle (PENDING→PAID/EXPIRED) with bank-prefixed number generation (BCA/BNI/Mandiri/Permata), bank callback, auto-expiry. 10 unit tests.
+- ✅ **IMP-043 — Hosted Checkout Page** (5 SP) — Snap-style checkout with token generation, server-rendered HTML page, session cleanup scheduler.
+- ✅ **IMP-044 — Payment Expiry & Auto-Cancel** (2 SP) — Centralized `PaymentExpiryScheduler` for transactions + VAs, `expiresAt` field on `Transaction` entity.
+- ✅ **IMP-045 — Dynamic QR for Merchants** (5 SP) — Merchant onboarding + dynamic QRIS generation with payment confirmation flow. 10+ unit tests.
+- ✅ **IMP-046 — Checkout Deeplink** (2 SP) — HMAC-SHA256 signed deeplinks (`payu://pay|topup|transfer`) with universal link fallback.
+- 🔧 **E-15 Code Quality Fixes** — Fixed @Audited enum misuse, @Transactional(readOnly) write bug, duplicate scheduler, hardcoded HMAC secret, missing @Audited/@Idempotent on financial endpoints, auth on payer endpoint, redundant indexes.
 
 **Epic Implementation (Feb 26):**
 

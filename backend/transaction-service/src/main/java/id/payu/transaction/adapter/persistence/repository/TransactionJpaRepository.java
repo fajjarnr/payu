@@ -87,4 +87,12 @@ public interface TransactionJpaRepository extends JpaRepository<Transaction, UUI
      * Requires scanning all partitions when sharding is enabled.
      */
     long countByRecipientAccountId(UUID recipientAccountId);
+
+    /**
+     * Find pending/processing transactions that have expired.
+     * Used by PaymentExpiryScheduler to auto-cancel expired payments.
+     */
+    @Query("SELECT t FROM Transaction t WHERE t.status IN ('PENDING', 'PROCESSING') " +
+           "AND t.expiresAt IS NOT NULL AND t.expiresAt < :now")
+    List<Transaction> findExpiredPendingTransactions(@Param("now") java.time.Instant now);
 }

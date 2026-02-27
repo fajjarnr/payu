@@ -81,6 +81,9 @@ public class Transaction {
     @Column(name = "idempotency_key")
     private String idempotencyKey;
 
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
     /**
      * Gets the monetary amount.
      * For backward compatibility, reconstructs Money from deprecated fields if amount is null.
