@@ -47,6 +47,7 @@ spring:
       retries: 3
       acks: all
       properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaProducerInterceptor
         retry.backoff.ms: 1000
     consumer:
       group-id: lending-service-group
@@ -54,6 +55,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
         spring.json.trusted.packages: "*"
         session.timeout.ms: 30000
         heartbeat.interval.ms: 10000

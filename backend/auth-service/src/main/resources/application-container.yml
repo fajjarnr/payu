@@ -33,9 +33,14 @@ spring:
   
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    producer:
+      properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaProducerInterceptor
     consumer:
       auto-startup: true
       group-id: auth-service-container
+      properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
   
   data:
     redis:

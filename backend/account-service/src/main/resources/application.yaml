@@ -96,12 +96,14 @@ spring:
       group-id: account-service-group
       auto-offset-reset: earliest
       properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
         session.timeout.ms: 30000
         heartbeat.interval.ms: 10000
     producer:
       retries: 3
       acks: all
       properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaProducerInterceptor
         retry.backoff.ms: 1000
   security:
     oauth2:

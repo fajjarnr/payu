@@ -55,11 +55,15 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaProducerInterceptor
     consumer:
       group-id: ab-testing-service
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
   security:
     oauth2:
       resourceserver:

@@ -30,7 +30,10 @@ quarkus:
       "id.payu.portal":
         level: DEBUG
     console:
-      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e%n"
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlation_id}] [%c{3.}] (%t) %s%e%n"
+      json:
+        ~: true
+        pretty-print: false
 portal:
   services:
     account-service:

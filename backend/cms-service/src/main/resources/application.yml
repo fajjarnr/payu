@@ -71,12 +71,14 @@ spring:
       retries: 3
       acks: all
       properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaProducerInterceptor
         enable.idempotence: true
     consumer:
       group-id: cms-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
+        interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
         spring.json.trusted.packages: "*"
   security:
     oauth2:

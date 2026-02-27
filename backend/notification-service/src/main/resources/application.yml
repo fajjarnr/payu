@@ -69,6 +69,11 @@ payu:
     category:
       "id.payu.notification":
         level: DEBUG
+    console:
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%X{correlation_id}] [%c{3.}] (%t) %s%e%n"
+      json:
+        ~: true
+        pretty-print: false
 "%dev":
   quarkus:
     hibernate-orm:

@@ -1,48 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    PayU Standard Logging Configuration for transaction-service
+    Uses shared logback-payu-base.xml for consistent logging across services
+-->
 <configuration>
-    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    <include resource="logback-payu-base.xml"/>
 
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <fieldNames>timestamp,level,logger,message,thread</fieldNames>
-            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSS</timestampPattern>
-            <customFields>
-                <service>transaction-service</service>
-                <environment>${spring.profiles.active:-dev}</environment>
-            </customFields>
-        </encoder>
-    </appender>
-
-    <springProfile name="!container">
-        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>logs/transaction-service.log</file>
-            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-                <fileNamePattern>logs/transaction-service.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-                <maxFileSize>100MB</maxFileSize>
-                <maxHistory>30</maxHistory>
-            </rollingPolicy>
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-                <fieldNames>timestamp,level,logger,message,thread</fieldNames>
-                <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSS</timestampPattern>
-                <customFields>
-                    <service>transaction-service</service>
-                    <environment>${spring.profiles.active:-dev}</environment>
-                </customFields>
-            </encoder>
-        </appender>
+    <!-- Service-specific: transaction domain debug logging in dev -->
+    <springProfile name="default,dev,test">
+        <logger name="id.payu.transaction" level="DEBUG"/>
     </springProfile>
 
-    <logger name="id.payu.transaction" level="DEBUG"/>
-    <logger name="org.springframework" level="INFO"/>
-    <logger name="org.hibernate" level="WARN"/>
-
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-    </root>
-
-    <springProfile name="!container">
-        <root level="INFO">
-            <appender-ref ref="FILE"/>
-        </root>
+    <springProfile name="staging,prod,container">
+        <logger name="id.payu.transaction" level="INFO"/>
     </springProfile>
 </configuration>

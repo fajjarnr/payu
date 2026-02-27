@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Logging Standardization — Full Platform Adoption (2026-02-27)**:
+  - Created `CorrelationIdFilter` (JAX-RS) for notification-service and api-portal-service (Quarkus): MDC `correlation_id` propagation, request timing, `X-Correlation-Id` response header.
+  - Added JSON structured logging (`quarkus.log.console.json`) to notification-service and api-portal-service for Loki compatibility.
+  - Added MDC `correlation_id` to console format patterns for all 3 Quarkus services.
+
+### Changed
+
+- **Logging Standardization — Full Platform Adoption (2026-02-27)**:
+  - Replaced custom `logback-spring.xml` in transaction-service and wallet-service with shared `logback-payu-base.xml` include — gains MDC correlation_id/trace_id in logs, async JSON appender for prod, profile-based text/JSON switching, Loki-compatible field names.
+  - Wired `MdcKafkaProducerInterceptor` and `MdcKafkaConsumerInterceptor` on all 12 Kafka-using Spring Boot services (account, auth, transaction, wallet, investment, lending, fx, statement, compliance, billing, cms, ab-testing) — enables cross-service correlation_id propagation through Kafka message headers.
+
 - **E-15 — Payment Gateway Features (2026-02-27)**:
   - **IMP-040 — Payment Link / Invoice Generation** (3 SP): Full payment link lifecycle in `partner-service`. Domain: `PaymentLink` entity (slug, amount, currency, description, expiry, status: ACTIVE→PAID/EXPIRED/CANCELLED). `PaymentLinkService` with create (partner-scoped, unique slug generation, external ID dedup), public retrieve by slug with auto-expire, confirm payment, cancel, and `@Scheduled` bulk expiry every 5 minutes. `PaymentLinkController` REST at `/partners/{partnerId}/payment-links` (CRUD with @Audited, @Idempotent). `PublicPaymentLinkController` at `/pay/{slug}` (public payer endpoint with payment confirmation). `PaymentLinkRepository` with JPA queries. Flyway V5 migration. 24 unit tests passing.
   - **IMP-041 — Payment Method Selection API** (3 SP): Payment method catalog in `gateway-service`. `PaymentMethodService` returns available methods (wallet, bank_transfer, virtual_account, qris, credit_card, paylater) with eligibility checks (KYC status, balance, limits), per-method fee calculation (percentage + fixed), and estimated settlement time. `PaymentMethodResource` REST at `/api/v1/payments/methods` (Quarkus JAX-RS). `PaymentContext` record for contextual eligibility evaluation.
