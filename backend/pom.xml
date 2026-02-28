@@ -59,6 +59,7 @@
         <!-- Core Services -->
         <module>account-service</module>
         <module>auth-service</module>
+        <module>product-catalog-service</module>
         <module>wallet-service</module>
         <module>transaction-service</module>
         <module>investment-service</module>
@@ -311,6 +312,7 @@
             <modules>
                 <module>account-service</module>
                 <module>auth-service</module>
+                <module>product-catalog-service</module>
                 <module>wallet-service</module>
                 <module>transaction-service</module>
                 <module>investment-service</module>

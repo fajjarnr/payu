@@ -52,7 +52,7 @@
 | E-02 | Gateway Hardening                 | 🔴 Highest |    5    | 11  | Q1 2026 | ✅ Done  |
 | E-03 | Frontend Quality                  | 🟠 High    |    5    |  7  | Q1 2026 | ✅ Done  |
 | E-04 | API Management & Analytics        | 🟠 High    |    5    | 19  | Q2 2026 | ✅ Done |
-| E-05 | Product Catalog                   | 🟠 High    |    1    |  5  | Q2 2026 | 📋 To Do |
+| E-05 | Product Catalog                   | 🟠 High    |    1    |  5  | Q2 2026 | ✅ Done  |
 | E-06 | Developer Hub (Backstage)         | 🟡 Medium  |    5    | 13  | Q2 2026 | 📋 To Do |
 | E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    | 25  | Q2 2026 | 📋 To Do |
 | E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |  5  | Future  | 📋 To Do |
@@ -421,7 +421,7 @@
 
 | Key     | Type  | Summary                     | Priority | SP  | Component(s)  | Labels           | Status   |
 | :------ | :---- | :-------------------------- | :------- | :-: | :------------ | :--------------- | :------- |
-| IMP-006 | Story | Product Catalog (DB-driven) | 🟠 High  |  5  | Multi-service | `backend` `core` | 📋 To Do |
+| IMP-006 | Story | Product Catalog (DB-driven) | 🟠 High  |  5  | Multi-service | `backend` `core` | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -433,10 +433,13 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `ProductDefinition` entity + CRUD API
-> - [ ] Migrate hardcoded constants ke DB seed
-> - [ ] Service-specific product lookups (account, loan, investment)
-> - [ ] Admin UI di backoffice untuk manage products
+> - [x] `ProductDefinition` entity + CRUD API
+> - [x] Migrate hardcoded constants ke DB seed
+> - [x] Service-specific product lookups (account, loan, investment)
+> - [ ] Admin UI di backoffice untuk manage products (deferred to E-18)
+>
+> ✅ **Completed 2026-02-28**: New `product-catalog-service` with hexagonal architecture, Redis caching,
+> Flyway migrations, 8 default products seeded, unit tests for domain and service layers.
 >
 > ⚠️ FE perlu extend: dropdown jadi dynamic dari API (non-breaking)
 
