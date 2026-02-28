@@ -10,7 +10,7 @@
 
 | Attribute                | Value                    |
 | :----------------------- | :----------------------- |
-| **Last Status Update**   | February 27, 2026        |
+| **Last Status Update**   | February 28, 2026        |
 | **Production Readiness** | 99% (229/232 bugs fixed) |
 | **OpenShift Tag**        | `v1.4.0` (in-progress)   |
 | **Namespace**            | `payu-dev`               |
@@ -64,7 +64,53 @@
 
 ## 📦 Deployment Log
 
-### v1.4.0 (In-Progress) — February 25-27, 2026
+### v1.5.0 (Completed) — February 28, 2026
+
+**E-15 — Payment Gateway Features COMPLETED (Feb 28):**
+
+All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
+- ✅ **IMP-040** — Payment Link webhooks (`payment_link.paid`, `payment_link.expired`) dengan HMAC-SHA256 signing
+- ✅ **IMP-042** — VA Simulator service (Quarkus Native) dengan deterministic behavior untuk testing
+- ✅ **IMP-044** — Payment expiry completion: balance release + Kafka events + scheduler job
+- ✅ **IMP-045** — Dynamic QR settlement flow ke merchant wallet via `MerchantService`
+- ✅ **IMP-046** — Mobile deeplink handler (`useDeeplinkHandler.ts`) dengan Expo Linking
+
+**E-12 — Settlement & FinOps COMPLETED (Feb 28):**
+
+4 stories finished (GAP-003, GAP-004, GAP-010, GAP-013, 16 SP total):
+- ✅ **GAP-003** — Settlement batch job dengan reconciliation & discrepancy detection
+- ✅ **GAP-004** — Rate card engine (flat, percentage, tiered pricing) per partner
+- ✅ **GAP-010** — Multi-currency settlement dengan 15m FX rate locking
+- ✅ **GAP-013** — Revenue share / royalty engine dengan stakeholder splits
+
+**E-14 — Consumer Banking Experience COMPLETED (Feb 28):**
+
+6 stories finished (IMP-034 to IMP-039, 12 SP total):
+- ✅ **IMP-034** — Transaction memo & tags (JSONB storage)
+- ✅ **IMP-035** — Beneficiary management (max 50/user)
+- ✅ **IMP-036** — P2P transfer via phone lookup
+- ✅ **IMP-037** — QR Pay P2P dengan checksum verification
+- ✅ **IMP-038, IMP-039** — Savings goals dengan progress tracking
+
+**E-03 — Frontend Quality COMPLETED (Feb 28):**
+
+5 stories finished (IMP-004, IMP-010, IMP-011, IMP-014, IMP-015, 7 SP total):
+- ✅ **IMP-004** — 429 rate limit handling dengan exponential backoff + toast notification
+- ✅ **IMP-010** — FxService double-prefix bug fix
+- ✅ **IMP-011** — Pocket type consolidation
+- ✅ **IMP-014** — Duplicate type definitions removed
+- ✅ **IMP-015** — Financial data moved dari URL query ke request body
+
+**E-04 — API Management COMPLETED (Feb 28):**
+
+3 stories finished (IMP-016, IMP-017, IMP-018, 9 SP total):
+- ✅ **IMP-016** — Persistent analytics dengan Redis (90d retention)
+- ✅ **IMP-017** — Rate plans per partner dengan per-endpoint overrides
+- ✅ **IMP-018** — Request/response transformation filters
+
+---
+
+### v1.4.0 (Completed) — February 25-27, 2026
 
 **E-15 — Payment Gateway Features (Feb 27):**
 

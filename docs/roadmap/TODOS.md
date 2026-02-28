@@ -62,7 +62,7 @@
 | E-12 | Settlement & Financial Operations | 🟠 High    |    4    | 16  | Q2 2026 | ✅ Done  |
 | E-13 | Dispute Resolution                | 🟠 High    |    1    |  5  | Q2 2026 | 📋 To Do |
 | E-14 | Consumer Banking Experience       | 🟠 High    |    6    | 12  | Q2 2026 | ✅ Done  |
-| E-15 | Payment Gateway Features          | 🔴 Highest |    7    | 25  | Q2 2026 | � In Progress |
+| E-15 | Payment Gateway Features          | 🔴 Highest |    7    | 25  | Q2 2026 | ✅ Done  |
 | E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    | 12  | Q3 2026 | 📋 To Do |
 | E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |  6  | Q2 2026 | 📋 To Do |
 | E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | 📋 To Do |
