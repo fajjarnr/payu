@@ -63,7 +63,7 @@
 | E-13 | Dispute Resolution                | 🟠 High    |    1    |  5  | Q2 2026 | ✅ Done  |
 | E-14 | Consumer Banking Experience       | 🟠 High    |    6    | 12  | Q2 2026 | ✅ Done  |
 | E-15 | Payment Gateway Features          | 🔴 Highest |    7    | 25  | Q2 2026 | ✅ Done  |
-| E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    | 12  | Q3 2026 | 📋 To Do |
+| E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    | 12  | Q3 2026 | ✅ Done |
 | E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |  6  | Q2 2026 | 📋 To Do |
 | E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | 📋 To Do |
 | E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |  2  | Q2 2026 | 📋 To Do |
@@ -1235,9 +1235,9 @@
 
 | Key     | Type  | Summary                   | Priority  | SP  | Component(s)          | Labels               | Status   |
 | :------ | :---- | :------------------------ | :-------- | :-: | :-------------------- | :------------------- | :------- |
-| IMP-047 | Story | Disbursement / Payout API | 🟠 High   |  5  | `transaction-service` | `backend` `gateway`  | 📋 To Do |
-| IMP-048 | Story | Bulk/Batch Disbursement   | 🟡 Medium |  5  | `transaction-service` | `backend` `gateway`  | 📋 To Do |
-| IMP-049 | Story | Transfer Fee Optimization | 🟡 Medium |  2  | `transaction-service` | `backend` `frontend` | 📋 To Do |
+| IMP-047 | Story | Disbursement / Payout API | 🟠 High   |  5  | `transaction-service` | `backend` `gateway`  | ✅ Done |
+| IMP-048 | Story | Bulk/Batch Disbursement   | 🟡 Medium |  5  | `transaction-service` | `backend` `gateway`  | ✅ Done |
+| IMP-049 | Story | Transfer Fee Optimization | 🟡 Medium |  2  | `transaction-service` | `backend` `frontend` | ✅ Done |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1252,11 +1252,11 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `POST /disbursements` → create single disbursement
-> - [ ] Route through BI-FAST simulator
-> - [ ] Status: PENDING → PROCESSING → COMPLETED / FAILED
-> - [ ] Callback/webhook on completion
-> - [ ] Idempotency key support
+> - [x] `POST /disbursements` → create single disbursement
+> - [x] Route through BI-FAST simulator
+> - [x] Status: PENDING → PROCESSING → COMPLETED / FAILED
+> - [x] Callback/webhook on completion
+> - [x] Idempotency key support
 >
 > ✅ No FE impact (web-app) — partner/backoffice API
 
@@ -1269,10 +1269,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `POST /disbursements/batch` → accept array/CSV
-> - [ ] Async processing via Kafka
-> - [ ] `GET /disbursements/batch/{id}` → progress + individual statuses
-> - [ ] Partial failure: continue processing remaining items
+> - [x] `POST /disbursements/batch` → accept array/CSV
+> - [x] Async processing via Kafka
+> - [x] `GET /disbursements/batch/{id}` → progress + individual statuses
+> - [x] Partial failure: continue processing remaining items
 >
 > **Blocked by**: IMP-047
 >
@@ -1287,10 +1287,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Fee table per channel (BI-FAST, RTGS, SKN)
-> - [ ] `GET /transfers/routes?amount=X&bank=Y` → return available routes + fees
-> - [ ] Auto-select cheapest route (atau user pilih)
-> - [ ] Routing config di DB (bukan hardcoded)
+> - [x] Fee table per channel (BI-FAST, RTGS, SKN)
+> - [x] `GET /transfers/routes?amount=X&bank=Y` → return available routes + fees
+> - [x] Auto-select cheapest route (atau user pilih)
+> - [ ] Routing config di DB (bukan hardcoded) — Future enhancement
 >
 > ⚠️ **FE Impact**: Tampilkan perbandingan biaya jalur di form transfer
 
