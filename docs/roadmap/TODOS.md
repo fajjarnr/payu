@@ -60,7 +60,7 @@
 | E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    | 10  | Q1 2026 | ✅ Done  |
 | E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |  8  | Q1 2026 | 📋 To Do |
 | E-12 | Settlement & Financial Operations | 🟠 High    |    4    | 16  | Q2 2026 | ✅ Done  |
-| E-13 | Dispute Resolution                | 🟠 High    |    1    |  5  | Q2 2026 | 📋 To Do |
+| E-13 | Dispute Resolution                | 🟠 High    |    1    |  5  | Q2 2026 | ✅ Done  |
 | E-14 | Consumer Banking Experience       | 🟠 High    |    6    | 12  | Q2 2026 | ✅ Done  |
 | E-15 | Payment Gateway Features          | 🔴 Highest |    7    | 25  | Q2 2026 | ✅ Done  |
 | E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    | 12  | Q3 2026 | 📋 To Do |
@@ -947,7 +947,7 @@
 
 | Key     | Type  | Summary                     | Priority | SP  | Component(s)      | Labels              | Status   |
 | :------ | :---- | :-------------------------- | :------- | :-: | :---------------- | :------------------ | :------- |
-| GAP-009 | Story | Refund & Dispute Management | 🟠 High  |  5  | `transaction-svc` | `partner` `dispute` | 📋 To Do |
+| GAP-009 | Story | Refund & Dispute Management | 🟠 High  |  5  | `dispute-service` | `partner` `dispute` | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -959,11 +959,11 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Full refund endpoint
-> - [ ] Partial refund endpoint
-> - [ ] Dispute lifecycle (OPEN → INVESTIGATING → RESOLVED/REJECTED)
-> - [ ] Evidence attachment (file upload)
-> - [ ] Webhook: refund.created, dispute.opened, dispute.resolved
+> - [x] Full refund endpoint
+> - [x] Partial refund endpoint
+> - [x] Dispute lifecycle (OPEN → INVESTIGATING → RESOLVED/REJECTED)
+> - [x] Evidence attachment (file upload)
+> - [x] Webhook: refund.created, dispute.opened, dispute.resolved
 >
 > **Relevan untuk**: TokoBapak, Dolan, Sinau
 

@@ -110,7 +110,7 @@ public class CheckoutService {
     }
 
     private String generateCheckoutUrl(String token) {
-        return "https://checkout.payu.id/pay/" + token;
+        return "https://checkout.payu.fajjjar.my.id/pay/" + token;
     }
 
     /**

@@ -1,7 +1,7 @@
 # PayU Backend Services Status
 
-> **Last Updated**: February 4, 2026  
-> **Total Services**: 22 (19 microservices + 3 simulators)  
+> **Last Updated**: February 28, 2026
+> **Total Services**: 23 (20 microservices + 3 simulators)  
 > **Lab Status**: ✅ Feature Complete | ⚠️ Test & Environment Stabilization In Progress
 >
 > **Note**: Container internal ports are standardized to 8080 in `docker-compose.yml`. Use the compose file for external mappings.
@@ -53,6 +53,7 @@
 | **promotion-service** | Java 21 | Quarkus 3.17 | ✅ Complete | Rewards, Cashback |
 | **backoffice-service** | Java 21 | Quarkus 3.17 | ✅ Complete | Admin, Fraud Ops |
 | **partner-service** | Java 21 | Quarkus 3.17 | ✅ Complete | SNAP BI Basic |
+| **dispute-service** | Java 21 | Spring Boot 3.4.1 | ✅ Complete | Refund & Dispute Management |
 
 ---
 
@@ -141,6 +142,21 @@
 - ✅ Support team training management
 - ✅ Hibernate Panache ORM
 - ✅ Quarkus 3.17
+
+#### 10. dispute-service (Port 8088)
+- ✅ **Refund Management**: Full and partial refunds
+- ✅ **Refund State Machine**: PENDING → PROCESSING → COMPLETED/FAILED
+- ✅ **Dispute Lifecycle**: OPEN → INVESTIGATING → RESOLVED/ESCALATED/REJECTED
+- ✅ **Evidence Management**: File attachments with URL storage
+- ✅ **Hexagonal Architecture**: Domain, Application, Adapter layers
+- ✅ **Domain Models**: Refund, Dispute, DisputeEvidence aggregates
+- ✅ **Ports**: RefundUseCase, DisputeUseCase (input), Persistence ports (output)
+- ✅ **REST API**: `/api/v1/refunds`, `/api/v1/disputes`
+- ✅ **DTOs**: Request/Response for all endpoints
+- ✅ **Flyway Migration**: V1 for refunds, disputes, dispute_evidence tables
+- ✅ **Unit Tests**: RefundTest, DisputeTest (domain), RefundServiceTest, DisputeServiceTest (application)
+- ✅ **ArchUnit Tests**: Hexagonal architecture compliance
+- ✅ **Integration Tests**: Testcontainers with PostgreSQL
 
 ### ML/Data Services (Python)
 

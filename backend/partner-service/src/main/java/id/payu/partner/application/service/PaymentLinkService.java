@@ -29,7 +29,7 @@ import java.util.Map;
 public class PaymentLinkService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentLinkService.class);
-    private static final String BASE_PAYMENT_URL = "https://pay.payu.id/pay/";
+    private static final String BASE_PAYMENT_URL = "https://pay.payu.fajjjar.my.id/pay/";
 
     private final PaymentLinkRepository paymentLinkRepository;
     private final PartnerRepository partnerRepository;

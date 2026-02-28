@@ -16,7 +16,7 @@ public class PaymentLinkResponse {
     @Schema(description = "Unique slug for the payment link URL")
     private String slug;
 
-    @Schema(description = "Full payment URL", example = "https://pay.payu.id/pay/abc123")
+    @Schema(description = "Full payment URL", example = "https://pay.payu.fajjjar.my.id/pay/abc123")
     private String paymentUrl;
 
     @Schema(description = "Payment amount")

@@ -65,7 +65,7 @@ public class DeeplinkService {
         String deeplinkUrl = urlBuilder.toString();
 
         // Also generate a universal link (HTTPS fallback)
-        String universalLink = "https://app.payu.id/" + action + "?token=" +
+        String universalLink = "https://app.payu.fajjjar.my.id/" + action + "?token=" +
                 encode(request.token() != null ? request.token() : "") +
                 "&sig=" + encode(signature);
 

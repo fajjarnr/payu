@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16-alpine:///dispute_service
+    username: payu
+    password: payu
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/payu
+          jwk-set-uri: http://localhost:8080/realms/payu/protocol/openid-connect/certs
+
+logging:
+  level:
+    root: INFO
+    id.payu.dispute: DEBUG
+    org.springframework.web: DEBUG
