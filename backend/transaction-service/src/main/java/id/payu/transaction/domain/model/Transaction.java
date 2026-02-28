@@ -84,6 +84,12 @@ public class Transaction {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
+    @Column(name = "memo", length = 140)
+    private String memo;
+
+    @Column(name = "tags", columnDefinition = "jsonb")
+    private String tags;
+
     /**
      * Gets the monetary amount.
      * For backward compatibility, reconstructs Money from deprecated fields if amount is null.

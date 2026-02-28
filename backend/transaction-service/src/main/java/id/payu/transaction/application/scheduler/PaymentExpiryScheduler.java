@@ -6,12 +6,18 @@ import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.model.VirtualAccount;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Scheduler to auto-cancel expired payments (VA, payment links, pending transactions).
@@ -26,10 +32,15 @@ public class PaymentExpiryScheduler {
 
     private final TransactionJpaRepository transactionRepository;
     private final VirtualAccountRepository virtualAccountRepository;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    private static final String WALLET_SERVICE_URL = "http://wallet-service/api/v1/wallets";
+    private static final String PAYMENT_EXPIRED_TOPIC = "payment.expired";
 
     /**
      * Expire pending transactions that have passed their expiresAt timestamp.
-     * Publishes payment.expired Kafka event for webhook notification.
+     * Releases reserved balance and publishes payment.expired Kafka event.
      */
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
@@ -40,6 +51,12 @@ public class PaymentExpiryScheduler {
                 tx.setStatus(Transaction.TransactionStatus.CANCELLED);
                 tx.setFailureReason("Payment expired");
                 tx.setUpdatedAt(Instant.now());
+
+                // Release reserved balance if any
+                releaseReservedBalance(tx);
+
+                // Publish Kafka event
+                publishPaymentExpiredEvent(tx);
             });
             transactionRepository.saveAll(expired);
             log.info("Auto-cancelled {} expired transactions", expired.size());
@@ -48,15 +65,106 @@ public class PaymentExpiryScheduler {
 
     /**
      * Expire pending Virtual Accounts that have passed their TTL.
+     * Publishes payment.expired Kafka event.
      */
     @Scheduled(fixedRate = 300000) // every 5 minutes
     @Transactional
     public void expireVirtualAccounts() {
         List<VirtualAccount> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());
         if (!expired.isEmpty()) {
-            expired.forEach(VirtualAccount::markExpired);
+            expired.forEach(va -> {
+                va.markExpired();
+                publishVaExpiredEvent(va);
+            });
             virtualAccountRepository.saveAll(expired);
             log.info("Auto-expired {} virtual accounts", expired.size());
         }
+    }
+
+    /**
+     * Release reserved balance for expired transaction.
+     */
+    private void releaseReservedBalance(Transaction tx) {
+        try {
+            if (tx.getSourceAccountId() != null && tx.getAmount() != null) {
+                // Call wallet-service to release reserved balance
+                String url = WALLET_SERVICE_URL + "/" + tx.getSourceAccountId() + "/release";
+                Map<String, Object> request = new HashMap<>();
+                request.put("amount", tx.getAmount());
+                request.put("transactionId", tx.getId().toString());
+                request.put("reason", "Payment expired");
+
+                restTemplate.postForEntity(url, request, Void.class);
+                log.info("Released reserved balance for transaction {}: amount={}",
+                    tx.getId(), tx.getAmount());
+            }
+        } catch (Exception e) {
+            log.error("Failed to release reserved balance for transaction {}", tx.getId(), e);
+        }
+    }
+
+    /**
+     * Publish payment.expired Kafka event.
+     */
+    private void publishPaymentExpiredEvent(Transaction tx) {
+        try {
+            Map<String, Object> event = new HashMap<>();
+            event.put("eventType", "payment.expired");
+            event.put("transactionId", tx.getId().toString());
+            event.put("referenceId", tx.getReferenceId());
+            event.put("amount", tx.getAmount());
+            event.put("currency", tx.getCurrency());
+            event.put("sourceAccountId", tx.getSourceAccountId());
+            event.put("expiredAt", Instant.now().toString());
+            event.put("reason", "Payment timeout");
+
+            String message = mapToJson(event);
+            kafkaTemplate.send(PAYMENT_EXPIRED_TOPIC, tx.getId().toString(), message);
+
+            log.info("Published payment.expired event for transaction {}", tx.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish payment.expired event for transaction {}", tx.getId(), e);
+        }
+    }
+
+    /**
+     * Publish VA expired Kafka event.
+     */
+    private void publishVaExpiredEvent(VirtualAccount va) {
+        try {
+            Map<String, Object> event = new HashMap<>();
+            event.put("eventType", "va.expired");
+            event.put("vaId", va.getId().toString());
+            event.put("vaNumber", va.getVaNumber());
+            event.put("amount", va.getAmount());
+            event.put("currency", va.getCurrency());
+            event.put("partnerId", va.getPartnerId());
+            event.put("externalId", va.getExternalId());
+            event.put("expiredAt", Instant.now().toString());
+
+            String message = mapToJson(event);
+            kafkaTemplate.send(PAYMENT_EXPIRED_TOPIC, va.getId().toString(), message);
+
+            log.info("Published va.expired event for VA {}", va.getVaNumber());
+        } catch (Exception e) {
+            log.error("Failed to publish va.expired event for VA {}", va.getVaNumber(), e);
+        }
+    }
+
+    private String mapToJson(Map<String, Object> map) {
+        StringBuilder sb = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (!first) sb.append(",");
+            first = false;
+            sb.append("\"").append(entry.getKey()).append("\":");
+            if (entry.getValue() instanceof String) {
+                sb.append("\"").append(entry.getValue()).append("\"");
+            } else {
+                sb.append(entry.getValue());
+            }
+        }
+        sb.append("}");
+        return sb.toString();
     }
 }

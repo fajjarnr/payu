@@ -13,9 +13,13 @@ import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
+import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +47,8 @@ public class TransactionService implements TransactionUseCase {
     private final ProcessQrisPaymentCommandHandler processQrisPaymentHandler;
     private final GetTransactionQueryHandler getTransactionHandler;
     private final GetAccountTransactionsQueryHandler getAccountTransactionsQueryHandler;
+    private final TransactionPersistencePort transactionPersistencePort;
+    private final ObjectMapper objectMapper;
 
     // CQRS Methods - Command Side (Write Operations)
 
@@ -105,5 +111,28 @@ public class TransactionService implements TransactionUseCase {
         GetAccountTransactionsQuery query = new GetAccountTransactionsQuery(
                 accountId.toString(), userId, page, size);
         return getAccountTransactions(query);
+    }
+
+    @Override
+    @Transactional
+    public Transaction updateTransactionTags(UUID transactionId, String userId, List<String> tags) {
+        log.info("Updating tags for transaction: {}", transactionId);
+
+        // Verify ownership and get transaction
+        GetTransactionQuery query = new GetTransactionQuery(transactionId, userId);
+        Transaction transaction = getTransaction(query);
+
+        // Convert tags to JSON
+        try {
+            String tagsJson = objectMapper.writeValueAsString(tags);
+            transaction.setTags(tagsJson);
+            transaction.setUpdatedAt(java.time.Instant.now());
+
+            // Save updated transaction
+            return transactionPersistencePort.save(transaction);
+        } catch (Exception e) {
+            log.error("Failed to update transaction tags: {}", e.getMessage());
+            throw new RuntimeException("Failed to update transaction tags", e);
+        }
     }
 }

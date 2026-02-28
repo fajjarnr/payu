@@ -14,12 +14,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -35,13 +41,23 @@ public class MerchantService {
     private final MerchantRepository merchantRepository;
     private final MerchantQrPaymentRepository qrPaymentRepository;
     private final PartnerRepository partnerRepository;
+    private final WebhookDispatcherService webhookDispatcher;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final RestTemplate restTemplate;
+
+    private static final String WALLET_SERVICE_URL = "http://wallet-service/api/v1/wallets";
 
     public MerchantService(MerchantRepository merchantRepository,
                            MerchantQrPaymentRepository qrPaymentRepository,
-                           PartnerRepository partnerRepository) {
+                           PartnerRepository partnerRepository,
+                           WebhookDispatcherService webhookDispatcher,
+                           KafkaTemplate<String, String> kafkaTemplate) {
         this.merchantRepository = merchantRepository;
         this.qrPaymentRepository = qrPaymentRepository;
         this.partnerRepository = partnerRepository;
+        this.webhookDispatcher = webhookDispatcher;
+        this.kafkaTemplate = kafkaTemplate;
+        this.restTemplate = new RestTemplate();
     }
 
     /**
@@ -154,6 +170,7 @@ public class MerchantService {
 
     /**
      * Confirm QR payment (called when payer scans and pays).
+     * Triggers settlement to merchant wallet.
      */
     public QrPaymentResponse confirmQrPayment(String referenceId, String payerAccountId) {
         MerchantQrPayment qrPayment = qrPaymentRepository.findByReferenceId(referenceId)
@@ -170,7 +187,125 @@ public class MerchantService {
         log.info("QR payment {} confirmed by payer {}, ref={}",
                 referenceId, payerAccountId, paymentRef);
 
+        // Trigger settlement to merchant wallet
+        settleToMerchantWallet(qrPayment);
+
+        // Dispatch webhook notification
+        dispatchQrPaymentPaidEvent(qrPayment);
+
         return toQrResponse(qrPayment);
+    }
+
+    /**
+     * Settle payment to merchant wallet.
+     * Credits the merchant's settlement account with the payment amount.
+     */
+    private void settleToMerchantWallet(MerchantQrPayment qrPayment) {
+        try {
+            Merchant merchant = qrPayment.getMerchant();
+            String settlementAccountId = merchant.getSettlementAccountId();
+
+            if (settlementAccountId == null || settlementAccountId.isEmpty()) {
+                log.warn("Merchant {} has no settlement account configured", merchant.getId());
+                return;
+            }
+
+            // Call wallet-service to credit merchant wallet
+            String url = WALLET_SERVICE_URL + "/" + settlementAccountId + "/credit";
+            Map<String, Object> request = new HashMap<>();
+            request.put("amount", qrPayment.getAmount());
+            request.put("currency", qrPayment.getCurrency());
+            request.put("referenceId", qrPayment.getPaymentReference());
+            request.put("description", "QR Payment settlement: " + qrPayment.getReferenceId());
+            request.put("sourceType", "MERCHANT_QR_PAYMENT");
+            request.put("sourceId", qrPayment.getReferenceId());
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Settled QR payment {} to merchant {} wallet: amount={}",
+                        qrPayment.getReferenceId(), merchant.getId(), qrPayment.getAmount());
+
+                // Publish settlement event
+                publishSettlementEvent(qrPayment, merchant, "SUCCESS");
+            } else {
+                log.error("Failed to settle QR payment {}: HTTP {}",
+                        qrPayment.getReferenceId(), response.getStatusCode());
+                publishSettlementEvent(qrPayment, merchant, "FAILED");
+            }
+        } catch (Exception e) {
+            log.error("Error settling QR payment {} to merchant wallet",
+                    qrPayment.getReferenceId(), e);
+            publishSettlementEvent(qrPayment, qrPayment.getMerchant(), "ERROR: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Dispatch webhook for QR payment paid event.
+     */
+    private void dispatchQrPaymentPaidEvent(MerchantQrPayment qrPayment) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("event", "qr_payment.paid");
+            payload.put("referenceId", qrPayment.getReferenceId());
+            payload.put("merchantId", qrPayment.getMerchant().getId());
+            payload.put("merchantCode", qrPayment.getMerchant().getMerchantCode());
+            payload.put("amount", qrPayment.getAmount());
+            payload.put("currency", qrPayment.getCurrency());
+            payload.put("status", qrPayment.getStatus().name());
+            payload.put("paymentReference", qrPayment.getPaymentReference());
+            payload.put("payerAccountId", qrPayment.getPayerAccountId());
+            payload.put("paidAt", qrPayment.getPaidAt().toString());
+
+            webhookDispatcher.dispatch("qr_payment.paid", payload);
+
+            log.info("Dispatched qr_payment.paid event for {}", qrPayment.getReferenceId());
+        } catch (Exception e) {
+            log.error("Failed to dispatch qr_payment.paid event for {}", qrPayment.getReferenceId(), e);
+        }
+    }
+
+    /**
+     * Publish settlement event to Kafka.
+     */
+    private void publishSettlementEvent(MerchantQrPayment qrPayment, Merchant merchant, String status) {
+        try {
+            Map<String, Object> event = new HashMap<>();
+            event.put("eventType", "merchant.settlement");
+            event.put("referenceId", qrPayment.getReferenceId());
+            event.put("paymentReference", qrPayment.getPaymentReference());
+            event.put("merchantId", merchant.getId());
+            event.put("merchantCode", merchant.getMerchantCode());
+            event.put("settlementAccountId", merchant.getSettlementAccountId());
+            event.put("amount", qrPayment.getAmount());
+            event.put("currency", qrPayment.getCurrency());
+            event.put("status", status);
+            event.put("settledAt", LocalDateTime.now().toString());
+
+            String message = mapToJson(event);
+            kafkaTemplate.send("merchant.settlements", qrPayment.getReferenceId(), message);
+
+            log.info("Published merchant.settlement event for {}", qrPayment.getReferenceId());
+        } catch (Exception e) {
+            log.error("Failed to publish settlement event for {}", qrPayment.getReferenceId(), e);
+        }
+    }
+
+    private String mapToJson(Map<String, Object> map) {
+        StringBuilder sb = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (!first) sb.append(",");
+            first = false;
+            sb.append("\"").append(entry.getKey()).append("\":");
+            if (entry.getValue() instanceof String) {
+                sb.append("\"").append(entry.getValue()).append("\"");
+            } else {
+                sb.append(entry.getValue());
+            }
+        }
+        sb.append("}");
+        return sb.toString();
     }
 
     /**

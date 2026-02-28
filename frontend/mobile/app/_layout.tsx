@@ -7,9 +7,16 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { QueryProvider } from '@/src/providers/QueryProvider';
+import { useDeeplinkHandler } from '@/hooks/useDeeplinkHandler';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+
+// Deeplink handler wrapper component
+function DeeplinkHandler({ children }: { children: React.ReactNode }) {
+  useDeeplinkHandler();
+  return children;
+}
 
 export default function RootLayout() {
   useEffect(() => {
@@ -22,8 +29,9 @@ export default function RootLayout() {
         <ThemeProvider>
           <AuthProvider>
             <NotificationProvider>
-              <StatusBar style="auto" />
-              <Stack screenOptions={{ headerShown: false }}>
+              <DeeplinkHandler>
+                <StatusBar style="auto" />
+                <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
@@ -46,7 +54,8 @@ export default function RootLayout() {
                     headerTitleStyle: { fontWeight: '700' },
                   }}
                 />
-              </Stack>
+                </Stack>
+              </DeeplinkHandler>
             </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>

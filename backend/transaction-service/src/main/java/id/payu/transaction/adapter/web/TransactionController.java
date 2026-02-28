@@ -19,6 +19,7 @@ import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.InitiateTransferResponse;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import id.payu.transaction.dto.TransactionResponse;
+import id.payu.transaction.dto.UpdateTransactionTagsRequest;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -330,6 +331,51 @@ public class TransactionController extends BaseController {
                     .body(ApiResponse.error(e.getCode(), e.getMessage()));
         }
         // BUG-BE-144: Removed generic Exception catch — GlobalExceptionHandler handles unexpected errors uniformly
+    }
+
+    /**
+     * Update transaction tags (IMP-037).
+     */
+    @PatchMapping("/{transactionId}/tags")
+    @Operation(
+            summary = "Update transaction tags",
+            description = """
+                    Updates the tags for a specific transaction.
+                    Supports predefined categories and custom tags.
+                    Maximum 10 tags per transaction.
+                    """
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Tags updated successfully",
+                    content = @Content(schema = @Schema(implementation = TransactionResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Transaction not found",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @PreAuthorize("hasAuthority('write:transaction')")
+    public ResponseEntity<ApiResponse<TransactionResponse>> updateTransactionTags(
+            @Parameter(description = "Transaction ID", required = true)
+            @PathVariable UUID transactionId,
+            @Valid @RequestBody UpdateTransactionTagsRequest request
+    ) {
+        try {
+            String userId = extractUserId();
+            Transaction transaction = transactionUseCase.updateTransactionTags(transactionId, userId, request.getTags());
+            return ok(TransactionResponse.from(transaction));
+        } catch (BusinessException e) {
+            log.warn("Failed to update transaction tags: {} - {}", transactionId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getCode(), e.getMessage()));
+        }
     }
 
     @Override

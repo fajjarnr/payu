@@ -53,7 +53,7 @@ describe('FxService', () => {
 
       const result = await service.getCurrentRate('USD', 'IDR');
 
-      expect(api.get).toHaveBeenCalledWith('/fx-api/v1/rates/USD/IDR');
+      expect(api.get).toHaveBeenCalledWith('/fx/rates/USD/IDR');
       expect(result.rate).toBe(15750.0);
       expect(result.fromCurrency).toBe('USD');
       expect(result.toCurrency).toBe('IDR');
@@ -66,7 +66,7 @@ describe('FxService', () => {
 
       const result = await service.getAllRates();
 
-      expect(api.get).toHaveBeenCalledWith('/fx-api/v1/rates');
+      expect(api.get).toHaveBeenCalledWith('/fx/rates');
       expect(result).toHaveLength(1);
     });
   });
@@ -83,7 +83,7 @@ describe('FxService', () => {
 
       const result = await service.estimateConversion(request);
 
-      expect(api.post).toHaveBeenCalledWith('/fx-api/v1/conversions/estimate', request);
+      expect(api.post).toHaveBeenCalledWith('/fx/conversions/estimate', request);
       expect(result.toAmount).toBe(1575000);
     });
   });
@@ -100,7 +100,7 @@ describe('FxService', () => {
 
       const result = await service.createConversion(request);
 
-      expect(api.post).toHaveBeenCalledWith('/fx-api/v1/conversions', request);
+      expect(api.post).toHaveBeenCalledWith('/fx/conversions', request);
       expect(result.status).toBe('COMPLETED');
     });
   });
@@ -111,7 +111,7 @@ describe('FxService', () => {
 
       const result = await service.getConversion('conv_001');
 
-      expect(api.get).toHaveBeenCalledWith('/fx-api/v1/conversions/conv_001');
+      expect(api.get).toHaveBeenCalledWith('/fx/conversions/conv_001');
       expect(result.id).toBe('conv_001');
     });
   });
@@ -122,7 +122,7 @@ describe('FxService', () => {
 
       const result = await service.getConversions();
 
-      expect(api.get).toHaveBeenCalledWith('/fx-api/v1/conversions');
+      expect(api.get).toHaveBeenCalledWith('/fx/conversions');
       expect(result).toHaveLength(1);
     });
   });
@@ -134,7 +134,7 @@ describe('FxService', () => {
 
       const result = await service.reverseConversion('conv_001');
 
-      expect(api.post).toHaveBeenCalledWith('/fx-api/v1/conversions/conv_001/reverse');
+      expect(api.post).toHaveBeenCalledWith('/fx/conversions/conv_001/reverse');
       expect(result.status).toBe('REVERSED');
     });
   });

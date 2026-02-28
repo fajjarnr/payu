@@ -8,6 +8,7 @@ import id.payu.transaction.application.cqrs.query.GetTransactionQuery;
 import id.payu.transaction.domain.model.Transaction;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Use Case interface for Transaction operations following CQRS pattern.
@@ -59,6 +60,16 @@ public interface TransactionUseCase {
      * @return list of transactions
      */
     List<Transaction> getAccountTransactions(GetAccountTransactionsQuery query);
+
+    /**
+     * Updates tags for a transaction (IMP-037).
+     *
+     * @param transactionId the transaction ID
+     * @param userId the user ID for ownership validation
+     * @param tags the list of tags to set
+     * @return the updated transaction
+     */
+    Transaction updateTransactionTags(UUID transactionId, String userId, List<String> tags);
 
     // Legacy Methods (Deprecated - Will be removed)
 

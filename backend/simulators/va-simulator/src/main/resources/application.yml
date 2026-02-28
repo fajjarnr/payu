@@ -1,0 +1,56 @@
+quarkus:
+  application:
+    name: va-simulator
+    version: 1.0.0
+
+  http:
+    port: 8085
+    root-path: /
+
+  datasource:
+    db-kind: postgresql
+    username: ${POSTGRES_USER:payu}
+    password: ${POSTGRES_PASSWORD:payu}
+    jdbc:
+      url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:payu_va_simulator}
+    health:
+      enabled: true
+
+  hibernate-orm:
+    database:
+      generation: update
+    log:
+      sql: false
+
+  smallrye-health:
+    ui:
+      root-path: /health
+
+  micrometer:
+    export:
+      prometheus:
+        enabled: true
+        path: /metrics
+
+  log:
+    level: INFO
+    category:
+      "id.payu.simulator.va":
+        level: DEBUG
+
+# VA Simulator Configuration
+va:
+  simulator:
+    callback:
+      url: ${VA_CALLBACK_URL:http://localhost:8083/api/v1/payments/va/callback}
+      timeout: 10
+    deterministic: true
+
+# OpenTelemetry
+quarkus:
+  otel:
+    enabled: true
+    exporter:
+      otlp:
+        traces:
+          endpoint: ${OTEL_ENDPOINT:http://localhost:4317}

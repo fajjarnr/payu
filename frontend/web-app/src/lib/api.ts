@@ -1,4 +1,5 @@
-import axios, { isAxiosError } from 'axios';
+import axios, { isAxiosError, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'sonner';
 
 /**
  * PayU API Client — Secure BFF Proxy
@@ -17,12 +18,36 @@ const api = axios.create({
   withCredentials: true, // include httpOnly cookies in every request
 });
 
+// IMP-004: Rate Limit Handling — Track retry state per request
+interface RateLimitState {
+  retryCount: number;
+  maxRetries: number;
+  baseDelay: number;
+}
+
+const rateLimitStates = new WeakMap<InternalAxiosRequestConfig, RateLimitState>();
+
+// Get or initialize rate limit state for a request
+const getRateLimitState = (config: InternalAxiosRequestConfig): RateLimitState => {
+  if (!rateLimitStates.has(config)) {
+    rateLimitStates.set(config, {
+      retryCount: 0,
+      maxRetries: 3,
+      baseDelay: 1000, // 1 second base delay
+    });
+  }
+  return rateLimitStates.get(config)!;
+};
+
 // Export isAxiosError for type checking
 export { isAxiosError };
 
-// ── No request interceptor ──────────────────────────────────────────
-// Cookies are sent automatically by the browser; the BFF proxy converts
-// the httpOnly cookie to a Bearer header on the server side.
+// ── Request interceptor: Initialize rate limit tracking ─────────────
+api.interceptors.request.use((config) => {
+  // Initialize rate limit state for new requests
+  getRateLimitState(config);
+  return config;
+});
 
 // ── Response unwrapper: auto-extract ApiResponse.data wrapper ───────
 // BUG-CROSS-003: Backend wraps responses in ApiResponse<T> = { success, data, message }.
@@ -102,6 +127,37 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
+      }
+    }
+
+    // IMP-004: Handle 429 Rate Limit with exponential backoff
+    if (error.response?.status === 429) {
+      const state = getRateLimitState(originalRequest);
+      const retryAfter = error.response.headers['retry-after'];
+
+      // Parse Retry-After header (seconds)
+      let delayMs: number;
+      if (retryAfter) {
+        const retrySeconds = parseInt(retryAfter, 10);
+        delayMs = isNaN(retrySeconds) ? state.baseDelay : retrySeconds * 1000;
+      } else {
+        // Exponential backoff: 1s, 2s, 4s
+        delayMs = state.baseDelay * Math.pow(2, state.retryCount);
+      }
+
+      // Show toast notification
+      const retrySeconds = Math.ceil(delayMs / 1000);
+      toast.error(`Terlalu banyak permintaan, coba lagi dalam ${retrySeconds} detik`, {
+        duration: Math.min(delayMs, 5000),
+      });
+
+      // Check if we should retry
+      if (state.retryCount < state.maxRetries) {
+        state.retryCount++;
+
+        // Wait for the delay then retry
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        return api(originalRequest);
       }
     }
 

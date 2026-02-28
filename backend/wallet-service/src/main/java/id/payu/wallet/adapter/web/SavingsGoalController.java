@@ -1,0 +1,221 @@
+package id.payu.wallet.adapter.web;
+
+import id.payu.api.common.response.ApiResponse;
+import id.payu.wallet.adapter.persistence.entity.SavingsGoalEntity;
+import id.payu.wallet.adapter.persistence.repository.PocketJpaRepository;
+import id.payu.wallet.adapter.persistence.repository.SavingsGoalJpaRepository;
+import id.payu.wallet.dto.SavingsGoalRequest;
+import id.payu.wallet.dto.SavingsGoalResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/v1/wallets/{walletId}/savings-goals")
+@RequiredArgsConstructor
+@Slf4j
+@Tag(name = "Savings Goals", description = "Savings goal management endpoints")
+@SecurityRequirement(name = "bearerAuth")
+public class SavingsGoalController {
+
+    private final SavingsGoalJpaRepository savingsGoalRepository;
+    private final PocketJpaRepository pocketRepository;
+
+    @GetMapping
+    @Operation(summary = "Get all savings goals for wallet")
+    @PreAuthorize("hasAuthority('read:wallet')")
+    public ResponseEntity<ApiResponse<List<SavingsGoalResponse>>> getSavingsGoals(
+            @Parameter(description = "Wallet ID", required = true)
+            @PathVariable UUID walletId) {
+        log.info("Getting savings goals for wallet: {}", walletId);
+
+        List<SavingsGoalEntity> goals = savingsGoalRepository.findByPocketIdAndStatusNot(
+                walletId, SavingsGoalEntity.SavingsGoalStatus.CANCELLED);
+
+        List<SavingsGoalResponse> responses = goals.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @PostMapping
+    @Operation(summary = "Create a new savings goal")
+    @PreAuthorize("hasAuthority('write:wallet')")
+    public ResponseEntity<ApiResponse<SavingsGoalResponse>> createSavingsGoal(
+            @Parameter(description = "Wallet ID", required = true)
+            @PathVariable UUID walletId,
+            @Valid @RequestBody SavingsGoalRequest request) {
+        log.info("Creating savings goal for wallet: {}", walletId);
+
+        // Verify pocket exists
+        var pocket = pocketRepository.findById(walletId).orElse(null);
+        if (pocket == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("WAL_001", "Wallet not found"));
+        }
+
+        SavingsGoalEntity goal = new SavingsGoalEntity();
+        goal.setPocketId(walletId);
+        goal.setUserId(UUID.fromString(pocket.getAccountId())); // Using accountId as userId for simplicity
+        goal.setName(request.getName());
+        goal.setDescription(request.getDescription());
+        goal.setTargetAmount(request.getTargetAmount());
+        goal.setCurrentAmount(BigDecimal.ZERO);
+        goal.setCurrency(pocket.getCurrency());
+        goal.setDeadline(request.getDeadline());
+        goal.setStatus(SavingsGoalEntity.SavingsGoalStatus.ACTIVE);
+        goal.setIcon(request.getIcon());
+        goal.setColor(request.getColor());
+
+        SavingsGoalEntity saved = savingsGoalRepository.save(goal);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(toResponse(saved)));
+    }
+
+    @PutMapping("/{goalId}")
+    @Operation(summary = "Update savings goal")
+    @PreAuthorize("hasAuthority('write:wallet')")
+    public ResponseEntity<ApiResponse<SavingsGoalResponse>> updateSavingsGoal(
+            @Parameter(description = "Wallet ID", required = true)
+            @PathVariable UUID walletId,
+            @Parameter(description = "Goal ID", required = true)
+            @PathVariable UUID goalId,
+            @Valid @RequestBody SavingsGoalRequest request) {
+        log.info("Updating savings goal: {} for wallet: {}", goalId, walletId);
+
+        SavingsGoalEntity goal = savingsGoalRepository.findById(goalId).orElse(null);
+        if (goal == null || !goal.getPocketId().equals(walletId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("SAV_001", "Savings goal not found"));
+        }
+
+        goal.setName(request.getName());
+        goal.setDescription(request.getDescription());
+        goal.setTargetAmount(request.getTargetAmount());
+        goal.setDeadline(request.getDeadline());
+        goal.setIcon(request.getIcon());
+        goal.setColor(request.getColor());
+        goal.setUpdatedAt(LocalDateTime.now());
+
+        SavingsGoalEntity saved = savingsGoalRepository.save(goal);
+        return ResponseEntity.ok(ApiResponse.success(toResponse(saved)));
+    }
+
+    @DeleteMapping("/{goalId}")
+    @Operation(summary = "Delete (cancel) a savings goal")
+    @PreAuthorize("hasAuthority('write:wallet')")
+    public ResponseEntity<ApiResponse<Void>> deleteSavingsGoal(
+            @Parameter(description = "Wallet ID", required = true)
+            @PathVariable UUID walletId,
+            @Parameter(description = "Goal ID", required = true)
+            @PathVariable UUID goalId) {
+        log.info("Deleting savings goal: {} for wallet: {}", goalId, walletId);
+
+        SavingsGoalEntity goal = savingsGoalRepository.findById(goalId).orElse(null);
+        if (goal == null || !goal.getPocketId().equals(walletId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("SAV_001", "Savings goal not found"));
+        }
+
+        goal.setStatus(SavingsGoalEntity.SavingsGoalStatus.CANCELLED);
+        goal.setUpdatedAt(LocalDateTime.now());
+        savingsGoalRepository.save(goal);
+
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PostMapping("/{goalId}/pause")
+    @Operation(summary = "Pause a savings goal")
+    @PreAuthorize("hasAuthority('write:wallet')")
+    public ResponseEntity<ApiResponse<SavingsGoalResponse>> pauseSavingsGoal(
+            @Parameter(description = "Wallet ID", required = true)
+            @PathVariable UUID walletId,
+            @Parameter(description = "Goal ID", required = true)
+            @PathVariable UUID goalId) {
+        log.info("Pausing savings goal: {} for wallet: {}", goalId, walletId);
+
+        SavingsGoalEntity goal = savingsGoalRepository.findById(goalId).orElse(null);
+        if (goal == null || !goal.getPocketId().equals(walletId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("SAV_001", "Savings goal not found"));
+        }
+
+        if (goal.getStatus() == SavingsGoalEntity.SavingsGoalStatus.ACTIVE) {
+            goal.setStatus(SavingsGoalEntity.SavingsGoalStatus.PAUSED);
+            goal.setUpdatedAt(LocalDateTime.now());
+            savingsGoalRepository.save(goal);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(toResponse(goal)));
+    }
+
+    @PostMapping("/{goalId}/resume")
+    @Operation(summary = "Resume a paused savings goal")
+    @PreAuthorize("hasAuthority('write:wallet')")
+    public ResponseEntity<ApiResponse<SavingsGoalResponse>> resumeSavingsGoal(
+            @Parameter(description = "Wallet ID", required = true)
+            @PathVariable UUID walletId,
+            @Parameter(description = "Goal ID", required = true)
+            @PathVariable UUID goalId) {
+        log.info("Resuming savings goal: {} for wallet: {}", goalId, walletId);
+
+        SavingsGoalEntity goal = savingsGoalRepository.findById(goalId).orElse(null);
+        if (goal == null || !goal.getPocketId().equals(walletId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("SAV_001", "Savings goal not found"));
+        }
+
+        if (goal.getStatus() == SavingsGoalEntity.SavingsGoalStatus.PAUSED) {
+            goal.setStatus(SavingsGoalEntity.SavingsGoalStatus.ACTIVE);
+            goal.setUpdatedAt(LocalDateTime.now());
+            savingsGoalRepository.save(goal);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(toResponse(goal)));
+    }
+
+    private SavingsGoalResponse toResponse(SavingsGoalEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        BigDecimal progressPercentage = BigDecimal.ZERO;
+        if (entity.getTargetAmount() != null && entity.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
+            progressPercentage = entity.getCurrentAmount()
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(entity.getTargetAmount(), 2, BigDecimal.ROUND_HALF_UP);
+        }
+
+        return SavingsGoalResponse.builder()
+                .id(entity.getId())
+                .pocketId(entity.getPocketId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .targetAmount(entity.getTargetAmount())
+                .currentAmount(entity.getCurrentAmount())
+                .progressPercentage(progressPercentage)
+                .currency(entity.getCurrency())
+                .deadline(entity.getDeadline())
+                .status(entity.getStatus() != null ? entity.getStatus().name() : null)
+                .icon(entity.getIcon())
+                .color(entity.getColor())
+                .createdAt(entity.getCreatedAt())
+                .completedAt(entity.getCompletedAt())
+                .build();
+    }
+}

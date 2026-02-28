@@ -1,13 +1,9 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
+import type { PocketType, BalanceResponse, WalletTransaction, Pocket } from '@/types';
 
-export interface BalanceResponse {
-  accountId: string;
-  balance: number;
-  availableBalance: number;
-  reservedBalance: number;
-  currency: string;
-}
+// IMP-014: Re-export types from centralized types/index.ts
+export type { BalanceResponse, WalletTransaction, Pocket };
 
 export interface ReserveBalanceRequest {
   amount: number;
@@ -27,16 +23,7 @@ export interface CreditRequest {
   description?: string;
 }
 
-export interface WalletTransaction {
-  id: string;
-  walletId: string;
-  referenceId: string;
-  type: 'CREDIT' | 'DEBIT';
-  amount: number;
-  balanceAfter: number;
-  description: string;
-  createdAt: string;
-}
+// IMP-014: WalletTransaction is now re-exported from '@/types'
 
 export class WalletService {
   private static instance: WalletService;
@@ -239,25 +226,13 @@ export interface UpdateCardRequest {
 
 // === Pocket Types ===
 
-export interface Pocket {
-  id: string;
-  accountId: string;
-  name: string;
-  currency: string;
-  balance: number;
-  target?: number;
-  status: 'ACTIVE' | 'FROZEN' | 'CLOSED';
-  type: 'SAVINGS' | 'SHARED' | 'GOAL';
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface CreatePocketRequest {
   accountId: string;
   name: string;
   currency: string;
   target?: number;
-  type?: 'SAVINGS' | 'SHARED' | 'GOAL';
+  type?: PocketType;
 }
 
 // === Ledger Types ===

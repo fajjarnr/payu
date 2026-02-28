@@ -1,11 +1,13 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
 import { assertUUID } from '@/lib/validation';
-import type { TransactionType, TransactionStatus, TransferType } from '@/types';
+import type { TransactionType, TransactionStatus, TransferType, Transaction } from '@/types';
 
 // Re-export types for convenience
 export type { TransactionType, TransactionStatus };
 export type { TransferType };
+// IMP-014: Re-export Transaction from centralized types/index.ts
+export type { Transaction };
 
 export interface InitiateTransferRequest {
   senderAccountId: string;
@@ -24,23 +26,6 @@ export interface InitiateTransferResponse {
   status: string;
   fee: number;
   estimatedCompletionTime: string;
-}
-
-export interface Transaction {
-  id: string;
-  referenceNumber: string;
-  senderAccountId: string;
-  recipientAccountId: string;
-  type: TransactionType;
-  amount: number;
-  currency: string;
-  description: string;
-  status: TransactionStatus;
-  failureReason?: string;
-  metadata?: string;
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
 }
 
 export interface ProcessQrisPaymentRequest {

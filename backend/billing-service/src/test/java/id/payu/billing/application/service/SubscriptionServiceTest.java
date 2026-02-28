@@ -6,6 +6,7 @@ import id.payu.billing.domain.model.SubscriptionCharge;
 import id.payu.billing.domain.model.SubscriptionCharge.ChargeStatus;
 import id.payu.billing.domain.model.SubscriptionPlan;
 import id.payu.billing.domain.model.SubscriptionPlan.BillingInterval;
+import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
 import id.payu.billing.exception.SubscriptionNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,9 @@ class SubscriptionServiceTest {
 
     @Mock
     SubscriptionPersistencePort persistencePort;
+
+    @Mock
+    SubscriptionEventPort eventPort;
 
     private SubscriptionPlan samplePlan;
     private UUID planId;
@@ -82,6 +86,11 @@ class SubscriptionServiceTest {
                     if (c.getId() == null) c.setId(UUID.randomUUID());
                     return c;
                 });
+
+        // Don't fail tests on event publishing
+        lenient().doNothing().when(eventPort).publishSubscriptionCreated(any(Subscription.class));
+        lenient().doNothing().when(eventPort).publishChargeSucceeded(any(Subscription.class), any(SubscriptionCharge.class));
+        lenient().doNothing().when(eventPort).publishChargeFailed(any(Subscription.class), any(SubscriptionCharge.class));
     }
 
     // ═══════════════════════════════════════════════════════
@@ -365,6 +374,80 @@ class SubscriptionServiceTest {
 
             int processed = subscriptionService.processExpiredTrials();
             assertEquals(0, processed);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  Webhook Event Tests
+    // ═══════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("Webhook Events")
+    class WebhookEventTests {
+
+        @Test
+        @DisplayName("should publish subscription.created event on subscribe")
+        void shouldPublishSubscriptionCreatedEvent() {
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+
+            subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
+
+            verify(eventPort).publishSubscriptionCreated(any(Subscription.class));
+        }
+
+        @Test
+        @DisplayName("should publish charge.succeeded event on successful charge")
+        void shouldPublishChargeSucceededEvent() {
+            Subscription sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
+            when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
+                    .thenReturn(List.of(sub));
+            when(persistencePort.findPastDueSubscriptions())
+                    .thenReturn(Collections.emptyList());
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+            subscriptionService.processDueSubscriptions();
+
+            verify(eventPort).publishChargeSucceeded(any(Subscription.class), any(SubscriptionCharge.class));
+        }
+
+        @Test
+        @DisplayName("should publish charge.failed event on failed charge")
+        void shouldPublishChargeFailedEvent() {
+            Subscription sub = createActiveSub();
+            sub.setNextBillingAt(LocalDateTime.now().minusHours(1));
+            when(persistencePort.findDueSubscriptions(any(LocalDateTime.class)))
+                    .thenReturn(List.of(sub));
+            when(persistencePort.findPastDueSubscriptions())
+                    .thenReturn(Collections.emptyList());
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+            // Simulate charge failure by making saveCharge throw on success case
+            // but we need to verify the failure event is published
+            doThrow(new RuntimeException("Wallet service unavailable"))
+                    .when(persistencePort).saveSubscription(any(Subscription.class));
+
+            // Should not throw, but log error
+            assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
+
+            // The charge.failed event should be published before the exception
+            verify(eventPort).publishChargeFailed(any(Subscription.class), any(SubscriptionCharge.class));
+        }
+
+        @Test
+        @DisplayName("should continue subscription creation even if event publishing fails")
+        void shouldContinueOnEventPublishFailure() {
+            when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
+            doThrow(new RuntimeException("Kafka unavailable"))
+                    .when(eventPort).publishSubscriptionCreated(any(Subscription.class));
+
+            Subscription result = subscriptionService.subscribe("acc-001", planId, "ext-ref-1");
+
+            assertNotNull(result);
+            assertEquals("acc-001", result.getAccountId());
+            verify(persistencePort).saveSubscription(any(Subscription.class));
         }
     }
 

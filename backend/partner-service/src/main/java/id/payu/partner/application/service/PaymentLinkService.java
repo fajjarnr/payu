@@ -10,12 +10,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Manages payment link lifecycle: creation, retrieval, payment confirmation, and expiry.
@@ -30,11 +33,17 @@ public class PaymentLinkService {
 
     private final PaymentLinkRepository paymentLinkRepository;
     private final PartnerRepository partnerRepository;
+    private final WebhookDispatcherService webhookDispatcher;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     public PaymentLinkService(PaymentLinkRepository paymentLinkRepository,
-                              PartnerRepository partnerRepository) {
+                              PartnerRepository partnerRepository,
+                              WebhookDispatcherService webhookDispatcher,
+                              KafkaTemplate<String, String> kafkaTemplate) {
         this.paymentLinkRepository = paymentLinkRepository;
         this.partnerRepository = partnerRepository;
+        this.webhookDispatcher = webhookDispatcher;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     /**
@@ -121,6 +130,7 @@ public class PaymentLinkService {
 
     /**
      * Mark a payment link as paid (called when payment is confirmed).
+     * Dispatches webhook notification on payment completion.
      */
     public PaymentLinkResponse confirmPayment(String slug, String paymentMethod, String paymentReference) {
         PaymentLink paymentLink = paymentLinkRepository.findBySlug(slug)
@@ -135,6 +145,9 @@ public class PaymentLinkService {
 
         log.info("Payment link {} (slug={}) paid via {} ref={}",
                 paymentLink.getId(), slug, paymentMethod, paymentReference);
+
+        // Dispatch webhook notification
+        dispatchPaymentLinkPaidEvent(paymentLink);
 
         return toResponse(paymentLink);
     }
@@ -158,14 +171,78 @@ public class PaymentLinkService {
     /**
      * Scheduled job to expire payment links past their expiry time.
      * Runs every 5 minutes.
+     * Dispatches webhook notification for each expired link.
      */
     @Scheduled(fixedRate = 300000)
     public void expirePaymentLinks() {
         List<PaymentLink> expiredLinks = paymentLinkRepository.findExpiredActiveLinks(LocalDateTime.now());
         if (!expiredLinks.isEmpty()) {
-            expiredLinks.forEach(PaymentLink::markExpired);
+            expiredLinks.forEach(link -> {
+                link.markExpired();
+                dispatchPaymentLinkExpiredEvent(link);
+            });
             paymentLinkRepository.saveAll(expiredLinks);
             log.info("Expired {} payment links", expiredLinks.size());
+        }
+    }
+
+    /**
+     * Dispatch webhook for payment_link.paid event.
+     */
+    private void dispatchPaymentLinkPaidEvent(PaymentLink paymentLink) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("event", "payment_link.paid");
+            payload.put("linkId", paymentLink.getId());
+            payload.put("slug", paymentLink.getSlug());
+            payload.put("externalId", paymentLink.getExternalId());
+            payload.put("amount", paymentLink.getAmount());
+            payload.put("currency", paymentLink.getCurrency());
+            payload.put("status", paymentLink.getStatus().name());
+            payload.put("paymentMethod", paymentLink.getPaymentMethod());
+            payload.put("paymentReference", paymentLink.getPaymentReference());
+            payload.put("paidAt", paymentLink.getPaidAt().toString());
+            payload.put("partnerId", paymentLink.getPartner().getId());
+
+            webhookDispatcher.dispatch("payment_link.paid", payload);
+
+            // Also publish to Kafka for other services
+            kafkaTemplate.send("payment.link.events",
+                paymentLink.getSlug(),
+                "{\"type\":\"payment_link.paid\",\"slug\":\"" + paymentLink.getSlug() + "\"}");
+
+            log.info("Dispatched payment_link.paid event for link {}", paymentLink.getId());
+        } catch (Exception e) {
+            log.error("Failed to dispatch payment_link.paid event for link {}", paymentLink.getId(), e);
+        }
+    }
+
+    /**
+     * Dispatch webhook for payment_link.expired event.
+     */
+    private void dispatchPaymentLinkExpiredEvent(PaymentLink paymentLink) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("event", "payment_link.expired");
+            payload.put("linkId", paymentLink.getId());
+            payload.put("slug", paymentLink.getSlug());
+            payload.put("externalId", paymentLink.getExternalId());
+            payload.put("amount", paymentLink.getAmount());
+            payload.put("currency", paymentLink.getCurrency());
+            payload.put("status", paymentLink.getStatus().name());
+            payload.put("expiredAt", LocalDateTime.now().toString());
+            payload.put("partnerId", paymentLink.getPartner().getId());
+
+            webhookDispatcher.dispatch("payment_link.expired", payload);
+
+            // Also publish to Kafka for other services
+            kafkaTemplate.send("payment.link.events",
+                paymentLink.getSlug(),
+                "{\"type\":\"payment_link.expired\",\"slug\":\"" + paymentLink.getSlug() + "\"}");
+
+            log.info("Dispatched payment_link.expired event for link {}", paymentLink.getId());
+        } catch (Exception e) {
+            log.error("Failed to dispatch payment_link.expired event for link {}", paymentLink.getId(), e);
         }
     }
 

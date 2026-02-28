@@ -113,9 +113,9 @@ export const SUPPORTED_CURRENCIES: Record<string, CurrencyInfo> = {
 
 export class FxService {
   private static instance: FxService;
-  // BUG-BE-078 Fix: Changed from '/fx-api/v1' to '/api/v1/fx' to match
-  // standard service routing pattern. The old prefix didn't match any BFF route.
-  private baseUrl = '/api/v1/fx';
+  // IMP-010 Fix: Changed from '/api/v1/fx' to '/fx' to avoid double-prefix.
+  // Axios baseURL is already '/api/v1', so '/fx' becomes '/api/v1/fx'.
+  private baseUrl = '/fx';
 
   private constructor() {}
 

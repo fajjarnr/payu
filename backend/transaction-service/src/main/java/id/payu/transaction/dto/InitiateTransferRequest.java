@@ -65,6 +65,9 @@ public class InitiateTransferRequest {
     @Pattern(regexp = "^[a-zA-Z0-9\\-]+$", message = "Idempotency key contains invalid characters")
     private String idempotencyKey;
 
+    @Size(max = 140, message = "Memo must not exceed 140 characters")
+    private String memo;
+
     // BUG-CROSS-004: Sync with Transaction.TransactionType — Frontend sends BILL_PAYMENT/TOP_UP/QRIS_PAYMENT
     public enum TransactionType {
         INTERNAL_TRANSFER,

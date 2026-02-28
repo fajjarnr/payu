@@ -7,6 +7,7 @@ import id.payu.billing.domain.model.SubscriptionCharge.ChargeStatus;
 import id.payu.billing.domain.model.SubscriptionPlan;
 import id.payu.billing.domain.model.SubscriptionPlan.BillingInterval;
 import id.payu.billing.domain.port.in.SubscriptionUseCase;
+import id.payu.billing.domain.port.out.SubscriptionEventPort;
 import id.payu.billing.domain.port.out.SubscriptionPersistencePort;
 import id.payu.billing.exception.SubscriptionNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ import java.util.UUID;
 public class SubscriptionService implements SubscriptionUseCase {
 
     private final SubscriptionPersistencePort persistencePort;
+    private final SubscriptionEventPort eventPort;
 
     // ═══════════════════════════════════════════════════════
     //  Plan Management
@@ -128,6 +130,14 @@ public class SubscriptionService implements SubscriptionUseCase {
 
         Subscription saved = persistencePort.saveSubscription(sub);
         log.info("Subscription created: id={}, status={}", saved.getId(), saved.getStatus());
+
+        // Publish webhook event asynchronously
+        try {
+            eventPort.publishSubscriptionCreated(saved);
+        } catch (Exception e) {
+            log.warn("Failed to publish subscription.created event, subscription still created: {}", e.getMessage());
+        }
+
         return saved;
     }
 
@@ -278,6 +288,13 @@ public class SubscriptionService implements SubscriptionUseCase {
 
             log.info("Charge succeeded: subscription={}, amount={} {}", sub.getId(),
                     charge.getAmount(), charge.getCurrency());
+
+            // Publish webhook event for successful charge
+            try {
+                eventPort.publishChargeSucceeded(sub, charge);
+            } catch (Exception ex) {
+                log.warn("Failed to publish charge.succeeded event: {}", ex.getMessage());
+            }
         } catch (Exception e) {
             log.error("Charge failed: subscription={}, attempt={}", sub.getId(),
                     charge.getAttemptNumber(), e);
@@ -286,6 +303,13 @@ public class SubscriptionService implements SubscriptionUseCase {
 
             sub.markPastDue();
             persistencePort.saveSubscription(sub);
+
+            // Publish webhook event for failed charge (dunning)
+            try {
+                eventPort.publishChargeFailed(sub, charge);
+            } catch (Exception ex) {
+                log.warn("Failed to publish charge.failed event: {}", ex.getMessage());
+            }
         }
     }
 

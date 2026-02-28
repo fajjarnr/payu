@@ -42,12 +42,16 @@ export interface LoginResponse {
   mfaChallengeId?: string;
 }
 
+// IMP-011 Fix: Consolidated pocket types to match backend API
+// Backend uses: SAVINGS, SHARED, GOAL (no MAIN/SAVING singular)
+export type PocketType = 'SAVINGS' | 'SHARED' | 'GOAL';
+
 export interface Pocket {
   id: string;
   name: string;
   balance: number;
   target?: number;
-  type: 'MAIN' | 'SAVING' | 'SHARED' | 'SAVINGS' | 'GOAL';
+  type: PocketType;
   sharedMembers?: SharedMember[];
   isShared?: boolean;
   ownerAccountId?: string;

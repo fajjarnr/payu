@@ -108,16 +108,21 @@ export class LendingService {
     return response.data;
   }
 
+  // IMP-015 Fix: Moved 'amount' from query param to request body
+  // Query params are logged in access logs and browser history (security risk)
   async processRepayment(scheduleId: string, amount: number): Promise<RepaymentSchedule> {
-    const response = await api.post<RepaymentSchedule>(`/lending/repayment-schedules/${scheduleId}/pay`, null, {
-      params: { amount }
+    const response = await api.post<RepaymentSchedule>(`/lending/repayment-schedules/${scheduleId}/pay`, {
+      amount
     });
     return response.data;
   }
 
+  // IMP-015 Fix: Moved 'userId' from query param to request body
+  // Query params are logged in access logs and browser history (security risk)
   async activatePayLater(userId: string, request: PayLaterLimitRequest): Promise<PayLater> {
-    const response = await api.post<PayLater>(`/lending/paylater/activate`, request, {
-      params: { userId }
+    const response = await api.post<PayLater>(`/lending/paylater/activate`, {
+      ...request,
+      userId
     });
     return response.data;
   }
