@@ -18,6 +18,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
  * Main auto-configuration for PayU Cache Starter.

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -161,8 +162,8 @@ public class SagaThreadPoolConfig {
     private static class SagaTaskDecorator implements org.springframework.core.task.TaskDecorator {
         @Override
         public Runnable decorate(Runnable runnable) {
-            // Capture current context
-            org.slf4j.MDC.MDCCopyContext mdcContext = org.slf4j.MDC.getCopyOfContextMap();
+            // Capture current MDC context
+            Map<String, String> mdcContext = org.slf4j.MDC.getCopyOfContextMap();
 
             return () -> {
                 try {
