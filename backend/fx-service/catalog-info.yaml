@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: fx-service
+  description: Foreign Exchange Service. Currency exchange rates, conversion calculations, and FX transaction processing.
+  annotations:
+    github.com/project-slug: payu/fx-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=fx-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - fx
+    - exchange-rates
+    - currency
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:redis
+  providesApis:
+    - fx-api

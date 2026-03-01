@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: lending-service
+  description: Lending Service. Personal loans, PayLater, credit scoring, and loan management.
+  annotations:
+    github.com/project-slug: payu/lending-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=lending-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - lending
+    - loans
+    - paylater
+    - credit-scoring
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:wallet-service
+  providesApis:
+    - lending-api

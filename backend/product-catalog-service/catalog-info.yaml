@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: product-catalog-service
+  description: Product Catalog Service. Financial product management, categories, variants, pricing, and inventory tracking.
+  annotations:
+    github.com/project-slug: payu/product-catalog-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=product-catalog-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - elasticsearch
+    - product-catalog
+    - inventory
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:elasticsearch
+    - component:redis
+    - component:kafka
+  providesApis:
+    - product-catalog-api

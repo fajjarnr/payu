@@ -1,0 +1,85 @@
+site_name: PayU Documentation
+site_description: PayU Digital Banking Platform Documentation
+site_url: https://docs.payu.id
+
+docs_dir: docs
+
+nav:
+  - Home: INDEX.md
+  - Architecture:
+    - Overview: architecture/ARCHITECTURE.md
+    - Service Catalog: architecture/SERVICE_CATALOG.md
+    - Event Catalog: architecture/EVENT_CATALOG.md
+    - Gateway Architecture: roadmap/GATEWAY_ARCH.md
+  - API:
+    - Standards: api/API_STANDARDS.md
+  - Guides:
+    - Onboarding: guides/ONBOARDING.md
+    - Contributing: guides/CONTRIBUTING.md
+    - Lessons Learned: guides/LESSONS.md
+    - Usage: guides/USAGE.md
+    - TDD Reference: guides/TDD_QUICK_REFERENCE.md
+  - Operations:
+    - Infrastructure Deployment: operations/INFRASTRUCTURE_DEPLOYMENT.md
+    - Zero Downtime Deployment: operations/ZERO-DOWNTIME-DEPLOYMENT.md
+    - Disaster Recovery: operations/DISASTER_RECOVERY.md
+  - Security:
+    - Security Policy: security/SECURITY.md
+    - PCI-DSS Audit: security/PCI-DSS-UU-PDP-AUDIT-REPORT.md
+  - Roadmap:
+    - Todos: roadmap/TODOS.md
+    - Progress: roadmap/PROGRESS.md
+
+plugins:
+  - techdocs-core
+  - search
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: green
+      accent: emerald
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: green
+      accent: emerald
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/payu
+  version:
+    provider: mike
+
+copyright: Copyright © 2026 PayU Indonesia

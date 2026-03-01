@@ -8,8 +8,9 @@ import id.payu.saga.model.StepResult;
 import id.payu.saga.repository.SagaRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +19,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 /**
  * Abstract base class for saga orchestrators.
@@ -31,10 +29,11 @@ import java.util.function.Function;
  * @param <T> The saga context/data type
  */
 @Slf4j
-@RequiredArgsConstructor
 public abstract class SagaOrchestrator<T> {
 
     protected final SagaRepository sagaRepository;
+    protected final TaskExecutor sagaTaskExecutor;
+    protected final ScheduledExecutorService sagaRetryScheduler;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -42,23 +41,20 @@ public abstract class SagaOrchestrator<T> {
     private final List<SagaStep<T>> steps = new ArrayList<>();
     private String sagaType;
 
-    // BUG-BE-068: Dedicated executor instead of ForkJoinPool.commonPool()
-    private static final ExecutorService SAGA_EXECUTOR = Executors.newCachedThreadPool(
-            r -> {
-                Thread t = new Thread(r, "saga-worker");
-                t.setDaemon(true);
-                return t;
-            }
-    );
-
-    // BUG-BE-069: Non-blocking retry scheduler
-    private static final ScheduledExecutorService RETRY_SCHEDULER = Executors.newScheduledThreadPool(2,
-            r -> {
-                Thread t = new Thread(r, "saga-retry");
-                t.setDaemon(true);
-                return t;
-            }
-    );
+    /**
+     * Constructor with Spring-managed executors.
+     *
+     * @param sagaRepository the saga repository
+     * @param sagaTaskExecutor the Spring-managed task executor for async operations
+     * @param sagaRetryScheduler the Spring-managed scheduled executor for retries
+     */
+    protected SagaOrchestrator(SagaRepository sagaRepository,
+                               @Qualifier("sagaTaskExecutor") TaskExecutor sagaTaskExecutor,
+                               @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler) {
+        this.sagaRepository = sagaRepository;
+        this.sagaTaskExecutor = sagaTaskExecutor;
+        this.sagaRetryScheduler = sagaRetryScheduler;
+    }
 
     /**
      * Initialize the orchestrator with saga type and steps.
@@ -174,14 +170,14 @@ public abstract class SagaOrchestrator<T> {
      * Execute saga asynchronously.
      */
     public CompletableFuture<SagaResult<T>> executeAsync(T initialData) {
-        return CompletableFuture.supplyAsync(() -> execute(initialData), SAGA_EXECUTOR);
+        return CompletableFuture.supplyAsync(() -> execute(initialData), sagaTaskExecutor::execute);
     }
 
     /**
      * Execute saga asynchronously with specific ID.
      */
     public CompletableFuture<SagaResult<T>> executeAsyncWithId(String sagaId, T initialData) {
-        return CompletableFuture.supplyAsync(() -> executeWithId(sagaId, initialData), SAGA_EXECUTOR);
+        return CompletableFuture.supplyAsync(() -> executeWithId(sagaId, initialData), sagaTaskExecutor::execute);
     }
 
     /**
@@ -295,10 +291,10 @@ public abstract class SagaOrchestrator<T> {
                     return StepResult.failure(data, "Max retries exceeded: " + e.getMessage(), e);
                 }
 
-                // BUG-BE-069: Non-blocking wait using ScheduledExecutorService
+                // IMP-068: Non-blocking wait using Spring-managed ScheduledExecutorService
                 try {
                     CompletableFuture<Void> waitFuture = new CompletableFuture<>();
-                    RETRY_SCHEDULER.schedule(() -> waitFuture.complete(null), delay.toMillis(), TimeUnit.MILLISECONDS);
+                    sagaRetryScheduler.schedule(() -> waitFuture.complete(null), delay.toMillis(), TimeUnit.MILLISECONDS);
                     waitFuture.get(); // blocks this saga worker thread, NOT Tomcat threads
                     delay = delay.multipliedBy(2); // Exponential backoff
                 } catch (Exception ie) {

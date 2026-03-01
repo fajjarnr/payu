@@ -14,6 +14,14 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.Parameter;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.time.Instant;
 import java.util.Map;
@@ -32,6 +40,8 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RolesAllowed("admin")
+@Tag(name = "Rate Plans", description = "Partner rate plan management (admin only)")
+@SecurityRequirement(name = "bearerAuth")
 public class PartnerRatePlanResource {
 
     @Inject
@@ -46,8 +56,11 @@ public class PartnerRatePlanResource {
     // Rate Plan CRUD Operations
 
     @GET
+    @Operation(summary = "List rate plans", description = "Returns all rate plans, optionally filtered by active status")
+    @APIResponse(responseCode = "200", description = "Rate plans retrieved successfully",
+        content = @Content(schema = @Schema(implementation = RatePlan.class)))
     public Multi<RatePlan> listRatePlans(
-            @QueryParam("active") @DefaultValue("true") boolean activeOnly) {
+            @Parameter(description = "Filter by active status only") @QueryParam("active") @DefaultValue("true") boolean activeOnly) {
         if (activeOnly) {
             return ratePlanRepository.findAllActive();
         }
@@ -56,7 +69,13 @@ public class PartnerRatePlanResource {
 
     @GET
     @Path("/{id}")
-    public Uni<Response> getRatePlan(@PathParam("id") String id) {
+    @Operation(summary = "Get rate plan by ID", description = "Returns a specific rate plan by its ID")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Rate plan found",
+            content = @Content(schema = @Schema(implementation = RatePlan.class))),
+        @APIResponse(responseCode = "404", description = "Rate plan not found")
+    })
+    public Uni<Response> getRatePlan(@Parameter(description = "Rate plan ID", required = true) @PathParam("id") String id) {
         return ratePlanRepository.findById(id)
             .map(optional -> optional
                 .map(plan -> Response.ok(plan).build())
@@ -64,6 +83,12 @@ public class PartnerRatePlanResource {
     }
 
     @POST
+    @Operation(summary = "Create rate plan", description = "Creates a new rate plan with default and endpoint-specific limits")
+    @APIResponses({
+        @APIResponse(responseCode = "201", description = "Rate plan created successfully",
+            content = @Content(schema = @Schema(implementation = RatePlan.class))),
+        @APIResponse(responseCode = "400", description = "Invalid request")
+    })
     public Uni<Response> createRatePlan(CreateRatePlanRequest request) {
         RatePlan plan = new RatePlan(
             java.util.UUID.randomUUID().toString(),
@@ -89,7 +114,14 @@ public class PartnerRatePlanResource {
 
     @PUT
     @Path("/{id}")
-    public Uni<Response> updateRatePlan(@PathParam("id") String id, UpdateRatePlanRequest request) {
+    @Operation(summary = "Update rate plan", description = "Updates an existing rate plan")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Rate plan updated successfully",
+            content = @Content(schema = @Schema(implementation = RatePlan.class))),
+        @APIResponse(responseCode = "404", description = "Rate plan not found"),
+        @APIResponse(responseCode = "400", description = "Invalid request")
+    })
+    public Uni<Response> updateRatePlan(@Parameter(description = "Rate plan ID", required = true) @PathParam("id") String id, UpdateRatePlanRequest request) {
         return ratePlanRepository.findById(id)
             .flatMap(optional -> {
                 if (optional.isEmpty()) {
@@ -121,7 +153,12 @@ public class PartnerRatePlanResource {
 
     @DELETE
     @Path("/{id}")
-    public Uni<Response> deleteRatePlan(@PathParam("id") String id) {
+    @Operation(summary = "Delete rate plan", description = "Deletes a rate plan by its ID")
+    @APIResponses({
+        @APIResponse(responseCode = "204", description = "Rate plan deleted successfully"),
+        @APIResponse(responseCode = "404", description = "Rate plan not found")
+    })
+    public Uni<Response> deleteRatePlan(@Parameter(description = "Rate plan ID", required = true) @PathParam("id") String id) {
         return ratePlanRepository.deleteById(id)
             .map(deleted -> deleted
                 ? Response.noContent().build()
@@ -132,6 +169,12 @@ public class PartnerRatePlanResource {
 
     @POST
     @Path("/assignments")
+    @Operation(summary = "Assign rate plan to partner", description = "Assigns a rate plan to a specific partner")
+    @APIResponses({
+        @APIResponse(responseCode = "201", description = "Rate plan assigned successfully",
+            content = @Content(schema = @Schema(implementation = PartnerRatePlan.class))),
+        @APIResponse(responseCode = "400", description = "Invalid request")
+    })
     public Uni<Response> assignRatePlan(AssignRatePlanRequest request) {
         return partnerRateLimitService.assignRatePlan(request.partnerId(), request.ratePlanId())
             .map(assignment -> Response.status(Response.Status.CREATED).entity(assignment).build())
@@ -145,7 +188,13 @@ public class PartnerRatePlanResource {
 
     @GET
     @Path("/partners/{partnerId}/rate-plan")
-    public Uni<Response> getPartnerRatePlan(@PathParam("partnerId") String partnerId) {
+    @Operation(summary = "Get partner rate plan", description = "Returns the rate plan assigned to a specific partner")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Rate plan found",
+            content = @Content(schema = @Schema(implementation = PartnerRatePlan.class))),
+        @APIResponse(responseCode = "404", description = "No rate plan assigned for partner")
+    })
+    public Uni<Response> getPartnerRatePlan(@Parameter(description = "Partner ID", required = true) @PathParam("partnerId") String partnerId) {
         return partnerRateLimitService.getPartnerRatePlan(partnerId)
             .map(optional -> optional
                 .map(plan -> Response.ok(plan).build())
@@ -156,9 +205,12 @@ public class PartnerRatePlanResource {
 
     @GET
     @Path("/partners/{partnerId}/limits")
+    @Operation(summary = "Get partner rate limits", description = "Returns the effective rate limits for a partner on a specific endpoint")
+    @APIResponse(responseCode = "200", description = "Rate limits retrieved successfully",
+        content = @Content(schema = @Schema(implementation = Map.class)))
     public Uni<Response> getPartnerLimits(
-            @PathParam("partnerId") String partnerId,
-            @QueryParam("endpoint") String endpoint) {
+            @Parameter(description = "Partner ID", required = true) @PathParam("partnerId") String partnerId,
+            @Parameter(description = "Endpoint path") @QueryParam("endpoint") String endpoint) {
 
         String path = endpoint != null ? endpoint : "/api/v1/*";
 
@@ -182,9 +234,12 @@ public class PartnerRatePlanResource {
 
     @GET
     @Path("/partners/{partnerId}/status")
+    @Operation(summary = "Check partner rate limit status", description = "Checks the current rate limit status for a partner on a specific endpoint")
+    @APIResponse(responseCode = "200", description = "Rate limit status retrieved successfully",
+        content = @Content(schema = @Schema(implementation = Map.class)))
     public Uni<Response> checkPartnerRateLimitStatus(
-            @PathParam("partnerId") String partnerId,
-            @QueryParam("endpoint") @DefaultValue("/api/v1/accounts") String endpoint) {
+            @Parameter(description = "Partner ID", required = true) @PathParam("partnerId") String partnerId,
+            @Parameter(description = "Endpoint path") @QueryParam("endpoint") @DefaultValue("/api/v1/accounts") String endpoint) {
 
         return partnerRateLimitService.checkRateLimit(partnerId, endpoint)
             .map(result -> Response.ok(Map.of(

@@ -40,6 +40,13 @@ public class ApiKeyEntity {
         SANDBOX
     }
 
+    /**
+     * Sandbox mode flag for test environment.
+     * When true, requests using this key are routed to simulators.
+     */
+    @Column(name = "sandbox", nullable = false)
+    private Boolean sandbox = false;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -143,6 +150,18 @@ public class ApiKeyEntity {
         this.keySuffix = keySuffix;
         this.environment = environment;
         this.status = KeyStatus.ACTIVE;
+        this.sandbox = (environment == KeyEnvironment.SANDBOX);
+    }
+
+    public ApiKeyEntity(Partner partner, String keyPrefix, String keyHash,
+                        String keySuffix, KeyEnvironment environment, Boolean sandbox) {
+        this.partner = partner;
+        this.keyPrefix = keyPrefix;
+        this.keyHash = keyHash;
+        this.keySuffix = keySuffix;
+        this.environment = environment;
+        this.status = KeyStatus.ACTIVE;
+        this.sandbox = sandbox != null ? sandbox : (environment == KeyEnvironment.SANDBOX);
     }
 
     // --- Domain Methods ---
@@ -243,4 +262,14 @@ public class ApiKeyEntity {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Boolean getSandbox() { return sandbox; }
+    public void setSandbox(Boolean sandbox) { this.sandbox = sandbox; }
+
+    /**
+     * Check if this key is a sandbox key.
+     */
+    public boolean isSandbox() {
+        return sandbox != null && sandbox;
+    }
 }

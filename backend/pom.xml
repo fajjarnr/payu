@@ -36,6 +36,7 @@
         <springdoc.version>2.3.0</springdoc.version>
         <lombok.version>1.18.42</lombok.version>
         <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
     </properties>
 
     <modules>
@@ -49,6 +50,8 @@
         <module>shared/outbox-starter</module>
         <module>shared/saga-starter</module>
         <module>shared/archunit-starter</module>
+        <module>shared/mapper-starter</module>
+        <module>shared/grpc-starter</module>
 
         <!-- Simulators -->
         <module>simulators/bi-fast-simulator</module>
@@ -78,6 +81,7 @@
         <module>ab-testing-service</module>
         <module>api-portal-service</module>
         <module>dispute-service</module>
+        <module>integration-service</module>
     </modules>
 
     <dependencyManagement>
@@ -116,6 +120,16 @@
             <dependency>
                 <groupId>id.payu</groupId>
                 <artifactId>saga-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>mapper-starter</artifactId>
+                <version>${payu.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>id.payu</groupId>
+                <artifactId>grpc-starter</artifactId>
                 <version>${payu.shared.version}</version>
             </dependency>
 
@@ -198,6 +212,13 @@
                 <groupId>net.logstash.logback</groupId>
                 <artifactId>logstash-logback-encoder</artifactId>
                 <version>${logstash-logback-encoder.version}</version>
+            </dependency>
+
+            <!-- MapStruct for compile-time type-safe mapping -->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

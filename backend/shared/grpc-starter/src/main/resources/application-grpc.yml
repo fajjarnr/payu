@@ -1,0 +1,64 @@
+# Default gRPC Configuration for PayU Services
+# Include this in your application.yml: spring.profiles.include: grpc
+
+payu:
+  grpc:
+    server:
+      enabled: true
+      port: 9090
+      reflection-enabled: false  # Enable only in dev/test
+      max-message-size: 4194304  # 4MB
+      security:
+        enabled: false  # TLS terminated by Istio
+
+    interceptors:
+      tracing:
+        enabled: true
+      auth:
+        enabled: true
+      error-handling:
+        enabled: true
+
+    # Client configurations per service
+    clients:
+      wallet-service:
+        address: static://wallet-service:9090
+        negotiation-type: PLAINTEXT
+        retry-enabled: true
+        max-retry-attempts: 3
+        initial-backoff-ms: 100
+        max-backoff-ms: 5000
+        connection-timeout-seconds: 10
+        deadline-seconds: 30
+
+      account-service:
+        address: static://account-service:9090
+        negotiation-type: PLAINTEXT
+        retry-enabled: true
+        max-retry-attempts: 3
+        connection-timeout-seconds: 10
+        deadline-seconds: 30
+
+      transaction-service:
+        address: static://transaction-service:9090
+        negotiation-type: PLAINTEXT
+        retry-enabled: true
+        max-retry-attempts: 3
+        connection-timeout-seconds: 10
+        deadline-seconds: 30
+
+# Spring gRPC configuration
+spring:
+  grpc:
+    server:
+      port: ${payu.grpc.server.port:9090}
+    client:
+      wallet-service:
+        address: ${payu.grpc.clients.wallet-service.address:static://localhost:9090}
+        negotiation-type: ${payu.grpc.clients.wallet-service.negotiation-type:PLAINTEXT}
+      account-service:
+        address: ${payu.grpc.clients.account-service.address:static://localhost:9091}
+        negotiation-type: ${payu.grpc.clients.account-service.negotiation-type:PLAINTEXT}
+      transaction-service:
+        address: ${payu.grpc.clients.transaction-service.address:static://localhost:9092}
+        negotiation-type: ${payu.grpc.clients.transaction-service.negotiation-type:PLAINTEXT}

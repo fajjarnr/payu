@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: billing-service
+  description: Bill Payment Service. PLN, PDAM, Pulsa, BPJS, and other biller integrations with wallet integration.
+  annotations:
+    github.com/project-slug: payu/billing-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=billing-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - quarkus
+    - postgresql
+    - kafka
+    - billing
+    - payments
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:wallet-service
+  providesApis:
+    - billing-api

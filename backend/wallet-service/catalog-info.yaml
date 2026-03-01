@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: wallet-service
+  description: Core Banking - Wallet Service. Balance management, double-entry ledger, virtual debit cards, and reservation system.
+  annotations:
+    github.com/project-slug: payu/wallet-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=wallet-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - kafka
+    - hexagonal-architecture
+    - ledger
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:redis
+  providesApis:
+    - wallet-api

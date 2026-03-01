@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: support-service
+  description: Customer Support Service. Ticketing system, support team training management, and customer service operations.
+  annotations:
+    github.com/project-slug: payu/support-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=support-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - quarkus
+    - postgresql
+    - support
+    - ticketing
+    - customer-service
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+  providesApis:
+    - support-api

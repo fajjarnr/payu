@@ -1,0 +1,27 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: api-portal-service
+  description: API Portal Service. Centralized OpenAPI documentation, API sandbox, and developer portal for partner integrations.
+  annotations:
+    github.com/project-slug: payu/api-portal-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=api-portal-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - quarkus
+    - openapi
+    - developer-portal
+    - documentation
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-partner-gateway
+  dependsOn:
+    - component:postgresql
+    - component:redis
+  providesApis:
+    - api-portal

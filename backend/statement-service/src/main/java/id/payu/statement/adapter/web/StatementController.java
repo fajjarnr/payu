@@ -1,7 +1,10 @@
 package id.payu.statement.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
+import id.payu.statement.application.service.ReceiptService;
 import id.payu.statement.application.service.StatementService;
+import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
+import id.payu.statement.application.service.dto.ReceiptResponse;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
 import id.payu.statement.domain.entity.Statement;
@@ -40,6 +43,7 @@ import java.util.UUID;
 public class StatementController extends BaseController {
 
     private final StatementService statementService;
+    private final ReceiptService receiptService;
 
     @PostMapping("/generate")
     @Operation(summary = "Generate statement", description = "Generate e-statement for a specific month and year")
@@ -159,5 +163,100 @@ public class StatementController extends BaseController {
                 .status(Statement.StatementStatus.GENERATING)
                 .build();
         return ResponseEntity.accepted().body(ApiResponse.success(response));
+    }
+
+    // ==================== Receipt Endpoints (Epic E-19) ====================
+
+    @PostMapping("/receipts/generate")
+    @Operation(summary = "Generate transaction receipt", description = "Generate a receipt for a specific transaction")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Receipt generated successfully",
+            content = @Content(schema = @Schema(implementation = ReceiptResponse.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Transaction not found")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<ReceiptResponse>> generateReceipt(
+            @Valid @RequestBody ReceiptGenerationRequest request,
+            Authentication authentication) {
+
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String customerId = jwt.getSubject();
+        request.setCustomerId(customerId);
+
+        ReceiptResponse response = receiptService.generateReceipt(request);
+        return ok(response);
+    }
+
+    @GetMapping("/receipts/{receiptId}")
+    @Operation(summary = "Get receipt by ID", description = "Retrieve receipt details by receipt ID")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Receipt found",
+            content = @Content(schema = @Schema(implementation = ReceiptResponse.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Receipt not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<ReceiptResponse>> getReceipt(
+            @Parameter(description = "Receipt ID", required = true) @PathVariable UUID receiptId) {
+
+        ReceiptResponse response = receiptService.getReceipt(receiptId);
+        return ok(response);
+    }
+
+    @GetMapping("/receipts/transaction/{transactionId}")
+    @Operation(summary = "Get receipt by transaction ID", description = "Retrieve receipt for a specific transaction")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Receipt found",
+            content = @Content(schema = @Schema(implementation = ReceiptResponse.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Receipt not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<ReceiptResponse>> getReceiptByTransaction(
+            @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId) {
+
+        return receiptService.getReceiptByTransactionId(transactionId)
+                .map(this::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/receipts/{receiptId}/download")
+    @Operation(summary = "Download receipt PDF", description = "Download transaction receipt as PDF file")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PDF downloaded successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Receipt not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "410", description = "Receipt has expired")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<byte[]> downloadReceipt(
+            @Parameter(description = "Receipt ID", required = true) @PathVariable UUID receiptId) {
+
+        byte[] pdfBytes = receiptService.generatePdf(receiptId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "receipt_" + receiptId + ".pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
+
+    @GetMapping("/receipts/transaction/{transactionId}/download")
+    @Operation(summary = "Download receipt PDF by transaction ID", description = "Download transaction receipt as PDF using transaction ID")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PDF downloaded successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Receipt not found")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "410", description = "Receipt has expired")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<byte[]> downloadReceiptByTransaction(
+            @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId) {
+
+        byte[] pdfBytes = receiptService.generatePdfByTransactionId(transactionId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "receipt_" + transactionId + ".pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 }

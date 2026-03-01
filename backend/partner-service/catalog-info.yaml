@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: partner-service
+  description: Partner Integration Service. SNAP-BI API standard, merchant management, payment links, webhooks, API key management, and sandbox environment.
+  annotations:
+    github.com/project-slug: payu/partner-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=partner-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - quarkus
+    - postgresql
+    - kafka
+    - snap-bi
+    - partner-api
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-partner-gateway
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:redis
+  providesApis:
+    - partner-api
+    - snap-bi-api

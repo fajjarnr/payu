@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: auth-service
+  description: Core Banking - Authentication Service. Keycloak integration, JWT authentication, OAuth2 resource server, MFA, and account lockout.
+  annotations:
+    github.com/project-slug: payu/auth-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=auth-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - keycloak
+    - oauth2
+    - jwt
+    - security
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:keycloak
+    - component:redis
+  providesApis:
+    - auth-api

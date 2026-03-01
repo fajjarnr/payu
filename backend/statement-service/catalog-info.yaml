@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: statement-service
+  description: Statement Service. PDF e-statement generation, transaction history exports, and monthly statements.
+  annotations:
+    github.com/project-slug: payu/statement-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=statement-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - pdf
+    - statements
+    - reports
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:wallet-service
+  providesApis:
+    - statement-api

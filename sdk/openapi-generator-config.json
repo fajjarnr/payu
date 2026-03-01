@@ -1,0 +1,17 @@
+{
+  "generatorName": "typescript-axios",
+  "outputDir": "./typescript",
+  "inputSpec": "../backend/gateway-service/src/main/resources/openapi/payu-gateway.json",
+  "additionalProperties": {
+    "npmName": "@payu/sdk",
+    "npmVersion": "1.0.0",
+    "supportsES6": true,
+    "typescriptThreePlus": true,
+    "withInterfaces": true,
+    "withSeparateModelsAndApi": true,
+    "modelPackage": "models",
+    "apiPackage": "api",
+    "useSingleRequestParameter": true,
+    "useEnumExtension": true
+  }
+}

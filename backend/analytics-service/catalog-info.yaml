@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: analytics-service
+  description: Analytics Service. Time-series analytics with TimescaleDB, user insights, spending patterns, and ML-based recommendations.
+  annotations:
+    github.com/project-slug: payu/analytics-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=analytics-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+  tags:
+    - python
+    - fastapi
+    - timescaledb
+    - kafka
+    - machine-learning
+    - analytics
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:timescaledb
+    - component:kafka
+  providesApis:
+    - analytics-api

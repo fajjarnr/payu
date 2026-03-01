@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: promotion-service
+  description: Promotion Service. Promo campaigns, vouchers, cashback, loyalty points, and referral programs.
+  annotations:
+    github.com/project-slug: payu/promotion-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=promotion-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - quarkus
+    - postgresql
+    - promotions
+    - vouchers
+    - cashback
+    - loyalty
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:redis
+  providesApis:
+    - promotion-api

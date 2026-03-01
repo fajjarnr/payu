@@ -1,0 +1,52 @@
+# PayU Microservice Containerfile
+# Multi-stage build with UBI9 base image
+
+# Stage 1: Build
+FROM registry.access.redhat.com/ubi9/openjdk-21:latest AS builder
+
+USER root
+WORKDIR /build
+
+# Copy Maven wrapper and pom
+COPY pom.xml .
+COPY src ./src
+
+# Build the application
+RUN mvn clean package -DskipTests -q
+
+# Stage 2: Runtime
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:latest
+
+# Labels
+LABEL maintainer="PayU Backend Team" \
+      app="${{ values.service_name }}" \
+      version="1.0.0" \
+      description="${{ values.description }}"
+
+# Environment variables
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom" \
+    SPRING_PROFILES_ACTIVE="openshift" \
+    SERVER_PORT=8080
+
+# Create non-root user
+USER root
+RUN mkdir -p /opt/app && chown -R 185:185 /opt/app
+
+# Copy application jar
+COPY --from=builder /build/target/${{ values.service_name }}-1.0.0-SNAPSHOT.jar /opt/app/app.jar
+
+# Set permissions
+RUN chown -R 185:185 /opt/app
+
+# Switch to non-root user
+USER 185
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# Run application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /opt/app/app.jar"]

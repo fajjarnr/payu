@@ -1,0 +1,127 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: payu-microservice-template
+  title: PayU Microservice Template
+  description: Scaffold a new PayU microservice with hexagonal architecture
+  tags:
+    - java
+    - spring-boot
+    - microservice
+    - hexagonal
+    - payu
+spec:
+  owner: team-backend
+  type: service
+
+  parameters:
+    - title: Service Configuration
+      required:
+        - service_name
+        - description
+        - owner
+        - java_package
+      properties:
+        service_name:
+          title: Service Name
+          type: string
+          description: Name of the microservice (e.g., inventory-service)
+          pattern: '^[a-z0-9-]+$'
+          ui:autofocus: true
+        description:
+          title: Description
+          type: string
+          description: Brief description of the service purpose
+        owner:
+          title: Owner
+          type: string
+          description: Team or individual responsible for this service
+          default: team-backend
+        java_package:
+          title: Java Package
+          type: string
+          description: Base Java package (e.g., id.payu.inventory)
+          default: id.payu.newservice
+        port:
+          title: Service Port
+          type: number
+          description: Port number for the service
+          default: 8080
+        database:
+          title: Database Required
+          type: boolean
+          description: Include PostgreSQL database configuration
+          default: true
+        kafka:
+          title: Kafka Required
+          type: boolean
+          description: Include Kafka messaging configuration
+          default: true
+        redis:
+          title: Redis Required
+          type: boolean
+          description: Include Redis caching configuration
+          default: true
+
+    - title: Repository Configuration
+      properties:
+        repoUrl:
+          title: Repository URL
+          type: string
+          description: GitHub repository URL (e.g., github.com?repo=my-service&owner=payu)
+
+  steps:
+    - id: fetch-template
+      name: Fetch Template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          service_name: ${{ parameters.service_name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          java_package: ${{ parameters.java_package }}
+          port: ${{ parameters.port }}
+          database: ${{ parameters.database }}
+          kafka: ${{ parameters.kafka }}
+          redis: ${{ parameters.redis }}
+
+    - id: publish
+      name: Publish to GitHub
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: ${{ parameters.description }}
+        repoUrl: ${{ parameters.repoUrl }}
+        defaultBranch: main
+
+    - id: register
+      name: Register in Backstage
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in Backstage
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
+    text:
+      - title: Next Steps
+        content: |
+          Your new PayU microservice has been created!
+
+          1. Clone the repository: `git clone ${{ steps.publish.output.remoteUrl }}`
+          2. Navigate to the service: `cd ${{ parameters.service_name }}`
+          3. Build the service: `mvn clean package`
+          4. Run locally: `mvn spring-boot:run`
+
+          Don't forget to:
+          - Update the README with specific service documentation
+          - Add your domain models in `domain/model/`
+          - Implement use cases in `application/service/`
+          - Create REST controllers in `adapter/web/`
+          - Add database migrations in `src/main/resources/db/migration/`

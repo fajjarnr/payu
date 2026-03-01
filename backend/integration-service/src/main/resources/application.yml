@@ -1,0 +1,114 @@
+spring:
+  application:
+    name: integration-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:integration_db}
+    username: ${DB_USER:integration}
+    password: ${DB_PASSWORD:integration}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: integration-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      max-poll-records: 100
+    producer:
+      acks: all
+      retries: 3
+      batch-size: 16384
+      buffer-memory: 33554432
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+camel:
+  springboot:
+    name: PayUIntegration
+    main-run-controller: true
+  component:
+    kafka:
+      brokers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    file:
+      auto-create: true
+  error:
+    handling:
+      redelivery-policy:
+        maximum-redeliveries: 3
+        redelivery-delay: 5000
+        retry-attempted-log-level: WARN
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/plain
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,camelroutes
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+payu:
+  integration:
+    api:
+      server-url: https://integration.payu.fajjjar.my.id
+    swift:
+      gateway-url: https://swift-gateway.payu.fajjjar.my.id/api/v1/messages
+      enabled: true
+    ojk:
+      upload-url: https://reporting.ojk.go.id/api/v1/upload
+      daily-report:
+        enabled: true
+        cron: "0 0 2 * * ?"  # 2 AM daily
+      monthly-report:
+        enabled: true
+        cron: "0 0 1 1 * ?"   # 1 AM on 1st of month
+    soap:
+      default-timeout: 30000
+      max-connections: 50
+
+logging:
+  level:
+    id.payu.integration: INFO
+    org.apache.camel: WARN
+    org.springframework.kafka: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

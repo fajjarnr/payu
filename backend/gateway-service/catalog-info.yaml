@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: gateway-service
+  description: API Gateway Service. Request routing, rate limiting, circuit breaker, API key validation, idempotency, and request/response transformation.
+  annotations:
+    github.com/project-slug: payu/gateway-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=gateway-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - quarkus
+    - redis
+    - gateway
+    - rate-limiting
+    - circuit-breaker
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:redis
+    - component:keycloak
+  providesApis:
+    - gateway-api

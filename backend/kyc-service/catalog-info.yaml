@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: kyc-service
+  description: KYC Service. OCR for Indonesian KTP, liveness detection, face matching, and Dukcapil integration for eKYC verification.
+  annotations:
+    github.com/project-slug: payu/kyc-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=kyc-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+  tags:
+    - python
+    - fastapi
+    - postgresql
+    - kafka
+    - ocr
+    - computer-vision
+    - ekyc
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:dukcapil-simulator
+  providesApis:
+    - kyc-api

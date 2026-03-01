@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: investment-service
+  description: Investment Service. Mutual funds, gold investment, time deposits, and robo-advisory features.
+  annotations:
+    github.com/project-slug: payu/investment-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=investment-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - investment
+    - mutual-funds
+    - gold
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:wallet-service
+  providesApis:
+    - investment-api

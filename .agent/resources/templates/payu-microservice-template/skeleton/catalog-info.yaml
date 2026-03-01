@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.service_name }}
+  description: ${{ values.description }}
+  annotations:
+    github.com/project-slug: payu/${{ values.service_name }}
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - java
+    - spring-boot
+    - microservice
+spec:
+  type: service
+  lifecycle: production
+  owner: ${{ values.owner }}
+  system: payu-core-banking

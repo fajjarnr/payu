@@ -1,0 +1,32 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: transaction-service
+  description: Core Banking - Transaction Service. Fund transfers, BI-FAST integration, QRIS payments, scheduled transfers, and disbursements.
+  annotations:
+    github.com/project-slug: payu/transaction-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=transaction-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - kafka
+    - hexagonal-architecture
+    - bi-fast
+    - qris
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:redis
+    - component:wallet-service
+    - component:bi-fast-simulator
+  providesApis:
+    - transaction-api

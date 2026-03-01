@@ -53,24 +53,24 @@
 | E-03 | Frontend Quality                  | 🟠 High    |    5    |  7  | Q1 2026 | ✅ Done  |
 | E-04 | API Management & Analytics        | 🟠 High    |    5    | 19  | Q2 2026 | ✅ Done |
 | E-05 | Product Catalog                   | 🟠 High    |    1    |  5  | Q2 2026 | ✅ Done  |
-| E-06 | Developer Hub (Backstage)         | 🟡 Medium  |    5    | 13  | Q2 2026 | 📋 To Do |
-| E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    | 25  | Q2 2026 | 📋 To Do |
-| E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |  5  | Future  | 📋 To Do |
+| E-06 | Developer Hub (Backstage)         | 🟡 Medium  |    5    | 13  | Q2 2026 | ✅ Done  |
+| E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    | 25  | Q2 2026 | ✅ Done  |
+| E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |  5  | Q2 2026 | ✅ Done  |
 | E-09 | Partner Integration Foundation    | 🔴 Highest |    4    | 18  | Q1 2026 | ✅ Done  |
 | E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    | 10  | Q1 2026 | ✅ Done  |
-| E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |  8  | Q1 2026 | 📋 To Do |
+| E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |  8  | Q1 2026 | ✅ Done  |
 | E-12 | Settlement & Financial Operations | 🟠 High    |    4    | 16  | Q2 2026 | ✅ Done  |
 | E-13 | Dispute Resolution                | 🟠 High    |    1    |  5  | Q2 2026 | ✅ Done  |
 | E-14 | Consumer Banking Experience       | 🟠 High    |    6    | 12  | Q2 2026 | ✅ Done  |
 | E-15 | Payment Gateway Features          | 🔴 Highest |    7    | 25  | Q2 2026 | ✅ Done  |
 | E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    | 12  | Q3 2026 | ✅ Done |
 | E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |  6  | Q2 2026 | ✅ Done |
-| E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | 📋 To Do |
-| E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |  2  | Q2 2026 | 📋 To Do |
+| E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | ✅ Done  |
+| E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |  2  | Q2 2026 | ✅ Done  |
 | E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    | 10  | Q1 2026 | ✅ Done  |
 | E-21 | Security Hardening                | 🔴 Highest |    2    |  5  | Q1 2026 | ✅ Done  |
 | E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |  6  | Q1 2026 | ✅ Done  |
-| E-23 | Shared Library Lifecycle          | 🟠 High    |    2    | 11  | Q2 2026 | 📋 To Do |
+| E-23 | Shared Library Lifecycle          | 🟠 High    |    2    | 11  | Q2 2026 | ✅ Done |
 
 > **Story Points**: XS=1, S=2, M=3, L=5, XL=8
 > **Labels**: `backend`, `frontend`, `gateway`, `platform`, `partner`, `security`, `grpc`, `dx`, `mobile`
@@ -455,10 +455,10 @@
 | Key     | Type  | Summary                        | Priority  | SP  | Component(s)         | Labels          | Status   |
 | :------ | :---- | :----------------------------- | :-------- | :-: | :------------------- | :-------------- | :------- |
 | IMP-021 | Story | Deploy Developer Hub           | 🟡 Medium |  3  | Platform             | `platform` `dx` | 📋 To Do |
-| IMP-022 | Story | Service Catalog (catalog-info) | 🟡 Medium |  2  | All services         | `platform` `dx` | 📋 To Do |
-| IMP-023 | Story | OpenAPI Coverage 16% → 80%+    | 🟡 Medium |  3  | `api-portal-service` | `backend` `dx`  | 📋 To Do |
-| IMP-024 | Story | Backstage Software Templates   | 🟡 Medium |  3  | Platform             | `platform` `dx` | 📋 To Do |
-| IMP-025 | Task  | Backstage TechDocs Integration | 🟡 Medium |  2  | Platform             | `platform` `dx` | 📋 To Do |
+| IMP-022 | Story | Service Catalog (catalog-info) | 🟡 Medium |  2  | All services         | `platform` `dx` | ✅ Done  |
+| IMP-023 | Story | OpenAPI Coverage 16% → 80%+    | 🟡 Medium |  3  | `api-portal-service` | `backend` `dx`  | ✅ Done  |
+| IMP-024 | Story | Backstage Software Templates   | 🟡 Medium |  3  | Platform             | `platform` `dx` | ✅ Done  |
+| IMP-025 | Task  | Backstage TechDocs Integration | 🟡 Medium |  2  | Platform             | `platform` `dx` | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -573,12 +573,12 @@
 
 | Key     | Type  | Summary                         | Priority  | SP  | Component(s)          | Labels                   | Blocked By    | Status   |
 | :------ | :---- | :------------------------------ | :-------- | :-: | :-------------------- | :----------------------- | :------------ | :------- |
-| IMP-026 | Story | Shared gRPC Starter Library     | 🟠 High   |  3  | `shared/grpc-starter` | `backend` `grpc`         | —             | 📋 To Do |
-| IMP-027 | Story | Wallet gRPC Server              | 🟠 High   |  3  | `wallet-service`      | `backend` `grpc`         | IMP-026       | 📋 To Do |
+| IMP-026 | Story | Shared gRPC Starter Library     | 🟠 High   |  3  | `shared/grpc-starter` | `backend` `grpc`         | —             | ✅ Done |
+| IMP-027 | Story | Wallet gRPC Server              | 🟠 High   |  3  | `wallet-service`      | `backend` `grpc`         | IMP-026       | ✅ Done |
 | IMP-028 | Story | Migrate Wallet Callers to gRPC  | 🟠 High   |  5  | Multi-service (6)     | `backend` `grpc`         | IMP-027       | 📋 To Do |
-| IMP-029 | Story | Account gRPC Server             | 🟡 Medium |  3  | `account-service`     | `backend` `grpc`         | IMP-026       | 📋 To Do |
-| IMP-030 | Story | Transaction gRPC Server         | 🟡 Medium |  3  | `transaction-service` | `backend` `grpc`         | IMP-026       | 📋 To Do |
-| IMP-031 | Story | Break wallet↔fx Circular Dep    | 🟠 High   |  3  | `wallet` + `fx`       | `backend` `architecture` | IMP-027       | 📋 To Do |
+| IMP-029 | Story | Account gRPC Server             | 🟡 Medium |  3  | `account-service`     | `backend` `grpc`         | IMP-026       | ✅ Done |
+| IMP-030 | Story | Transaction gRPC Server         | 🟡 Medium |  3  | `transaction-service` | `backend` `grpc`         | IMP-026       | ✅ Done |
+| IMP-031 | Story | Break wallet↔fx Circular Dep    | 🟠 High   |  3  | `wallet` + `fx`       | `backend` `architecture` | IMP-027       | ✅ Done |
 | IMP-032 | Task  | Standardize REST Client Cleanup | 🟡 Medium |  2  | Multi-service         | `backend` `cleanup`      | IMP-028       | 📋 To Do |
 | IMP-033 | Story | Gateway gRPC→REST Bridge        | 🟡 Medium |  3  | `gateway-service`     | `backend` `grpc`         | IMP-027,29,30 | 📋 To Do |
 
@@ -593,12 +593,12 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Maven module `grpc-starter` di `backend/shared/`
-> - [ ] Common `.proto` types di `src/main/proto/payu/common/`
-> - [ ] gRPC server interceptor: tracing, auth context propagation
-> - [ ] gRPC client interceptor: error mapping, retry
-> - [ ] Spring Boot auto-configuration
-> - [ ] Unit tests
+> - [x] Maven module `grpc-starter` di `backend/shared/`
+> - [x] Common `.proto` types di `src/main/proto/payu/common/`
+> - [x] gRPC server interceptor: tracing, auth context propagation
+> - [x] gRPC client interceptor: error mapping, retry
+> - [x] Spring Boot auto-configuration
+> - [x] Unit tests
 >
 > ✅ No FE impact
 
@@ -609,10 +609,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `wallet-service.proto` dengan semua RPC methods
-> - [ ] gRPC server di port 9090
-> - [ ] Existing REST endpoints untouched
-> - [ ] Integration test dengan gRPC client
+> - [x] `wallet-service.proto` dengan semua RPC methods
+> - [x] gRPC server di port 9090
+> - [x] Existing REST endpoints untouched
+> - [x] Integration test dengan gRPC client
 >
 > ✅ No FE impact
 
@@ -652,10 +652,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Kafka topic `fx-rates-updated`
-> - [ ] `wallet-service` consume & cache rates lokal
-> - [ ] Remove `FxRateProviderAdapter` (REST call ke fx-service) dari wallet
-> - [ ] Verify no circular dependency
+> - [x] Kafka topic `fx-rates-updated`
+> - [x] `wallet-service` consume & cache rates lokal
+> - [x] Remove `FxRateProviderAdapter` (REST call ke fx-service) dari wallet
+> - [x] Verify no circular dependency
 >
 > ✅ No FE impact
 
@@ -687,7 +687,7 @@
 
 | Key     | Type  | Summary                  | Priority | SP  | Component(s) | Labels                  | Status   |
 | :------ | :---- | :----------------------- | :------- | :-: | :----------- | :---------------------- | :------- |
-| IMP-013 | Story | Apache Camel Integration | ⚪ Low   |  5  | New module   | `backend` `integration` | 📋 To Do |
+| IMP-013 | Story | Apache Camel Integration | ⚪ Low   |  5  | New module   | `backend` `integration` | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1359,9 +1359,9 @@
 
 | Key     | Type  | Summary                  | Priority  | SP  | Component(s)             | Labels               | Status   |
 | :------ | :---- | :----------------------- | :-------- | :-: | :----------------------- | :------------------- | :------- |
-| IMP-052 | Story | Sandbox Test Environment | 🟠 High   |  3  | `api-portal` + `partner` | `platform` `dx`      | 📋 To Do |
-| IMP-053 | Story | Partner SDK Generation   | 🟡 Medium |  5  | New `sdk/` module        | `platform` `dx`      | 📋 To Do |
-| IMP-054 | Story | Spending Limits / Budget | 🟡 Medium |  3  | `account` + `txn`        | `backend` `frontend` | 📋 To Do |
+| IMP-052 | Story | Sandbox Test Environment | 🟠 High   |  3  | `api-portal` + `partner` | `platform` `dx`      | ✅ Done |
+| IMP-053 | Story | Partner SDK Generation   | 🟡 Medium |  5  | New `sdk/` module        | `platform` `dx`      | ✅ Done |
+| IMP-054 | Story | Spending Limits / Budget | 🟡 Medium |  3  | `account` + `txn`        | `backend` `frontend` | ✅ Done |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1376,9 +1376,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `sandbox` flag di API key entity
-> - [ ] Sandbox requests route ke simulators (tanpa random failure)
-> - [ ] Seed test data: test accounts, test merchants, test VA
+> - [x] `sandbox` flag di API key entity
+> - [x] Sandbox requests route ke simulators (tanpa random failure)
+> - [x] Seed test data: test accounts, test merchants, test VA
 > - [ ] Sandbox dashboard di developer-docs
 >
 > ✅ No FE impact (web-app) — developer portal
@@ -1392,9 +1392,9 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] OpenAPI Generator config untuk TypeScript + Java
-> - [ ] Generated SDK handles auth, retry, error parsing
-> - [ ] README + quickstart per language
+> - [x] OpenAPI Generator config untuk TypeScript + Java
+> - [x] Generated SDK handles auth, retry, error parsing
+> - [x] README + quickstart per language
 > - [ ] CI pipeline auto-generate on OpenAPI spec change
 >
 > **Blocked by**: IMP-023 (OpenAPI Coverage 80%+)
@@ -1410,10 +1410,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `Budget` entity (userId, category, limitAmount, period, currentSpent)
-> - [ ] CRUD: `POST/GET/PUT/DELETE /accounts/{id}/budgets`
-> - [ ] Check budget pada setiap transaksi (warn/block mode)
-> - [ ] Monthly reset scheduler
+> - [x] `Budget` entity (userId, category, limitAmount, period, currentSpent)
+> - [x] CRUD: `POST/GET/PUT/DELETE /accounts/{id}/budgets`
+> - [x] Check budget pada setiap transaksi (warn/block mode)
+> - [x] Monthly reset scheduler
 > - [ ] Notification saat 80% / 100% limit tercapai
 >
 > ⚠️ **FE Impact**: Settings page budget per kategori, progress bar
@@ -1431,7 +1431,7 @@
 
 | Key     | Type  | Summary                              | Priority | SP  | Component(s)        | Labels               | Status   |
 | :------ | :---- | :----------------------------------- | :------- | :-: | :------------------ | :------------------- | :------- |
-| IMP-055 | Story | Transaction Receipt (Bukti Transfer) | 🟠 High  |  2  | `statement-service` | `backend` `frontend` | 📋 To Do |
+| IMP-055 | Story | Transaction Receipt (Bukti Transfer) | 🟠 High  |  2  | `statement-service` | `backend` `frontend` | ✅ Done  |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1446,10 +1446,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `GET /statements/receipts/{transactionId}` → return PDF
-> - [ ] Receipt template dengan branding PayU
-> - [ ] Include: txn ID, date, amount, sender, recipient, reference, status
-> - [ ] Reuse existing PDF generation dari statement-service
+> - [x] `GET /statements/receipts/{transactionId}` → return PDF
+> - [x] Receipt template dengan branding PayU
+> - [x] Include: txn ID, date, amount, sender, recipient, reference, status
+> - [x] Reuse existing PDF generation dari statement-service
 >
 > ⚠️ **FE Impact**: Tombol "Download Bukti" / "Share" di detail transaksi
 
@@ -1706,8 +1706,8 @@
 
 | Key     | Type  | Summary                         | Priority  | SP  | Component(s)                    | Labels                  | Status   |
 | :------ | :---- | :------------------------------ | :-------- | :-: | :------------------------------ | :---------------------- | :------- |
-| IMP-068 | Story | Spring-Managed Thread Pools     | 🟠 High   |  3  | `shared/saga-starter` + `cache` | `backend` `reliability` | 📋 To Do |
-| IMP-069 | Story | MapStruct Entity-Domain Mapping | 🟡 Medium |  8  | New `shared/mapper-starter`     | `backend` `quality`     | 📋 To Do |
+| IMP-068 | Story | Spring-Managed Thread Pools     | 🟠 High   |  3  | `shared/saga-starter` + `cache` | `backend` `reliability` | ✅ Done |
+| IMP-069 | Story | MapStruct Entity-Domain Mapping | 🟡 Medium |  8  | New `shared/mapper-starter`     | `backend` `quality`     | ✅ Done |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1720,10 +1720,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Replace static executors dengan `@Bean TaskExecutor` (Spring-managed)
-> - [ ] Configure `ThreadPoolTaskExecutor` dengan bounded pool (core=4, max=16, queue=100)
-> - [ ] Register executor metrics di Micrometer (`executor.pool.size`, `executor.active`)
-> - [ ] Verify graceful shutdown: pending tasks complete before pod termination
+> - [x] Replace static executors dengan `@Bean TaskExecutor` (Spring-managed)
+> - [x] Configure `ThreadPoolTaskExecutor` dengan bounded pool (core=4, max=16, queue=100)
+> - [x] Register executor metrics di Micrometer (`executor.pool.size`, `executor.active`)
+> - [x] Verify graceful shutdown: pending tasks complete before pod termination
 >
 > ✅ No FE impact
 
@@ -1735,11 +1735,11 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Add MapStruct dependency ke parent POM (`dependencyManagement`)
-> - [ ] Create `shared/mapper-starter` dengan base mapper config
-> - [ ] Migrate wallet-service adapters ke MapStruct (pilot)
-> - [ ] Document pattern untuk other services
-> - [ ] Annotation processor config di maven-compiler-plugin (alongside Lombok)
+> - [x] Add MapStruct dependency ke parent POM (`dependencyManagement`)
+> - [x] Create `shared/mapper-starter` dengan base mapper config
+> - [x] Migrate wallet-service adapters ke MapStruct (pilot)
+> - [x] Document pattern untuk other services
+> - [x] Annotation processor config di maven-compiler-plugin (alongside Lombok)
 >
 > ✅ No FE impact
 
@@ -1802,7 +1802,7 @@
 | E-05 | Product Catalog                |    1    |    5    |
 | E-06 | Developer Hub (Backstage)      |    5    |   13    |
 | E-07 | gRPC Inter-Service Comm.       |    8    |   25    |
-| E-08 | Legacy Integration             |    1    |    5    |
+| E-08 | Legacy Integration Layer       |    1    |    5    | ✅ Done  |
 | E-09 | Partner Foundation             |    4    |   18    |
 | E-10 | Escrow & Marketplace           |    2    |   10    |
 | E-11 | Subscription & Billing         |    2    |    8    |

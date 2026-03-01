@@ -88,6 +88,12 @@ public class Merchant {
     @Column(name = "settlement_account_id", length = 64)
     private String settlementAccountId;
 
+    @Column(name = "settlement_account", length = 32)
+    private String settlementAccount;
+
+    @Column(name = "settlement_bank", length = 20)
+    private String settlementBank;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private MerchantStatus status;
@@ -179,6 +185,12 @@ public class Merchant {
 
     public String getSettlementAccountId() { return settlementAccountId; }
     public void setSettlementAccountId(String settlementAccountId) { this.settlementAccountId = settlementAccountId; }
+
+    public String getSettlementAccount() { return settlementAccount; }
+    public void setSettlementAccount(String settlementAccount) { this.settlementAccount = settlementAccount; }
+
+    public String getSettlementBank() { return settlementBank; }
+    public void setSettlementBank(String settlementBank) { this.settlementBank = settlementBank; }
 
     public MerchantStatus getStatus() { return status; }
     public void setStatus(MerchantStatus status) { this.status = status; }

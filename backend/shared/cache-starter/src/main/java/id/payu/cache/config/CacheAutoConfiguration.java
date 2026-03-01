@@ -15,10 +15,9 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
 import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Import;
 
 /**
  * Main auto-configuration for PayU Cache Starter.
@@ -42,6 +41,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @EnableConfigurationProperties(CacheProperties.class)
 @ConditionalOnClass(RedisConnectionFactory.class)
 @ConditionalOnProperty(prefix = "payu.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
+@Import(CacheThreadPoolConfig.class)
 public class CacheAutoConfiguration {
 
     private final CacheProperties properties;
@@ -63,8 +63,9 @@ public class CacheAutoConfiguration {
     @ConditionalOnMissingBean
     public CacheService cacheService(
             DistributedCacheService distributedCacheService,
-            LocalCacheService localCacheService) {
-        return new CacheService(distributedCacheService, localCacheService, properties);
+            LocalCacheService localCacheService,
+            @Qualifier("cacheRefreshExecutor") Executor cacheRefreshExecutor) {
+        return new CacheService(distributedCacheService, localCacheService, properties, cacheRefreshExecutor);
     }
 
     @Bean
@@ -73,18 +74,6 @@ public class CacheAutoConfiguration {
             CacheService cacheService,
             @Qualifier("cacheRefreshExecutor") Executor cacheRefreshExecutor) {
         return new CacheWithTTLAspect(cacheService, cacheRefreshExecutor);
-    }
-
-    @Bean(name = "cacheRefreshExecutor")
-    @ConditionalOnMissingBean(name = "cacheRefreshExecutor")
-    public Executor cacheRefreshExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(properties.getStaleWhileRevalidate().getRefreshThreadPoolSize());
-        executor.setMaxPoolSize(properties.getStaleWhileRevalidate().getRefreshThreadPoolSize() * 2);
-        executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("cache-refresh-");
-        executor.initialize();
-        return executor;
     }
 
     @Bean(name = "cacheWarmExecutor")

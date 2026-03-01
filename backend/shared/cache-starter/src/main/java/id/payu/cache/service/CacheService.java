@@ -5,12 +5,12 @@ import id.payu.cache.properties.CacheProperties;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.QueryTimeoutException;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 /**
@@ -56,25 +56,29 @@ public class CacheService {
     private final DistributedCacheService distributedCache;
     private final LocalCacheService localCache;
     private final CacheProperties properties;
-
-    // BUG-BE-064: Dedicated executor for async stale-while-revalidate refresh
-    private static final Executor REFRESH_EXECUTOR = Executors.newCachedThreadPool(r -> {
-        Thread t = new Thread(r, "cache-refresh");
-        t.setDaemon(true);
-        return t;
-    });
+    private final Executor cacheRefreshExecutor;
 
     // Metrics
     private final Counter localFallbackCounter;
     private final Counter localWriteCounter;
 
+    /**
+     * Constructor with Spring-managed executor.
+     *
+     * @param distributedCache the distributed cache service
+     * @param localCache the local cache service
+     * @param properties the cache properties
+     * @param cacheRefreshExecutor the Spring-managed executor for cache refresh operations
+     */
     public CacheService(
             DistributedCacheService distributedCache,
             LocalCacheService localCache,
-            CacheProperties properties) {
+            CacheProperties properties,
+            @Qualifier("cacheRefreshExecutor") Executor cacheRefreshExecutor) {
         this.distributedCache = distributedCache;
         this.localCache = localCache;
         this.properties = properties;
+        this.cacheRefreshExecutor = cacheRefreshExecutor;
 
         // Initialize metrics
         this.localFallbackCounter = Metrics.counter("cache.local.fallback");
@@ -177,7 +181,7 @@ public class CacheService {
                 }
 
                 if (entry.isStale()) {
-                    // BUG-BE-064: Trigger async background refresh for stale data
+                    // IMP-068: Trigger async background refresh using Spring-managed executor
                     final Duration sTtl = softTtl;
                     final Duration hTtl = hardTtl;
                     CompletableFuture.runAsync(() -> {
@@ -189,7 +193,7 @@ public class CacheService {
                         } catch (Exception ex) {
                             log.warn("Async cache refresh failed for key '{}': {}", key, ex.getMessage());
                         }
-                    }, REFRESH_EXECUTOR);
+                    }, cacheRefreshExecutor);
                     return entry.getValue();
                 }
 

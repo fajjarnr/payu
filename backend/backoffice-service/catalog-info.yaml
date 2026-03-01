@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backoffice-service
+  description: Backoffice Service. Internal admin dashboard, fraud operations, user management, and system administration.
+  annotations:
+    github.com/project-slug: payu/backoffice-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=backoffice-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - quarkus
+    - postgresql
+    - admin
+    - backoffice
+    - fraud-ops
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:redis
+  providesApis:
+    - backoffice-api

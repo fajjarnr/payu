@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: notification-service
+  description: Multi-Channel Notification Service. Email, SMS, Push notifications, in-app messages, and WhatsApp integration via Kafka consumers.
+  annotations:
+    github.com/project-slug: payu/notification-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=notification-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - quarkus
+    - kafka
+    - email
+    - sms
+    - push-notification
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:kafka
+    - component:redis
+  providesApis:
+    - notification-api

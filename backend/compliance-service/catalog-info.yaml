@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: compliance-service
+  description: Compliance Service. Regulatory compliance, AML monitoring, PCI-DSS compliance, and audit trails.
+  annotations:
+    github.com/project-slug: payu/compliance-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=compliance-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - kafka
+    - compliance
+    - aml
+    - pci-dss
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+  providesApis:
+    - compliance-api

@@ -36,4 +36,6 @@ public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, Long> {
 
     long countByPartnerIdAndStatusIn(Long partnerId,
                                      List<ApiKeyEntity.KeyStatus> statuses);
+
+    boolean existsByKeyHash(String keyHash);
 }

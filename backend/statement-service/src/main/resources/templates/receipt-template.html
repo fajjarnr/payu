@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bukti Transfer - PayU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .receipt-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header .brand {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header .url {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+        }
+
+        .status-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .amount-section {
+            text-align: center;
+            padding: 24px 0;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 24px;
+        }
+
+        .amount-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .amount-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .info-section {
+            margin-bottom: 24px;
+        }
+
+        .info-section h3 {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #111827;
+            text-align: right;
+        }
+
+        .party-info {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .party-info .name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .party-info .account {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .party-info .bank {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .reference-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 1px solid #a7f3d0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .reference-box .label {
+            font-size: 11px;
+            color: #059669;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .reference-box .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #065f46;
+            font-family: 'Courier New', monospace;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px 30px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer p {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .footer .support {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        .watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.05;
+            font-size: 60px;
+            font-weight: 700;
+            color: #10b981;
+            transform: rotate(-30deg);
+            pointer-events: none;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .receipt-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="header">
+            <h1>Bukti Transfer</h1>
+            <div class="brand">PayU</div>
+            <div class="url">payu.fajjjar.my.id</div>
+        </div>
+
+        <div class="content">
+            <div style="text-align: center;">
+                <span class="status-badge success">Berhasil</span>
+            </div>
+
+            <div class="amount-section">
+                <div class="amount-label">Jumlah Transfer</div>
+                <div class="amount-value" th:text="${formattedAmount}">IDR 1.500.000,00</div>
+            </div>
+
+            <div class="info-section">
+                <h3>Detail Transaksi</h3>
+                <div class="info-row">
+                    <span class="info-label">ID Transaksi</span>
+                    <span class="info-value" th:text="${transactionId}">TXN-123456</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Waktu Transaksi</span>
+                    <span class="info-value" th:text="${formattedTimestamp}">01 Maret 2024, 14:30 WIB</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Receipt ID</span>
+                    <span class="info-value" th:text="${receiptId}">REC-UUID</span>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>Pengirim</h3>
+                <div class="party-info">
+                    <div class="name" th:text="${senderName}">John Doe</div>
+                    <div class="account" th:text="${senderAccountMasked}">****7890</div>
+                    <div class="bank" th:text="${senderBankName}">PayU Digital Banking</div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>Penerima</h3>
+                <div class="party-info">
+                    <div class="name" th:text="${recipientName}">Jane Smith</div>
+                    <div class="account" th:text="${recipientAccountMasked}">****4321</div>
+                    <div class="bank" th:text="${recipientBankName}">Bank Central Asia</div>
+                </div>
+            </div>
+
+            <div class="reference-box">
+                <div class="label">Nomor Referensi</div>
+                <div class="value" th:text="${referenceNumber}">REF-BIFAST-789456</div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-row">
+                    <span class="info-label">Berlaku Sampai</span>
+                    <span class="info-value" th:text="${expiryDate}">30 Mei 2024, 14:30 WIB</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Dokumen ini adalah bukti transfer resmi yang dihasilkan secara elektronik.</p>
+            <p class="support">
+                Untuk bantuan, hubungi Customer Service:<br>
+                +62 21 555-1234 | support@payu.fajjjar.my.id
+            </p>
+        </div>
+    </div>
+
+    <div class="watermark">PayU</div>
+</body>
+</html>

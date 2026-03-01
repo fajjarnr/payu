@@ -1,0 +1,32 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: dispute-service
+  description: Dispute Resolution Service. Refund management, dispute lifecycle, evidence handling, and chargeback processing.
+  annotations:
+    github.com/project-slug: payu/dispute-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=dispute-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - kafka
+    - hexagonal-architecture
+    - disputes
+    - refunds
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:kafka
+    - component:transaction-service
+    - component:wallet-service
+  providesApis:
+    - dispute-api
+    - refund-api

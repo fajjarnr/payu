@@ -1,0 +1,136 @@
+syntax = "proto3";
+package payu.transaction;
+
+import "payu/common/common.proto";
+
+option java_multiple_files = true;
+option java_package = "id.payu.transaction.grpc";
+option java_outer_classname = "TransactionServiceProto";
+
+/**
+ * TransactionService provides gRPC interface for transaction operations.
+ * This service is used for inter-service communication.
+ */
+service TransactionService {
+  /**
+   * Get transaction by ID
+   */
+  rpc GetTransaction(GetTransactionRequest) returns (TransactionResponse);
+
+  /**
+   * Get transaction history (streaming response)
+   */
+  rpc GetHistory(GetHistoryRequest) returns (stream TransactionResponse);
+
+  /**
+   * Get transaction by reference
+   */
+  rpc GetByReference(GetByReferenceRequest) returns (TransactionResponse);
+
+  /**
+   * Create a new transaction
+   */
+  rpc CreateTransaction(CreateTransactionRequest) returns (TransactionResponse);
+
+  /**
+   * Update transaction status
+   */
+  rpc UpdateStatus(UpdateStatusRequest) returns (TransactionResponse);
+
+  /**
+   * Get transactions by account
+   */
+  rpc GetByAccount(GetByAccountRequest) returns (stream TransactionResponse);
+
+  /**
+   * Check if transaction exists by reference
+   */
+  rpc ExistsByReference(ExistsByReferenceRequest) returns (ExistsByReferenceResponse);
+}
+
+message GetTransactionRequest {
+  string transaction_id = 1;
+}
+
+message GetHistoryRequest {
+  string account_id = 1;
+  payu.common.PageRequest page = 2;
+  string start_date = 3;  // ISO-8601 format
+  string end_date = 4;    // ISO-8601 format
+  TransactionType type = 5;
+  TransactionStatus status = 6;
+}
+
+message GetByReferenceRequest {
+  string reference_id = 1;
+}
+
+message CreateTransactionRequest {
+  string account_id = 1;
+  TransactionType type = 2;
+  payu.common.Money amount = 3;
+  string description = 4;
+  string reference_id = 5;
+  string destination_account_id = 6;
+  map<string, string> metadata = 7;
+}
+
+message UpdateStatusRequest {
+  string transaction_id = 1;
+  TransactionStatus status = 2;
+  string reason = 3;
+}
+
+message GetByAccountRequest {
+  string account_id = 1;
+  payu.common.PageRequest page = 2;
+}
+
+message ExistsByReferenceRequest {
+  string reference_id = 1;
+}
+
+message ExistsByReferenceResponse {
+  bool exists = 1;
+  string transaction_id = 2;
+}
+
+message TransactionResponse {
+  string transaction_id = 1;
+  string account_id = 2;
+  string reference_id = 3;
+  TransactionType type = 4;
+  TransactionStatus status = 5;
+  payu.common.Money amount = 6;
+  payu.common.Money fee = 7;
+  payu.common.Money total_amount = 8;
+  string description = 9;
+  string destination_account_id = 10;
+  payu.common.Timestamp created_at = 11;
+  payu.common.Timestamp updated_at = 12;
+  payu.common.Timestamp completed_at = 13;
+  string failure_reason = 14;
+  map<string, string> metadata = 15;
+  payu.common.ErrorDetail error = 16;
+}
+
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  CREDIT = 1;
+  DEBIT = 2;
+  TRANSFER = 3;
+  PAYMENT = 4;
+  REFUND = 5;
+  FEE = 6;
+  INTEREST = 7;
+}
+
+enum TransactionStatus {
+  TRANSACTION_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  PROCESSING = 2;
+  COMPLETED = 3;
+  FAILED = 4;
+  CANCELLED = 5;
+  REVERSED = 6;
+}

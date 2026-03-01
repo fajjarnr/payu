@@ -21,6 +21,9 @@ public class Partner {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, length = 64)
+    private String partnerCode;
+
     @NotBlank
     private String name;
 
@@ -42,6 +45,13 @@ public class Partner {
     private String publicKey;
 
     private boolean active;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private PartnerStatus status = PartnerStatus.PENDING_VERIFICATION;
+
+    @Column(name = "webhook_url", length = 500)
+    private String webhookUrl;
 
     /**
      * Tenant identifier for multi-tenancy data isolation.
@@ -69,6 +79,8 @@ public class Partner {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public String getPartnerCode() { return partnerCode; }
+    public void setPartnerCode(String partnerCode) { this.partnerCode = partnerCode; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getType() { return type; }
@@ -85,8 +97,12 @@ public class Partner {
     public void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
     public String getPublicKey() { return publicKey; }
     public void setPublicKey(String publicKey) { this.publicKey = publicKey; }
-    public boolean isActive() { return active; }
+    public boolean isActive() { return active || status == PartnerStatus.ACTIVE; }
     public void setActive(boolean active) { this.active = active; }
+    public PartnerStatus getStatus() { return status; }
+    public void setStatus(PartnerStatus status) { this.status = status; }
+    public String getWebhookUrl() { return webhookUrl; }
+    public void setWebhookUrl(String webhookUrl) { this.webhookUrl = webhookUrl; }
     public String getTenantId() { return tenantId; }
     public void setTenantId(String tenantId) { this.tenantId = tenantId; }
     public LocalDateTime getCreatedAt() { return createdAt; }

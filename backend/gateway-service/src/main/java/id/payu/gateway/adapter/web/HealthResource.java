@@ -5,6 +5,12 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +20,7 @@ import java.util.Map;
  */
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
+@Tag(name = "Health", description = "Health check and status endpoints")
 public class HealthResource {
 
     private static final Instant START_TIME = Instant.now();
@@ -26,6 +33,12 @@ public class HealthResource {
      */
     @GET
     @Path("/health")
+    @Operation(summary = "Health check", description = "Returns the health status of the gateway service including circuit breaker states")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Service is healthy or degraded",
+            content = @Content(schema = @Schema(implementation = Map.class))),
+        @APIResponse(responseCode = "503", description = "Service is unavailable")
+    })
     public Response health() {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "UP");
@@ -73,6 +86,9 @@ public class HealthResource {
      */
     @GET
     @Path("/status")
+    @Operation(summary = "Service status", description = "Returns detailed status information including uptime, memory, and system info")
+    @APIResponse(responseCode = "200", description = "Status information retrieved successfully",
+        content = @Content(schema = @Schema(implementation = Map.class)))
     public Response status() {
         Runtime runtime = Runtime.getRuntime();
         long uptime = Instant.now().toEpochMilli() - START_TIME.toEpochMilli();
@@ -100,6 +116,9 @@ public class HealthResource {
      */
     @GET
     @Path("/version")
+    @Operation(summary = "API version", description = "Returns the API version and build information")
+    @APIResponse(responseCode = "200", description = "Version information retrieved successfully",
+        content = @Content(schema = @Schema(implementation = Map.class)))
     public Response version() {
         return Response.ok(Map.of(
             "service", "gateway-service",
@@ -115,6 +134,9 @@ public class HealthResource {
      */
     @GET
     @Path("/health/circuits")
+    @Operation(summary = "Circuit breaker states", description = "Returns circuit breaker states for all downstream services")
+    @APIResponse(responseCode = "200", description = "Circuit breaker states retrieved successfully",
+        content = @Content(schema = @Schema(implementation = Map.class)))
     public Response circuitBreakers() {
         Map<String, CircuitBreakerService.CircuitBreakerInfo> states =
                 circuitBreakerService.getCircuitStates();
@@ -172,6 +194,12 @@ public class HealthResource {
      */
     @GET
     @Path("/health/circuits/{serviceName}")
+    @Operation(summary = "Service circuit breaker state", description = "Returns circuit breaker state for a specific downstream service")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Circuit breaker state retrieved successfully",
+            content = @Content(schema = @Schema(implementation = Map.class))),
+        @APIResponse(responseCode = "404", description = "Service not found")
+    })
     public Response circuitBreakerForService(@PathParam("serviceName") String serviceName) {
         CircuitBreakerService.CircuitBreakerInfo info =
                 circuitBreakerService.getCircuitState(serviceName);
@@ -201,6 +229,13 @@ public class HealthResource {
      */
     @POST
     @Path("/health/circuits/{serviceName}/reset")
+    @Operation(summary = "Reset circuit breaker", description = "Resets the circuit breaker for a specific downstream service (admin only)")
+    @APIResponses({
+        @APIResponse(responseCode = "200", description = "Circuit breaker reset successfully",
+            content = @Content(schema = @Schema(implementation = Map.class))),
+        @APIResponse(responseCode = "404", description = "Service not found"),
+        @APIResponse(responseCode = "403", description = "Forbidden - admin access required")
+    })
     public Response resetCircuitBreaker(@PathParam("serviceName") String serviceName) {
         circuitBreakerService.reset(serviceName);
         return Response.ok(Map.of(
