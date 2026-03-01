@@ -90,7 +90,14 @@ logging:
 # Service URLs
 services:
   wallet:
-    url: ${WALLET_SERVICE_URL:http://localhost:8084}
+    url: ${WALLET_SERVICE_URL:http://wallet-service:8080}
+
+# App Configuration
+app:
+  kafka:
+    topics:
+      transaction-completed: transaction.completed
+      notifications: notifications
 
 ---
 # Development Profile

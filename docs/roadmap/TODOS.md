@@ -64,7 +64,7 @@
 | E-14 | Consumer Banking Experience       | 🟠 High    |    6    | 12  | Q2 2026 | ✅ Done  |
 | E-15 | Payment Gateway Features          | 🔴 Highest |    7    | 25  | Q2 2026 | ✅ Done  |
 | E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    | 12  | Q3 2026 | ✅ Done |
-| E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |  6  | Q2 2026 | 📋 To Do |
+| E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |  6  | Q2 2026 | ✅ Done |
 | E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    | 11  | Q3 2026 | 📋 To Do |
 | E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |  2  | Q2 2026 | 📋 To Do |
 | E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    | 10  | Q1 2026 | ✅ Done  |
@@ -1307,8 +1307,8 @@
 
 | Key     | Type  | Summary                               | Priority | SP  | Component(s)        | Labels              | Status   |
 | :------ | :---- | :------------------------------------ | :------- | :-: | :------------------ | :------------------ | :------- |
-| IMP-050 | Story | Checkout Promo Code Redemption        | 🟠 High  |  3  | `promotion-service` | `backend` `partner` | 📋 To Do |
-| IMP-051 | Story | Cashback Auto-Apply after Transaction | 🟠 High  |  3  | `promotion-service` | `backend` `partner` | 📋 To Do |
+| IMP-050 | Story | Checkout Promo Code Redemption        | 🟠 High  |  3  | `promotion-service` | `backend` `partner` | ✅ Done |
+| IMP-051 | Story | Cashback Auto-Apply after Transaction | 🟠 High  |  3  | `promotion-service` | `backend` `partner` | ✅ Done |
 
 <details>
 <summary>📄 Story Details</summary>
@@ -1322,10 +1322,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] `POST /promotions/apply` — input: promo code + transaction context
-> - [ ] Validate: code valid, not expired, user eligible, min transaction
-> - [ ] Return: discount amount, adjusted total, promo details
-> - [ ] Mark promo usage (prevent double-use)
+> - [x] `POST /promotions/apply` — input: promo code + transaction context
+> - [x] Validate: code valid, not expired, user eligible, min transaction
+> - [x] Return: discount amount, adjusted total, promo details
+> - [x] Mark promo usage (prevent double-use)
 >
 > ✅ No FE impact (web-app) — partner checkout API. Consumer app bisa extend later.
 
@@ -1339,10 +1339,10 @@
 >
 > **Acceptance Criteria**:
 >
-> - [ ] Kafka consumer listen `transaction.completed` events
-> - [ ] Evaluate active cashback rules (amount threshold, category, partner)
-> - [ ] Credit cashback amount ke user wallet via wallet-service
-> - [ ] Notification: "Cashback Rp5.000 diterima!"
+> - [x] Kafka consumer listen `transaction.completed` events
+> - [x] Evaluate active cashback rules (amount threshold, category, partner)
+> - [x] Credit cashback amount ke user wallet via wallet-service
+> - [x] Notification: "Cashback Rp5.000 diterima!"
 >
 > ⚠️ **FE Impact**: Toast/notification "Cashback diterima" di web-app
 
