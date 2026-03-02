@@ -206,14 +206,12 @@ public class RedisApiAnalyticsRepository implements ApiAnalyticsRepository {
 
         // Fetch events from all keys
         return Multi.createFrom().iterable(keys)
-            .onItem().transformToMulti(key ->
+            .onItem().transformToMultiAndConcatenate(key ->
                 listCommands.lrange(key, 0, -1)
                     .onItem().transformToMulti(list ->
                         Multi.createFrom().iterable(list != null ? list : List.of())
                     )
-                    .concatenate()
             )
-            .concatenate()
             .onItem().transform(this::parseEvent)
             .filter(Optional::isPresent)
             .map(Optional::get)

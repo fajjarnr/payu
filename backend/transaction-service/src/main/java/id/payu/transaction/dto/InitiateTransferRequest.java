@@ -6,11 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -24,11 +19,166 @@ import java.util.UUID;
  * - PIN validation for security-critical operations
  * - Device ID for fraud detection
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class InitiateTransferRequest {
+    public InitiateTransferRequest() {
+    }
+
+    public InitiateTransferRequest(UUID senderAccountId, String recipientAccountNumber, BigDecimal amount, String currency, String description, TransactionType type, String transactionPin, String deviceId, String idempotencyKey, String memo) {
+        this.senderAccountId = senderAccountId;
+        this.recipientAccountNumber = recipientAccountNumber;
+        this.amount = amount;
+        this.currency = currency;
+        this.description = description;
+        this.type = type;
+        this.transactionPin = transactionPin;
+        this.deviceId = deviceId;
+        this.idempotencyKey = idempotencyKey;
+        this.memo = memo;
+    }
+
+    public static InitiateTransferRequestBuilder builder() {
+        return new InitiateTransferRequestBuilder();
+    }
+
+    public static class InitiateTransferRequestBuilder {
+        private UUID senderAccountId;
+        private String recipientAccountNumber;
+        private BigDecimal amount;
+        private String currency;
+        private String description;
+        private TransactionType type;
+        private String transactionPin;
+        private String deviceId;
+        private String idempotencyKey;
+        private String memo;
+
+        public InitiateTransferRequestBuilder senderAccountId(UUID senderAccountId) {
+            this.senderAccountId = senderAccountId;
+            return this;
+        }
+        public InitiateTransferRequestBuilder recipientAccountNumber(String recipientAccountNumber) {
+            this.recipientAccountNumber = recipientAccountNumber;
+            return this;
+        }
+        public InitiateTransferRequestBuilder amount(BigDecimal amount) {
+            this.amount = amount;
+            return this;
+        }
+        public InitiateTransferRequestBuilder currency(String currency) {
+            this.currency = currency;
+            return this;
+        }
+        public InitiateTransferRequestBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+        public InitiateTransferRequestBuilder type(TransactionType type) {
+            this.type = type;
+            return this;
+        }
+        public InitiateTransferRequestBuilder transactionPin(String transactionPin) {
+            this.transactionPin = transactionPin;
+            return this;
+        }
+        public InitiateTransferRequestBuilder deviceId(String deviceId) {
+            this.deviceId = deviceId;
+            return this;
+        }
+        public InitiateTransferRequestBuilder idempotencyKey(String idempotencyKey) {
+            this.idempotencyKey = idempotencyKey;
+            return this;
+        }
+        public InitiateTransferRequestBuilder memo(String memo) {
+            this.memo = memo;
+            return this;
+        }
+
+        public InitiateTransferRequest build() {
+            return new InitiateTransferRequest(senderAccountId, recipientAccountNumber, amount, currency, description, type, transactionPin, deviceId, idempotencyKey, memo);
+        }
+    }
+
+    public UUID getSenderAccountId() {
+        return senderAccountId;
+    }
+
+    public void setSenderAccountId(UUID senderAccountId) {
+        this.senderAccountId = senderAccountId;
+    }
+
+    public String getRecipientAccountNumber() {
+        return recipientAccountNumber;
+    }
+
+    public void setRecipientAccountNumber(String recipientAccountNumber) {
+        this.recipientAccountNumber = recipientAccountNumber;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
+
+    public void setType(TransactionType type) {
+        this.type = type;
+    }
+
+    public String getTransactionPin() {
+        return transactionPin;
+    }
+
+    public void setTransactionPin(String transactionPin) {
+        this.transactionPin = transactionPin;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public String getMemo() {
+        return memo;
+    }
+
+    public void setMemo(String memo) {
+        this.memo = memo;
+    }
+
+
     @NotNull(message = "Sender account ID is required")
     private UUID senderAccountId;
 

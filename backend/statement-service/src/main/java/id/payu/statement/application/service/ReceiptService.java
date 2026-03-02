@@ -209,7 +209,20 @@ public class ReceiptService {
      */
     private TransactionData fetchTransactionData(String transactionId) {
         try {
-            return transactionServiceClient.getTransaction(transactionId);
+            StatementService.TransactionRecord record = transactionServiceClient.getTransaction(transactionId);
+            return TransactionData.builder()
+                    .transactionId(transactionId)
+                    .amount(record.getAmount())
+                    .currency("IDR")
+                    .senderName("N/A")
+                    .senderAccountNumber("N/A")
+                    .senderBankName("PayU Digital Banking")
+                    .recipientName("N/A")
+                    .recipientAccountNumber("N/A")
+                    .recipientBankName("N/A")
+                    .referenceNumber("REF-" + transactionId)
+                    .transactionDate(record.getDate() != null ? record.getDate().atStartOfDay() : LocalDateTime.now())
+                    .build();
         } catch (Exception e) {
             log.error("Failed to fetch transaction data for: {}", transactionId, e);
             // For testing/demo purposes, return mock data if service is unavailable
@@ -544,8 +557,6 @@ public class ReceiptService {
     }
 
     // Inner classes for data transfer
-    @lombok.Data
-    @lombok.Builder
     public static class TransactionData {
         private String transactionId;
         private BigDecimal amount;
@@ -558,5 +569,188 @@ public class ReceiptService {
         private String recipientBankName;
         private String referenceNumber;
         private LocalDateTime transactionDate;
+
+        // Default constructor
+        public TransactionData() {
+        }
+
+        // Builder
+        public static TransactionDataBuilder builder() {
+            return new TransactionDataBuilder();
+        }
+
+        public static class TransactionDataBuilder {
+            private String transactionId;
+            private BigDecimal amount;
+            private String currency;
+            private String senderName;
+            private String senderAccountNumber;
+            private String senderBankName;
+            private String recipientName;
+            private String recipientAccountNumber;
+            private String recipientBankName;
+            private String referenceNumber;
+            private LocalDateTime transactionDate;
+
+            public TransactionDataBuilder transactionId(String transactionId) {
+                this.transactionId = transactionId;
+                return this;
+            }
+
+            public TransactionDataBuilder amount(BigDecimal amount) {
+                this.amount = amount;
+                return this;
+            }
+
+            public TransactionDataBuilder currency(String currency) {
+                this.currency = currency;
+                return this;
+            }
+
+            public TransactionDataBuilder senderName(String senderName) {
+                this.senderName = senderName;
+                return this;
+            }
+
+            public TransactionDataBuilder senderAccountNumber(String senderAccountNumber) {
+                this.senderAccountNumber = senderAccountNumber;
+                return this;
+            }
+
+            public TransactionDataBuilder senderBankName(String senderBankName) {
+                this.senderBankName = senderBankName;
+                return this;
+            }
+
+            public TransactionDataBuilder recipientName(String recipientName) {
+                this.recipientName = recipientName;
+                return this;
+            }
+
+            public TransactionDataBuilder recipientAccountNumber(String recipientAccountNumber) {
+                this.recipientAccountNumber = recipientAccountNumber;
+                return this;
+            }
+
+            public TransactionDataBuilder recipientBankName(String recipientBankName) {
+                this.recipientBankName = recipientBankName;
+                return this;
+            }
+
+            public TransactionDataBuilder referenceNumber(String referenceNumber) {
+                this.referenceNumber = referenceNumber;
+                return this;
+            }
+
+            public TransactionDataBuilder transactionDate(LocalDateTime transactionDate) {
+                this.transactionDate = transactionDate;
+                return this;
+            }
+
+            public TransactionData build() {
+                TransactionData data = new TransactionData();
+                data.transactionId = this.transactionId;
+                data.amount = this.amount;
+                data.currency = this.currency;
+                data.senderName = this.senderName;
+                data.senderAccountNumber = this.senderAccountNumber;
+                data.senderBankName = this.senderBankName;
+                data.recipientName = this.recipientName;
+                data.recipientAccountNumber = this.recipientAccountNumber;
+                data.recipientBankName = this.recipientBankName;
+                data.referenceNumber = this.referenceNumber;
+                data.transactionDate = this.transactionDate;
+                return data;
+            }
+        }
+
+        // Getters and Setters
+        public String getTransactionId() {
+            return transactionId;
+        }
+
+        public void setTransactionId(String transactionId) {
+            this.transactionId = transactionId;
+        }
+
+        public BigDecimal getAmount() {
+            return amount;
+        }
+
+        public void setAmount(BigDecimal amount) {
+            this.amount = amount;
+        }
+
+        public String getCurrency() {
+            return currency;
+        }
+
+        public void setCurrency(String currency) {
+            this.currency = currency;
+        }
+
+        public String getSenderName() {
+            return senderName;
+        }
+
+        public void setSenderName(String senderName) {
+            this.senderName = senderName;
+        }
+
+        public String getSenderAccountNumber() {
+            return senderAccountNumber;
+        }
+
+        public void setSenderAccountNumber(String senderAccountNumber) {
+            this.senderAccountNumber = senderAccountNumber;
+        }
+
+        public String getSenderBankName() {
+            return senderBankName;
+        }
+
+        public void setSenderBankName(String senderBankName) {
+            this.senderBankName = senderBankName;
+        }
+
+        public String getRecipientName() {
+            return recipientName;
+        }
+
+        public void setRecipientName(String recipientName) {
+            this.recipientName = recipientName;
+        }
+
+        public String getRecipientAccountNumber() {
+            return recipientAccountNumber;
+        }
+
+        public void setRecipientAccountNumber(String recipientAccountNumber) {
+            this.recipientAccountNumber = recipientAccountNumber;
+        }
+
+        public String getRecipientBankName() {
+            return recipientBankName;
+        }
+
+        public void setRecipientBankName(String recipientBankName) {
+            this.recipientBankName = recipientBankName;
+        }
+
+        public String getReferenceNumber() {
+            return referenceNumber;
+        }
+
+        public void setReferenceNumber(String referenceNumber) {
+            this.referenceNumber = referenceNumber;
+        }
+
+        public LocalDateTime getTransactionDate() {
+            return transactionDate;
+        }
+
+        public void setTransactionDate(LocalDateTime transactionDate) {
+            this.transactionDate = transactionDate;
+        }
     }
 }

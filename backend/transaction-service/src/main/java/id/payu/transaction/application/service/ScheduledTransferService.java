@@ -9,7 +9,6 @@ import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
 import id.payu.transaction.dto.CreateScheduledTransferRequest;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.ScheduledTransferResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +17,20 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class ScheduledTransferService implements ScheduledTransferUseCase {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ScheduledTransferService.class);
+
+
 
     private final ScheduledTransferPersistencePort persistencePort;
     private final TransactionUseCase transactionUseCase;
+
+    public ScheduledTransferService(ScheduledTransferPersistencePort persistencePort,
+                                    TransactionUseCase transactionUseCase) {
+        this.persistencePort = persistencePort;
+        this.transactionUseCase = transactionUseCase;
+    }
 
     @Override
     @Transactional

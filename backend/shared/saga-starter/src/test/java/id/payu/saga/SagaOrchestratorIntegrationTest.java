@@ -18,6 +18,8 @@ import org.springframework.test.context.ActiveProfiles;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,13 +39,16 @@ class SagaOrchestratorIntegrationTest {
     private SagaRepository sagaRepository;
 
     private TestSagaOrchestrator orchestrator;
+    private final ScheduledExecutorService retryScheduler = Executors.newScheduledThreadPool(2);
 
     /**
      * Concrete test implementation of the abstract SagaOrchestrator.
      */
     static class TestSagaOrchestrator extends SagaOrchestrator<Map<String, Object>> {
-        public TestSagaOrchestrator(SagaRepository sagaRepository) {
-            super(sagaRepository);
+        public TestSagaOrchestrator(SagaRepository sagaRepository,
+                                    org.springframework.core.task.TaskExecutor taskExecutor,
+                                    ScheduledExecutorService retryScheduler) {
+            super(sagaRepository, taskExecutor, retryScheduler);
         }
 
         public void init(String sagaType, List<SagaStep<Map<String, Object>>> steps) {
@@ -53,7 +58,14 @@ class SagaOrchestratorIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        orchestrator = new TestSagaOrchestrator(sagaRepository);
+        org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor taskExecutor =
+            new org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(2);
+        taskExecutor.setMaxPoolSize(4);
+        taskExecutor.setQueueCapacity(50);
+        taskExecutor.setThreadNamePrefix("saga-test-");
+        taskExecutor.initialize();
+        orchestrator = new TestSagaOrchestrator(sagaRepository, taskExecutor, retryScheduler);
     }
 
     @Nested

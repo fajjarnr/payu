@@ -7,6 +7,7 @@ import id.payu.fx.domain.port.in.FxRateUseCase;
 import id.payu.fx.domain.port.out.FxConversionRepositoryPort;
 import id.payu.fx.domain.port.out.FxRateProviderPort;
 import id.payu.fx.domain.port.out.FxRateRepositoryPort;
+import id.payu.fx.domain.port.out.WalletServicePort;
 import id.payu.fx.application.service.FxConversionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,13 +34,16 @@ class FxConversionServiceTest {
     @Mock
     private FxRateUseCase fxRateUseCase;
 
+    @Mock
+    private WalletServicePort walletServicePort;
+
     private FxConversionService fxConversionService;
 
     private FxRate testRate;
 
     @BeforeEach
     void setUp() {
-        fxConversionService = new FxConversionService(conversionRepository, fxRateUseCase);
+        fxConversionService = new FxConversionService(conversionRepository, fxRateUseCase, walletServicePort);
         
         testRate = FxRate.builder()
                 .id(UUID.randomUUID())

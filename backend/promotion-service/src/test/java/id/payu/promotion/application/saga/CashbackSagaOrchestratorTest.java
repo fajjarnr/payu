@@ -1,5 +1,6 @@
 package id.payu.promotion.application.saga;
 
+import id.payu.promotion.adapter.client.WalletCreditException;
 import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
 import id.payu.promotion.domain.Cashback;
 import id.payu.promotion.domain.port.out.WalletServicePort;
@@ -13,10 +14,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.task.TaskExecutor;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -33,6 +36,12 @@ class CashbackSagaOrchestratorTest {
     private SagaRepository sagaRepository;
 
     @Mock
+    private TaskExecutor sagaTaskExecutor;
+
+    @Mock
+    private ScheduledExecutorService sagaRetryScheduler;
+
+    @Mock
     private WalletServicePort walletServicePort;
 
     @Mock
@@ -45,7 +54,7 @@ class CashbackSagaOrchestratorTest {
 
     @BeforeEach
     void setUp() {
-        orchestrator = new CashbackSagaOrchestrator(sagaRepository, walletServicePort, cashbackRepository);
+        orchestrator = new CashbackSagaOrchestrator(sagaRepository, sagaTaskExecutor, sagaRetryScheduler, walletServicePort, cashbackRepository);
     }
 
     @Test
@@ -117,7 +126,7 @@ class CashbackSagaOrchestratorTest {
 
         // Mock wallet credit failure
         when(walletServicePort.creditWallet(any(), any(), any(), any()))
-            .thenThrow(new WalletServicePort.WalletCreditException("Wallet service unavailable"));
+            .thenThrow(new WalletCreditException("Wallet service unavailable"));
 
         // Mock saga repository
         when(sagaRepository.save(any()))

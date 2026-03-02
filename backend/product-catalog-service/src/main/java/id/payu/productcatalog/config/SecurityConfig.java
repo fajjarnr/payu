@@ -45,7 +45,8 @@ public class SecurityConfig {
                 new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter();
         converter.setPrincipalClaimName("sub");
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            var authorities = new java.util.ArrayList<org.springframework.security.core.authority.SimpleGrantedAuthority>();
+            java.util.Collection<org.springframework.security.core.GrantedAuthority> authorities =
+                new java.util.ArrayList<>();
             var roles = jwt.getClaimAsStringList("roles");
             if (roles != null) {
                 roles.forEach(role -> authorities.add(

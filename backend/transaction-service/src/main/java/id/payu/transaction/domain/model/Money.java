@@ -1,8 +1,5 @@
 package id.payu.transaction.domain.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Currency;
@@ -33,9 +30,8 @@ import java.util.Currency;
  * @see java.util.Currency
  * @see RoundingMode#HALF_EVEN
  */
-@EqualsAndHashCode
-@Getter
 public class Money implements Comparable<Money> {
+
 
     /**
      * Standard decimal scale for monetary values (2 decimal places).
@@ -64,6 +60,14 @@ public class Money implements Comparable<Money> {
     private Money(BigDecimal amount, Currency currency) {
         this.amount = amount.setScale(SCALE, ROUNDING_MODE);
         this.currency = currency;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public Currency getCurrency() {
+        return currency;
     }
 
     /**

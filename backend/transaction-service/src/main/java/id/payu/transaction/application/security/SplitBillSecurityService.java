@@ -3,7 +3,6 @@ package id.payu.transaction.application.security;
 import id.payu.transaction.domain.model.SplitBill;
 import id.payu.transaction.domain.port.in.SplitBillUseCase;
 import id.payu.transaction.dto.SplitBillResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,12 +12,17 @@ import java.util.UUID;
  * Security service for split bill ownership validation.
  * Enforces RBAC policies for split bill resources.
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class SplitBillSecurityService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SplitBillSecurityService.class);
+
+
 
     private final SplitBillUseCase splitBillUseCase;
+
+    public SplitBillSecurityService(SplitBillUseCase splitBillUseCase) {
+        this.splitBillUseCase = splitBillUseCase;
+    }
 
     /**
      * Verify user is the creator/owner of the split bill.

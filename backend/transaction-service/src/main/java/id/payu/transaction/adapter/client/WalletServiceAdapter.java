@@ -5,7 +5,6 @@ import id.payu.transaction.dto.ReserveBalanceRequest;
 import id.payu.transaction.dto.ReserveBalanceResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -22,15 +21,20 @@ import java.util.UUID;
  * Adapter for calling wallet-service REST API.
  * Implements circuit breaker and retry for resilience.
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class WalletServiceAdapter implements WalletServicePort {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WalletServiceAdapter.class);
+
+
 
     @Value("${services.wallet.url:http://localhost:8084}")
     private String walletServiceUrl;
 
     private final RestTemplate restTemplate;
+
+    public WalletServiceAdapter(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     @Override
     @CircuitBreaker(name = "walletService", fallbackMethod = "reserveBalanceFallback")

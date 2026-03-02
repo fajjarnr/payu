@@ -30,7 +30,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -50,13 +49,18 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/transactions")
-@RequiredArgsConstructor
-@Slf4j
 @Tag(name = OpenApiConstants.Tags.TRANSACTIONS, description = "Fund transfer and payment endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class TransactionController extends BaseController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransactionController.class);
+
+
 
     private final TransactionUseCase transactionUseCase;
+
+    public TransactionController(TransactionUseCase transactionUseCase) {
+        this.transactionUseCase = transactionUseCase;
+    }
 
     /**
      * Extracts the user ID from the JWT authentication token.

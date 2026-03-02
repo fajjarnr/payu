@@ -1,6 +1,7 @@
 package id.payu.integration.domain.service;
 
 import id.payu.integration.domain.model.IntegrationMessage;
+import id.payu.integration.domain.model.MessageDirection;
 import id.payu.integration.domain.model.MessageStatus;
 import id.payu.integration.domain.model.MessageType;
 import id.payu.integration.domain.repository.IntegrationMessageRepository;

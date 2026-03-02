@@ -4,8 +4,8 @@ import id.payu.outbox.service.OutboxService;
 import id.payu.transaction.domain.model.SplitBill;
 import id.payu.transaction.domain.model.SplitBillParticipant;
 import id.payu.transaction.domain.port.out.SplitBillEventPublisherPort;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -15,15 +15,18 @@ import java.util.Map;
 /**
  * Outbox-backed adapter for publishing split-bill events.
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class SplitBillEventPublisherAdapter implements SplitBillEventPublisherPort {
 
+    private static final Logger log = LoggerFactory.getLogger(SplitBillEventPublisherAdapter.class);
     private final OutboxService outboxService;
 
     private static final String AGGREGATE_TYPE = "SplitBill";
     private static final String TOPIC_SPLIT_BILLS = "payu.split-bills";
+
+    public SplitBillEventPublisherAdapter(OutboxService outboxService) {
+        this.outboxService = outboxService;
+    }
 
     @Override
     public void publishSplitBillCreated(SplitBill splitBill) {

@@ -19,7 +19,7 @@ public class SwiftValidator {
 
     // SWIFT message block patterns
     private static final Pattern BASIC_HEADER_PATTERN = Pattern.compile("\\{1:[FAL]\\d{2}\\w{12}\\d{4}\\d{6}\\}");
-    private static final Pattern APPLICATION_HEADER_PATTERN = Pattern.compile("\\{2:[IEO]\\d{3}\\w{12}[\dN]\\d{4}\\d{6}\\}");
+    private static final Pattern APPLICATION_HEADER_PATTERN = Pattern.compile("\\{2:[IEO]\\d{3}\\w{12}[\\dN]\\d{4}\\d{6}\\}");
     private static final Pattern USER_HEADER_PATTERN = Pattern.compile("\\{3:\\{\\d{3}:[^}]+\\}*\\}");
     private static final Pattern TEXT_BLOCK_PATTERN = Pattern.compile("\\{4:[^}]+\\}");
     private static final Pattern TRAILER_PATTERN = Pattern.compile("\\{5:\\{[^}]+\\}\\}");
@@ -191,7 +191,7 @@ public class SwiftValidator {
 
     private void validateFieldFormats(String payload, List<String> errors) {
         // Validate date format in field 32A (YYMMDD)
-        java.util.regex.Matcher dateMatcher = Pattern.compile(":32A:(\d{6})").matcher(payload);
+        java.util.regex.Matcher dateMatcher = Pattern.compile(":32A:(\\d{6})").matcher(payload);
         if (dateMatcher.find()) {
             String dateStr = dateMatcher.group(1);
             try {
@@ -208,7 +208,7 @@ public class SwiftValidator {
         }
 
         // Validate currency code (3 uppercase letters)
-        java.util.regex.Matcher currencyMatcher = Pattern.compile(":32A:\d{6}([A-Z]{3})").matcher(payload);
+        java.util.regex.Matcher currencyMatcher = Pattern.compile(":32A:\\d{6}([A-Z]{3})").matcher(payload);
         if (currencyMatcher.find()) {
             String currency = currencyMatcher.group(1);
             // Basic check for valid currency format

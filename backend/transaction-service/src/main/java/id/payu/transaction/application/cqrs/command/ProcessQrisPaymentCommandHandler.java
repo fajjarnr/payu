@@ -9,7 +9,6 @@ import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.dto.QrisPaymentRequest;
 import id.payu.transaction.dto.QrisPaymentResponse;
 import id.payu.transaction.dto.ReserveBalanceResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +22,26 @@ import java.util.UUID;
  *
  * <p>Flow: reserve wallet balance → call QRIS service → commit (success) or release (failure).</p>
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQrisPaymentCommand, Void> {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProcessQrisPaymentCommandHandler.class);
+
+
 
     private final TransactionPersistencePort transactionPersistencePort;
     private final QrisServicePort qrisServicePort;
     private final WalletServicePort walletServicePort;
     private final TransactionEventPublisherPort eventPublisherPort;
+
+    public ProcessQrisPaymentCommandHandler(TransactionPersistencePort transactionPersistencePort,
+                                            QrisServicePort qrisServicePort,
+                                            WalletServicePort walletServicePort,
+                                            TransactionEventPublisherPort eventPublisherPort) {
+        this.transactionPersistencePort = transactionPersistencePort;
+        this.qrisServicePort = qrisServicePort;
+        this.walletServicePort = walletServicePort;
+        this.eventPublisherPort = eventPublisherPort;
+    }
 
     @Override
     @Transactional

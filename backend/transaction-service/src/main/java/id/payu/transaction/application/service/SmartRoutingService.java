@@ -35,9 +35,11 @@ import java.util.List;
  * @see TransferRoute
  * @see SmartRoutingUseCase
  */
-@Slf4j
 @Service
 public class SmartRoutingService implements SmartRoutingUseCase {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SmartRoutingService.class);
+
+
 
     private static final List<TransferRoute> DEFAULT_ROUTES = List.of(
             TransferRoute.biFast(),

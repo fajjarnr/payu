@@ -1,20 +1,12 @@
 package id.payu.transaction.domain.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "split_bills")
 public class SplitBill {
@@ -77,6 +69,243 @@ public class SplitBill {
         CANCELLED
     }
 
+    // Default constructor
+    public SplitBill() {
+    }
+
+    // All-args constructor
+    public SplitBill(UUID id, String referenceNumber, UUID creatorAccountId, BigDecimal totalAmount,
+                     String currency, String title, String description, SplitType splitType,
+                     SplitStatus status, Instant dueDate, List<SplitBillParticipant> participants,
+                     Instant createdAt, Instant updatedAt, Instant completedAt) {
+        this.id = id;
+        this.referenceNumber = referenceNumber;
+        this.creatorAccountId = creatorAccountId;
+        this.totalAmount = totalAmount;
+        this.currency = currency;
+        this.title = title;
+        this.description = description;
+        this.splitType = splitType;
+        this.status = status;
+        this.dueDate = dueDate;
+        this.participants = participants;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.completedAt = completedAt;
+    }
+
+    // Builder
+    public static SplitBillBuilder builder() {
+        return new SplitBillBuilder();
+    }
+
+    public static class SplitBillBuilder {
+        private UUID id;
+        private String referenceNumber;
+        private UUID creatorAccountId;
+        private BigDecimal totalAmount;
+        private String currency;
+        private String title;
+        private String description;
+        private SplitType splitType;
+        private SplitStatus status;
+        private Instant dueDate;
+        private List<SplitBillParticipant> participants;
+        private Instant createdAt;
+        private Instant updatedAt;
+        private Instant completedAt;
+
+        public SplitBillBuilder id(UUID id) {
+            this.id = id;
+            return this;
+        }
+
+        public SplitBillBuilder referenceNumber(String referenceNumber) {
+            this.referenceNumber = referenceNumber;
+            return this;
+        }
+
+        public SplitBillBuilder creatorAccountId(UUID creatorAccountId) {
+            this.creatorAccountId = creatorAccountId;
+            return this;
+        }
+
+        public SplitBillBuilder totalAmount(BigDecimal totalAmount) {
+            this.totalAmount = totalAmount;
+            return this;
+        }
+
+        public SplitBillBuilder currency(String currency) {
+            this.currency = currency;
+            return this;
+        }
+
+        public SplitBillBuilder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public SplitBillBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public SplitBillBuilder splitType(SplitType splitType) {
+            this.splitType = splitType;
+            return this;
+        }
+
+        public SplitBillBuilder status(SplitStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public SplitBillBuilder dueDate(Instant dueDate) {
+            this.dueDate = dueDate;
+            return this;
+        }
+
+        public SplitBillBuilder participants(List<SplitBillParticipant> participants) {
+            this.participants = participants;
+            return this;
+        }
+
+        public SplitBillBuilder createdAt(Instant createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public SplitBillBuilder updatedAt(Instant updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
+        public SplitBillBuilder completedAt(Instant completedAt) {
+            this.completedAt = completedAt;
+            return this;
+        }
+
+        public SplitBill build() {
+            return new SplitBill(id, referenceNumber, creatorAccountId, totalAmount, currency,
+                    title, description, splitType, status, dueDate, participants,
+                    createdAt, updatedAt, completedAt);
+        }
+    }
+
+    // Getters and Setters
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getReferenceNumber() {
+        return referenceNumber;
+    }
+
+    public void setReferenceNumber(String referenceNumber) {
+        this.referenceNumber = referenceNumber;
+    }
+
+    public UUID getCreatorAccountId() {
+        return creatorAccountId;
+    }
+
+    public void setCreatorAccountId(UUID creatorAccountId) {
+        this.creatorAccountId = creatorAccountId;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public SplitType getSplitType() {
+        return splitType;
+    }
+
+    public void setSplitType(SplitType splitType) {
+        this.splitType = splitType;
+    }
+
+    public SplitStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(SplitStatus status) {
+        this.status = status;
+    }
+
+    public Instant getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(Instant dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public List<SplitBillParticipant> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(List<SplitBillParticipant> participants) {
+        this.participants = participants;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(Instant completedAt) {
+        this.completedAt = completedAt;
+    }
+
+    // Business methods
     public boolean isFullyPaid() {
         if (participants == null || participants.isEmpty()) {
             return false;

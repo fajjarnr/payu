@@ -127,13 +127,6 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- Spring gRPC Server -->
-        <dependency>
-            <groupId>net.devh.boot</groupId>
-            <artifactId>grpc-server-spring-boot-starter</artifactId>
-            <version>3.0.0.RELEASE</version>
-        </dependency>
-
         <!-- gRPC Protobuf -->
         <dependency>
             <groupId>io.grpc</groupId>
@@ -153,6 +146,13 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <version>${protobuf.version}</version>
+        </dependency>
+
+        <!-- javax.annotation for gRPC generated code -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
         </dependency>
 
         <!-- MapStruct for compile-time mapping -->

@@ -97,8 +97,8 @@ public class SandboxDataSeeder {
             merchant1.setPartner(testPartner);
             merchant1.setMerchantCode(TEST_MERCHANT_001);
             merchant1.setBusinessName("Test Retail Store");
-            merchant1.setCategory(MerchantCategory.RETAIL);
-            merchant1.setStatus(MerchantStatus.ACTIVE);
+            merchant1.setCategory(Merchant.MerchantCategory.RETAIL);
+            merchant1.setStatus(Merchant.MerchantStatus.ACTIVE);
             merchant1.setSettlementAccount(TEST_BCA_ACCOUNT);
             merchant1.setSettlementBank("BCA");
             merchant1.setCreatedAt(LocalDateTime.now());
@@ -114,8 +114,8 @@ public class SandboxDataSeeder {
             merchant2.setPartner(testPartner);
             merchant2.setMerchantCode(TEST_MERCHANT_002);
             merchant2.setBusinessName("Test Restaurant");
-            merchant2.setCategory(MerchantCategory.FOOD_BEVERAGE);
-            merchant2.setStatus(MerchantStatus.ACTIVE);
+            merchant2.setCategory(Merchant.MerchantCategory.FOOD_BEVERAGE);
+            merchant2.setStatus(Merchant.MerchantStatus.ACTIVE);
             merchant2.setSettlementAccount(TEST_BNI_ACCOUNT);
             merchant2.setSettlementBank("BNI");
             merchant2.setCreatedAt(LocalDateTime.now());
@@ -131,8 +131,8 @@ public class SandboxDataSeeder {
             merchant3.setPartner(testPartner);
             merchant3.setMerchantCode(TEST_MERCHANT_003);
             merchant3.setBusinessName("Test Service Provider");
-            merchant3.setCategory(MerchantCategory.SERVICES);
-            merchant3.setStatus(MerchantStatus.ACTIVE);
+            merchant3.setCategory(Merchant.MerchantCategory.SERVICES);
+            merchant3.setStatus(Merchant.MerchantStatus.ACTIVE);
             merchant3.setSettlementAccount(TEST_MANDIRI_ACCOUNT);
             merchant3.setSettlementBank("MANDIRI");
             merchant3.setCreatedAt(LocalDateTime.now());

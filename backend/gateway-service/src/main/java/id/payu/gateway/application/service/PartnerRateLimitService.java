@@ -65,14 +65,14 @@ public class PartnerRateLimitService {
             .flatMap(rateLimit -> {
                 if (rateLimit == null) {
                     // No rate limit configured, allow
-                    return Uni.createFrom().item(RateLimitCheck.allowed());
+                    return Uni.createFrom().item(RateLimitCheck.allowAll());
                 }
 
                 return checkAllWindows(partnerId, endpoint, rateLimit);
             })
             .onFailure().recoverWithItem(e -> {
                 Log.warnf(e, "Rate limit check failed for partner %s, allowing request", partnerId);
-                return RateLimitCheck.allowed();
+                return RateLimitCheck.allowAll();
             });
     }
 
@@ -237,7 +237,7 @@ public class PartnerRateLimitService {
         long retryAfter,
         String limitingWindow
     ) {
-        public static RateLimitCheck allowed() {
+        public static RateLimitCheck allowAll() {
             return new RateLimitCheck(true, Long.MAX_VALUE, Long.MAX_VALUE, 0, 0, null);
         }
 

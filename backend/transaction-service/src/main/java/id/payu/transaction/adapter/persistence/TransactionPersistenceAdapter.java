@@ -4,7 +4,6 @@ import id.payu.transaction.config.ShardingConfig;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
@@ -15,12 +14,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
-@Slf4j
 public class TransactionPersistenceAdapter implements TransactionPersistencePort {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransactionPersistenceAdapter.class);
+
+
 
     private final TransactionJpaRepository transactionJpaRepository;
     private final ShardingConfig shardingConfig;
+
+    public TransactionPersistenceAdapter(TransactionJpaRepository transactionJpaRepository, ShardingConfig shardingConfig) {
+        this.transactionJpaRepository = transactionJpaRepository;
+        this.shardingConfig = shardingConfig;
+    }
 
     @Override
     @Transactional

@@ -4,7 +4,6 @@ import id.payu.transaction.application.service.dto.ArchivalResult;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.model.TransactionArchive;
 import id.payu.transaction.domain.port.out.TransactionArchivalPersistencePort;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,12 +19,17 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class TransactionArchivalService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransactionArchivalService.class);
+
+
 
     private final TransactionArchivalPersistencePort archivalPersistencePort;
+
+    public TransactionArchivalService(TransactionArchivalPersistencePort archivalPersistencePort) {
+        this.archivalPersistencePort = archivalPersistencePort;
+    }
 
     @Value("${archival.retention-months:12}")
     private int retentionMonths;

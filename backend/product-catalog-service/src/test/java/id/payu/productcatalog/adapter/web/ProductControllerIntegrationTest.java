@@ -1,6 +1,7 @@
 package id.payu.productcatalog.adapter.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.payu.productcatalog.domain.model.ProductType;
 import id.payu.productcatalog.dto.CreateProductRequest;
 import id.payu.productcatalog.dto.UpdateProductRequest;
 import org.junit.jupiter.api.Test;
@@ -96,7 +97,7 @@ class ProductControllerIntegrationTest {
 
         CreateProductRequest request = CreateProductRequest.builder()
                 .productCode("TEST_PRODUCT_001")
-                .productType("LOAN")
+                .productType(ProductType.LOAN)
                 .name("Test Loan Product")
                 .description("A test loan product")
                 .parameters(params)
@@ -115,7 +116,7 @@ class ProductControllerIntegrationTest {
         // First create
         CreateProductRequest request = CreateProductRequest.builder()
                 .productCode("DUPLICATE_TEST")
-                .productType("SAVINGS")
+                .productType(ProductType.SAVINGS)
                 .name("Duplicate Test")
                 .build();
 
@@ -136,7 +137,7 @@ class ProductControllerIntegrationTest {
         // First create
         CreateProductRequest createRequest = CreateProductRequest.builder()
                 .productCode("UPDATE_TEST")
-                .productType("LOAN")
+                .productType(ProductType.LOAN)
                 .name("Original Name")
                 .build();
 
@@ -164,7 +165,7 @@ class ProductControllerIntegrationTest {
         // Create
         CreateProductRequest request = CreateProductRequest.builder()
                 .productCode("TOGGLE_TEST")
-                .productType("SAVINGS")
+                .productType(ProductType.SAVINGS)
                 .name("Toggle Test")
                 .build();
 
@@ -194,15 +195,12 @@ class ProductControllerIntegrationTest {
 
     @Test
     void shouldReturnBadRequestForInvalidProductType() throws Exception {
-        CreateProductRequest request = CreateProductRequest.builder()
-                .productCode("INVALID_TYPE")
-                .productType("INVALID")
-                .name("Invalid Type Test")
-                .build();
+        // Use raw JSON to send an invalid product type string that can't deserialize to ProductType enum
+        String invalidJson = "{\"productCode\":\"INVALID_TYPE\",\"productType\":\"INVALID\",\"name\":\"Invalid Type Test\"}";
 
         mockMvc.perform(post("/admin/products")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(invalidJson))
                 .andExpect(status().isBadRequest());
     }
 
@@ -210,7 +208,7 @@ class ProductControllerIntegrationTest {
     void shouldReturnBadRequestForMissingRequiredFields() throws Exception {
         CreateProductRequest request = CreateProductRequest.builder()
                 .productCode("MISSING_FIELDS")
-                // Missing productType and name
+                // Missing productType and name — left null
                 .build();
 
         mockMvc.perform(post("/admin/products")

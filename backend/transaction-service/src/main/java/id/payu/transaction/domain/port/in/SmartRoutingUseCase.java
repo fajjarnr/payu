@@ -1,4 +1,8 @@
-package id.payu.transaction.domain.model;
+package id.payu.transaction.domain.port.in;
+
+import id.payu.transaction.domain.model.Money;
+import id.payu.transaction.domain.model.TransferMethod;
+import id.payu.transaction.domain.model.TransferRoute;
 
 import java.util.List;
 

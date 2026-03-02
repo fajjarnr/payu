@@ -188,6 +188,7 @@ public class LedgerEntryEntity {
     public static class LedgerEntryEntityBuilder {
         private UUID id;
         private UUID transactionId;
+        private JournalEntryEntity journalEntry;
         private String accountId;
         private String coaCode;
         private String entryType;
@@ -199,6 +200,11 @@ public class LedgerEntryEntity {
         private LocalDateTime createdAt;
 
         LedgerEntryEntityBuilder() {
+        }
+
+        public LedgerEntryEntityBuilder journalEntry(JournalEntryEntity journalEntry) {
+            this.journalEntry = journalEntry;
+            return this;
         }
 
         public LedgerEntryEntityBuilder id(UUID id) {
@@ -257,11 +263,13 @@ public class LedgerEntryEntity {
         }
 
         public LedgerEntryEntity build() {
-            return new LedgerEntryEntity(id, transactionId, accountId, coaCode, entryType, amount, currency, balanceAfter, referenceType, referenceId, createdAt);
+            LedgerEntryEntity entity = new LedgerEntryEntity(id, transactionId, accountId, coaCode, entryType, amount, currency, balanceAfter, referenceType, referenceId, createdAt);
+            entity.setJournalEntry(journalEntry);
+            return entity;
         }
 
         public String toString() {
-            return "LedgerEntryEntity.LedgerEntryEntityBuilder(id=" + this.id + ", transactionId=" + this.transactionId + ", accountId=" + this.accountId + ", coaCode=" + this.coaCode + ", entryType=" + this.entryType + ", amount=" + this.amount + ", currency=" + this.currency + ", balanceAfter=" + this.balanceAfter + ", referenceType=" + this.referenceType + ", referenceId=" + this.referenceId + ", createdAt=" + this.createdAt + ")";
+            return "LedgerEntryEntity.LedgerEntryEntityBuilder(id=" + this.id + ", transactionId=" + this.transactionId + ", journalEntry=" + this.journalEntry + ", accountId=" + this.accountId + ", coaCode=" + this.coaCode + ", entryType=" + this.entryType + ", amount=" + this.amount + ", currency=" + this.currency + ", balanceAfter=" + this.balanceAfter + ", referenceType=" + this.referenceType + ", referenceId=" + this.referenceId + ", createdAt=" + this.createdAt + ")";
         }
     }
 }

@@ -4,7 +4,6 @@ import id.payu.transaction.application.cqrs.QueryHandler;
 import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -15,13 +14,20 @@ import java.util.UUID;
  * Handler for the GetAccountTransactionsQuery.
  * Implements the read side of CQRS for retrieving account transactions.
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class GetAccountTransactionsQueryHandler implements QueryHandler<GetAccountTransactionsQuery, List<Transaction>> {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GetAccountTransactionsQueryHandler.class);
+
+
 
     private final TransactionPersistencePort transactionPersistencePort;
     private final AuthorizationService authorizationService;
+
+    public GetAccountTransactionsQueryHandler(TransactionPersistencePort transactionPersistencePort,
+                                              AuthorizationService authorizationService) {
+        this.transactionPersistencePort = transactionPersistencePort;
+        this.authorizationService = authorizationService;
+    }
 
     @Override
     public List<Transaction> handle(GetAccountTransactionsQuery query) {

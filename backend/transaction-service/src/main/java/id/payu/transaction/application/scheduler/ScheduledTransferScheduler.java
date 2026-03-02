@@ -3,7 +3,6 @@ package id.payu.transaction.application.scheduler;
 import id.payu.transaction.domain.model.ScheduledTransfer;
 import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
 import id.payu.transaction.application.service.ScheduledTransferService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -11,14 +10,23 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.List;
 
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class ScheduledTransferScheduler {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ScheduledTransferScheduler.class);
+
+
 
     private final ScheduledTransferPersistencePort persistencePort;
     private final ScheduledTransferService scheduledTransferService;
     private final org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
+
+    public ScheduledTransferScheduler(ScheduledTransferPersistencePort persistencePort,
+                                      ScheduledTransferService scheduledTransferService,
+                                      org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate) {
+        this.persistencePort = persistencePort;
+        this.scheduledTransferService = scheduledTransferService;
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
 
     @Scheduled(fixedRate = 60000)
     public void processDueScheduledTransfers() {

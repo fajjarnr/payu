@@ -1,10 +1,6 @@
 package id.payu.transaction.domain.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -44,10 +40,6 @@ import java.util.UUID;
  * @see Disbursement
  * @see BatchDisbursementStatus
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "batch_disbursements", indexes = {
     @Index(name = "idx_batch_source_account", columnList = "source_account_id"),
@@ -79,7 +71,6 @@ public class BatchDisbursement {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "batch_id")
-    @Builder.Default
     private List<Disbursement> items = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -90,6 +81,91 @@ public class BatchDisbursement {
 
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    // Default constructor
+    public BatchDisbursement() {
+    }
+
+    // Getters and Setters
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public UUID getSourceAccountId() {
+        return sourceAccountId;
+    }
+
+    public void setSourceAccountId(UUID sourceAccountId) {
+        this.sourceAccountId = sourceAccountId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public BatchDisbursementStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(BatchDisbursementStatus status) {
+        this.status = status;
+    }
+
+    public List<Disbursement> getItems() {
+        return Collections.unmodifiableList(items);
+    }
+
+    public void setItems(List<Disbursement> items) {
+        this.items = items;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getStartedAt() {
+        return startedAt;
+    }
+
+    public void setStartedAt(Instant startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(Instant completedAt) {
+        this.completedAt = completedAt;
+    }
 
     /**
      * Creates a new batch disbursement with the specified parameters.
@@ -145,16 +221,6 @@ public class BatchDisbursement {
             );
         }
         this.items.add(item);
-    }
-
-    /**
-     * Gets the list of disbursement items.
-     * Returns an unmodifiable view to preserve encapsulation.
-     *
-     * @return unmodifiable list of items
-     */
-    public List<Disbursement> getItems() {
-        return Collections.unmodifiableList(items);
     }
 
     /**

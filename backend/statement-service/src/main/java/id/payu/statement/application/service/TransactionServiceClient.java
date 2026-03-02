@@ -1,6 +1,5 @@
 package id.payu.statement.application.service;
 
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -8,7 +7,6 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Client for Transaction Service - Feign could be used alternatively
@@ -53,16 +51,78 @@ public class TransactionServiceClient {
         }
     }
 
-    @Data
-    private static class TransactionListResponse {
-        private List<TransactionDto> transactions;
+    /**
+     * Get single transaction by ID.
+     */
+    public StatementService.TransactionRecord getTransaction(String transactionId) {
+        String url = transactionServiceUrl + "/api/v1/transactions/" + transactionId;
+
+        try {
+            TransactionDto response = restTemplate.getForObject(url, TransactionDto.class);
+
+            if (response != null) {
+                return new StatementService.TransactionRecord(
+                    response.getDate(),
+                    response.getDescription(),
+                    response.getAmount(),
+                    "CREDIT".equals(response.getType()) ? StatementService.TransactionType.CREDIT : StatementService.TransactionType.DEBIT
+                );
+            }
+
+            throw new RuntimeException("Transaction not found: " + transactionId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch transaction " + transactionId + ": " + e.getMessage(), e);
+        }
     }
 
-    @Data
+    private static class TransactionListResponse {
+        private List<TransactionDto> transactions;
+
+        public List<TransactionDto> getTransactions() {
+            return transactions;
+        }
+
+        public void setTransactions(List<TransactionDto> transactions) {
+            this.transactions = transactions;
+        }
+    }
+
     private static class TransactionDto {
         private LocalDate date;
         private String description;
         private String type;
         private java.math.BigDecimal amount;
+
+        public LocalDate getDate() {
+            return date;
+        }
+
+        public void setDate(LocalDate date) {
+            this.date = date;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public java.math.BigDecimal getAmount() {
+            return amount;
+        }
+
+        public void setAmount(java.math.BigDecimal amount) {
+            this.amount = amount;
+        }
     }
 }

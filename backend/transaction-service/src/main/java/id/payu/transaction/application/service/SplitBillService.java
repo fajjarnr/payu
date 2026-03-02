@@ -9,7 +9,6 @@ import id.payu.transaction.dto.AddParticipantRequest;
 import id.payu.transaction.dto.CreateSplitBillRequest;
 import id.payu.transaction.dto.MakePaymentRequest;
 import id.payu.transaction.dto.SplitBillResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +19,20 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class SplitBillService implements SplitBillUseCase {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SplitBillService.class);
+
+
 
     private final SplitBillPersistencePort persistencePort;
     private final SplitBillEventPublisherPort eventPublisher;
+
+    public SplitBillService(SplitBillPersistencePort persistencePort,
+                            SplitBillEventPublisherPort eventPublisher) {
+        this.persistencePort = persistencePort;
+        this.eventPublisher = eventPublisher;
+    }
 
     @Override
     @Transactional

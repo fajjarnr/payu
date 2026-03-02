@@ -1,27 +1,35 @@
 package id.payu.support.application.service;
 
-import id.payu.support.domain.AgentTraining;
+import id.payu.support.adapter.persistence.repository.AgentTrainingRepository;
+import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
 import id.payu.support.domain.SupportAgent;
 import id.payu.support.dto.AgentResponse;
 import id.payu.support.dto.CreateAgentRequest;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
+@SpringBootTest
 class AgentServiceTest {
 
-    @Inject
+    @Autowired
     AgentService agentService;
 
+    @Autowired
+    SupportAgentRepository supportAgentRepository;
+
+    @Autowired
+    AgentTrainingRepository agentTrainingRepository;
+
     @BeforeEach
-    @jakarta.transaction.Transactional
+    @Transactional
     void setup() {
-        AgentTraining.deleteAll();
-        SupportAgent.deleteAll();
+        agentTrainingRepository.deleteAll();
+        supportAgentRepository.deleteAll();
     }
 
     @Test

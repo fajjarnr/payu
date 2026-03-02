@@ -3,7 +3,6 @@ package id.payu.transaction.application.service;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.AccountServicePort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -27,13 +26,19 @@ import java.util.UUID;
  * - Requirement 7: Restrict access to cardholder data by business need-to-know
  * - OWASP: Verify authorization for every data access
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class AuthorizationService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AuthorizationService.class);
+
+
 
     private final TransactionPersistencePort transactionPersistencePort;
     private final AccountServicePort accountServicePort;
+
+    public AuthorizationService(TransactionPersistencePort transactionPersistencePort, AccountServicePort accountServicePort) {
+        this.transactionPersistencePort = transactionPersistencePort;
+        this.accountServicePort = accountServicePort;
+    }
 
     /**
      * Verifies that the user has access to the specified transaction.

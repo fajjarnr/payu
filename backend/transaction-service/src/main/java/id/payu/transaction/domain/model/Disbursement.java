@@ -1,11 +1,6 @@
 package id.payu.transaction.domain.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -43,10 +38,6 @@ import java.util.UUID;
  * @see DisbursementStatus
  * @see Money
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "disbursements", indexes = {
     @Index(name = "idx_disbursement_source_account", columnList = "source_account_id"),
@@ -55,6 +46,268 @@ import java.util.UUID;
     @Index(name = "idx_disbursement_idempotency", columnList = "idempotency_key", unique = true)
 })
 public class Disbursement {
+    public Disbursement() {
+    }
+
+    public Disbursement(UUID id, String idempotencyKey, UUID sourceAccountId, Money amount, BigDecimal amountValue, String currencyCode, String bankCode, String accountNumber, String accountName, String description, DisbursementStatus status, String bankReference, String failureReason, Instant createdAt, Instant processedAt, Instant completedAt) {
+        this.id = id;
+        this.idempotencyKey = idempotencyKey;
+        this.sourceAccountId = sourceAccountId;
+        this.amount = amount;
+        this.amountValue = amountValue;
+        this.currencyCode = currencyCode;
+        this.bankCode = bankCode;
+        this.accountNumber = accountNumber;
+        this.accountName = accountName;
+        this.description = description;
+        this.status = status;
+        this.bankReference = bankReference;
+        this.failureReason = failureReason;
+        this.createdAt = createdAt;
+        this.processedAt = processedAt;
+        this.completedAt = completedAt;
+    }
+
+    public static DisbursementBuilder builder() {
+        return new DisbursementBuilder();
+    }
+
+    public static class DisbursementBuilder {
+        private UUID id;
+        private String idempotencyKey;
+        private UUID sourceAccountId;
+        private Money amount;
+        private BigDecimal amountValue;
+        private String currencyCode;
+        private String bankCode;
+        private String accountNumber;
+        private String accountName;
+        private String description;
+        private DisbursementStatus status;
+        private String bankReference;
+        private String failureReason;
+        private Instant createdAt;
+        private Instant processedAt;
+        private Instant completedAt;
+
+        public DisbursementBuilder id(UUID id) {
+            this.id = id;
+            return this;
+        }
+        public DisbursementBuilder idempotencyKey(String idempotencyKey) {
+            this.idempotencyKey = idempotencyKey;
+            return this;
+        }
+        public DisbursementBuilder sourceAccountId(UUID sourceAccountId) {
+            this.sourceAccountId = sourceAccountId;
+            return this;
+        }
+        public DisbursementBuilder amount(Money amount) {
+            this.amount = amount;
+            return this;
+        }
+        public DisbursementBuilder amountValue(BigDecimal amountValue) {
+            this.amountValue = amountValue;
+            return this;
+        }
+        public DisbursementBuilder currencyCode(String currencyCode) {
+            this.currencyCode = currencyCode;
+            return this;
+        }
+        public DisbursementBuilder bankCode(String bankCode) {
+            this.bankCode = bankCode;
+            return this;
+        }
+        public DisbursementBuilder accountNumber(String accountNumber) {
+            this.accountNumber = accountNumber;
+            return this;
+        }
+        public DisbursementBuilder accountName(String accountName) {
+            this.accountName = accountName;
+            return this;
+        }
+        public DisbursementBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+        public DisbursementBuilder status(DisbursementStatus status) {
+            this.status = status;
+            return this;
+        }
+        public DisbursementBuilder bankReference(String bankReference) {
+            this.bankReference = bankReference;
+            return this;
+        }
+        public DisbursementBuilder failureReason(String failureReason) {
+            this.failureReason = failureReason;
+            return this;
+        }
+        public DisbursementBuilder createdAt(Instant createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+        public DisbursementBuilder processedAt(Instant processedAt) {
+            this.processedAt = processedAt;
+            return this;
+        }
+        public DisbursementBuilder completedAt(Instant completedAt) {
+            this.completedAt = completedAt;
+            return this;
+        }
+
+        public Disbursement build() {
+            return new Disbursement(id, idempotencyKey, sourceAccountId, amount, amountValue, currencyCode, bankCode, accountNumber, accountName, description, status, bankReference, failureReason, createdAt, processedAt, completedAt);
+        }
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public UUID getSourceAccountId() {
+        return sourceAccountId;
+    }
+
+    public void setSourceAccountId(UUID sourceAccountId) {
+        this.sourceAccountId = sourceAccountId;
+    }
+
+    /**
+     * Gets the monetary amount.
+     * For backward compatibility, reconstructs Money from deprecated fields if amount is null.
+     *
+     * @return the monetary amount
+     */
+    public Money getAmount() {
+        if (amount == null && amountValue != null && currencyCode != null) {
+            return Money.of(amountValue, currencyCode);
+        }
+        return amount;
+    }
+
+    /**
+     * Sets the monetary amount.
+     * Also updates deprecated fields for JPA compatibility.
+     *
+     * @param amount the monetary amount
+     */
+    public void setAmount(Money amount) {
+        this.amount = amount;
+        if (amount != null) {
+            this.amountValue = amount.getAmount();
+            this.currencyCode = amount.getCurrency().getCurrencyCode();
+        }
+    }
+
+    public BigDecimal getAmountValue() {
+        return amountValue;
+    }
+
+    public void setAmountValue(BigDecimal amountValue) {
+        this.amountValue = amountValue;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
+    }
+
+    public String getBankCode() {
+        return bankCode;
+    }
+
+    public void setBankCode(String bankCode) {
+        this.bankCode = bankCode;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public DisbursementStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(DisbursementStatus status) {
+        this.status = status;
+    }
+
+    public String getBankReference() {
+        return bankReference;
+    }
+
+    public void setBankReference(String bankReference) {
+        this.bankReference = bankReference;
+    }
+
+    public String getFailureReason() {
+        return failureReason;
+    }
+
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getProcessedAt() {
+        return processedAt;
+    }
+
+    public void setProcessedAt(Instant processedAt) {
+        this.processedAt = processedAt;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(Instant completedAt) {
+        this.completedAt = completedAt;
+    }
+
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -173,33 +426,6 @@ public class Disbursement {
         disbursement.createdAt = Instant.now();
 
         return disbursement;
-    }
-
-    /**
-     * Gets the monetary amount.
-     * For backward compatibility, reconstructs Money from deprecated fields if amount is null.
-     *
-     * @return the monetary amount
-     */
-    public Money getAmount() {
-        if (amount == null && amountValue != null && currencyCode != null) {
-            return Money.of(amountValue, currencyCode);
-        }
-        return amount;
-    }
-
-    /**
-     * Sets the monetary amount.
-     * Also updates deprecated fields for JPA compatibility.
-     *
-     * @param amount the monetary amount
-     */
-    public void setAmount(Money amount) {
-        this.amount = amount;
-        if (amount != null) {
-            this.amountValue = amount.getAmount();
-            this.currencyCode = amount.getCurrency().getCurrencyCode();
-        }
     }
 
     /**

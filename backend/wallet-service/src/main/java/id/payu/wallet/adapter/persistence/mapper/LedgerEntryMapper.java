@@ -2,6 +2,7 @@ package id.payu.wallet.adapter.persistence.mapper;
 
 import id.payu.mapper.config.MappingConfig;
 import id.payu.mapper.spi.BaseMapper;
+import id.payu.wallet.adapter.persistence.entity.JournalEntryEntity;
 import id.payu.wallet.adapter.persistence.entity.LedgerEntryEntity;
 import id.payu.wallet.domain.model.LedgerEntry;
 import org.mapstruct.Mapper;
@@ -44,6 +45,15 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
     @Mapping(target = "journalEntry", ignore = true)
     @Mapping(target = "entryType", expression = "java(mapEntryTypeToEntity(domain.getEntryType()))")
     LedgerEntryEntity toEntity(LedgerEntry domain);
+
+    /**
+     * Custom after-mapping to set journalEntry via setter (not via builder).
+     */
+    default LedgerEntryEntity toEntityWithJournal(LedgerEntry domain, JournalEntryEntity journalEntry) {
+        LedgerEntryEntity entity = toEntity(domain);
+        entity.setJournalEntry(journalEntry);
+        return entity;
+    }
 
     /**
      * Convert LedgerEntryEntity to domain LedgerEntry.

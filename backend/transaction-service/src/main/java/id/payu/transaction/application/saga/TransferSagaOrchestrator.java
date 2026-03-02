@@ -11,12 +11,14 @@ import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.dto.BifastTransferRequest;
 import id.payu.transaction.dto.BifastTransferResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Saga orchestrator for inter-bank (BiFast) transfer lifecycle.
@@ -32,7 +34,6 @@ import java.util.Map;
  *
  * @see TransferSagaContext
  */
-@Slf4j
 @Component
 @SagaOrchestration(
         value = "BiFastTransferSaga",
@@ -43,6 +44,7 @@ import java.util.Map;
         eventTopic = "transaction.saga.events"
 )
 public class TransferSagaOrchestrator extends SagaOrchestrator<TransferSagaContext> {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransferSagaOrchestrator.class);
 
     private final WalletServicePort walletService;
     private final BifastServicePort bifastService;
@@ -50,10 +52,12 @@ public class TransferSagaOrchestrator extends SagaOrchestrator<TransferSagaConte
 
     public TransferSagaOrchestrator(
             SagaRepository sagaRepository,
+            @Qualifier("sagaTaskExecutor") TaskExecutor sagaTaskExecutor,
+            @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler,
             WalletServicePort walletService,
             BifastServicePort bifastService,
             TransactionPersistencePort transactionPersistence) {
-        super(sagaRepository);
+        super(sagaRepository, sagaTaskExecutor, sagaRetryScheduler);
         this.walletService = walletService;
         this.bifastService = bifastService;
         this.transactionPersistence = transactionPersistence;

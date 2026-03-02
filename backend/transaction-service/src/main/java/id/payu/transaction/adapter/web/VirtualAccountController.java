@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,13 +27,18 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/payments/va")
-@RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Virtual Accounts", description = "Virtual Account payment collection endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class VirtualAccountController extends BaseController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(VirtualAccountController.class);
+
+
 
     private final VirtualAccountService virtualAccountService;
+
+    public VirtualAccountController(VirtualAccountService virtualAccountService) {
+        this.virtualAccountService = virtualAccountService;
+    }
 
     @PostMapping
     @Operation(summary = "Create a Virtual Account",

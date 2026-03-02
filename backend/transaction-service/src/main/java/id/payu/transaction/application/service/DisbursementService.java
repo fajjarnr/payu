@@ -9,7 +9,6 @@ import id.payu.transaction.domain.port.out.DisbursementRepositoryPort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.dto.BifastTransferRequest;
 import id.payu.transaction.dto.ReserveBalanceResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,15 +36,24 @@ import java.util.UUID;
  * @see Disbursement
  * @see DisbursementUseCase
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DisbursementService implements DisbursementUseCase {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DisbursementService.class);
+
+
 
     private final DisbursementRepositoryPort disbursementRepository;
     private final WalletServicePort walletService;
     private final BifastServicePort bifastService;
+
+    public DisbursementService(DisbursementRepositoryPort disbursementRepository,
+                               WalletServicePort walletService,
+                               BifastServicePort bifastService) {
+        this.disbursementRepository = disbursementRepository;
+        this.walletService = walletService;
+        this.bifastService = bifastService;
+    }
 
     @Override
     @Transactional

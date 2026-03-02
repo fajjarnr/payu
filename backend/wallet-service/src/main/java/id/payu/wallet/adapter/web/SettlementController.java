@@ -16,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -51,8 +50,8 @@ public class SettlementController extends BaseController {
                 request.getPartnerId(), request.getSettlementDate(), request.getCurrency());
 
         SettlementBatchResponse response = toSettlementBatchResponse(batch);
-        URI location = URI.create("/api/v1/settlements/batches/" + batch.getId());
-        return created(location, response);
+        String location = "/api/v1/settlements/batches/" + batch.getId();
+        return created(response, location);
     }
 
     @GetMapping("/batches/{batchId}")
@@ -149,8 +148,8 @@ public class SettlementController extends BaseController {
                 RevenueSplit.SplitType.valueOf(request.getSplitType()), request.getCreatedBy());
 
         RevenueSplitResponse response = toRevenueSplitResponse(split);
-        URI location = URI.create("/api/v1/settlements/revenue-splits/" + split.getId());
-        return created(location, response);
+        String location = "/api/v1/settlements/revenue-splits/" + split.getId();
+        return created(response, location);
     }
 
     @GetMapping("/revenue-splits/{splitId}")

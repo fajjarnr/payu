@@ -1,11 +1,6 @@
 package id.payu.grpc.starter.interceptor;
 
 import io.grpc.*;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceState;
-import io.opentelemetry.context.Context;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.core.annotation.Order;
@@ -37,6 +32,10 @@ public class GrpcTracingInterceptor {
     private static final String MDC_TRACE_ID = "traceId";
     private static final String MDC_SPAN_ID = "spanId";
 
+    // gRPC Context keys for trace propagation
+    public static final Context.Key<String> TRACE_ID_CONTEXT_KEY = Context.key("trace-id");
+    public static final Context.Key<String> SPAN_ID_CONTEXT_KEY = Context.key("span-id");
+
     /**
      * Server interceptor that extracts trace context from incoming gRPC calls.
      */
@@ -66,15 +65,10 @@ public class GrpcTracingInterceptor {
             MDC.put(MDC_TRACE_ID, traceId);
             MDC.put(MDC_SPAN_ID, spanId);
 
-            // Create span context
-            SpanContext spanContext = SpanContext.create(
-                    traceId,
-                    spanId,
-                    "1".equals(sampled) ? TraceFlags.getSampled() : TraceFlags.getDefault(),
-                    TraceState.getDefault()
-            );
-
-            Context context = Context.current().with(Span.wrap(spanContext));
+            // Create gRPC context with tracing info
+            io.grpc.Context context = io.grpc.Context.current()
+                    .withValue(TRACE_ID_CONTEXT_KEY, traceId)
+                    .withValue(SPAN_ID_CONTEXT_KEY, spanId);
 
             log.debug("gRPC server call - traceId: {}, spanId: {}, method: {}",
                     traceId, spanId, call.getMethodDescriptor().getFullMethodName());

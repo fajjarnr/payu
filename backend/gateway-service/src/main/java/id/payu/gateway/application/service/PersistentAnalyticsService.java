@@ -141,10 +141,11 @@ public class PersistentAnalyticsService {
 
         bufferSize.addAndGet(-count);
 
+        final int flushedCount = count;
         analyticsRepository.saveBatch(batch)
             .subscribe()
             .with(
-                unused -> Log.debugf("Flushed %d analytics events", count),
+                unused -> Log.debugf("Flushed %d analytics events", flushedCount),
                 failure -> {
                     Log.errorf(failure, "Failed to flush analytics events");
                     // Re-queue events for retry

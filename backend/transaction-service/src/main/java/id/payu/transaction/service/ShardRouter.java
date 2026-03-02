@@ -1,7 +1,6 @@
 package id.payu.transaction.service;
 
 import id.payu.transaction.config.ShardingConfig;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -28,11 +27,16 @@ import java.util.stream.IntStream;
  * queries to the correct partition based on the WHERE clause.</p>
  */
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class ShardRouter {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShardRouter.class);
+
+
 
     private final ShardingConfig shardingConfig;
+
+    public ShardRouter(ShardingConfig shardingConfig) {
+        this.shardingConfig = shardingConfig;
+    }
 
     /**
      * Executor for parallel cross-partition queries.

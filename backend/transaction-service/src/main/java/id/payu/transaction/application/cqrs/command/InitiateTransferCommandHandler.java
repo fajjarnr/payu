@@ -9,7 +9,6 @@ import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.QrisPaymentRequest;
 import id.payu.transaction.dto.QrisPaymentResponse;
 import id.payu.transaction.dto.ReserveBalanceResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +21,11 @@ import java.util.UUID;
  * Handler for the InitiateTransferCommand.
  * Implements the write side of CQRS for transfer initiation.
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class InitiateTransferCommandHandler implements CommandHandler<InitiateTransferCommand, InitiateTransferCommandResult> {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InitiateTransferCommandHandler.class);
+
+
 
     private final TransactionPersistencePort transactionPersistencePort;
     private final WalletServicePort walletServicePort;
@@ -34,6 +34,22 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     private final RgsServicePort rgsServicePort;
     private final TransactionEventPublisherPort eventPublisherPort;
     private final AuthorizationService authorizationService;
+
+    public InitiateTransferCommandHandler(TransactionPersistencePort transactionPersistencePort,
+                                          WalletServicePort walletServicePort,
+                                          BifastServicePort bifastServicePort,
+                                          SknServicePort sknServicePort,
+                                          RgsServicePort rgsServicePort,
+                                          TransactionEventPublisherPort eventPublisherPort,
+                                          AuthorizationService authorizationService) {
+        this.transactionPersistencePort = transactionPersistencePort;
+        this.walletServicePort = walletServicePort;
+        this.bifastServicePort = bifastServicePort;
+        this.sknServicePort = sknServicePort;
+        this.rgsServicePort = rgsServicePort;
+        this.eventPublisherPort = eventPublisherPort;
+        this.authorizationService = authorizationService;
+    }
 
     @Override
     @Transactional

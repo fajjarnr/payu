@@ -3,11 +3,9 @@ package id.payu.transaction.dto;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Data
 public class ProcessQrisPaymentRequest {
     @NotBlank(message = "QRIS code is required")
     private String qrisCode;
@@ -27,4 +25,63 @@ public class ProcessQrisPaymentRequest {
 
     private String transactionPin;
     private String deviceId;
+
+    public ProcessQrisPaymentRequest() {
+    }
+
+    public String getQrisCode() {
+        return qrisCode;
+    }
+
+    public void setQrisCode(String qrisCode) {
+        this.qrisCode = qrisCode;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public Long getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
+    }
+
+    public java.util.UUID getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(java.util.UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public String getTransactionPin() {
+        return transactionPin;
+    }
+
+    public void setTransactionPin(String transactionPin) {
+        this.transactionPin = transactionPin;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
 }

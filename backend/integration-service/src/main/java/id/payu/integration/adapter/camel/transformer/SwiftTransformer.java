@@ -22,8 +22,8 @@ import java.util.regex.Pattern;
 public class SwiftTransformer {
 
     // SWIFT field patterns
-    private static final Pattern FIELD_20_PATTERN = Pattern.compile(":20:([^\n]+)");
-    private static final Pattern FIELD_32A_PATTERN = Pattern.compile(":32A:(\d{6})([A-Z]{3})([\d,]+)");
+    private static final Pattern FIELD_20_PATTERN = Pattern.compile(":20:([^\\n]+)");
+    private static final Pattern FIELD_32A_PATTERN = Pattern.compile(":32A:(\\d{6})([A-Z]{3})([\\d,]+)");
     private static final Pattern FIELD_50_PATTERN = Pattern.compile(":50[AK]?:([^:]+)(?::|$)");
     private static final Pattern FIELD_59_PATTERN = Pattern.compile(":59:([^:]+)(?::|$)");
     private static final Pattern FIELD_71A_PATTERN = Pattern.compile(":71A:(SHA|BEN|OUR)");

@@ -48,14 +48,11 @@ public class SandboxController extends BaseController {
         try {
             SandboxSeedResult result = sandboxDataSeeder.seedAllTestData();
 
-            return ResponseEntity.ok(ApiResponse.success(
-                    "Sandbox test data seeded successfully",
-                    result
-            ));
+            return ResponseEntity.ok(ApiResponse.success(result));
         } catch (Exception e) {
             log.error("Failed to seed sandbox test data", e);
             return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Failed to seed test data: " + e.getMessage()));
+                    .body(ApiResponse.error("SEED_FAILED", "Failed to seed test data: " + e.getMessage()));
         }
     }
 

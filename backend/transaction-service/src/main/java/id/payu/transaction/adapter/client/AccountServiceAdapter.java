@@ -3,7 +3,6 @@ package id.payu.transaction.adapter.client;
 import id.payu.transaction.domain.port.out.AccountServicePort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -23,15 +22,20 @@ import java.util.UUID;
  * <p>This adapter follows the Hexagonal Architecture pattern by implementing
  * the {@link AccountServicePort} interface defined in the domain layer.</p>
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class AccountServiceAdapter implements AccountServicePort {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AccountServiceAdapter.class);
+
+
 
     @Value("${services.account.url:http://localhost:8081}")
     private String accountServiceUrl;
 
     private final RestTemplate restTemplate;
+
+    public AccountServiceAdapter(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     @Override
     @CircuitBreaker(name = "accountService", fallbackMethod = "getAccountIdsByUserIdFallback")

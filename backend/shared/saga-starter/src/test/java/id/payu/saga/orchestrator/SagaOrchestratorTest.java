@@ -14,6 +14,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,13 +37,16 @@ class SagaOrchestratorTest {
     private ArgumentCaptor<SagaInstance> instanceCaptor;
 
     private TestSagaOrchestrator orchestrator;
+    private final ScheduledExecutorService retryScheduler = Executors.newScheduledThreadPool(2);
 
     /**
      * Concrete test implementation of the abstract SagaOrchestrator.
      */
     static class TestSagaOrchestrator extends SagaOrchestrator<Map<String, Object>> {
-        public TestSagaOrchestrator(SagaRepository sagaRepository) {
-            super(sagaRepository);
+        public TestSagaOrchestrator(SagaRepository sagaRepository,
+                                    org.springframework.core.task.TaskExecutor taskExecutor,
+                                    ScheduledExecutorService retryScheduler) {
+            super(sagaRepository, taskExecutor, retryScheduler);
         }
 
         public void init(String sagaType, List<SagaStep<Map<String, Object>>> steps) {
@@ -51,7 +56,14 @@ class SagaOrchestratorTest {
 
     @BeforeEach
     void setUp() {
-        orchestrator = new TestSagaOrchestrator(sagaRepository);
+        org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor taskExecutor =
+            new org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(2);
+        taskExecutor.setMaxPoolSize(4);
+        taskExecutor.setQueueCapacity(50);
+        taskExecutor.setThreadNamePrefix("saga-test-");
+        taskExecutor.initialize();
+        orchestrator = new TestSagaOrchestrator(sagaRepository, taskExecutor, retryScheduler);
 
         // Mock save to return the same instance
         lenient().when(sagaRepository.save(any(SagaInstance.class))).thenAnswer(inv -> inv.getArgument(0));

@@ -5,14 +5,12 @@ import id.payu.grpc.starter.interceptor.GrpcErrorHandlingInterceptor;
 import id.payu.grpc.starter.interceptor.GrpcRetryInterceptor;
 import id.payu.grpc.starter.interceptor.GrpcTracingInterceptor;
 import io.grpc.ClientInterceptor;
+import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.devh.boot.grpc.client.channelfactory.GrpcChannelConfigurer;
-import net.devh.boot.grpc.server.serverfactory.GrpcServerConfigurer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,7 +21,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Spring Boot Auto-Configuration for gRPC starter.
@@ -108,60 +105,67 @@ public class GrpcStarterAutoConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "payu.grpc.server", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public GrpcServerConfigurer grpcServerConfigurer() {
-        return serverBuilder -> {
-            if (serverBuilder instanceof NettyServerBuilder nettyBuilder) {
-                nettyBuilder.maxInboundMessageSize(properties.getServer().getMaxMessageSize());
+    @ConditionalOnMissingBean
+    public ServerBuilder<?> grpcServerBuilder() {
+        NettyServerBuilder serverBuilder = NettyServerBuilder.forPort(properties.getServer().getPort())
+                .maxInboundMessageSize(properties.getServer().getMaxMessageSize());
 
-                // Configure security if enabled
-                if (properties.getServer().getSecurity().isEnabled()) {
-                    // TLS configuration would go here
-                    log.info("gRPC server TLS enabled");
-                } else {
-                    log.info("gRPC server running without TLS (Istio handles TLS termination)");
-                }
+        // Configure security if enabled
+        if (properties.getServer().getSecurity().isEnabled()) {
+            // TLS configuration would go here
+            log.info("gRPC server TLS enabled");
+        } else {
+            log.info("gRPC server running without TLS (Istio handles TLS termination)");
+        }
 
-                // Add reflection service if enabled
-                if (properties.getServer().isReflectionEnabled()) {
-                    nettyBuilder.addService(ProtoReflectionService.newInstance());
-                    log.info("gRPC reflection service enabled");
-                }
-            }
-        };
+        // Add reflection service if enabled
+        if (properties.getServer().isReflectionEnabled()) {
+            serverBuilder.addService(ProtoReflectionService.newInstance());
+            log.info("gRPC reflection service enabled");
+        }
+
+        return serverBuilder;
     }
 
-    // ==================== Client Configuration ====================
+    // ==================== Client Interceptor Provider ====================
+
+    /**
+     * Provider for client interceptors that can be used by gRPC channels.
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "grpcClientInterceptors")
+    public List<ClientInterceptor> grpcClientInterceptors(
+            GrpcTracingInterceptor.ClientInterceptor tracingInterceptor,
+            GrpcAuthInterceptor.ClientInterceptor authInterceptor,
+            GrpcRetryInterceptor retryInterceptor) {
+        List<ClientInterceptor> interceptors = new ArrayList<>();
+        interceptors.add(tracingInterceptor);
+        interceptors.add(authInterceptor);
+        interceptors.add(retryInterceptor);
+        return interceptors;
+    }
 
     @Bean
-    @ConditionalOnMissingBean(name = "grpcChannelConfigurer")
-    public GrpcChannelConfigurer grpcChannelConfigurer(List<ClientInterceptor> clientInterceptors) {
-        return (channelBuilder, name) -> {
-            if (channelBuilder instanceof NettyChannelBuilder nettyBuilder) {
-                GrpcStarterProperties.ClientConfig clientConfig = properties.getClients().get(name);
+    @ConditionalOnProperty(prefix = "payu.grpc.interceptors.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public GrpcTracingInterceptor.ClientInterceptor grpcTracingClientInterceptorBean() {
+        return new GrpcTracingInterceptor.ClientInterceptor();
+    }
 
-                if (clientConfig != null) {
-                    // Configure connection timeout
-                    nettyBuilder.withOption(
-                            io.grpc.netty.shaded.io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                            clientConfig.getConnectionTimeoutSeconds() * 1000
-                    );
+    @Bean
+    @ConditionalOnProperty(prefix = "payu.grpc.interceptors.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public GrpcAuthInterceptor.ClientInterceptor grpcAuthClientInterceptorBean() {
+        return new GrpcAuthInterceptor.ClientInterceptor();
+    }
 
-                    // Configure deadline
-                    nettyBuilder.withDeadlineAfter(clientConfig.getDeadlineSeconds(), TimeUnit.SECONDS);
-
-                    // Configure retry
-                    if (clientConfig.isRetryEnabled()) {
-                        // Retry is handled by GrpcRetryInterceptor
-                        log.debug("Retry enabled for gRPC client: {}", name);
-                    }
-                }
-
-                // Add interceptors
-                List<ClientInterceptor> interceptors = new ArrayList<>(clientInterceptors);
-                nettyBuilder.intercept(interceptors);
-
-                log.info("Configured gRPC channel for service: {}", name);
-            }
-        };
+    @Bean
+    @ConditionalOnMissingBean
+    public GrpcRetryInterceptor grpcRetryInterceptorBean() {
+        return new GrpcRetryInterceptor(
+                3, // maxRetries
+                100, // initialBackoffMs
+                5000 // maxBackoffMs
+        );
     }
 }

@@ -2,10 +2,7 @@ package id.payu.grpc.starter.interceptor;
 
 import id.payu.grpc.common.ErrorDetail;
 import io.grpc.*;
-import io.grpc.protobuf.StatusProto;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.concurrent.TimeoutException;
 
 /**
  * gRPC interceptor for error handling.
@@ -57,8 +54,6 @@ public class GrpcErrorHandlingInterceptor {
                         handleException(call, headers, e, Status.PERMISSION_DENIED);
                     } catch (UnsupportedOperationException e) {
                         handleException(call, headers, e, Status.UNIMPLEMENTED);
-                    } catch (TimeoutException e) {
-                        handleException(call, headers, e, Status.DEADLINE_EXCEEDED);
                     } catch (Exception e) {
                         handleException(call, headers, e, Status.INTERNAL);
                     }
@@ -80,13 +75,12 @@ public class GrpcErrorHandlingInterceptor {
                     .setMessage(e.getMessage())
                     .build();
 
-            com.google.rpc.Status rpcStatus = com.google.rpc.Status.newBuilder()
-                    .setCode(status.getCode().value())
-                    .setMessage(e.getMessage())
-                    .addDetails(com.google.protobuf.Any.pack(errorDetail))
-                    .build();
+            // Attach error details to trailers
+            Metadata trailers = new Metadata();
+            trailers.put(Metadata.Key.of("error-code", Metadata.ASCII_STRING_MARSHALLER), status.getCode().name());
+            trailers.put(Metadata.Key.of("error-message", Metadata.ASCII_STRING_MARSHALLER), e.getMessage());
 
-            call.close(StatusProto.toStatusException(rpcStatus), headers);
+            call.close(status.withDescription(e.getMessage()), trailers);
         }
     }
 

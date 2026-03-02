@@ -6,7 +6,6 @@ import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.BatchDisbursementUseCase;
 import id.payu.transaction.domain.port.out.BatchDisbursementRepositoryPort;
 import id.payu.transaction.domain.port.out.DisbursementRepositoryPort;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -33,15 +32,24 @@ import java.util.UUID;
  * @see BatchDisbursement
  * @see BatchDisbursementUseCase
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BatchDisbursementService implements BatchDisbursementUseCase {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BatchDisbursementService.class);
+
+
 
     private final BatchDisbursementRepositoryPort batchRepository;
     private final DisbursementRepositoryPort disbursementRepository;
     private final DisbursementService disbursementService;
+
+    public BatchDisbursementService(BatchDisbursementRepositoryPort batchRepository,
+                                     DisbursementRepositoryPort disbursementRepository,
+                                     DisbursementService disbursementService) {
+        this.batchRepository = batchRepository;
+        this.disbursementRepository = disbursementRepository;
+        this.disbursementService = disbursementService;
+    }
 
     @Override
     @Transactional

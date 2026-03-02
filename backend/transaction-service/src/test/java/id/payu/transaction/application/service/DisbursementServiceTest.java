@@ -64,7 +64,7 @@ class DisbursementServiceTest {
             when(disbursementRepository.findByIdempotencyKey(idempotencyKey))
                     .thenReturn(Optional.empty());
             when(walletService.reserveBalance(any(), any(), any()))
-                    .thenReturn(new ReserveBalanceResponse("res-123", true, "Reserved"));
+                    .thenReturn(new ReserveBalanceResponse("res-123", SOURCE_ACCOUNT_ID.toString(), "ref-123", "RESERVED"));
             when(disbursementRepository.save(any()))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -112,7 +112,7 @@ class DisbursementServiceTest {
 
         @Test
         @DisplayName("Should process pending disbursement")
-        void shouldProcessPendingDisbursement() {
+        void shouldProcessPendingDisbursement() throws Exception {
             // Given
             Disbursement disbursement = Disbursement.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-123"
@@ -121,7 +121,7 @@ class DisbursementServiceTest {
                     .thenReturn(Optional.of(disbursement));
             when(bifastService.initiateTransfer(any()))
                     .thenReturn(BifastTransferResponse.builder()
-                            .success(true)
+                            .status("SUCCESS")
                             .referenceNumber("BIFAST-123")
                             .build());
             when(disbursementRepository.save(any()))
@@ -143,7 +143,7 @@ class DisbursementServiceTest {
 
         @Test
         @DisplayName("Should complete processing disbursement")
-        void shouldCompleteProcessingDisbursement() {
+        void shouldCompleteProcessingDisbursement() throws Exception {
             // Given
             Disbursement disbursement = Disbursement.createWithIdempotencyKey(
                     SOURCE_ACCOUNT_ID, AMOUNT, BANK_CODE, ACCOUNT_NUMBER, ACCOUNT_NAME, "idem-123"

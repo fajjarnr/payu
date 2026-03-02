@@ -6,7 +6,6 @@ import id.payu.transaction.domain.port.out.TransactionArchivalPersistencePort;
 import id.payu.transaction.adapter.persistence.repository.TransactionArchiveJpaRepository;
 import id.payu.transaction.adapter.persistence.repository.TransactionJpaRepository;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,14 +17,23 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class TransactionArchivalPersistenceAdapter implements TransactionArchivalPersistencePort {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransactionArchivalPersistenceAdapter.class);
+
+
 
     private final TransactionArchiveJpaRepository transactionArchiveJpaRepository;
     private final TransactionJpaRepository transactionJpaRepository;
     private final JdbcTemplate jdbcTemplate;
+
+    public TransactionArchivalPersistenceAdapter(TransactionArchiveJpaRepository transactionArchiveJpaRepository,
+                                                  TransactionJpaRepository transactionJpaRepository,
+                                                  JdbcTemplate jdbcTemplate) {
+        this.transactionArchiveJpaRepository = transactionArchiveJpaRepository;
+        this.transactionJpaRepository = transactionJpaRepository;
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public List<Transaction> findTransactionsToArchive(Instant beforeDate, int limit) {

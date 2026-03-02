@@ -1,6 +1,8 @@
 package id.payu.statement.integration;
 
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -100,5 +102,17 @@ public class TestContainersConfig {
      */
     public static String adminBearerToken() {
         return "Bearer admin-token";
+    }
+
+    /**
+     * Context initializer referenced by integration tests.
+     * Uses H2 in-memory database (configured in application-test.yml),
+     * so no Testcontainers setup is needed here.
+     */
+    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        @Override
+        public void initialize(ConfigurableApplicationContext applicationContext) {
+            // No-op: H2 in-memory database is configured via application-test.yml
+        }
     }
 }

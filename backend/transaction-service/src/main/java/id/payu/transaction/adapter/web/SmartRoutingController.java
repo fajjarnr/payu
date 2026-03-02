@@ -3,12 +3,12 @@ package id.payu.transaction.adapter.web;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.model.TransferRoute;
 import id.payu.transaction.domain.port.in.SmartRoutingUseCase;
+import id.payu.transaction.dto.RouteRecommendationResponse;
 import id.payu.transaction.dto.TransferRouteResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +29,15 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/v1/transfers/routes")
-@RequiredArgsConstructor
 @Tag(name = "Smart Routing", description = "Smart Transfer Routing API")
 @SecurityRequirement(name = "bearerAuth")
 public class SmartRoutingController {
 
     private final SmartRoutingUseCase smartRoutingUseCase;
+
+    public SmartRoutingController(SmartRoutingUseCase smartRoutingUseCase) {
+        this.smartRoutingUseCase = smartRoutingUseCase;
+    }
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")

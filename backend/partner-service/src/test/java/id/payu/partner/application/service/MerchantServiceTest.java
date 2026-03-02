@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -39,6 +40,12 @@ class MerchantServiceTest {
     @Mock
     private PartnerRepository partnerRepository;
 
+    @Mock
+    private WebhookDispatcherService webhookDispatcher;
+
+    @Mock
+    private KafkaTemplate<String, String> kafkaTemplate;
+
     private MerchantService merchantService;
 
     private Partner activePartner;
@@ -46,7 +53,7 @@ class MerchantServiceTest {
 
     @BeforeEach
     void setUp() {
-        merchantService = new MerchantService(merchantRepository, qrPaymentRepository, partnerRepository);
+        merchantService = new MerchantService(merchantRepository, qrPaymentRepository, partnerRepository, webhookDispatcher, kafkaTemplate);
 
         activePartner = new Partner("Test Partner", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);

@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,15 +19,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/v1/split-bills")
-@RequiredArgsConstructor
 @Tag(name = "Split Bill", description = "APIs for managing split bills between multiple users")
 public class SplitBillController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SplitBillController.class);
+
+
 
     private final SplitBillUseCase splitBillUseCase;
     private final SplitBillSecurityService splitBillSecurityService;
+
+    public SplitBillController(SplitBillUseCase splitBillUseCase, SplitBillSecurityService splitBillSecurityService) {
+        this.splitBillUseCase = splitBillUseCase;
+        this.splitBillSecurityService = splitBillSecurityService;
+    }
 
     @PostMapping
     @Operation(summary = "Create a new split bill", description = "Create a new split bill and add initial participants")

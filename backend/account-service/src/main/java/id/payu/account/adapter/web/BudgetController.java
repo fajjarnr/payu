@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,11 +51,11 @@ public class BudgetController {
     @PreAuthorize("hasRole('USER') and @accountSecurityService.isAccountOwner(#accountId, authentication)")
     @Operation(summary = "Create budget", description = "Creates a new spending budget for a specific category")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget created successfully",
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Budget created successfully",
             content = @Content(schema = @Schema(implementation = Budget.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid request"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<Budget>> createBudget(
             @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId,
@@ -70,7 +69,7 @@ public class BudgetController {
                 request.period()
         );
 
-        return ResponseEntity.ok(ApiResponse.success("Budget created successfully", budget));
+        return ResponseEntity.ok(ApiResponse.success(budget));
     }
 
     /**
@@ -80,9 +79,9 @@ public class BudgetController {
     @PreAuthorize("hasRole('USER') and @accountSecurityService.isAccountOwner(#accountId, authentication)")
     @Operation(summary = "Get all budgets", description = "Returns all budgets for the specified account")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budgets retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Budgets retrieved successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<List<Budget>>> getBudgets(
             @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId) {
@@ -99,11 +98,11 @@ public class BudgetController {
     @PreAuthorize("hasRole('USER') and @accountSecurityService.isAccountOwner(#accountId, authentication)")
     @Operation(summary = "Get budget by ID", description = "Returns a specific budget by its ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget found",
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Budget found",
             content = @Content(schema = @Schema(implementation = Budget.class))),
-        @ApiResponse(responseCode = "404", description = "Budget not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Budget not found"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<Budget>> getBudget(
             @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId,
@@ -122,12 +121,12 @@ public class BudgetController {
     @PreAuthorize("hasRole('USER') and @accountSecurityService.isAccountOwner(#accountId, authentication)")
     @Operation(summary = "Update budget", description = "Updates an existing budget")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget updated successfully",
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Budget updated successfully",
             content = @Content(schema = @Schema(implementation = Budget.class))),
-        @ApiResponse(responseCode = "404", description = "Budget not found"),
-        @ApiResponse(responseCode = "400", description = "Invalid request"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Budget not found"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<Budget>> updateBudget(
             @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId,
@@ -142,7 +141,7 @@ public class BudgetController {
                 request.active()
         );
 
-        return ResponseEntity.ok(ApiResponse.success("Budget updated successfully", budget));
+        return ResponseEntity.ok(ApiResponse.success(budget));
     }
 
     /**
@@ -152,10 +151,10 @@ public class BudgetController {
     @PreAuthorize("hasRole('USER') and @accountSecurityService.isAccountOwner(#accountId, authentication)")
     @Operation(summary = "Delete budget", description = "Deletes a budget by its ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "Budget not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Budget deleted successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Budget not found"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<Void>> deleteBudget(
             @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId,
@@ -163,7 +162,7 @@ public class BudgetController {
         log.info("Deleting budget {} for account={}", budgetId, accountId);
 
         budgetService.deleteBudget(budgetId);
-        return ResponseEntity.ok(ApiResponse.success("Budget deleted successfully", null));
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     /**
@@ -173,9 +172,9 @@ public class BudgetController {
     @PreAuthorize("hasRole('USER') and @accountSecurityService.isAccountOwner(#accountId, authentication)")
     @Operation(summary = "Get budget status", description = "Returns the current status of all budgets for the account")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget status retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Budget status retrieved successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - not account owner")
     })
     public ResponseEntity<ApiResponse<List<BudgetStatusInfo>>> getBudgetStatus(
             @Parameter(description = "Account ID", required = true) @PathVariable UUID accountId) {
@@ -232,14 +231,4 @@ public class BudgetController {
             String message,
             UUID budgetId,
             BigDecimal remainingAmount) {}
-
-    // Simple ApiResponse wrapper
-    public record ApiResponse<T>(boolean success, String message, T data) {
-        public static <T> ApiResponse<T> success(T data) {
-            return new ApiResponse<>(true, "Success", data);
-        }
-        public static <T> ApiResponse<T> success(String message, T data) {
-            return new ApiResponse<>(true, message, data);
-        }
-    }
 }

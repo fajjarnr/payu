@@ -1,8 +1,10 @@
 package id.payu.support.integration;
 
-import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -12,9 +14,17 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for Agent Management workflows.
  * Tests the complete lifecycle of support agents from creation to deactivation.
  */
-@QuarkusTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AgentManagementIntegrationTest {
+
+    @LocalServerPort
+    private int port;
+
+    @BeforeEach
+    void setUp() {
+        RestAssured.port = port;
+    }
 
     private static Long createdAgentId;
     private static String testEmployeeId = "INT-TEST-001";

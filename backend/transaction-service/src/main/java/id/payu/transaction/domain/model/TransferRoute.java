@@ -1,9 +1,5 @@
 package id.payu.transaction.domain.model;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
 import java.time.Duration;
 
 /**
@@ -25,9 +21,6 @@ import java.time.Duration;
  * @see TransferMethod
  * @see Money
  */
-@Getter
-@EqualsAndHashCode(of = "method")
-@Builder
 public class TransferRoute implements Comparable<TransferRoute> {
 
     private final TransferMethod method;
@@ -35,6 +28,83 @@ public class TransferRoute implements Comparable<TransferRoute> {
     private final Duration estimatedTime;
     private final Money minAmount;
     private final Money maxAmount;
+
+    public TransferRoute() {
+        this.method = null;
+        this.fee = null;
+        this.estimatedTime = null;
+        this.minAmount = null;
+        this.maxAmount = null;
+    }
+
+    public TransferRoute(TransferMethod method, Money fee, Duration estimatedTime, Money minAmount, Money maxAmount) {
+        this.method = method;
+        this.fee = fee;
+        this.estimatedTime = estimatedTime;
+        this.minAmount = minAmount;
+        this.maxAmount = maxAmount;
+    }
+
+    public static TransferRouteBuilder builder() {
+        return new TransferRouteBuilder();
+    }
+
+    public TransferMethod getMethod() {
+        return method;
+    }
+
+    public Money getFee() {
+        return fee;
+    }
+
+    public Duration getEstimatedTime() {
+        return estimatedTime;
+    }
+
+    public Money getMinAmount() {
+        return minAmount;
+    }
+
+    public Money getMaxAmount() {
+        return maxAmount;
+    }
+
+    public static class TransferRouteBuilder {
+        private TransferMethod method;
+        private Money fee;
+        private Duration estimatedTime;
+        private Money minAmount;
+        private Money maxAmount;
+
+        public TransferRouteBuilder method(TransferMethod method) {
+            this.method = method;
+            return this;
+        }
+
+        public TransferRouteBuilder fee(Money fee) {
+            this.fee = fee;
+            return this;
+        }
+
+        public TransferRouteBuilder estimatedTime(Duration estimatedTime) {
+            this.estimatedTime = estimatedTime;
+            return this;
+        }
+
+        public TransferRouteBuilder minAmount(Money minAmount) {
+            this.minAmount = minAmount;
+            return this;
+        }
+
+        public TransferRouteBuilder maxAmount(Money maxAmount) {
+            this.maxAmount = maxAmount;
+            return this;
+        }
+
+        public TransferRoute build() {
+            return new TransferRoute(method, fee, estimatedTime, minAmount, maxAmount);
+        }
+    }
 
     /**
      * Creates a standard BI-FAST route with default parameters.

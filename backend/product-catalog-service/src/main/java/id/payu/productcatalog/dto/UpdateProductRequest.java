@@ -5,11 +5,18 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
 import java.util.Map;
 
 /**
  * DTO for updating a product definition.
  */
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateProductRequest {
 
     @NotNull(message = "Product type is required")

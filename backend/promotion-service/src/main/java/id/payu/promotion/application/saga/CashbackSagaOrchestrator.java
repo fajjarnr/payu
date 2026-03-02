@@ -10,12 +10,15 @@ import id.payu.saga.orchestrator.SagaOrchestrator;
 import id.payu.saga.repository.SagaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Saga orchestrator for cashback credit workflow.
@@ -39,9 +42,11 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
 
     public CashbackSagaOrchestrator(
             SagaRepository sagaRepository,
+            @Qualifier("sagaTaskExecutor") TaskExecutor sagaTaskExecutor,
+            @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler,
             WalletServicePort walletServicePort,
             CashbackRepository cashbackRepository) {
-        super(sagaRepository);
+        super(sagaRepository, sagaTaskExecutor, sagaRetryScheduler);
         this.walletServicePort = walletServicePort;
         this.cashbackRepository = cashbackRepository;
 

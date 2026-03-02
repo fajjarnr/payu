@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
@@ -36,13 +37,19 @@ class PaymentLinkServiceTest {
     @Mock
     private PartnerRepository partnerRepository;
 
+    @Mock
+    private WebhookDispatcherService webhookDispatcher;
+
+    @Mock
+    private KafkaTemplate<String, String> kafkaTemplate;
+
     private PaymentLinkService paymentLinkService;
 
     private Partner activePartner;
 
     @BeforeEach
     void setUp() {
-        paymentLinkService = new PaymentLinkService(paymentLinkRepository, partnerRepository);
+        paymentLinkService = new PaymentLinkService(paymentLinkRepository, partnerRepository, webhookDispatcher, kafkaTemplate);
 
         activePartner = new Partner("Test Partner", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);

@@ -5,7 +5,6 @@ import id.payu.transaction.domain.model.VirtualAccount;
 import id.payu.transaction.dto.CreateVirtualAccountRequest;
 import id.payu.transaction.dto.VaCallbackRequest;
 import id.payu.transaction.dto.VirtualAccountResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +21,16 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @Service
 @Transactional
-@RequiredArgsConstructor
-@Slf4j
 public class VirtualAccountService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(VirtualAccountService.class);
+
+
 
     private final VirtualAccountRepository virtualAccountRepository;
+
+    public VirtualAccountService(VirtualAccountRepository virtualAccountRepository) {
+        this.virtualAccountRepository = virtualAccountRepository;
+    }
 
     /**
      * Create a new Virtual Account with a generated VA number.

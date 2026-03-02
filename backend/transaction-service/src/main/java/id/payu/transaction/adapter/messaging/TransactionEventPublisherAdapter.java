@@ -5,7 +5,6 @@ import id.payu.events.cloudevents.CloudEventEnvelope;
 import id.payu.outbox.service.OutboxService;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -21,12 +20,17 @@ import java.util.Map;
  * <p>
  * All events conform to CloudEvents 1.0 spec via the events-starter CloudEventEnvelope.
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class TransactionEventPublisherAdapter implements TransactionEventPublisherPort {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransactionEventPublisherAdapter.class);
+
+
 
     private final OutboxService outboxService;
+
+    public TransactionEventPublisherAdapter(OutboxService outboxService) {
+        this.outboxService = outboxService;
+    }
 
     private static final String AGGREGATE_TYPE = "Transaction";
     private static final String TOPIC_TRANSACTIONS = "payu.transactions";

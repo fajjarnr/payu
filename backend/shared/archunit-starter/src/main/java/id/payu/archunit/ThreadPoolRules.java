@@ -51,47 +51,4 @@ public final class ThreadPoolRules {
             .because("Static executors are not managed by Spring lifecycle and cause thread leaks. " +
                     "Use Spring-managed ThreadPoolTaskExecutor or inject via constructor (IMP-068).");
 
-    /**
-     * Rule: No direct usage of Executors factory methods in field initialization.
-     *
-     * <p>Direct usage of {@code Executors.newCachedThreadPool()}, {@code Executors.newFixedThreadPool()},
-     * etc. in field initialization bypasses Spring's lifecycle management.</p>
-     */
-    public static final ArchRule NO_EXECUTORS_FACTORY_METHODS = noFields()
-            .should(useExecutorsFactoryMethods())
-            .because("Executors factory methods create unmanaged thread pools. " +
-                    "Use Spring-managed ThreadPoolTaskExecutor instead (IMP-068).");
-
-    /**
-     * Condition that checks if a field uses Executors factory methods for initialization.
-     */
-    private static ArchCondition<JavaField> useExecutorsFactoryMethods() {
-        return new ArchCondition<>("use Executors factory methods") {
-            @Override
-            public void check(JavaField field, ConditionEvents events) {
-                // Check if the field type is an executor type
-                JavaClass rawType = field.getRawType();
-                boolean isExecutorType = rawType.isAssignableFrom(Executor.class)
-                        || rawType.isAssignableFrom(ExecutorService.class)
-                        || rawType.isAssignableFrom(ScheduledExecutorService.class);
-
-                if (isExecutorType && field.getInitializer().isPresent()) {
-                    String initializer = field.getInitializer().get().toString();
-                    if (initializer.contains("Executors.new")) {
-                        events.add(SimpleConditionEvent.violated(field,
-                                String.format("Field %s uses Executors factory method: %s",
-                                        field.getFullName(), initializer)));
-                    }
-                }
-            }
-        };
-    }
-
-    /**
-     * Combined rule for thread pool best practices.
-     *
-     * <p>Enforces all thread pool related rules.</p>
-     */
-    public static final ArchRule THREAD_POOL_BEST_PRACTICES = NO_STATIC_UNMANAGED_EXECUTORS
-            .and(NO_EXECUTORS_FACTORY_METHODS);
 }

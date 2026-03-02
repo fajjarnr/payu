@@ -14,7 +14,6 @@ import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.dto.InitiateTransferRequest;
 import id.payu.transaction.dto.ProcessQrisPaymentRequest;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,10 +37,11 @@ import java.util.UUID;
  *   <li><b>Benefits:</b> Independent optimization, clear intent, better testability</li>
  * </ul>
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class TransactionService implements TransactionUseCase {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransactionService.class);
+
+
 
     private final InitiateTransferCommandHandler initiateTransferHandler;
     private final ProcessQrisPaymentCommandHandler processQrisPaymentHandler;
@@ -49,6 +49,20 @@ public class TransactionService implements TransactionUseCase {
     private final GetAccountTransactionsQueryHandler getAccountTransactionsQueryHandler;
     private final TransactionPersistencePort transactionPersistencePort;
     private final ObjectMapper objectMapper;
+
+    public TransactionService(InitiateTransferCommandHandler initiateTransferHandler,
+                              ProcessQrisPaymentCommandHandler processQrisPaymentHandler,
+                              GetTransactionQueryHandler getTransactionHandler,
+                              GetAccountTransactionsQueryHandler getAccountTransactionsQueryHandler,
+                              TransactionPersistencePort transactionPersistencePort,
+                              ObjectMapper objectMapper) {
+        this.initiateTransferHandler = initiateTransferHandler;
+        this.processQrisPaymentHandler = processQrisPaymentHandler;
+        this.getTransactionHandler = getTransactionHandler;
+        this.getAccountTransactionsQueryHandler = getAccountTransactionsQueryHandler;
+        this.transactionPersistencePort = transactionPersistencePort;
+        this.objectMapper = objectMapper;
+    }
 
     // CQRS Methods - Command Side (Write Operations)
 

@@ -4,7 +4,6 @@ import id.payu.transaction.adapter.persistence.repository.TransactionJpaReposito
 import id.payu.transaction.adapter.persistence.repository.VirtualAccountRepository;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.model.VirtualAccount;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,15 +24,24 @@ import java.util.UUID;
  *
  * Part of E-15 IMP-044: Payment Expiry & Auto-Cancel
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class PaymentExpiryScheduler {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PaymentExpiryScheduler.class);
+
+
 
     private final TransactionJpaRepository transactionRepository;
     private final VirtualAccountRepository virtualAccountRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final RestTemplate restTemplate = new RestTemplate();
+
+    public PaymentExpiryScheduler(TransactionJpaRepository transactionRepository,
+                                  VirtualAccountRepository virtualAccountRepository,
+                                  KafkaTemplate<String, String> kafkaTemplate) {
+        this.transactionRepository = transactionRepository;
+        this.virtualAccountRepository = virtualAccountRepository;
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     private static final String WALLET_SERVICE_URL = "http://wallet-service/api/v1/wallets";
     private static final String PAYMENT_EXPIRED_TOPIC = "payment.expired";

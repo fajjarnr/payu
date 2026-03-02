@@ -1,5 +1,9 @@
 package id.payu.promotion.domain.model;
 
+import id.payu.promotion.domain.exception.InvalidPromoException;
+import id.payu.promotion.domain.exception.MinimumAmountNotMetException;
+import id.payu.promotion.domain.exception.PromoAlreadyUsedException;
+import id.payu.promotion.domain.exception.PromoExpiredException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
