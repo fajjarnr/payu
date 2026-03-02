@@ -53,6 +53,13 @@
             <version>${grpc.version}</version>
         </dependency>
 
+        <!-- gRPC Servlet Jakarta (required by spring-grpc auto-configuration) -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-servlet-jakarta</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+
         <!-- gRPC Protobuf -->
         <dependency>
             <groupId>io.grpc</groupId>

@@ -56,6 +56,7 @@ public class RequestValidationFilter implements ContainerRequestFilter {
         map.put("/api/v1/auth/refresh", "auth-refresh.json");
 
         // Account endpoints
+        map.put("/api/v1/accounts/register", "accounts-register.json");
         map.put("/api/v1/accounts", "accounts-create.json");
 
         // Transaction endpoints

@@ -78,6 +78,18 @@ public class SecurityAutoConfiguration {
         return converter;
     }
 
+    /**
+     * When encryption is NOT enabled (disabled or not configured), set EncryptedStringConverter
+     * to pass-through mode so JPA entities with @Convert don't fail at runtime.
+     */
+    @Bean
+    @ConditionalOnMissingBean(EncryptionService.class)
+    public EncryptedStringConverter encryptedStringConverterPassThrough() {
+        log.info("Encryption not enabled — EncryptedStringConverter will operate in pass-through mode");
+        EncryptedStringConverter.setEncryptionDisabled(true);
+        return new EncryptedStringConverter();
+    }
+
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "payu.security", name = "masking-enabled", havingValue = "true", matchIfMissing = true)

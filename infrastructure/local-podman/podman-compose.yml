@@ -745,6 +745,12 @@ services:
       ROUTES_PROMOTION_URL: http://promotion-service:8080
       ROUTES_SUPPORT_URL: http://support-service:8080
       ROUTES_STATEMENT_URL: http://statement-service:8015
+      ROUTES_DISPUTE_URL: http://dispute-service:8080
+      ROUTES_INTEGRATION_URL: http://integration-service:8080
+      ROUTES_PRODUCT_CATALOG_URL: http://product-catalog-service:8080
+      ROUTES_FX_URL: http://fx-service:8080/fx-api
+      ROUTES_CMS_URL: http://cms-service:8080
+      ROUTES_AB_TESTING_URL: http://ab-testing-service:8080
       # Service URLs for gateway.services.* config mapping
       ACCOUNT_SERVICE_URL: http://account-service:8001
       AUTH_SERVICE_URL: http://auth-service:8002
@@ -763,6 +769,10 @@ services:
       SUPPORT_SERVICE_URL: http://support-service:8080
       STATEMENT_SERVICE_URL: http://statement-service:8015
       CMS_SERVICE_URL: http://cms-service:8080
+      DISPUTE_SERVICE_URL: http://dispute-service:8080
+      INTEGRATION_SERVICE_URL: http://integration-service:8080
+      PRODUCT_CATALOG_SERVICE_URL: http://product-catalog-service:8080
+      FX_SERVICE_URL: http://fx-service:8080
       WEBHOOK_PARTNER_1_SECRET: ${WEBHOOK_PARTNER_1_SECRET:-dummy_secret_for_dev_only}
       GATEWAY_AUTHORIZATION_JWT_SECRET: ${GATEWAY_AUTHORIZATION_JWT_SECRET:-dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
@@ -1318,6 +1328,138 @@ services:
       retries: 3
       start_period: 30s
     image: localhost/payu-ab-testing-service
+  dispute-service:
+    build:
+      context: ../../backend/dispute-service
+      dockerfile: Containerfile
+    container_name: payu-dispute-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - "8098:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+        -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: payu_dispute
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_dispute
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_dispute
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      - postgres
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    image: localhost/payu-dispute-service
+  integration-service:
+    build:
+      context: ../../backend/integration-service
+      dockerfile: Containerfile
+    container_name: payu-integration-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - "8101:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+        -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: payu_integration
+      DB_USER: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_integration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_integration
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BOOTSTRAP: kafka:29092
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      - postgres
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    image: localhost/payu-integration-service
+  product-catalog-service:
+    build:
+      context: ../../backend/product-catalog-service
+      dockerfile: Containerfile
+    container_name: payu-product-catalog-service
+    podman_networks:
+      - name: payu-network
+    ports:
+      - "8100:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: container
+      SERVER_PORT: "8080"
+      PORT: "8080"
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+        -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USERNAME: payu
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/payu_products
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_products
+      SPRING_DATASOURCE_USERNAME: payu
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-payu_secret}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      OTEL_ENDPOINT: http://jaeger:4317
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/actuator/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    image: localhost/payu-product-catalog-service
   web-app:
     build:
       context: ../../frontend/web-app

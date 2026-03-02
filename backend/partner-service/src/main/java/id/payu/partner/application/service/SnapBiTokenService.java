@@ -33,11 +33,12 @@ public class SnapBiTokenService {
 
     private SecretKey signingKey;
 
+    @SuppressWarnings("unchecked")
     private final RedisTemplate<String, TokenInfo> redisTemplate;
     private ValueOperations<String, TokenInfo> valueOps;
 
-    public SnapBiTokenService(RedisTemplate<String, TokenInfo> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public SnapBiTokenService(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = (RedisTemplate<String, TokenInfo>) (RedisTemplate<?, ?>) redisTemplate;
     }
 
     @PostConstruct

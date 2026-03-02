@@ -56,7 +56,7 @@ public class CacheAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public DistributedCacheService distributedCacheService(
-            RedisTemplate<String, Object> redisTemplate) {
+            @Qualifier("payuCacheRedisTemplate") RedisTemplate<String, Object> redisTemplate) {
         return new DistributedCacheService(redisTemplate, properties);
     }
 

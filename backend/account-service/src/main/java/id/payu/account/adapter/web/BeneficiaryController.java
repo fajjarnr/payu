@@ -4,7 +4,7 @@ import id.payu.account.dto.BeneficiaryRequest;
 import id.payu.account.dto.BeneficiaryResponse;
 import id.payu.account.entity.Beneficiary;
 import id.payu.account.repository.BeneficiaryRepository;
-import id.payu.account.repository.UserRepository;
+import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.api.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

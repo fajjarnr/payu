@@ -52,6 +52,39 @@ test-analytics: ## Run analytics flow tests
 test-backoffice: ## Run backoffice flow tests
 	pytest -v test_backoffice.py
 
+test-fx: ## Run FX service flow tests
+	pytest -v test_fx_flow.py
+
+test-cms: ## Run CMS service flow tests
+	pytest -v test_cms_flow.py
+
+test-statement: ## Run statement service flow tests
+	pytest -v test_statement_flow.py
+
+test-billing: ## Run billing service flow tests
+	pytest -v test_billing_flow.py
+
+test-notification: ## Run notification service flow tests
+	pytest -v test_notification_flow.py
+
+test-dispute: ## Run dispute service flow tests
+	pytest -v test_dispute_flow.py
+
+test-integration-svc: ## Run integration service flow tests
+	pytest -v test_integration_flow.py
+
+test-product-catalog: ## Run product catalog flow tests
+	pytest -v test_product_catalog_flow.py
+
+test-ab-testing: ## Run AB testing flow tests
+	pytest -v test_ab_testing_flow.py
+
+test-kyc: ## Run KYC service flow tests
+	pytest -v test_kyc_flow.py
+
+test-gateway: ## Run gateway service flow tests
+	pytest -v test_gateway_flow.py
+
 test-journey: ## Run complete user journey tests
 	pytest -v test_complete_user_journey.py
 

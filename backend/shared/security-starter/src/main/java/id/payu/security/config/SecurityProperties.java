@@ -2,7 +2,6 @@ package id.payu.security.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -10,7 +9,6 @@ import java.util.List;
  * Configuration properties for Security features
  */
 @Data
-@Component
 @ConfigurationProperties(prefix = "payu.security")
 public class SecurityProperties {
 

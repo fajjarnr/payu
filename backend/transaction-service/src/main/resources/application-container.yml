@@ -35,11 +35,6 @@ spring:
       auto-startup: true
       group-id: transaction-service-container
   
-  data:
-    redis:
-      host: ${REDIS_HOST:redis}
-      port: ${REDIS_PORT:6379}
-  
   security:
     oauth2:
       resourceserver:

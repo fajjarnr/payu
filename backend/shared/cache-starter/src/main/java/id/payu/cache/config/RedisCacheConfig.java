@@ -14,7 +14,9 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Primary;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -51,7 +53,7 @@ import java.util.Map;
  * portability — no Java-specific serialization that would break with Data Grid.</p>
  */
 @Slf4j
-@AutoConfiguration
+@AutoConfiguration(before = RedisAutoConfiguration.class)
 @EnableCaching
 @EnableConfigurationProperties(CacheProperties.class)
 @ConditionalOnClass(RedisConnectionFactory.class)
@@ -219,9 +221,9 @@ public class RedisCacheConfig {
         return new StringRedisTemplate(connectionFactory);
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    @Bean(name = {"payuCacheRedisTemplate", "redisTemplate"})
+    @Primary
+    public RedisTemplate<String, Object> payuCacheRedisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 

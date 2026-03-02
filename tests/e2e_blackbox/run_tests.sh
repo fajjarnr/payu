@@ -24,7 +24,7 @@ show_help() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  -t, --type TYPE       Test type to run (all, smoke, critical, investment, lending, promotion, compliance, support, partner, analytics, backoffice, journey)"
+    echo "  -t, --type TYPE       Test type to run (all, smoke, critical, investment, lending, promotion, compliance, support, partner, analytics, backoffice, journey, fx, cms, statement, billing, notification, dispute, integration, product-catalog, ab-testing, kyc, gateway)"
     echo "  -v, --verbose         Enable verbose output"
     echo "  -x, --stop-on-fail    Stop on first failure"
     echo "  -c, --coverage        Run with coverage report"
@@ -155,9 +155,53 @@ case $TEST_TYPE in
         echo -e "${BLUE}Running complete user journey tests...${NC}"
         $PYTEST_CMD test_complete_user_journey.py
         ;;
+    fx)
+        echo -e "${BLUE}Running FX service tests...${NC}"
+        $PYTEST_CMD test_fx_flow.py
+        ;;
+    cms)
+        echo -e "${BLUE}Running CMS service tests...${NC}"
+        $PYTEST_CMD test_cms_flow.py
+        ;;
+    statement)
+        echo -e "${BLUE}Running statement service tests...${NC}"
+        $PYTEST_CMD test_statement_flow.py
+        ;;
+    billing)
+        echo -e "${BLUE}Running billing service tests...${NC}"
+        $PYTEST_CMD test_billing_flow.py
+        ;;
+    notification)
+        echo -e "${BLUE}Running notification service tests...${NC}"
+        $PYTEST_CMD test_notification_flow.py
+        ;;
+    dispute)
+        echo -e "${BLUE}Running dispute service tests...${NC}"
+        $PYTEST_CMD test_dispute_flow.py
+        ;;
+    integration)
+        echo -e "${BLUE}Running integration service tests...${NC}"
+        $PYTEST_CMD test_integration_flow.py
+        ;;
+    product-catalog)
+        echo -e "${BLUE}Running product catalog tests...${NC}"
+        $PYTEST_CMD test_product_catalog_flow.py
+        ;;
+    ab-testing)
+        echo -e "${BLUE}Running AB testing tests...${NC}"
+        $PYTEST_CMD test_ab_testing_flow.py
+        ;;
+    kyc)
+        echo -e "${BLUE}Running KYC service tests...${NC}"
+        $PYTEST_CMD test_kyc_flow.py
+        ;;
+    gateway)
+        echo -e "${BLUE}Running gateway service tests...${NC}"
+        $PYTEST_CMD test_gateway_flow.py
+        ;;
     *)
         echo -e "${RED}Unknown test type: $TEST_TYPE${NC}"
-        echo "Valid types: all, smoke, critical, investment, lending, promotion, compliance, support, partner, analytics, backoffice, journey"
+        echo "Valid types: all, smoke, critical, investment, lending, promotion, compliance, support, partner, analytics, backoffice, journey, fx, cms, statement, billing, notification, dispute, integration, product-catalog, ab-testing, kyc, gateway"
         exit 1
         ;;
 esac

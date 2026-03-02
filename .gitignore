@@ -16,6 +16,7 @@ temp/
 crash-reports/
 test_output.txt
 test-results/
+**/reports/
 
 # --- Secrets & Environment ---
 .env
@@ -63,6 +64,8 @@ __pycache__/
 *$py.class
 *.so
 .Python
+.venv/
+venv/
 develop-eggs/
 dist/
 downloads/

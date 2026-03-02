@@ -50,12 +50,19 @@ public class Account {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "allow_phone_lookup")
+    private Boolean allowPhoneLookup = true;
+
+    @Column(name = "qr_code_hash", length = 64)
+    private String qrCodeHash;
+
     public Account() {
     }
 
     public Account(UUID id, String tenantId, User user, String accountNumber,
                    AccountType type, AccountStatus status, String currency,
-                   BigDecimal balance, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   BigDecimal balance, LocalDateTime createdAt, LocalDateTime updatedAt,
+                   Boolean allowPhoneLookup, String qrCodeHash) {
         this.id = id;
         this.tenantId = tenantId;
         this.user = user;
@@ -66,6 +73,8 @@ public class Account {
         this.balance = balance;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.allowPhoneLookup = allowPhoneLookup;
+        this.qrCodeHash = qrCodeHash;
     }
 
     // Getters and Setters
@@ -149,6 +158,22 @@ public class Account {
         this.updatedAt = updatedAt;
     }
 
+    public Boolean getAllowPhoneLookup() {
+        return allowPhoneLookup;
+    }
+
+    public void setAllowPhoneLookup(Boolean allowPhoneLookup) {
+        this.allowPhoneLookup = allowPhoneLookup;
+    }
+
+    public String getQrCodeHash() {
+        return qrCodeHash;
+    }
+
+    public void setQrCodeHash(String qrCodeHash) {
+        this.qrCodeHash = qrCodeHash;
+    }
+
     // Builder
     public static Builder builder() {
         return new Builder();
@@ -165,6 +190,8 @@ public class Account {
         private BigDecimal balance;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private Boolean allowPhoneLookup = true;
+        private String qrCodeHash;
 
         public Builder id(UUID id) {
             this.id = id;
@@ -216,9 +243,19 @@ public class Account {
             return this;
         }
 
+        public Builder allowPhoneLookup(Boolean allowPhoneLookup) {
+            this.allowPhoneLookup = allowPhoneLookup;
+            return this;
+        }
+
+        public Builder qrCodeHash(String qrCodeHash) {
+            this.qrCodeHash = qrCodeHash;
+            return this;
+        }
+
         public Account build() {
             return new Account(id, tenantId, user, accountNumber, type, status,
-                    currency, balance, createdAt, updatedAt);
+                    currency, balance, createdAt, updatedAt, allowPhoneLookup, qrCodeHash);
         }
     }
 

@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class EncryptedStringConverter implements AttributeConverter<String, String> {
 
     private static EncryptionService encryptionService;
+    private static boolean encryptionDisabled = false;
 
     /**
      * Spring automatically injects the EncryptionService bean.
@@ -40,6 +41,14 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
      */
     public static void setEncryptionService(EncryptionService service) {
         EncryptedStringConverter.encryptionService = service;
+    }
+
+    /**
+     * Mark encryption as explicitly disabled (pass-through mode).
+     * When disabled, the converter stores/reads plaintext without throwing.
+     */
+    public static void setEncryptionDisabled(boolean disabled) {
+        EncryptedStringConverter.encryptionDisabled = disabled;
     }
 
     /**
@@ -56,6 +65,9 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
         }
 
         if (encryptionService == null) {
+            if (encryptionDisabled) {
+                return attribute; // pass-through when encryption is explicitly disabled
+            }
             throw new IllegalStateException("EncryptionService not initialized. " +
                     "Ensure security-starter is properly configured.");
         }
@@ -77,6 +89,9 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
         }
 
         if (encryptionService == null) {
+            if (encryptionDisabled) {
+                return dbData; // pass-through when encryption is explicitly disabled
+            }
             throw new IllegalStateException("EncryptionService not initialized. " +
                     "Ensure security-starter is properly configured.");
         }

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://payu.id/schemas/accounts-register.json",
+  "title": "Register User Request",
+  "description": "Schema for user registration requests via account-service",
+  "type": "object",
+  "properties": {
+    "externalId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "External identifier for the user"
+    },
+    "username": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 50,
+      "pattern": "^[a-zA-Z0-9_]+$"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "maxLength": 255
+    },
+    "phoneNumber": {
+      "type": "string",
+      "pattern": "^\\+?[0-9]{10,15}$"
+    },
+    "fullName": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 100
+    },
+    "nik": {
+      "type": "string",
+      "pattern": "^[0-9]{16}$",
+      "description": "National ID number (16 digits)"
+    },
+    "password": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "description": "User password (processed by auth-service)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 100,
+      "description": "Alternative name field"
+    }
+  },
+  "required": ["username", "email"],
+  "additionalProperties": true
+}

@@ -169,6 +169,13 @@ resilience4j:
 
 # PayU Configuration
 payu:
+  grpc:
+    server:
+      enabled: true
+      port: 9090
+      reflection-enabled: false
+      security:
+        enabled: false
   events:
     enabled: true
     kafka:
@@ -240,13 +247,3 @@ grpc:
     port: 9090
     security:
       enabled: false  # TLS terminated by Istio
-
-# PayU gRPC Configuration
-payu:
-  grpc:
-    server:
-      enabled: true
-      port: 9090
-      reflection-enabled: false
-      security:
-        enabled: false
