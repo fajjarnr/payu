@@ -203,6 +203,46 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 
 ---
 
+## ✅ Completed Epics Summary (20/24 Fully Done)
+
+> All completed stories have detailed implementation notes in [`CHANGELOG.md`](../../CHANGELOG.md).
+> Items below were removed from `TODOS.md` on March 2, 2026 per backlog hygiene convention.
+
+| Epic | Name                              | Priority   | Stories | SP  | Completed   |
+| :--- | :-------------------------------- | :--------- | :-----: | :-: | :---------- |
+| E-01 | Core Banking Ledger               | 🔴 Highest |    3    |  13 | Feb 26 2026 |
+| E-02 | Gateway Hardening                 | 🔴 Highest |    5    |  11 | Feb 26 2026 |
+| E-03 | Frontend Quality                  | 🟠 High    |    5    |   7 | Feb 28 2026 |
+| E-05 | Product Catalog                   | 🟠 High    |    1    |   5 | Feb 28 2026 |
+| E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |   5 | Feb 28 2026 |
+| E-09 | Partner Integration Foundation    | 🔴 Highest |    4    |  18 | Feb 28 2026 |
+| E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    |  10 | Feb 28 2026 |
+| E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |   8 | Feb 28 2026 |
+| E-12 | Settlement & Financial Operations | 🟠 High    |    4    |  16 | Feb 28 2026 |
+| E-13 | Dispute Resolution                | 🟠 High    |    1    |   5 | Feb 28 2026 |
+| E-14 | Consumer Banking Experience       | 🟠 High    |    6    |  12 | Feb 28 2026 |
+| E-15 | Payment Gateway Features          | 🔴 Highest |    7    |  25 | Feb 28 2026 |
+| E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    |  12 | Feb 28 2026 |
+| E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |   6 | Feb 28 2026 |
+| E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    |  11 | Feb 28 2026 |
+| E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |   2 | Feb 28 2026 |
+| E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    |  10 | Feb 26 2026 |
+| E-21 | Security Hardening                | 🔴 Highest |    2    |   5 | Feb 26 2026 |
+| E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |   6 | Feb 26 2026 |
+| E-23 | Shared Library Lifecycle          | 🟠 High    |    2    |  11 | Feb 28 2026 |
+|      | **TOTAL**                         |            | **63**  | **198** |         |
+
+**Partially Completed Epics** (remaining stories tracked in TODOS.md):
+
+| Epic | Name                             | Done Stories | Open Stories | Done SP | Open SP |
+| :--- | :------------------------------- | :----------: | :----------: | :-----: | :-----: |
+| E-04 | API Management & Analytics       |      3       |      2       |    9    |   10    |
+| E-06 | Developer Hub (Backstage)        |      4       |      1       |   10    |    3    |
+| E-07 | gRPC Inter-Service Communication |      5       |      3       |   15    |   10    |
+|      | **Subtotal**                     |   **12**     |    **6**     | **34**  | **23**  |
+
+---
+
 ## ✅ Major Completed Tech Debt Items (19/19 Closed)
 
 > Previously tracked as P0-P3 blockers, all resolved prior to Feb 20 deployment.

@@ -39,15 +39,30 @@ def test_timeout():
 
 @pytest.fixture(scope="session", autouse=True)
 def check_gateway_available(gateway_url):
-    """Skip all tests if the gateway is not reachable"""
-    try:
-        resp = requests.get(f"{gateway_url}/actuator/health", timeout=5)
-        if resp.status_code >= 500:
-            pytest.skip(f"Gateway unhealthy (HTTP {resp.status_code})")
-    except requests.ConnectionError:
+    """Skip all tests if the gateway is not reachable.
+    
+    Gateway is Quarkus-based, so health endpoint is /q/health (not /actuator/health).
+    Falls back to /actuator/health for Spring Boot gateways.
+    """
+    health_paths = ["/q/health", "/actuator/health"]
+    last_error = None
+    for path in health_paths:
+        try:
+            resp = requests.get(f"{gateway_url}{path}", timeout=5)
+            if resp.status_code < 500:
+                return  # Gateway is reachable
+            last_error = f"HTTP {resp.status_code}"
+        except requests.ConnectionError:
+            last_error = "connection refused"
+        except requests.Timeout:
+            last_error = "timeout"
+    
+    if last_error in ("connection refused",):
         pytest.skip(
             f"Gateway not reachable at {gateway_url}. "
             "Start services first: make podman-test-up"
         )
-    except requests.Timeout:
+    elif last_error == "timeout":
         pytest.skip(f"Gateway timed out at {gateway_url}")
+    elif last_error:
+        pytest.skip(f"Gateway unhealthy at {gateway_url} ({last_error})")

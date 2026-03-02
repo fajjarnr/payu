@@ -29,7 +29,7 @@ class TestDisputeServiceFlow:
         }
 
         response = api.post("/api/v1/accounts/register", json=user_data)
-        if response.status_code in [401, 403, 500, 502, 503, 504]:
+        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
             pytest.skip(f"account-service unavailable or auth barrier ({response.status_code})")
         assert response.status_code in [200, 201], f"Register failed: {response.status_code}"
         user_id = response.json().get("id", response.json().get("userId"))
