@@ -77,21 +77,21 @@ echo ""
 
 # Check if dependencies are installed
 echo -e "${YELLOW}Checking dependencies...${NC}"
-if ! python -c "import pytest" 2>/dev/null; then
+if ! python3 -c "import pytest" 2>/dev/null; then
     echo -e "${RED}pytest not installed. Installing...${NC}"
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt --break-system-packages 2>/dev/null || pip3 install -r requirements.txt
 fi
 
-if ! python -c "import faker" 2>/dev/null; then
+if ! python3 -c "import faker" 2>/dev/null; then
     echo -e "${RED}faker not installed. Installing...${NC}"
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt --break-system-packages 2>/dev/null || pip3 install -r requirements.txt
 fi
 
 echo -e "${GREEN}Dependencies check complete${NC}"
 echo ""
 
 # Build pytest command
-PYTEST_CMD="pytest -v"
+PYTEST_CMD="python3 -m pytest -v"
 
 if [ "$VERBOSE" = true ]; then
     PYTEST_CMD="$PYTEST_CMD -s"

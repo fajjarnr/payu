@@ -143,7 +143,7 @@ class TestFullUserJourney:
         dest_user_id = response.json().get("id", response.json().get("userId"))
 
         # Initiate transfer
-        response = api.post("/api/v1/v1/transactions/transfer", json={
+        response = api.post("/api/v1/transactions/transfer", json={
             "sourceAccountId": recipient_id,
             "destinationAccountId": dest_user_id,
             "amount": 500000,
@@ -222,7 +222,7 @@ class TestFullUserJourney:
         api.set_token(response.json()["access_token"])
 
         # Process QRIS payment
-        response = api.post("/api/v1/v1/transactions/qris/pay", json={
+        response = api.post("/api/v1/transactions/qris/pay", json={
             "qrisCode": fake.uuid4(),
             "amount": 100000,
             "merchantName": "Test Merchant",

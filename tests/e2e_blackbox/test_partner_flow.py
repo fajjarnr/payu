@@ -6,7 +6,6 @@ fake = Faker()
 
 
 @pytest.mark.partner
-@pytest.mark.skip(reason="Partner SNAP BI integration not yet fully implemented")
 class TestPartnerFlow:
     """
     Partner Integration and SNAP BI Standard E2E tests.
@@ -46,7 +45,7 @@ class TestPartnerFlow:
         """
         api = admin_session["api"]
 
-        response = api.post("/api/v1/partners", json={
+        response = api.post("/partners", json={
             "name": "TokoBapak",
             "partnerCode": f"TB{fake.random_number(digits=4)}",
             "email": f"contact@tokobapak.com",
@@ -74,7 +73,7 @@ class TestPartnerFlow:
         """
         api = admin_session["api"]
 
-        response = api.get("/api/v1/partners")
+        response = api.get("/partners")
         assert response.status_code == 200
         partners = response.json()
         assert isinstance(partners, list)
@@ -86,7 +85,7 @@ class TestPartnerFlow:
         api = admin_session["api"]
 
         # Create a partner
-        response = api.post("/api/v1/partners", json={
+        response = api.post("/partners", json={
             "name": "Test Partner",
             "partnerCode": f"TP{fake.random_number(digits=4)}",
             "email": f"contact@testpartner.com",
@@ -104,7 +103,7 @@ class TestPartnerFlow:
         partner = response.json()
         partner_id = partner.get("id")
 
-        response = api.get(f"/api/v1/partners/{partner_id}")
+        response = api.get(f"/partners/{partner_id}")
         assert response.status_code == 200
         retrieved_partner = response.json()
         assert retrieved_partner["id"] == partner_id
@@ -116,7 +115,7 @@ class TestPartnerFlow:
         api = admin_session["api"]
 
         # Create a partner
-        response = api.post("/api/v1/partners", json={
+        response = api.post("/partners", json={
             "name": "Old Name",
             "partnerCode": f"UP{fake.random_number(digits=4)}",
             "email": f"contact@old.com",
@@ -134,7 +133,7 @@ class TestPartnerFlow:
         partner = response.json()
         partner_id = partner.get("id")
 
-        response = api.put(f"/api/v1/partners/{partner_id}", json={
+        response = api.put(f"/partners/{partner_id}", json={
             "name": "Updated Name",
             "email": f"contact@updated.com",
             "phoneNumber": "+628123456789",
@@ -158,7 +157,7 @@ class TestPartnerFlow:
         api = admin_session["api"]
 
         # Create a partner
-        response = api.post("/api/v1/partners", json={
+        response = api.post("/partners", json={
             "name": "Key Test Partner",
             "partnerCode": f"KT{fake.random_number(digits=4)}",
             "email": f"contact@keytest.com",
@@ -177,7 +176,7 @@ class TestPartnerFlow:
         partner_id = partner.get("id")
         old_key = partner.get("apiKey")
 
-        response = api.post(f"/api/v1/partners/{partner_id}/keys/regenerate")
+        response = api.post(f"/partners/{partner_id}/keys/regenerate")
         if response.status_code != 200:
             pytest.skip(f"Key regeneration may require admin privileges: {response.text}")
 
@@ -191,7 +190,7 @@ class TestPartnerFlow:
         api = admin_session["api"]
 
         # Create a partner
-        response = api.post("/api/v1/partners", json={
+        response = api.post("/partners", json={
             "name": "Delete Test Partner",
             "partnerCode": f"DT{fake.random_number(digits=4)}",
             "email": f"contact@deletetest.com",
@@ -209,7 +208,7 @@ class TestPartnerFlow:
         partner = response.json()
         partner_id = partner.get("id")
 
-        response = api.delete(f"/api/v1/partners/{partner_id}")
+        response = api.delete(f"/partners/{partner_id}")
         if response.status_code not in [200, 204]:
             pytest.skip(f"Partner deletion may require admin privileges: {response.text}")
 
@@ -220,7 +219,7 @@ class TestPartnerFlow:
         api = admin_session["api"]
 
         # Create a partner
-        response = api.post("/api/v1/partners", json={
+        response = api.post("/partners", json={
             "name": "SNAP BI Partner",
             "partnerCode": f"SB{fake.random_number(digits=4)}",
             "email": f"contact@snapbi.com",
@@ -257,7 +256,7 @@ class TestPartnerFlow:
         api = admin_session["api"]
 
         # Create a partner
-        response = api.post("/api/v1/partners", json={
+        response = api.post("/partners", json={
             "name": "SNAP BI Payment Partner",
             "partnerCode": f"SP{fake.random_number(digits=4)}",
             "email": f"contact@snapbipay.com",

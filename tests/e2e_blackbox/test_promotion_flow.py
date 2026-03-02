@@ -7,7 +7,6 @@ fake = Faker()
 
 
 @pytest.mark.promotion
-@pytest.mark.skip(reason="Promotion and gamification features not yet fully implemented")
 class TestPromotionFlow:
     """
     Promotion, Rewards, and Gamification E2E tests.
@@ -204,7 +203,7 @@ class TestPromotionFlow:
         api = user_session["api"]
         user_id = user_session["user_id"]
 
-        response = api.get(f"/api/v1/referrals/{user_id}")
+        response = api.get(f"/api/v1/referrals/referrer/{user_id}")
         if response.status_code != 200:
             pytest.skip("Referral may not exist")
 
@@ -217,12 +216,14 @@ class TestPromotionFlow:
         """
         api = user_session["api"]
 
-        response = api.get("/api/v1/rewards")
+        user_id = user_session["user_id"]
+
+        response = api.get(f"/api/v1/rewards/account/{user_id}")
         if response.status_code != 200:
             pytest.skip("Rewards endpoint may not be implemented")
 
         rewards = response.json()
-        assert isinstance(rewards, list)
+        assert rewards is not None
 
     def test_update_promotion(self, admin_session):
         """

@@ -7,7 +7,6 @@ fake = Faker()
 
 
 @pytest.mark.analytics
-@pytest.mark.skip(reason="Analytics service features not yet fully implemented")
 class TestAnalyticsFlow:
     """
     Analytics and ML Recommendations E2E tests.
@@ -158,7 +157,7 @@ class TestAnalyticsFlow:
         assert isinstance(transactions, list)
 
         # Get account transactions
-        response = api.get(f"/api/v1/v1/transactions/accounts/{user_id}?page=0&size=50")
+        response = api.get(f"/api/v1/transactions/accounts/{user_id}?page=0&size=50")
         if response.status_code == 200:
             transactions = response.json()
             assert isinstance(transactions, list)

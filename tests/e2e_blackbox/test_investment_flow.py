@@ -7,7 +7,6 @@ fake = Faker()
 
 
 @pytest.mark.investment
-@pytest.mark.skip(reason="Investment service features not yet fully implemented")
 class TestInvestmentFlow:
     """
     Investment and Wealth Management E2E tests.
@@ -118,14 +117,14 @@ class TestInvestmentFlow:
         api = user_session["api"]
         user_id = user_session["user_id"]
 
-        response = api.get(f"/api/v1/investments/accounts/{user_id}")
+        response = api.get("/api/v1/investments/accounts/me")
         if response.status_code != 200:
             pytest.skip("Investment account may not exist")
 
         account = response.json()
         assert account is not None
 
-        response = api.get(f"/api/v1/investments/gold/{user_id}")
+        response = api.get("/api/v1/investments/gold/me")
         # Gold endpoint might not have holdings yet
         if response.status_code == 200:
             gold_holdings = response.json()

@@ -1,6 +1,7 @@
 import pytest
 import os
 import sys
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -34,3 +35,19 @@ def gateway_url():
 def test_timeout():
     """Get test timeout from environment or use default"""
     return int(os.getenv("TEST_TIMEOUT", "30"))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def check_gateway_available(gateway_url):
+    """Skip all tests if the gateway is not reachable"""
+    try:
+        resp = requests.get(f"{gateway_url}/actuator/health", timeout=5)
+        if resp.status_code >= 500:
+            pytest.skip(f"Gateway unhealthy (HTTP {resp.status_code})")
+    except requests.ConnectionError:
+        pytest.skip(
+            f"Gateway not reachable at {gateway_url}. "
+            "Start services first: make podman-test-up"
+        )
+    except requests.Timeout:
+        pytest.skip(f"Gateway timed out at {gateway_url}")

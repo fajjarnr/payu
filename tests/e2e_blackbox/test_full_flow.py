@@ -20,18 +20,16 @@ def test_user_data():
         "fullName": fake.name(),
         "phoneNumber": "+6281234567890",
         "externalId": fake.uuid4(),
-        "nik": nik
+        "nik": nik,
+        "userId": None  # Will be set after registration
     }
 
 @pytest.mark.smoke
 @pytest.mark.critical
 def test_health_check(api):
     """Verify Gateway and Services are reachable"""
-    # Simply check if gateway is up (it should be if we are running tests)
-    # Ideally we hit /actuator/health or similar, but let's assume root or api root 
-    # For now, let's try to hit a robust endpoint or just proceed.
-    # Gateway usually exposes health check.
-    pass 
+    response = api.get("/actuator/health")
+    assert response.status_code == 200, f"Gateway health check failed: {response.text}"
 
 @pytest.mark.smoke
 @pytest.mark.critical
@@ -49,6 +47,7 @@ def test_user_registration(api, test_user_data):
     assert response.status_code in [200, 201], f"Registration failed: {response.text}"
     data = response.json()
     assert data["username"] == test_user_data["username"]
+    test_user_data["userId"] = data.get("id", data.get("userId"))
 
 @pytest.mark.smoke
 @pytest.mark.critical
@@ -71,53 +70,49 @@ def test_user_login(api, test_user_data):
 
 @pytest.mark.smoke
 @pytest.mark.critical
-def test_wallet_creation(api):
+def test_wallet_creation(api, test_user_data):
     """Step 3: Verify wallet was created automatically or create it"""
     # Wallet usually created on registration event. Let's check balance.
     # We need to retry a few times because it's event driven
-    
+    user_id = test_user_data.get("userId")
+    assert user_id is not None, "User ID not set — registration test must run first"
+
     max_retries = 10
-    for _ in range(max_retries):
-        response = api.get("/api/v1/wallets/me") # Assuming /me endpoint exists or similar
+    for attempt in range(max_retries):
+        response = api.get(f"/api/v1/wallets/{user_id}/balance")
         if response.status_code == 200:
             data = response.json()
             assert "balance" in data
             assert data["balance"] == 0
             return
         elif response.status_code == 404:
-            # Maybe use /api/v1/wallets?userId=... but let's assume Gateway handles user context
-            time.sleep(1)
-            continue
+            if attempt < max_retries - 1:
+                time.sleep(1)
+                continue
         else:
-            # If endpoint is different, let's try to find wallet by user ID if accessible
-            # Or assume /api/v1/wallets is the endpoint
             break
-            
-    # If /me didn't work, maybe we need to query by ID. 
-    # But for now, let's assert we got 200 at least once.
-    # If 404 persists, the event might not have propagated or endpoint is wrong.
+
     assert response.status_code == 200, f"Could not fetch wallet: {response.text}"
 
 @pytest.mark.smoke
 @pytest.mark.critical
-def test_topup_balance(api):
-    """Step 4: Topup balance via Billing/Simulator"""
-    # Usually TopUp is done via Virtual Account or direct injection for testing.
-    # Let's use the Billing Service /api/v1/payments or similar? 
-    # Or simply mock a deposit if there's a dev endpoint.
-    
-    # Let's try to use the Transaction Service to "TopUp" if supported, or Billing.
-    # Checking SERVICES_STATUS for "TopUp"... Billing Service has "Bill payments, top-ups"
-    
-    # Alternatively, use simulating an incoming transfer from BI-FAST simulator?
-    # POST /api/v1/transfer on Simulator -> triggers webhook to PayU
-    # Let's try that if internal API not available.
-    
-    # But simpler: Wallet Service 'credit' balance.
-    # Is there a public endpoint? Probably not.
-    
-    # Let's try BI-FAST Simulator transfer to this user.
-    # We need the user's account number.
-    # Fetch wallet/account to get account number.
-    pass
+def test_topup_balance(api, test_user_data):
+    """Step 4: Topup balance via wallet credit endpoint"""
+    user_id = test_user_data.get("userId")
+    assert user_id is not None, "User ID not set — registration test must run first"
+
+    response = api.post(f"/api/v1/wallets/{user_id}/credit", json={
+        "amount": 1000000,
+        "referenceId": f"TOPUP_{fake.uuid4()}",
+        "description": "E2E test initial topup"
+    })
+
+    if response.status_code not in [200, 201]:
+        pytest.skip(f"Topup requires admin/internal access: {response.text}")
+
+    # Verify balance updated
+    response = api.get(f"/api/v1/wallets/{user_id}/balance")
+    assert response.status_code == 200
+    balance = response.json()
+    assert balance["balance"] >= 1000000
 

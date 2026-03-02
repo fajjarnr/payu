@@ -7,7 +7,6 @@ fake = Faker()
 
 
 @pytest.mark.lending
-@pytest.mark.skip(reason="Lending service features not yet fully implemented")
 class TestLendingFlow:
     """
     Lending and Credit E2E tests.
