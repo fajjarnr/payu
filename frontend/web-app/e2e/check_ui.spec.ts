@@ -4,13 +4,13 @@ test('capture landing page and dashboard', async ({ authPage: page }) => {
     // 1. Check Landing Page
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.screenshot({ path: 'landing-page.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/landing-page.png', fullPage: true });
     console.log('Landing page screenshot saved.');
 
     // 2. Check Dashboard with authentication
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
-    await page.screenshot({ path: 'dashboard-ui.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/dashboard-ui.png', fullPage: true });
     console.log('Dashboard screenshot saved.');
 
     // Check for Dashboard elements

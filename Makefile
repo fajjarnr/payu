@@ -2,11 +2,11 @@
 # Provides convenient targets for running tests
 
 .PHONY: help test test-all test-unit test-integration test-e2e test-coverage \
-        test-local test-docker test-backend test-frontend test-mobile \
+        test-local test-podman test-backend test-frontend test-mobile \
         test-account test-auth test-transaction test-wallet \
         clean clean-test build-test-deps \
         seed-test-data cleanup-test-db \
-        test-health-check docker-test-up docker-test-down
+        test-health-check podman-test-up podman-test-down
 
 # Default target
 .DEFAULT_GOAL := help
@@ -32,7 +32,7 @@ help: ## Show this help message
 	@echo ""
 	@echo "Test Environments:"
 	@echo "  make test-local        - Run tests in local environment"
-	@echo "  make test-docker       - Run tests in Docker test environment"
+	@echo "  make test-podman       - Run tests in Podman test environment"
 	@echo ""
 	@echo "Service-Specific Tests:"
 	@echo "  make test-account      - Test account-service"
@@ -47,8 +47,8 @@ help: ## Show this help message
 	@echo ""
 	@echo "Test Infrastructure:"
 	@echo "  make test-health-check      - Check test environment health"
-	@echo "  make docker-test-up         - Start Podman test environment"
-	@echo "  make docker-test-down       - Stop Podman test environment"
+	@echo "  make podman-test-up         - Start Podman test environment"
+	@echo "  make podman-test-down       - Stop Podman test environment"
 	@echo "  make seed-test-data         - Seed test databases"
 	@echo "  make cleanup-test-db        - Reset test databases"
 	@echo ""
@@ -83,11 +83,11 @@ test-coverage: ## Generate coverage reports
 test-local: ## Run tests in local environment
 	@./scripts/run-all-tests.sh --skip-build
 
-test-docker: ## Run tests in Docker test environment
-	@$(MAKE) docker-test-up
+test-podman: ## Run tests in Podman test environment
+	@$(MAKE) podman-test-up
 	@sleep 10
 	@./scripts/run-all-tests.sh
-	@$(MAKE) docker-test-down
+	@$(MAKE) podman-test-down
 
 test-backend: ## Run all backend tests only
 	@./scripts/run-all-tests.sh --skip-frontend --skip-mobile
@@ -136,13 +136,13 @@ test-analytics: ## Test analytics-service
 test-health-check: ## Check test environment health
 	@./scripts/test-health-check.sh
 
-docker-test-up: ## Start Podman test environment
+podman-test-up: ## Start Podman test environment
 	@podman compose -f infrastructure/local-podman/podman-compose.test.yml up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 15
 	@./scripts/test-health-check.sh
 
-docker-test-down: ## Stop Podman test environment
+podman-test-down: ## Stop Podman test environment
 	@podman compose -f infrastructure/local-podman/podman-compose.test.yml down -v
 
 seed-test-data: ## Seed test databases with test data
