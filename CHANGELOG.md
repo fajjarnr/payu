@@ -11,6 +11,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Build Stabilization — 38/38 Maven Modules (2026-03-02)**:
+  - Resolved all compilation errors across entire backend reactor build. 138 files changed, 8,588 insertions, 851 deletions.
+  - **partner-service**: Created `Refund` and `Dispute` domain models with lifecycle state machines (`RefundStatus`, `DisputeStatus` enums). Added `WebhookDispatcherService` and `KafkaTemplate` mocks to `MerchantServiceTest` and `PaymentLinkServiceTest`. Fixed UUID type mismatches in domain models.
+  - **integration-service**: Removed non-existent `camel-cxf:4.4.0` dependency (split into `camel-cxf-soap`/`camel-cxf-rest` in Camel 4.x). Fixed illegal regex escape characters in `SwiftTransformer` and `SwiftValidator`. Added missing `MessageDirection` import in `MessageProcessingService`.
+  - **promotion-service**: Fixed invalid ArchUnit API calls in `HexagonalArchitectureTest`. Fixed `CashbackSagaOrchestrator` constructor to 5 args. Fixed `WalletCreditException` import path.
+  - **transaction-service**: Converted Lombok to manual implementations for domain models and DTOs. Added `throws Exception` to `DisbursementServiceTest` for checked `TimeoutException`.
+  - **fx-service**: Added `WalletServicePort` mock to `FxConversionServiceTest`.
+  - **support-service**: Converted Quarkus test annotations to Spring Boot.
+  - **billing-service**: Fixed port interface method signatures and pom.xml dependencies.
+  - **product-catalog-service**: Fixed `ArchitectureTest`, DTO validations, `SecurityConfig`.
+  - **gateway-service**: Fixed Redis analytics, rate-limit, and partner rate plan resource signatures.
+  - **statement-service**: Fixed `ReceiptService` constructor and `TestContainersConfig`.
+  - **shared starters**: Fixed `cache-starter`, `saga-starter`, and `archunit-starter` test compilation.
+
+### Changed
+
+- **Kafka Zookeeper → KRaft Migration (2026-03-02)**:
+  - Upgraded local Podman dev from `cp-kafka:7.5.0` + Zookeeper to `cp-kafka:7.7.1` KRaft mode. Aligned with AMQ Streams operator on OpenShift.
+  - Removed `zookeeper` service from `podman-compose.yml` and `podman-compose.test.yml`.
+  - Deleted `zookeeper.container` and `zookeeper.target` quadlet files.
+  - Updated `kafka.container` quadlet with KRaft config (`KAFKA_PROCESS_ROLES=broker,controller`).
+  - Removed `KAFKA_CLUSTERS_0_ZOOKEEPER` from kafka-ui configuration.
+
 ### Added
 
 - **E-08 — Legacy Integration Layer (2026-03-01)**:

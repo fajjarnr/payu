@@ -10,13 +10,15 @@
 
 | Attribute                | Value                    |
 | :----------------------- | :----------------------- |
-| **Last Status Update**   | February 28, 2026        |
+| **Last Status Update**   | March 2, 2026            |
 | **Production Readiness** | 99% (229/232 bugs fixed) |
-| **OpenShift Tag**        | `v1.4.0` (in-progress)   |
+| **OpenShift Tag**        | `v1.6.0` (in-progress)   |
 | **Namespace**            | `payu-dev`               |
 | **Total Pods**           | 36/36 running            |
 | **Services Deployed**    | 22/22                    |
 | **E2E Tests**            | 399/399 passing          |
+| **Maven Build**          | 38/38 modules SUCCESS    |
+| **Kafka Mode**           | KRaft (no Zookeeper)     |
 
 > ✅ **Code Review Complete (Feb 24-25)**: 229 of ~232 bugs fixed (~99% resolution rate).
 > **0 open bugs**. 3 intentionally skipped (low impact, future consideration).
@@ -63,6 +65,29 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.6.0 (In Progress) — March 2, 2026
+
+**Build Stabilization & Infrastructure Alignment:**
+
+- ✅ **38/38 Maven Modules Compile** — Resolved all compilation errors across entire backend reactor build (`mvn clean package -DskipTests -T 1C`). 138 files changed.
+- ✅ **partner-service** — Created `Refund`/`Dispute` domain models with lifecycle state machines, added `WebhookDispatcherService`/`KafkaTemplate` mocks to test constructors, fixed UUID type mismatches.
+- ✅ **integration-service** — Removed non-existent `camel-cxf:4.4.0` dependency, fixed illegal regex escape characters in `SwiftTransformer`/`SwiftValidator`, added missing `MessageDirection` import.
+- ✅ **promotion-service** — Fixed ArchUnit test API calls (replaced non-existent methods), CashbackSagaOrchestrator constructor args, WalletCreditException import.
+- ✅ **transaction-service** — Lombok→manual conversion for domain models and DTOs, fixed `DisbursementServiceTest` checked exception handling.
+- ✅ **fx-service** — Added `WalletServicePort` mock to `FxConversionServiceTest`.
+- ✅ **support-service** — Converted Quarkus test annotations to Spring Boot.
+- ✅ **billing-service** — Fixed port interfaces and pom dependencies.
+- ✅ **product-catalog-service** — Fixed ArchTest, DTO validations, SecurityConfig.
+- ✅ **gateway-service** — Fixed Redis/analytics/rate-limit service signatures.
+- ✅ **statement-service** — Fixed ReceiptService and TestContainersConfig.
+- ✅ **shared starters** — Fixed cache/saga/archunit test compilation.
+
+**Infrastructure — Kafka KRaft Migration:**
+
+- ✅ **Kafka Zookeeper → KRaft** — Migrated local Podman dev environment from `cp-kafka:7.5.0` + Zookeeper to `cp-kafka:7.7.1` KRaft mode. Aligned with AMQ Streams operator on OpenShift.
+- ✅ **Removed Zookeeper** — Deleted `zookeeper.container`, `zookeeper.target` quadlet files. Updated `podman-compose.yml`, `podman-compose.test.yml`, `kafka.container`, `kafka.target`, `podman-payu.service`.
+- ✅ **KRaft Config** — Combined broker+controller mode (`KAFKA_PROCESS_ROLES=broker,controller`), Raft consensus voters, static CLUSTER_ID.
 
 ### v1.5.0 (Completed) — February 28, 2026
 
