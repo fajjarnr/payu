@@ -1,6 +1,5 @@
 import pytest
 import time
-from client import PayUClient
 from faker import Faker
 
 fake = Faker()
@@ -13,74 +12,39 @@ class TestLendingFlow:
     Tests: Loan Application -> Credit Score -> Repayment -> PayLater
     """
 
-    @pytest.fixture(scope="class")
-    def api(self):
-        return PayUClient(gateway_url="http://localhost:8080")
-
-    @pytest.fixture(scope="class")
-    def user_session(self, api):
-        """Register and login a user, return user data and api with token set"""
-        user_data = {
-            "email": f"lending_{fake.uuid4()}@example.com",
-            "username": f"lending_{fake.uuid4()[:8]}",
-            "password": "Password123!",
-            "name": fake.name(),
-            "phoneNumber": "+6281234567890"
-        }
-
-        response = api.post("/api/v1/accounts/register", json=user_data)
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"account-service unavailable or auth barrier ({response.status_code})")
-        assert response.status_code in [200, 201], f"Register failed: {response.status_code}"
-        user_id = response.json().get("id", response.json().get("userId"))
-
-        response = api.post("/api/v1/auth/login", json={
-            "username": user_data["username"],
-            "password": user_data["password"]
-        })
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"auth-service unavailable ({response.status_code})")
-        assert response.status_code == 200, f"Login failed: {response.status_code}"
-        api.set_token(response.json()["access_token"])
-
-        return {"user_id": user_id, "api": api}
-
-    def test_calculate_credit_score(self, user_session):
+    def test_calculate_credit_score(self, authenticated_api, registered_user):
         """
         Calculate credit score for a user
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/lending/credit-score/calculate", params={"userId": user_id})
+        response = authenticated_api.post("/api/v1/lending/credit-score/calculate", params={"userId": user_id})
         if response.status_code != 200:
             pytest.skip(f"Credit score calculation failed: {response.text}")
 
         credit_score = response.json()
         assert "score" in credit_score or credit_score is not None
 
-    def test_get_credit_score(self, user_session):
+    def test_get_credit_score(self, authenticated_api, registered_user):
         """
         Get existing credit score
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.get(f"/api/v1/lending/credit-score/{user_id}")
+        response = authenticated_api.get(f"/api/v1/lending/credit-score/{user_id}")
         if response.status_code != 200:
             pytest.skip("Credit score may not exist yet")
 
         credit_score = response.json()
         assert credit_score is not None
 
-    def test_apply_personal_loan(self, user_session):
+    def test_apply_personal_loan(self, authenticated_api, registered_user):
         """
         Apply for a personal loan
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/lending/loans", json={
+        response = authenticated_api.post("/api/v1/lending/loans", json={
             "userId": user_id,
             "amount": 10000000,
             "tenure": 12,
@@ -97,17 +61,16 @@ class TestLendingFlow:
 
             return loan.get("id", loan.get("loanId"))
 
-    def test_get_loan_details(self, user_session):
+    def test_get_loan_details(self, authenticated_api, registered_user):
         """
         Get loan details
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
         # First, try to get a loan ID
         # This is optional as it requires a successful loan application
         loan_id = None
-        response = api.post("/api/v1/lending/loans", json={
+        response = authenticated_api.post("/api/v1/lending/loans", json={
             "userId": user_id,
             "amount": 5000000,
             "tenure": 6,
@@ -122,20 +85,19 @@ class TestLendingFlow:
         if not loan_id:
             pytest.skip("No loan ID available")
 
-        response = api.get(f"/api/v1/lending/loans/{loan_id}")
+        response = authenticated_api.get(f"/api/v1/lending/loans/{loan_id}")
         assert response.status_code == 200
         loan_details = response.json()
         assert loan_details.get("id") == loan_id
 
-    def test_create_repayment_schedule(self, user_session):
+    def test_create_repayment_schedule(self, authenticated_api, registered_user):
         """
         Create repayment schedule for a loan
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
         # Get a loan ID first
-        response = api.post("/api/v1/lending/loans", json={
+        response = authenticated_api.post("/api/v1/lending/loans", json={
             "userId": user_id,
             "amount": 8000000,
             "tenure": 12,
@@ -152,7 +114,7 @@ class TestLendingFlow:
         if not loan_id:
             pytest.skip("No loan ID available")
 
-        response = api.post(f"/api/v1/lending/loans/{loan_id}/repayment-schedule")
+        response = authenticated_api.post(f"/api/v1/lending/loans/{loan_id}/repayment-schedule")
         if response.status_code != 200:
             pytest.skip(f"Repayment schedule creation failed: {response.text}")
 
@@ -160,14 +122,13 @@ class TestLendingFlow:
         assert isinstance(schedule, list)
         assert len(schedule) > 0
 
-    def test_activate_paylater(self, user_session):
+    def test_activate_paylater(self, authenticated_api, registered_user):
         """
         Activate PayLater for a user
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/lending/paylater/activate", json={
+        response = authenticated_api.post("/api/v1/lending/paylater/activate", json={
             "monthlyIncome": 15000000,
             "employmentStatus": "EMPLOYED"
         }, params={"userId": user_id})
@@ -179,14 +140,13 @@ class TestLendingFlow:
         assert paylater is not None
         assert paylater.get("status") in ["ACTIVE", "PENDING"]
 
-    def test_record_paylater_purchase(self, user_session):
+    def test_record_paylater_purchase(self, authenticated_api, registered_user):
         """
         Record a PayLater purchase
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post(f"/api/v1/lending/paylater/{user_id}/purchase", params={
+        response = authenticated_api.post(f"/api/v1/lending/paylater/{user_id}/purchase", params={
             "merchantName": "TokoBapak",
             "amount": 500000,
             "description": "Grocery shopping"
@@ -199,14 +159,13 @@ class TestLendingFlow:
         assert transaction is not None
         assert transaction.get("amount") == 500000
 
-    def test_record_paylater_payment(self, user_session):
+    def test_record_paylater_payment(self, authenticated_api, registered_user):
         """
         Record a PayLater payment
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post(f"/api/v1/lending/paylater/{user_id}/payment", params={
+        response = authenticated_api.post(f"/api/v1/lending/paylater/{user_id}/payment", params={
             "amount": 200000
         })
 
@@ -216,14 +175,13 @@ class TestLendingFlow:
         transaction = response.json()
         assert transaction is not None
 
-    def test_get_paylater_transactions(self, user_session):
+    def test_get_paylater_transactions(self, authenticated_api, registered_user):
         """
         Get PayLater transaction history
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.get(f"/api/v1/lending/paylater/{user_id}/transactions")
+        response = authenticated_api.get(f"/api/v1/lending/paylater/{user_id}/transactions")
         if response.status_code != 200:
             pytest.skip("PayLater may not be active")
 

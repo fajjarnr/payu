@@ -1,0 +1,114 @@
+# 3scale APIcast Custom Policy: PayU Header Forwarding
+#
+# This policy injects partner identification headers into requests forwarded
+# from 3scale APIcast (Tier 1) to PayU gateway-service (Tier 2).
+#
+# Headers injected:
+#   X-PayU-Partner-Id   — 3scale application/account identifier
+#   X-PayU-Plan-Id      — 3scale application plan (Basic/Premium/Enterprise)
+#   X-PayU-Request-Id   — Unique request ID for tracing across tiers
+#   X-PayU-Rate-Limit-Remaining — Remaining quota for the current window
+#
+# Usage:
+#   1. Create the secret from this policy:
+#      oc create secret generic apicast-policy-payu-header-forwarding \
+#        --from-file=apicast-policy.json=apicast-policy.yaml \
+#        -n payu-api-management
+#   2. Enable the policy in 3scale Admin Portal → Product → Policy Chain
+#   3. Place it AFTER the default apicast policy in the chain
+#
+# NOTE: This is a TEMPLATE. Adjust header names if PayU gateway-service contract changes.
+---
+# Policy definition (JSON format expected by 3scale)
+# Store this as a ConfigMap or Secret and reference in APIManager CR
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apicast-policy-payu-header-forwarding
+  namespace: payu-api-management
+  labels:
+    app.kubernetes.io/name: 3scale-policy
+    app.kubernetes.io/part-of: payu-api-management
+    threescale_component: apicast
+data:
+  apicast-policy.json: |
+    {
+      "name": "payu-header-forwarding",
+      "version": "1.0.0",
+      "summary": "Injects PayU partner identification headers into upstream requests",
+      "description": [
+        "This policy extracts partner information from the 3scale application",
+        "context and forwards it as HTTP headers to the PayU gateway-service.",
+        "This enables the gateway to apply partner-specific business rules",
+        "(rate tiers, feature flags, SNAP-BI routing) without re-authenticating."
+      ],
+      "configuration": {
+        "type": "object",
+        "properties": {
+          "partner_id_header": {
+            "type": "string",
+            "default": "X-PayU-Partner-Id",
+            "description": "Header name for the partner identifier"
+          },
+          "plan_id_header": {
+            "type": "string",
+            "default": "X-PayU-Plan-Id",
+            "description": "Header name for the application plan"
+          },
+          "request_id_header": {
+            "type": "string",
+            "default": "X-PayU-Request-Id",
+            "description": "Header name for the unique request ID"
+          },
+          "include_rate_limit_info": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to include rate limit remaining count"
+          }
+        }
+      }
+    }
+
+  init.lua: |
+    local policy = require('apicast.policy')
+    local _M = policy.new('PayU Header Forwarding', '1.0.0')
+    local new = _M.new
+
+    function _M.new(config)
+      local self = new(config)
+      self.partner_id_header = config.partner_id_header or 'X-PayU-Partner-Id'
+      self.plan_id_header = config.plan_id_header or 'X-PayU-Plan-Id'
+      self.request_id_header = config.request_id_header or 'X-PayU-Request-Id'
+      self.include_rate_limit_info = config.include_rate_limit_info ~= false
+      return self
+    end
+
+    -- Inject headers after 3scale authentication has resolved the application
+    function _M:rewrite(context)
+      local service = context.service or {}
+      local credentials = context.credentials or {}
+
+      -- Extract partner info from 3scale application context
+      local app_id = credentials.app_id or credentials.user_key or 'unknown'
+      local plan_name = service.plan_name or 'default'
+
+      -- Generate request ID for end-to-end tracing
+      local request_id = ngx.var.request_id or require('resty.jit-uuid').generate_v4()
+
+      -- Set headers for PayU gateway-service (Tier 2)
+      ngx.req.set_header(self.partner_id_header, app_id)
+      ngx.req.set_header(self.plan_id_header, plan_name)
+      ngx.req.set_header(self.request_id_header, request_id)
+
+      -- Optionally include rate limit info
+      if self.include_rate_limit_info then
+        local usage = context.usage or {}
+        local remaining = usage.remaining or -1
+        ngx.req.set_header('X-PayU-Rate-Limit-Remaining', tostring(remaining))
+      end
+
+      ngx.log(ngx.INFO, '[payu-policy] partner=', app_id,
+              ' plan=', plan_name, ' req_id=', request_id)
+    end
+
+    return _M

@@ -104,10 +104,6 @@ portal:
       name: CMS Service
       url: http://localhost:8080
       openapi-path: /v3/api-docs
-    ab-testing-service:
-      name: AB Testing Service
-      url: http://localhost:8080
-      openapi-path: /api-docs
     gateway-service:
       name: API Gateway
       url: http://localhost:8080

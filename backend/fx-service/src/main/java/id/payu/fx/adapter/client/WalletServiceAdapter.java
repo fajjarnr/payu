@@ -15,9 +15,13 @@ import java.util.Map;
 /**
  * REST adapter for wallet-service integration used during FX conversions.
  * Calls wallet-service endpoints to debit source currency and credit target currency.
+ *
+ * @deprecated Use {@link WalletGrpcAdapter} instead (IMP-028: gRPC migration).
+ *             Kept as fallback during migration period.
  */
+@Deprecated
 @Slf4j
-@Component
+@Component("walletRestAdapter")
 public class WalletServiceAdapter implements WalletServicePort {
 
     private final RestTemplate restTemplate;

@@ -1,5 +1,4 @@
 import pytest
-from client import PayUClient
 from faker import Faker
 
 fake = Faker()
@@ -12,44 +11,11 @@ class TestPartnerFlow:
     Tests: Create Partner -> Generate Keys -> SNAP BI Payment
     """
 
-    @pytest.fixture(scope="class")
-    def api(self):
-        return PayUClient(gateway_url="http://localhost:8080")
-
-    @pytest.fixture(scope="class")
-    def admin_session(self, api):
-        """Admin session for managing partners"""
-        user_data = {
-            "email": f"partner_admin_{fake.uuid4()}@example.com",
-            "username": f"prtadmin_{fake.uuid4()[:8]}",
-            "password": "Password123!",
-            "name": "Partner Admin",
-            "phoneNumber": "+6281234567890"
-        }
-
-        response = api.post("/api/v1/accounts/register", json=user_data)
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"account-service unavailable or auth barrier ({response.status_code})")
-        assert response.status_code in [200, 201], f"Register failed: {response.status_code}"
-
-        response = api.post("/api/v1/auth/login", json={
-            "username": user_data["username"],
-            "password": user_data["password"]
-        })
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"auth-service unavailable ({response.status_code})")
-        assert response.status_code == 200, f"Login failed: {response.status_code}"
-        api.set_token(response.json()["access_token"])
-
-        return {"api": api}
-
-    def test_create_partner(self, admin_session):
+    def test_create_partner(self, authenticated_api, registered_user):
         """
         Create a new partner
         """
-        api = admin_session["api"]
-
-        response = api.post("/partners", json={
+        response = authenticated_api.post("/partners", json={
             "name": "TokoBapak",
             "partnerCode": f"TB{fake.random_number(digits=4)}",
             "email": f"contact@tokobapak.com",
@@ -71,25 +37,21 @@ class TestPartnerFlow:
 
         return partner.get("id")
 
-    def test_get_all_partners(self, admin_session):
+    def test_get_all_partners(self, authenticated_api):
         """
         Get all partners
         """
-        api = admin_session["api"]
-
-        response = api.get("/partners")
+        response = authenticated_api.get("/partners")
         assert response.status_code == 200
         partners = response.json()
         assert isinstance(partners, list)
 
-    def test_get_partner_by_id(self, admin_session):
+    def test_get_partner_by_id(self, authenticated_api):
         """
         Get partner by ID
         """
-        api = admin_session["api"]
-
         # Create a partner
-        response = api.post("/partners", json={
+        response = authenticated_api.post("/partners", json={
             "name": "Test Partner",
             "partnerCode": f"TP{fake.random_number(digits=4)}",
             "email": f"contact@testpartner.com",
@@ -107,19 +69,17 @@ class TestPartnerFlow:
         partner = response.json()
         partner_id = partner.get("id")
 
-        response = api.get(f"/partners/{partner_id}")
+        response = authenticated_api.get(f"/partners/{partner_id}")
         assert response.status_code == 200
         retrieved_partner = response.json()
         assert retrieved_partner["id"] == partner_id
 
-    def test_update_partner(self, admin_session):
+    def test_update_partner(self, authenticated_api):
         """
         Update partner details
         """
-        api = admin_session["api"]
-
         # Create a partner
-        response = api.post("/partners", json={
+        response = authenticated_api.post("/partners", json={
             "name": "Old Name",
             "partnerCode": f"UP{fake.random_number(digits=4)}",
             "email": f"contact@old.com",
@@ -137,7 +97,7 @@ class TestPartnerFlow:
         partner = response.json()
         partner_id = partner.get("id")
 
-        response = api.put(f"/partners/{partner_id}", json={
+        response = authenticated_api.put(f"/partners/{partner_id}", json={
             "name": "Updated Name",
             "email": f"contact@updated.com",
             "phoneNumber": "+628123456789",
@@ -154,14 +114,12 @@ class TestPartnerFlow:
         updated_partner = response.json()
         assert updated_partner["name"] == "Updated Name"
 
-    def test_regenerate_partner_keys(self, admin_session):
+    def test_regenerate_partner_keys(self, authenticated_api):
         """
         Regenerate partner API keys
         """
-        api = admin_session["api"]
-
         # Create a partner
-        response = api.post("/partners", json={
+        response = authenticated_api.post("/partners", json={
             "name": "Key Test Partner",
             "partnerCode": f"KT{fake.random_number(digits=4)}",
             "email": f"contact@keytest.com",
@@ -180,21 +138,19 @@ class TestPartnerFlow:
         partner_id = partner.get("id")
         old_key = partner.get("apiKey")
 
-        response = api.post(f"/partners/{partner_id}/keys/regenerate")
+        response = authenticated_api.post(f"/partners/{partner_id}/keys/regenerate")
         if response.status_code != 200:
             pytest.skip(f"Key regeneration may require admin privileges: {response.text}")
 
         updated_partner = response.json()
         assert updated_partner["apiKey"] != old_key
 
-    def test_delete_partner(self, admin_session):
+    def test_delete_partner(self, authenticated_api):
         """
         Delete a partner
         """
-        api = admin_session["api"]
-
         # Create a partner
-        response = api.post("/partners", json={
+        response = authenticated_api.post("/partners", json={
             "name": "Delete Test Partner",
             "partnerCode": f"DT{fake.random_number(digits=4)}",
             "email": f"contact@deletetest.com",
@@ -212,18 +168,16 @@ class TestPartnerFlow:
         partner = response.json()
         partner_id = partner.get("id")
 
-        response = api.delete(f"/partners/{partner_id}")
+        response = authenticated_api.delete(f"/partners/{partner_id}")
         if response.status_code not in [200, 204]:
             pytest.skip(f"Partner deletion may require admin privileges: {response.text}")
 
-    def test_snap_bi_token_request(self, admin_session):
+    def test_snap_bi_token_request(self, authenticated_api):
         """
         SNAP BI token request (OAuth2 flow)
         """
-        api = admin_session["api"]
-
         # Create a partner
-        response = api.post("/partners", json={
+        response = authenticated_api.post("/partners", json={
             "name": "SNAP BI Partner",
             "partnerCode": f"SB{fake.random_number(digits=4)}",
             "email": f"contact@snapbi.com",
@@ -241,7 +195,7 @@ class TestPartnerFlow:
         partner = response.json()
 
         # SNAP BI token request
-        response = api.post("/v1/partner/auth/token", json={
+        response = authenticated_api.post("/v1/partner/auth/token", json={
             "grantType": "client_credentials",
             "clientKey": partner.get("apiKey"),
             "clientSecret": partner.get("secretKey")
@@ -253,14 +207,12 @@ class TestPartnerFlow:
         token_data = response.json()
         assert "accessToken" in token_data or "access_token" in token_data
 
-    def test_snap_bi_payment_request(self, admin_session):
+    def test_snap_bi_payment_request(self, authenticated_api):
         """
         SNAP BI payment request
         """
-        api = admin_session["api"]
-
         # Create a partner
-        response = api.post("/partners", json={
+        response = authenticated_api.post("/partners", json={
             "name": "SNAP BI Payment Partner",
             "partnerCode": f"SP{fake.random_number(digits=4)}",
             "email": f"contact@snapbipay.com",
@@ -278,7 +230,7 @@ class TestPartnerFlow:
         partner = response.json()
 
         # Get token first
-        response = api.post("/v1/partner/auth/token", json={
+        response = authenticated_api.post("/v1/partner/auth/token", json={
             "grantType": "client_credentials",
             "clientKey": partner.get("apiKey"),
             "clientSecret": partner.get("secretKey")
@@ -289,10 +241,10 @@ class TestPartnerFlow:
 
         token_data = response.json()
         token = token_data.get("accessToken") or token_data.get("access_token")
-        api.set_token(token)
+        authenticated_api.set_token(token)
 
         # Create payment
-        response = api.post("/v1/partner/payments", json={
+        response = authenticated_api.post("/v1/partner/payments", json={
             "amount": 100000,
             "currency": "IDR",
             "destinationAccount": "1234567890",

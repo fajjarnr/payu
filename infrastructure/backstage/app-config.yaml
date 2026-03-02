@@ -1,0 +1,159 @@
+app:
+  title: PayU Developer Hub
+  baseUrl: https://developer-hub.payu.fajjjar.my.id
+
+organization:
+  name: PayU
+
+backend:
+  baseUrl: https://developer-hub.payu.fajjjar.my.id
+  listen:
+    port: 7007
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+  cors:
+    origin: https://developer-hub.payu.fajjjar.my.id
+    methods: [GET, POST, PUT, DELETE]
+    credentials: true
+
+auth:
+  environment: production
+  providers:
+    oidc:
+      development:
+        metadataUrl: ${KEYCLOAK_URL}/realms/payu/.well-known/openid-configuration
+        clientId: ${KEYCLOAK_CLIENT_ID}
+        clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+        prompt: auto
+        scope: openid profile email
+
+techdocs:
+  builder: local
+  generator:
+    runIn: local
+  publisher:
+    type: local
+
+kubernetes:
+  serviceLocatorMethod:
+    type: multiTenant
+  clusterLocatorMethods:
+    - type: config
+      clusters:
+        - url: ${KUBERNETES_API_URL}
+          name: payu-openshift
+          authProvider: serviceAccount
+          serviceAccountToken: ${KUBERNETES_SA_TOKEN}
+          skipTLSVerify: false
+
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, API, Resource, Location, Group, User]
+  locations:
+    # ──────────────────────────────────────────────
+    # PayU Core Banking Services (Spring Boot 3.4)
+    # ──────────────────────────────────────────────
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/account-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/auth-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/transaction-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/wallet-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/investment-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/lending-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/fx-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/statement-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/backoffice-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/partner-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/promotion-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/support-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/compliance-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/cms-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/dispute-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/product-catalog-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+
+    # ──────────────────────────────────────────────
+    # Quarkus Native Services
+    # ──────────────────────────────────────────────
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/billing-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/notification-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/gateway-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/api-portal-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+
+    # ──────────────────────────────────────────────
+    # Python FastAPI Services
+    # ──────────────────────────────────────────────
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/kyc-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+    - type: url
+      target: https://github.com/payu-org/payu/blob/main/backend/analytics-service/catalog-info.yaml
+      rules:
+        - allow: [Component, API]

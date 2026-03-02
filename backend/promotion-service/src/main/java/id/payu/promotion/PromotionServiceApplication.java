@@ -17,7 +17,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * - Cashback rewards
  * - Loyalty points
  * - Referrals
- * - Gamification features (badges, levels, daily check-ins)
  * - Customer segmentation
  */
 @EnableJpaRepositories(basePackages = "id.payu.promotion.adapter.persistence.repository")

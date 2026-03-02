@@ -1,5 +1,4 @@
 import pytest
-from client import PayUClient
 from faker import Faker
 
 fake = Faker()
@@ -12,57 +11,22 @@ class TestSupportFlow:
     Tests: Create Agent -> Create Training Module -> Assign Training -> Check Status
     """
 
-    @pytest.fixture(scope="class")
-    def api(self):
-        return PayUClient(gateway_url="http://localhost:8080")
-
-    @pytest.fixture(scope="class")
-    def support_session(self, api):
-        """Support admin session"""
-        user_data = {
-            "email": f"support_{fake.uuid4()}@example.com",
-            "username": f"supp_{fake.uuid4()[:8]}",
-            "password": "Password123!",
-            "name": "Support Admin",
-            "phoneNumber": "+6281234567890"
-        }
-
-        response = api.post("/api/v1/accounts/register", json=user_data)
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"account-service unavailable or auth barrier ({response.status_code})")
-        assert response.status_code in [200, 201], f"Register failed: {response.status_code}"
-
-        response = api.post("/api/v1/auth/login", json={
-            "username": user_data["username"],
-            "password": user_data["password"]
-        })
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"auth-service unavailable ({response.status_code})")
-        assert response.status_code == 200, f"Login failed: {response.status_code}"
-        api.set_token(response.json()["access_token"])
-
-        return {"api": api}
-
-    def test_get_training_status(self, support_session):
+    def test_get_training_status(self, authenticated_api):
         """
         Get overall training status
         """
-        api = support_session["api"]
-
-        response = api.get("/api/v1/support/training-status")
+        response = authenticated_api.get("/api/v1/support/training-status")
         assert response.status_code == 200
         status = response.json()
         assert "activeAgents" in status
         assert "trainedAgents" in status
         assert "trainingPercentage" in status
 
-    def test_create_support_agent(self, support_session):
+    def test_create_support_agent(self, authenticated_api):
         """
         Create a new support agent
         """
-        api = support_session["api"]
-
-        response = api.post("/api/v1/support/agents", json={
+        response = authenticated_api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
             "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
@@ -79,25 +43,21 @@ class TestSupportFlow:
 
         return agent.get("id")
 
-    def test_get_all_agents(self, support_session):
+    def test_get_all_agents(self, authenticated_api):
         """
         Get all support agents
         """
-        api = support_session["api"]
-
-        response = api.get("/api/v1/support/agents")
+        response = authenticated_api.get("/api/v1/support/agents")
         assert response.status_code == 200
         agents = response.json()
         assert isinstance(agents, list)
 
-    def test_get_agent_by_id(self, support_session):
+    def test_get_agent_by_id(self, authenticated_api):
         """
         Get agent by ID
         """
-        api = support_session["api"]
-
         # First create an agent
-        response = api.post("/api/v1/support/agents", json={
+        response = authenticated_api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
             "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
@@ -111,20 +71,19 @@ class TestSupportFlow:
         agent = response.json()
         agent_id = agent.get("id")
 
-        response = api.get(f"/api/v1/support/agents/{agent_id}")
+        response = authenticated_api.get(f"/api/v1/support/agents/{agent_id}")
         assert response.status_code == 200
         retrieved_agent = response.json()
         assert retrieved_agent["id"] == agent_id
 
-    def test_get_agent_by_employee_id(self, support_session):
+    def test_get_agent_by_employee_id(self, authenticated_api):
         """
         Get agent by employee ID
         """
-        api = support_session["api"]
         employee_id = f"EMP{fake.random_number(digits=6)}"
 
         # Create an agent
-        response = api.post("/api/v1/support/agents", json={
+        response = authenticated_api.post("/api/v1/support/agents", json={
             "employeeId": employee_id,
             "name": fake.name(),
             "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
@@ -135,21 +94,19 @@ class TestSupportFlow:
         if response.status_code not in [200, 201]:
             pytest.skip("Agent creation required")
 
-        response = api.get(f"/api/v1/support/agents/employee/{employee_id}")
+        response = authenticated_api.get(f"/api/v1/support/agents/employee/{employee_id}")
         if response.status_code != 200:
             pytest.skip(f"Employee ID lookup may not be supported: {response.text}")
 
         agent = response.json()
         assert agent["employeeId"] == employee_id
 
-    def test_update_agent_status(self, support_session):
+    def test_update_agent_status(self, authenticated_api):
         """
         Update agent active status
         """
-        api = support_session["api"]
-
         # Create an agent
-        response = api.post("/api/v1/support/agents", json={
+        response = authenticated_api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
             "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
@@ -164,20 +121,18 @@ class TestSupportFlow:
         agent_id = agent.get("id")
 
         # Deactivate agent
-        response = api.patch(f"/api/v1/support/agents/{agent_id}/status", json={"active": False})
+        response = authenticated_api.patch(f"/api/v1/support/agents/{agent_id}/status", json={"active": False})
         if response.status_code != 200:
             pytest.skip(f"Agent status update may require permissions: {response.text}")
 
         updated_agent = response.json()
         assert updated_agent["active"] == False
 
-    def test_create_training_module(self, support_session):
+    def test_create_training_module(self, authenticated_api):
         """
         Create a new training module
         """
-        api = support_session["api"]
-
-        response = api.post("/api/v1/support/modules", json={
+        response = authenticated_api.post("/api/v1/support/modules", json={
             "title": "Fraud Detection Training",
             "description": "Learn to identify and prevent fraud",
             "duration": 120,
@@ -194,36 +149,30 @@ class TestSupportFlow:
 
         return module.get("id")
 
-    def test_get_all_training_modules(self, support_session):
+    def test_get_all_training_modules(self, authenticated_api):
         """
         Get all training modules
         """
-        api = support_session["api"]
-
-        response = api.get("/api/v1/support/modules")
+        response = authenticated_api.get("/api/v1/support/modules")
         assert response.status_code == 200
         modules = response.json()
         assert isinstance(modules, list)
 
-    def test_get_mandatory_modules(self, support_session):
+    def test_get_mandatory_modules(self, authenticated_api):
         """
         Get mandatory training modules
         """
-        api = support_session["api"]
-
-        response = api.get("/api/v1/support/modules/mandatory")
+        response = authenticated_api.get("/api/v1/support/modules/mandatory")
         assert response.status_code == 200
         modules = response.json()
         assert isinstance(modules, list)
 
-    def test_get_module_by_id(self, support_session):
+    def test_get_module_by_id(self, authenticated_api):
         """
         Get training module by ID
         """
-        api = support_session["api"]
-
         # Create a module
-        response = api.post("/api/v1/support/modules", json={
+        response = authenticated_api.post("/api/v1/support/modules", json={
             "title": "Customer Service Basics",
             "description": "Fundamentals of customer service",
             "duration": 60,
@@ -237,19 +186,17 @@ class TestSupportFlow:
         module = response.json()
         module_id = module.get("id")
 
-        response = api.get(f"/api/v1/support/modules/{module_id}")
+        response = authenticated_api.get(f"/api/v1/support/modules/{module_id}")
         assert response.status_code == 200
         retrieved_module = response.json()
         assert retrieved_module["id"] == module_id
 
-    def test_assign_training_to_agent(self, support_session):
+    def test_assign_training_to_agent(self, authenticated_api):
         """
         Assign training to an agent
         """
-        api = support_session["api"]
-
         # Create an agent
-        response = api.post("/api/v1/support/agents", json={
+        response = authenticated_api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
             "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
@@ -264,7 +211,7 @@ class TestSupportFlow:
         agent_id = agent.get("id")
 
         # Create a module
-        response = api.post("/api/v1/support/modules", json={
+        response = authenticated_api.post("/api/v1/support/modules", json={
             "title": "Compliance Training",
             "description": "AML/CFT compliance basics",
             "duration": 90,
@@ -279,7 +226,7 @@ class TestSupportFlow:
         module_id = module.get("id")
 
         # Assign training
-        response = api.post("/api/v1/support/trainings/assign", json={
+        response = authenticated_api.post("/api/v1/support/trainings/assign", json={
             "agentId": agent_id,
             "moduleId": module_id,
             "dueDate": "2024-12-31"
@@ -291,14 +238,12 @@ class TestSupportFlow:
         training = response.json()
         assert training is not None
 
-    def test_get_agent_trainings(self, support_session):
+    def test_get_agent_trainings(self, authenticated_api):
         """
         Get trainings for a specific agent
         """
-        api = support_session["api"]
-
         # Create an agent
-        response = api.post("/api/v1/support/agents", json={
+        response = authenticated_api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
             "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
@@ -312,21 +257,19 @@ class TestSupportFlow:
         agent = response.json()
         agent_id = agent.get("id")
 
-        response = api.get(f"/api/v1/support/trainings/agent/{agent_id}")
+        response = authenticated_api.get(f"/api/v1/support/trainings/agent/{agent_id}")
         if response.status_code != 200:
             pytest.skip(f"Agent trainings may not exist: {response.text}")
 
         trainings = response.json()
         assert isinstance(trainings, list)
 
-    def test_check_agent_training_status(self, support_session):
+    def test_check_agent_training_status(self, authenticated_api):
         """
         Check if agent is fully trained
         """
-        api = support_session["api"]
-
         # Create an agent
-        response = api.post("/api/v1/support/agents", json={
+        response = authenticated_api.post("/api/v1/support/agents", json={
             "employeeId": f"EMP{fake.random_number(digits=6)}",
             "name": fake.name(),
             "email": f"agent_{fake.uuid4()}@payu.fajjjar.my.id",
@@ -340,7 +283,7 @@ class TestSupportFlow:
         agent = response.json()
         agent_id = agent.get("id")
 
-        response = api.get(f"/api/v1/support/trainings/agent/{agent_id}/status")
+        response = authenticated_api.get(f"/api/v1/support/trainings/agent/{agent_id}/status")
         if response.status_code != 200:
             pytest.skip(f"Agent training status may not be available: {response.text}")
 
@@ -348,13 +291,11 @@ class TestSupportFlow:
         assert "agentId" in status
         assert "fullyTrained" in status
 
-    def test_get_all_trainings(self, support_session):
+    def test_get_all_trainings(self, authenticated_api):
         """
         Get all agent trainings
         """
-        api = support_session["api"]
-
-        response = api.get("/api/v1/support/trainings")
+        response = authenticated_api.get("/api/v1/support/trainings")
         assert response.status_code == 200
         trainings = response.json()
         assert isinstance(trainings, list)

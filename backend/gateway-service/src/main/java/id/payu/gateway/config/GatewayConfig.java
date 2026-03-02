@@ -140,6 +140,15 @@ public interface GatewayConfig {
         @WithDefault("true")
         boolean enabled();
 
+        /**
+         * Test mode: when enabled, requests with X-E2E-Test header bypass rate limiting.
+         * This allows E2E test suites to run without hitting rate limits (IMP-070).
+         * MUST be false in production.
+         */
+        @WithName("test-mode")
+        @WithDefault("false")
+        boolean testMode();
+
         @WithName("default")
         RateLimitRule defaultRule();
 

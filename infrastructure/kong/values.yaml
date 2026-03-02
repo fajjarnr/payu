@@ -1,0 +1,167 @@
+# Kong Ingress Controller — Helm Values for PayU
+#
+# Deploys Kong Gateway (OSS) as the Tier 1 API management layer.
+#
+# Usage:
+#   helm install kong kong/ingress -f values.yaml -n payu-api-management
+#
+# NOTE: This is a TEMPLATE. Replace all <PLACEHOLDER> values before deploying.
+# See README.md for full setup instructions.
+# ---
+
+# -- Deployment configuration
+deployment:
+  kong:
+    enabled: true
+
+# -- Kong Gateway (Data Plane)
+gateway:
+  replicaCount: 2
+
+  image:
+    repository: kong/kong-gateway
+    tag: "3.9"  # Pin to specific version
+
+  env:
+    # Database mode (set to "off" for DB-less/declarative mode)
+    database: postgres
+    pg_host: crunchy-primary.payu-db.svc
+    pg_port: "5432"
+    pg_database: kong
+    pg_user: kong
+    pg_password:
+      valueFrom:
+        secretKeyRef:
+          name: kong-postgresql
+          key: password
+
+    # Proxy configuration
+    proxy_access_log: /dev/stdout
+    admin_access_log: /dev/stdout
+    proxy_error_log: /dev/stderr
+    admin_error_log: /dev/stderr
+
+    # Performance tuning
+    nginx_worker_processes: "2"
+    mem_cache_size: 128m
+
+    # Tracing (OpenTelemetry)
+    tracing_instrumentations: all
+    tracing_sampling_rate: "0.1"
+
+  # Resource requests/limits (adjust for your cluster)
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+  proxy:
+    enabled: true
+    type: ClusterIP  # Use OpenShift Route for external access
+    annotations:
+      # OpenShift Route will be created separately
+      route.openshift.io/termination: edge
+
+    http:
+      enabled: true
+      containerPort: 8000
+      servicePort: 80
+
+    tls:
+      enabled: true
+      containerPort: 8443
+      servicePort: 443
+
+  admin:
+    enabled: true
+    type: ClusterIP  # NEVER expose externally
+    http:
+      enabled: true
+      containerPort: 8001
+      servicePort: 8001
+
+  # Readiness/liveness probes
+  readinessProbe:
+    httpGet:
+      path: /status/ready
+      port: status
+      scheme: HTTP
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+  livenessProbe:
+    httpGet:
+      path: /status
+      port: status
+      scheme: HTTP
+    initialDelaySeconds: 30
+    periodSeconds: 15
+
+# -- Kong Ingress Controller (Control Plane)
+controller:
+  enabled: true
+  replicaCount: 1
+
+  ingressController:
+    enabled: true
+    installCRDs: true
+    # Watch all namespaces or restrict to specific ones
+    watchNamespaces:
+      - payu-api-management
+      - payu-gateway
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  env:
+    # Log level for the ingress controller
+    controller_log_level: info
+
+# -- Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# -- Autoscaling (HPA)
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+# -- Service Monitor for Prometheus/OpenShift Monitoring
+serviceMonitor:
+  enabled: true
+  namespace: payu-api-management
+  interval: 30s
+  labels:
+    release: prometheus
+
+# -- OpenShift-specific settings
+securityContext:
+  runAsNonRoot: true
+  # OpenShift assigns UID/GID automatically via SCC
+  # Do not set runAsUser
+
+# -- Pod topology spread for HA
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: kong

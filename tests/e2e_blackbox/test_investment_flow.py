@@ -1,6 +1,5 @@
 import pytest
 import time
-from client import PayUClient
 from faker import Faker
 
 fake = Faker()
@@ -13,58 +12,24 @@ class TestInvestmentFlow:
     Tests: Create Investment Account -> Buy Deposits/Mutual Funds/Gold -> Check Holdings
     """
 
-    @pytest.fixture(scope="class")
-    def api(self):
-        return PayUClient(gateway_url="http://localhost:8080")
-
-    @pytest.fixture(scope="class")
-    def user_session(self, api):
-        """Register and login a user, return user data and api with token set"""
-        user_data = {
-            "email": f"invest_{fake.uuid4()}@example.com",
-            "username": f"invest_{fake.uuid4()[:8]}",
-            "password": "Password123!",
-            "name": fake.name(),
-            "phoneNumber": "+6281234567890"
-        }
-
-        response = api.post("/api/v1/accounts/register", json=user_data)
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"account-service unavailable or auth barrier ({response.status_code})")
-        assert response.status_code in [200, 201], f"Register failed: {response.status_code}"
-        user_id = response.json().get("id", response.json().get("userId"))
-
-        response = api.post("/api/v1/auth/login", json={
-            "username": user_data["username"],
-            "password": user_data["password"]
-        })
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"auth-service unavailable ({response.status_code})")
-        assert response.status_code == 200, f"Login failed: {response.status_code}"
-        api.set_token(response.json()["access_token"])
-
-        return {"user_id": user_id, "api": api}
-
-    def test_investment_account_creation(self, user_session):
+    def test_investment_account_creation(self, authenticated_api, registered_user):
         """
         Create investment account
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/investments/accounts", json={"userId": user_id})
+        response = authenticated_api.post("/api/v1/investments/accounts", json={"userId": user_id})
         assert response.status_code == 200, f"Failed to create investment account: {response.text}"
         account = response.json()
         assert "id" in account or "accountId" in account
 
-    def test_buy_digital_deposit(self, user_session):
+    def test_buy_digital_deposit(self, authenticated_api, registered_user):
         """
         Buy a digital deposit
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/investments/deposits", json={
+        response = authenticated_api.post("/api/v1/investments/deposits", json={
             "userId": user_id,
             "amount": 1000000,
             "tenure": 12
@@ -77,14 +42,13 @@ class TestInvestmentFlow:
             deposit = response.json()
             assert "amount" in deposit
 
-    def test_buy_mutual_fund(self, user_session):
+    def test_buy_mutual_fund(self, authenticated_api, registered_user):
         """
         Buy a mutual fund
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/investments/mutual-funds", json={
+        response = authenticated_api.post("/api/v1/investments/mutual-funds", json={
             "userId": user_id,
             "fundCode": "ABCP001",
             "amount": 500000
@@ -96,14 +60,13 @@ class TestInvestmentFlow:
             transaction = response.json()
             assert "amount" in transaction
 
-    def test_buy_digital_gold(self, user_session):
+    def test_buy_digital_gold(self, authenticated_api, registered_user):
         """
         Buy digital gold
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/investments/gold", json={
+        response = authenticated_api.post("/api/v1/investments/gold", json={
             "userId": user_id,
             "amount": 2000000
         })
@@ -114,21 +77,20 @@ class TestInvestmentFlow:
             gold = response.json()
             assert "amount" in gold or "weight" in gold
 
-    def test_get_investment_holdings(self, user_session):
+    def test_get_investment_holdings(self, authenticated_api, registered_user):
         """
         Get user's investment holdings
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.get("/api/v1/investments/accounts/me")
+        response = authenticated_api.get("/api/v1/investments/accounts/me")
         if response.status_code != 200:
             pytest.skip("Investment account may not exist")
 
         account = response.json()
         assert account is not None
 
-        response = api.get("/api/v1/investments/gold/me")
+        response = authenticated_api.get("/api/v1/investments/gold/me")
         # Gold endpoint might not have holdings yet
         if response.status_code == 200:
             gold_holdings = response.json()

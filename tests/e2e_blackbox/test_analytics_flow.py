@@ -1,9 +1,4 @@
 import pytest
-import time
-from client import PayUClient
-from faker import Faker
-
-fake = Faker()
 
 
 @pytest.mark.analytics
@@ -13,53 +8,13 @@ class TestAnalyticsFlow:
     Tests: User Metrics -> Spending Trends -> Cash Flow -> Recommendations
     """
 
-    @pytest.fixture(scope="class")
-    def api(self):
-        return PayUClient(gateway_url="http://localhost:8080")
-
-    @pytest.fixture(scope="class")
-    def user_session(self, api):
-        """Register and login a user"""
-        user_data = {
-            "email": f"analytics_{fake.uuid4()}@example.com",
-            "username": f"analytics_{fake.uuid4()[:8]}",
-            "password": "Password123!",
-            "name": fake.name(),
-            "phoneNumber": "+6281234567890"
-        }
-
-        response = api.post("/api/v1/accounts/register", json=user_data)
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"account-service unavailable or auth barrier ({response.status_code})")
-        assert response.status_code in [200, 201], f"Register failed: {response.status_code}"
-        user_id = response.json().get("id", response.json().get("userId"))
-
-        response = api.post("/api/v1/auth/login", json={
-            "username": user_data["username"],
-            "password": user_data["password"]
-        })
-        if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
-            pytest.skip(f"auth-service unavailable ({response.status_code})")
-        assert response.status_code == 200, f"Login failed: {response.status_code}"
-        api.set_token(response.json()["access_token"])
-
-        # Add some transactions to the wallet for analytics
-        response = api.post(f"/api/v1/wallets/{user_id}/credit", json={
-            "amount": 5000000,
-            "referenceId": f"CREDIT_{fake.uuid4()}",
-            "description": "Initial funding"
-        })
-
-        return {"user_id": user_id, "api": api}
-
-    def test_get_user_metrics(self, user_session):
+    def test_get_user_metrics(self, authenticated_api, registered_user):
         """
         Get user metrics including transaction summary
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.get(f"/api/v1/analytics/user/{user_id}/metrics")
+        response = authenticated_api.get(f"/api/v1/analytics/user/{user_id}/metrics")
         if response.status_code != 200:
             pytest.skip(f"Analytics service may not be available: {response.text}")
 
@@ -69,14 +24,13 @@ class TestAnalyticsFlow:
         assert "total_transactions" in metrics or "totalTransactions" in metrics
         assert "total_amount" in metrics or "totalAmount" in metrics
 
-    def test_get_spending_trends_daily(self, user_session):
+    def test_get_spending_trends_daily(self, authenticated_api, registered_user):
         """
         Get spending trends grouped by day
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/analytics/spending/trends", json={
+        response = authenticated_api.post("/api/v1/analytics/spending/trends", json={
             "userId": user_id,
             "periodDays": 30,
             "groupBy": "day"
@@ -90,14 +44,13 @@ class TestAnalyticsFlow:
         if "trends" in trends:
             assert isinstance(trends["trends"], list)
 
-    def test_get_spending_trends_category(self, user_session):
+    def test_get_spending_trends_category(self, authenticated_api, registered_user):
         """
         Get spending trends grouped by category
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/analytics/spending/trends", json={
+        response = authenticated_api.post("/api/v1/analytics/spending/trends", json={
             "userId": user_id,
             "periodDays": 90,
             "groupBy": "category"
@@ -109,14 +62,13 @@ class TestAnalyticsFlow:
         trends = response.json()
         assert trends is not None
 
-    def test_get_cash_flow_analysis(self, user_session):
+    def test_get_cash_flow_analysis(self, authenticated_api, registered_user):
         """
         Get cash flow analysis
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.post("/api/v1/analytics/cashflow", json={
+        response = authenticated_api.post("/api/v1/analytics/cashflow", json={
             "userId": user_id,
             "periodDays": 30
         })
@@ -130,14 +82,13 @@ class TestAnalyticsFlow:
             assert "expense" in cashflow
             assert "net" in cashflow
 
-    def test_get_recommendations(self, user_session):
+    def test_get_recommendations(self, authenticated_api, registered_user):
         """
         Get personalized recommendations
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.get(f"/api/v1/analytics/user/{user_id}/recommendations")
+        response = authenticated_api.get(f"/api/v1/analytics/user/{user_id}/recommendations")
         if response.status_code != 200:
             pytest.skip(f"Analytics service may not be available: {response.text}")
 
@@ -147,45 +98,42 @@ class TestAnalyticsFlow:
         if "recommendations" in recommendations:
             assert isinstance(recommendations["recommendations"], list)
 
-    def test_transaction_history_for_analytics(self, user_session):
+    def test_transaction_history_for_analytics(self, authenticated_api, registered_user):
         """
         Get transaction history for analytics
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
         # Get wallet transactions
-        response = api.get(f"/api/v1/wallets/{user_id}/transactions?page=0&size=50")
+        response = authenticated_api.get(f"/api/v1/wallets/{user_id}/transactions?page=0&size=50")
         assert response.status_code == 200
         transactions = response.json()
         assert isinstance(transactions, list)
 
         # Get account transactions
-        response = api.get(f"/api/v1/transactions/accounts/{user_id}?page=0&size=50")
+        response = authenticated_api.get(f"/api/v1/transactions/accounts/{user_id}?page=0&size=50")
         if response.status_code == 200:
             transactions = response.json()
             assert isinstance(transactions, list)
 
-    def test_wallet_ledger_for_analytics(self, user_session):
+    def test_wallet_ledger_for_analytics(self, authenticated_api, registered_user):
         """
         Get wallet ledger entries for analytics
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.get(f"/api/v1/wallets/{user_id}/ledger")
+        response = authenticated_api.get(f"/api/v1/wallets/{user_id}/ledger")
         if response.status_code == 200:
             ledger = response.json()
             assert isinstance(ledger, list)
 
-    def test_balance_snapshot(self, user_session):
+    def test_balance_snapshot(self, authenticated_api, registered_user):
         """
         Get balance snapshot for analytics
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
-        response = api.get(f"/api/v1/wallets/{user_id}/balance")
+        response = authenticated_api.get(f"/api/v1/wallets/{user_id}/balance")
         assert response.status_code == 200
         balance = response.json()
 
@@ -193,17 +141,16 @@ class TestAnalyticsFlow:
         assert "availableBalance" in balance or "available_balance" in balance
         assert "reservedBalance" in balance or "reserved_balance" in balance
 
-    def test_spending_by_period(self, user_session):
+    def test_spending_by_period(self, authenticated_api, registered_user):
         """
         Test analytics for different time periods
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
         periods = [7, 30, 90, 180, 365]
 
         for period in periods:
-            response = api.post("/api/v1/analytics/spending/trends", json={
+            response = authenticated_api.post("/api/v1/analytics/spending/trends", json={
                 "userId": user_id,
                 "periodDays": period,
                 "groupBy": "day"
@@ -213,15 +160,14 @@ class TestAnalyticsFlow:
                 trends = response.json()
                 assert trends is not None
 
-    def test_comparison_analytics(self, user_session):
+    def test_comparison_analytics(self, authenticated_api, registered_user):
         """
         Test comparison analytics (if available)
         """
-        api = user_session["api"]
-        user_id = user_session["user_id"]
+        user_id = registered_user["userId"]
 
         # Try to get comparison data
-        response = api.post("/api/v1/analytics/spending/trends", json={
+        response = authenticated_api.post("/api/v1/analytics/spending/trends", json={
             "userId": user_id,
             "periodDays": 30,
             "groupBy": "day"

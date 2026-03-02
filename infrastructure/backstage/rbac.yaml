@@ -1,0 +1,61 @@
+# ServiceAccount, Role, and RoleBinding for Developer Hub
+# Grants read access to pods, services, and deployments for the Kubernetes plugin
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: developer-hub
+  namespace: payu-platform
+  labels:
+    app: developer-hub
+    app.kubernetes.io/name: developer-hub
+    app.kubernetes.io/component: developer-portal
+    app.kubernetes.io/part-of: payu
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: developer-hub-reader
+  labels:
+    app: developer-hub
+    app.kubernetes.io/name: developer-hub
+    app.kubernetes.io/part-of: payu
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - services
+      - configmaps
+      - namespaces
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["route.openshift.io"]
+    resources:
+      - routes
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: developer-hub-reader-binding
+  labels:
+    app: developer-hub
+    app.kubernetes.io/name: developer-hub
+    app.kubernetes.io/part-of: payu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: developer-hub-reader
+subjects:
+  - kind: ServiceAccount
+    name: developer-hub
+    namespace: payu-platform

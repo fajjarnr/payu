@@ -38,8 +38,7 @@ public class CustomerSegment {
      * - transactionCount: minimum number of transactions
      * - lastLoginDate: days since last login (null = no restriction)
      * - kycStatus: required KYC status (VERIFIED, PENDING, NOT_STARTED)
-     * - loyaltyLevel: minimum loyalty/gamification level
-     * - hasBadges: list of required badge IDs (user must have all)
+     * - loyaltyLevel: minimum loyalty level
      * - minBalance: minimum account balance
      * - maxBalance: maximum account balance
      * - registrationDateFrom: registration date range start

@@ -1,0 +1,136 @@
+# 3scale APIManager Custom Resource for PayU
+# Deploys the full 3scale API Management platform on OpenShift via the 3scale Operator.
+#
+# Prerequisites:
+#   - 3scale Operator installed from OperatorHub (threescale-2.14 channel)
+#   - Namespace: payu-api-management
+#   - Secrets: system-seed, system-database, backend-redis, system-redis
+#
+# Usage:
+#   oc apply -f apimanager.yaml -n payu-api-management
+#
+# NOTE: This is a TEMPLATE. Replace all <PLACEHOLDER> values before deploying.
+# See README.md for full setup instructions.
+---
+apiVersion: apps.3scale.net/v1alpha1
+kind: APIManager
+metadata:
+  name: payu-apimanager
+  namespace: payu-api-management
+  labels:
+    app.kubernetes.io/name: 3scale
+    app.kubernetes.io/part-of: payu-api-management
+    app.kubernetes.io/managed-by: 3scale-operator
+spec:
+  wildcardDomain: api.payu.example.com
+  appLabel: payu-3scale
+  tenantName: payu
+  resourceRequirementsEnabled: true
+
+  system:
+    fileStorage:
+      persistentVolumeClaim:
+        storageClassName: gp3-csi  # Adjust to your cluster's StorageClass
+        resources:
+          requests:
+            storage: 5Gi
+    database:
+      postgresql:
+        image: "registry.redhat.io/rhel9/postgresql-16"
+    appSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+    sidekiqSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+
+  backend:
+    listenerSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+    workerSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+    cronSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 250m
+          memory: 128Mi
+
+  apicast:
+    productionSpec:
+      replicas: 2
+      resources:
+        requests:
+          cpu: 250m
+          memory: 128Mi
+        limits:
+          cpu: "1"
+          memory: 512Mi
+      # Custom environment variables for PayU integration
+      customEnvironments:
+        - secretRef:
+            name: apicast-payu-env
+      # Enable custom policy for PayU header forwarding
+      customPolicies:
+        - name: payu-header-forwarding
+          version: "1.0.0"
+          secretRef:
+            name: apicast-policy-payu-header-forwarding
+    stagingSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+
+  zync:
+    appSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+    queSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi

@@ -12,7 +12,7 @@
 | :----------------------- | :----------------------- |
 | **Last Status Update**   | March 2, 2026            |
 | **Production Readiness** | 99% (229/232 bugs fixed) |
-| **OpenShift Tag**        | `v1.6.0` (in-progress)   |
+| **OpenShift Tag**        | `v1.6.0`                 |
 | **Namespace**            | `payu-dev`               |
 | **Total Pods**           | 36/36 running            |
 | **Services Deployed**    | 22/22                    |
@@ -60,13 +60,38 @@
 | **ArchUnit Governance**    | ✅ 18/19          | 1 service exempt with documented reason            |
 | **Zero Trust**             | ✅ Per-service    | JWT + OIDC validation per endpoint                 |
 | **API-First**              | ✅ 22/22          | OpenAPI spec per service                           |
-| **Doc-as-Code**            | ✅ 13 ADRs        | `/docs/adr/`                                       |
+| **Doc-as-Code**            | ✅ 14 ADRs        | `/docs/adr/`                                       |
 
 ---
 
 ## 📦 Deployment Log
 
-### v1.6.0 (In Progress) — March 2, 2026
+### v1.6.0 (Completed) — March 2, 2026
+
+**Backlog Completion — All Epics Done (86/86 stories, 265/265 SP):**
+
+- ✅ **E-24 — E2E Test & Gateway Readiness COMPLETED** (4 stories, 8 SP):
+  - **IMP-070** — Gateway rate limiter test-mode bypass via `X-E2E-Test` header + `test-mode` config
+  - **IMP-071** — Registration/login endpoints already whitelisted (verified)
+  - **IMP-072** — Backoffice IP whitelist expanded for E2E (192.168.0.0/16, 127.0.0.1)
+  - **IMP-073** — E2E conftest.py rewritten with session-scoped shared fixtures (20 test files updated)
+
+- ✅ **E-07 — gRPC Inter-Service Communication COMPLETED** (3 remaining stories, 10 SP):
+  - **IMP-028** — Wallet gRPC client migration across 6 services (transaction, billing, investment, fx, promotion, statement). Each service got `WalletGrpcAdapter.java`, proto files, protobuf-maven-plugin config. Old REST adapters deprecated.
+  - **IMP-032** — Created `rest-client-starter` shared module with Spring 6.1 `RestClient` + Resilience4j circuit breaker/retry
+  - **IMP-033** — Gateway gRPC→REST bridge using `quarkus-grpc` (Mutiny-based `WalletGrpcBridge` + JAX-RS `GrpcBridgeResource`)
+
+- ✅ **E-06 — Developer Hub COMPLETED** (1 remaining story, 3 SP):
+  - **IMP-021** — Infrastructure manifests for Red Hat Developer Hub (Backstage) on OpenShift: app-config, deployment, service, secrets, RBAC, Kustomize
+
+- ✅ **E-04 — API Management & Analytics COMPLETED** (2 remaining stories, 10 SP):
+  - **IMP-019** — ADR-0014 (API Management Platform comparison). 3scale infrastructure manifests (apimanager.yaml, apicast-policy.yaml)
+  - **IMP-020** — Kong infrastructure manifests (values.yaml, kong-plugin-payu.yaml)
+
+- ✅ **Tech Debt COMPLETED** (3 items, 6 SP):
+  - **SIMP-001** — `ab-testing-service` fully deleted (34 files). Removed from parent POM and api-portal config.
+  - **SIMP-002** — Gamification removed from promotion-service (28 files deleted). Flyway V5 drop migration created.
+  - **SIMP-003** — Robo-advisory already removed (verified no code exists)
 
 **Build Stabilization & Infrastructure Alignment:**
 
@@ -203,7 +228,7 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 
 ---
 
-## ✅ Completed Epics Summary (20/24 Fully Done)
+## ✅ Completed Epics Summary (24/24 Fully Done)
 
 > All completed stories have detailed implementation notes in [`CHANGELOG.md`](../../CHANGELOG.md).
 > Items below were removed from `TODOS.md` on March 2, 2026 per backlog hygiene convention.
@@ -213,7 +238,10 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 | E-01 | Core Banking Ledger               | 🔴 Highest |    3    |  13 | Feb 26 2026 |
 | E-02 | Gateway Hardening                 | 🔴 Highest |    5    |  11 | Feb 26 2026 |
 | E-03 | Frontend Quality                  | 🟠 High    |    5    |   7 | Feb 28 2026 |
+| E-04 | API Management & Analytics        | 🟠 High    |    5    |  19 | Mar 02 2026 |
 | E-05 | Product Catalog                   | 🟠 High    |    1    |   5 | Feb 28 2026 |
+| E-06 | Developer Hub (Backstage)         | 🟡 Medium  |    5    |  13 | Mar 02 2026 |
+| E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    |  25 | Mar 02 2026 |
 | E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |   5 | Feb 28 2026 |
 | E-09 | Partner Integration Foundation    | 🔴 Highest |    4    |  18 | Feb 28 2026 |
 | E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    |  10 | Feb 28 2026 |
@@ -230,16 +258,10 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 | E-21 | Security Hardening                | 🔴 Highest |    2    |   5 | Feb 26 2026 |
 | E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |   6 | Feb 26 2026 |
 | E-23 | Shared Library Lifecycle          | 🟠 High    |    2    |  11 | Feb 28 2026 |
-|      | **TOTAL**                         |            | **63**  | **198** |         |
+| E-24 | E2E Test & Gateway Readiness      | 🔴 Highest |    4    |   8 | Mar 02 2026 |
+|      | **TOTAL**                         |            | **86**  | **265** |         |
 
-**Partially Completed Epics** (remaining stories tracked in TODOS.md):
-
-| Epic | Name                             | Done Stories | Open Stories | Done SP | Open SP |
-| :--- | :------------------------------- | :----------: | :----------: | :-----: | :-----: |
-| E-04 | API Management & Analytics       |      3       |      2       |    9    |   10    |
-| E-06 | Developer Hub (Backstage)        |      4       |      1       |   10    |    3    |
-| E-07 | gRPC Inter-Service Communication |      5       |      3       |   15    |   10    |
-|      | **Subtotal**                     |   **12**     |    **6**     | **34**  | **23**  |
+> **Tech Debt**: 3/3 completed (SIMP-001 ab-testing removal, SIMP-002 gamification removal, SIMP-003 robo-advisory removal)
 
 ---
 

@@ -9,6 +9,7 @@ spring:
     name: investment-service
   profiles:
     active: ${SPRING_PROFILE:local}
+    include: grpc
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_investment}
     username: ${DATABASE_USERNAME:payu}
@@ -80,6 +81,10 @@ resilience4j:
 
 # Cache Configuration
 payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
   cache:
     enabled: true
     redis:

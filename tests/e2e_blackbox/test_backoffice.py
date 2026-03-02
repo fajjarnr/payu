@@ -1,12 +1,7 @@
 import pytest
-from client import PayUClient
 from faker import Faker
 
 fake = Faker()
-
-@pytest.fixture(scope="module")
-def api():
-    return PayUClient(gateway_url="http://localhost:8080")
 
 @pytest.mark.backoffice
 def test_backoffice_flow(api):

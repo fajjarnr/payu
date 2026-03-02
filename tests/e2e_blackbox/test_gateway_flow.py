@@ -1,7 +1,6 @@
 import pytest
 import uuid
 import time
-from client import PayUClient
 from faker import Faker
 
 fake = Faker()
@@ -14,21 +13,6 @@ class TestGatewayServiceFlow:
     Gateway Service E2E tests.
     Tests: Health check -> Rate limiting -> Payment methods -> Rate plans -> CORS -> Routing
     """
-
-    @pytest.fixture(scope="class")
-    def api(self):
-        return PayUClient(gateway_url="http://localhost:8080")
-
-    @pytest.fixture(scope="class")
-    def admin_session(self, api):
-        """Login as admin for gateway admin operations"""
-        response = api.post("/api/v1/auth/login", json={
-            "username": "admin",
-            "password": "admin123"
-        })
-        if response.status_code == 200:
-            api.set_token(response.json()["access_token"])
-        return {"api": api}
 
     def test_gateway_health(self, api):
         """Verify gateway health endpoint"""
@@ -64,18 +48,16 @@ class TestGatewayServiceFlow:
             data = response.json()
             assert isinstance(data, (list, dict))
 
-    def test_get_rate_plans(self, admin_session):
+    def test_get_rate_plans(self, authenticated_api):
         """List rate plans (admin)"""
-        api = admin_session["api"]
-        response = api.get("/api/v1/admin/rate-plans")
+        response = authenticated_api.get("/api/v1/admin/rate-plans")
         assert response.status_code in [200, 401, 403, 404], f"Unexpected status: {response.status_code}"
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (list, dict))
 
-    def test_create_rate_plan(self, admin_session):
+    def test_create_rate_plan(self, authenticated_api):
         """Create a rate plan (admin)"""
-        api = admin_session["api"]
         payload = {
             "name": f"Test Plan {fake.uuid4()[:8]}",
             "requestsPerSecond": 100,
@@ -83,14 +65,13 @@ class TestGatewayServiceFlow:
             "burstLimit": 200,
             "active": True
         }
-        response = api.post("/api/v1/admin/rate-plans", json=payload)
+        response = authenticated_api.post("/api/v1/admin/rate-plans", json=payload)
         assert response.status_code in [200, 201, 400, 401, 403, 422], f"Unexpected status: {response.status_code}"
 
-    def test_get_partner_rate_limit_status(self, admin_session):
+    def test_get_partner_rate_limit_status(self, authenticated_api):
         """Check rate limit status for a partner"""
-        api = admin_session["api"]
         fake_partner_id = str(uuid.uuid4())
-        response = api.get(f"/api/v1/admin/rate-plans/partners/{fake_partner_id}/status")
+        response = authenticated_api.get(f"/api/v1/admin/rate-plans/partners/{fake_partner_id}/status")
         assert response.status_code in [200, 401, 403, 404], f"Unexpected status: {response.status_code}"
 
     def test_routing_to_account_service(self, api):
@@ -106,8 +87,11 @@ class TestGatewayServiceFlow:
 
     def test_unauthorized_access(self, api):
         """Test that protected endpoints require authentication"""
-        api.clear_token()
-        response = api.get("/api/v1/accounts/me")
+        # Use a fresh client to avoid using the session token
+        from client import PayUClient
+        unauthenticated = PayUClient(gateway_url=api.gateway_url)
+        unauthenticated.session.headers.update({"X-E2E-Test": "true"})
+        response = unauthenticated.get("/api/v1/accounts/me")
         assert response.status_code in [401, 403], f"Expected auth error, got: {response.status_code}"
 
     def test_invalid_route(self, api):

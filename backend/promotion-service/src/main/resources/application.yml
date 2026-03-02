@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: promotion-service
+  profiles:
+    include: grpc
 
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/promotiondb}
@@ -91,6 +93,13 @@ logging:
 services:
   wallet:
     url: ${WALLET_SERVICE_URL:http://wallet-service:8080}
+
+# PayU gRPC Configuration (IMP-028)
+payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
 
 # App Configuration
 app:

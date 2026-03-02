@@ -1,5 +1,6 @@
 package id.payu.statement.application.service;
 
+import id.payu.statement.domain.port.out.WalletServicePort;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -10,10 +11,14 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Client for Wallet Service - Feign could be used alternatively
+ * REST client for Wallet Service.
+ *
+ * @deprecated IMP-028: Use {@link id.payu.statement.adapter.client.WalletGrpcAdapter} instead.
+ *             This REST client is retained for fallback purposes during the gRPC migration period.
  */
-@Component
-public class WalletServiceClient {
+@Deprecated(since = "IMP-028", forRemoval = false)
+@Component("walletRestAdapter")
+public class WalletServiceClient implements WalletServicePort {
 
     private final RestTemplate restTemplate;
 
@@ -28,6 +33,7 @@ public class WalletServiceClient {
      * Get current balance for a customer.
      * BUG-BE-051: Renamed from getBalanceAtDate to be explicit about returning current balance.
      */
+    @Override
     public BigDecimal getCurrentBalance(String customerId) {
         try {
             String url = walletServiceUrl + "/api/v1/wallets/customer/" + customerId + "/balance";

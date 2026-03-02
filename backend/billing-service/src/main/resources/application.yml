@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: billing-service
+  profiles:
+    include: grpc
 
   # Database Configuration
   datasource:
@@ -140,6 +142,10 @@ vault:
       key: encryption.key
 
 payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
   outbox:
     enabled: true
     publisher:

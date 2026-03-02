@@ -111,6 +111,17 @@ public class RateLimitFilter implements ContainerRequestFilter {
             return;
         }
 
+        // IMP-070: Test mode bypass — skip rate limiting when X-E2E-Test header is present
+        // and test-mode is enabled. This allows E2E test suites to run without hitting
+        // rate limits while keeping production limits unchanged.
+        if (config.rateLimit().testMode()) {
+            String e2eHeader = requestContext.getHeaderString("X-E2E-Test");
+            if (e2eHeader != null && !e2eHeader.isBlank()) {
+                Log.debugf("Rate limit bypassed for E2E test: path=%s", path);
+                return;
+            }
+        }
+
         String category = determineCategory(path);
         GatewayConfig.RateLimitRule rule = getRule(category);
         int windowSeconds = CATEGORY_WINDOWS.getOrDefault(category, 60);

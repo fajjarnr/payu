@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: developer-hub
+  namespace: payu-platform
+  labels:
+    app: developer-hub
+    app.kubernetes.io/name: developer-hub
+    app.kubernetes.io/component: developer-portal
+    app.kubernetes.io/part-of: payu
+spec:
+  selector:
+    app: developer-hub
+  ports:
+    - port: 7007
+      targetPort: 7007
+      name: http
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: developer-hub
+  namespace: payu-platform
+  labels:
+    app: developer-hub
+    app.kubernetes.io/name: developer-hub
+    app.kubernetes.io/component: developer-portal
+    app.kubernetes.io/part-of: payu
+  annotations:
+    haproxy.router.openshift.io/timeout: 60s
+    router.openshift.io/cookie-same-site: Lax
+    router.openshift.io/cookie_name: developer-hub-session
+spec:
+  host: developer-hub.payu.fajjjar.my.id
+  to:
+    kind: Service
+    name: developer-hub
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

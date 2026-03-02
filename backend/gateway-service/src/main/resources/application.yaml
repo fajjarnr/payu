@@ -60,6 +60,12 @@ quarkus:
     info-contact-name: PayU Engineering Team
     info-contact-email: engineering@payu.fajjjar.my.id
     path: /q/openapi
+  # gRPC Client Configuration (IMP-033: REST-to-gRPC Bridge)
+  grpc:
+    clients:
+      wallet-service:
+        host: ${WALLET_GRPC_HOST:wallet-service}
+        port: ${WALLET_GRPC_PORT:9090}
   # Logging
   log:
     level: INFO
@@ -156,6 +162,9 @@ gateway:
   # Differentiated limits per endpoint type with burst handling
   rate-limit:
     enabled: true
+    # IMP-070: Test mode — when true, requests with X-E2E-Test header bypass rate limiting.
+    # Set to true only in test/CI environments. MUST be false in production.
+    test-mode: ${GATEWAY_RATE_LIMIT_TEST_MODE:false}
     default:
       requests-per-minute: 100
       burst: 150
@@ -203,9 +212,6 @@ gateway:
       partners:
         requests-per-minute: 20
         burst: 30
-      promotions:
-        requests-per-minute: 40
-        burst: 60
       lending:
         requests-per-minute: 20
         burst: 30
@@ -224,9 +230,6 @@ gateway:
       notifications:
         requests-per-minute: 40
         burst: 60
-      contents:
-        requests-per-minute: 60
-        burst: 100
       cashbacks:
         requests-per-minute: 30
         burst: 50
@@ -382,6 +385,8 @@ gateway:
         ips:
           - "10.0.0.0/8"
           - "172.16.0.0/12"
+          - "192.168.0.0/16"
+          - "127.0.0.1"
     bypass-headers:
       - "X-Bypass-IP-Check"
   # Retry Policies

@@ -17,7 +17,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Adapter for calling wallet-service REST API from investment-service.
+ * REST adapter for calling wallet-service REST API from investment-service.
  *
  * BUG-BE-018 Fix: Replaced non-existent /deduct and /credit/{userId} endpoints with
  * the actual wallet-service API:
@@ -26,8 +26,12 @@ import java.util.concurrent.ConcurrentHashMap;
  *   - hasSufficientBalance → GET /{accountId}/balance (reads 'availableBalance', not 'balance')
  *
  * BUG-BE-029 Fix: hasSufficientBalance now reads 'availableBalance' from response.
+ *
+ * @deprecated Use {@link WalletGrpcAdapter} instead (IMP-028: gRPC migration).
+ *             Kept as fallback during migration period.
  */
-@Component
+@Deprecated
+@Component("walletRestAdapter")
 @Slf4j
 public class WalletServiceAdapter implements WalletServicePort {
 

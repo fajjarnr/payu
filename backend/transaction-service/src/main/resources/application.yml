@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: transaction-service
+  profiles:
+    include: grpc
   security:
     oauth2:
       resourceserver:
@@ -212,6 +214,10 @@ resilience4j:
           - java.net.ConnectException
 # PayU Configuration
 payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
   events:
     enabled: true
     kafka:

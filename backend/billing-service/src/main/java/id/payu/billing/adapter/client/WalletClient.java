@@ -8,7 +8,11 @@ import java.math.BigDecimal;
 
 /**
  * REST client for wallet-service using Spring RestTemplate.
+ *
+ * @deprecated IMP-028: Use {@link WalletGrpcAdapter} instead. This REST client
+ *             is retained for fallback purposes during the gRPC migration period.
  */
+@Deprecated(since = "IMP-028", forRemoval = false)
 @Component
 public class WalletClient {
 

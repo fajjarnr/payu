@@ -1,6 +1,8 @@
 spring:
   application:
     name: statement-service
+  profiles:
+    include: grpc
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:${SPRING_DATASOURCE_JDBC_URL:jdbc:postgresql://localhost:5432/payu_statement}}
@@ -87,6 +89,13 @@ services:
     url: ${SERVICES_WALLET_URL:http://wallet-service:8080}
   transaction:
     url: ${SERVICES_TRANSACTION_URL:http://transaction-service:8080}
+
+# PayU gRPC Configuration (IMP-028)
+payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
 
 # OpenTelemetry Configuration
 management:

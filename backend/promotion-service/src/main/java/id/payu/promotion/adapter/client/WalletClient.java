@@ -21,8 +21,12 @@ import java.util.Map;
 /**
  * REST client adapter for wallet-service integration.
  * Implements circuit breaker and retry patterns for resilience.
+ *
+ * @deprecated Use {@link WalletGrpcAdapter} instead (IMP-028: gRPC migration).
+ *             Kept as fallback during migration period.
  */
-@Component
+@Deprecated
+@Component("walletRestAdapter")
 public class WalletClient implements WalletServicePort {
 
     private static final Logger LOG = LoggerFactory.getLogger(WalletClient.class);

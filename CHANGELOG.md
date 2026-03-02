@@ -11,6 +11,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **E-24 — E2E Test & Gateway Readiness COMPLETED (2026-03-02)**:
+  - **IMP-070 — Gateway Rate Limiter Test-Mode Bypass** (2 SP): Added `test-mode` configuration to `RateLimitFilter.java` in gateway-service. When `payu.gateway.rate-limit.test-mode=true`, requests with `X-E2E-Test: true` header bypass rate limiting entirely. Added `testMode()` method to `GatewayConfig.RateLimitConfig` interface (SmallRye `@ConfigMapping`). Configuration in `application.yaml` under `payu.gateway.rate-limit.test-mode`. Environment variable `GATEWAY_RATE_LIMIT_TEST_MODE` documented in `.env.example`. Production rate limits unchanged — test-mode is off by default.
+  - **IMP-071 — Registration Endpoint Auth Bypass** (2 SP): Verified already done — `POST /api/v1/accounts/register` and `POST /api/v1/auth/login` already whitelisted in `AuthorizationFilter.java` via both `PUBLIC_ENDPOINTS` (path prefix matching) and `EXACT_PUBLIC_ENDPOINTS` (exact match).
+  - **IMP-072 — Backoffice IP Whitelist for E2E** (1 SP): Added `192.168.0.0/16` and `127.0.0.1` to the backoffice allowed IP ranges in gateway `application.yaml` (~line 381-384), enabling E2E tests from localhost and container networks.
+  - **IMP-073 — E2E Shared User Fixture** (3 SP): Rewrote `tests/e2e_blackbox/conftest.py` with session-scoped shared fixtures: `api` (base HTTP client), `test_user_data` (random test user), `registered_user` (registers once per session), `auth_token` (logs in once), `authenticated_api` (pre-authenticated client). Updated all 20 remaining test files to use shared fixtures. Added `X-E2E-Test: true` default header to bypass rate limiting. Deleted `test_ab_testing_flow.py` (service removed).
+
+- **E-07 — gRPC Inter-Service Communication COMPLETED (2026-03-02)**:
+  - **IMP-028 — Migrate Wallet Callers to gRPC** (5 SP): Created `WalletGrpcAdapter.java` in all 6 consumer services (transaction-service, billing-service, investment-service, fx-service, promotion-service, statement-service). Each adapter implements the existing port interface (`WalletServicePort` or equivalent), uses raw `ManagedChannel`/`ManagedChannelBuilder` with `@PostConstruct`/`@PreDestroy` lifecycle per `spring-grpc` conventions. Deprecated old REST adapters (`@Deprecated` annotation). Added `grpc-starter` dependency, `protobuf-maven-plugin` + `os-maven-plugin` + `javax.annotation-api:1.3.2` to all 6 service POMs. Copied `common.proto` and `WalletService.proto` to each service's `src/main/proto/` directory. Added gRPC client config (host/port) to each service's `application.yaml`/`application.yml`. Created `WalletServicePort.java` for statement-service (had no port interface).
+  - **IMP-032 — REST Client Starter** (2 SP): Created `backend/shared/rest-client-starter/` module with 5 Java classes: `RestClientAutoConfiguration` (Spring Boot auto-config), `RestClientProperties` (configurable base-url, connect-timeout, read-timeout per service), `PayuRestClient` (wrapper around Spring 6.1 `RestClient` with Resilience4j circuit breaker + retry), `RestClientErrorHandler` (maps HTTP errors to domain exceptions). Auto-configuration registered via `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`. Module added to `backend/pom.xml` modules and dependency management.
+  - **IMP-033 — Gateway gRPC→REST Bridge** (3 SP): Added `quarkus-grpc` dependency to gateway-service. Copied wallet + common proto files. Created `WalletGrpcBridge.java` — Mutiny-based gRPC client using `MutinyWalletServiceGrpc` stubs for `getBalance`, `getAvailableBalance`, `debit`, `credit`, `transfer`, `getWallet` operations. Created `GrpcBridgeResource.java` — JAX-RS REST endpoints at `/api/internal/grpc/wallet/*` exposing gRPC operations via REST for internal use. Added gRPC client config in `application.yaml` under `quarkus.grpc.clients.wallet-service`.
+
+- **E-06 — Developer Hub COMPLETED (2026-03-02)**:
+  - **IMP-021 — Deploy Developer Hub** (3 SP): Created `infrastructure/backstage/` with 6 files: `app-config.yaml` (RHDH config with catalog locations for all 22 services, Keycloak SSO provider, TechDocs, Kubernetes integration), `deployment.yaml` (RHDH image `registry.redhat.io/rhdh/rhdh-hub-rhel9:1.4`), `service.yaml`, `secrets.yaml` (placeholder for credentials), `rbac.yaml` (admin + developer roles), `kustomization.yaml`.
+
+- **E-04 — API Management & Analytics COMPLETED (2026-03-02)**:
+  - **IMP-019 — Adopt Red Hat 3scale** (5 SP): Created ADR `docs/adr/0014-api-management-platform.md` with decision matrix comparing 3scale vs Kong vs Gravitee.io across 8 criteria (developer portal, rate limiting, analytics, auth, deployment, cost, ecosystem, PayU fit). Decision: 3scale for Red Hat ecosystem alignment, Kong as alternative. Created `infrastructure/3scale/` with `README.md`, `apimanager.yaml` (3scale operator CR), `apicast-policy.yaml` (custom rate-limit policy with PayU partner integration).
+  - **IMP-020 — Alternative: Kong/Gravitee** (5 SP): Created `infrastructure/kong/` with `README.md`, `values.yaml` (Helm chart values for Kong + PostgreSQL + Ingress), `kong-plugin-payu.yaml` (custom Lua plugin for PayU partner authentication, rate limiting, request transformation).
+
+### Removed
+
+- **SIMP-001 — Remove ab-testing-service** (2 SP): Deleted entire `backend/ab-testing-service/` directory (34 files). Removed both module references from `backend/pom.xml`. Removed ab-testing service entry from `api-portal-service/application.yaml` OpenAPI aggregation config. Deleted `tests/e2e_blackbox/test_ab_testing_flow.py`.
+- **SIMP-002 — Remove Gamification from promotion-service** (2 SP): Deleted 28 gamification files: 6 domain entities (`Badge`, `DailyCheckin`, `LevelReward`, `UserBadge`, `UserLevel`, `XpTransaction`), 6 repositories, 2 service/controller (`GamificationService`, `GamificationResource`), 9 DTOs, 3 tests. Cleaned 2 Javadoc references in `CustomerSegment.java` and `PromotionServiceApplication.java`. Created `V5__drop_gamification_tables.sql` Flyway migration dropping 6 gamification tables.
+- **SIMP-003 — Remove Robo-advisory** (2 SP): Verified already done — no robo-advisory code exists in investment-service. Already simplified to portfolio view + mutual fund.
+
 ### Fixed
 
 - **E2E Blackbox Test Suite — 0 Failures/Errors (2026-03-02)**:

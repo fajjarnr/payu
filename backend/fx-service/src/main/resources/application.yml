@@ -8,6 +8,7 @@ spring:
     name: fx-service
   profiles:
     active: ${ENVIRONMENT:dev}
+    include: grpc
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:payu_fx}
     username: ${DB_USERNAME:postgres}
@@ -108,6 +109,10 @@ fx:
 
 # PayU Cache Starter Configuration
 payu:
+  grpc:
+    clients:
+      wallet-service:
+        address: ${WALLET_GRPC_ADDRESS:static://wallet-service:9090}
   cache:
     enabled: true
     redis:

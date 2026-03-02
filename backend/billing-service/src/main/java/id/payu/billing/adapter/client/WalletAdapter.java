@@ -7,9 +7,13 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 /**
- * Adapter wrapping WalletClient to implement WalletPort.
+ * REST adapter wrapping WalletClient to implement WalletPort.
+ *
+ * @deprecated Use {@link WalletGrpcAdapter} instead (IMP-028: gRPC migration).
+ *             Kept as fallback during migration period.
  */
-@Component
+@Deprecated
+@Component("walletRestAdapter")
 @RequiredArgsConstructor
 public class WalletAdapter implements WalletPort {
 
