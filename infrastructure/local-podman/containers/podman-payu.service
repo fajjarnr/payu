@@ -29,6 +29,5 @@ ExecStopPost=/usr/bin/podman system prune -f
 WantedBy=multi-user.target
 Also=postgres.target
 Also=redis.target
-Also=zookeeper.target
 Also=kafka.target
 Also=keycloak.target

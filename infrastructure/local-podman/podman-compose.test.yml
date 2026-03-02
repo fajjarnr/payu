@@ -76,30 +76,10 @@ services:
     annotation:
       io.containers.autoupdate: registry
   # ============================================
-  # MESSAGE BROKER (Test)
+  # MESSAGE BROKER (Test) - KRaft mode (no Zookeeper)
   # ============================================
-  zookeeper-test:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: payu-zookeeper-test
-    podman_networks:
-      - name: payu-test-network
-    ports:
-      - "2182:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      KAFKA_HEAP_OPTS: "-Xmx256M -Xms256M"
-    healthcheck:
-      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    cgroupns: host
-    annotation:
-      io.containers.autoupdate: registry
   kafka-test:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.7.1
     container_name: payu-kafka-test
     podman_networks:
       - name: payu-test-network
@@ -107,29 +87,33 @@ services:
       - "9093:9092"
       - "29093:29092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      # KRaft mode - aligned with AMQ Streams on OpenShift
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-test:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9094
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
-    depends_on:
-      - zookeeper-test
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     healthcheck:
       test:
         [
           "CMD",
           "kafka-broker-api-versions",
           "--bootstrap-server",
-          "localhost:9093",
+          "localhost:9092",
         ]
       interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 20s
+      start_period: 30s
     cgroupns: host
     annotation:
       io.containers.autoupdate: registry

@@ -1,7 +1,0 @@
-[Unit]
-Description=PayU Zookeeper Target
-After=network.target container.service
-PartOf=podman-payu.service
-
-[Install]
-WantedBy=podman-payu.service

@@ -22,8 +22,7 @@ This directory contains Podman quadlet configurations for local development and 
 - `redis.container` - Redis cache with memory limits
 
 ### Messaging Layer
-- `zookeeper.container` - Apache Zookeeper for Kafka coordination
-- `kafka.container` - Apache Kafka broker with zookeeper dependency
+- `kafka.container` - Apache Kafka broker (KRaft mode, no Zookeeper — aligned with AMQ Streams on OpenShift)
 
 ### Identity Management
 - `keycloak.container` - Keycloak identity server

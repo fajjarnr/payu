@@ -1,6 +1,6 @@
 [Unit]
-Description=PayU Kafka Target
-After=zookeeper.target container.service
+Description=PayU Kafka Target (KRaft mode)
+After=network.target container.service
 PartOf=podman-payu.service
 
 [Install]
