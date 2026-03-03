@@ -43,7 +43,7 @@ async def start_kyc_verification(
     try:
         await limiter.check(request, get_remote_address(request), "10/minute")
     except Exception:
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_RAT_001",
             message="Rate limit exceeded. Please try again later.",
             request_id=getattr(request.state, "request_id", None),
@@ -58,7 +58,7 @@ async def start_kyc_verification(
         )
         if cached:
             log.info("Returning cached KYC start result")
-            return ApiResponse.success(
+            return ApiResponse.create_success(
                 data=cached, request_id=getattr(request.state, "request_id", None)
             ).model_dump()
 
@@ -94,7 +94,7 @@ async def start_kyc_verification(
         ).model_dump()
     except Exception as e:
         log.error("Failed to start KYC verification", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_SYS_001",
             message="Failed to start KYC verification",
             request_id=getattr(request.state, "request_id", None),
@@ -125,7 +125,7 @@ async def upload_ktp(
     try:
         await limiter.check(request, get_remote_address(request), "5/minute")
     except Exception:
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_RAT_001",
             message="Rate limit exceeded. Please try again later.",
             request_id=getattr(request.state, "request_id", None),
@@ -140,7 +140,7 @@ async def upload_ktp(
         )
         if cached:
             log.info("Returning cached KTP upload result")
-            return ApiResponse.success(
+            return ApiResponse.create_success(
                 data=cached, request_id=getattr(request.state, "request_id", None)
             ).model_dump()
 
@@ -174,14 +174,14 @@ async def upload_ktp(
         ).model_dump()
     except ValueError as e:
         log.warning("KTP validation failed", error=str(e))
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_VAL_001",
             message=str(e),
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
     except Exception as e:
         log.error("Failed to process KTP upload", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_SYS_002",
             message="Failed to process KTP upload",
             request_id=getattr(request.state, "request_id", None),
@@ -212,7 +212,7 @@ async def upload_selfie(
     try:
         await limiter.check(request, get_remote_address(request), "5/minute")
     except Exception:
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_RAT_001",
             message="Rate limit exceeded. Please try again later.",
             request_id=getattr(request.state, "request_id", None),
@@ -227,7 +227,7 @@ async def upload_selfie(
         )
         if cached:
             log.info("Returning cached selfie upload result")
-            return ApiResponse.success(
+            return ApiResponse.create_success(
                 data=cached, request_id=getattr(request.state, "request_id", None)
             ).model_dump()
 
@@ -262,14 +262,14 @@ async def upload_selfie(
         ).model_dump()
     except ValueError as e:
         log.warning("Selfie validation failed", error=str(e))
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_VAL_002",
             message=str(e),
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
     except Exception as e:
         log.error("Failed to process selfie upload", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_SYS_003",
             message="Failed to process selfie upload",
             request_id=getattr(request.state, "request_id", None),
@@ -293,7 +293,7 @@ async def get_kyc_status(
 
         if not verification:
             log.warning("Verification not found")
-            return ApiResponse.error(
+            return ApiResponse.create_error(
                 code="KYC_VAL_003",
                 message="Verification not found",
                 request_id=getattr(request.state, "request_id", None),
@@ -318,7 +318,7 @@ async def get_kyc_status(
         ).model_dump()
     except Exception as e:
         log.error("Failed to fetch verification status", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_SYS_004",
             message="Failed to fetch verification status",
             request_id=getattr(request.state, "request_id", None),
@@ -360,7 +360,7 @@ async def get_user_kyc_history(
         ).model_dump()
     except Exception as e:
         log.error("Failed to fetch user KYC history", exc_info=e)
-        return ApiResponse.error(
+        return ApiResponse.create_error(
             code="KYC_SYS_005",
             message="Failed to fetch user KYC history",
             request_id=getattr(request.state, "request_id", None),

@@ -115,26 +115,34 @@ def registered_user(api, test_user_data):
     if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
         pytest.skip(f"account-service unavailable or auth barrier ({response.status_code})")
     assert response.status_code in [200, 201], f"Registration failed: {response.text}"
-    data = response.json()
-    test_user_data["userId"] = data.get("id", data.get("userId"))
+    body = response.json()
+    # Handle ApiResponse wrapper: {"success": true, "data": {...}}
+    data = body.get("data", body) if isinstance(body, dict) else body
+    test_user_data["userId"] = data.get("id", data.get("userId")) if isinstance(data, dict) else None
     return test_user_data
 
 
 @pytest.fixture(scope="session")
-def auth_token(api, registered_user):
-    """Session-scoped fixture that logs in the registered user and returns auth token.
+def auth_token(api):
+    """Session-scoped fixture that logs in a pre-seeded Keycloak user and returns auth token.
+    
+    Uses pre-seeded Keycloak user because account-service registration does NOT
+    create users in Keycloak (architecture gap — user sync not yet implemented).
+    Pre-seeded users: customer1, customer2, admin, backoffice (password: P@ssw0rd123).
     
     Also sets the token on the api client.
     """
     response = api.post("/api/v1/auth/login", json={
-        "username": registered_user["username"],
-        "password": registered_user["password"],
+        "username": "customer1",
+        "password": "P@ssw0rd123",
     })
     if response.status_code in [401, 403, 429, 500, 502, 503, 504]:
         pytest.skip(f"auth-service unavailable or login failed ({response.status_code})")
     assert response.status_code == 200, f"Login failed: {response.text}"
-    data = response.json()
-    assert "access_token" in data
+    body = response.json()
+    # Handle ApiResponse wrapper: {"success": true, "data": {"access_token": "..."}}
+    data = body.get("data", body) if isinstance(body, dict) else body
+    assert "access_token" in data, f"No access_token in response: {body}"
     token = data["access_token"]
     api.set_token(token)
     return token

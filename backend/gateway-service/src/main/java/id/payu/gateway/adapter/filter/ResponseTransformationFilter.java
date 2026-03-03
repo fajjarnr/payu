@@ -82,16 +82,16 @@ public class ResponseTransformationFilter implements ContainerResponseFilter {
     private void transformHeaders(ContainerRequestContext requestContext,
                                    ContainerResponseContext responseContext,
                                    String path, String method) {
-        // Convert headers to mutable map
+        // Convert headers to mutable map — header values may be non-String (e.g., Integer for Content-Length)
         Map<String, List<String>> headers = new java.util.HashMap<>();
         for (String headerName : responseContext.getHeaders().keySet()) {
-            Object values = responseContext.getHeaders().get(headerName);
-            if (values instanceof List) {
-                headers.put(headerName, new ArrayList<>((List<String>) values));
-            } else if (values != null) {
-                List<String> list = new ArrayList<>();
-                list.add(values.toString());
-                headers.put(headerName, list);
+            List<Object> rawValues = responseContext.getHeaders().get(headerName);
+            if (rawValues != null) {
+                List<String> stringValues = new ArrayList<>();
+                for (Object v : rawValues) {
+                    stringValues.add(v != null ? v.toString() : "");
+                }
+                headers.put(headerName, stringValues);
             }
         }
 

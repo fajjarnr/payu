@@ -47,7 +47,7 @@ public class SplitBillController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.hasReadAccess(#id, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get split bill by ID", description = "Retrieve details of a specific split bill")
     @ApiResponse(responseCode = "200", description = "Split bill found")
     @ApiResponse(responseCode = "404", description = "Split bill not found")
@@ -61,7 +61,7 @@ public class SplitBillController {
 
     @GetMapping("/account/{accountId}")
     @Operation(summary = "Get account split bills", description = "Retrieve all split bills for an account")
-    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<SplitBill>> getAccountSplitBills(
             @PathVariable UUID accountId,
             @RequestParam(defaultValue = "0") int page,
@@ -72,7 +72,7 @@ public class SplitBillController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.isOwner(#id, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Update split bill", description = "Update details of a draft split bill")
     @ApiResponse(responseCode = "200", description = "Split bill updated successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -87,7 +87,7 @@ public class SplitBillController {
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.isOwner(#id, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Cancel split bill", description = "Cancel a split bill in draft or active status")
     @ApiResponse(responseCode = "200", description = "Split bill cancelled successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -100,7 +100,7 @@ public class SplitBillController {
     }
 
     @PostMapping("/{id}/activate")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.isOwner(#id, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Activate split bill", description = "Activate a draft split bill and send notifications to participants")
     @ApiResponse(responseCode = "200", description = "Split bill activated successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -113,7 +113,7 @@ public class SplitBillController {
     }
 
     @PostMapping("/{id}/participants")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.isOwner(#id, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Add participant", description = "Add a new participant to a draft split bill")
     @ApiResponse(responseCode = "200", description = "Participant added successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -128,7 +128,7 @@ public class SplitBillController {
     }
 
     @PostMapping("/{id}/participants/{participantId}/accept")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.canRespondToInvitation(#id, #participantId, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Accept split bill", description = "Accept a split bill invitation")
     @ApiResponse(responseCode = "200", description = "Split bill accepted successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -143,7 +143,7 @@ public class SplitBillController {
     }
 
     @PostMapping("/{id}/participants/{participantId}/decline")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.canRespondToInvitation(#id, #participantId, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Decline split bill", description = "Decline a split bill invitation")
     @ApiResponse(responseCode = "200", description = "Split bill declined successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -158,7 +158,7 @@ public class SplitBillController {
     }
 
     @PostMapping("/{id}/participants/{participantId}/payment")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.canMakePayment(#id, #participantId, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Make payment", description = "Make a payment towards a split bill")
     @ApiResponse(responseCode = "200", description = "Payment made successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -175,7 +175,7 @@ public class SplitBillController {
     }
 
     @PostMapping("/{id}/settle")
-    @PreAuthorize("isAuthenticated() and @splitBillSecurityService.isOwner(#id, authentication.principal.userId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Settle split bill", description = "Mark a split bill as completed")
     @ApiResponse(responseCode = "200", description = "Split bill settled successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")

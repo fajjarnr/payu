@@ -499,6 +499,8 @@ public interface GatewayConfig {
         @WithName("jwt-secret")
         @WithDefault("dGVzdC1qd3Qtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC0xMjM0NTY3ODkw")
         String jwtSecret();
+
+        Optional<String> audience();
     }
 
     /**

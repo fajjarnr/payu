@@ -34,6 +34,8 @@ class TestPromotionFlow:
             pytest.skip(f"Promotion creation may require admin privileges: {response.text}")
 
         promotion = response.json()
+        if isinstance(promotion, dict) and "data" in promotion:
+            promotion = promotion["data"]
         assert "id" in promotion
         assert promotion["code"] == "WELCOME2024"
 
@@ -46,6 +48,8 @@ class TestPromotionFlow:
         response = authenticated_api.get("/api/v1/promotions")
         assert response.status_code == 200
         promotions = response.json()
+        if isinstance(promotions, dict) and "data" in promotions:
+            promotions = promotions["data"]
         assert isinstance(promotions, list)
 
     def test_get_promotion_by_code(self, authenticated_api):
@@ -57,6 +61,8 @@ class TestPromotionFlow:
             pytest.skip("Promotion code may not exist")
 
         promotion = response.json()
+        if isinstance(promotion, dict) and "data" in promotion:
+            promotion = promotion["data"]
         assert promotion["code"] == "WELCOME2024"
 
     def test_claim_promotion(self, authenticated_api, registered_user):
@@ -169,6 +175,8 @@ class TestPromotionFlow:
             pytest.skip("No promotion to update")
 
         promotion = response.json()
+        if isinstance(promotion, dict) and "data" in promotion:
+            promotion = promotion["data"]
         promotion_id = promotion.get("id")
 
         response = authenticated_api.put(f"/api/v1/promotions/{promotion_id}", json={
@@ -181,6 +189,8 @@ class TestPromotionFlow:
             pytest.skip(f"Promotion update may require admin privileges: {response.text}")
 
         updated_promotion = response.json()
+        if isinstance(updated_promotion, dict) and "data" in updated_promotion:
+            updated_promotion = updated_promotion["data"]
         assert updated_promotion is not None
 
     def test_activate_promotion(self, authenticated_api):
@@ -192,6 +202,8 @@ class TestPromotionFlow:
             pytest.skip("No promotion to activate")
 
         promotion = response.json()
+        if isinstance(promotion, dict) and "data" in promotion:
+            promotion = promotion["data"]
         promotion_id = promotion.get("id")
 
         response = authenticated_api.post(f"/api/v1/promotions/{promotion_id}/activate")
@@ -199,5 +211,7 @@ class TestPromotionFlow:
             pytest.skip(f"Promotion activation may require admin privileges: {response.text}")
 
         activated_promotion = response.json()
+        if isinstance(activated_promotion, dict) and "data" in activated_promotion:
+            activated_promotion = activated_promotion["data"]
         assert activated_promotion is not None
         assert activated_promotion.get("status") == "ACTIVE"

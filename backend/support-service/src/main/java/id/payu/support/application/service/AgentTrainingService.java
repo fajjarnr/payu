@@ -25,6 +25,7 @@ public class AgentTrainingService {
     private final SupportAgentRepository agentRepository;
     private final TrainingModuleRepository moduleRepository;
 
+    @Transactional(readOnly = true)
     public List<AgentTrainingResponse> getAllAgentTrainings() {
         return agentTrainingRepository.findAll()
                 .stream()
@@ -32,6 +33,7 @@ public class AgentTrainingService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<AgentTrainingResponse> getTrainingsByAgent(Long agentId) {
         return agentTrainingRepository.findByAgentId(agentId)
                 .stream()
@@ -39,6 +41,7 @@ public class AgentTrainingService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<AgentTrainingResponse> getTrainingsByModule(Long moduleId) {
         return agentTrainingRepository.findByTrainingModuleId(moduleId)
                 .stream()
@@ -46,6 +49,7 @@ public class AgentTrainingService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public AgentTrainingResponse getAgentTraining(Long agentId, Long moduleId) {
         return agentTrainingRepository.findByAgentIdAndTrainingModuleId(agentId, moduleId)
                 .map(this::toResponse)
@@ -96,6 +100,7 @@ public class AgentTrainingService {
         return completedMandatory >= mandatoryModules;
     }
 
+    @Transactional(readOnly = true)
     public long countFullyTrainedAgents() {
         long totalAgents = agentRepository.countByActiveTrue();
         long mandatoryModules = moduleRepository.countByMandatoryTrueAndStatus(TrainingModule.TrainingStatus.ACTIVE);

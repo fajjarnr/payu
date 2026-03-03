@@ -55,10 +55,6 @@ public class InvestmentApplicationService implements
 
     @Override
     @Transactional
-    @Async
-    @CircuitBreaker(name = "walletService", fallbackMethod = "createAccountFallback")
-    @Retry(name = "walletService")
-    @TimeLimiter(name = "walletService")
     public CompletableFuture<InvestmentAccount> createAccount(String userId) {
         log.info("Creating investment account for user: {}", userId);
 

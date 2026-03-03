@@ -5,6 +5,11 @@ spring:
   application:
     name: dispute-service
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost:5432}/${DB_NAME:dispute_service}}
     username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:payu}}
@@ -83,6 +88,14 @@ logging:
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Cache (Redis)
+payu:
+  cache:
+    enabled: true
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 # OpenTelemetry
 otel:

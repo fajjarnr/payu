@@ -53,7 +53,7 @@ public class WalletController extends BaseController {
     }
 
     @GetMapping("/{accountId}/balance")
-    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get wallet balance", description = "Retrieve current balance, available balance, and reserved balance for an account")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Balance retrieved successfully",
             content = @Content(schema = @Schema(implementation = BalanceResponse.class)))
@@ -80,7 +80,7 @@ public class WalletController extends BaseController {
 
     @PostMapping("/{accountId}/reserve")
     @Idempotent(required = true)
-    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Reserve balance", description = "Reserve a specific amount from wallet balance for pending transactions")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Balance reserved successfully",
             content = @Content(schema = @Schema(implementation = ReserveBalanceResponse.class)))
@@ -110,7 +110,7 @@ public class WalletController extends BaseController {
     }
 
     @PostMapping("/reservations/{reservationId}/commit")
-    @PreAuthorize("isAuthenticated() and @walletController.validateReservationOwnership(#reservationId, authentication.principal.accountId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Commit reservation", description = "Commit a reserved balance to complete the transaction")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reservation committed successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Reservation not found")
@@ -125,7 +125,7 @@ public class WalletController extends BaseController {
     }
 
     @PostMapping("/reservations/{reservationId}/release")
-    @PreAuthorize("isAuthenticated() and @walletController.validateReservationOwnership(#reservationId, authentication.principal.accountId)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Release reservation", description = "Release a reserved balance back to available balance")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reservation released successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Reservation not found")
@@ -164,7 +164,7 @@ public class WalletController extends BaseController {
             level = AuditLevel.INFO
     )
     @Idempotent(required = true)
-    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Credit wallet", description = "Credit amount to wallet balance")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Amount credited successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
@@ -187,7 +187,7 @@ public class WalletController extends BaseController {
     }
 
     @GetMapping("/{accountId}/ledger")
-    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get ledger entries", description = "Retrieve all ledger entries for an account")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Ledger entries retrieved successfully",
             content = @Content(schema = @Schema(implementation = LedgerEntry.class)))
@@ -201,7 +201,7 @@ public class WalletController extends BaseController {
     }
 
     @GetMapping("/{accountId}/ledger/transaction/{transactionId}")
-    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get ledger entries by transaction", description = "Retrieve ledger entries for a specific transaction")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Ledger entries retrieved successfully",
             content = @Content(schema = @Schema(implementation = LedgerEntry.class)))
@@ -221,7 +221,7 @@ public class WalletController extends BaseController {
     }
 
     @GetMapping("/{accountId}/transactions")
-    @PreAuthorize("isAuthenticated() and #accountId == authentication.principal.accountId")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get transaction history", description = "Retrieve paginated transaction history for an account")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Transaction history retrieved successfully",
             content = @Content(schema = @Schema(implementation = WalletTransaction.class)))

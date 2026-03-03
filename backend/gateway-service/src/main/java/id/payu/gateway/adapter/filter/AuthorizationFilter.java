@@ -17,6 +17,7 @@ import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import io.quarkus.logging.Log;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.value.ReactiveValueCommands;
+import id.payu.gateway.config.GatewayConfig;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -60,7 +61,8 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         "/api/v1/partners/webhook",
         "/api/v1/bi-fast/callback",
         "/api/v1/qris/callback",
-        "/api/v1/public/"             // Public content endpoints (CMS, etc.)
+        "/api/v1/public/",             // Public content endpoints (CMS, etc.)
+        "/api/v1/simulator/"           // Internal simulator proxy endpoints
     };
 
     // Exact match public endpoints (must match exactly)
@@ -86,8 +88,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     String authServerUrl;
 
     @Inject
-    @ConfigProperty(name = "quarkus.oidc.token.audience", defaultValue = "gateway-service")
-    String jwtAudience;
+    GatewayConfig gatewayConfig;
 
     @Inject
     ReactiveRedisDataSource redisDataSource;
@@ -138,6 +139,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 .issuer(jwtIssuer);
 
             // Add audience validation if configured
+            String jwtAudience = gatewayConfig.authorization().audience().orElse("");
             if (jwtAudience != null && !jwtAudience.isBlank()) {
                 expectedClaimsBuilder.audience(jwtAudience);
             }

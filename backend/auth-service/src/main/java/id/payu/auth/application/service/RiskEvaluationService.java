@@ -131,7 +131,9 @@ public class RiskEvaluationService {
                      UserRiskProfileEntity newProfile = new UserRiskProfileEntity();
                      newProfile.setUsername(username);
                      newProfile.setFailedAttempts(0);
-                     return newProfile;
+                     // Persist immediately so child entities (known IPs, devices)
+                     // can reference a managed entity with valid PK
+                     return riskProfileRepository.save(newProfile);
                 });
     }
 

@@ -148,6 +148,10 @@ public class ApiGatewayResource {
     public Uni<Response> notificationGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
         return proxy("notification-service", "/api/v1/notifications/" + path, "GET", body, headers);
     }
+    @POST @Path("/notifications")
+    public Uni<Response> notificationRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("notification-service", "/api/v1/notifications", "POST", body, headers);
+    }
     @POST @Path("/notifications/{path: .*}")
     public Uni<Response> notificationPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
         return proxy("notification-service", "/api/v1/notifications/" + path, "POST", body, headers);
@@ -414,8 +418,133 @@ public class ApiGatewayResource {
         return proxy("cms-service", "/api/v1/public/contents", "GET", body, headers);
     }
 
+    // ==================== Dispute Service ====================
+    @GET @Path("/disputes/{path: .*}")
+    public Uni<Response> disputeGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/disputes/" + path, "GET", body, headers);
+    }
+    @POST @Path("/disputes/{path: .*}")
+    public Uni<Response> disputePost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/disputes/" + path, "POST", body, headers);
+    }
+    @PUT @Path("/disputes/{path: .*}")
+    public Uni<Response> disputePut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/disputes/" + path, "PUT", body, headers);
+    }
+    @GET @Path("/disputes")
+    public Uni<Response> disputeRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/disputes", "GET", body, headers);
+    }
+    @POST @Path("/disputes")
+    public Uni<Response> disputeRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/disputes", "POST", body, headers);
+    }
+
+    // ==================== Refund Service (via Dispute Service) ====================
+    @GET @Path("/refunds/{path: .*}")
+    public Uni<Response> refundGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/refunds/" + path, "GET", body, headers);
+    }
+    @POST @Path("/refunds/{path: .*}")
+    public Uni<Response> refundPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/refunds/" + path, "POST", body, headers);
+    }
+    @GET @Path("/refunds")
+    public Uni<Response> refundRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/refunds", "GET", body, headers);
+    }
+    @POST @Path("/refunds")
+    public Uni<Response> refundRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("dispute-service", "/api/v1/refunds", "POST", body, headers);
+    }
+
+    // ==================== FX Service ====================
+    @GET @Path("/fx/{path: .*}")
+    public Uni<Response> fxGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("fx-service", "/fx-api/v1/" + path, "GET", body, headers);
+    }
+    @POST @Path("/fx/{path: .*}")
+    public Uni<Response> fxPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("fx-service", "/fx-api/v1/" + path, "POST", body, headers);
+    }
+    @GET @Path("/fx")
+    public Uni<Response> fxRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("fx-service", "/fx-api/v1", "GET", body, headers);
+    }
+
+    // ==================== KYC Service ====================
+    @GET @Path("/kyc/{path: .*}")
+    public Uni<Response> kycGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("kyc-service", "/api/v1/kyc/" + path, "GET", body, headers);
+    }
+    @POST @Path("/kyc/{path: .*}")
+    public Uni<Response> kycPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("kyc-service", "/api/v1/kyc/" + path, "POST", body, headers);
+    }
+    @GET @Path("/kyc")
+    public Uni<Response> kycRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("kyc-service", "/api/v1/kyc", "GET", body, headers);
+    }
+    @POST @Path("/kyc")
+    public Uni<Response> kycRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("kyc-service", "/api/v1/kyc", "POST", body, headers);
+    }
+
+    // ==================== Statement Service ====================
+    @GET @Path("/statements/{path: .*}")
+    public Uni<Response> statementGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("statement-service", "/api/v1/statements/" + path, "GET", body, headers);
+    }
+    @POST @Path("/statements/{path: .*}")
+    public Uni<Response> statementPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("statement-service", "/api/v1/statements/" + path, "POST", body, headers);
+    }
+    @GET @Path("/statements")
+    public Uni<Response> statementRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("statement-service", "/api/v1/statements", "GET", body, headers);
+    }
+    @POST @Path("/statements")
+    public Uni<Response> statementRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("statement-service", "/api/v1/statements", "POST", body, headers);
+    }
+
+    // ==================== Subscription Service (via Billing) ====================
+    @GET @Path("/subscriptions/{path: .*}")
+    public Uni<Response> subscriptionGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/subscriptions/" + path, "GET", body, headers);
+    }
+    @POST @Path("/subscriptions/{path: .*}")
+    public Uni<Response> subscriptionPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/subscriptions/" + path, "POST", body, headers);
+    }
+    @GET @Path("/subscriptions")
+    public Uni<Response> subscriptionRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/subscriptions", "GET", body, headers);
+    }
+    @POST @Path("/subscriptions")
+    public Uni<Response> subscriptionRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/subscriptions", "POST", body, headers);
+    }
+
+    // ==================== TopUp Service (via Billing) ====================
+    @GET @Path("/topup/{path: .*}")
+    public Uni<Response> topupGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/topup/" + path, "GET", body, headers);
+    }
+    @POST @Path("/topup/{path: .*}")
+    public Uni<Response> topupPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/topup/" + path, "POST", body, headers);
+    }
+    @GET @Path("/topup")
+    public Uni<Response> topupRootGet(String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/topup", "GET", body, headers);
+    }
+    @POST @Path("/topup")
+    public Uni<Response> topupRootPost(String body, @Context HttpHeaders headers) {
+        return proxy("billing-service", "/api/v1/topup", "POST", body, headers);
+    }
+
     // ==================== Dynamic Route (IMP-007) ====================
-    // Catch-all endpoint for routes not explicitly defined above.
     // Uses RouteRegistry to match path prefix → backend service dynamically.
     // This allows adding new routes via YAML config without code changes.
 

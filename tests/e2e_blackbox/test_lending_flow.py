@@ -23,6 +23,8 @@ class TestLendingFlow:
             pytest.skip(f"Credit score calculation failed: {response.text}")
 
         credit_score = response.json()
+        if isinstance(credit_score, dict) and "data" in credit_score:
+            credit_score = credit_score["data"]
         assert "score" in credit_score or credit_score is not None
 
     def test_get_credit_score(self, authenticated_api, registered_user):
@@ -36,6 +38,8 @@ class TestLendingFlow:
             pytest.skip("Credit score may not exist yet")
 
         credit_score = response.json()
+        if isinstance(credit_score, dict) and "data" in credit_score:
+            credit_score = credit_score["data"]
         assert credit_score is not None
 
     def test_apply_personal_loan(self, authenticated_api, registered_user):
@@ -56,6 +60,8 @@ class TestLendingFlow:
             pytest.skip(f"Loan application may require credit history: {response.text}")
         else:
             loan = response.json()
+            if isinstance(loan, dict) and "data" in loan:
+                loan = loan["data"]
             assert "id" in loan or "loanId" in loan
             assert loan.get("status") in ["PENDING", "APPROVED", "REJECTED"]
 
@@ -80,6 +86,8 @@ class TestLendingFlow:
 
         if response.status_code in [200, 201]:
             loan = response.json()
+            if isinstance(loan, dict) and "data" in loan:
+                loan = loan["data"]
             loan_id = loan.get("id", loan.get("loanId"))
 
         if not loan_id:
@@ -88,6 +96,8 @@ class TestLendingFlow:
         response = authenticated_api.get(f"/api/v1/lending/loans/{loan_id}")
         assert response.status_code == 200
         loan_details = response.json()
+        if isinstance(loan_details, dict) and "data" in loan_details:
+            loan_details = loan_details["data"]
         assert loan_details.get("id") == loan_id
 
     def test_create_repayment_schedule(self, authenticated_api, registered_user):
@@ -109,6 +119,8 @@ class TestLendingFlow:
             pytest.skip("Loan creation required for schedule")
 
         loan = response.json()
+        if isinstance(loan, dict) and "data" in loan:
+            loan = loan["data"]
         loan_id = loan.get("id", loan.get("loanId"))
 
         if not loan_id:
@@ -119,6 +131,8 @@ class TestLendingFlow:
             pytest.skip(f"Repayment schedule creation failed: {response.text}")
 
         schedule = response.json()
+        if isinstance(schedule, dict) and "data" in schedule:
+            schedule = schedule["data"]
         assert isinstance(schedule, list)
         assert len(schedule) > 0
 
@@ -137,6 +151,8 @@ class TestLendingFlow:
             pytest.skip(f"PayLater activation requires credit score: {response.text}")
 
         paylater = response.json()
+        if isinstance(paylater, dict) and "data" in paylater:
+            paylater = paylater["data"]
         assert paylater is not None
         assert paylater.get("status") in ["ACTIVE", "PENDING"]
 
@@ -156,6 +172,8 @@ class TestLendingFlow:
             pytest.skip(f"PayLater purchase requires active PayLater: {response.text}")
 
         transaction = response.json()
+        if isinstance(transaction, dict) and "data" in transaction:
+            transaction = transaction["data"]
         assert transaction is not None
         assert transaction.get("amount") == 500000
 
@@ -186,4 +204,6 @@ class TestLendingFlow:
             pytest.skip("PayLater may not be active")
 
         transactions = response.json()
+        if isinstance(transactions, dict) and "data" in transactions:
+            transactions = transactions["data"]
         assert isinstance(transactions, list)

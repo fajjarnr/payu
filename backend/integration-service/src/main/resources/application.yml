@@ -45,6 +45,12 @@ spring:
     baseline-on-migrate: true
     validate-on-migrate: true
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 5000
+
 camel:
   springboot:
     name: PayUIntegration
@@ -87,6 +93,11 @@ management:
         enabled: true
 
 payu:
+  cache:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      ttl: 3600
   integration:
     api:
       server-url: https://integration.payu.fajjjar.my.id

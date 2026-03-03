@@ -46,6 +46,10 @@ public class DataMaskingAspect {
     // ThreadLocal to track visited objects and prevent infinite recursion
     private final ThreadLocal<IdentityHashMap<Object, Object>> visitedObjects = ThreadLocal.withInitial(IdentityHashMap::new);
 
+    // BUG-BE-175: Maximum recursion depth to prevent StackOverflowError
+    private static final int MAX_RECURSION_DEPTH = 5;
+    private final ThreadLocal<Integer> recursionDepth = ThreadLocal.withInitial(() -> 0);
+
     public DataMaskingAspect(SecurityProperties properties) {
         this.properties = properties;
     }
@@ -61,28 +65,46 @@ public class DataMaskingAspect {
             return joinPoint.proceed();
         }
 
-        // Clear visited objects before processing
-        visitedObjects.get().clear();
+        // BUG-BE-175: Wrap entire masking logic in try-catch to prevent StackOverflowError
+        // from propagating and causing 401 responses via Spring Security's ExceptionTranslationFilter
+        try {
+            // Clear visited objects and reset recursion depth before processing
+            visitedObjects.get().clear();
+            recursionDepth.set(0);
 
-        // Mask arguments before logging
-        Object[] maskedArgs = maskArguments(joinPoint.getArgs());
+            // Mask arguments before logging
+            Object[] maskedArgs = maskArguments(joinPoint.getArgs());
 
-        // Log masked arguments
-        if (log.isDebugEnabled()) {
-            log.debug("Executing: {} with masked args: {}", joinPoint.getSignature(),
-                    formatArgs(maskedArgs));
+            // Log masked arguments
+            if (log.isDebugEnabled()) {
+                log.debug("Executing: {} with masked args: {}", joinPoint.getSignature(),
+                        formatArgs(maskedArgs));
+            }
+        } catch (Throwable t) {
+            // BUG-BE-175: Never let masking failure prevent the actual method from executing
+            log.warn("Failed to mask method arguments for {}: {}", joinPoint.getSignature().toShortString(), t.getClass().getSimpleName());
+        } finally {
+            visitedObjects.get().clear();
+            recursionDepth.set(0);
         }
 
         Object result = joinPoint.proceed();
 
         // Mask return value before logging
-        if (log.isDebugEnabled() && result != null) {
-            Object maskedResult = maskValue(result);
-            log.debug("Result: {}", maskedResult);
+        try {
+            if (log.isDebugEnabled() && result != null) {
+                recursionDepth.set(0);
+                visitedObjects.get().clear();
+                Object maskedResult = maskValue(result);
+                log.debug("Result: {}", maskedResult);
+            }
+        } catch (Throwable t) {
+            log.warn("Failed to mask return value for {}: {}", joinPoint.getSignature().toShortString(), t.getClass().getSimpleName());
+        } finally {
+            // Clean up after processing
+            visitedObjects.remove();
+            recursionDepth.remove();
         }
-
-        // Clean up after processing
-        visitedObjects.remove();
 
         return result;
     }
@@ -113,8 +135,25 @@ public class DataMaskingAspect {
             return maskAmount((BigDecimal) value);
         }
 
+        // BUG-BE-175: Check recursion depth to prevent StackOverflowError
+        int depth = recursionDepth.get();
+        if (depth >= MAX_RECURSION_DEPTH) {
+            return value.getClass().getSimpleName() + "[MAX_DEPTH]";
+        }
+
+        // BUG-BE-175: Skip JDK/framework classes — only deep-mask id.payu.* DTOs
+        String className = value.getClass().getName();
+        if (!className.startsWith("id.payu.")) {
+            return value.getClass().getSimpleName() + "[...]";
+        }
+
         // Handle objects by converting to string and masking
-        return maskObject(value);
+        recursionDepth.set(depth + 1);
+        try {
+            return maskObject(value);
+        } finally {
+            recursionDepth.set(depth);
+        }
     }
 
     private String maskString(String value) {
@@ -199,6 +238,18 @@ public class DataMaskingAspect {
     private String maskObject(Object obj) {
         if (obj == null) {
             return "null";
+        }
+
+        // BUG-BE-175: Skip non-PayU classes to avoid reflection on JDK internals
+        String objClassName = obj.getClass().getName();
+        if (!objClassName.startsWith("id.payu.")) {
+            return obj.getClass().getSimpleName() + "[...]";
+        }
+
+        // BUG-BE-175: Check recursion depth
+        int depth = recursionDepth.get();
+        if (depth >= MAX_RECURSION_DEPTH) {
+            return obj.getClass().getSimpleName() + "[MAX_DEPTH]";
         }
 
         // Check for circular reference

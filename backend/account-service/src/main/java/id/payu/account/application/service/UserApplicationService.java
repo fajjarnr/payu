@@ -7,20 +7,15 @@ import id.payu.account.domain.port.out.UserPersistencePort;
 import id.payu.account.dto.DukcapilResponse;
 import id.payu.account.dto.RegisterUserRequest;
 import id.payu.security.annotation.Audited;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
-import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 @RequiredArgsConstructor
@@ -33,13 +28,12 @@ public class UserApplicationService implements RegisterUserUseCase {
     private final id.payu.account.domain.port.out.UserEventPublisherPort userEventPublisherPort;
 
     @Override
+    // @Transactional ensures all JPA calls (existsBy*, save) share the same Hibernate session
+    // and JDBC connection with proper transaction management. Without it, the existsBy* calls
+    // run in autoCommit mode, polluting the connection state for the subsequent save.
+    // KYC call is wrapped in try-catch and fails fast on error, so holding a tx is acceptable.
+    // Resilience4j annotations removed — they caused double-fallback (duplicate key errors).
     @Transactional
-    // BUG-BE-020 fix: Removed @Async — @Transactional is ineffective on async threads.
-    // DB operations must run synchronously. Event publishing can be async separately.
-    @CircuitBreaker(name = "dukcapilService", fallbackMethod = "registerFallback")
-    @Retry(name = "dukcapilService")
-    @TimeLimiter(name = "dukcapilService")
-    @Bulkhead(name = "dukcapilService", fallbackMethod = "registerFallback")
     @Audited(operation = Audited.Operation.CREATE, entityType = "User")
     public CompletableFuture<User> registerUser(RegisterUserRequest command) {
         log.info("Processing registration for user: {}", command.username());
@@ -51,16 +45,24 @@ public class UserApplicationService implements RegisterUserUseCase {
             throw new IllegalArgumentException("Username already exists");
         }
 
-        // Call KYC (Port)
-        DukcapilResponse kycResponse = kycVerificationPort.verifyNik(command.nik(), command.fullName());
-
-        User.KycStatus kycStatus = kycResponse.verified() ? User.KycStatus.APPROVED : User.KycStatus.REJECTED;
-
-        // BUG-BE-027 Fix: Set user status based on KYC result.
-        // Previously always ACTIVE, allowing rejected KYC users to login and transact.
-        User.UserStatus userStatus = kycResponse.verified()
-                ? User.UserStatus.ACTIVE
-                : User.UserStatus.PENDING_VERIFICATION;
+        // Attempt KYC verification — if unavailable, register with PENDING status.
+        // Simple try-catch replaces resilience4j annotations which caused double-fallback
+        // (both @CircuitBreaker and @Bulkhead fired registerFallback, leading to duplicate key errors).
+        // Registration is low-throughput and non-idempotent — circuit breaking adds no value here.
+        User.KycStatus kycStatus;
+        User.UserStatus userStatus;
+        try {
+            DukcapilResponse kycResponse = kycVerificationPort.verifyNik(command.nik(), command.fullName());
+            kycStatus = kycResponse.verified() ? User.KycStatus.APPROVED : User.KycStatus.REJECTED;
+            // BUG-BE-027 Fix: Set user status based on KYC result.
+            userStatus = kycResponse.verified()
+                    ? User.UserStatus.ACTIVE
+                    : User.UserStatus.PENDING_VERIFICATION;
+        } catch (Exception e) {
+            log.warn("KYC service unavailable, registering with PENDING status. Error: {}", e.getMessage());
+            kycStatus = User.KycStatus.PENDING;
+            userStatus = User.UserStatus.PENDING_VERIFICATION;
+        }
 
         User user = User.builder()
                 .externalId(command.externalId())
@@ -84,7 +86,8 @@ public class UserApplicationService implements RegisterUserUseCase {
             throw new IllegalStateException("Registration conflict: email or username already taken", e);
         }
 
-        log.info("User registered successfully: {}", savedUser.getId());
+        log.info("User registered successfully with status={}, kycStatus={}: {}",
+                userStatus, kycStatus, savedUser.getId());
 
         // Publish event
         userEventPublisherPort.publishUserCreated(new id.payu.account.dto.UserCreatedEvent(
@@ -94,26 +97,6 @@ public class UserApplicationService implements RegisterUserUseCase {
                 savedUser.getFullName(),
                 savedUser.getCreatedAt()));
 
-        return CompletableFuture.completedFuture(savedUser);
-    }
-
-    public CompletableFuture<User> registerFallback(RegisterUserRequest command, Throwable t) {
-        log.error("KYC Service unavailable, registering with PENDING status. Error: {}", t.getMessage());
-
-        User user = User.builder()
-                .externalId(command.externalId())
-                .username(command.username())
-                .email(command.email())
-                .phoneNumber(command.phoneNumber())
-                .fullName(command.fullName())
-                .nik(command.nik())
-                .status(User.UserStatus.PENDING_VERIFICATION)
-                .kycStatus(User.KycStatus.PENDING)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        User savedUser = userPersistencePort.save(user);
         return CompletableFuture.completedFuture(savedUser);
     }
 }

@@ -18,6 +18,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import io.smallrye.common.annotation.Blocking;
 import java.net.URI;
 import java.time.temporal.ChronoUnit;
 
@@ -29,6 +30,7 @@ import java.time.temporal.ChronoUnit;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
+@Blocking
 public class SimulatorGatewayResource {
 
     @Inject

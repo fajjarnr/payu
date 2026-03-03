@@ -1,8 +1,9 @@
 package id.payu.account.entity;
 
-import id.payu.account.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantAware;
 import id.payu.security.annotation.Sensitive;
 import id.payu.security.converter.EncryptedStringConverter;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class User {
 
     @Id

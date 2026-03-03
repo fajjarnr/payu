@@ -12,10 +12,12 @@ import io.grpc.protobuf.services.ProtoReflectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
@@ -49,6 +51,7 @@ public class GrpcStarterAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(JwtDecoder.class)
     @ConditionalOnProperty(prefix = "payu.grpc.interceptors.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "grpcAuthServerInterceptor")
     public ServerInterceptor grpcAuthServerInterceptor(JwtDecoder jwtDecoder) {
@@ -135,37 +138,13 @@ public class GrpcStarterAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "grpcClientInterceptors")
     public List<ClientInterceptor> grpcClientInterceptors(
-            GrpcTracingInterceptor.ClientInterceptor tracingInterceptor,
-            GrpcAuthInterceptor.ClientInterceptor authInterceptor,
-            GrpcRetryInterceptor retryInterceptor) {
+            @Qualifier("grpcTracingClientInterceptor") ClientInterceptor tracingInterceptor,
+            @Qualifier("grpcAuthClientInterceptor") ClientInterceptor authInterceptor,
+            @Qualifier("grpcRetryInterceptor") ClientInterceptor retryInterceptor) {
         List<ClientInterceptor> interceptors = new ArrayList<>();
         interceptors.add(tracingInterceptor);
         interceptors.add(authInterceptor);
         interceptors.add(retryInterceptor);
         return interceptors;
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "payu.grpc.interceptors.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnMissingBean
-    public GrpcTracingInterceptor.ClientInterceptor grpcTracingClientInterceptorBean() {
-        return new GrpcTracingInterceptor.ClientInterceptor();
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "payu.grpc.interceptors.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnMissingBean
-    public GrpcAuthInterceptor.ClientInterceptor grpcAuthClientInterceptorBean() {
-        return new GrpcAuthInterceptor.ClientInterceptor();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public GrpcRetryInterceptor grpcRetryInterceptorBean() {
-        return new GrpcRetryInterceptor(
-                3, // maxRetries
-                100, // initialBackoffMs
-                5000 // maxBackoffMs
-        );
     }
 }

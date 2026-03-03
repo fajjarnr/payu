@@ -18,8 +18,10 @@ spring:
       max-lifetime: 1800000
       keepalive-time: 60000
       pool-name: container-pool
+      auto-commit: false
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: none
     show-sql: false
@@ -27,6 +29,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
+        connection:
+          provider_disables_autocommit: true
 
   flyway:
     enabled: true

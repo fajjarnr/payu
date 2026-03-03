@@ -3,6 +3,7 @@ package id.payu.fx.adapter.persistence.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,10 +11,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "fx_rates")
-public class FxRateEntity {
+public class FxRateEntity implements Persistable<UUID> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "from_currency", length = 3, nullable = false)
@@ -44,6 +44,24 @@ public class FxRateEntity {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    private boolean isNewEntity = false;
+
+    @Override
+    public boolean isNew() {
+        return isNewEntity;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNewEntity = false;
+    }
+
+    public void setNewEntity(boolean newEntity) {
+        this.isNewEntity = newEntity;
+    }
 
     public UUID getId() {
         return id;

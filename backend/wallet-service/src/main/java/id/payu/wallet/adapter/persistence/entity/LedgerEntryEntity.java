@@ -35,7 +35,7 @@ public class LedgerEntryEntity {
     @Column(name = "coa_code", length = 20)
     private String coaCode;
 
-    @Column(name = "type", nullable = false, length = 10)
+    @Column(name = "entry_type", nullable = false, length = 10)
     private String entryType;
 
     @Column(name = "amount", nullable = false, precision = 19, scale = 4)

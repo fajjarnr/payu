@@ -80,8 +80,18 @@ CREATE INDEX IF NOT EXISTS idx_ledger_coa_code ON ledger_entries(coa_code);
 
 -- Also fix the account_id column type: the original V3 migration created it as UUID
 -- but the entity uses String. Change column type to VARCHAR to match.
+-- Must drop the existing FK constraint first (created in V3 as fk_ledger_account
+-- referencing wallets.id which is UUID), then alter column type, then re-add FK.
+ALTER TABLE ledger_entries DROP CONSTRAINT IF EXISTS fk_ledger_account;
+
 ALTER TABLE ledger_entries
     ALTER COLUMN account_id TYPE VARCHAR(50) USING account_id::VARCHAR;
+
+-- Re-add the FK constraint now that both sides are compatible types
+-- (account_id is now VARCHAR, so we reference wallets.account_id or just drop the FK
+-- since the ledger can reference accounts by string identifier)
+-- Note: We intentionally do NOT re-add fk_ledger_account because account_id
+-- now stores string identifiers that may not directly map to wallets.id (UUID).
 
 -- ============================================================
 -- 4. SEED DATA: Standard Banking Chart of Accounts

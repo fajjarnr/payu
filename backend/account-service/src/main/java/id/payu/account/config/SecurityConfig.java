@@ -1,7 +1,11 @@
 package id.payu.account.config;
 
+import id.payu.security.converter.EncryptedStringConverter;
+import id.payu.security.crypto.EncryptionService;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -10,7 +14,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -18,6 +23,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -25,6 +31,41 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+    @Value("${payu.security.encryption-enabled:false}")
+    private boolean encryptionEnabled;
+
+    @Value("${payu.security.encryption.password:}")
+    private String encryptionPassword;
+
+    @Value("${payu.security.encryption.salt:}")
+    private String encryptionSalt;
+
+    /**
+     * Initialize EncryptedStringConverter directly to work around SecurityAutoConfiguration
+     * not loading in certain container environments.
+     * This ensures JPA @Convert annotations on User entity fields (email, phoneNumber) work correctly.
+     */
+    @PostConstruct
+    public void initEncryptedStringConverter() {
+        if (encryptionEnabled && encryptionPassword != null && !encryptionPassword.isEmpty()) {
+            try {
+                EncryptionService encryptionService = new EncryptionService(
+                        encryptionPassword,
+                        Collections.emptyList(),
+                        encryptionSalt != null && !encryptionSalt.isEmpty() ? encryptionSalt : null
+                );
+                EncryptedStringConverter.setEncryptionService(encryptionService);
+                log.info("EncryptedStringConverter initialized with EncryptionService (encryption enabled)");
+            } catch (Exception e) {
+                log.warn("Failed to initialize EncryptionService, falling back to pass-through mode: {}", e.getMessage());
+                EncryptedStringConverter.setEncryptionDisabled(true);
+            }
+        } else {
+            EncryptedStringConverter.setEncryptionDisabled(true);
+            log.info("EncryptedStringConverter set to pass-through mode (encryption-enabled={})", encryptionEnabled);
+        }
+    }
 
     /**
      * Single security filter chain with proper authorization rules.

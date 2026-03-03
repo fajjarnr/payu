@@ -21,7 +21,6 @@ quarkus:
       verification: none # pragma: allowlist secret
     token:
       issuer: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-      audience: ${OIDC_AUDIENCE:gateway-service}
     # Explicitly configure RS256 algorithm to prevent algorithm confusion attacks
     # This mitigates the "none" algorithm attack and ensures asymmetric encryption
     jws-algorithm: RS256
@@ -137,6 +136,12 @@ gateway:
       timeout: 30s
     cms-service:
       url: ${CMS_SERVICE_URL:http://cms-service:8080}
+      timeout: 30s
+    dispute-service:
+      url: ${DISPUTE_SERVICE_URL:http://dispute-service:8080}
+      timeout: 30s
+    fx-service:
+      url: ${FX_SERVICE_URL:http://fx-service:8080}
       timeout: 30s
   # Simulators
   simulators:

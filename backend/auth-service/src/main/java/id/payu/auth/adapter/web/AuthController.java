@@ -126,7 +126,13 @@ public class AuthController extends BaseController {
             }
 
             // Clear failed attempts counter on successful login
-            riskEvaluationService.recordSuccessfulLogin(request.username(), context);
+            // Non-critical risk telemetry — must NEVER prevent successful login from returning tokens
+            try {
+                riskEvaluationService.recordSuccessfulLogin(request.username(), context);
+            } catch (Exception riskEx) {
+                log.warn("Failed to record successful login for risk profile (non-critical): {} - {}",
+                        riskEx.getClass().getSimpleName(), riskEx.getMessage());
+            }
 
             log.info("Successful login for user: {}", request.username());
             return ResponseEntity.ok(ApiResponse.success(loginResponse));

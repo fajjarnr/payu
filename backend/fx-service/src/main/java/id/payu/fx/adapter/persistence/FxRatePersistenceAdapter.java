@@ -65,6 +65,7 @@ public class FxRatePersistenceAdapter implements FxRateRepositoryPort {
         entity.setValidUntil(fxRate.getValidUntil());
         entity.setVersion(fxRate.getVersion());
         entity.setCreatedAt(fxRate.getCreatedAt());
+        entity.setNewEntity(true);
         return entity;
     }
 
