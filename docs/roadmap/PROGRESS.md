@@ -8,18 +8,20 @@
 
 ## 🏁 Current Status Snapshot
 
-| Attribute                | Value                    |
-| :----------------------- | :----------------------- |
-| **Last Status Update**   | March 2, 2026            |
-| **Production Readiness** | 99% (229/232 bugs fixed) |
-| **OpenShift Tag**        | `v1.6.0`                 |
-| **Namespace**            | `payu-dev`               |
-| **Total Pods**           | 36/36 running            |
-| **Services Deployed**    | 22/22                    |
-| **E2E Tests**            | 399/399 passing          |
-| **Maven Build**          | 38/38 modules SUCCESS    |
-| **Kafka Mode**           | KRaft (no Zookeeper)     |
+| Attribute                | Value                                       |
+| :----------------------- | :------------------------------------------ |
+| **Last Status Update**   | March 3, 2026                               |
+| **Production Readiness** | 99% (229/232 bugs fixed)                    |
+| **OpenShift Tag**        | `v1.6.0`                                    |
+| **Namespace**            | `payu-dev`                                  |
+| **Total Pods**           | 36/36 running                               |
+| **Services Deployed**    | 22/22                                       |
+| **E2E Tests (Blackbox)** | 103 pass, 55 skip, 0 fail (local Podman)    |
+| **E2E Tests (OCP)**      | 399/399 passing                             |
+| **Maven Build**          | 38/38 modules SUCCESS                       |
+| **Kafka Mode**           | KRaft (no Zookeeper)                        |
 
+> ✅ **Phase 1 Local Validation Complete (Mar 3)**: All 54 E2E failures resolved across 10 root cause categories. 53 files changed. 103 passed, 55 skipped, 0 failed.
 > ✅ **Code Review Complete (Feb 24-25)**: 229 of ~232 bugs fixed (~99% resolution rate).
 > **0 open bugs**. 3 intentionally skipped (low impact, future consideration).
 > Lihat `TODOS.md` untuk detail skipped items.
@@ -65,6 +67,26 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.6.1 (Completed) — March 3, 2026
+
+**Phase 1 Local Validation — All E2E Failures Resolved:**
+
+- ✅ **54 → 0 E2E failures** — Resolved all 54 test failures from local Podman `podman compose` environment. Final result: 103 passed, 55 skipped, 0 failed.
+- ✅ **10 Root Cause Categories** fixed across 53 files (768 insertions, 318 deletions):
+  - Cat A: Missing OIDC env vars for dispute-service and fx-service
+  - Cat B: Flat roles claim → nested `realm_access.roles` in 3 SecurityConfig files
+  - Cat C: KYC Python method name mismatches (`error()` → `create_error()`)
+  - Cat D: Test ApiResponse data unwrapping for 4 test suites
+  - Cat E: Wallet `LedgerEntryEntity` column mapping (`type` → `entry_type`)
+  - Cat F: Investment `InvestmentAccountEntity` Persistable pattern
+  - Cat G: Gateway missing notification POST root handler
+  - Cat H: FX `FxRateEntity` Persistable pattern
+  - Cat I: Support `AgentTrainingService` `@Transactional` for lazy collections
+  - Cat J: Test assertion fixes (enums, field names, status codes)
+- ✅ **Gateway routing expanded** — 120+ lines of new JAX-RS routes for disputes, refunds, fx, kyc, statements, subscriptions, topup, notifications
+- ✅ **Shared starters fixed** — DataMaskingAspect StackOverflow, cache/grpc config cleanup
+- ✅ **DB migrations** — V10 profiles schema fix, V8 journal entries column fix
 
 ### v1.6.0 (Completed) — March 2, 2026
 
@@ -306,11 +328,12 @@ Data Layer:
 
 ## 📊 Test Coverage Summary
 
-| Layer        | Framework         | Status                               |
-| :----------- | :---------------- | :----------------------------------- |
-| E2E          | Playwright        | ✅ 399/399                           |
-| Performance  | Gatling           | ✅ Configured                        |
-| Contract     | Pact              | ✅ Configured                        |
-| Integration  | Testcontainers    | ✅ Per service                       |
-| Architecture | ArchUnit          | ✅ 18/19 services                    |
-| Unit         | JUnit 5 + Mockito | Varies (see TODOS for coverage gaps) |
+| Layer             | Framework         | Status                                    |
+| :---------------- | :---------------- | :---------------------------------------- |
+| E2E (OCP)         | Playwright        | ✅ 399/399                                |
+| E2E (Local)       | Pytest Blackbox   | ✅ 103 pass, 55 skip, 0 fail              |
+| Performance       | Gatling           | ✅ Configured                             |
+| Contract          | Pact              | ✅ Configured                             |
+| Integration       | Testcontainers    | ✅ Per service                            |
+| Architecture      | ArchUnit          | ✅ 18/19 services                         |
+| Unit              | JUnit 5 + Mockito | Varies (see TODOS for coverage gaps)      |

@@ -39,6 +39,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Phase 1 Local Validation — 0 E2E Failures (2026-03-03)**:
+  - Resolved all 54 E2E test failures from local Podman environment. Final result: **103 passed, 55 skipped, 0 failed**.
+  - **10 root cause categories identified and fixed across 53 files** (768 insertions, 318 deletions):
+  - **Cat A — Missing OIDC env vars** (19 tests): Added `OIDC_ISSUER` and `OIDC_JWK_SET_URI` for `dispute-service` and `fx-service` in `podman-compose.yml`.
+  - **Cat B — Flat roles claim extraction** (10+ tests): Fixed `statement-service`, `partner-service`, `cms-service` SecurityConfig to extract roles from nested `realm_access.roles` in Keycloak JWT (was using flat `roles` claim).
+  - **Cat C — KYC service wrong method names** (5 tests): Fixed `kyc.py` calling `ApiResponse.error()` / `ApiResponse.success()` → `create_error()` / `create_success()`.
+  - **Cat D — Test ApiResponse unwrapping** (10+ tests): Fixed `lending`, `support`, `promotion`, `billing` tests to unwrap `{success: true, data: {...}}` envelope.
+  - **Cat E — Wallet ledger column mapping**: Fixed `LedgerEntryEntity` `@Column(name = "type")` → `@Column(name = "entry_type")`.
+  - **Cat F — Investment StaleObjectStateException**: Removed `@GeneratedValue(strategy = UUID)` and implemented `Persistable<UUID>` pattern on `InvestmentAccountEntity`.
+  - **Cat G — Notification POST 404**: Added root POST handler for `/notifications` in gateway `ApiGatewayResource`.
+  - **Cat H — FX service Persistable**: Same Persistable pattern fix as investment-service for `FxRateEntity`.
+  - **Cat I — Support service LazyInitializationException**: Added `@Transactional(readOnly = true)` to `AgentTrainingService` methods.
+  - **Cat J — Test assertion issues**: Fixed wrong enums (`REFUND` → `REFUND_CUSTOMER`), wrong DTO fields (`sourceAccountId` → `senderAccountId`), missing acceptable status codes, rate limit handling.
+  - **Additional fixes**: 120+ lines of gateway JAX-RS routes, simplified `@PreAuthorize` annotations in wallet/transaction controllers, removed problematic resilience4j annotations, fixed `DataMaskingAspect` StackOverflow, `V10__fix_profiles_schema.sql` migration, `RestTemplateConfig` for integration-service.
+
 - **E2E Blackbox Test Suite — 0 Failures/Errors (2026-03-02)**:
   - Fixed all 21 E2E test failures achieving **54 passed, 115 skipped, 0 failures, 0 errors**.
   - **conftest.py**: Fixed gateway health check to use Quarkus `/q/health` endpoint (was using Spring Boot `/actuator/health` which doesn't exist on the Quarkus gateway-service).
