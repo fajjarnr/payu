@@ -7,6 +7,7 @@
 ## Context
 
 PayU microservices architecture requires a data persistence strategy. We need to decide between:
+
 - Shared database (all services use one DB)
 - Database per service (each service has own DB)
 
@@ -20,6 +21,7 @@ PayU microservices architecture requires a data persistence strategy. We need to
 ## Considered Options
 
 ### Option 1: Database per Service
+
 - **Pros**:
   - Independent deployment
   - Fault isolation
@@ -34,6 +36,7 @@ PayU microservices architecture requires a data persistence strategy. We need to
 - **Rationale**: Best for microservices architecture
 
 ### Option 2: Shared Database
+
 - **Pros**:
   - Simpler transaction management
   - Cross-table queries possible
@@ -47,6 +50,7 @@ PayU microservices architecture requires a data persistence strategy. We need to
 - **Rationale**: Anti-pattern for microservices
 
 ### Option 3: Hybrid Approach
+
 - **Pros**:
   - Flexibility to choose per domain
 - **Cons**:
@@ -61,6 +65,7 @@ PayU microservices architecture requires a data persistence strategy. We need to
 **Choose Database per Service** for all services.
 
 Each microservice has its own database:
+
 - account-service → `payu_account`
 - transaction-service → `payu_transaction`
 - wallet-service → `payu_wallet`
@@ -77,18 +82,21 @@ Each microservice has its own database:
 ## Consequences
 
 **Positive**:
+
 - Clear service boundaries
 - Independent deployments
 - Fault isolation
 - Teams work independently
 
 **Negative**:
+
 - No cross-service JOINs
 - Distributed transactions required (Saga pattern)
 - More operational overhead
 - Reporting requires API calls or data warehouse
 
 **Trade-offs Accepted**:
+
 - Accept no JOINs for service independence
 - Accept Saga pattern for distributed transactions
 - Accept operational overhead for fault isolation
@@ -102,6 +110,7 @@ payu_{service_name}
 ```
 
 Examples:
+
 - `payu_account` (for account-service)
 - `payu_transaction` (for transaction-service)
 - `payu_wallet` (for wallet-service)
@@ -145,6 +154,7 @@ public class TransferSaga {
 ### Reporting and Analytics
 
 Use data warehouse for reporting:
+
 - Debezium CDC to capture changes
 - Kafka to stream events
 - Analytics database to aggregate data

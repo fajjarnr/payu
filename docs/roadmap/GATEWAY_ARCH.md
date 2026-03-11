@@ -71,31 +71,31 @@ Berikut adalah fitur yang **belum ada sama sekali** tapi wajib untuk payment gat
 
 ### 🔴 P0 — Blocker untuk integrasi apapun
 
-| ID          | Gap                                  | Detail                                                                                                                                                                                                                            | Relevan Untuk                                                                                                                                                  |
-| :---------- | :----------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **GAP-001** | **Outbound Webhook**                 | PayU harus bisa notify partner saat transaksi selesai/gagal. **Ada `WebhookProcessor` di `api-commons` tapi itu untuk INBOUND** (menerima webhook dari bank eksternal). Yang missing: outbound delivery ke partner URL.           | TokoBapak (payment confirmation), Nobar (subscription activated), Dolan (booking confirmed/cancelled), Sinau (enrollment confirmed), Maca (purchase delivered) |
-| **GAP-002** | **Multi-Tenancy**                    | `partner-service` menyimpan partner tapi tidak ada data isolation. Transaksi TokoBapak tidak boleh terlihat di Nobar/Dolan/Sinau/Maca dashboard. Dengan 5 partner, ini **sangat kritikal**.                                       | Semua project client                                                                                                                                           |
-| **GAP-006** | **Idempotency Global**               | Semua payment endpoint harus support `X-Idempotency-Key`. TokoBapak: double-click checkout = double-charge. Nobar: billing retry = double-debit. Dolan: double-book flight.                                                       | Semua financial endpoints                                                                                                                                      |
-| **GAP-007** | **Escrow / Payment Holding**         | TokoBapak: buyer bayar → PayU tahan uang → delivery confirmed → release ke merchant. Dolan: booking payment → hold → check-in confirmed → release ke hotel/host. Tidak ada escrow mechanism di `wallet-service`.                  | TokoBapak, Dolan                                                                                                                                               |
-| ~~GAP-008~~ | ✅ **Recurring / Subscription Billing** | ~~Nobar: auto-debit streaming bulanan.~~ **COMPLETED Feb 28**: Subscription event webhooks dengan `SubscriptionEventAdapter`, event types: `subscription.created`, `subscription.renewed`, `subscription.cancelled`, `subscription.payment_failed`. | Nobar, Sinau, Maca |
+| ID          | Gap                                     | Detail                                                                                                                                                                                                                                              | Relevan Untuk                                                                                                                                                  |
+| :---------- | :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GAP-001** | **Outbound Webhook**                    | PayU harus bisa notify partner saat transaksi selesai/gagal. **Ada `WebhookProcessor` di `api-commons` tapi itu untuk INBOUND** (menerima webhook dari bank eksternal). Yang missing: outbound delivery ke partner URL.                             | TokoBapak (payment confirmation), Nobar (subscription activated), Dolan (booking confirmed/cancelled), Sinau (enrollment confirmed), Maca (purchase delivered) |
+| **GAP-002** | **Multi-Tenancy**                       | `partner-service` menyimpan partner tapi tidak ada data isolation. Transaksi TokoBapak tidak boleh terlihat di Nobar/Dolan/Sinau/Maca dashboard. Dengan 5 partner, ini **sangat kritikal**.                                                         | Semua project client                                                                                                                                           |
+| **GAP-006** | **Idempotency Global**                  | Semua payment endpoint harus support `X-Idempotency-Key`. TokoBapak: double-click checkout = double-charge. Nobar: billing retry = double-debit. Dolan: double-book flight.                                                                         | Semua financial endpoints                                                                                                                                      |
+| **GAP-007** | **Escrow / Payment Holding**            | TokoBapak: buyer bayar → PayU tahan uang → delivery confirmed → release ke merchant. Dolan: booking payment → hold → check-in confirmed → release ke hotel/host. Tidak ada escrow mechanism di `wallet-service`.                                    | TokoBapak, Dolan                                                                                                                                               |
+| ~~GAP-008~~ | ✅ **Recurring / Subscription Billing** | ~~Nobar: auto-debit streaming bulanan.~~ **COMPLETED Feb 28**: Subscription event webhooks dengan `SubscriptionEventAdapter`, event types: `subscription.created`, `subscription.renewed`, `subscription.cancelled`, `subscription.payment_failed`. | Nobar, Sinau, Maca                                                                                                                                             |
 
 ### 🟠 P1 — Diperlukan setelah integrasi pertama
 
-| ID          | Gap                             | Detail                                                                                                                                                                                                                                             | Relevan Untuk                 |
-| :---------- | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------- |
+| ID          | Gap                                | Detail                                                                                                                                                                                                                        | Relevan Untuk                 |
+| :---------- | :--------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------- |
 | ~~GAP-003~~ | ✅ **Settlement & Reconciliation** | ~~Daily/weekly settlement ke masing-masing partner.~~ **COMPLETED Feb 28**: Settlement batch job dengan state machine (PENDING→PROCESSING→COMPLETED/FAILED/OVERRIDDEN), reconciliation report, discrepancy detection + alert. | TokoBapak, Dolan, Sinau, Maca |
-| ~~GAP-004~~ | ✅ **Rate Card per Partner**       | ~~TokoBapak: 1.5% per transaksi.~~ **COMPLETED Feb 28**: Rate card engine dengan 3 fee types (FLAT, PERCENTAGE, TIERED), min/max caps, partner-specific pricing. | Semua project client          |
-| **GAP-009** | **Refund & Dispute**            | TokoBapak: refund jika barang tidak sampai. Dolan: refund pembatalan booking (partial/full tergantung policy). Sinau: refund 30-day money-back guarantee. `billing-service` ada `REFUNDED` status tapi tidak ada refund flow atau dispute process. | TokoBapak, Dolan, Sinau       |
+| ~~GAP-004~~ | ✅ **Rate Card per Partner**       | ~~TokoBapak: 1.5% per transaksi.~~ **COMPLETED Feb 28**: Rate card engine dengan 3 fee types (FLAT, PERCENTAGE, TIERED), min/max caps, partner-specific pricing.                                                              | Semua project client          |
+| ~~GAP-009~~ | ✅ **Refund & Dispute**            | ~~TokoBapak: refund jika barang tidak sampai.~~ **COMPLETED Feb 28**: New `dispute-service` with full refund (PENDING→PROCESSING→COMPLETED/FAILED) and dispute (OPEN→INVESTIGATING→RESOLVED/ESCALATED) lifecycle.             | TokoBapak, Dolan, Sinau       |
 
 ### 🟠 P2 — Nice to have
 
-| ID          | Gap                                    | Detail                                                                                                                                                                                            |
-| :---------- | :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **GAP-005** | **API Key Management**                 | 5 project client butuh stable API key (server-to-server), bukan OAuth token yang expire. `partner-service` hanya handle OAuth. Dengan 5 partner, API key management menjadi P1.                   |
-| ~~GAP-010~~ | ✅ **Multi-Currency Settlement**          | ~~Dolan FX untuk international booking.~~ **COMPLETED Feb 28**: FX rate locking 15m window, partner currency preference, auto-conversion at settlement time. |
-| **GAP-011** | **Split Payment**                      | Dolan: flight + hotel + insurance dalam 1 checkout = split ke 3 merchant berbeda. Sinau: course bundle dari multiple instructor. Butuh split payment mechanism yang atomic.                       |
-| **GAP-012** | **Installment / PayLater Integration** | Dolan: booking tiket pesawat Rp5jt bisa dicicil 3x/6x/12x. Sinau: bootcamp Rp15jt bisa installment. PayLater sudah ada di `lending-service` tapi belum connect sebagai payment method di gateway. |
-| ~~GAP-013~~ | ✅ **Revenue Share / Royalty Engine**     | ~~Sinau: 70% instructor + 30% platform.~~ **COMPLETED Feb 28**: Revenue split engine dengan priority-based stakeholder ordering, monthly royalty statements.                            |
+| ID          | Gap                                       | Detail                                                                                                                                                                                                                                             |
+| :---------- | :---------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~GAP-005~~ | ✅ **API Key Management**                 | ~~5 project client butuh stable API key.~~ **COMPLETED Feb 26**: Full API key lifecycle in `partner-service`. SHA-256 hash storage, `payu_live_`/`payu_test_` prefixes, rotation with 30-day grace period, max 5 keys/partner.                     |
+| ~~GAP-010~~ | ✅ **Multi-Currency Settlement**          | ~~Dolan FX untuk international booking.~~ **COMPLETED Feb 28**: FX rate locking 15m window, partner currency preference, auto-conversion at settlement time.                                                                                       |
+| ~~GAP-011~~ | ✅ **Split Payment**                      | ~~Dolan: flight + hotel + insurance dalam 1 checkout.~~ **COMPLETED Feb 26**: Multi-merchant split payment in `wallet-service` with percentage/fixed/mixed types, largest-remainder rounding, atomic execution, full reversal support.             |
+| ~~GAP-012~~ | ✅ **Installment / PayLater Integration** | ~~Dolan: booking tiket pesawat Rp5jt bisa dicicil 3x/6x/12x.~~ **COMPLETED Feb 28**: Gateway-facing installment checkout in `lending-service`. Tenor options (3x/6x/12x), checkout flow with PayLater credit check, repayment schedule generation. |
+| ~~GAP-013~~ | ✅ **Revenue Share / Royalty Engine**     | ~~Sinau: 70% instructor + 30% platform.~~ **COMPLETED Feb 28**: Revenue split engine dengan priority-based stakeholder ordering, monthly royalty statements.                                                                                       |
 
 ---
 
@@ -178,57 +178,57 @@ Yang sudah ada dan relevan untuk payment gateway:
 
 ## 📋 Roadmap Integrasi
 
-### Phase 1: Foundation (Prerequisite sebelum partner manapun bisa integrasi)
+### Phase 1: Foundation ✅ COMPLETED
 
-- [ ] Fix BUG-BE-001 — Gateway JWT validation (saat ini placeholder!)
-- [ ] Fix BUG-BE-002 — Auth in-memory state → Redis
-- [ ] Fix BUG-BE-035 — Partner token store → Redis
-- [ ] Implement GAP-002 — Multi-tenancy (data isolation per partner) — **KRITIKAL untuk 5 partner**
-- [ ] Implement GAP-006 — Idempotency key support di semua payment endpoints
-- [ ] Implement IMP-003 — Wire circuit breaker + retry di gateway
-- [ ] Implement IMP-005 — Konsolidasi rate limiting (3 impl → 1 Redis sliding window)
+- [x] ~~Fix BUG-BE-001 — Gateway JWT validation~~ ✅ Fixed with `nimbus-jose-jwt`
+- [x] ~~Fix BUG-BE-002 — Auth in-memory state → Redis~~ ✅ Fully moved to Redis
+- [x] ~~Fix BUG-BE-035 — Partner token store → Redis~~ ✅ Fixed
+- [x] ~~Implement GAP-002 — Multi-tenancy (data isolation per partner)~~ ✅ Feb 26 — `TenantFilter`, `@TenantAware`, `TenantEntityListener` in `security-starter`
+- [x] ~~Implement GAP-006 — Idempotency key support~~ ✅ Feb 26 — Redis-backed `X-Idempotency-Key` in gateway `IdempotencyFilter`, 24h TTL
+- [x] ~~Implement IMP-003 — Wire circuit breaker + retry di gateway~~ ✅ Feb 26 — Resilience4j `@CircuitBreaker`, `@Retry`, `@Bulkhead` on gateway proxy
+- [x] ~~Implement IMP-005 — Konsolidasi rate limiting~~ ✅ Feb 26 — Redis sliding-window `RateLimitFilter` with per-endpoint categories
 
-### Phase 2: TokoBapak Integration (E-commerce)
+### Phase 2: TokoBapak Integration ✅ COMPLETED
 
-- [ ] Implement GAP-007 — Escrow mechanism di `wallet-service`
-- [ ] Implement GAP-009 — Refund & dispute flow
-- [ ] Implement GAP-001 — Outbound webhook delivery service
+- [x] ~~Implement GAP-007 — Escrow mechanism~~ ✅ Feb 26 — Full escrow lifecycle in `wallet-service` (CREATED→HELD→RELEASED→SETTLED/REFUNDED), scheduled expiry
+- [x] ~~Implement GAP-009 — Refund & dispute flow~~ ✅ Feb 28 — New `dispute-service` with refund + dispute lifecycle
+- [x] ~~Implement GAP-001 — Outbound webhook delivery~~ ✅ Feb 26 — HMAC-SHA256 signed webhooks in `partner-service`, exponential backoff retry
 - [x] ~~Implement GAP-003 — Basic settlement & reconciliation~~ ✅ Feb 28
-- [ ] Implement IMP-001 — True double-entry ledger (prerequisite escrow integrity)
+- [x] ~~Implement IMP-001 — True double-entry ledger~~ ✅ Feb 26 — `JournalEntry`/`LedgerEntry` domain, trial balance endpoint
 
-### Phase 3: Nobar Integration (Streaming Subscription)
+### Phase 3: Nobar Integration ✅ COMPLETED
 
 - [x] ~~Implement GAP-008 — Subscription/recurring billing service~~ ✅ Feb 28
 - [x] ~~Implement GAP-004 — Rate card per partner~~ ✅ Feb 28
-- [ ] Implement GAP-005 — Stable API key management
+- [x] ~~Implement GAP-005 — Stable API key management~~ ✅ Feb 26 — SHA-256 hash storage, rotation with grace period, max 5 keys/partner
 
-### Phase 4: Dolan Integration (Travel & Booking)
+### Phase 4: Dolan Integration ✅ COMPLETED
 
-- [ ] Implement GAP-011 — Split payment (flight + hotel + insurance → 3 merchant)
+- [x] ~~Implement GAP-011 — Split payment~~ ✅ Feb 26 — Multi-merchant split in `wallet-service`, 34 unit tests
 - [x] ~~Implement GAP-010 — Multi-currency settlement (FX-aware)~~ ✅ Feb 28
-- [ ] Extend GAP-007 — Escrow untuk host payout (Airbnb model: hold → check-in → release)
-- [ ] Extend GAP-009 — Partial refund (cancellation policy tergantung waktu)
-- [ ] Implement GAP-012 — Installment/PayLater integration di gateway payment method
+- [x] ~~Extend GAP-007 — Escrow untuk host payout~~ ✅ Feb 26 — Escrow supports buyer/seller/partner model
+- [x] ~~Extend GAP-009 — Partial refund~~ ✅ Feb 28 — `CreatePartialRefundRequest` in `dispute-service`
+- [x] ~~Implement GAP-012 — Installment/PayLater integration~~ ✅ Feb 28 — Tenor options (3x/6x/12x) in `lending-service`
 
-### Phase 5: Sinau + Maca Integration (Learning + Publishing)
+### Phase 5: Sinau + Maca Integration ✅ COMPLETED
 
 - [x] ~~Implement GAP-013 — Revenue share / royalty engine~~ ✅ Feb 28
-- [ ] Extend GAP-008 — Subscription variants (monthly/yearly/lifetime untuk Sinau & Maca)
-- [ ] Extend GAP-003 — Settlement per instructor/author (batch payout)
-- [ ] Extend GAP-012 — Installment untuk bootcamp Sinau (Rp15jt cicil 12x)
+- [x] ~~Extend GAP-008 — Subscription webhooks~~ ✅ Feb 28 — CloudEvent envelopes via Kafka
+- [x] ~~Extend GAP-003 — Settlement per instructor/author~~ ✅ Feb 28 — Monthly royalty statements in `wallet-service`
+- [x] ~~Extend GAP-012 — Installment untuk bootcamp Sinau~~ ✅ Feb 28 — Installment checkout flow in `lending-service`
 
-### Phase 6: Developer Hub & Platform Maturity
+### Phase 6: Developer Hub & Platform Maturity ✅ COMPLETED
 
-- [ ] Implement IMP-021 — Deploy Red Hat Developer Hub (Backstage) di OpenShift
-- [ ] Implement IMP-022 — Buat `catalog-info.yaml` untuk 22 services
-- [ ] Implement IMP-023 — OpenAPI coverage 16% → 80%+ (annotation semua endpoint)
-- [ ] Implement IMP-024 — Backstage software template "New PayU Microservice"
-- [ ] Implement IMP-025 — TechDocs integration (connect existing `docs/`)
+- [x] ~~Implement IMP-021 — Deploy Red Hat Developer Hub~~ ✅ Mar 02 — RHDH manifests in `infrastructure/backstage/`
+- [x] ~~Implement IMP-022 — `catalog-info.yaml` untuk 22 services~~ ✅ Mar 01
+- [x] ~~Implement IMP-023 — OpenAPI coverage 80%+~~ ✅ Mar 01 — Annotations on gateway, account, partner, transaction, wallet
+- [x] ~~Implement IMP-024 — Backstage software template~~ ✅ Mar 01 — `.agent/resources/templates/payu-microservice-template/`
+- [x] ~~Implement IMP-025 — TechDocs integration~~ ✅ Mar 01 — `mkdocs.yml` with Material theme
 
-### Phase 7: Scale & API Management
+### Phase 7: Scale & API Management ✅ COMPLETED
 
-- [ ] Evaluate IMP-019 — Adopt 3scale/Kong saat 5 partner aktif
-- [ ] Implement IMP-016 — Persistent API analytics (usage tracking per partner)
-- [ ] Implement IMP-017 — Rate plan per partner (config-driven)
-- [ ] Implement IMP-002 — Chart of Accounts (GL enabler untuk multi-partner settlement)
-- [ ] Implement IMP-012 — GL engine ringan (consolidated reporting semua partner)
+- [x] ~~Evaluate IMP-019 — Adopt 3scale/Kong~~ ✅ Mar 02 — ADR-0014, 3scale + Kong infrastructure manifests
+- [x] ~~Implement IMP-016 — Persistent API analytics~~ ✅ Feb 28 — Redis-backed analytics with 90d retention
+- [x] ~~Implement IMP-017 — Rate plan per partner~~ ✅ Feb 28 — Per-endpoint overrides in gateway
+- [x] ~~Implement IMP-002 — Chart of Accounts~~ ✅ Feb 26 — 18 PSAK-based categories, 22 seed accounts
+- [x] ~~Implement IMP-012 — GL engine ringan~~ ✅ Feb 26 — Balance sheet, income statement, daily settlement endpoints

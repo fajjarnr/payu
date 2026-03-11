@@ -32,11 +32,13 @@ docs/adr/
 ## Consequences
 
 **Good**:
+
 - Permanent record of "Why" (not just "What").
 - Easier onboarding for new engineers.
 - Explicit impact analysis (Consequences section).
 
 **Bad**:
+
 - Overhead of writing and reviewing ADRs.
 - Need to keep the index up-to-date.
 

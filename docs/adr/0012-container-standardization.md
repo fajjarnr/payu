@@ -14,12 +14,12 @@ Standardize on **Podman** (Pod Manager) for all container operations.
 
 ### Standards
 
-1.  **Runtime**: Podman 4.x/5.x.
-2.  **Definition**: Use `Containerfile` preferred over `Dockerfile`.
-3.  **Orchestration**:
+1. **Runtime**: Podman 4.x/5.x.
+2. **Definition**: Use `Containerfile` preferred over `Dockerfile`.
+3. **Orchestration**:
     - Local: `podman-compose` or `docker-compose` (compatible).
     - System: Quadlets (`.container` files) for systemd integration.
-4.  **Rootless**: Default to rootless containers for security.
+4. **Rootless**: Default to rootless containers for security.
 
 ## Implementation
 

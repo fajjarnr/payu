@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-01-30
+**Last Updated**: 2026-03-11
 **Deciders**: Architecture Team, Engineering Leads
 
 ## Context
@@ -25,6 +26,7 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 ## Considered Options
 
 ### Option 1: Spring Boot 3.4
+
 - **Pros**:
   - Mature ecosystem with banking-specific libraries
   - Excellent testing support (JUnit 5, Mockito, Testcontainers)
@@ -39,6 +41,7 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 - **Rationale**: Best fit for complex business logic with strong typing
 
 ### Option 2: Quarkus 3.x
+
 - **Pros**:
   - Fast startup time
   - Lower memory footprint
@@ -51,6 +54,7 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 - **Rationale**: Better suited for supporting services, not core banking
 
 ### Option 3: Micronaut
+
 - **Pros**:
   - Fast startup time
   - Cloud-native design
@@ -62,6 +66,7 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 - **Rationale**: Not enough banking-specific libraries
 
 ### Option 4: Node.js/TypeScript
+
 - **Pros**:
   - Large talent pool
   - Fast development
@@ -75,6 +80,7 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 ## Decision
 
 **Choose Spring Boot 3.4** for all Core Banking services:
+
 - account-service
 - auth-service
 - transaction-service
@@ -89,7 +95,11 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 - support-service
 - compliance-service
 - cms-service
-- ab-testing-service
+- dispute-service _(added Feb 2026)_
+- product-catalog-service _(added Feb 2026)_
+- integration-service _(added Mar 2026)_
+
+> **Amendment (Mar 11, 2026)**: `ab-testing-service` removed from platform (SIMP-001, Mar 2026). Three new Spring Boot services added: `dispute-service` (E-13), `product-catalog-service` (E-05), and `integration-service` (E-08).
 
 ## Rationale
 
@@ -103,6 +113,7 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 ## Consequences
 
 **Positive**:
+
 - Industry-standard framework for banking
 - Strong typing for financial calculations
 - Excellent testing support
@@ -110,11 +121,13 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 - Enterprise support available
 
 **Negative**:
+
 - Higher memory footprint
 - Slower startup time
 - More complex configuration
 
 **Trade-offs Accepted**:
+
 - Accept higher memory usage for type safety and ecosystem
 - Accept slower startup for maturity and support
 
@@ -143,6 +156,7 @@ PayU Digital Banking Platform requires a robust, enterprise-grade framework for 
 ### Code Structure
 
 Follow Hexagonal Architecture:
+
 - `domain/` - Business logic (entities, value objects, domain services)
 - `application/` - Use cases, ports (interfaces)
 - `infrastructure/` - Adapters (repositories, external services)
@@ -150,4 +164,4 @@ Follow Hexagonal Architecture:
 
 ---
 
-*Created via @principal-architect*
+_Created via @principal-architect_

@@ -16,7 +16,7 @@ PayU operates as a payment gateway serving multiple external partners (TokoBapak
 
 The PayU `gateway-service` (Quarkus-based) currently handles routing, rate limiting, JWT authentication, IP whitelisting, and HMAC signing. An API management platform would sit **in front** of this gateway in a 2-tier architecture:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Partner Apps (TokoBapak, Nobar, Dolan, Sinau, Maca)       │
 └──────────────────────────┬──────────────────────────────────┘
@@ -62,6 +62,7 @@ The PayU `gateway-service` (Quarkus-based) currently handles routing, rate limit
 Red Hat's native API management platform, deployed via OperatorHub on OpenShift.
 
 **Pros:**
+
 - Native OpenShift integration via Operator (OperatorHub install)
 - Red Hat support included in OpenShift subscription
 - APIcast gateway (nginx-based) with admin portal and developer portal
@@ -70,6 +71,7 @@ Red Hat's native API management platform, deployed via OperatorHub on OpenShift.
 - Consistent with existing Red Hat technology stack (AMQ Streams, Crunchy PG, SSO)
 
 **Cons:**
+
 - Higher resource footprint (~3 pods minimum: system-app, system-sidekiq, apicast-staging/production)
 - Learning curve for APIcast policy chain configuration
 - Some features overlap with existing gateway-service (rate limiting, auth)
@@ -80,6 +82,7 @@ Red Hat's native API management platform, deployed via OperatorHub on OpenShift.
 Lightweight, high-performance API gateway built on OpenResty/Lua.
 
 **Pros:**
+
 - Lightweight, high-performance (Lua/OpenResty, sub-millisecond latency overhead)
 - Large plugin ecosystem (100+ plugins: auth, rate-limit, logging, transforms)
 - Kong Ingress Controller for Kubernetes/OpenShift
@@ -88,6 +91,7 @@ Lightweight, high-performance API gateway built on OpenResty/Lua.
 - DB-less mode available for declarative configuration (GitOps-friendly)
 
 **Cons:**
+
 - No native OpenShift operator (deploy via Helm chart)
 - Developer portal requires Kong Enterprise (paid) or building a custom portal
 - No built-in API monetization or usage metering
@@ -98,6 +102,7 @@ Lightweight, high-performance API gateway built on OpenResty/Lua.
 Open-source API management with event-native capabilities.
 
 **Pros:**
+
 - Open-source with developer portal included in community edition
 - API designer and documentation tools built-in
 - Event-native: supports Kafka, MQTT, and WebSocket APIs (aligns with AMQ Streams)
@@ -105,6 +110,7 @@ Open-source API management with event-native capabilities.
 - Policy studio with visual drag-and-drop policy chain editor
 
 **Cons:**
+
 - Smaller community than Kong (~3k GitHub stars)
 - No Red Hat support or OpenShift operator
 - OpenShift deployment requires manual Helm/manifest configuration
@@ -114,17 +120,18 @@ Open-source API management with event-native capabilities.
 
 **Deferred** — Evaluate when partner count reaches 5+ active integrations. Current recommendation matrix:
 
-| Criterion                  | 3scale (A)  | Kong OSS (B) | Gravitee (C) |
-| :------------------------- | :---------- | :------------ | :------------ |
-| OpenShift integration      | ★★★★★       | ★★★☆☆         | ★★☆☆☆         |
-| Resource efficiency        | ★★☆☆☆       | ★★★★★         | ★★★★☆         |
-| Developer portal (built-in)| ★★★★★       | ★☆☆☆☆         | ★★★★☆         |
-| API monetization           | ★★★★★       | ★☆☆☆☆         | ★★★☆☆         |
-| Event-native (Kafka)       | ★★☆☆☆       | ★★☆☆☆         | ★★★★★         |
-| Community & ecosystem      | ★★★☆☆       | ★★★★★         | ★★★☆☆         |
-| Cost (OSS)                 | ★★★☆☆       | ★★★★★         | ★★★★☆         |
+| Criterion                   | 3scale (A) | Kong OSS (B) | Gravitee (C) |
+| :-------------------------- | :--------- | :----------- | :----------- |
+| OpenShift integration       | ★★★★★      | ★★★☆☆        | ★★☆☆☆        |
+| Resource efficiency         | ★★☆☆☆      | ★★★★★        | ★★★★☆        |
+| Developer portal (built-in) | ★★★★★      | ★☆☆☆☆        | ★★★★☆        |
+| API monetization            | ★★★★★      | ★☆☆☆☆        | ★★★☆☆        |
+| Event-native (Kafka)        | ★★☆☆☆      | ★★☆☆☆        | ★★★★★        |
+| Community & ecosystem       | ★★★☆☆      | ★★★★★        | ★★★☆☆        |
+| Cost (OSS)                  | ★★★☆☆      | ★★★★★        | ★★★★☆        |
 
 **Guidance:**
+
 - **Red Hat ecosystem alignment** (recommended default): **3scale** (Option A) — operational consistency, single-vendor support
 - **Budget-constrained / performance-critical**: **Kong OSS** (Option B) with custom developer portal
 - **Event-driven APIs primary**: **Gravitee.io** (Option C) — native Kafka/MQTT protocol support
@@ -132,6 +139,7 @@ Open-source API management with event-native capabilities.
 ## Rationale
 
 The decision is deferred because:
+
 1. Current partner count (3-4) does not yet justify the operational overhead
 2. PayU gateway-service adequately handles current traffic patterns
 3. Premature adoption would increase infrastructure complexity without proportional benefit
@@ -141,12 +149,14 @@ Template configurations for 3scale and Kong are prepared in `infrastructure/3sca
 ## Consequences
 
 **Positive:**
+
 - Clear evaluation criteria documented for future decision
 - Deployment templates ready for rapid adoption when needed
 - Banking-specific logic (SNAP-BI, HMAC, idempotency) remains decoupled in PayU gateway regardless of choice
 - 2-tier architecture ensures API management concerns are separated from banking protocol concerns
 
 **Negative:**
+
 - Maintaining deployment templates for multiple options adds minor overhead
 - Team needs to build expertise in chosen platform when trigger is reached
 - Potential feature overlap between API management layer and existing gateway-service rate limiting
@@ -159,4 +169,5 @@ Template configurations for 3scale and Kong are prepared in `infrastructure/3sca
 4. **Templates**: See `infrastructure/3scale/` and `infrastructure/kong/` for deployment configurations
 
 ---
-*Created: 2026-03-02 | Relates to: IMP-019, IMP-020*
+
+> _Created: 2026-03-02 | Relates to: IMP-019, IMP-020_

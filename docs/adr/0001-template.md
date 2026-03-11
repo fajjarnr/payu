@@ -16,10 +16,12 @@ Describe the problem or situation. Why do we need to make a decision now? What a
 ## Considered Options
 
 ### Option 1: [Name]
+
 - **Pros**: ...
 - **Cons**: ...
 
 ### Option 2: [Name]
+
 - **Pros**: ...
 - **Cons**: ...
 
@@ -34,10 +36,12 @@ Explain *why* this option was chosen over others. Map it back to decision driver
 ## Consequences
 
 **Positive**:
+
 - List benefit 1
 - List benefit 2
 
 **Negative**:
+
 - List cost 1
 - List risk 1
 

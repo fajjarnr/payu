@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-01-30
+**Last Updated**: 2026-03-11
 **Deciders**: Architecture Team, Engineering Leads
 
 ## Context
@@ -23,6 +24,7 @@ PayU platform needs to maintain clean separation between business logic and tech
 ## Considered Options
 
 ### Option 1: Hexagonal (Ports and Adapters) Architecture
+
 - **Pros**:
   - Domain logic completely isolated
   - Easy to test (no framework dependencies)
@@ -35,6 +37,7 @@ PayU platform needs to maintain clean separation between business logic and tech
 - **Rationale**: Best for complex domain logic (core banking)
 
 ### Option 2: Layered Architecture
+
 - **Pros**:
   - Simple and familiar
   - Less boilerplate
@@ -46,6 +49,7 @@ PayU platform needs to maintain clean separation between business logic and tech
 - **Rationale**: Suitable for simple CRUD, not banking
 
 ### Option 3: Onion Architecture
+
 - **Pros**:
   - Similar benefits to Hexagonal
   - Domain at center
@@ -57,9 +61,11 @@ PayU platform needs to maintain clean separation between business logic and tech
 
 ## Decision
 
-**Choose Hexagonal Architecture** for all 19 Java/Quarkus microservices.
+**Choose Hexagonal Architecture** for all backend microservices.
 
-> **Amendment (Feb 10, 2026)**: Originally scoped to 6 core services only. After TD-ARCH-004 refactoring (Batches 1-3), all 19 services now use hexagonal architecture — 100% compliance. The simpler services (notification, cms, ab-testing, etc.) also benefited from clear port/adapter separation for testability.
+> **Amendment (Feb 10, 2026)**: Originally scoped to 6 core services only. After TD-ARCH-004 refactoring (Batches 1-3), all services now use hexagonal architecture — 100% compliance. The simpler services (notification, cms, etc.) also benefited from clear port/adapter separation for testability.
+>
+> **Amendment (Mar 11, 2026)**: Service count updated. `ab-testing-service` removed (SIMP-001). Three new hexagonal services added: `dispute-service`, `product-catalog-service`, `integration-service`. Current count: **21 backend services** (17 Spring Boot + 3 Quarkus + 1 hybrid), all hexagonal-compliant. ArchUnit governance at 18/19 Java services (per PROGRESS.md).
 
 ## Rationale
 
@@ -71,17 +77,20 @@ PayU platform needs to maintain clean separation between business logic and tech
 ## Consequences
 
 **Positive**:
+
 - Clean domain logic
 - Easy to test
 - Technology flexibility
 - Better code organization
 
 **Negative**:
+
 - More boilerplate initially
 - Learning curve for new developers
 - More interfaces and abstractions
 
 **Trade-offs Accepted**:
+
 - Accept more boilerplate for cleaner architecture
 - Accept learning curve for long-term maintainability
 
@@ -139,4 +148,4 @@ public class WalletRepositoryJpa implements WalletRepository {
 
 ---
 
-*Created via @principal-architect*
+_Created via @principal-architect_

@@ -11,14 +11,14 @@
 
 ## 📊 Board Summary
 
-| Status          | Count | Breakdown                                              |
-| :-------------- | :---: | :----------------------------------------------------- |
-| **Active Epics** |   0   | All completed ✅                                       |
-| **Open Stories** |   0   | All completed ✅                                       |
-| **Tech Debt**   |   0   | All completed ✅                                       |
-| **Spikes**      |   4   | ARCH-001 – ARCH-004                                    |
-| **Deferred**    |   5   | P2-FE-003, OCP-007, OCP-010, DR-001, Card Token/3DS   |
-| **Bugs**        | 0/232 | 229 fixed, 4 Won't Do (BUG-BE-061, 076, 080, 091)     |
+| Status           | Count | Breakdown                                             |
+| :--------------- | :---: | :---------------------------------------------------- |
+| **Active Epics** |   0   | All completed ✅                                      |
+| **Open Stories** |   0   | All completed ✅                                      |
+| **Tech Debt**    |   0   | All completed ✅                                      |
+| **Spikes**       |   5   | ARCH-001 – ARCH-005                                   |
+| **Deferred**     |   9   | P2-FE-003, OCP-007, OCP-010, DR-001, DEFER-001, RHPAM |
+| **Bugs**         | 0/232 | 229 fixed, 4 Won't Do (BUG-BE-061, 076, 080, 091)     |
 
 > **Completed Epics**: 24/24 fully done. All stories & tech debt cleared.
 > See [`PROGRESS.md`](./PROGRESS.md) for completed Epics summary.
@@ -46,24 +46,29 @@
 
 ## 🔍 Spikes (Research / Architecture Decision)
 
-| Key      | Type  | Question                                                  | Impact                            | Status   |
-| :------- | :---- | :-------------------------------------------------------- | :-------------------------------- | :------- |
-| ARCH-001 | Spike | KYC di level PayU atau project client?                    | Scope `kyc-service`               | 📋 To Do |
-| ARCH-002 | Spike | Statement: PDF end-user atau JSON/CSV project client?     | Output format `statement-service` | 📋 To Do |
-| ARCH-003 | Spike | Support ticket: end-user PayU atau project client?        | Multi-tenancy `support-service`   | 📋 To Do |
-| ARCH-004 | Spike | CMS: hanya PayU web-app atau multi-tenant project client? | Multi-tenant mode `cms-service`   | 📋 To Do |
+| Key      | Type  | Question                                                                              | Impact                               | Status   |
+| :------- | :---- | :------------------------------------------------------------------------------------ | :----------------------------------- | :------- |
+| ARCH-001 | Spike | KYC di level PayU atau project client?                                                | Scope `kyc-service`                  | 📋 To Do |
+| ARCH-002 | Spike | Statement: PDF end-user atau JSON/CSV project client?                                 | Output format `statement-service`    | 📋 To Do |
+| ARCH-003 | Spike | Support ticket: end-user PayU atau project client?                                    | Multi-tenancy `support-service`      | 📋 To Do |
+| ARCH-004 | Spike | CMS: hanya PayU web-app atau multi-tenant project client?                             | Multi-tenant mode `cms-service`      | 📋 To Do |
+| ARCH-005 | Spike | RHPAM/Kogito/Drools PoC: evaluate rules engine untuk credit scoring & fraud detection | ADR-0015, `rules-starter` shared lib | 📋 To Do |
 
 ---
 
 ## 🔮 Deferred (Icebox)
 
-| Key       | Type  | Summary                               | Notes                                            |
-| :-------- | :---- | :------------------------------------ | :----------------------------------------------- |
-| P2-FE-003 | Story | Mobile App Feature Parity (Expo/RN)   | ❄️ Deferred                                      |
-| OCP-007   | Story | Service Mesh mTLS enforcement         | ❄️ Planned                                       |
-| OCP-010   | Story | API versioning headers                | ❄️ Planned                                       |
-| DR-001    | Story | Disaster Recovery live test execution | ❄️ Scripts ready                                 |
-| DEFER-001 | Story | Card Tokenization & 3DS               | ❄️ Requires PCI-DSS scope + card network kontrak |
+| Key       | Type  | Summary                                                           | Notes                                            |
+| :-------- | :---- | :---------------------------------------------------------------- | :----------------------------------------------- |
+| P2-FE-003 | Story | Mobile App Feature Parity (Expo/RN)                               | ❄️ Deferred                                      |
+| OCP-007   | Story | Service Mesh mTLS enforcement                                     | ❄️ Planned                                       |
+| OCP-010   | Story | API versioning headers                                            | ❄️ Planned                                       |
+| DR-001    | Story | Disaster Recovery live test execution                             | ❄️ Scripts ready                                 |
+| DEFER-001 | Story | Card Tokenization & 3DS                                           | ❄️ Requires PCI-DSS scope + card network kontrak |
+| RHPAM-001 | Story | Phase 1: Create `shared/rules-starter` (Drools 9.x embedded)      | ❄️ Depends on ARCH-005 PoC. See ADR-0015         |
+| RHPAM-002 | Story | Phase 2: Migrate `lending-service` credit scoring ke DRL rules    | ❄️ Depends on RHPAM-001                          |
+| RHPAM-003 | Story | Phase 3: Payment routing DMN decision tables di `gateway-service` | ❄️ Depends on RHPAM-001                          |
+| RHPAM-004 | Story | Phase 4: Lending workflow + KYC/AML BPMN orchestration (Kogito)   | ❄️ Depends on RHPAM-002, evaluasi Q3 2026        |
 
 ---
 
@@ -78,11 +83,11 @@
 | Completed SP      | 265/265                                      |
 | Completion Rate   | 100% stories, 100% SP                        |
 | Bugs Fixed        | 229/232 (~99%)                               |
-| Tech Debt         | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)|
+| Tech Debt         | 3/3 completed (SIMP-001, SIMP-002, SIMP-003) |
 
 ---
 
-_Last Updated: March 3, 2026 | 0 Active Epics · 0 Open Stories · 0 Open SP · 0 Tech Debt · 4 Spikes · 5 Deferred_
+_Last Updated: March 11, 2026 | 0 Active Epics · 0 Open Stories · 0 Open SP · 0 Tech Debt · 5 Spikes · 9 Deferred_
 _Phase 1 Local Validation: ✅ COMPLETE (103 pass, 55 skip, 0 fail) — March 3, 2026_
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
 _Referensi: BCA Digital (blu), Xendit, Midtrans, GoPay, OVO, DANA, Flip, Jago_

@@ -8,18 +8,18 @@
 
 ## 🏁 Current Status Snapshot
 
-| Attribute                | Value                                       |
-| :----------------------- | :------------------------------------------ |
-| **Last Status Update**   | March 3, 2026                               |
-| **Production Readiness** | 99% (229/232 bugs fixed)                    |
-| **OpenShift Tag**        | `v1.6.0`                                    |
-| **Namespace**            | `payu-dev`                                  |
-| **Total Pods**           | 36/36 running                               |
-| **Services Deployed**    | 22/22                                       |
-| **E2E Tests (Blackbox)** | 103 pass, 55 skip, 0 fail (local Podman)    |
-| **E2E Tests (OCP)**      | 399/399 passing                             |
-| **Maven Build**          | 38/38 modules SUCCESS                       |
-| **Kafka Mode**           | KRaft (no Zookeeper)                        |
+| Attribute                | Value                                    |
+| :----------------------- | :--------------------------------------- |
+| **Last Status Update**   | March 3, 2026                            |
+| **Production Readiness** | 99% (229/232 bugs fixed)                 |
+| **OpenShift Tag**        | `v1.6.0`                                 |
+| **Namespace**            | `payu-dev`                               |
+| **Total Pods**           | 36/36 running                            |
+| **Services Deployed**    | 22/22                                    |
+| **E2E Tests (Blackbox)** | 103 pass, 55 skip, 0 fail (local Podman) |
+| **E2E Tests (OCP)**      | 399/399 passing                          |
+| **Maven Build**          | 38/38 modules SUCCESS                    |
+| **Kafka Mode**           | KRaft (no Zookeeper)                     |
 
 > ✅ **Phase 1 Local Validation Complete (Mar 3)**: All 54 E2E failures resolved across 10 root cause categories. 53 files changed. 103 passed, 55 skipped, 0 failed.
 > ✅ **Code Review Complete (Feb 24-25)**: 229 of ~232 bugs fixed (~99% resolution rate).
@@ -62,7 +62,7 @@
 | **ArchUnit Governance**    | ✅ 18/19          | 1 service exempt with documented reason            |
 | **Zero Trust**             | ✅ Per-service    | JWT + OIDC validation per endpoint                 |
 | **API-First**              | ✅ 22/22          | OpenAPI spec per service                           |
-| **Doc-as-Code**            | ✅ 14 ADRs        | `/docs/adr/`                                       |
+| **Doc-as-Code**            | ✅ 15 ADRs        | `/docs/adr/`                                       |
 
 ---
 
@@ -141,6 +141,7 @@
 **E-15 — Payment Gateway Features COMPLETED (Feb 28):**
 
 All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
+
 - ✅ **IMP-040** — Payment Link webhooks (`payment_link.paid`, `payment_link.expired`) dengan HMAC-SHA256 signing
 - ✅ **IMP-042** — VA Simulator service (Quarkus Native) dengan deterministic behavior untuk testing
 - ✅ **IMP-044** — Payment expiry completion: balance release + Kafka events + scheduler job
@@ -150,6 +151,7 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 **E-12 — Settlement & FinOps COMPLETED (Feb 28):**
 
 4 stories finished (GAP-003, GAP-004, GAP-010, GAP-013, 16 SP total):
+
 - ✅ **GAP-003** — Settlement batch job dengan reconciliation & discrepancy detection
 - ✅ **GAP-004** — Rate card engine (flat, percentage, tiered pricing) per partner
 - ✅ **GAP-010** — Multi-currency settlement dengan 15m FX rate locking
@@ -158,6 +160,7 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 **E-14 — Consumer Banking Experience COMPLETED (Feb 28):**
 
 6 stories finished (IMP-034 to IMP-039, 12 SP total):
+
 - ✅ **IMP-034** — Transaction memo & tags (JSONB storage)
 - ✅ **IMP-035** — Beneficiary management (max 50/user)
 - ✅ **IMP-036** — P2P transfer via phone lookup
@@ -167,6 +170,7 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 **E-03 — Frontend Quality COMPLETED (Feb 28):**
 
 5 stories finished (IMP-004, IMP-010, IMP-011, IMP-014, IMP-015, 7 SP total):
+
 - ✅ **IMP-004** — 429 rate limit handling dengan exponential backoff + toast notification
 - ✅ **IMP-010** — FxService double-prefix bug fix
 - ✅ **IMP-011** — Pocket type consolidation
@@ -176,6 +180,7 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 **E-04 — API Management COMPLETED (Feb 28):**
 
 3 stories finished (IMP-016, IMP-017, IMP-018, 9 SP total):
+
 - ✅ **IMP-016** — Persistent analytics dengan Redis (90d retention)
 - ✅ **IMP-017** — Rate plans per partner dengan per-endpoint overrides
 - ✅ **IMP-018** — Request/response transformation filters
@@ -255,33 +260,33 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 > All completed stories have detailed implementation notes in [`CHANGELOG.md`](../../CHANGELOG.md).
 > Items below were removed from `TODOS.md` on March 2, 2026 per backlog hygiene convention.
 
-| Epic | Name                              | Priority   | Stories | SP  | Completed   |
-| :--- | :-------------------------------- | :--------- | :-----: | :-: | :---------- |
-| E-01 | Core Banking Ledger               | 🔴 Highest |    3    |  13 | Feb 26 2026 |
-| E-02 | Gateway Hardening                 | 🔴 Highest |    5    |  11 | Feb 26 2026 |
-| E-03 | Frontend Quality                  | 🟠 High    |    5    |   7 | Feb 28 2026 |
-| E-04 | API Management & Analytics        | 🟠 High    |    5    |  19 | Mar 02 2026 |
-| E-05 | Product Catalog                   | 🟠 High    |    1    |   5 | Feb 28 2026 |
-| E-06 | Developer Hub (Backstage)         | 🟡 Medium  |    5    |  13 | Mar 02 2026 |
-| E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    |  25 | Mar 02 2026 |
-| E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |   5 | Feb 28 2026 |
-| E-09 | Partner Integration Foundation    | 🔴 Highest |    4    |  18 | Feb 28 2026 |
-| E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    |  10 | Feb 28 2026 |
-| E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |   8 | Feb 28 2026 |
-| E-12 | Settlement & Financial Operations | 🟠 High    |    4    |  16 | Feb 28 2026 |
-| E-13 | Dispute Resolution                | 🟠 High    |    1    |   5 | Feb 28 2026 |
-| E-14 | Consumer Banking Experience       | 🟠 High    |    6    |  12 | Feb 28 2026 |
-| E-15 | Payment Gateway Features          | 🔴 Highest |    7    |  25 | Feb 28 2026 |
-| E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    |  12 | Feb 28 2026 |
-| E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |   6 | Feb 28 2026 |
-| E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    |  11 | Feb 28 2026 |
-| E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |   2 | Feb 28 2026 |
-| E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    |  10 | Feb 26 2026 |
-| E-21 | Security Hardening                | 🔴 Highest |    2    |   5 | Feb 26 2026 |
-| E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |   6 | Feb 26 2026 |
-| E-23 | Shared Library Lifecycle          | 🟠 High    |    2    |  11 | Feb 28 2026 |
-| E-24 | E2E Test & Gateway Readiness      | 🔴 Highest |    4    |   8 | Mar 02 2026 |
-|      | **TOTAL**                         |            | **86**  | **265** |         |
+| Epic | Name                              | Priority   | Stories |   SP    | Completed   |
+| :--- | :-------------------------------- | :--------- | :-----: | :-----: | :---------- |
+| E-01 | Core Banking Ledger               | 🔴 Highest |    3    |   13    | Feb 26 2026 |
+| E-02 | Gateway Hardening                 | 🔴 Highest |    5    |   11    | Feb 26 2026 |
+| E-03 | Frontend Quality                  | 🟠 High    |    5    |    7    | Feb 28 2026 |
+| E-04 | API Management & Analytics        | 🟠 High    |    5    |   19    | Mar 02 2026 |
+| E-05 | Product Catalog                   | 🟠 High    |    1    |    5    | Feb 28 2026 |
+| E-06 | Developer Hub (Backstage)         | 🟡 Medium  |    5    |   13    | Mar 02 2026 |
+| E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    |   25    | Mar 02 2026 |
+| E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |    5    | Feb 28 2026 |
+| E-09 | Partner Integration Foundation    | 🔴 Highest |    4    |   18    | Feb 28 2026 |
+| E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    |   10    | Feb 28 2026 |
+| E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |    8    | Feb 28 2026 |
+| E-12 | Settlement & Financial Operations | 🟠 High    |    4    |   16    | Feb 28 2026 |
+| E-13 | Dispute Resolution                | 🟠 High    |    1    |    5    | Feb 28 2026 |
+| E-14 | Consumer Banking Experience       | 🟠 High    |    6    |   12    | Feb 28 2026 |
+| E-15 | Payment Gateway Features          | 🔴 Highest |    7    |   25    | Feb 28 2026 |
+| E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    |   12    | Feb 28 2026 |
+| E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |    6    | Feb 28 2026 |
+| E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    |   11    | Feb 28 2026 |
+| E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |    2    | Feb 28 2026 |
+| E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    |   10    | Feb 26 2026 |
+| E-21 | Security Hardening                | 🔴 Highest |    2    |    5    | Feb 26 2026 |
+| E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |    6    | Feb 26 2026 |
+| E-23 | Shared Library Lifecycle          | 🟠 High    |    2    |   11    | Feb 28 2026 |
+| E-24 | E2E Test & Gateway Readiness      | 🔴 Highest |    4    |    8    | Mar 02 2026 |
+|      | **TOTAL**                         |            | **86**  | **265** |             |
 
 > **Tech Debt**: 3/3 completed (SIMP-001 ab-testing removal, SIMP-002 gamification removal, SIMP-003 robo-advisory removal)
 
@@ -328,12 +333,12 @@ Data Layer:
 
 ## 📊 Test Coverage Summary
 
-| Layer             | Framework         | Status                                    |
-| :---------------- | :---------------- | :---------------------------------------- |
-| E2E (OCP)         | Playwright        | ✅ 399/399                                |
-| E2E (Local)       | Pytest Blackbox   | ✅ 103 pass, 55 skip, 0 fail              |
-| Performance       | Gatling           | ✅ Configured                             |
-| Contract          | Pact              | ✅ Configured                             |
-| Integration       | Testcontainers    | ✅ Per service                            |
-| Architecture      | ArchUnit          | ✅ 18/19 services                         |
-| Unit              | JUnit 5 + Mockito | Varies (see TODOS for coverage gaps)      |
+| Layer        | Framework         | Status                               |
+| :----------- | :---------------- | :----------------------------------- |
+| E2E (OCP)    | Playwright        | ✅ 399/399                           |
+| E2E (Local)  | Pytest Blackbox   | ✅ 103 pass, 55 skip, 0 fail         |
+| Performance  | Gatling           | ✅ Configured                        |
+| Contract     | Pact              | ✅ Configured                        |
+| Integration  | Testcontainers    | ✅ Per service                       |
+| Architecture | ArchUnit          | ✅ 18/19 services                    |
+| Unit         | JUnit 5 + Mockito | Varies (see TODOS for coverage gaps) |

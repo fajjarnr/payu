@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-01-30
+**Last Updated**: 2026-03-11
 **Deciders**: Architecture Team, Engineering Leads
 
 ## Context
@@ -24,6 +25,7 @@ Supporting services (gateway, billing, notification) require high performance an
 ## Considered Options
 
 ### Option 1: Quarkus 3.x Native
+
 - **Pros**:
   - Native compilation with GraalVM
   - Fast startup time (< 100ms native)
@@ -37,6 +39,7 @@ Supporting services (gateway, billing, notification) require high performance an
 - **Rationale**: Best fit for high-throughput supporting services
 
 ### Option 2: Spring Boot 3.4
+
 - **Pros**:
   - Consistent with core banking services
   - Mature ecosystem
@@ -48,6 +51,7 @@ Supporting services (gateway, billing, notification) require high performance an
 - **Rationale**: Overkill for simple supporting services
 
 ### Option 3: Node.js/TypeScript
+
 - **Pros**:
   - Fast development
   - Good for IO-bound workloads
@@ -60,11 +64,21 @@ Supporting services (gateway, billing, notification) require high performance an
 
 ## Decision
 
-**Choose Quarkus 3.x Native** for all Supporting services:
+**Choose Quarkus 3.x Native** for Supporting services:
+
 - gateway-service
-- billing-service
 - notification-service
 - api-portal-service
+
+**Quarkus Simulators** (test infrastructure):
+
+- biller-simulator _(added Feb 2026)_
+- va-simulator _(added Feb 2026)_
+- qris-simulator
+- bi-fast-simulator
+- dukcapil-simulator
+
+> **Amendment (Mar 11, 2026)**: `billing-service` was originally planned as Quarkus but was implemented using **Spring Boot 3.4** due to deeper integration needs with shared starters (`security-starter`, `resilience-starter`, `cache-starter`) and JPA/Flyway patterns consistent with other core services. Moved to ADR-0002 scope. Simulator services added as Quarkus services for lightweight external mocking.
 
 ## Rationale
 
@@ -77,17 +91,20 @@ Supporting services (gateway, billing, notification) require high performance an
 ## Consequences
 
 **Positive**:
+
 - Fast startup and scaling
 - Low memory footprint
 - Lower cloud costs
 - Excellent for stateless services
 
 **Negative**:
+
 - Different framework from core services
 - Smaller ecosystem
 - Learning curve for Spring developers
 
 **Trade-offs Accepted**:
+
 - Accept framework diversity for resource efficiency
 - Accept learning curve for performance benefits
 
@@ -127,4 +144,4 @@ CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]
 
 ---
 
-*Created via @principal-architect*
+_Created via @principal-architect_

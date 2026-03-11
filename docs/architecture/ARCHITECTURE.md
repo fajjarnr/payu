@@ -9,7 +9,7 @@
 1. [Executive Summary](#1-executive-summary)
 2. [System Overview](#2-system-overview)
 3. [Microservices Architecture](#3-microservices-architecture)
-   - 3.4 [Testing Strategy](#34-testing-strategy)
+   - 3.4 [Testing Strategy](#35-testing-strategy)
 4. [Event-Driven Architecture](#4-event-driven-architecture)
 5. [Data Architecture](#5-data-architecture)
 6. [Security Architecture](#6-security-architecture)
@@ -52,7 +52,7 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 | **Message Queue**         | AMQ Broker (Artemis)                 | ActiveMQ Artemis, RabbitMQ |
 | **Database**              | Crunchy PostgreSQL 16                | Any PostgreSQL             |
 | **Caching**               | Red Hat Data Grid (RESP mode)        | Redis, ElastiCache         |
-| **Identity & Access**     | Red Hat SSO (Keycloak) 24            | Keycloak, Auth0            |
+| **Identity & Access**     | Red Hat Build of Keycloak (RHBK) v26 | Keycloak, Auth0            |
 | **Service Mesh**          | OpenShift Service Mesh               | Istio, Linkerd             |
 | **Logging**               | OpenShift Logging (LokiStack)        | Grafana Loki               |
 | **Monitoring**            | OpenShift Monitoring                 | Prometheus/Grafana         |
@@ -74,12 +74,13 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 │  │ account-svc   auth-svc       │     │ backoffice-svc  partner-svc     │    │
 │  │ transaction-svc wallet-svc   │     │ promotion-svc   support-svc     │    │
 │  │ investment-svc lending-svc   │     │ compliance-svc  cms-svc         │    │
-│  │ fx-svc  statement-svc        │     │ ab-testing-svc                  │    │
+│  │ fx-svc  statement-svc        │     │ billing-svc    dispute-svc      │    │
+│  │                              │     │ product-catalog integration-svc │    │
 │  └──────────────────────────────┘     └─────────────────────────────────┘    │
 │                                                                              │
 │  NATIVE SERVICES (Quarkus 3.x)         ML/DATA (Python 3.12 UBI)            │
 │  ┌──────────────────────────────┐     ┌─────────────────────────────────┐    │
-│  │ gateway-svc   billing-svc    │     │ kyc-svc (OCR, liveness)         │    │
+│  │ gateway-svc                  │     │ kyc-svc (OCR, liveness)         │    │
 │  │ notification-svc             │     │ analytics-svc (Fraud ML)        │    │
 │  │ api-portal-svc               │     │                                 │    │
 │  └──────────────────────────────┘     └─────────────────────────────────┘    │
@@ -89,6 +90,8 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 │  │ security-starter (PII, Audit)│     │ bi-fast-simulator               │    │
 │  │ resilience-starter (Circuit) │     │ dukcapil-simulator              │    │
 │  │ cache-starter (L2 Caching)   │     │ qris-simulator                  │    │
+│  │ grpc-starter, saga-starter   │     │ biller-simulator                │    │
+│  │ events, outbox, api-commons  │     │ va-simulator                    │    │
 │  └──────────────────────────────┘     └─────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -135,7 +138,7 @@ C4Container
     Container(mobile, "Mobile App", "React Native / Expo", "Customer-facing mobile application")
     Container(web_app, "Web App", "Next.js 15", "Customer web portal")
     Container(admin_web, "Admin Dashboard", "Next.js 15", "Internal administration interface")
-    Container(gateway, "API Gateway", "Spring Cloud Gateway", "Rate limiting, JWT validation, routing")
+    Container(gateway, "API Gateway", "Quarkus Native", "Rate limiting, JWT validation, routing")
 
     System_Boundary(core_banking, "Core Banking Services") {
       Container(account_svc, "Account Service", "Spring Boot 3.4", "User accounts, multi-pocket, profile")
@@ -151,7 +154,7 @@ C4Container
     System_Boundary(supporting_services, "Supporting Services") {
       Container(kyc_svc, "KYC Service", "Python FastAPI", "OCR, liveness detection")
       Container(notification_svc, "Notification Service", "Quarkus Native", "Push, SMS, Email")
-      Container(billing_svc, "Billing Service", "Quarkus Native", "Bill payments")
+      Container(billing_svc, "Billing Service", "Spring Boot 3.4", "Bill payments")
       Container(gateway_svc, "Gateway Service", "Quarkus Native", "Internal API gateway")
       Container(api_portal_svc, "API Portal Service", "Quarkus Native", "OpenAPI docs & sandbox")
       Container(analytics_svc, "Analytics Service", "Python FastAPI", "Fraud scoring, insights")
@@ -164,7 +167,9 @@ C4Container
       Container(support_svc, "Support Service", "Spring Boot 3.4", "Customer support, ticketing")
       Container(compliance_svc, "Compliance Service", "Spring Boot 3.4", "Regulatory compliance, AML")
       Container(cms_svc, "CMS Service", "Spring Boot 3.4", "Banners, promos, dynamic content")
-      Container(ab_testing_svc, "AB Testing Service", "Spring Boot 3.4", "Feature flags, experimentation")
+      Container(dispute_svc, "Dispute Service", "Spring Boot 3.4", "Refund & dispute resolution")
+      Container(product_catalog_svc, "Product Catalog Service", "Spring Boot 3.4", "Partner product registry")
+      Container(integration_svc, "Integration Service", "Spring Boot 3.4", "External system integration")
     }
 
     ContainerDb(accounts_db, "Accounts Database", "PostgreSQL 16", "User accounts, pockets")
@@ -241,7 +246,7 @@ C4Container
 
 ### 3.1 Service Decomposition
 
-```
+```text
                                ┌─────────────────────────────────────┐
                                │           CORE BANKING              │
                                └─────────────────────────────────────┘
@@ -271,9 +276,11 @@ C4Container
     ┌───────────────┬───────────────┬─────────┴──────┬───────────────┬───────────────┐
     │               │               │                │               │               │
 ┌───▼───────┐ ┌─────▼─────┐ ┌───────▼─────┐ ┌────────▼─────┐ ┌───────▼─────┐ ┌───────▼─────┐
-│Backoffice │ │  Partner  │ │  Promotion  │ │   Support    │ │ Compliance  │ │ AB Testing  │
-│  Service  │ │  Service  │ │   Service   │ │   Service    │ │   Service   │ │   Service   │
+│Backoffice │ │  Partner  │ │  Promotion  │ │   Support    │ │ Compliance  │ │  Dispute    │
+│  Service  │ │  Service  │ │   Service   │ │   Service    │ │   Service   │ │  Service    │
 └───────────┘ └───────────┘ └─────────────┘ └──────────────┘ └─────────────┘ └─────────────┘
+
+> Also includes: Billing Service, Product Catalog Service, Integration Service (not shown for readability)
 ```
 
 ### 3.2 Service Specifications
@@ -287,7 +294,7 @@ C4Container
 | **Port**             | 8001                                            |
 | **Responsibilities** | User accounts, multi-pocket, profile management |
 
-```
+```text
 account-service/
 ├── src/main/java/id/payu/account/
 │   ├── AccountServiceApplication.java
@@ -314,12 +321,13 @@ account-service/
 ```
 
 **Key APIs:**
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v1/accounts` | POST | Open new account |
-| `/v1/accounts/{id}` | GET | Get account details |
-| `/v1/accounts/{id}/pockets` | POST | Create savings pocket |
-| `/v1/accounts/{id}/pockets` | GET | List all pockets |
+
+| Endpoint                    | Method | Description           |
+| --------------------------- | ------ | --------------------- |
+| `/v1/accounts`              | POST   | Open new account      |
+| `/v1/accounts/{id}`         | GET    | Get account details   |
+| `/v1/accounts/{id}/pockets` | POST   | Create savings pocket |
+| `/v1/accounts/{id}/pockets` | GET    | List all pockets      |
 
 ---
 
@@ -351,12 +359,13 @@ account-service/
 | **Responsibilities** | Transfer, BI-FAST, QRIS, payment processing |
 
 **Transaction Types:**
-| Type | Processing | SLA |
-|------|------------|-----|
-| Internal Transfer | Synchronous | < 1s |
-| BI-FAST | Async (callback) | < 5s |
-| QRIS Payment | Synchronous | < 3s |
-| Bill Payment | Async (callback) | < 30s |
+
+| Type              | Processing       | SLA   |
+| ----------------- | ---------------- | ----- |
+| Internal Transfer | Synchronous      | < 1s  |
+| BI-FAST           | Async (callback) | < 5s  |
+| QRIS Payment      | Synchronous      | < 3s  |
+| Bill Payment      | Async (callback) | < 30s |
 
 ---
 
@@ -402,7 +411,7 @@ CREATE TABLE ledger_entries (
 
 **ML Pipeline:**
 
-```
+```text
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │  KTP Image  │───▶│  OCR Model  │───▶│  Liveness   │───▶│  Dukcapil   │
 │   Upload    │    │ (PyTorch)   │    │  Detection  │    │    API      │
@@ -429,12 +438,13 @@ CREATE TABLE ledger_entries (
 | **Responsibilities** | Push notifications, SMS, Email, in-app messages |
 
 **Notification Channels:**
-| Channel | Provider | Use Case |
-|---------|----------|----------|
-| Push | Firebase FCM | Real-time alerts |
-| SMS | Twilio / Local | OTP, critical alerts |
-| Email | SendGrid | Statements, marketing |
-| WhatsApp | Meta Business | Customer support |
+
+| Channel  | Provider       | Use Case              |
+| -------- | -------------- | --------------------- |
+| Push     | Firebase FCM   | Real-time alerts      |
+| SMS      | Twilio / Local | OTP, critical alerts  |
+| Email    | SendGrid       | Statements, marketing |
+| WhatsApp | Meta Business  | Customer support      |
 
 ---
 
@@ -483,14 +493,32 @@ CREATE TABLE ledger_entries (
 | **Port**             | 8011                                 |
 | **Responsibilities** | Banners, Promos, Dynamic App Content |
 
-#### 3.2.12 AB Testing Service
+#### 3.2.12 Dispute Service _(added Feb 2026, replacing removed ab-testing-service)_
 
-| Attribute            | Value                                             |
-| -------------------- | ------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                        |
-| **Database**         | PostgreSQL                                        |
-| **Port**             | 8012                                              |
-| **Responsibilities** | Feature flags, Experimentation, Variant bucketing |
+| Attribute            | Value                                                  |
+| -------------------- | ------------------------------------------------------ |
+| **Technology**       | Java 21, Spring Boot 3.4.x                             |
+| **Database**         | PostgreSQL                                             |
+| **Port**             | 8020                                                   |
+| **Responsibilities** | Refund processing, dispute resolution, chargeback mgmt |
+
+#### 3.2.18 Product Catalog Service _(added Feb 2026)_
+
+| Attribute            | Value                                        |
+| -------------------- | -------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                   |
+| **Database**         | PostgreSQL                                   |
+| **Port**             | 8021                                         |
+| **Responsibilities** | Partner product registry, catalog management |
+
+#### 3.2.19 Integration Service _(added Mar 2026)_
+
+| Attribute            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                      |
+| **Database**         | PostgreSQL                                      |
+| **Port**             | 8022                                            |
+| **Responsibilities** | External system integration, adapter management |
 
 #### 3.2.13 Backoffice Service
 
@@ -539,11 +567,18 @@ CREATE TABLE ledger_entries (
 
 ### 3.3 Shared Libraries (Common Components)
 
-| Library                | Platform    | Purpose                            |
-| ---------------------- | ----------- | ---------------------------------- |
-| **security-starter**   | Spring Boot | Encryption, Masking, Audit         |
-| **resilience-starter** | Spring Boot | Circuit Breaker, Retry, Bulkhead   |
-| **cache-starter**      | Spring Boot | Multi-layer Redis + Caffeine cache |
+| Library                | Platform    | Purpose                              |
+| ---------------------- | ----------- | ------------------------------------ |
+| **security-starter**   | Spring Boot | Encryption, Masking, Audit           |
+| **resilience-starter** | Spring Boot | Circuit Breaker, Retry, Bulkhead     |
+| **cache-starter**      | Spring Boot | Multi-layer Redis + Caffeine cache   |
+| **grpc-starter**       | Spring Boot | gRPC server/client auto-config       |
+| **events-starter**     | Spring Boot | CloudEvent envelope, Kafka producers |
+| **outbox-starter**     | Spring Boot | Transactional outbox pattern         |
+| **saga-starter**       | Spring Boot | Saga orchestration framework         |
+| **api-commons**        | Spring Boot | Shared DTOs, error codes, pagination |
+| **archunit-starter**   | Spring Boot | Architecture test rules              |
+| **flyway**             | Spring Boot | Shared migration config              |
 
 ### 3.4 Service Communication Matrix
 
@@ -580,7 +615,7 @@ CREATE TABLE ledger_entries (
 
 #### Test Structure (per service)
 
-```
+```text
 src/test/java/id/payu/<service>/
 ├── service/           # Unit tests with Mockito
 ├── controller/        # WebMvcTest for REST endpoints
@@ -598,11 +633,13 @@ mvn test -Dtest=*Arch*  # Architecture tests only
 
 #### Clean Architecture Decision
 
-| Service Type                                | Architecture     | Rationale                               |
-| ------------------------------------------- | ---------------- | --------------------------------------- |
-| Core Banking (account, transaction, wallet) | Clean/Hexagonal  | Complex domain, high testability needed |
-| Supporting (notification, billing)          | Layered          | Simple CRUD, no over-engineering        |
-| ML Services (kyc, analytics)                | Simplified Clean | Focus on ML logic isolation             |
+> **Amendment (Mar 2026)**: All 21 backend services now use Hexagonal Architecture — 100% compliance after TD-ARCH-004 refactoring. See ADR-0004.
+
+| Service Type                                | Architecture     | Rationale                                |
+| ------------------------------------------- | ---------------- | ---------------------------------------- |
+| Core Banking (account, transaction, wallet) | Clean/Hexagonal  | Complex domain, high testability needed  |
+| Supporting (notification, billing, cms)     | Hexagonal        | Refactored for consistency (TD-ARCH-004) |
+| ML Services (kyc, analytics)                | Simplified Clean | Focus on ML logic isolation              |
 
 ---
 
@@ -610,7 +647,7 @@ mvn test -Dtest=*Arch*  # Architecture tests only
 
 ### 4.1 Kafka Topic Design
 
-```
+```text
 payu.                              # Namespace prefix
 ├── accounts.                      # Account domain
 │   ├── account-created            # Account lifecycle events
@@ -865,7 +902,7 @@ CREATE TABLE event_snapshots (
 
 ### 5.4 Entity Relationship Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          CORE BANKING ERD                                    │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -927,7 +964,7 @@ C4Deployment
 
   Deployment_Node(platform, "Application Platform", "OpenShift 4.20") {
     Deployment_Node(gateway_zone, "DMZ Zone") {
-      Container(api_gateway, "API Gateway", "Spring Cloud Gateway", "JWT validation, rate limiting")
+      Container(api_gateway, "API Gateway", "Quarkus Native", "JWT validation, rate limiting")
       Container(ingress, "Ingress Gateway", "Istio", "mTLS termination")
     }
 
@@ -937,7 +974,7 @@ C4Deployment
     }
 
     Deployment_Node(infra_zone, "Infrastructure Zone") {
-      Container(sso, "SSO (Keycloak)", "Keycloak 24", "OAuth2/OIDC provider")
+      Container(sso, "SSO (RHBK)", "Red Hat Build of Keycloak v26", "OAuth2/OIDC provider")
       Container(vault, "HashiCorp Vault", "Vault", "Secret management")
     }
   }
@@ -1031,19 +1068,19 @@ encryption:
 
 ## 7. API Gateway & Service Mesh
 
-### 7.1 Spring Cloud Gateway Configuration (C4 Component)
+### 7.1 API Gateway Architecture (C4 Component)
 
 ```mermaid
 C4Component
   title API Gateway Internal Architecture
 
-  Container(gateway, "API Gateway", "Spring Cloud Gateway")
+  Container(gateway, "API Gateway", "Quarkus Native (gateway-service)")
 
-  Component(rate_limiter, "Rate Limiter", "RedisRateLimiter", "Per-IP and per-user limits")
-  Component(jwt_filter, "JWT Filter", "GlobalFilter", "Token validation and extraction")
-  Component(router, "Route Locator", "RouteLocator", "Request routing to services")
-  Component(circuit_breaker, "Circuit Breaker", "Resilience4j", "Failure handling")
-  Component(load_balancer, "Load Balancer", "Spring Cloud LoadBalancer", "Service discovery")
+  Component(rate_limiter, "Rate Limiter", "RateLimitFilter (Redis Sliding Window)", "Per-IP and per-user limits")
+  Component(jwt_filter, "JWT Filter", "JwtValidationFilter", "Token validation and extraction")
+  Component(router, "Route Registry", "RouteRegistry", "Dynamic request routing to services")
+  Component(circuit_breaker, "Circuit Breaker", "Resilience4j", "Per-service failure handling")
+  Component(idempotency, "Idempotency", "IdempotencyFilter", "Redis-backed dedup (24h TTL)")
 
   ComponentDb(redis, "Data Grid", "Redis", "Rate limit counters, token cache")
 
@@ -1120,9 +1157,9 @@ C4Deployment
     }
 
     Deployment_Node(infra_namespace, "Namespace: payu-infrastructure", "OpenShift") {
-      ContainerQueue(kafka_cluster, "AMQ Streams", "Kafka 3.7 Cluster")
+      ContainerQueue(kafka_cluster, "AMQ Streams", "Kafka KRaft Cluster")
       ContainerDb(redis_cluster, "Data Grid", "Redis Cluster")
-      Container(sso_cluster, "Red Hat SSO", "Keycloak 24")
+      Container(sso_cluster, "Red Hat SSO", "RHBK v26")
       Container(monitoring, "Monitoring Stack", "Prometheus + Grafana")
       Container(tracing, "Distributed Tracing", "Jaeger")
     }
@@ -1147,7 +1184,7 @@ C4Deployment
 
 ### 8.2 Helm Chart Structure
 
-```
+```text
 payu-helm/
 ├── charts/
 │   ├── account-service/
@@ -1171,51 +1208,40 @@ payu-helm/
 
 ### 8.3 CI/CD Pipeline
 
+> **Amendment (Mar 2026)**: CI/CD uses **Tekton Pipelines** + **ArgoCD GitOps**, not GitHub Actions.
+> See `infrastructure/tekton/` and `infrastructure/argocd/` for manifests.
+
 ```yaml
-# .github/workflows/deploy.yml
-name: Deploy to Production
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Tests
-        run: ./mvnw test
-      - name: SonarQube Analysis
-        run: ./mvnw sonar:sonar
-
-  security-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trivy Container Scan
-        uses: aquasecurity/trivy-action@master
-      - name: OWASP Dependency Check
-        uses: dependency-check/gh-action@main
-
-  build:
-    needs: [test, security-scan]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Build & Push Image
-        run: |
-          docker build -t payu/${{ matrix.service }}:${{ github.sha }} .
-          docker push payu/${{ matrix.service }}:${{ github.sha }}
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to EKS
-        run: |
-          helm upgrade --install ${{ matrix.service }} \
-            ./charts/${{ matrix.service }} \
-            -f ./values/production.yaml \
-            --set image.tag=${{ github.sha }}
+# Tekton Pipeline (simplified)
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: payu-service-pipeline
+  namespace: payu-ci
+spec:
+  params:
+    - name: SERVICE_NAME
+    - name: GIT_REVISION
+  tasks:
+    - name: unit-test
+      taskRef:
+        name: maven-test
+    - name: arch-test
+      taskRef:
+        name: archunit-test
+    - name: build-image
+      taskRef:
+        name: buildah
+      runAfter: [unit-test, arch-test]
+    - name: trivy-scan
+      taskRef:
+        name: trivy-scanner
+      runAfter: [build-image]
+    - name: update-manifests
+      taskRef:
+        name: git-update-deployment
+      runAfter: [trivy-scan]
+  # ArgoCD auto-syncs from updated manifests
 ```
 
 ---
@@ -1224,9 +1250,9 @@ jobs:
 
 ### 9.1 Observability Stack
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         OBSERVABILITY ARCHITECTURE                           │
+│ OBSERVABILITY ARCHITECTURE │
 └─────────────────────────────────────────────────────────────────────────────┘
 
                     ┌────────────────────────────────────┐
@@ -1237,18 +1263,20 @@ jobs:
            ┌────────────────────────┼────────────────────────┐
            │                        │                        │
            ▼                        ▼                        ▼
-┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐
-│    Prometheus       │  │    Elasticsearch    │  │      Jaeger         │
-│    (Metrics)        │  │    (Logs via ELK)   │  │    (Traces)         │
-└──────────┬──────────┘  └──────────┬──────────┘  └──────────┬──────────┘
-           │                        │                        │
-           │                        │                        │
-           └────────────────────────┼────────────────────────┘
-                                    │
-                    ┌───────────────▼───────────────┐
-                    │        Service Mesh           │
-                    │     (Istio + Envoy Proxy)     │
-                    └───────────────────────────────┘
+
+┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────┐
+│ Prometheus │ │ LokiStack │ │ Jaeger │
+│ (Metrics) │ │ (Logs via Grafana) │ │ (Traces) │
+└──────────┬──────────┘ └──────────┬──────────┘ └──────────┬──────────┘
+│ │ │
+│ │ │
+└────────────────────────┼────────────────────────┘
+│
+┌───────────────▼───────────────┐
+│ Service Mesh │
+│ (Istio + Envoy Proxy) │
+└───────────────────────────────┘
+
 ```
 
 ### 9.2 Key Metrics & SLIs
@@ -1279,7 +1307,7 @@ groups:
 
       - alert: TransactionLatencyHigh
         expr: |
-          histogram_quantile(0.99, 
+          histogram_quantile(0.99,
             rate(transaction_duration_seconds_bucket[5m])) > 3
         for: 5m
         labels:
@@ -1879,14 +1907,14 @@ Phase 7: Integration (Later)
 
 ### B. Compliance Checklist
 
-- [ ] PCI DSS Level 1 Certification
+- [x] PCI DSS v4.0 Audit (94/100 — Feb 2026)
 - [ ] ISO 27001 Certification
 - [ ] SOC 2 Type II Report
-- [ ] OJK Digital Banking License
+- [x] OJK Compliance Audit (95/100 — Feb 2026)
 - [ ] BI-FAST Participation
 - [ ] QRIS Certification
 - [ ] Penetration Test (Annual)
-- [ ] Security Audit (Quarterly)
+- [x] Security Audit (P19 full platform audit — Feb 2026)
 
 ### C. References
 
@@ -1900,7 +1928,7 @@ Phase 7: Integration (Later)
 
 ---
 
-**Document Version**: 2.0  
-**Last Updated**: January 2026  
-**Owner**: Engineering Team PayU  
-**Status**: Lab Configuration Ready
+**Document Version**: 3.0
+**Last Updated**: March 2026
+**Owner**: Engineering Team PayU
+**Status**: Production-Ready (22 services deployed on OpenShift)

@@ -381,6 +381,8 @@ After completing a complex task (Workflow), generate a "Lesson Learned" block in
 
 **Core Principle:** NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
 
+- **Rule of Reproduction**: When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
+
 > [!IMPORTANT]
 > **The Iron Law**: If you haven't completed Phase 1 (Root Cause Investigation), you are NOT allowed to propose or implement fixes.
 > For detailed patterns and case studies, use the **`debugging-methodology` skill** ([SKILL.md](../../.agent/skills/debugging-methodology/SKILL.md)).
@@ -483,7 +485,7 @@ This section defines the high-performance operational protocol for all AI Agents
 
 ### 6. Autonomous Bug Fixing
 
-- **Just Fix It**: When given a bug report: just fix it. Don't ask for hand-holding.
+- **Test-First Reproduction**: When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
 - **Evidence-Based Resolution**: Point at logs, errors, failing tests – then resolve them.
 - **Zero-Context Switching**: Aim for zero context switching required from the user.
 - **Proactive Maintenance**: Fix failing CI tests without being told how.

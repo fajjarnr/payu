@@ -2,11 +2,13 @@
 
 **Status**: Accepted
 **Date**: 2026-01-30
+**Last Updated**: 2026-03-11
 **Deciders**: Architecture Team, Engineering Leads
 
 ## Context
 
 PayU platform requires an event streaming backbone for:
+
 - Event-driven communication between services
 - Saga pattern for distributed transactions
 - Real-time data synchronization
@@ -23,6 +25,7 @@ PayU platform requires an event streaming backbone for:
 ## Considered Options
 
 ### Option 1: Apache Kafka (AMQ Streams)
+
 - **Pros**:
   - Guaranteed message delivery
   - Message ordering per key
@@ -31,11 +34,12 @@ PayU platform requires an event streaming backbone for:
   - Red Hat AMQ Streams support
 - **Cons**:
   - Operational complexity
-  - Requires ZooKeeper (pre-KRaft)
+  - ~~Requires ZooKeeper (pre-KRaft)~~ → Migrated to KRaft (Mar 2026)
 - **Complexity**: High
 - **Rationale**: Industry standard for event streaming
 
 ### Option 2: RabbitMQ (AMQ Broker)
+
 - **Pros**:
   - Simpler to operate
   - Good for request-response patterns
@@ -48,6 +52,7 @@ PayU platform requires an event streaming backbone for:
 - **Rationale**: Better for point-to-point messaging
 
 ### Option 3: Redis Streams
+
 - **Pros**:
   - Simple to operate
   - Lightweight
@@ -61,12 +66,14 @@ PayU platform requires an event streaming backbone for:
 ## Decision
 
 **Choose Apache Kafka** (via Red Hat AMQ Streams) for:
+
 - Event streaming between services
 - Saga choreography
 - Audit event logs
 - Real-time notifications
 
 **Choose AMQ Broker (RabbitMQ)** for:
+
 - Point-to-point messaging (notification queue)
 - Request-response patterns where needed
 
@@ -81,19 +88,24 @@ PayU platform requires an event streaming backbone for:
 ## Consequences
 
 **Positive**:
+
 - Reliable event delivery
 - Excellent for Saga pattern
 - Horizontal scalability
 - Enterprise support from Red Hat
 
 **Negative**:
+
 - Operational complexity
-- Requires ZooKeeper/KRaft
+- ~~Requires ZooKeeper~~ → Eliminated via KRaft migration (Mar 2026)
 - More complex than message queues
 
 **Trade-offs Accepted**:
+
 - Accept operational complexity for reliability
 - Accept Kafka learning curve for event streaming benefits
+
+> **Amendment (Mar 11, 2026)**: Kafka migrated from ZooKeeper to **KRaft mode** (`cp-kafka:7.7.1`). Zookeeper service, quadlet files, and dependencies fully removed from `podman-compose.yml`. KRaft config uses combined `broker,controller` process roles with static `CLUSTER_ID`. Aligned with AMQ Streams operator on OpenShift.
 
 ## Implementation Notes
 
@@ -104,6 +116,7 @@ payu.{domain}.{event-type}
 ```
 
 Examples:
+
 - `payu.accounts.account-created`
 - `payu.transactions.transaction-initiated`
 - `payu.wallet.balance-changed`
@@ -149,4 +162,4 @@ spring:
 
 ---
 
-*Created via @principal-architect*
+_Created via @principal-architect_
