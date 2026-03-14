@@ -98,6 +98,8 @@ yarn-error.log*
 .npm/
 .next/
 out/
+!**/port/out/
+!**/port/output/
 .turbo/
 coverage/
 *.tsbuildinfo
