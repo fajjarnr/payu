@@ -1,71 +1,74 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useExperiment } from '@/hooks/useExperiment';
-import { ExperimentProvider } from '@/contexts/ExperimentContext';
-import ABTestingService from '@/services/ABTestingService';
-import { ExperimentStatus, AllocationStrategy } from '@/services/ABTestingService';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useExperiment } from "@/hooks/useExperiment";
+import { ExperimentProvider } from "@/contexts/ExperimentContext";
+import ABTestingService from "@/services/ABTestingService";
+import {
+  ExperimentStatus,
+  AllocationStrategy,
+} from "@/services/ABTestingService";
 
 // Mock ABTestingService
-vi.mock('@/services/ABTestingService');
+vi.mock("@/services/ABTestingService");
 
 // Mock useAuth
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
-    user: { id: 'test-user-id' },
+    user: { id: "test-user-id" },
   }),
   useLogin: vi.fn(),
   useLogout: vi.fn(),
   useRefreshToken: vi.fn(),
 }));
 
-describe('useExperiment', () => {
+describe("useExperiment", () => {
   const mockExperiment = {
-    id: 'exp-1',
-    key: 'test_experiment',
-    name: 'Test Experiment',
-    description: 'A test experiment',
+    id: "exp-1",
+    key: "test_experiment",
+    name: "Test Experiment",
+    description: "A test experiment",
     status: ExperimentStatus.RUNNING,
     allocationStrategy: AllocationStrategy.MODULO,
     trafficPercentage: 100,
     targetAudience: {},
     variants: [
       {
-        id: 'var-1',
-        experimentId: 'exp-1',
-        key: 'control',
-        name: 'Control',
-        description: 'Control variant',
+        id: "var-1",
+        experimentId: "exp-1",
+        key: "control",
+        name: "Control",
+        description: "Control variant",
         isControl: true,
         allocationWeight: 50,
         config: {},
-        createdAt: '2024-01-01T00:00:00Z',
+        createdAt: "2024-01-01T00:00:00Z",
       },
       {
-        id: 'var-2',
-        experimentId: 'exp-1',
-        key: 'variant_b',
-        name: 'Variant B',
-        description: 'Test variant B',
+        id: "var-2",
+        experimentId: "exp-1",
+        key: "variant_b",
+        name: "Variant B",
+        description: "Test variant B",
         isControl: false,
         allocationWeight: 50,
         config: {},
-        createdAt: '2024-01-01T00:00:00Z',
+        createdAt: "2024-01-01T00:00:00Z",
       },
     ],
-    startDate: '2024-01-01T00:00:00Z',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
+    startDate: "2024-01-01T00:00:00Z",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
   };
 
   const mockAssignment = {
-    id: 'assign-1',
-    experimentId: 'exp-1',
-    experimentKey: 'test_experiment',
-    variantId: 'var-1',
-    variantKey: 'control',
-    userId: 'test-user-id',
-    assignedAt: '2024-01-01T00:00:00Z',
+    id: "assign-1",
+    experimentId: "exp-1",
+    experimentKey: "test_experiment",
+    variantId: "var-1",
+    variantKey: "control",
+    userId: "test-user-id",
+    assignedAt: "2024-01-01T00:00:00Z",
     variant: mockExperiment.variants[0],
   };
 
@@ -88,13 +91,15 @@ describe('useExperiment', () => {
     localStorage.clear();
   });
 
-  it('should fetch experiment and assign variant', async () => {
-    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(mockExperiment);
+  it("should fetch experiment and assign variant", async () => {
+    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(
+      mockExperiment,
+    );
     vi.mocked(ABTestingService.assignVariant).mockResolvedValue(mockAssignment);
     vi.mocked(ABTestingService.getCachedVariant).mockReturnValue(null);
     vi.mocked(ABTestingService.trackConversion).mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useExperiment('test_experiment'), {
+    const { result } = renderHook(() => useExperiment("test_experiment"), {
       wrapper,
     });
 
@@ -104,21 +109,25 @@ describe('useExperiment', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.variantKey).toBe('control');
+    expect(result.current.variantKey).toBe("control");
     expect(result.current.assignment).toEqual(mockAssignment);
-    expect(ABTestingService.getExperimentByKey).toHaveBeenCalledWith('test_experiment');
+    expect(ABTestingService.getExperimentByKey).toHaveBeenCalledWith(
+      "test_experiment",
+    );
     expect(ABTestingService.assignVariant).toHaveBeenCalledWith(
-      'test_experiment',
-      'test-user-id',
-      undefined
+      "test_experiment",
+      "test-user-id",
+      undefined,
     );
   });
 
-  it('should use cached variant if available', async () => {
-    vi.mocked(ABTestingService.getCachedVariant).mockReturnValue('variant_b');
-    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(mockExperiment);
+  it("should use cached variant if available", async () => {
+    vi.mocked(ABTestingService.getCachedVariant).mockReturnValue("variant_b");
+    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(
+      mockExperiment,
+    );
 
-    const { result } = renderHook(() => useExperiment('test_experiment'), {
+    const { result } = renderHook(() => useExperiment("test_experiment"), {
       wrapper,
     });
 
@@ -126,40 +135,50 @@ describe('useExperiment', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.variantKey).toBe('variant_b');
+    expect(result.current.variantKey).toBe("variant_b");
     expect(ABTestingService.assignVariant).not.toHaveBeenCalled();
   });
 
-  it('should track impression on mount', async () => {
-    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(mockExperiment);
+  it("should track impression on mount", async () => {
+    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(
+      mockExperiment,
+    );
     vi.mocked(ABTestingService.assignVariant).mockResolvedValue(mockAssignment);
     vi.mocked(ABTestingService.getCachedVariant).mockReturnValue(null);
     vi.mocked(ABTestingService.trackConversion).mockResolvedValue(undefined);
 
-    renderHook(() => useExperiment('test_experiment', { trackImpression: true }), {
-      wrapper,
-    });
+    renderHook(
+      () => useExperiment("test_experiment", { trackImpression: true }),
+      {
+        wrapper,
+      },
+    );
 
     await waitFor(() => {
       expect(ABTestingService.trackConversion).toHaveBeenCalledWith(
-        'exp-1',
-        'test-user-id',
-        'impression',
+        "exp-1",
+        "test-user-id",
+        "impression",
         undefined,
-        { variantKey: 'control', experimentKey: 'test_experiment' }
+        { variantKey: "control", experimentKey: "test_experiment" },
       );
     });
   });
 
-  it('should not track impression when disabled', async () => {
-    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(mockExperiment);
+  it("should not track impression when disabled", async () => {
+    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(
+      mockExperiment,
+    );
     vi.mocked(ABTestingService.assignVariant).mockResolvedValue(mockAssignment);
     vi.mocked(ABTestingService.getCachedVariant).mockReturnValue(null);
     vi.mocked(ABTestingService.trackConversion).mockResolvedValue(undefined);
 
-    renderHook(() => useExperiment('test_experiment', { trackImpression: false }), {
-      wrapper,
-    });
+    renderHook(
+      () => useExperiment("test_experiment", { trackImpression: false }),
+      {
+        wrapper,
+      },
+    );
 
     await waitFor(() => {
       expect(ABTestingService.assignVariant).toHaveBeenCalled();
@@ -168,67 +187,73 @@ describe('useExperiment', () => {
     expect(ABTestingService.trackConversion).not.toHaveBeenCalled();
   });
 
-  it('should track conversions', async () => {
-    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(mockExperiment);
+  it("should track conversions", async () => {
+    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(
+      mockExperiment,
+    );
     vi.mocked(ABTestingService.assignVariant).mockResolvedValue(mockAssignment);
     vi.mocked(ABTestingService.getCachedVariant).mockReturnValue(null);
     vi.mocked(ABTestingService.trackConversion).mockResolvedValue(undefined);
 
     const { result } = renderHook(
-      () => useExperiment('test_experiment', { trackImpression: false }),
-      { wrapper }
+      () => useExperiment("test_experiment", { trackImpression: false }),
+      { wrapper },
     );
 
     await waitFor(() => {
       expect(result.current.assignment).not.toBeNull();
     });
 
-    await result.current.trackConversion('purchase_completed', { amount: 100000 });
+    await result.current.trackConversion("purchase_completed", {
+      amount: 100000,
+    });
 
     expect(ABTestingService.trackConversion).toHaveBeenCalledWith(
-      'exp-1',
-      'test-user-id',
-      'purchase_completed',
+      "exp-1",
+      "test-user-id",
+      "purchase_completed",
       undefined,
-      { amount: 100000 }
+      { amount: 100000 },
     );
   });
 
-  it('should call onVariantAssigned callback', async () => {
+  it("should call onVariantAssigned callback", async () => {
     const onVariantAssigned = vi.fn();
 
-    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(mockExperiment);
+    vi.mocked(ABTestingService.getExperimentByKey).mockResolvedValue(
+      mockExperiment,
+    );
     vi.mocked(ABTestingService.assignVariant).mockResolvedValue(mockAssignment);
     vi.mocked(ABTestingService.getCachedVariant).mockReturnValue(null);
     vi.mocked(ABTestingService.trackConversion).mockResolvedValue(undefined);
 
     renderHook(
       () =>
-        useExperiment('test_experiment', {
+        useExperiment("test_experiment", {
           trackImpression: false,
           onVariantAssigned,
         }),
-      { wrapper }
+      { wrapper },
     );
 
     await waitFor(() => {
-      expect(onVariantAssigned).toHaveBeenCalledWith('control');
+      expect(onVariantAssigned).toHaveBeenCalledWith("control");
     });
   });
 
-  it.skip('should handle errors', async () => {
+  it.skip("should handle errors", async () => {
     // NOTE: This test is skipped due to complex mock setup issues
     // The useAuth hook is imported via index.ts, making it difficult to mock properly
     // The error handling functionality is tested in integration tests
-    const error = new Error('Network error');
+    const error = new Error("Network error");
     vi.mocked(ABTestingService.getExperimentByKey).mockRejectedValue(error);
     vi.mocked(ABTestingService.getCachedVariant).mockReturnValue(null);
 
     const onError = vi.fn();
 
     const { result } = renderHook(
-      () => useExperiment('test_experiment', { onError }),
-      { wrapper }
+      () => useExperiment("test_experiment", { onError }),
+      { wrapper },
     );
 
     await waitFor(() => {

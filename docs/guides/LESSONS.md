@@ -196,21 +196,25 @@ A root `.gitignore` entry `out/` matched any path containing `out/`, including v
 Lessons from implementing E-15 Payment Gateway Features (7 stories, 25 SP):
 
 **1. VA Simulator Architecture**
+
 - External bank simulators should be **deterministic** — same VA number + amount = same response
 - Use **fixed prefixes per bank** (BCA: 12345, BNI: 67890) untuk memudahkan testing
 - Quarkus Native ideal untuk simulators: sub-second startup, low memory footprint
 
 **2. Payment Link Webhook Reliability**
+
 - **HMAC-SHA256 signing** wajib untuk webhook payload integrity
 - Implement **exponential backoff retry** (3x) dengan jitter untuk failed deliveries
 - Store webhook delivery attempts di DB untuk audit trail
 
 **3. Scheduler-Based Expiry Pattern**
+
 - Gunakan **single centralized scheduler** (`PaymentExpiryScheduler`) daripada multiple schedulers per payment type
 - Implement **optimistic locking** pada status updates untuk prevent race conditions
 - Release reserved balance **sebelum** publish Kafka event untuk maintain consistency
 
 **4. Mobile Deeplink Security**
+
 - **Signed URLs dengan expiry** — jangan trust client-side params
 - Support **universal links** (iOS) dan **app links** (Android) sebagai fallback
 - Expo Linking + React Native Hooks pattern untuk clean separation
@@ -224,25 +228,64 @@ Lessons from implementing E-15 Payment Gateway Features (7 stories, 25 SP):
 Lessons from implementing E-12 Settlement & Financial Operations:
 
 **1. Rate Card Engine Design**
+
 - Support **3 fee types**: FLAT (fixed amount), PERCENTAGE (of transaction), TIERED (volume-based brackets)
 - **Min/max caps** essential untuk percentage fees (prevent Rp100 juta fee on Rp1M transaction)
 - Link: Partner → Rate Card (1:1 untuk simplicity, 1:N jika complex pricing tiers)
 
 **2. Settlement State Machine**
+
 - PENDING → PROCESSING → COMPLETED/FAILED/OVERRIDDEN
 - **Never delete** settlement batches — soft delete dengan status untuk audit
 - Manual override capability dengan **dual-authorization** untuk amount > threshold
 
 **3. Revenue Split Calculation**
+
 - **Priority-based stakeholder ordering** — primary stakeholder dapat payout pertama
 - Handle **remaining amount** (rounding errors) — assign ke platform atau distribute proportional
 - **Monthly royalty statements** auto-generated dengan breakdown per transaction
 
 **4. Multi-Currency Settlement**
+
 - **FX rate locking window** (15 menit) — prevent rate fluctuation during settlement processing
 - Partner currency preference per settlement batch
 - Auto-conversion hanya pada settlement time, bukan saat transaction
 
 ---
 
-_Last Updated: February 28, 2026_
+### L-011: .gitignore `out/` vs Hexagonal `port/out/` — 26 Missing Port Interfaces
+
+**Date**: March 14, 2026 | **Severity**: Critical | **Domain**: Backend / Architecture
+
+A root `.gitignore` entry `out/` (intended for Next.js build output) silently matched all `port/out/` directories in the Hexagonal Architecture, preventing 26 port interface files across 10 services from being committed to git.
+
+**Symptoms**:
+
+- Build passes locally (files exist on disk) but fails on fresh clone
+- `mvn clean package` fails with "cannot find symbol" errors on port interfaces
+- `git status` shows nothing to commit despite files existing
+
+**Root Cause**: Git's `out/` pattern matches _any_ path containing `/out/` — including `domain/port/out/AccountServicePort.java`.
+
+**Affected Services** (26 files total):
+
+- account-service (1), billing-service (6), dispute-service (2), fx-service (1), integration-service (1), lending-service (1), product-catalog-service (1), promotion-service (6), statement-service (1), transaction-service (2), wallet-service (4)
+
+**Fix Applied**:
+
+```gitignore
+out/
+# Negation: preserve Hexagonal Architecture port directories
+!**/port/out/
+!**/port/output/
+```
+
+**Rules**:
+
+1. Use `/out/` (root-only) instead of `out/` (recursive) when targeting build output directories
+2. After adding gitignore rules, always verify with `git ls-files --others --ignored --exclude-standard | grep port` that no source files are excluded
+3. When build fails with missing port interfaces on CI but works locally, check `.gitignore` first
+
+---
+
+_Last Updated: March 14, 2026_

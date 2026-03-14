@@ -2,7 +2,6 @@ package id.payu.gateway.adapter.filter;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.Header;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -11,7 +10,6 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-@Disabled("Tenant filter requires backend services - disabled in tests")
 @DisplayName("Tenant Filter Tests")
 class TenantFilterTest {
 
