@@ -87,61 +87,61 @@ gateway:
   # Backend Services
   services:
     account-service:
-      url: ${ACCOUNT_SERVICE_URL:http://account-service:8001}
+      url: ${ROUTES_ACCOUNT_URL:http://account-service:8080}
       timeout: 30s
     auth-service:
-      url: ${AUTH_SERVICE_URL:http://auth-service:8002}
+      url: ${ROUTES_AUTH_URL:http://auth-service:8080}
       timeout: 10s
     transaction-service:
-      url: ${TRANSACTION_SERVICE_URL:http://transaction-service:8003}
+      url: ${ROUTES_TRANSACTION_URL:http://transaction-service:8080}
       timeout: 30s
     wallet-service:
-      url: ${WALLET_SERVICE_URL:http://wallet-service:8004}
+      url: ${ROUTES_WALLET_URL:http://wallet-service:8080}
       timeout: 15s
     billing-service:
-      url: ${BILLING_SERVICE_URL:http://billing-service:8080}
+      url: ${ROUTES_BILLING_URL:http://billing-service:8080}
       timeout: 30s
     notification-service:
-      url: ${NOTIFICATION_SERVICE_URL:http://notification-service:8080}
+      url: ${ROUTES_NOTIFICATION_URL:http://notification-service:8080}
       timeout: 10s
     kyc-service:
-      url: ${KYC_SERVICE_URL:http://kyc-service:8080}
+      url: ${ROUTES_KYC_URL:http://kyc-service:8080}
       timeout: 60s
     analytics-service:
-      url: ${ANALYTICS_SERVICE_URL:http://analytics-service:8080}
+      url: ${ROUTES_ANALYTICS_URL:http://analytics-service:8080}
       timeout: 30s
     partner-service:
-      url: ${PARTNER_SERVICE_URL:http://partner-service:8080}
+      url: ${ROUTES_PARTNER_URL:http://partner-service:8080}
       timeout: 30s
     promotion-service:
-      url: ${PROMOTION_SERVICE_URL:http://promotion-service:8080}
+      url: ${ROUTES_PROMOTION_URL:http://promotion-service:8080}
       timeout: 30s
     lending-service:
-      url: ${LENDING_SERVICE_URL:http://lending-service:8087}
+      url: ${ROUTES_LENDING_URL:http://lending-service:8080}
       timeout: 30s
     investment-service:
-      url: ${INVESTMENT_SERVICE_URL:http://investment-service:8080}
+      url: ${ROUTES_INVESTMENT_URL:http://investment-service:8080}
       timeout: 30s
     compliance-service:
-      url: ${COMPLIANCE_SERVICE_URL:http://compliance-service:8087}
+      url: ${ROUTES_COMPLIANCE_URL:http://compliance-service:8080}
       timeout: 30s
     backoffice-service:
-      url: ${BACKOFFICE_SERVICE_URL:http://backoffice-service:8080}
+      url: ${ROUTES_BACKOFFICE_URL:http://backoffice-service:8080}
       timeout: 30s
     support-service:
-      url: ${SUPPORT_SERVICE_URL:http://support-service:8080}
+      url: ${ROUTES_SUPPORT_URL:http://support-service:8080}
       timeout: 30s
     statement-service:
-      url: ${STATEMENT_SERVICE_URL:http://statement-service:8015}
+      url: ${ROUTES_STATEMENT_URL:http://statement-service:8080}
       timeout: 30s
     cms-service:
-      url: ${CMS_SERVICE_URL:http://cms-service:8080}
+      url: ${ROUTES_CMS_URL:http://cms-service:8080}
       timeout: 30s
     dispute-service:
-      url: ${DISPUTE_SERVICE_URL:http://dispute-service:8080}
+      url: ${ROUTES_DISPUTE_URL:http://dispute-service:8080}
       timeout: 30s
     fx-service:
-      url: ${FX_SERVICE_URL:http://fx-service:8080}
+      url: ${ROUTES_FX_URL:http://fx-service:8080}
       timeout: 30s
   # Simulators
   simulators:
@@ -531,6 +531,14 @@ gateway:
       service: "cms-service"
       target-prefix: "/api/v1/public/contents"
       methods: ["GET"]
+    statements:
+      service: "statement-service"
+      target-prefix: "/api/v1/statements"
+      methods: ["GET", "POST", "PUT", "DELETE"]
+    fx:
+      service: "fx-service"
+      target-prefix: "/fx-api/v1"
+      methods: ["GET", "POST", "PUT", "DELETE"]
 
   # Response Masking (IMP-009)
   response-masking:

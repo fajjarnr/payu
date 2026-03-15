@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-7.4.3, pluggy-1.6.0 -- /home/ubuntu/payu/tests/e2e_blackbox/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/ubuntu/payu/tests/e2e_blackbox
+configfile: pytest.ini
+plugins: Faker-20.1.0, asyncio-0.21.1
+asyncio: mode=Mode.STRICT
+collecting ... collected 13 items
+
+test_statement_flow.py::TestStatementServiceFlow::test_list_statements SKIPPED [  7%]
+test_statement_flow.py::TestStatementServiceFlow::test_generate_statement SKIPPED [ 15%]
+test_statement_flow.py::TestStatementServiceFlow::test_get_latest_statement SKIPPED [ 23%]
+test_statement_flow.py::TestStatementServiceFlow::test_get_statement_by_id SKIPPED [ 30%]
+test_statement_flow.py::TestStatementServiceFlow::test_download_statement_pdf SKIPPED [ 38%]
+test_statement_flow.py::TestStatementServiceFlow::test_generate_receipt SKIPPED [ 46%]
+test_statement_flow.py::TestStatementServiceFlow::test_get_receipt_by_transaction_id SKIPPED [ 53%]
+test_fx_flow.py::TestFxServiceFlow::test_get_all_fx_rates SKIPPED (auth-
+service unavailable or login failed (503))                               [ 61%]
+test_fx_flow.py::TestFxServiceFlow::test_get_specific_fx_rate SKIPPED    [ 69%]
+test_fx_flow.py::TestFxServiceFlow::test_estimate_conversion SKIPPED     [ 76%]
+test_fx_flow.py::TestFxServiceFlow::test_execute_conversion SKIPPED      [ 84%]
+test_fx_flow.py::TestFxServiceFlow::test_get_user_conversions SKIPPED    [ 92%]
+test_fx_flow.py::TestFxServiceFlow::test_get_conversion_by_id SKIPPED    [100%]
+
+============================= 13 skipped in 10.07s =============================

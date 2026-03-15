@@ -9,7 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [Unreleased] - 2026-03-15
+
+### Fixed
+
+- **E2E Stabilization & Wallet Recovery (2026-03-15)**:
+  - **IMP-074 — Kafka Deserialization Type Mapping** (2 SP): Resolved `RecordDeserializationException` in `wallet-service` by adding `spring.json.type.mapping` for `FxRatesUpdatedEvent`. This allows cross-service event consumption when package names differ between producer and consumer.
+  - **IMP-075 — Wallet Saga Infrastructure** (2 SP): Fixed `wallet-service` startup failures by adding Flyway migration `V101__add_saga_instances_table.sql`. This provides the necessary persistence for the shared `saga-starter` recovery mechanism.
+  - **IMP-076 — Semantic Versioning Standardization** (3 SP): Migrated all services in `podman-compose.yml` from `:latest` to semantic versioning (`:1.4.0`) to ensure reproducibility and prevent "dirty" image overwrites in local dev.
+  - **IMP-077 — Infra Storage Remediation** (1 SP): Resolved critical "No space left on device" errors by pruning Podman resources and cleaning Maven/tmp build artifacts.
+  - **Verification**: Confirmed `wallet-service` successfully consuming and caching FX rates from Kafka. All core services (Gateway, Account, Wallet, FX) reporting "UP" health status.
 
 ### Added
 

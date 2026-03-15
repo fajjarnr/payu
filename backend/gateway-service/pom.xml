@@ -169,6 +169,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Test Security for @TestSecurity annotation (bypass @RolesAllowed in tests) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-security</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- WireMock for mocking external services in integration tests -->
         <dependency>
             <groupId>com.github.tomakehurst</groupId>

@@ -145,19 +145,17 @@ services:
     podman_networks:
       - name: payu-network
     ports:
-      - 8001:8001
+      - 8001:8080
     environment:
       SERVICES_DUKCAPIL_URL: http://dukcapil-simulator:8080
-      SERVICES_AUTH_URL: http://auth-service:8002
+      SERVICES_AUTH_URL: http://auth-service:8080
       GATEWAY_URL: http://gateway-service:8080
       OTEL_ENDPOINT: http://jaeger:4317
-      JAVA_OPTS:
-        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
       DB_URL: jdbc:postgresql://postgres:5432/payu_account
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_account
-      SERVER_PORT: "8001"
-      PORT: "8001"
+      SERVER_PORT: "8080"
+      PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
@@ -185,12 +183,12 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8001/actuator/health/liveness
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-account-service
+    image: localhost/payu-account-service:1.4.0
   auth-service:
     build:
       context: ../../backend/auth-service
@@ -199,20 +197,20 @@ services:
     podman_networks:
       - name: payu-network
     ports:
-      - 8002:8002
+      - 8002:8080
     environment:
-      KEYCLOAK_SERVER_URL: http://keycloak:8080
-      KEYCLOAK_REALM: payu
-      KEYCLOAK_CLIENT_ID: payu-backend
-      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-secret}
+      PAYU_KEYCLOAK_SERVER_URL: http://keycloak:8080
+      PAYU_KEYCLOAK_REALM: payu
+      PAYU_KEYCLOAK_CLIENT_ID: payu-backend
+      PAYU_KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-secret}
+      PAYU_KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      PAYU_KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       OTEL_ENDPOINT: http://jaeger:4317
-      JAVA_OPTS:
-        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
       DB_URL: jdbc:postgresql://postgres:5432/payu_auth
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_auth
-      SERVER_PORT: "8002"
-      PORT: "8002"
+      SERVER_PORT: "8080"
+      PORT: "8080"
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
@@ -241,12 +239,12 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8002/actuator/health/liveness
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-auth-service
+    image: localhost/payu-auth-service:1.4.0
   transaction-service:
     build:
       context: ../../backend/transaction-service
@@ -255,19 +253,17 @@ services:
     podman_networks:
       - name: payu-network
     ports:
-      - 8003:8003
+      - 8003:8080
     environment:
-      SERVICES_WALLET_URL: http://wallet-service:8004
+      SERVICES_WALLET_URL: http://wallet-service:8080
       SERVICES_BIFAST_URL: http://bi-fast-simulator:8080
       SERVICES_QRIS_URL: http://qris-simulator:8080
       OTEL_ENDPOINT: http://jaeger:4317
-      JAVA_OPTS:
-        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
       DB_URL: jdbc:postgresql://postgres:5432/payu_transaction
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_transaction
-      SERVER_PORT: "8003"
-      PORT: "8003"
+      SERVER_PORT: "8080"
+      PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
@@ -293,12 +289,12 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8003/actuator/health/liveness
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-transaction-service
+    image: localhost/payu-transaction-service:1.4.0
   wallet-service:
     build:
       context: ../../backend/wallet-service
@@ -307,16 +303,14 @@ services:
     podman_networks:
       - name: payu-network
     ports:
-      - 8004:8004
+      - 8004:8080
     environment:
       OTEL_ENDPOINT: http://jaeger:4317
-      JAVA_OPTS:
-        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
       DB_URL: jdbc:postgresql://postgres:5432/payu_wallet
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_wallet
-      SERVER_PORT: "8004"
-      PORT: "8004"
+      SERVER_PORT: "8080"
+      PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
@@ -342,12 +336,12 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8004/actuator/health/liveness
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-wallet-service
+    image: localhost/payu-wallet-service:1.4.0
   compliance-service:
     build:
       context: ../../backend/compliance-service
@@ -359,9 +353,7 @@ services:
       - 8087:8087
     environment:
       OTEL_ENDPOINT: http://jaeger:4317
-      JAVA_OPTS:
-        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
       DB_URL: jdbc:postgresql://postgres:5432/payu_compliance
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_compliance
       SERVER_PORT: "8087"
@@ -396,7 +388,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-compliance-service
+    image: localhost/payu-compliance-service:1.4.0
   investment-service:
     build:
       context: ../../backend/investment-service
@@ -407,11 +399,9 @@ services:
     ports:
       - 8009:8080
     environment:
-      WALLET_SERVICE_URL: http://wallet-service:8004
+      WALLET_SERVICE_URL: http://wallet-service:8080
       OTEL_ENDPOINT: http://jaeger:4317
-      JAVA_OPTS:
-        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
       DB_URL: jdbc:postgresql://postgres:5432/payu_investment
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_investment
       SERVER_PORT: "8080"
@@ -446,7 +436,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-investment-service
+    image: localhost/payu-investment-service:1.4.0
   lending-service:
     build:
       context: ../../backend/lending-service
@@ -458,9 +448,7 @@ services:
       - 8010:8087
     environment:
       OTEL_ENDPOINT: http://jaeger:4317
-      JAVA_OPTS:
-        -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx768M -Xms512M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
       DB_URL: jdbc:postgresql://postgres:5432/payu_lending
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_lending
       SERVER_PORT: "8087"
@@ -496,7 +484,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-lending-service
+    image: localhost/payu-lending-service:1.4.0
   bi-fast-simulator:
     build:
       context: ../../backend/simulators/bi-fast-simulator
@@ -539,7 +527,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-bi-fast-simulator
+    image: localhost/payu-bi-fast-simulator:1.4.0
   dukcapil-simulator:
     build:
       context: ../../backend/simulators/dukcapil-simulator
@@ -581,7 +569,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-dukcapil-simulator
+    image: localhost/payu-dukcapil-simulator:1.4.0
   qris-simulator:
     build:
       context: ../../backend/simulators/qris-simulator
@@ -624,7 +612,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-qris-simulator
+    image: localhost/payu-qris-simulator:1.4.0
   billing-service:
     build:
       context: ../../backend/billing-service
@@ -636,7 +624,7 @@ services:
       - 8005:8080
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SERVICES_WALLET_URL: http://wallet-service:8004
+      SERVICES_WALLET_URL: http://wallet-service:8080
       OTEL_ENDPOINT: http://jaeger:4317
       DB_URL: jdbc:postgresql://postgres:5432/payu_billing
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_billing
@@ -671,7 +659,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-billing-service
+    image: localhost/payu-billing-service:1.4.0
   notification-service:
     build:
       context: ../../backend/notification-service
@@ -720,8 +708,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-notification-service
+    image: localhost/payu-notification-service:1.4.0
   gateway-service:
+    image: localhost/payu-gateway-service:1.4.0
     build:
       context: ../../backend/gateway-service
       dockerfile: Containerfile
@@ -734,10 +723,10 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KEYCLOAK_URL: http://keycloak:8080
       OTEL_ENDPOINT: http://jaeger:4317
-      ROUTES_ACCOUNT_URL: http://account-service:8001
-      ROUTES_AUTH_URL: http://auth-service:8002
-      ROUTES_TRANSACTION_URL: http://transaction-service:8003
-      ROUTES_WALLET_URL: http://wallet-service:8004
+      ROUTES_ACCOUNT_URL: http://account-service:8080
+      ROUTES_AUTH_URL: http://auth-service:8080
+      ROUTES_TRANSACTION_URL: http://transaction-service:8080
+      ROUTES_WALLET_URL: http://wallet-service:8080
       ROUTES_BILLING_URL: http://billing-service:8080
       ROUTES_NOTIFICATION_URL: http://notification-service:8080
       ROUTES_KYC_URL: http://kyc-service:8080
@@ -749,17 +738,17 @@ services:
       ROUTES_PARTNER_URL: http://partner-service:8080
       ROUTES_PROMOTION_URL: http://promotion-service:8080
       ROUTES_SUPPORT_URL: http://support-service:8080
-      ROUTES_STATEMENT_URL: http://statement-service:8015
+      ROUTES_STATEMENT_URL: http://statement-service:8080
       ROUTES_DISPUTE_URL: http://dispute-service:8080
       ROUTES_INTEGRATION_URL: http://integration-service:8080
       ROUTES_PRODUCT_CATALOG_URL: http://product-catalog-service:8080
       ROUTES_FX_URL: http://fx-service:8080/fx-api
       ROUTES_CMS_URL: http://cms-service:8080
       # Service URLs for gateway.services.* config mapping
-      ACCOUNT_SERVICE_URL: http://account-service:8001
-      AUTH_SERVICE_URL: http://auth-service:8002
-      TRANSACTION_SERVICE_URL: http://transaction-service:8003
-      WALLET_SERVICE_URL: http://wallet-service:8004
+      ACCOUNT_SERVICE_URL: http://account-service:8080
+      AUTH_SERVICE_URL: http://auth-service:8080
+      TRANSACTION_SERVICE_URL: http://transaction-service:8080
+      WALLET_SERVICE_URL: http://wallet-service:8080
       BILLING_SERVICE_URL: http://billing-service:8080
       NOTIFICATION_SERVICE_URL: http://notification-service:8080
       KYC_SERVICE_URL: http://kyc-service:8080
@@ -771,7 +760,7 @@ services:
       COMPLIANCE_SERVICE_URL: http://compliance-service:8087
       BACKOFFICE_SERVICE_URL: http://backoffice-service:8080
       SUPPORT_SERVICE_URL: http://support-service:8080
-      STATEMENT_SERVICE_URL: http://statement-service:8015
+      STATEMENT_SERVICE_URL: http://statement-service:8080
       CMS_SERVICE_URL: http://cms-service:8080
       DISPUTE_SERVICE_URL: http://dispute-service:8080
       INTEGRATION_SERVICE_URL: http://integration-service:8080
@@ -818,7 +807,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-gateway-service
   backoffice-service:
     build:
       context: ../../backend/backoffice-service
@@ -831,7 +819,7 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_KYC_URL: http://kyc-service:8080
-      SERVICES_WALLET_URL: http://wallet-service:8004
+      SERVICES_WALLET_URL: http://wallet-service:8080
       OTEL_ENDPOINT: http://jaeger:4317
       DB_URL: jdbc:postgresql://postgres:5432/payu_backoffice
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_backoffice
@@ -864,7 +852,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-backoffice-service
+    image: localhost/payu-backoffice-service:1.4.0
   partner-service:
     build:
       context: ../../backend/partner-service
@@ -911,7 +899,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 240s
-    image: localhost/payu-partner-service
+    image: localhost/payu-partner-service:1.4.0
   promotion-service:
     build:
       context: ../../backend/promotion-service
@@ -955,7 +943,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-promotion-service
+    image: localhost/payu-promotion-service:1.4.0
   support-service:
     build:
       context: ../../backend/support-service
@@ -999,7 +987,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-support-service
+    image: localhost/payu-support-service:1.4.0
   api-portal-service:
     build:
       context: ../../backend/api-portal-service
@@ -1008,12 +996,12 @@ services:
     podman_networks:
       - name: payu-network
     ports:
-      - 8021:8021
+      - 8021:8080
     environment:
-      ACCOUNT_SERVICE_URL: http://account-service:8001
-      AUTH_SERVICE_URL: http://auth-service:8002
-      TRANSACTION_SERVICE_URL: http://transaction-service:8003
-      WALLET_SERVICE_URL: http://wallet-service:8004
+      ACCOUNT_SERVICE_URL: http://account-service:8080
+      AUTH_SERVICE_URL: http://auth-service:8080
+      TRANSACTION_SERVICE_URL: http://transaction-service:8080
+      WALLET_SERVICE_URL: http://wallet-service:8080
       BILLING_SERVICE_URL: http://billing-service:8080
       NOTIFICATION_SERVICE_URL: http://notification-service:8080
       KYC_SERVICE_URL: http://kyc-service:8080
@@ -1030,7 +1018,7 @@ services:
       QUARKUS_HEALTH_SECURITY_ENABLED: "false"
       DB_URL: jdbc:postgresql://postgres:5432/payu_api_portal
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_api_portal
-      SERVER_PORT: "8021"
+      SERVER_PORT: "8080"
       PORT: "8021"
       QUARKUS_HTTP_PORT: "8021"
       KEYCLOAK_URL: http://keycloak:8080
@@ -1068,13 +1056,14 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8021/q/health
+        - http://localhost:8080/q/health
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-api-portal-service
+    image: localhost/payu-api-portal-service:1.4.0
   statement-service:
+    image: localhost/payu-statement-service:1.4.0
     build:
       context: ../../backend/statement-service
       dockerfile: Containerfile
@@ -1082,19 +1071,17 @@ services:
     podman_networks:
       - name: payu-network
     ports:
-      - 8015:8015
+      - 8015:8080
     environment:
-      SERVICES_WALLET_URL: http://wallet-service:8004
-      SERVICES_TRANSACTION_URL: http://transaction-service:8003
+      SERVICES_WALLET_URL: http://wallet-service:8080
+      SERVICES_TRANSACTION_URL: http://transaction-service:8080
       KEYCLOAK_SERVER_URL: http://keycloak:8080
       OTEL_ENDPOINT: http://jaeger:4317
-      JAVA_OPTS:
-        -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
-        -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom
       DB_URL: jdbc:postgresql://postgres:5432/payu_statement
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_statement
-      SERVER_PORT: "8015"
-      PORT: "8015"
+      SERVER_PORT: "8080"
+      PORT: "8080"
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_PROFILES_ACTIVE: container
       REDIS_HOST: redis
@@ -1125,12 +1112,11 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8015/actuator/health/liveness
+        - http://localhost:8080/actuator/health/liveness
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-statement-service
   kyc-service:
     build:
       context: ../../backend/kyc-service
@@ -1163,7 +1149,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-kyc-service
+    image: localhost/payu-kyc-service:1.4.0
   analytics-service:
     build:
       context: ../../backend/analytics-service
@@ -1195,7 +1181,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-analytics-service
+    image: localhost/payu-analytics-service:1.4.0
   cms-service:
     build:
       context: ../../backend/cms-service
@@ -1209,8 +1195,7 @@ services:
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       PORT: "8080"
-      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
-        -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
       DATABASE_URL: jdbc:postgresql://postgres:5432/payu_cms
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payu_cms
       SPRING_DATASOURCE_USERNAME: payu
@@ -1242,8 +1227,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-cms-service
+    image: localhost/payu-cms-service:1.4.0
   fx-service:
+    image: localhost/payu-fx-service:1.4.0
     build:
       context: ../../backend/fx-service
       dockerfile: Containerfile
@@ -1254,8 +1240,7 @@ services:
       - "8096:8080"
     environment:
       SPRING_PROFILES_ACTIVE: container
-      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
-        -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_NAME: payu_fx
@@ -1288,7 +1273,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-fx-service
   dispute-service:
     build:
       context: ../../backend/dispute-service
@@ -1302,8 +1286,7 @@ services:
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       PORT: "8080"
-      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
-        -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_NAME: payu_dispute
@@ -1335,7 +1318,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-dispute-service
+    image: localhost/payu-dispute-service:1.4.0
   integration-service:
     build:
       context: ../../backend/integration-service
@@ -1349,8 +1332,7 @@ services:
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       PORT: "8080"
-      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
-        -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_NAME: payu_integration
@@ -1379,7 +1361,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-integration-service
+    image: localhost/payu-integration-service:1.4.0
   product-catalog-service:
     build:
       context: ../../backend/product-catalog-service
@@ -1393,8 +1375,7 @@ services:
       SPRING_PROFILES_ACTIVE: container
       SERVER_PORT: "8080"
       PORT: "8080"
-      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200
-        -Djava.security.egd=file:/dev/./urandom
+      JAVA_OPTS: -Xmx512M -Xms256M -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USERNAME: payu
@@ -1424,7 +1405,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-product-catalog-service
+    image: localhost/payu-product-catalog-service:1.4.0
   web-app:
     build:
       context: ../../frontend/web-app
@@ -1452,7 +1433,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-web-app
+    image: localhost/payu-web-app:1.4.0
   jaeger:
     image: docker.io/jaegertracing/all-in-one:1.58
     container_name: payu-jaeger
@@ -1574,8 +1555,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit
-          1
+        - wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
       interval: 20s
       timeout: 10s
       retries: 3

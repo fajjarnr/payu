@@ -1,5 +1,4 @@
--- Saga instances table for PayU Saga Starter
--- Tracks distributed transaction state, steps, and compensation audit trail
+-- Saga instances table for PayU Saga Starter (Promotion Service)
 CREATE TABLE IF NOT EXISTS saga_instances (
     saga_id             VARCHAR(36) PRIMARY KEY,
     saga_type           VARCHAR(255) NOT NULL,
@@ -19,14 +18,9 @@ CREATE TABLE IF NOT EXISTS saga_instances (
     version             BIGINT NOT NULL DEFAULT 0
 );
 
--- Indexes for saga recovery and monitoring queries
 CREATE INDEX IF NOT EXISTS idx_saga_type ON saga_instances(saga_type);
 CREATE INDEX IF NOT EXISTS idx_saga_state ON saga_instances(current_state);
 CREATE INDEX IF NOT EXISTS idx_saga_started_at ON saga_instances(started_at);
 CREATE INDEX IF NOT EXISTS idx_saga_completed_at ON saga_instances(completed_at);
-CREATE INDEX IF NOT EXISTS idx_saga_type_state ON saga_instances(saga_type, current_state);
 
--- GIN index for JSONB payload queries (correlation ID lookups, etc.)
-CREATE INDEX IF NOT EXISTS idx_saga_payload_gin ON saga_instances USING GIN (payload);
-
-COMMENT ON TABLE saga_instances IS 'Persists distributed saga state for the BiFast transfer orchestrator';
+COMMENT ON TABLE saga_instances IS 'Persists distributed saga state for the Cashback and Promotion orchestrators';

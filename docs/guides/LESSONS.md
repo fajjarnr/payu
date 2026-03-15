@@ -288,4 +288,65 @@ out/
 
 ---
 
-_Last Updated: March 14, 2026_
+### L-012: Kafka Deserialization — Class Mismatch in Microservices
+
+**Date**: March 15, 2026 | **Severity**: High | **Domain**: Integration / Messaging
+
+When sharing events via Kafka between microservices with different package structures (e.g., `fx-service` vs `wallet-service`), the default Jackson deserializer will fail due to `ClassNotFoundException` because the fully qualified class name in the message header doesn't exist in the consumer.
+
+**Symptoms**:
+- `RecordDeserializationException` in Kafka consumer logs
+- `ClassNotFoundException` for the event class
+
+**Fix**: Use `spring.json.type.mapping` in `application.yml` to map the producer's class string to the consumer's local class.
+
+```yaml
+spring:
+  kafka:
+    consumer:
+      properties:
+        spring.json.type.mapping: 'id.payu.fx.adapter.messaging.FxRatesUpdatedEvent:id.payu.wallet.adapter.messaging.fx.FxRatesUpdatedEvent'
+```
+
+**Rule**: Always use explicit type mapping or shared event libraries with identical package names for cross-service Kafka events.
+
+---
+
+### L-013: Saga Starter Infrastructure — Missing `saga_instances` Table
+
+**Date**: March 15, 2026 | **Severity**: Critical | **Domain**: Backend / Saga
+
+Services including the `saga-starter` module automatically initialize `SagaRecoveryService`, which requires a local `saga_instances` table for state persistence. If this table is missing from a service's database, the application will fail to start or crash during recovery cycles.
+
+**Symptoms**:
+- Hibernate error: `Relation "saga_instances" does not exist`
+- Service health check failing or 503 errors on dependent endpoints
+
+**Fix**: Ensure every microservice using `saga-starter` has a Flyway migration creating the `saga_instances` table.
+
+**Rule**: The `saga_instances` table schema must remain consistent across all services to ensure compatibility with the shared `saga-starter` entity mappings.
+
+---
+
+### L-014: Podman Local Infrastructure — Storage Management
+
+**Date**: March 15, 2026 | **Severity**: Medium | **Domain**: Platform / DevOps
+
+Local development with 22+ microservices, Postgres, Kafka, and large ML-based images (OCR, Analytics) rapidly consumes disk space, leading to "No space left on device" errors in both the host and container volumes (Postgres stats, Maven repo).
+
+**Symptoms**:
+- `mvn` build failures during artifact download
+- Postgres failing to write temp files
+- `podman-compose up` failing to pull or build images
+
+**Recommended Cleanup Ritual**:
+1. `podman system prune -f` (removes unused containers/networks)
+2. `podman builder prune -f` (cleans build cache)
+3. `rm -rf ~/.m2/repository` (if repo is corrupted or too large)
+4. `rm -rf /tmp/*` (cleans temporary build artifacts)
+
+**Rule**: Monitor disk space with `df -h` and keep at least 10GB free for stable local multi-service orchestration.
+
+---
+
+_Last Updated: March 15, 2026_

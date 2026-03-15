@@ -64,17 +64,27 @@ public class AnalyticsResource {
             : Instant.now();
 
         return analyticsService.getEndpointMetrics(path, method, from, to)
-            .onItem().transform(metrics -> Response.ok(Map.of(
-                "endpoint", metrics.endpoint(),
-                "method", metrics.method().name(),
-                "totalRequests", metrics.totalRequests(),
-                "successfulRequests", metrics.successfulRequests(),
-                "errorRequests", metrics.errorRequests(),
-                "avgResponseTime", metrics.avgResponseTime(),
-                "minResponseTime", metrics.minResponseTime(),
-                "maxResponseTime", metrics.maxResponseTime(),
-                "statusCodeDistribution", metrics.statusCodeDistribution()
-            )).build())
+            .onItem().transform(metrics -> {
+                if (metrics == null) {
+                    return Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of(
+                            "error", "METRICS_NOT_FOUND",
+                            "message", "No metrics found for the specified path"
+                        ))
+                        .build();
+                }
+                return Response.ok(Map.of(
+                    "endpoint", metrics.endpoint(),
+                    "method", metrics.method().name(),
+                    "totalRequests", metrics.totalRequests(),
+                    "successfulRequests", metrics.successfulRequests(),
+                    "errorRequests", metrics.errorRequests(),
+                    "avgResponseTime", metrics.avgResponseTime(),
+                    "minResponseTime", metrics.minResponseTime(),
+                    "maxResponseTime", metrics.maxResponseTime(),
+                    "statusCodeDistribution", metrics.statusCodeDistribution()
+                )).build();
+            })
             .onFailure().recoverWithItem(throwable -> {
                 Log.errorf(throwable, "Failed to retrieve analytics metrics");
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)

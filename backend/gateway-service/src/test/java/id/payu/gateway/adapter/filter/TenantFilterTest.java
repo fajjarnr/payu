@@ -61,7 +61,7 @@ class TenantFilterTest {
                 given()
                     .header(new Header("X-Tenant-Id", tenantId))
                 .when()
-                    .get("/api/v1/wallets")
+                    .get("/api/v1/accounts")
                 .then()
                     .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)))
                     .header("X-Tenant-Id", tenantId);
@@ -101,7 +101,7 @@ class TenantFilterTest {
             given()
                 .header(tenantHeader)
             .when()
-                .get("/api/v1/wallets")
+                .get("/api/v1/accounts/register")
             .then()
                 .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)))
                 .header("X-Tenant-Id", tenantId);

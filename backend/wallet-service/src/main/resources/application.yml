@@ -1,11 +1,9 @@
 server:
   port: ${PORT:8080}
   shutdown: graceful
-
 spring:
   application:
     name: wallet-service
-
   datasource:
     # Primary datasource for write operations
     primary:
@@ -25,7 +23,6 @@ spring:
         auto-commit: false
         leak-detection-threshold: 60000
         pool-name: primary-pool
-
     # Read replica datasource for reporting/analytics queries
     read-replica:
       enabled: ${READ_REPLICA_ENABLED:false}
@@ -46,7 +43,6 @@ spring:
         leak-detection-threshold: 60000
         pool-name: read-replica-pool
         read-only: true
-
   jpa:
     open-in-view: false
     hibernate:
@@ -65,13 +61,11 @@ spring:
         # Connection pool optimization
         connection:
           provider_disables_autocommit: true
-
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
-
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
     producer:
@@ -91,16 +85,15 @@ spring:
       properties:
         interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
         spring.json.trusted.packages: "*"
+        spring.json.type.mapping: "id.payu.fx.adapter.messaging.FxRatesUpdatedEvent:id.payu.wallet.adapter.messaging.fx.FxRatesUpdatedEvent"
         session.timeout.ms: 30000
         heartbeat.interval.ms: 10000
-
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
           jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
-
 management:
   endpoints:
     web:
@@ -136,114 +129,3 @@ management:
   metrics:
     export:
       prometheus:
-        enabled: true
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      accountService:
-        register-health-indicator: true
-        sliding-window-size: 10
-        minimum-number-of-calls: 5
-        failure-rate-threshold: 50
-        wait-duration-in-open-state: 30s
-        permitted-number-of-calls-in-half-open-state: 3
-        slow-call-rate-threshold: 50
-        slow-call-duration-threshold: 2000ms
-  retry:
-    instances:
-      accountService:
-        max-attempts: 3
-        wait-duration: 1s
-        enable-exponential-backoff: true
-        exponential-backoff-multiplier: 2
-        retry-exceptions:
-          - java.net.ConnectException
-          - java.util.concurrent.TimeoutException
-        ignore-exceptions:
-          - java.lang.IllegalArgumentException
-  timelimiter:
-    instances:
-      accountService:
-        timeout-duration: 5s
-
-# PayU Configuration
-payu:
-  grpc:
-    server:
-      enabled: true
-      port: 9090
-      reflection-enabled: false
-      security:
-        enabled: false
-  events:
-    enabled: true
-    kafka:
-      enabled: true
-      default-topic: payu.wallet
-  outbox:
-    enabled: true
-    publisher:
-      batch-size: 100
-      poll-interval-ms: 1000
-      max-retries: 3
-    cleanup:
-      enabled: true
-      retention-days: 30
-      cron: "0 0 2 * * *"
-  cache:
-    enabled: true
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      pool-size: 20
-      timeout: 5s
-      command-timeout: 3s
-    default-ttl: 5m
-    cache-warming:
-      enabled: true
-      startup-delay: 10s
-      async: true
-      thread-pool-size: 4
-    invalidation:
-      enabled: true
-      topic: cache-invalidation
-      consumer-group: wallet-cache-invalidation-group
-    local-cache:
-      enabled: true
-      max-size: 1000
-      ttl: 1m
-      record-stats: true
-    caches:
-      balances:
-        ttl: 1m
-        stale-while-revalidate: true
-      pockets:
-        ttl: 5m
-        stale-while-revalidate: false
-    metrics:
-      enabled: true
-      prefix: cache
-      percentiles: true
-      histogram: true
-
-logging:
-  level:
-    root: INFO
-    id.payu.wallet: DEBUG
-    org.springframework.security: WARN
-
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-  show-actuator: true
-  packages-to-scan: id.payu.wallet
-
-# gRPC Configuration
-grpc:
-  server:
-    port: 9090
-    security:
-      enabled: false  # TLS terminated by Istio

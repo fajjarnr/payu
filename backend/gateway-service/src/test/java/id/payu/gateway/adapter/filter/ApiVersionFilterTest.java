@@ -37,10 +37,14 @@ public class ApiVersionFilterTest {
     @Test
     @DisplayName("Should reject invalid API version")
     public void testInvalidVersion() {
+        // Use a path that does NOT contain an embedded version (e.g., /gateway/...)
+        // so ApiVersionFilter falls back to the X-API-Version header.
+        // Paths like /api/v1/accounts have "v1" extracted from the path first,
+        // making the header irrelevant.
         given()
             .header("X-API-Version", "v99")
             .when()
-            .get("/api/v1/accounts")
+            .get("/gateway/analytics/health")
             .then()
             .statusCode(400)
             .body("error", equalTo("INVALID_API_VERSION"));

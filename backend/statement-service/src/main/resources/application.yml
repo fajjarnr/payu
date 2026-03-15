@@ -39,7 +39,7 @@ spring:
           jwk-set-uri: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}/realms/payu/protocol/openid-connect/certs
 
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

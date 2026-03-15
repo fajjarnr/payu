@@ -3,7 +3,7 @@
 -- Run this manually after all V* migrations are complete
 
 -- Clean up existing test data to avoid conflicts
-DELETE FROM profiles WHERE user_id IN (SELECT id FROM users WHERE username IN ('customer1', 'customer2', 'admin'));
+DELETE FROM profiles WHERE id IN (SELECT id FROM users WHERE username IN ('customer1', 'customer2', 'admin'));
 DELETE FROM accounts WHERE user_id IN (SELECT id FROM users WHERE username IN ('customer1', 'customer2', 'admin'));
 DELETE FROM users WHERE username IN ('customer1', 'customer2', 'admin');
 
@@ -14,10 +14,10 @@ INSERT INTO users (id, external_id, username, email, phone_number, status, kyc_s
     ('550e8400-e29b-41d4-a716-446655440003', 'EXT-ADMIN-001', 'admin', 'admin@payu.fajjjar.my.id', '+628111111111', 'ACTIVE', 'VERIFIED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert profiles for test users
-INSERT INTO profiles (id, user_id, full_name, nik, date_of_birth, address, created_at, updated_at) VALUES
-    ('650e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'Customer One', '3201234567890001', '1990-01-15', 'Jl. Sudirman No. 123, Jakarta', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('650e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440002', 'Customer Two', '3201234567890002', '1992-05-20', 'Jl. Braga No. 456, Bandung', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('650e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440003', 'System Administrator', '3201234567890003', '1985-03-25', 'Jakarta, Indonesia', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO profiles (id, full_name, nik, birth_date, address) VALUES
+    ('550e8400-e29b-41d4-a716-446655440001', 'Customer One', '3201234567890001', '1990-01-15', 'Jl. Sudirman No. 123, Jakarta'),
+    ('550e8400-e29b-41d4-a716-446655440002', 'Customer Two', '3201234567890002', '1992-05-20', 'Jl. Braga No. 456, Bandung'),
+    ('550e8400-e29b-41d4-a716-446655440003', 'System Administrator', '3201234567890003', '1985-03-25', 'Jakarta, Indonesia');
 
 -- Insert accounts for test users (Main account + Pocket accounts)
 INSERT INTO accounts (id, user_id, account_number, type, status, currency, balance, created_at, updated_at) VALUES

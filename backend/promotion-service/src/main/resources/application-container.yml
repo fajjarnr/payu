@@ -18,6 +18,7 @@ spring:
       max-lifetime: 1800000
       keepalive-time: 60000
       pool-name: container-pool
+      auto-commit: false
 
   jpa:
     hibernate:
