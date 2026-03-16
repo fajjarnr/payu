@@ -359,10 +359,10 @@ export default function LandingPage() {
                  
                  <footer className="w-full flex justify-between items-center text-[8px] font-black uppercase tracking-[0.4em] text-white/10 pt-20 border-t border-white/5">
                     <p>© 2026 PayU Digital Banking Platform</p>
-                    <div className="flex gap-8">
-                       <Link href="#" className="hover:text-emerald-500 transition-colors">Syarat & Ketentuan</Link>
-                       <Link href="#" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link>
-                    </div>
+                     <div className="flex gap-8">
+                        <Link href={l('/terms')} className="hover:text-emerald-500 transition-colors">Syarat & Ketentuan</Link>
+                        <Link href={l('/privacy')} className="hover:text-emerald-500 transition-colors">Privacy Policy</Link>
+                     </div>
                  </footer>
               </div>
            </div>

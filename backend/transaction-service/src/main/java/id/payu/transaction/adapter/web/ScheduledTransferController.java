@@ -16,6 +16,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +33,32 @@ import java.util.UUID;
 public class ScheduledTransferController {
 
     private final ScheduledTransferUseCase scheduledTransferUseCase;
+
+    /**
+     * Extracts the authenticated user's ID from the JWT subject claim.
+     * BUG-BE-148: Added to enforce ownership checks on all endpoints.
+     */
+    private String extractUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getSubject();
+    }
+
+    /**
+     * Verifies the authenticated user owns the scheduled transfer.
+     * Throws AccessDeniedException if ownership check fails.
+     */
+    private ScheduledTransferResponse verifyOwnership(UUID transferId) {
+        String userId = extractUserId();
+        ScheduledTransferResponse response = scheduledTransferUseCase.getScheduledTransfer(transferId);
+        if (!response.getSenderAccountId().toString().equals(userId)) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+        return response;
+    }
 
     @PostMapping
     @Idempotent(required = true)
@@ -57,11 +87,21 @@ public class ScheduledTransferController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "401",
                     description = "Unauthorized"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - sender account mismatch"
             )
     })
     public ResponseEntity<ScheduledTransferResponse> createScheduledTransfer(
             @Parameter(description = "Scheduled transfer request", required = true)
             @Valid @RequestBody CreateScheduledTransferRequest request) {
+        // BUG-BE-148: Validate caller owns the sender account
+        String userId = extractUserId();
+        if (!UUID.fromString(userId).equals(request.getSenderAccountId())) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         ScheduledTransferResponse response = scheduledTransferUseCase.createScheduledTransfer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -82,6 +122,10 @@ public class ScheduledTransferController {
                     description = "Unauthorized"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - not the owner"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
                     description = "Scheduled transfer not found"
             )
@@ -89,7 +133,8 @@ public class ScheduledTransferController {
     public ResponseEntity<ScheduledTransferResponse> getScheduledTransfer(
             @Parameter(description = "Scheduled transfer ID", required = true)
             @PathVariable UUID id) {
-        ScheduledTransferResponse response = scheduledTransferUseCase.getScheduledTransfer(id);
+        // BUG-BE-148: Verify ownership before returning
+        ScheduledTransferResponse response = verifyOwnership(id);
         return ResponseEntity.ok(response);
     }
 
@@ -106,11 +151,21 @@ public class ScheduledTransferController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "401",
                     description = "Unauthorized"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - account mismatch"
             )
     })
     public ResponseEntity<List<ScheduledTransfer>> getAccountScheduledTransfers(
             @Parameter(description = "Account ID", required = true)
             @PathVariable UUID accountId) {
+        // BUG-BE-148: Verify caller owns the account
+        String userId = extractUserId();
+        if (!accountId.toString().equals(userId)) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         List<ScheduledTransfer> transfers = scheduledTransferUseCase.getAccountScheduledTransfers(accountId);
         return ResponseEntity.ok(transfers);
     }
@@ -139,6 +194,10 @@ public class ScheduledTransferController {
                     description = "Unauthorized"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - not the owner"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
                     description = "Scheduled transfer not found"
             )
@@ -148,6 +207,9 @@ public class ScheduledTransferController {
             @PathVariable UUID id,
             @Parameter(description = "Updated scheduled transfer details", required = true)
             @Valid @RequestBody CreateScheduledTransferRequest request) {
+        // BUG-BE-148: Verify ownership before updating
+        verifyOwnership(id);
+
         ScheduledTransferResponse response = scheduledTransferUseCase.updateScheduledTransfer(id, request);
         return ResponseEntity.ok(response);
     }
@@ -177,6 +239,10 @@ public class ScheduledTransferController {
                     description = "Unauthorized"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - not the owner"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
                     description = "Scheduled transfer not found"
             )
@@ -184,6 +250,9 @@ public class ScheduledTransferController {
     public ResponseEntity<ScheduledTransferResponse> cancelScheduledTransfer(
             @Parameter(description = "Scheduled transfer ID", required = true)
             @PathVariable UUID id) {
+        // BUG-BE-148: Verify ownership before cancelling
+        verifyOwnership(id);
+
         ScheduledTransferResponse response = scheduledTransferUseCase.cancelScheduledTransfer(id);
         return ResponseEntity.ok(response);
     }
@@ -213,6 +282,10 @@ public class ScheduledTransferController {
                     description = "Unauthorized"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - not the owner"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
                     description = "Scheduled transfer not found"
             )
@@ -220,6 +293,9 @@ public class ScheduledTransferController {
     public ResponseEntity<ScheduledTransferResponse> pauseScheduledTransfer(
             @Parameter(description = "Scheduled transfer ID", required = true)
             @PathVariable UUID id) {
+        // BUG-BE-148: Verify ownership before pausing
+        verifyOwnership(id);
+
         ScheduledTransferResponse response = scheduledTransferUseCase.pauseScheduledTransfer(id);
         return ResponseEntity.ok(response);
     }
@@ -249,6 +325,10 @@ public class ScheduledTransferController {
                     description = "Unauthorized"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - not the owner"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
                     description = "Scheduled transfer not found"
             )
@@ -256,6 +336,9 @@ public class ScheduledTransferController {
     public ResponseEntity<ScheduledTransferResponse> resumeScheduledTransfer(
             @Parameter(description = "Scheduled transfer ID", required = true)
             @PathVariable UUID id) {
+        // BUG-BE-148: Verify ownership before resuming
+        verifyOwnership(id);
+
         ScheduledTransferResponse response = scheduledTransferUseCase.resumeScheduledTransfer(id);
         return ResponseEntity.ok(response);
     }

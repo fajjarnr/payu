@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginRequest } from '@/types';
 import { useSearchParams } from 'next/navigation';
-import { Link } from '@/lib/navigation';
+import { Link, useRouter } from '@/lib/navigation';
 import Image from 'next/image';
 import { useAuthStore } from '@/stores';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,7 @@ function LoginSkeleton() {
 function LoginForm() {
   const t = useTranslations('auth');
   const searchParams = useSearchParams();
+  const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   // Read callbackUrl set by middleware when redirecting unauthenticated users.
@@ -88,8 +89,8 @@ function LoginForm() {
       if (user) {
         setAuth(user, user.id);
         toast.success(t('loginSuccess') || 'Login successful!');
-        // Hard redirect ensures the browser sends fresh cookies in a full page request.
-        window.location.href = callbackUrl;
+        // Use locale-aware router for navigation (BUG-I18N-002)
+        router.push(callbackUrl);
       } else {
         toast.error('Login failed: Invalid server response');
       }

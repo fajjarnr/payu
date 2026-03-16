@@ -25,6 +25,7 @@ import {
   useDeleteCard,
   useUpdateCard
 } from '@/hooks';
+import { useAuthStore } from '@/stores/authStore';
 import type { VirtualCard } from '@/services/WalletService';
 
 interface CardData {
@@ -36,6 +37,7 @@ interface CardData {
 }
 
 export default function CardsPage() {
+  const { accountId: authAccountId } = useAuthStore();
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -115,7 +117,7 @@ export default function CardsPage() {
                   <Button
                     className="shadow-xl shadow-primary/20"
                     onClick={() => createCard.mutate({
-                      accountId: 'default',
+                      accountId: authAccountId ?? '',
                       cardholderName: cardOwner,
                       dailyLimit: 25000000,
                       monthlyLimit: 100000000,

@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import StatementService, { Statement, PeriodType, StatementFormat, StatementStatus } from '@/services/StatementService';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { getA11yProps } from '@/lib/a11y';
+import { useAuthStore } from '@/stores/authStore';
 
 /**
  * Statement Downloader Component
@@ -18,6 +19,7 @@ import { getA11yProps } from '@/lib/a11y';
  * - WCAG AA compliant accessibility
  */
 export default function StatementDownloader() {
+  const { user, accountId } = useAuthStore();
   const [statements, setStatements] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
@@ -66,8 +68,8 @@ export default function StatementDownloader() {
       setSuccess(null);
 
       await StatementService.generateAndDownload({
-        customerId: '', // TODO: populate from auth context
-        accountNumber: 'default', // Will be populated from user context
+        customerId: user?.id ?? '',
+        accountNumber: accountId ?? '',
         year: selectedYear,
         month: selectedMonth
       });

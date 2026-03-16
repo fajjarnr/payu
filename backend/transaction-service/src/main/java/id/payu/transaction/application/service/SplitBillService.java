@@ -283,9 +283,8 @@ public class SplitBillService implements SplitBillUseCase {
     }
 
     /**
-     * BUG-BE-118: Force-closes a split bill regardless of outstanding payments.
-     * WARNING: This marks the bill as COMPLETED without processing remaining payments.
-     * Unpaid participants will be marked as-is (not auto-settled).
+     * Settles a split bill after verifying all participants have fully paid.
+     * BUG-BE-151: No longer force-completes without checking outstanding payments.
      */
     @Override
     @Transactional
@@ -295,6 +294,17 @@ public class SplitBillService implements SplitBillUseCase {
 
         if (splitBill.getStatus() == SplitBill.SplitStatus.COMPLETED) {
             throw new IllegalStateException("Split bill already completed");
+        }
+
+        if (splitBill.getStatus() == SplitBill.SplitStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot settle a cancelled split bill");
+        }
+
+        // BUG-BE-151: Verify all participants have paid before settling
+        splitBill.setParticipants(persistencePort.findParticipantsBySplitBillId(splitBillId));
+        if (!splitBill.isFullyPaid()) {
+            throw new IllegalStateException(
+                    "Cannot settle: outstanding payments remain. Total remaining: " + splitBill.getRemainingAmount());
         }
 
         splitBill.setStatus(SplitBill.SplitStatus.COMPLETED);

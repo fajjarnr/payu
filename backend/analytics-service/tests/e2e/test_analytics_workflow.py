@@ -42,12 +42,16 @@ class TestAnalyticsWorkflowE2E:
 
                 assert response.status_code == 200
                 data = response.json()
-                assert data["user_id"] == sample_user_id
-                assert data["total_transactions"] == 150
-                assert data["total_amount"] == "15000000.00"
-                assert data["average_transaction"] == "100000.00"
-                assert data["account_age_days"] == 90
-                assert data["kyc_status"] == "VERIFIED"
+                # Response is wrapped in ApiResponse envelope:
+                # {"success": True, "data": {...}, "error": null, "meta": ...}
+                assert data["success"] is True
+                payload = data["data"]
+                assert payload["user_id"] == sample_user_id
+                assert payload["total_transactions"] == 150
+                assert payload["total_amount"] == "15000000.00"
+                assert payload["average_transaction"] == "100000.00"
+                assert payload["account_age_days"] == 90
+                assert payload["kyc_status"] == "VERIFIED"
 
     @pytest.mark.asyncio
     async def test_get_spending_trends(self, sample_user_id):

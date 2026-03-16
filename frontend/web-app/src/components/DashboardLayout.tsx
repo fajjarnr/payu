@@ -33,6 +33,8 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { PersonalizedGreeting } from './personalization';
+import { useLogout } from '@/hooks';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,6 +86,8 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
   const t = useTranslations('nav');
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
+  const logoutMutation = useLogout();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Helper to localize paths
@@ -227,6 +231,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                  data-testid="notification-button"
                  className="w-14 h-14 bg-card text-foreground/60 hover:text-emerald-500 hover:bg-emerald-500/5 rounded-2xl relative shadow-sm border border-emerald-500/10 hover:border-emerald-500/30 transition-all"
                  aria-label="Notifikasi"
+                 onClick={() => router.push(`/${locale}/notifications`)}
                >
                  <div className="absolute top-5 right-5 h-2.5 w-2.5 bg-emerald-500 rounded-full border-2 border-card shadow-sm" aria-label="Notifikasi baru" />
                  <Bell className="h-6 w-6" aria-hidden="true" />
@@ -255,7 +260,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                     <DropdownMenuItem className="p-0">
                       <Button
                         variant="ghost"
-                        onClick={onLogout}
+                        onClick={() => onLogout ? onLogout() : logoutMutation.mutate()}
                         data-testid="logout-button"
                         className="w-full text-left px-8 py-5 text-xs sm:text-sm text-red-500 hover:bg-red-500/10 hover:text-red-500 font-bold uppercase tracking-[0.3em] flex items-center justify-between transition-colors h-auto border-none focus-visible:ring-0"
                       >

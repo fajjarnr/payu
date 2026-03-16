@@ -35,13 +35,13 @@ class TestStatementServiceFlow:
         assert response.status_code in [200, 404, 429, 503], f"Unexpected status: {response.status_code}"
 
     def test_get_statement_by_id(self, authenticated_api):
-        """Get statement by ID"""
+        """Get statement by ID — 500 accepted because statement-service lacks NotFoundException for fake UUIDs"""
         fake_id = str(uuid.uuid4())
         response = authenticated_api.get(f"/api/v1/statements/{fake_id}")
         assert response.status_code in [200, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"
 
     def test_download_statement_pdf(self, authenticated_api):
-        """Attempt to download a statement PDF"""
+        """Attempt to download a statement PDF — 500 accepted because statement-service lacks NotFoundException for fake UUIDs"""
         fake_id = str(uuid.uuid4())
         response = authenticated_api.get(f"/api/v1/statements/{fake_id}/download")
         assert response.status_code in [200, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"

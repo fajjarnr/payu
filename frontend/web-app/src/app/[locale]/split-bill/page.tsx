@@ -88,6 +88,7 @@ export default function SplitBillPage() {
     if (!newBillName || !newBillAmount) return;
     createSplitBill.mutate(
       {
+        description: newBillName,
         totalAmount: parseFloat(newBillAmount),
         currency: 'IDR',
         creatorAccountId: acctId,

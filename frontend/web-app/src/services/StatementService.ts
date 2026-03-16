@@ -93,7 +93,10 @@ export class StatementService {
    */
   async generateStatement(request: StatementGenerationRequest): Promise<Statement> {
     const response = await api.post<ApiResponseType<Statement>>('/statements/generate', request);
-    return response.data.data;
+    // BFF proxy returns backend response body directly (already unwrapped once by axios).
+    // Backend wraps in {data: ...}, so response.data is the ApiResponseType.
+    // If the backend already returns the Statement directly, fall back to response.data.
+    return (response.data as any)?.data ?? response.data;
   }
 
   /**
@@ -103,7 +106,7 @@ export class StatementService {
    */
   async getStatement(id: string): Promise<Statement> {
     const response = await api.get<ApiResponseType<Statement>>(`/statements/${id}`);
-    return response.data.data;
+    return (response.data as any)?.data ?? response.data;
   }
 
   /**
@@ -116,7 +119,7 @@ export class StatementService {
     const response = await api.get<ApiResponseType<StatementsListResponse>>('/statements', {
       params: { page, size, sort: 'statementPeriod,desc' }
     });
-    return response.data.data;
+    return (response.data as any)?.data ?? response.data;
   }
 
   /**
@@ -126,7 +129,7 @@ export class StatementService {
   async getLatestStatement(): Promise<Statement | null> {
     try {
       const response = await api.get<ApiResponseType<Statement>>('/statements/latest');
-      return response.data.data;
+      return (response.data as any)?.data ?? response.data;
     } catch (error) {
       // Return null if 404 (no statements found)
       if (isAxiosError(error) && error.response?.status === 404) {

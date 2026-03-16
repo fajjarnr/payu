@@ -184,33 +184,46 @@ export class TransactionService {
 
 // === Scheduled Transfer Types ===
 
-// BUG-CROSS-019: Align frequency enum with backend ScheduleType values
+// BUG-CROSS-030: Align field names with backend ScheduledTransferResponse
 export interface ScheduledTransfer {
   id: string;
+  referenceNumber: string;
   senderAccountId: string;
   recipientAccountNumber: string;
+  recipientAccountId?: string;
+  transferType: 'INTERNAL_TRANSFER' | 'BANK_TRANSFER' | 'BI_FAST' | 'RTGS' | 'SKN';
   amount: number;
   currency: string;
   description: string;
-  frequency: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
+  scheduleType: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
   startDate: string;
   endDate?: string;
   nextExecutionDate: string;
+  frequencyDays?: number;
+  dayOfMonth?: number;
+  occurrenceCount?: number;
+  executedCount?: number;
   status: 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'COMPLETED' | 'FAILED';
   failureReason?: string;
+  lastTransactionId?: string;
   createdAt: string;
   updatedAt: string;
 }
 
+// BUG-CROSS-030: Align field names with backend CreateScheduledTransferRequest
 export interface CreateScheduledTransferRequest {
   senderAccountId: string;
   recipientAccountNumber: string;
   amount: number;
   currency?: string;
   description: string;
-  frequency: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
+  transferType: 'INTERNAL_TRANSFER' | 'BANK_TRANSFER' | 'BI_FAST' | 'RTGS' | 'SKN';
+  scheduleType: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
   startDate: string;
   endDate?: string;
+  frequencyDays?: number;
+  dayOfMonth?: number;
+  occurrenceCount?: number;
 }
 
 // === Split Bill Types ===

@@ -14,7 +14,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,14 +30,25 @@ import java.util.UUID;
 public class SplitBillController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SplitBillController.class);
 
-
-
     private final SplitBillUseCase splitBillUseCase;
     private final SplitBillSecurityService splitBillSecurityService;
 
     public SplitBillController(SplitBillUseCase splitBillUseCase, SplitBillSecurityService splitBillSecurityService) {
         this.splitBillUseCase = splitBillUseCase;
         this.splitBillSecurityService = splitBillSecurityService;
+    }
+
+    /**
+     * Extracts the authenticated user's ID from the JWT subject claim.
+     * BUG-BE-149: Added to enforce ownership/participation checks on all endpoints.
+     */
+    private String extractUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getSubject();
     }
 
     @PostMapping
@@ -57,6 +72,13 @@ public class SplitBillController {
     @ApiResponse(responseCode = "403", description = "Forbidden - not a participant")
     public ResponseEntity<SplitBillResponse> getSplitBill(@PathVariable UUID id) {
         log.info("Getting split bill: id={}", id);
+
+        // BUG-BE-149: Verify caller is a participant or creator
+        String userId = extractUserId();
+        if (!splitBillSecurityService.isParticipant(id, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.getSplitBill(id);
         return ResponseEntity.ok(response);
     }
@@ -69,6 +91,13 @@ public class SplitBillController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         log.info("Getting split bills for account: id={}", accountId);
+
+        // BUG-BE-149: Verify caller owns the account
+        String userId = extractUserId();
+        if (!accountId.toString().equals(userId)) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         List<SplitBill> splitBills = splitBillUseCase.getAccountSplitBills(accountId, page, size);
         return ResponseEntity.ok(splitBills);
     }
@@ -84,6 +113,13 @@ public class SplitBillController {
             @PathVariable UUID id,
             @Valid @RequestBody CreateSplitBillRequest request) {
         log.info("Updating split bill: id={}", id);
+
+        // BUG-BE-149: Verify caller is the creator/owner
+        String userId = extractUserId();
+        if (!splitBillSecurityService.isOwner(id, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.updateSplitBill(id, request);
         return ResponseEntity.ok(response);
     }
@@ -97,6 +133,13 @@ public class SplitBillController {
     @ApiResponse(responseCode = "404", description = "Split bill not found")
     public ResponseEntity<SplitBillResponse> cancelSplitBill(@PathVariable UUID id) {
         log.info("Cancelling split bill: id={}", id);
+
+        // BUG-BE-149: Verify caller is the creator/owner
+        String userId = extractUserId();
+        if (!splitBillSecurityService.isOwner(id, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.cancelSplitBill(id);
         return ResponseEntity.ok(response);
     }
@@ -110,6 +153,13 @@ public class SplitBillController {
     @ApiResponse(responseCode = "404", description = "Split bill not found")
     public ResponseEntity<SplitBillResponse> activateSplitBill(@PathVariable UUID id) {
         log.info("Activating split bill: id={}", id);
+
+        // BUG-BE-149: Verify caller is the creator/owner
+        String userId = extractUserId();
+        if (!splitBillSecurityService.isOwner(id, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.activateSplitBill(id);
         return ResponseEntity.ok(response);
     }
@@ -125,6 +175,13 @@ public class SplitBillController {
             @PathVariable UUID id,
             @Valid @RequestBody AddParticipantRequest request) {
         log.info("Adding participant to split bill: id={}", id);
+
+        // BUG-BE-149: Verify caller is the creator/owner
+        String userId = extractUserId();
+        if (!splitBillSecurityService.isOwner(id, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.addParticipant(id, request);
         return ResponseEntity.ok(response);
     }
@@ -140,6 +197,13 @@ public class SplitBillController {
             @PathVariable UUID id,
             @PathVariable UUID participantId) {
         log.info("Accepting split bill: id={}, participantId={}", id, participantId);
+
+        // BUG-BE-149: Verify caller is the specific participant
+        String userId = extractUserId();
+        if (!splitBillSecurityService.canRespondToInvitation(id, participantId, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.acceptSplitBill(id, participantId);
         return ResponseEntity.ok(response);
     }
@@ -155,6 +219,13 @@ public class SplitBillController {
             @PathVariable UUID id,
             @PathVariable UUID participantId) {
         log.info("Declining split bill: id={}, participantId={}", id, participantId);
+
+        // BUG-BE-149: Verify caller is the specific participant
+        String userId = extractUserId();
+        if (!splitBillSecurityService.canRespondToInvitation(id, participantId, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.declineSplitBill(id, participantId);
         return ResponseEntity.ok(response);
     }
@@ -173,6 +244,13 @@ public class SplitBillController {
             @Valid @RequestBody MakePaymentRequest request) {
         log.info("Making payment for split bill: id={}, participantId={}, amount={}",
                 id, participantId, request.getAmount());
+
+        // BUG-BE-149: Verify caller is the specific participant making the payment
+        String userId = extractUserId();
+        if (!splitBillSecurityService.canMakePayment(id, participantId, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.makePayment(id, participantId, request);
         return ResponseEntity.ok(response);
     }
@@ -187,6 +265,13 @@ public class SplitBillController {
     @ApiResponse(responseCode = "404", description = "Split bill not found")
     public ResponseEntity<SplitBillResponse> settleSplitBill(@PathVariable UUID id) {
         log.info("Settling split bill: id={}", id);
+
+        // BUG-BE-149: Verify caller is the creator/owner
+        String userId = extractUserId();
+        if (!splitBillSecurityService.isOwner(id, UUID.fromString(userId))) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         SplitBillResponse response = splitBillUseCase.settleSplitBill(id);
         return ResponseEntity.ok(response);
     }

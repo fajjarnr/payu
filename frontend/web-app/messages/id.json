@@ -311,6 +311,7 @@
     "haveAccount": "Sudah punya akun?",
     "noAccount": "Belum memiliki akun?",
     "registerLink": "Daftar Sekarang",
+    "loginSuccess": "Berhasil masuk!",
     "onboarding": {
       "title": "Selamat Datang di PayU",
       "subtitle": "Platform perbankan digital masa depan",
@@ -395,6 +396,24 @@
     "about": "Tentang",
     "logout": "Keluar",
     "changeLanguage": "Ganti Bahasa"
+  },
+  "merchant": {
+    "title": "Portal Merchant",
+    "dashboard": "Dasbor Merchant",
+    "subtitle": "Kelola akun merchant dan kredensial API Anda",
+    "register": "Daftar sebagai Merchant",
+    "notRegistered": "Anda belum terdaftar sebagai merchant.",
+    "profile": "Profil Merchant",
+    "merchantName": "Nama Merchant",
+    "email": "Email",
+    "type": "Tipe",
+    "status": "Status",
+    "active": "Aktif",
+    "inactive": "Tidak Aktif",
+    "apiCredentials": "Kredensial API",
+    "clientId": "Client ID",
+    "publicKey": "Kunci Publik",
+    "noPublicKey": "Kunci publik belum dikonfigurasi"
   },
   "landing": {
     "heroTitle": "Solusi Finansial<br />Masa Depan.",

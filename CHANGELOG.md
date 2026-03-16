@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-03-16
 
+### Fixed
+
+- **Phase 3 — Close All 34 Audit Bugs (2026-03-16)**:
+  - **Backend Security (P0)**: Fixed IDOR vulnerabilities in `ScheduledTransferController` (BUG-BE-148), `SplitBillController` (BUG-BE-149), and `WalletController` (BUG-BE-150) — all endpoints now extract JWT subject and verify resource ownership before allowing read/write operations.
+  - **Backend Logic (P1)**: Fixed `SplitBillService.settleSplitBill()` (BUG-BE-151) — now loads participants and checks `isFullyPaid()` before allowing settlement.
+  - **Frontend BFF/Service (13 bugs)**: BFF whitelist expanded (BUG-FE-047), auth store integration for bills/cards/scheduled-transfers/split-bill/statements (BUG-FE-048/050/051/054/055), DashboardLayout logout universalized (BUG-FE-052), SilentRefreshProvider added to transfer/settings/exchange layouts (BUG-FE-053), rewards page uses fallback icons + real cashback data (BUG-FE-056/057), notification bell navigates (BUG-FE-058), landing legal links wired (BUG-FE-059), StatementService response unwrapping fixed (BUG-FE-049).
+  - **Auth (P1)**: Settings logout now calls server-side `/api/auth/logout` via `useLogout` hook (BUG-AUTH-011).
+  - **i18n (8 bugs)**: Middleware locale detection enabled (BUG-I18N-001), login redirect locale-aware (BUG-I18N-002), scheduled-transfers uses `<Link>` (BUG-I18N-003), backoffice fraud/KYC uses locale router (BUG-I18N-004), added `auth.loginSuccess` + full `merchant.*` namespace to en.json/id.json (BUG-I18N-005), merchant page fully localized (BUG-I18N-006), settings page uses `useTranslations` (BUG-I18N-007), E2E specs verified with English locale (BUG-I18N-008).
+  - **Cross-Service Mismatch (5 bugs)**: TransactionService field alignment (BUG-CROSS-030), investments page i18n (BUG-CROSS-031), notifications field mapping `body`→`content`/`sentAt`→`timestamp` (BUG-CROSS-032), merchant page rewritten with PartnerService + DashboardLayout (BUG-CROSS-033), support page uses `useTranslations` (BUG-CROSS-034).
+  - **Test Quality (5 bugs)**: Analytics unit tests updated with mock Request + ApiResponse (BUG-TEST-001), analytics E2E syntax error fixed (BUG-TEST-002), statement blackbox assertions tightened (BUG-TEST-003), gateway smoke 500 removed from wallet assertion (BUG-TEST-004), analytics blackbox docstrings clarified (BUG-TEST-005).
+  - **Verification**: Backend 38/38 modules BUILD SUCCESS. Frontend Next.js build SUCCESS. Playwright 544/544 pass. Pytest blackbox 159/159 pass.
+
 ### Added
 
 - **GAP-006 — Global Idempotency (2026-03-16)**:

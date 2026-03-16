@@ -6,24 +6,24 @@ import { LifeBuoy, MessageCircle, Mail, Phone, ExternalLink, HelpCircle, FileTex
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
-import { useTickets, useCreateTicket, useTrainingStatus } from '@/hooks';
+import { useTrainingStatus } from '@/hooks';
+import { useTranslations } from 'next-intl';
 
 export default function SupportPage() {
-  const { data: ticketsData } = useTickets();
-  const createTicket = useCreateTicket();
+  const t = useTranslations('support');
   const { data: trainingStatus } = useTrainingStatus();
 
   const supportChannels = [
-    { label: 'Bantuan Langsung', desc: 'Obrolan real-time dengan agen dukungan kami.', icon: MessageCircle, action: 'Hubungkan Sekarang', color: 'primary' },
-    { label: 'Protokol Email', desc: 'Dukungan email asinkron yang aman.', icon: Mail, action: 'Kirim Pesan', color: 'blue-600' },
-    { label: 'Panggilan Suara', desc: 'Dukungan telepon global secara instan.', icon: Phone, action: 'Hubungi Kami', color: 'gray-900' },
+    { label: t('liveChat'), desc: t('liveChatDesc'), icon: MessageCircle, action: t('contactUs'), color: 'primary' },
+    { label: t('email'), desc: t('emailDesc'), icon: Mail, action: t('sendMessage'), color: 'blue-600' },
+    { label: t('phone'), desc: t('phoneDesc'), icon: Phone, action: t('callUs'), color: 'gray-900' },
   ];
 
   const faqs = [
-    { title: 'Sinkronisasi Identitas', desc: 'Memperbarui eKYC dan pemetaan biometrik Anda.', icon: HelpCircle },
-    { title: 'Batas Transaksi Global', desc: 'Memahami batas tingkat kredit akun Anda.', icon: FileText },
-    { title: 'Masalah Token Perangkat', desc: 'Pemecahan masalah MFA dan kesalahan kunci aman.', icon: HelpCircle },
-    { title: 'Protokol Pencegahan Penipuan', desc: 'Langkah tindakan untuk aktivitas akun mencurigakan.', icon: FileText },
+    { title: t('faqItems.identitySync'), desc: t('faqItems.identitySyncDesc'), icon: HelpCircle },
+    { title: t('faqItems.transactionLimits'), desc: t('faqItems.transactionLimitsDesc'), icon: FileText },
+    { title: t('faqItems.deviceToken'), desc: t('faqItems.deviceTokenDesc'), icon: HelpCircle },
+    { title: t('faqItems.fraudPrevention'), desc: t('faqItems.fraudPreventionDesc'), icon: FileText },
   ];
 
   return (
@@ -35,8 +35,8 @@ export default function SupportPage() {
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground">Terminal Bantuan</h2>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">Ada yang bisa kami bantu? Tim spesialis kami siap melayani 24/7.</p>
+                  <h2 className="text-3xl font-bold text-foreground">{t('title')}</h2>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">{t('subtitle')}</p>
                 </div>
               </div>
             </StaggerItem>
@@ -67,7 +67,7 @@ export default function SupportPage() {
             <StaggerItem className="mt-4">
               <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-                <h3 className="text-xl font-bold text-foreground mb-10 relative z-10">Repositori Inteligensi</h3>
+                <h3 className="text-xl font-bold text-foreground mb-10 relative z-10">{t('faqs')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                   {faqs.map((faq, i) => (
                     <div key={i} className="flex gap-6 p-6 bg-muted/30 rounded-xl border border-transparent hover:border-border transition-all cursor-pointer group hover:bg-card duration-300">

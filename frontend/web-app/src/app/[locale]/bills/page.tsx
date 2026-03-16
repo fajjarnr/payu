@@ -9,12 +9,14 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUIStore } from '@/stores';
+import { useAuthStore } from '@/stores/authStore';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function BillsPage() {
  const { addToast } = useUIStore();
+ const { accountId: authAccountId } = useAuthStore();
  const [selectedBiller, setSelectedBiller] = useState<{ name: string; icon: React.ComponentType<{ className?: string }>; color: string; code: string } | null>(null);
  const [customerId, setCustomerId] = useState('');
  const [amount, setAmount] = useState('');
@@ -30,7 +32,7 @@ export default function BillsPage() {
   { name: 'Game Voucher', icon: Gamepad2, color: 'bg-orange-100 text-orange-600', code: 'VOUCHER' },
  ];
 
- const accountId = typeof window !== 'undefined' ? localStorage.getItem('accountId') : null;
+ const accountId = authAccountId;
 
  const { data: recentPayments, isLoading } = useQuery({
   queryKey: ['recent-payments', accountId],
@@ -63,13 +65,13 @@ export default function BillsPage() {
    return;
   }
 
-  const data: CreatePaymentRequest = {
-   accountId: '', // TODO: Get from auth context/wallet
-   billerCode: selectedBiller.code,
-   customerId,
-   amount: parseFloat(amount),
-   referenceNumber: `REF-${Date.now()}`,
-  };
+   const data: CreatePaymentRequest = {
+    accountId: authAccountId ?? '',
+    billerCode: selectedBiller.code,
+    customerId,
+    amount: parseFloat(amount),
+    referenceNumber: `REF-${Date.now()}`,
+   };
 
   paymentMutation.mutate(data);
  };

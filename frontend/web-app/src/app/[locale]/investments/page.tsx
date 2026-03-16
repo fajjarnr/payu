@@ -8,8 +8,10 @@ import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/c
 import { Button } from '@/components/ui/button';
 import { useInvestmentAccount, useGoldHoldings } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
+import { useTranslations } from 'next-intl';
 
 export default function InvestmentsPage() {
+  const t = useTranslations('investments');
   const { user } = useAuthStore();
   const userId = user?.id ?? '';
   const { data: account, isLoading: loadingAccount } = useInvestmentAccount(userId);
@@ -19,9 +21,9 @@ export default function InvestmentsPage() {
   const formatRp = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 
   const investmentProducts = [
-    { name: 'Suku Bunga Tetap Plus', type: 'Risiko Rendah', return: '5.5% p.a', icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { name: 'Equity Growth Fund', type: 'Risiko Tinggi', return: '18.2% p.a', icon: TrendingUp, color: 'text-primary', bg: 'bg-success-light' },
-    { name: 'Emas Digital (XAU)', type: 'Stabil', return: 'Harga Pasar', icon: Coins, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { name: 'Suku Bunga Tetap Plus', type: t('risk.low'), return: '5.5% p.a', icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { name: 'Equity Growth Fund', type: t('risk.high'), return: '18.2% p.a', icon: TrendingUp, color: 'text-primary', bg: 'bg-success-light' },
+    { name: 'Emas Digital (XAU)', type: t('digitalGold'), return: t('return'), icon: Coins, color: 'text-amber-500', bg: 'bg-amber-500/10' },
   ];
 
   return (
@@ -33,12 +35,12 @@ export default function InvestmentsPage() {
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground">Manajemen Kekayaan</h2>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">Tumbuhkan aset Anda dengan produk investasi kelas institusi.</p>
+                  <h2 className="text-3xl font-bold text-foreground">{t('title')}</h2>
+                   <p className="text-sm text-muted-foreground font-medium mt-1">{t('subtitle')}</p>
                 </div>
                 <ButtonMotion>
                   <Button data-testid="new-investment-button" className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
-                    <Plus className="h-4 w-4" /> Investasi Baru
+                    <Plus className="h-4 w-4" /> {t('newInvestment')}
                   </Button>
                 </ButtonMotion>
               </div>
@@ -136,7 +138,7 @@ export default function InvestmentsPage() {
             {/* Marketplace Grid */}
             <div className="space-y-8 mt-12">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-foreground">Katalog Produk Terpilih</h3>
+                <h3 className="text-xl font-bold text-foreground">{t('portfolio')}</h3>
                 <div className="flex gap-2">
                   <Button size="sm" className="px-4">Semua</Button>
                   <Button size="sm" variant="ghost" className="px-4 border border-border">Pasar Uang</Button>
@@ -192,7 +194,7 @@ export default function InvestmentsPage() {
                   </p>
                 </div>
                 <div className="md:ml-auto">
-                  <Button data-testid="review-strategy-button" className="h-14 px-8 shadow-xl shadow-primary/20">Tinjau Strategi</Button>
+                  <Button data-testid="review-strategy-button" className="h-14 px-8 shadow-xl shadow-primary/20">{t('performance')}</Button>
                 </div>
               </div>
             </div>

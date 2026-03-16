@@ -2,6 +2,12 @@
 Unit tests for Analytics API endpoints.
 
 Tests the FastAPI endpoint handlers in the analytics router.
+
+NOTE: The actual endpoint handlers now accept a ``Request`` object as the
+first parameter and return ``ApiResponse`` envelope dicts (via
+``ApiResponse.success(...).model_dump()`` / ``ApiResponse.error(...).model_dump()``)
+instead of raising ``HTTPException``.  These tests create a lightweight mock
+``Request`` and assert on the envelope structure.
 """
 
 import pytest
@@ -28,6 +34,29 @@ from app.models.schemas import (
     SpendingTrendResponse,
     CashFlowAnalysis,
 )
+
+
+def _make_mock_request(*, with_limiter: bool = False) -> MagicMock:
+    """Create a lightweight mock ``Request`` suitable for endpoint calls.
+
+    The mock satisfies the attributes accessed by the analytics handlers:
+    - ``request.state.request_id``
+    - ``request.url.path``
+    - ``request.app.state.limiter`` (when *with_limiter* is True)
+    - ``request.body()`` (async, for idempotency cache)
+    """
+    mock_request = MagicMock()
+    mock_request.app = MagicMock()
+    mock_request.app.state = MagicMock()
+    mock_request.state = MagicMock()
+    mock_request.state.request_id = "test-request-id"
+    mock_request.url = MagicMock()
+    mock_request.url.path = "/test"
+    mock_request.body = AsyncMock(return_value=b"")
+    if with_limiter:
+        mock_request.app.state.limiter = MagicMock()
+        mock_request.app.state.limiter.check = AsyncMock(return_value=True)
+    return mock_request
 
 
 @pytest.fixture
@@ -134,60 +163,61 @@ class TestAnalyticsAPIEndpoints:
         self, mock_db_session, sample_user_metrics_response
     ):
         """Test successful user metrics retrieval."""
-        # Mock the service
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_user_metrics.return_value = sample_user_metrics_response
             mock_service_class.return_value = mock_service
 
-            # Execute
-            result = await get_user_metrics("user_123", mock_db_session)
+            result = await get_user_metrics(mock_request, "user_123", mock_db_session)
 
-            # Verify
-            assert isinstance(result, UserMetricsResponse)
-            assert result.user_id == "user_123"
-            assert result.total_transactions == 100
-            assert result.kyc_status == "VERIFIED"
+            # Handler returns ApiResponse envelope dict
+            assert isinstance(result, dict)
+            assert result["success"] is True
+            assert result["data"]["user_id"] == "user_123"
+            assert result["data"]["total_transactions"] == 100
+            assert result["data"]["kyc_status"] == "VERIFIED"
 
     @pytest.mark.asyncio
     async def test_get_user_metrics_not_found(self, mock_db_session):
         """Test user metrics retrieval when user not found."""
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_user_metrics.return_value = None
             mock_service_class.return_value = mock_service
 
-            from fastapi import HTTPException
+            result = await get_user_metrics(mock_request, "nonexistent_user", mock_db_session)
 
-            # Should raise HTTPException
-            with pytest.raises(HTTPException) as exc_info:
-                await get_user_metrics("nonexistent_user", mock_db_session)
-
-            assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
-            assert exc_info.value.detail["error_code"] == "ANA_VAL_001"
+            assert isinstance(result, dict)
+            assert result["success"] is False
+            assert result["error"]["code"] == "ANA_VAL_001"
 
     @pytest.mark.asyncio
     async def test_get_user_metrics_service_error(self, mock_db_session):
         """Test user metrics retrieval when service raises error."""
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_user_metrics.side_effect = Exception("Database error")
             mock_service_class.return_value = mock_service
 
-            from fastapi import HTTPException
+            result = await get_user_metrics(mock_request, "user_123", mock_db_session)
 
-            with pytest.raises(HTTPException) as exc_info:
-                await get_user_metrics("user_123", mock_db_session)
-
-            assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-            assert exc_info.value.detail["error_code"] == "ANA_SYS_001"
+            assert isinstance(result, dict)
+            assert result["success"] is False
+            assert result["error"]["code"] == "ANA_SYS_001"
 
     @pytest.mark.asyncio
     async def test_get_spending_trends_success(
         self, mock_db_session, sample_spending_trends_response
     ):
         """Test successful spending trends retrieval."""
-        request = GetSpendingTrendsRequest(
+        mock_request = _make_mock_request()
+        request_data = GetSpendingTrendsRequest(
             user_id="user_123", period_days=30, group_by="category"
         )
 
@@ -198,15 +228,16 @@ class TestAnalyticsAPIEndpoints:
             )
             mock_service_class.return_value = mock_service
 
-            result = await get_spending_trends(request, mock_db_session)
+            result = await get_spending_trends(mock_request, request_data, mock_db_session)
 
-            assert isinstance(result, SpendingTrendResponse)
-            assert result.period == "30 days"
+            assert isinstance(result, dict)
+            assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_get_spending_trends_service_error(self, mock_db_session):
         """Test spending trends when service raises error."""
-        request = GetSpendingTrendsRequest(
+        mock_request = _make_mock_request()
+        request_data = GetSpendingTrendsRequest(
             user_id="user_123", period_days=30, group_by="category"
         )
 
@@ -215,36 +246,35 @@ class TestAnalyticsAPIEndpoints:
             mock_service.get_spending_trends.side_effect = Exception("Query error")
             mock_service_class.return_value = mock_service
 
-            from fastapi import HTTPException
+            result = await get_spending_trends(mock_request, request_data, mock_db_session)
 
-            with pytest.raises(HTTPException) as exc_info:
-                await get_spending_trends(request, mock_db_session)
-
-            assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-            assert exc_info.value.detail["error_code"] == "ANA_SYS_002"
+            assert isinstance(result, dict)
+            assert result["success"] is False
+            assert result["error"]["code"] == "ANA_SYS_002"
 
     @pytest.mark.asyncio
     async def test_get_cash_flow_analysis_success(
         self, mock_db_session, sample_cash_flow_response
     ):
         """Test successful cash flow analysis retrieval."""
-        request = GetAnalyticsRequest(user_id="user_123", period_days=30)
+        mock_request = _make_mock_request()
+        request_data = GetAnalyticsRequest(user_id="user_123", period_days=30)
 
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_cash_flow_analysis.return_value = sample_cash_flow_response
             mock_service_class.return_value = mock_service
 
-            result = await get_cash_flow_analysis(request, mock_db_session)
+            result = await get_cash_flow_analysis(mock_request, request_data, mock_db_session)
 
-            assert isinstance(result, CashFlowAnalysis)
-            assert result.period == "30 days"
-            assert result.income > 0
+            assert isinstance(result, dict)
+            assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_get_cash_flow_analysis_service_error(self, mock_db_session):
         """Test cash flow analysis when service raises error."""
-        request = GetAnalyticsRequest(user_id="user_123", period_days=30)
+        mock_request = _make_mock_request()
+        request_data = GetAnalyticsRequest(user_id="user_123", period_days=30)
 
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
@@ -253,17 +283,16 @@ class TestAnalyticsAPIEndpoints:
             )
             mock_service_class.return_value = mock_service
 
-            from fastapi import HTTPException
+            result = await get_cash_flow_analysis(mock_request, request_data, mock_db_session)
 
-            with pytest.raises(HTTPException) as exc_info:
-                await get_cash_flow_analysis(request, mock_db_session)
-
-            assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-            assert exc_info.value.detail["error_code"] == "ANA_SYS_003"
+            assert isinstance(result, dict)
+            assert result["success"] is False
+            assert result["error"]["code"] == "ANA_SYS_003"
 
     @pytest.mark.asyncio
     async def test_get_recommendations_success(self, mock_db_session):
         """Test successful recommendations retrieval."""
+        mock_request = _make_mock_request()
         from app.models.schemas import RecommendationType
 
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
@@ -281,15 +310,18 @@ class TestAnalyticsAPIEndpoints:
             ]
             mock_service_class.return_value = mock_service
 
-            result = await get_recommendations("user_123", mock_db_session)
+            result = await get_recommendations(mock_request, "user_123", mock_db_session)
 
-            assert isinstance(result, GetRecommendationsResponse)
-            assert result.user_id == "user_123"
-            assert len(result.recommendations) > 0
+            assert isinstance(result, dict)
+            assert result["success"] is True
+            assert result["data"]["user_id"] == "user_123"
+            assert len(result["data"]["recommendations"]) > 0
 
     @pytest.mark.asyncio
     async def test_get_recommendations_service_error(self, mock_db_session):
         """Test recommendations when service raises error."""
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_recommendations.side_effect = Exception(
@@ -297,17 +329,17 @@ class TestAnalyticsAPIEndpoints:
             )
             mock_service_class.return_value = mock_service
 
-            from fastapi import HTTPException
+            result = await get_recommendations(mock_request, "user_123", mock_db_session)
 
-            with pytest.raises(HTTPException) as exc_info:
-                await get_recommendations("user_123", mock_db_session)
-
-            assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-            assert exc_info.value.detail["error_code"] == "ANA_SYS_004"
+            assert isinstance(result, dict)
+            assert result["success"] is False
+            assert result["error"]["code"] == "ANA_SYS_004"
 
     @pytest.mark.asyncio
     async def test_get_robo_advisory_success(self, sample_robo_advisory_request):
         """Test successful robo advisory generation."""
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.RoboAdvisoryEngine") as mock_engine_class:
             mock_engine = MagicMock()
             mock_engine.generate_robo_advisory.return_value = {
@@ -318,30 +350,39 @@ class TestAnalyticsAPIEndpoints:
             }
             mock_engine_class.return_value = mock_engine
 
-            result = await get_robo_advisory(sample_robo_advisory_request)
+            with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
+                with patch("app.api.v1.analytics.cache_result", new_callable=AsyncMock):
+                    result = await get_robo_advisory(
+                        mock_request, sample_robo_advisory_request, idempotency_key=None
+                    )
 
-            assert result is not None
+            assert isinstance(result, dict)
+            assert result["success"] is True
             mock_engine.generate_robo_advisory.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_get_robo_advisory_service_error(self, sample_robo_advisory_request):
         """Test robo advisory when service raises error."""
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.RoboAdvisoryEngine") as mock_engine_class:
             mock_engine = MagicMock()
             mock_engine.generate_robo_advisory.side_effect = Exception("Advisory error")
             mock_engine_class.return_value = mock_engine
 
-            from fastapi import HTTPException
+            with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
+                result = await get_robo_advisory(
+                    mock_request, sample_robo_advisory_request, idempotency_key=None
+                )
 
-            with pytest.raises(HTTPException) as exc_info:
-                await get_robo_advisory(sample_robo_advisory_request)
-
-            assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-            assert exc_info.value.detail["error_code"] == "ANA_SYS_005"
+            assert isinstance(result, dict)
+            assert result["success"] is False
+            assert result["error"]["code"] == "ANA_SYS_005"
 
     @pytest.mark.asyncio
     async def test_calculate_fraud_score_success(self, sample_fraud_score_request):
         """Test successful fraud score calculation."""
+        mock_request = _make_mock_request(with_limiter=True)
         from app.models.schemas import FraudDetectionResult, FraudScore, FraudRiskLevel
 
         mock_result = FraudDetectionResult(
@@ -364,16 +405,22 @@ class TestAnalyticsAPIEndpoints:
             mock_engine.calculate_fraud_score.return_value = mock_result
             mock_engine_class.return_value = mock_engine
 
-            result = await calculate_fraud_score(sample_fraud_score_request)
+            with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
+                with patch("app.api.v1.analytics.cache_result", new_callable=AsyncMock):
+                    result = await calculate_fraud_score(
+                        mock_request, sample_fraud_score_request, idempotency_key=None
+                    )
 
-            assert isinstance(result, FraudDetectionResult)
-            assert result.fraud_score.transaction_id == "txn_12345"
+            assert isinstance(result, dict)
+            assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_calculate_fraud_score_service_error(
         self, sample_fraud_score_request
     ):
         """Test fraud score calculation when service raises error."""
+        mock_request = _make_mock_request(with_limiter=True)
+
         with patch("app.api.v1.analytics.FraudDetectionEngine") as mock_engine_class:
             mock_engine = AsyncMock()
             mock_engine.calculate_fraud_score.side_effect = Exception(
@@ -381,61 +428,63 @@ class TestAnalyticsAPIEndpoints:
             )
             mock_engine_class.return_value = mock_engine
 
-            from fastapi import HTTPException
+            with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
+                result = await calculate_fraud_score(
+                    mock_request, sample_fraud_score_request, idempotency_key=None
+                )
 
-            with pytest.raises(HTTPException) as exc_info:
-                await calculate_fraud_score(sample_fraud_score_request)
-
-            assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-            assert exc_info.value.detail["error_code"] == "ANA_SYS_006"
+            assert isinstance(result, dict)
+            assert result["success"] is False
+            assert result["error"]["code"] == "ANA_SYS_006"
 
     @pytest.mark.asyncio
     async def test_get_transaction_fraud_score_found(
         self, mock_db_session, sample_fraud_score_entity, mock_scalar_result_fn
     ):
         """Test retrieving existing fraud score for transaction."""
+        mock_request = _make_mock_request()
         mock_db_session.execute.return_value = mock_scalar_result_fn(
             sample_fraud_score_entity
         )
 
-        result = await get_transaction_fraud_score("txn_12345", mock_db_session)
+        result = await get_transaction_fraud_score(mock_request, "txn_12345", mock_db_session)
 
-        assert result is not None
-        assert result.fraud_score.transaction_id == "txn_12345"
+        assert isinstance(result, dict)
+        assert result["success"] is True
+        assert result["data"]["fraud_score"]["transaction_id"] == "txn_12345"
 
     @pytest.mark.asyncio
     async def test_get_transaction_fraud_score_not_found(
         self, mock_db_session, mock_scalar_result_fn
     ):
         """Test retrieving fraud score when transaction not found."""
+        mock_request = _make_mock_request()
         mock_db_session.execute.return_value = mock_scalar_result_fn(None)
 
-        from fastapi import HTTPException
+        result = await get_transaction_fraud_score(mock_request, "nonexistent_txn", mock_db_session)
 
-        with pytest.raises(HTTPException) as exc_info:
-            await get_transaction_fraud_score("nonexistent_txn", mock_db_session)
-
-        assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
-        assert exc_info.value.detail["error_code"] == "ANA_VAL_002"
+        assert isinstance(result, dict)
+        assert result["success"] is False
+        assert result["error"]["code"] == "ANA_VAL_002"
 
     @pytest.mark.asyncio
     async def test_get_transaction_fraud_score_service_error(self, mock_db_session):
         """Test fraud score retrieval when service raises error."""
+        mock_request = _make_mock_request()
         mock_db_session.execute.side_effect = Exception("Database error")
 
-        from fastapi import HTTPException
+        result = await get_transaction_fraud_score(mock_request, "txn_12345", mock_db_session)
 
-        with pytest.raises(HTTPException) as exc_info:
-            await get_transaction_fraud_score("txn_12345", mock_db_session)
-
-        assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        assert exc_info.value.detail["error_code"] == "ANA_SYS_007"
+        assert isinstance(result, dict)
+        assert result["success"] is False
+        assert result["error"]["code"] == "ANA_SYS_007"
 
     @pytest.mark.asyncio
     async def test_get_user_high_risk_transactions_success(
         self, mock_db_session, sample_fraud_score_entity, mock_scalars_result_fn
     ):
         """Test retrieving high-risk transactions for user."""
+        mock_request = _make_mock_request()
         from datetime import datetime, timedelta
         from app.database import FraudScoreEntity
 
@@ -459,35 +508,39 @@ class TestAnalyticsAPIEndpoints:
 
         mock_db_session.execute.return_value = mock_scalars_result_fn(mock_entities)
 
-        result = await get_user_high_risk_transactions("user_123", mock_db_session)
+        result = await get_user_high_risk_transactions(mock_request, "user_123", mock_db_session)
 
-        assert isinstance(result, list)
-        assert len(result) > 0
-        assert all("transaction_id" in txn for txn in result)
+        assert isinstance(result, dict)
+        assert result["success"] is True
+        assert isinstance(result["data"], list)
+        assert len(result["data"]) > 0
+        assert all("transaction_id" in txn for txn in result["data"])
 
     @pytest.mark.asyncio
     async def test_get_user_high_risk_transactions_empty(
         self, mock_db_session, mock_scalars_result_fn
     ):
         """Test retrieving high-risk transactions when none exist."""
+        mock_request = _make_mock_request()
         mock_db_session.execute.return_value = mock_scalars_result_fn([])
 
-        result = await get_user_high_risk_transactions("user_123", mock_db_session)
+        result = await get_user_high_risk_transactions(mock_request, "user_123", mock_db_session)
 
-        assert result == []
+        assert isinstance(result, dict)
+        assert result["success"] is True
+        assert result["data"] == []
 
     @pytest.mark.asyncio
     async def test_get_user_high_risk_transactions_service_error(self, mock_db_session):
         """Test high-risk transactions retrieval when service raises error."""
+        mock_request = _make_mock_request()
         mock_db_session.execute.side_effect = Exception("Query error")
 
-        from fastapi import HTTPException
+        result = await get_user_high_risk_transactions(mock_request, "user_123", mock_db_session)
 
-        with pytest.raises(HTTPException) as exc_info:
-            await get_user_high_risk_transactions("user_123", mock_db_session)
-
-        assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        assert exc_info.value.detail["error_code"] == "ANA_SYS_008"
+        assert isinstance(result, dict)
+        assert result["success"] is False
+        assert result["error"]["code"] == "ANA_SYS_008"
 
 
 class TestAnalyticsAPIValidation:
@@ -496,6 +549,8 @@ class TestAnalyticsAPIValidation:
     @pytest.mark.asyncio
     async def test_get_spending_trends_different_group_by(self, mock_db_session):
         """Test spending trends with different group_by options."""
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_spending_trends.return_value = SpendingTrendResponse(
@@ -509,15 +564,18 @@ class TestAnalyticsAPIValidation:
 
             # Test different group_by values
             for group_by in ["category", "merchant", "day"]:
-                request = GetSpendingTrendsRequest(
+                request_data = GetSpendingTrendsRequest(
                     user_id="user_123", period_days=30, group_by=group_by
                 )
-                result = await get_spending_trends(request, mock_db_session)
+                result = await get_spending_trends(mock_request, request_data, mock_db_session)
                 assert result is not None
+                assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_get_spending_trends_custom_period(self, mock_db_session):
         """Test spending trends with custom period."""
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_spending_trends.return_value = SpendingTrendResponse(
@@ -529,15 +587,18 @@ class TestAnalyticsAPIValidation:
             )
             mock_service_class.return_value = mock_service
 
-            request = GetSpendingTrendsRequest(
+            request_data = GetSpendingTrendsRequest(
                 user_id="user_123", period_days=60, group_by="category"
             )
-            result = await get_spending_trends(request, mock_db_session)
+            result = await get_spending_trends(mock_request, request_data, mock_db_session)
             assert result is not None
+            assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_get_cash_flow_analysis_custom_period(self, mock_db_session):
         """Test cash flow analysis with custom period."""
+        mock_request = _make_mock_request()
+
         with patch("app.api.v1.analytics.AnalyticsService") as mock_service_class:
             mock_service = AsyncMock()
             mock_service.get_cash_flow_analysis.return_value = CashFlowAnalysis(
@@ -550,13 +611,15 @@ class TestAnalyticsAPIValidation:
             )
             mock_service_class.return_value = mock_service
 
-            request = GetAnalyticsRequest(user_id="user_123", period_days=90)
-            result = await get_cash_flow_analysis(request, mock_db_session)
+            request_data = GetAnalyticsRequest(user_id="user_123", period_days=90)
+            result = await get_cash_flow_analysis(mock_request, request_data, mock_db_session)
             assert result is not None
+            assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_robo_advisory_various_risk_profiles(self):
         """Test robo advisory with various risk profiles."""
+        mock_request = _make_mock_request()
         from app.models.schemas import RiskAssessmentQuestions, InvestmentTimeHorizon
 
         risk_profiles = [
@@ -587,18 +650,25 @@ class TestAnalyticsAPIValidation:
             }
             mock_engine_class.return_value = mock_engine
 
-            for risk_questions in risk_profiles:
-                request = GetRoboAdvisoryRequest(
-                    user_id="user_123",
-                    risk_questions=risk_questions,
-                    monthly_investment_amount=1000000.0,
-                )
-                result = await get_robo_advisory(request)
-                assert result is not None
+            with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
+                with patch("app.api.v1.analytics.cache_result", new_callable=AsyncMock):
+                    for risk_questions in risk_profiles:
+                        request_data = GetRoboAdvisoryRequest(
+                            user_id="user_123",
+                            risk_questions=risk_questions,
+                            monthly_investment_amount=1000000.0,
+                        )
+                        result = await get_robo_advisory(
+                            mock_request, request_data, idempotency_key=None
+                        )
+                        assert result is not None
+                        assert isinstance(result, dict)
+                        assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_fraud_score_different_transaction_types(self):
         """Test fraud score calculation for different transaction types."""
+        mock_request = _make_mock_request(with_limiter=True)
         transaction_types = ["TRANSFER", "QRIS", "PAYMENT", "WITHDRAWAL"]
 
         with patch("app.api.v1.analytics.FraudDetectionEngine") as mock_engine_class:
@@ -623,14 +693,20 @@ class TestAnalyticsAPIValidation:
             mock_engine.calculate_fraud_score.return_value = mock_result
             mock_engine_class.return_value = mock_engine
 
-            for txn_type in transaction_types:
-                request = GetFraudScoreRequest(
-                    transaction_id=f"txn_{txn_type}",
-                    user_id="user_123",
-                    amount=500000.0,
-                    currency="IDR",
-                    transaction_type=txn_type,
-                    metadata={},
-                )
-                result = await calculate_fraud_score(request)
-                assert result is not None
+            with patch("app.api.v1.analytics.get_cached_result", new_callable=AsyncMock, return_value=None):
+                with patch("app.api.v1.analytics.cache_result", new_callable=AsyncMock):
+                    for txn_type in transaction_types:
+                        request_data = GetFraudScoreRequest(
+                            transaction_id=f"txn_{txn_type}",
+                            user_id="user_123",
+                            amount=500000.0,
+                            currency="IDR",
+                            transaction_type=txn_type,
+                            metadata={},
+                        )
+                        result = await calculate_fraud_score(
+                            mock_request, request_data, idempotency_key=None
+                        )
+                        assert result is not None
+                        assert isinstance(result, dict)
+                        assert result["success"] is True

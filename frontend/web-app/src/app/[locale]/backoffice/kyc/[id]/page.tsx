@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BackofficeService, BackofficeKycStatus } from '@/services';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 
 export default function KycReviewDetailPage() {
  const { id } = useParams() as { id: string };

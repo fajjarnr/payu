@@ -10,12 +10,15 @@ const intlMiddleware = createMiddleware({
   localeDetection: false
 });
 
+// Dynamically build locale pattern from config instead of hardcoding
+const localePattern = new RegExp(`^/(${locales.join('|')})`);
+
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Define public vs protected paths
   // Locale-agnostic check
-  const pathWithoutLocale = pathname.replace(/^\/(en|id)/, '') || '/';
+  const pathWithoutLocale = pathname.replace(localePattern, '') || '/';
   
   // Authentication check - verify existence of session tokens
   // Priority: refreshToken (7 days) > accessToken (15 min) > session cookie
@@ -28,7 +31,7 @@ export default function middleware(request: NextRequest) {
 
   // 1. Auto-redirect from Landing to Dashboard if already logged in
   if (pathWithoutLocale === '/' && hasSession) {
-    const localeMatch = pathname.match(/^\/(en|id)/);
+    const localeMatch = pathname.match(localePattern);
     const locale = localeMatch ? localeMatch[0] : '';
     edgeLogger.info('Redirecting authenticated user to dashboard', {
       action: 'middleware',
@@ -39,7 +42,7 @@ export default function middleware(request: NextRequest) {
 
   // 1b. Auto-redirect from Login to Dashboard if already logged in
   if (pathWithoutLocale === '/login' && hasSession) {
-    const localeMatch = pathname.match(/^\/(en|id)/);
+    const localeMatch = pathname.match(localePattern);
     const locale = localeMatch ? localeMatch[0] : '';
     edgeLogger.info('Redirecting authenticated user away from login to dashboard', {
       action: 'middleware',
@@ -62,7 +65,7 @@ export default function middleware(request: NextRequest) {
     publicRoutes.some(route => pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/'));
 
   if (!isPublicRoute && !hasSession) {
-    const localeMatch = pathname.match(/^\/(en|id)/);
+    const localeMatch = pathname.match(localePattern);
     const locale = localeMatch ? localeMatch[0] : '';
     // Redirect to login, ensuring user doesn't bypass auth
     const loginUrl = new URL(`${locale}/login`, request.url);

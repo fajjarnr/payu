@@ -34,9 +34,15 @@ export default function NotificationsPage() {
   const markRead = useMarkNotificationRead();
 
   const rawNotifications = notificationsData?.content ?? [];
-  const notifications = rawNotifications as unknown as Array<{
-    id: string; title: string; content: string; type: string; read: boolean; timestamp: string;
-  }>;
+  // BUG-CROSS-032: Map backend field names (body/sentAt) to frontend display fields (content/timestamp)
+  const notifications = rawNotifications.map((n: any) => ({
+    id: n.id as string,
+    title: n.title as string ?? '',
+    content: (n.body ?? n.content ?? n.message ?? '') as string,
+    type: n.type as string ?? 'INFO',
+    read: n.read as boolean ?? false,
+    timestamp: (n.sentAt ?? n.timestamp ?? n.createdAt ?? '') as string,
+  }));
 
   const filteredNotifs = notifications.filter(n => {
     const matchesSearch = n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 

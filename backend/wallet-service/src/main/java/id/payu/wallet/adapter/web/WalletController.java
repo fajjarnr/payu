@@ -16,7 +16,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
@@ -44,8 +48,33 @@ public class WalletController extends BaseController {
     }
 
     /**
+     * Extracts the authenticated user's ID from the JWT subject claim.
+     * BUG-BE-150: Added to enforce ownership checks on all endpoints.
+     */
+    private String extractUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getSubject();
+    }
+
+    /**
+     * Verifies the authenticated user owns the given account.
+     * Throws AccessDeniedException if the accountId does not match the JWT subject.
+     * BUG-BE-150: Centralised ownership check for account-scoped endpoints.
+     */
+    private void verifyAccountOwnership(String accountId) {
+        String userId = extractUserId();
+        if (!accountId.equals(userId)) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+    }
+
+    /**
      * Masks an account ID for safe logging.
-     * e.g., "abcd-1234-efgh" → "abcd****"
+     * e.g., "abcd-1234-efgh" -> "abcd****"
      */
     private String maskId(String id) {
         if (id == null || id.length() <= 4) return "****";
@@ -62,6 +91,9 @@ public class WalletController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<BalanceResponse>> getBalance(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId) {
+        // BUG-BE-150: Verify caller owns the account
+        verifyAccountOwnership(accountId);
+
         log.info("Getting balance for account: {}", maskId(accountId));
 
         Wallet wallet = walletUseCase.getWalletByAccountId(accountId)
@@ -91,6 +123,9 @@ public class WalletController extends BaseController {
     public ResponseEntity<ApiResponse<ReserveBalanceResponse>> reserveBalance(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Valid @RequestBody ReserveBalanceRequest request) {
+        // BUG-BE-150: Verify caller owns the account
+        verifyAccountOwnership(accountId);
+
         log.info("Reserving {} for account: {}", request.getAmount(), maskId(accountId));
 
         String reservationId = walletUseCase.reserveBalance(
@@ -120,6 +155,12 @@ public class WalletController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - reservation access denied")
     public ResponseEntity<ApiResponse<Map<String, String>>> commitReservation(
             @Parameter(description = "Reservation ID", required = true) @PathVariable String reservationId) {
+        // BUG-BE-150: Verify caller owns the reservation
+        String userId = extractUserId();
+        if (!validateReservationOwnership(reservationId, userId)) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         log.info("Committing reservation: {}", reservationId);
         walletUseCase.commitReservation(reservationId);
         return ok(Map.of("status", "COMMITTED", "reservationId", reservationId));
@@ -136,6 +177,12 @@ public class WalletController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - reservation access denied")
     public ResponseEntity<ApiResponse<Map<String, String>>> releaseReservation(
             @Parameter(description = "Reservation ID", required = true) @PathVariable String reservationId) {
+        // BUG-BE-150: Verify caller owns the reservation
+        String userId = extractUserId();
+        if (!validateReservationOwnership(reservationId, userId)) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+
         log.info("Releasing reservation: {}", reservationId);
         walletUseCase.releaseReservation(reservationId);
         return ok(Map.of("status", "RELEASED", "reservationId", reservationId));
@@ -143,7 +190,7 @@ public class WalletController extends BaseController {
 
     /**
      * Validates that the authenticated user owns the reservation.
-     * Used by @PreAuthorize for ownership-based access control.
+     * Used by ownership-based access control on commit/release endpoints.
      *
      * @param reservationId the reservation ID to check
      * @param accountId the authenticated user's account ID
@@ -176,6 +223,9 @@ public class WalletController extends BaseController {
     public ResponseEntity<ApiResponse<Map<String, String>>> credit(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Valid @RequestBody CreditRequest request) {
+        // BUG-BE-150: Verify caller owns the account
+        verifyAccountOwnership(accountId);
+
         log.info("Crediting {} to account: {}", request.getAmount(), maskId(accountId));
 
         walletUseCase.credit(
@@ -197,6 +247,9 @@ public class WalletController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
     public ResponseEntity<ApiResponse<List<LedgerEntry>>> getLedgerEntries(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId) {
+        // BUG-BE-150: Verify caller owns the account
+        verifyAccountOwnership(accountId);
+
         log.info("Getting ledger entries for account: {}", maskId(accountId));
         List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByAccountId(accountId);
         return ok(ledgerEntries);
@@ -212,6 +265,9 @@ public class WalletController extends BaseController {
     public ResponseEntity<ApiResponse<List<LedgerEntry>>> getLedgerEntriesByTransaction(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId) {
+        // BUG-BE-150: Verify caller owns the account
+        verifyAccountOwnership(accountId);
+
         log.info("Getting ledger entries for transaction: {}", transactionId);
         try {
             List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByTransactionId(UUID.fromString(transactionId));
@@ -233,6 +289,9 @@ public class WalletController extends BaseController {
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Parameter(description = "Page number (default: 0)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (default: 20)") @RequestParam(defaultValue = "20") int size) {
+        // BUG-BE-150: Verify caller owns the account
+        verifyAccountOwnership(accountId);
+
         log.info("Getting transaction history for account: {}", maskId(accountId));
         List<WalletTransaction> transactions = walletUseCase.getTransactionHistory(accountId, page, size);
         return ok(transactions);

@@ -37,6 +37,11 @@ export default function RewardsPage() {
 
   const cashbackHistory: Array<{ id: number; merchant: string; amount: number; status: string; date: string; description: string }> = (cashbackData as any) ?? [];
 
+  // Compute cashback summary from actual data
+  const cashbackCredited = cashbackHistory.filter(cb => cb.status === 'credited').reduce((sum, cb) => sum + cb.amount, 0);
+  const cashbackPending = cashbackHistory.filter(cb => cb.status === 'pending').reduce((sum, cb) => sum + cb.amount, 0);
+  const cashbackTotal = cashbackCredited + cashbackPending;
+
   const referralStats = {
     code: (referralData as any)?.code ?? '-',
     totalReferrals: (referralData as any)?.totalReferrals ?? 0,
@@ -46,7 +51,7 @@ export default function RewardsPage() {
     totalEarnings: (referralData as any)?.totalEarnings ?? 0
   };
 
-  const activePromotions: Array<{ id: number; name: string; description: string; type: string; value: string; endDate: string; icon: any }> = (promotionsData as any) ?? [];
+  const activePromotions: Array<{ id: number; name: string; description: string; type: string; value: string; endDate: string }> = (promotionsData as any) ?? [];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -217,17 +222,17 @@ export default function RewardsPage() {
                           </div>
                           <div>
                             <p className="text-xs font-bold text-gray-400 tracking-widest uppercase">Total Cashback</p>
-                            <h3 className="text-4xl font-bold">{formatCurrency(190000)}</h3>
+                            <h3 className="text-4xl font-bold">{formatCurrency(cashbackTotal)}</h3>
                           </div>
                         </div>
                         <div className="space-y-4">
                           <div className="flex justify-between items-center py-3 border-b border-white/10">
                             <span className="text-sm text-gray-400">Dikreditkan</span>
-                            <span className="font-bold text-success-light">{formatCurrency(40000)}</span>
+                            <span className="font-bold text-success-light">{formatCurrency(cashbackCredited)}</span>
                           </div>
                           <div className="flex justify-between items-center py-3 border-b border-white/10">
                             <span className="text-sm text-gray-400">Menunggu</span>
-                            <span className="font-bold text-warning">{formatCurrency(150000)}</span>
+                            <span className="font-bold text-warning">{formatCurrency(cashbackPending)}</span>
                           </div>
                           <div className="flex justify-between items-center pt-3">
                             <span className="text-sm text-gray-400">Kadaluarsa</span>
@@ -246,7 +251,7 @@ export default function RewardsPage() {
                           <div key={i} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border hover:border-primary/20 transition-all group">
                             <div className="flex items-center gap-4">
                               <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10 group-hover:scale-110 transition-transform">
-                                <promo.icon className="h-6 w-6 text-primary" />
+                                <Gift className="h-6 w-6 text-primary" />
                               </div>
                               <div>
                                 <h4 className="font-bold text-foreground">{promo.name}</h4>

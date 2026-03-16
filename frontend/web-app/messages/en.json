@@ -311,6 +311,7 @@
     "haveAccount": "Already have an account?",
     "noAccount": "Don't have an account?",
     "registerLink": "Register Now",
+    "loginSuccess": "Login successful!",
     "onboarding": {
       "title": "Welcome to PayU",
       "subtitle": "The digital banking platform of the future",
@@ -395,6 +396,24 @@
     "about": "About",
     "logout": "Logout",
     "changeLanguage": "Change Language"
+  },
+  "merchant": {
+    "title": "Merchant Portal",
+    "dashboard": "Merchant Dashboard",
+    "subtitle": "Manage your merchant account and API credentials",
+    "register": "Register as Merchant",
+    "notRegistered": "You are not registered as a merchant yet.",
+    "profile": "Merchant Profile",
+    "merchantName": "Merchant Name",
+    "email": "Email",
+    "type": "Type",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "apiCredentials": "API Credentials",
+    "clientId": "Client ID",
+    "publicKey": "Public Key",
+    "noPublicKey": "No public key configured"
   },
   "landing": {
     "heroTitle": "One App.<br />Millions of Solutions.",

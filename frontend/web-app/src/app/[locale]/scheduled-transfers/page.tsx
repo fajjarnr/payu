@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Repeat
 } from 'lucide-react';
+import { Link } from '@/lib/navigation';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +49,7 @@ import type { ScheduledTransfer } from '@/services/TransactionService';
 
 export default function ScheduledTransfersPage() {
   const { user } = useAuth();
-  const accountId = user?.id || 'default';
+  const accountId = user?.id ?? '';
 
   const { data: transfers, isLoading } = useScheduledTransfers(accountId);
   const updateTransfer = useUpdateScheduledTransfer();
@@ -63,7 +64,7 @@ export default function ScheduledTransfersPage() {
   const [editForm, setEditForm] = useState({
     amount: 0,
     description: '',
-    frequency: 'ONE_TIME',
+    scheduleType: 'ONE_TIME',
   });
 
   const handleOpenEditModal = (transfer: ScheduledTransfer) => {
@@ -71,7 +72,7 @@ export default function ScheduledTransfersPage() {
     setEditForm({
       amount: transfer.amount,
       description: transfer.description || '',
-      frequency: transfer.frequency,
+      scheduleType: transfer.scheduleType,
     });
     setIsEditModalOpen(true);
   };
@@ -89,7 +90,7 @@ export default function ScheduledTransfersPage() {
       data: {
         amount: editForm.amount,
         description: editForm.description,
-        frequency: editForm.frequency as any,
+        scheduleType: editForm.scheduleType as any,
       },
     });
 
@@ -154,9 +155,9 @@ export default function ScheduledTransfersPage() {
                 </div>
                 <ButtonMotion>
                   <Button className="shadow-xl shadow-primary/20" asChild>
-                    <a href="/transfer">
+                    <Link href="/transfer">
                       <Plus className="h-4 w-4 mr-2" /> Transfer Baru
-                    </a>
+                    </Link>
                   </Button>
                 </ButtonMotion>
               </div>
@@ -222,7 +223,7 @@ export default function ScheduledTransfersPage() {
                     <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
                     <p className="text-muted-foreground">Belum ada transfer terjadwal</p>
                     <Button className="mt-4" asChild>
-                      <a href="/transfer">Buat Transfer Terjadwal</a>
+                      <Link href="/transfer">Buat Transfer Terjadwal</Link>
                     </Button>
                   </div>
                 ) : (
@@ -249,7 +250,7 @@ export default function ScheduledTransfersPage() {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {getScheduleTypeLabel(transfer.frequency)}
+                                  {getScheduleTypeLabel(transfer.scheduleType)}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
@@ -368,10 +369,10 @@ export default function ScheduledTransfersPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Frekuensi</label>
+              <label className="text-sm font-medium">Tipe Jadwal</label>
               <Select
-                value={editForm.frequency}
-                onValueChange={(value: string) => setEditForm((prev) => ({ ...prev, frequency: value }))}
+                value={editForm.scheduleType}
+                onValueChange={(value: string) => setEditForm((prev) => ({ ...prev, scheduleType: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />

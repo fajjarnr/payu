@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SilentRefreshProvider } from '@/components/auth/SilentRefreshProvider';
 
 export const metadata: Metadata = {
  title: "Pengaturan Akun",
@@ -14,5 +15,5 @@ export default function SettingsPageLayout({
 }: {
  children: React.ReactNode;
 }) {
- return children;
+ return <SilentRefreshProvider>{children}</SilentRefreshProvider>;
 }

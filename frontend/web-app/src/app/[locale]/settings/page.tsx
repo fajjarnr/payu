@@ -9,15 +9,16 @@ import StatementDownloader from '@/components/settings/statement-downloader';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useAuth, useUpdateUser } from '@/hooks';
-import { useAuthStore } from '@/stores';
+import { useAuth, useLogout, useUpdateUser } from '@/hooks';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useTranslations } from 'next-intl';
 
 export default function SettingsPage() {
+  const t = useTranslations('settings');
   const [activeTab, setActiveTab] = useState<'profile' | 'statements'>('profile');
   const { user } = useAuth();
   const updateUser = useUpdateUser();
-  const logout = useAuthStore((state) => state.logout);
+  const logoutMutation = useLogout();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -38,17 +39,17 @@ export default function SettingsPage() {
   }, [user]);
 
   const menuItems = [
-    { label: 'Profil Umum', icon: User, active: activeTab === 'profile', onClick: () => setActiveTab('profile') },
-    { label: 'E-Statement', icon: FileText, active: activeTab === 'statements', onClick: () => setActiveTab('statements') },
-    { label: 'Tagihan & Paket', icon: CreditCard, active: false },
-    { label: 'Privasi & Keamanan', icon: Shield, active: false },
-    { label: 'Pengaturan Lanjut', icon: Globe, active: false },
+    { label: t('menu.generalProfile'), icon: User, active: activeTab === 'profile', onClick: () => setActiveTab('profile') },
+    { label: t('menu.eStatement'), icon: FileText, active: activeTab === 'statements', onClick: () => setActiveTab('statements') },
+    { label: t('menu.billingPlan'), icon: CreditCard, active: false },
+    { label: t('menu.privacySecurity'), icon: Shield, active: false },
+    { label: t('menu.advanced'), icon: Globe, active: false },
   ];
 
   const preferences = [
-    { label: 'Notifikasi Push', desc: 'Peringatan transaksi & status real-time', icon: Bell, active: true },
-    { label: 'Grafis Mode Gelap', desc: 'Antarmuka visual kontras tinggi', icon: Moon, active: false },
-    { label: 'Wawasan Pemasaran', desc: 'Pembaruan promosi, berita, dan hadiah', icon: Globe, active: true },
+    { label: t('pref.pushNotifications'), desc: t('pref.pushNotificationsDesc'), icon: Bell, active: true },
+    { label: t('pref.darkMode'), desc: t('pref.darkModeDesc'), icon: Moon, active: false },
+    { label: t('pref.marketingInsights'), desc: t('pref.marketingInsightsDesc'), icon: Globe, active: true },
   ];
 
   const handleInputChange = (field: string, value: string) => {
@@ -65,8 +66,7 @@ export default function SettingsPage() {
   };
 
   const handleClearSession = () => {
-    logout();
-    window.location.href = '/login';
+    logoutMutation.mutate();
   };
 
   return (
@@ -78,8 +78,8 @@ export default function SettingsPage() {
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground">Ekosistem Akun</h2>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">Kelola profil pribadi, preferensi sistem, dan tata kelola akun.</p>
+                  <h2 className="text-3xl font-bold text-foreground">{t('header.title')}</h2>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">{t('header.subtitle')}</p>
                 </div>
               </div>
             </StaggerItem>
@@ -94,18 +94,18 @@ export default function SettingsPage() {
                     {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : 'P'}
                   </div>
                   <h3 className="text-xl font-bold text-foreground">{formData.fullName || 'PENGGUNA PAYU'}</h3>
-                  <p className="text-xs font-bold text-primary tracking-widest uppercase mt-3 bg-success-light px-4 py-1.5 rounded-full border border-primary/10">Premium Member</p>
+                  <p className="text-xs font-bold text-primary tracking-widest uppercase mt-3 bg-success-light px-4 py-1.5 rounded-full border border-primary/10">{t('premiumMember')}</p>
 
                   <div className="w-full h-[1px] bg-border my-10" />
 
                   <div className="w-full space-y-4 px-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">ID Akun</span>
+                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{t('accountId')}</span>
                       <span className="text-xs font-bold text-foreground font-mono">{user?.id?.slice(0, 12) || 'PAYU-09228373'}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Status</span>
-                      <span className="text-xs font-bold text-primary">eKYC Terverifikasi</span>
+                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{t('status')}</span>
+                      <span className="text-xs font-bold text-primary">{t('ekycVerified')}</span>
                     </div>
                   </div>
                 </div>
@@ -144,8 +144,8 @@ export default function SettingsPage() {
                     {updateUser.isSuccess && (
                       <Alert className="bg-green-500/10 border-green-500/20 relative z-10">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        <AlertDescription className="text-green-500">
-                          Profil berhasil diperbarui!
+                         <AlertDescription className="text-green-500">
+                          {t('profileUpdateSuccess')}
                         </AlertDescription>
                       </Alert>
                     )}
@@ -153,8 +153,8 @@ export default function SettingsPage() {
                     {/* Error Alert */}
                     {updateUser.isError && (
                       <Alert className="bg-red-500/10 border-red-500/20 relative z-10">
-                        <AlertDescription className="text-red-500">
-                          Gagal memperbarui profil. Silakan coba lagi.
+                         <AlertDescription className="text-red-500">
+                          {t('profileUpdateError')}
                         </AlertDescription>
                       </Alert>
                     )}
@@ -165,26 +165,26 @@ export default function SettingsPage() {
                         <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
                           <User className="h-6 w-6 text-primary" />
                         </div>
-                        <h3 className="text-xl font-bold text-foreground">Kredensial Profil</h3>
+                        <h3 className="text-xl font-bold text-foreground">{t('profileCredentials')}</h3>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
                           <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-                            Nama Lengkap (Sesuai KTP)
+                            {t('form.fullName')}
                           </label>
                           <Input
                             type="text"
                             value={formData.fullName}
                             onChange={(e) => handleInputChange('fullName', e.target.value)}
-                            placeholder="Nama lengkap"
+                            placeholder={t('form.fullNamePlaceholder')}
                             className="font-bold"
                             disabled={updateUser.isPending}
                           />
                         </div>
                         <div className="space-y-3">
                           <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-                            Email Kontak
+                            {t('form.contactEmail')}
                           </label>
                           <Input
                             type="email"
@@ -197,7 +197,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="space-y-3">
                           <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-                            Protokol Telepon
+                            {t('form.phone')}
                           </label>
                           <Input
                             type="text"
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                         <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
                           <Bell className="h-6 w-6 text-primary" />
                         </div>
-                        <h3 className="text-xl font-bold text-foreground">Preferensi Sistem</h3>
+                        <h3 className="text-xl font-bold text-foreground">{t('systemPreferences')}</h3>
                       </div>
 
                       <div className="grid grid-cols-1 gap-8">
@@ -244,10 +244,10 @@ export default function SettingsPage() {
                         {updateUser.isPending ? (
                           <>
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Menyimpan...
+                            {t('saving')}
                           </>
                         ) : (
-                          'Sinkronisasi Profil'
+                          t('syncProfile')
                         )}
                       </Button>
                       <Button
@@ -256,7 +256,7 @@ export default function SettingsPage() {
                         onClick={handleClearSession}
                       >
                         <Trash2 className="h-5 w-5 mr-1" />
-                        Hapus Sesi
+                        {t('clearSession')}
                       </Button>
                     </div>
                   </div>
@@ -265,9 +265,9 @@ export default function SettingsPage() {
                     <StaggerItem>
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                         <div>
-                          <h2 className="text-3xl font-bold text-foreground">E-Statement</h2>
+                          <h2 className="text-3xl font-bold text-foreground">{t('menu.eStatement')}</h2>
                           <p className="text-sm text-muted-foreground font-medium mt-1">
-                            Kelola dan unduh laporan transaksi bulanan Anda
+                            {t('eStatementSubtitle')}
                           </p>
                         </div>
                       </div>
