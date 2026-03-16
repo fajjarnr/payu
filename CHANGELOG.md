@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-03-16
 
+### Changed
+
+- **Backlog Hygiene — Archived completed bugs to CHANGELOG (2026-03-16)**:
+  - Moved 34 Phase 3 closed bugs (BUG-BE-148 through BUG-TEST-005) from `TODOS.md` to CHANGELOG (already documented below).
+  - Archived 4 Won't Do items (BUG-BE-061, BUG-BE-076, BUG-BE-080, BUG-BE-091) from `TODOS.md` — rationale: gamification removed (SIMP-002), sandbox not yet relevant, lending pre-approval inactive, rate limit burst acceptable for early traffic phase (superseded by IMP-005).
+  - Simplified `TODOS.md` bug scorecard to show only 19 remaining open bugs from parallel re-audit.
+  - Total bug history: 267 fixed + 4 Won't Do + 19 open = 290 tracked.
+
+### Identified
+
+- **Parallel Re-Audit — 19 New Bugs Discovered (2026-03-16)**:
+  - Deeper parallel audit discovered 19 additional issues beyond the 34 closed in Phase 3.
+  - **Backend P0 (3)**: Disbursement IDOR — caller-supplied `X-Account-Id` trusted (BUG-BE-152), reservation IDs discarded causing permanent fund locks (BUG-BE-153), batch disbursement no ownership enforcement (BUG-BE-154).
+  - **Backend P1 (1)**: Batch `processBatch` never publishes Kafka work items (BUG-BE-155).
+  - **Auth P1 (1)**: Cookie-restored sessions not rehydrated into client auth store (BUG-AUTH-012).
+  - **Cross-Service P1 (1)**: Login stores JWT subject as `accountId` causing wrong API calls (BUG-CROSS-035).
+  - **Frontend P1-P2 (5)**: Notifications handlers unwired (BUG-FE-060), security page decorative (BUG-FE-061), analytics page fabricated data (BUG-FE-062), pockets hard-coded goals (BUG-FE-063), transactions summary zero (BUG-FE-064).
+  - **Infrastructure P1-P2 (4)**: Staging/prod overlays inherit dev images (BUG-INFRA-001), base manifests hardcode dev DNS (BUG-INFRA-002), secret/configmap name mismatch (BUG-INFRA-003), staging label mismatch (BUG-INFRA-004).
+  - **Test Quality P1 (4)**: Notification stale payload (BUG-TEST-006), billing stale DTOs (BUG-TEST-007), compliance hard-coded 404s (BUG-TEST-008), user-journey outdated payment contracts (BUG-TEST-009).
+  - All 19 tracked in `docs/roadmap/TODOS.md`.
+
 ### Fixed
 
 - **Phase 3 — Close All 34 Audit Bugs (2026-03-16)**:
@@ -22,6 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Cross-Service Mismatch (5 bugs)**: TransactionService field alignment (BUG-CROSS-030), investments page i18n (BUG-CROSS-031), notifications field mapping `body`→`content`/`sentAt`→`timestamp` (BUG-CROSS-032), merchant page rewritten with PartnerService + DashboardLayout (BUG-CROSS-033), support page uses `useTranslations` (BUG-CROSS-034).
   - **Test Quality (5 bugs)**: Analytics unit tests updated with mock Request + ApiResponse (BUG-TEST-001), analytics E2E syntax error fixed (BUG-TEST-002), statement blackbox assertions tightened (BUG-TEST-003), gateway smoke 500 removed from wallet assertion (BUG-TEST-004), analytics blackbox docstrings clarified (BUG-TEST-005).
   - **Verification**: Backend 38/38 modules BUILD SUCCESS. Frontend Next.js build SUCCESS. Playwright 544/544 pass. Pytest blackbox 159/159 pass.
+
+### Won't Do (Archived)
+
+- **BUG-BE-061**: Promotion `getTransactionAmount()` returns ZERO — Won't Do, gamification removed (SIMP-002).
+- **BUG-BE-076**: API Portal sandbox in-memory — Won't Do, partner belum ada, sandbox belum relevan.
+- **BUG-BE-080**: Lending pre-approval endpoints missing — Won't Do, feature belum aktif di frontend.
+- **BUG-BE-091**: Fixed-window rate limit burstable — Won't Do, low-traffic fase awal, superseded oleh IMP-005.
 
 ### Added
 

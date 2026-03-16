@@ -14,36 +14,30 @@
 | Status           | Count | Breakdown                                             |
 | :--------------- | :---: | :---------------------------------------------------- |
 | **Active Epics** |   0   | All completed ✅                                      |
-| **Open Stories** |  18   | TEST-WEB-001 – TEST-WEB-018                           |
+| **Open Stories** |  21   | TEST-WEB-001 – TEST-WEB-021                           |
 | **Tech Debt**    |   0   | All completed ✅                                      |
 | **Spikes**       |   5   | ARCH-001 – ARCH-005                                   |
 | **Deferred**     |   9   | P2-FE-003, OCP-007, OCP-010, DR-001, DEFER-001, RHPAM |
-| **Bugs**         | 0/267 | 263 fixed, 4 Won't Do, 0 open                        |
+| **Open Bugs**    |  19   | From parallel audit (Mar 16). 267 fixed + 4 Won't Do archived to CHANGELOG |
 
 > **Completed Epics**: 24/24 fully done. All stories & tech debt cleared.
 > See [`PROGRESS.md`](./PROGRESS.md) for completed Epics summary.
+> **Closed bugs & history**: See [`CHANGELOG.md`](../../CHANGELOG.md).
 
-### 🐛 Bug Scorecard
+### 🐛 Open Bug Scorecard
 
-| Kategori                  | Open  | Won't Do | Done |  Total   |
-| :------------------------ | :---: | :------: | :--: | :------: |
-| Backend Logic             |   0   |    4     | 148  | **152**  |
-| Frontend Logic            |   0   |    0     |  65  |  **65**  |
-| Frontend-Backend Mismatch |   0   |    0     |  34  |  **34**  |
-| Auth / Session            |   0   |    0     |  11  |  **11**  |
-| Test Coverage / Quality   |   0   |    0     |   5  |  **5**   |
-| **TOTAL**                 | **0** |  **4**   | 263  | **267** |
+| Kategori                   | Open | Priority Range |
+| :------------------------- | :--: | :------------- |
+| Backend Logic              |   4  | P0–P1          |
+| Frontend Logic             |   5  | P1–P2          |
+| Frontend-Backend Mismatch  |   1  | P1             |
+| Auth / Session             |   1  | P1             |
+| Test Coverage / Quality    |   4  | P1             |
+| Infrastructure / OpenShift |   4  | P1–P2          |
+| **TOTAL**                  | **19** |             |
 
-### Won't Do (4 items)
-
-| Key        | Summary                                   | Resolution                                                |
-| :--------- | :---------------------------------------- | :-------------------------------------------------------- |
-| BUG-BE-061 | Promotion `getTransactionAmount()` → ZERO | Won't Do — gamification removed (SIMP-002)                |
-| BUG-BE-076 | API Portal sandbox in-memory              | Won't Do — partner belum ada, sandbox belum relevan       |
-| BUG-BE-080 | Lending pre-approval endpoints missing    | Won't Do — feature belum aktif di frontend                |
-| BUG-BE-091 | Fixed-window rate limit burstable         | Won't Do — low-traffic fase awal. Superseded oleh IMP-005 |
-
-> Note: kategori **Test Coverage / Quality** ditrack sebagai open bugs audit karena green suite saat ini masih bisa memberi false confidence.
+> Note: 267 bugs fixed + 4 Won't Do have been archived to [`CHANGELOG.md`](../../CHANGELOG.md).
+> Test Coverage / Quality bugs are tracked because the current green suite can still give false confidence.
 
 ---
 
@@ -97,81 +91,56 @@
 | TEST-WEB-016 | Story | Add navigation-shell coverage for logout, notification entry, legal links, and locale-safe cross-page transitions | `frontend/web-app/src/components/DashboardLayout.tsx`, `frontend/web-app/src/app/[locale]/page.tsx`, `frontend/web-app/e2e/check_ui.spec.ts`, `frontend/web-app/e2e/navigation.spec.ts` | The global shell exposes critical entry points that are either broken or unverified, so regressions can hide behind page-level smoke tests | 📋 To Do |
 | TEST-WEB-017 | Story | Add route-segment session coverage for authenticated pages outside dashboard | `frontend/web-app/src/app/[locale]/dashboard/layout.tsx`, `frontend/web-app/src/app/[locale]/transfer/layout.tsx`, `frontend/web-app/src/app/[locale]/settings/layout.tsx`, `frontend/web-app/src/app/[locale]/exchange/layout.tsx` | Silent refresh and auth survivability are only guaranteed in one route segment today, but no test proves session continuity across the rest of the authenticated app | 📋 To Do |
 | TEST-WEB-018 | Story | Audit and repair stale repo-level tests that currently pass without validating current service contracts | `tests/e2e_blackbox/`, `backend/analytics-service/tests/`, `frontend/web-app/e2e/onboarding-flow.spec.ts` | Several green tests still validate mocks, 404s, or broad status-code allowances rather than the actual implemented contracts, so release confidence is overstated | 📋 To Do |
+| TEST-WEB-019 | Story | Add black-box and integration coverage for implemented reverse-FX conversion flow | `tests/e2e_blackbox/test_fx_flow.py`, `backend/fx-service/src/main/java/id/payu/fx/adapter/web/FxController.java` | FX service ships reverse-conversion capability but the repo-level tests still do not prove it works in deployed environments | 📋 To Do |
+| TEST-WEB-020 | Story | Cover implemented CMS status-update/delete and dispute reject flows in repo-level E2E | `tests/e2e_blackbox/test_cms_flow.py`, `tests/e2e_blackbox/test_dispute_flow.py`, `backend/cms-service/src/main/java/id/payu/cms/adapter/web/rest/ContentController.java`, `backend/dispute-service/src/test/java/id/payu/dispute/integration/DisputeControllerIntegrationTest.java` | Executable black-box coverage stops before important implemented admin actions, so regressions can ship despite green suites | 📋 To Do |
+| TEST-WEB-021 | Story | Rationalize OpenShift overlays so staging/prod images, routes, configs, and policies are environment-correct | `infrastructure/openshift/overlays/staging/`, `infrastructure/openshift/overlays/prod/`, `infrastructure/openshift/base/` | Current overlays inherit dev-only image refs, service URLs, route hosts, and mismatched config names, so production-like validation is not trustworthy | 📋 To Do |
 
 ---
 
-## 🐛 Closed Bugs (Audit — March 16, 2026) — Phase 3
+## 🐛 Open Bugs (Parallel Audit — March 16, 2026)
 
-> All 34 bugs from the March 16 deep audit have been **CLOSED** in a single Phase 3 commit.
-> Backend build: 38/38 SUCCESS | Frontend build: SUCCESS | Playwright: 544/544 | Pytest: 159/159
-
-| Key | Area | Severity | Summary | Resolution |
-| :-- | :--- | :------: | :------ | :--------- |
-| BUG-BE-148 | Backend Logic | P0 | ScheduledTransferController IDOR — no caller identity binding | ✅ Added `extractUserId()` + `verifyOwnership()` to all 7 endpoints |
-| BUG-BE-149 | Backend Logic | P0 | SplitBillController only checks `isAuthenticated()` | ✅ Added `extractUserId()`, all endpoints now call `SplitBillSecurityService` methods |
-| BUG-BE-150 | Backend Logic | P0 | WalletController reservation commit/release without ownership check | ✅ Added `extractUserId()` + `verifyAccountOwnership()` for all accountId-based endpoints |
-| BUG-BE-151 | Backend Logic | P1 | `settleSplitBill` force-completes bills with outstanding payments | ✅ Now loads participants, checks `isFullyPaid()`, throws if outstanding remain |
-| BUG-CROSS-030 | Frontend-Backend Mismatch | P1 | Scheduled-transfer contract drift between FE and BE | ✅ TransactionService field names aligned to backend contract |
-| BUG-CROSS-031 | Frontend-Backend Mismatch | P1 | Investment frontend targets stale endpoints | ✅ Investments page uses `useTranslations('investments')` with proper i18n keys |
-| BUG-CROSS-032 | Frontend-Backend Mismatch | P1 | Notifications frontend field name mismatch | ✅ Field mapping fixed: `body`→`content`, `sentAt`→`timestamp` |
-| BUG-CROSS-033 | Frontend-Backend Mismatch | P1 | Merchant web flow wired to demo IDs | ✅ merchant/page.tsx rewritten with DashboardLayout + PartnerService + i18n |
-| BUG-CROSS-034 | Frontend-Backend Mismatch | P1 | Support frontend points to future ticket/FAQ flows | ✅ support/page.tsx uses `useTranslations('support')`, removed future ticket hooks |
-| BUG-FE-047 | Frontend Logic | P1 | BFF whitelist blocks cards, pockets, payments, topup, billers, biometric | ✅ Added 6 missing path prefixes to ALLOWED_PATH_PREFIXES |
-| BUG-FE-048 | Frontend Logic | P1 | Bills page sends empty `accountId` | ✅ Uses auth store for accountId |
-| BUG-FE-049 | Frontend Logic | P1 | StatementService double-unwraps API responses | ✅ Response unwrapping fixed |
-| BUG-FE-050 | Frontend Logic | P1 | Statement downloader sends placeholder customerId/accountNumber | ✅ Gets customerId/accountNumber from auth store |
-| BUG-FE-051 | Frontend Logic | P1 | Cards page uses placeholder `accountId: 'default'` | ✅ Uses auth store accountId |
-| BUG-FE-052 | Frontend Logic | P1 | Header logout wired to optional callback most pages never pass | ✅ DashboardLayout uses `useLogout` hook directly |
-| BUG-FE-053 | Frontend Logic | P1 | SilentRefreshProvider only mounted under dashboard route | ✅ Added to transfer, settings, exchange layouts |
-| BUG-FE-054 | Frontend Logic | P1 | Scheduled transfers queries by `user.id` fallback `'default'` | ✅ Uses auth store accountId properly |
-| BUG-FE-055 | Frontend Logic | P1 | Split-bill create omits `creatorAccountId` | ✅ Includes `creatorAccountId` in create request |
-| BUG-FE-056 | Frontend Logic | P1 | Rewards renders non-existent `promo.icon` field | ✅ Uses fallback `Gift` icon |
-| BUG-FE-057 | Frontend Logic | P1 | Cashback summary shows fixed demo totals | ✅ Uses actual data from API response |
-| BUG-FE-058 | Frontend Logic | P2 | Notification bell has no click handler | ✅ Now navigates to notifications page |
-| BUG-FE-059 | Frontend Logic | P2 | Landing page legal links point to `#` | ✅ Updated to real locale-aware legal paths |
-| BUG-AUTH-011 | Auth / Session | P1 | Settings logout only clears local state, no server-side revocation | ✅ Uses `useLogout` hook that calls `/api/auth/logout` |
-| BUG-I18N-001 | Frontend Logic | P1 | Locale detection disabled in middleware | ✅ Middleware uses dynamic `localePattern` from config |
-| BUG-I18N-002 | Frontend Logic | P1 | Login redirects to unprefixed `/dashboard` | ✅ Uses locale-aware `router.push(callbackUrl)` |
-| BUG-I18N-003 | Frontend Logic | P1 | Scheduled-transfers uses raw `/transfer` anchors | ✅ Changed to locale-aware `<Link>` from `@/lib/navigation` |
-| BUG-I18N-004 | Frontend Logic | P1 | Backoffice fraud/KYC detail pages use unprefixed router | ✅ Import `useRouter` from `@/lib/navigation` |
-| BUG-I18N-005 | Frontend Logic | P1 | Missing i18n keys for auth.loginSuccess and merchant namespace | ✅ Added `auth.loginSuccess` + full `merchant.*` namespace to en.json and id.json |
-| BUG-I18N-006 | Frontend Logic | P1 | Merchant pages not localized | ✅ merchant/page.tsx rewritten with `useTranslations('merchant')` |
-| BUG-I18N-007 | Frontend Logic | P1 | Settings page renders fixed Indonesian under all locales | ✅ Uses `useTranslations('settings')` |
-| BUG-I18N-008 | Frontend Logic | P2 | E2E specs assert default-locale text | ✅ Playwright tests already use English locale; assertions pass 544/544 |
-| BUG-TEST-001 | Test Coverage / Quality | P1 | Analytics unit tests call old handler signatures | ✅ Updated with mock Request + ApiResponse assertions |
-| BUG-TEST-002 | Test Coverage / Quality | P1 | Analytics E2E tests assert flat JSON vs wrapped envelopes | ✅ Fixed syntax error (duplicate `top_merchants=` key) |
-| BUG-TEST-003 | Test Coverage / Quality | P1 | Statement blackbox test accepts broad error codes | ✅ Tightened assertions; 500 documented as backend NotFoundException gap |
-| BUG-TEST-004 | Test Coverage / Quality | P1 | Gateway smoke test accepts 500 for wallet routing | ✅ Removed 500 from wallet routing assertion |
-| BUG-TEST-005 | Test Coverage / Quality | P1 | Analytics blackbox tests assert 404 (not routed through gateway) | ✅ Added clear docstrings explaining expected 404 |
-
-### Audit Notes
-
-- **All 34 bugs from the March 16 deep audit have been CLOSED in Phase 3.**
-- Playwright inventory: `18` spec files, 544 tests, all passing.
-- Pytest blackbox: 20+ test files, 159 tests, all passing.
-- Backend build: 38/38 modules SUCCESS.
-- Frontend build: Next.js 16 compiled successfully with all i18n keys resolved.
-- Remaining 18 open stories (TEST-WEB-001 – TEST-WEB-018) are enhancement stories for deeper stateful E2E coverage, not bugs.
+| Key | Area | Severity | Summary | Evidence | Impact | Status |
+| :-- | :--- | :------: | :------ | :------- | :----- | :----- |
+| BUG-BE-152 | Backend Logic | P0 | Disbursement APIs trust caller-supplied `X-Account-Id`, generate random fallback account IDs, and expose get-by-id/get-by-idempotency-key without ownership checks | `backend/transaction-service/src/main/java/id/payu/transaction/adapter/web/DisbursementController.java:49`, `backend/transaction-service/src/main/java/id/payu/transaction/adapter/web/DisbursementController.java:72`, `backend/transaction-service/src/main/java/id/payu/transaction/adapter/web/DisbursementController.java:96` | Any authenticated caller can create/list/read another account's disbursements or operate against a fake random account context | 📋 To Do |
+| BUG-BE-153 | Backend Logic | P0 | Disbursement balance reservations are never committed or released because reservation IDs are discarded before completion/failure | `backend/transaction-service/src/main/java/id/payu/transaction/application/service/DisbursementService.java:97`, `backend/transaction-service/src/main/java/id/payu/transaction/application/service/DisbursementService.java:175`, `backend/transaction-service/src/main/java/id/payu/transaction/adapter/client/WalletRestAdapter.java:76`, `backend/transaction-service/src/main/java/id/payu/transaction/adapter/client/WalletGrpcAdapter.java:113` | Completed or failed payouts can leave user funds permanently reserved and corrupt wallet availability | 📋 To Do |
+| BUG-BE-154 | Backend Logic | P0 | Batch disbursement endpoints accept arbitrary source accounts and allow read/update/process by bare batch UUID without ownership enforcement | `backend/transaction-service/src/main/java/id/payu/transaction/dto/CreateBatchRequest.java:14`, `backend/transaction-service/src/main/java/id/payu/transaction/adapter/web/BatchDisbursementController.java:48`, `backend/transaction-service/src/main/java/id/payu/transaction/application/service/BatchDisbursementService.java:154` | Authenticated users can inspect or process another account's bulk payout batches if they know the account ID or batch UUID | 📋 To Do |
+| BUG-BE-155 | Backend Logic | P1 | `processBatch` marks a batch as processing but never publishes work to the Kafka topic that actually drives execution | `backend/transaction-service/src/main/java/id/payu/transaction/application/service/BatchDisbursementService.java:151`, `backend/transaction-service/src/main/java/id/payu/transaction/application/service/BatchDisbursementService.java:174` | Batch disbursements can stick indefinitely in `PROCESSING` with zero items executed | 📋 To Do |
+| BUG-AUTH-012 | Auth / Session | P1 | Cookie-restored sessions are not rehydrated into the client auth store, so authenticated routes can load with missing client identity/account state | `frontend/web-app/src/middleware.ts:67`, `frontend/web-app/src/app/providers.tsx:43`, `frontend/web-app/src/stores/authStore.ts:113`, `frontend/web-app/src/hooks/useSilentRefresh.ts:76` | Users can have a valid server session but lose mobile navigation, websocket initialization, and account-scoped data until they log in again locally | 📋 To Do |
+| BUG-CROSS-035 | Frontend-Backend Mismatch | P1 | Login flow stores JWT subject/user ID as `accountId`, causing account-scoped pages to call wallet/transaction APIs with the wrong identifier | `frontend/web-app/src/app/api/auth/login/route.ts:67`, `frontend/web-app/src/app/[locale]/login/page.tsx:89`, `frontend/web-app/src/app/[locale]/dashboard/page.tsx:61`, `frontend/web-app/src/app/[locale]/transactions/page.tsx:75` | Account-bound queries can return empty or incorrect data even when authentication succeeds | 📋 To Do |
+| BUG-FE-060 | Frontend Logic | P2 | Notifications inbox exposes mark-read, delete, and detail actions that are rendered but not wired to any handler | `frontend/web-app/src/app/[locale]/notifications/page.tsx:34`, `frontend/web-app/src/app/[locale]/notifications/page.tsx:70`, `frontend/web-app/src/app/[locale]/notifications/page.tsx:154` | The inbox looks interactive but cannot mutate or drill into notification state | 📋 To Do |
+| BUG-FE-061 | Frontend Logic | P1 | Security page is largely decorative: biometric/session lockdown controls never call the available mutation hooks | `frontend/web-app/src/hooks/useBiometric.ts:24`, `frontend/web-app/src/app/[locale]/security/page.tsx:68`, `frontend/web-app/src/app/[locale]/security/page.tsx:121` | Users are presented with critical security controls that do not actually change backend or device state | 📋 To Do |
+| BUG-FE-062 | Frontend Logic | P1 | Analytics page falls back to fabricated demo financial metrics whenever live analytics data is absent | `frontend/web-app/src/app/[locale]/analytics/page.tsx:31`, `frontend/web-app/src/hooks/useAnalytics.ts:7` | Users can be shown invented income/expense/savings insights unrelated to their account | 📋 To Do |
+| BUG-FE-063 | Frontend Logic | P1 | Pockets page mixes real wallet data with hard-coded goals and shared-pocket collaboration state | `frontend/web-app/src/app/[locale]/pockets/page.tsx:203`, `frontend/web-app/src/app/[locale]/pockets/page.tsx:471`, `frontend/web-app/src/app/[locale]/pockets/page.tsx:593` | The page can present fabricated balances, targets, and collaboration details beside live data, undermining trust | 📋 To Do |
+| BUG-FE-064 | Frontend Logic | P2 | Transactions summary cards stay hard-coded at zero even when real transaction lists are loaded | `frontend/web-app/src/app/[locale]/transactions/page.tsx:80`, `frontend/web-app/src/app/[locale]/transactions/page.tsx:147` | Users see incorrect income/expense/pending/completed totals despite having real transaction history | 📋 To Do |
+| BUG-INFRA-001 | Infrastructure / OpenShift | P1 | Staging/prod overlays never override base `payu-dev` image references | `infrastructure/openshift/overlays/staging/kustomization.yaml`, `infrastructure/openshift/overlays/prod/kustomization.yaml`, `infrastructure/openshift/base/account-service.yaml`, `infrastructure/openshift/base/gateway-service.yaml`, `infrastructure/openshift/base/web-app.yaml` | Higher environments can deploy the wrong image provenance or fail pulls if dev tags are missing | 📋 To Do |
+| BUG-INFRA-002 | Infrastructure / OpenShift | P1 | Base manifests hardcode dev DNS/public URLs and staging/prod overlays do not retarget them | `infrastructure/openshift/base/account-service.yaml`, `infrastructure/openshift/base/auth-service.yaml`, `infrastructure/openshift/base/gateway-service.yaml`, `infrastructure/openshift/base/web-app.yaml`, `infrastructure/openshift/overlays/staging/kustomization.yaml`, `infrastructure/openshift/overlays/prod/kustomization.yaml` | Staging/prod deployments can talk to dev services or expose dev-facing URLs, breaking environment isolation | 📋 To Do |
+| BUG-INFRA-003 | Infrastructure / OpenShift | P1 | Staging/prod secret and configmap names do not match the resources referenced by workloads | `infrastructure/openshift/base/account-service.yaml`, `infrastructure/openshift/base/gateway-service.yaml`, `infrastructure/openshift/base/web-app.yaml`, `infrastructure/openshift/overlays/staging/secrets/secrets-template.yaml`, `infrastructure/openshift/overlays/prod/secrets/secrets-template.yaml`, `infrastructure/openshift/overlays/staging/config/configmaps.yaml`, `infrastructure/openshift/overlays/prod/config/configmaps.yaml` | Pods can fail env resolution or boot with missing configuration in non-dev environments | 📋 To Do |
+| BUG-INFRA-004 | Infrastructure / OpenShift | P2 | Staging replica-reduction patch and network-policy selectors target labels that workloads do not have | `infrastructure/openshift/overlays/staging/kustomization.yaml`, `infrastructure/openshift/base/network-policies.yaml`, `infrastructure/openshift/base/account-service.yaml` | Planned staging sizing and future network-policy enforcement are ineffective as written | 📋 To Do |
+| BUG-TEST-006 | Test Coverage / Quality | P1 | Notification black-box send tests use a stale payload shape and omit required `userId` | `tests/e2e_blackbox/test_notification_flow.py:25`, `backend/notification-service/src/main/java/id/payu/notification/dto/SendNotificationRequest.java:12` | Passing results cannot prove notification creation because the request contract is already invalid | 📋 To Do |
+| BUG-TEST-007 | Test Coverage / Quality | P1 | Billing black-box create flows still send stale DTOs for payment, top-up, and subscription-plan creation | `tests/e2e_blackbox/test_billing_flow.py:46`, `tests/e2e_blackbox/test_billing_flow.py:71`, `tests/e2e_blackbox/test_billing_flow.py:88`, `backend/billing-service/src/main/java/id/payu/billing/dto/CreatePaymentRequest.java:9`, `backend/billing-service/src/main/java/id/payu/billing/dto/TopUpRequest.java:6`, `backend/billing-service/src/main/java/id/payu/billing/dto/CreateSubscriptionPlanRequest.java:10` | Green black-box results do not validate the current billing contracts for core create flows | 📋 To Do |
+| BUG-TEST-008 | Test Coverage / Quality | P1 | Compliance black-box suite hard-codes expected 404s even though the controller and integration coverage exist | `tests/e2e_blackbox/test_compliance_flow.py:12`, `backend/compliance-service/src/main/java/id/payu/compliance/adapter/web/ComplianceAuditController.java:33`, `backend/compliance-service/src/test/java/id/payu/compliance/integration/ComplianceIntegrationTest.java:73` | Test passes normalize missing or broken deployment wiring instead of validating the implemented compliance API | 📋 To Do |
+| BUG-TEST-009 | Test Coverage / Quality | P1 | Complete-user-journey test encodes outdated payment and QRIS assumptions | `tests/e2e_blackbox/test_complete_user_journey.py:73`, `tests/e2e_blackbox/test_complete_user_journey.py:123`, `backend/gateway-service/src/main/resources/application.yaml:466`, `backend/transaction-service/src/main/java/id/payu/transaction/dto/ProcessQrisPaymentRequest.java:9` | A green journey test no longer proves the live payment/QRIS contracts are correct | 📋 To Do |
 
 ---
 
 ## 📊 Metrics
 
-### Completed Summary
+### Current State
 
-| Metric            | Value                                        |
-| :---------------- | :------------------------------------------- |
-| Completed Epics   | 24 fully done (see PROGRESS.md)              |
-| Completed Stories | 86 done + 18 new audit stories open          |
-| Completed SP      | 265/265                                      |
-| Completion Rate   | Phase 3 complete — 0 open bugs               |
-| Bugs Fixed        | 263 done, 0 open, 4 Won't Do                 |
-| Tech Debt         | 3/3 completed (SIMP-001, SIMP-002, SIMP-003) |
+| Metric            | Value                                            |
+| :---------------- | :----------------------------------------------- |
+| Completed Epics   | 24/24 fully done (see PROGRESS.md)               |
+| Completed Stories | 86 done + 21 open audit stories                  |
+| Completed SP      | 265/265                                          |
+| Bugs Fixed        | 267 done + 4 Won't Do (archived to CHANGELOG)    |
+| Open Bugs         | 19 (from parallel March 16 audit)                |
+| Tech Debt         | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)    |
 
 ---
 
-_Last Updated: March 16, 2026 | 0 Active Epics · 18 Open Stories · 0 Open Bugs · 0 Tech Debt · 5 Spikes · 9 Deferred_
-_Phase 3 Bug Fixes: ✅ COMPLETE (34/34 bugs closed) — March 16, 2026_
+_Last Updated: March 16, 2026 | 0 Active Epics · 21 Open Stories · 19 Open Bugs · 0 Tech Debt · 5 Spikes · 9 Deferred_
+_Closed bugs (267 fixed + 4 Won't Do + 34 Phase 3 closures) archived to CHANGELOG.md_
+_Phase 3 Bug Fixes: ✅ COMPLETE (34/34 closed) — March 16, 2026_
 _Phase 2 Gateway Gaps: ✅ COMPLETE (GAP-001, GAP-002, GAP-006, GAP-007) — March 16, 2026_
 _Phase 1 E2E Stabilization: ✅ COMPLETE (544 Playwright + 159 Pytest = 703 tests, 0 failures) — March 15, 2026_
 _Partners: TokoBapak, Nobar, Dolan, Sinau, Maca_
