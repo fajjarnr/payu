@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: docker.io/library/postgres:16-alpine
+    image: docker.io/library/postgres:17-alpine
     container_name: payu-postgres
     command: postgres -c max_connections=300 -c shared_buffers=256MB
     podman_networks:
@@ -21,7 +21,7 @@ services:
       retries: 5
       start_period: 10s
   redis:
-    image: docker.io/library/redis:7-alpine
+    image: docker.io/library/redis:7.4-alpine
     container_name: payu-redis
     podman_networks:
       - name: payu-network
@@ -36,7 +36,7 @@ services:
       retries: 3
       start_period: 5s
   kafka:
-    image: docker.io/confluentinc/cp-kafka:7.7.1
+    image: docker.io/confluentinc/cp-kafka:7.8.7
     container_name: payu-kafka
     podman_networks:
       - name: payu-network
@@ -83,7 +83,7 @@ services:
     depends_on:
       - kafka
   vault:
-    image: docker.io/hashicorp/vault:1.15
+    image: docker.io/hashicorp/vault:1.21
     container_name: payu-vault
     podman_networks:
       - name: payu-network
@@ -109,7 +109,7 @@ services:
       retries: 3
       start_period: 5s
   keycloak:
-    image: quay.io/keycloak/keycloak:26.1
+    image: quay.io/keycloak/keycloak:26.5
     container_name: payu-keycloak
     podman_networks:
       - name: payu-network
@@ -176,8 +176,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - dukcapil-simulator
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -233,7 +231,6 @@ services:
     depends_on:
       - postgres
       - keycloak
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -283,7 +280,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -330,7 +326,6 @@ services:
     depends_on:
       - postgres
       - kafka
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -796,7 +791,6 @@ services:
     depends_on:
       - redis
       - keycloak
-      - jaeger
     healthcheck:
       test:
         - CMD
@@ -1435,7 +1429,7 @@ services:
       start_period: 20s
     image: localhost/payu-web-app:1.4.0
   jaeger:
-    image: docker.io/jaegertracing/all-in-one:1.58
+    image: docker.io/jaegertracing/all-in-one:1.76.0
     container_name: payu-jaeger
     podman_networks:
       - name: payu-network
@@ -1467,7 +1461,7 @@ services:
       retries: 3
       start_period: 120s
   prometheus:
-    image: docker.io/prom/prometheus:v2.54.1
+    image: docker.io/prom/prometheus:v2.55.1
     container_name: payu-prometheus
     podman_networks:
       - name: payu-network
@@ -1497,7 +1491,7 @@ services:
       retries: 3
       start_period: 120s
   loki:
-    image: docker.io/grafana/loki:2.9.10
+    image: docker.io/grafana/loki:3.5.12
     container_name: payu-loki
     podman_networks:
       - name: payu-network
@@ -1520,7 +1514,7 @@ services:
       retries: 3
       start_period: 120s
   promtail:
-    image: docker.io/grafana/promtail:2.9.10
+    image: docker.io/grafana/promtail:3.5.12
     container_name: payu-promtail
     podman_networks:
       - name: payu-network
@@ -1532,7 +1526,7 @@ services:
     depends_on:
       - loki
   grafana:
-    image: docker.io/grafana/grafana:11.1.4
+    image: docker.io/grafana/grafana:11.6.13
     container_name: payu-grafana
     podman_networks:
       - name: payu-network
@@ -1561,7 +1555,7 @@ services:
       retries: 3
       start_period: 120s
   alertmanager:
-    image: docker.io/prom/alertmanager:v0.27.0
+    image: docker.io/prom/alertmanager:v0.31.1
     container_name: payu-alertmanager
     podman_networks:
       - name: payu-network
