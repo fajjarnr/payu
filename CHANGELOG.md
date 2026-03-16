@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Skill Reference Sync — 21 Lessons into 8 Skill Files (2026-03-16)**:
+  - Synced all 21 lessons (L-001 through L-021) into 8 `.agent/skills/*/references/*.md` files.
+  - `INFRASTRUCTURE_PATTERNS.md` — Added L-002 (Podman gotchas), L-004 (UBI9 Python), L-005 (quadlet networking), L-006 (KRaft migration), L-007 (PG connection pooling), L-014 (Podman compose HA); enhanced L-001 with UBI9 gotchas.
+  - `DEPLOYMENT_PATTERNS.md` — Added L-003 (domain migration patterns).
+  - `BACKEND_PATTERNS.md` — Added L-008 (Hexagonal starter wiring), L-009 (outbox + webhook), L-010 (multi-tenant entity), L-011 (Flyway migration ordering), L-018 (idempotency architecture); fixed `com.payu` → `id.payu`.
+  - `API_STANDARDS.md` — Added L-009 (webhooks), L-018 (idempotency architecture).
+  - `EVENT_DRIVEN_PATTERNS.md` — Added L-012 (CloudEvents deserialization), L-013 (Kafka type mapping); fixed stale Zookeeper → KRaft.
+  - `SECURITY_PATTERNS.md` — Added L-015 (IDOR pattern), L-016 (BFF SSRF).
+  - `FRONTEND_PATTERNS.md` — Added L-016 (BFF whitelist), L-017 (i18n middleware), L-020 (SilentRefresh).
+  - `TESTING_PATTERNS.md` — Added L-019 (E2E resilience patterns).
+
 - **Lessons Learned — 7 New Patterns from Phase 1–4 (2026-03-16)**:
   - L-015: IDOR vulnerability pattern — duplicated `extractUserId()` across controllers, need shared `SecurityContextUtils`
   - L-016: BFF path whitelist — silent 400 on new backend routes when prefix not added
@@ -29,6 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Total bug history: 267 fixed + 4 Won't Do + 19 open = 290 tracked.
 
 ### Identified
+
+- **Deep Audit Addendum - 182 New Findings Logged (2026-03-16)**:
+  - Added a detailed deep-audit addendum at `docs/roadmap/DEEP_AUDIT_2026-03-16.md` and linked it from `docs/roadmap/TODOS.md`.
+  - New findings logged by area: Backend Logic (32), Frontend Logic (38), Auth / Session (19), Frontend-Backend Mismatch (35), Infrastructure / OpenShift (34), Test Coverage / Quality (24).
+  - Open bug backlog updated to reflect the combined inventory from the original open list plus the deep-audit addendum.
 
 - **Parallel Re-Audit — 19 New Bugs Discovered (2026-03-16)**:
   - Deeper parallel audit discovered 19 additional issues beyond the 34 closed in Phase 3.

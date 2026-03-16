@@ -7,20 +7,21 @@
 
 ---
 
-## ✅ Platform Status (Feb 2026)
+## ✅ Platform Status (Mar 2026)
 
-> **Deployment**: 🟢 22/22 services live on OpenShift | **E2E Tests**: 🟢 399/399 pass
+> **Deployment**: 🟢 22/22 services live on OpenShift | **E2E Tests**: 🟢 703/703 pass (544 Playwright + 159 Pytest)
 >
-> ⚠️ **Code Review Status (Feb 24, 2026)**: ~117 bugs teridentifikasi dari deep code review.
-> Scorecard infra/deployment tetap green, tapi logic correctness & security perlu perbaikan.
-> Gateway readiness untuk integrasi TokoBapak/Nobar: 5 P0 gaps belum diimplementasikan.
+> ✅ **All 4 P0 Gateway Gaps Closed (Mar 16)**: GAP-001 Webhooks, GAP-002 Multi-Tenancy, GAP-006 Idempotency, GAP-007 Escrow — all implemented and E2E verified.
+> ⚠️ **Open Bug Backlog**: 240 items (58 from parallel audit + 182 from deep audit addendum). See `TODOS.md` + `DEEP_AUDIT_2026-03-16.md`.
+> ✅ **Phase 1–5 Complete**: E2E stabilization, gateway gaps, bug fixes, backlog hygiene, lessons learned, skill sync.
 >
 > **Dokumen Roadmap (split Feb 24)**:
 >
 > - **Bug backlog & open items**: `docs/roadmap/TODOS.md`
+> - **Deep audit addendum (182 findings)**: `docs/roadmap/DEEP_AUDIT_2026-03-16.md`
 > - **Deployment history & scorecard**: `docs/roadmap/PROGRESS.md`
 > - **Gateway architecture & gap analysis**: `docs/roadmap/GATEWAY_ARCH.md`
-> - **Implementation patterns**: `docs/guides/LESSONS.md`
+> - **Implementation patterns (21 lessons)**: `docs/guides/LESSONS.md`
 > - **Architecture**: `docs/architecture/ARCHITECTURE.md`
 
 ---
@@ -37,7 +38,7 @@
 | **Type**              | Core Banking & Payment Gateway Platform             |
 | **Architecture**      | Scalable Microservices + Event-Driven + Hexagonal   |
 | **Primary Languages** | Java 21, Python 3.12, TypeScript                    |
-| **Last Updated**      | February 24, 2026                                   |
+| **Last Updated**      | March 16, 2026                                      |
 | **Key Integrations**  | TokoBapak (e-commerce escrow), Nobar (subscription) |
 | **Gateway Standard**  | SNAP-BI (Bank Indonesia API Standard)               |
 
@@ -58,7 +59,7 @@
 | File                           | Tujuan                                                  |
 | :----------------------------- | :------------------------------------------------------ |
 | `docs/INDEX.md`                | Doc map & navigation hub                                |
-| `docs/roadmap/TODOS.md`        | **Bug backlog & open items** (~117 bugs, P0-P3)         |
+| `docs/roadmap/TODOS.md`        | **Bug backlog & open items** (240 bugs, P0-P3)          |
 | `docs/roadmap/PROGRESS.md`     | Deployment history, scorecard, DORA metrics             |
 | `docs/roadmap/GATEWAY_ARCH.md` | **Gateway architecture** — gap analysis TokoBapak/Nobar |
 | `docs/guides/LESSONS.md`       | Implementation patterns & lessons learned               |
@@ -81,7 +82,7 @@
 | **Caching**             | Red Hat Data Grid (RESP mode)      | Redis, ElastiCache   |
 | **Event Streaming**     | AMQ Streams (Kafka)                | Apache Kafka         |
 | **Message Queue**       | AMQ Broker (Artemis)               | ActiveMQ Artemis     |
-| **Identity**            | Red Hat SSO (Keycloak 24+)         | Keycloak, Auth0      |
+| **Identity**            | Red Hat Build of Keycloak 26.1     | Keycloak, Auth0      |
 | **Logging**             | OpenShift Logging (LokiStack)      | Grafana Loki         |
 | **Monitoring**          | OpenShift Monitoring               | Prometheus/Grafana   |
 | **Developer Hub**       | Red Hat Developer Hub              | Backstage.io (CNCF)  |
@@ -95,7 +96,7 @@
 | `auth-service`         | Spring Boot 3.4    | Authentication, Risk-based MFA, Biometrics       |
 | `transaction-service`  | Spring Boot 3.4    | Transfers, BI-FAST, QRIS, Sharding               |
 | `wallet-service`       | Spring Boot 3.4    | Double-entry ledger, balance management          |
-| `investment-service`   | Spring Boot 3.4    | Mutual funds, Gold, Robo-advisory                |
+| `investment-service`   | Spring Boot 3.4    | Mutual funds, Gold, Portfolio view               |
 | `lending-service`      | Spring Boot 3.4    | Loans, PayLater, Credit Scoring                  |
 | `fx-service`           | Spring Boot 3.4    | Currency exchange rates & conversion             |
 | `statement-service`    | Spring Boot 3.4    | PDF E-Statement generation                       |
@@ -108,20 +109,28 @@
 | `notification-service` | Quarkus 3.x Native | Push, SMS, Email, WhatsApp                       |
 | `gateway-service`      | Quarkus 3.x Native | API Gateway, Rate limiting                       |
 | `cms-service`          | Spring Boot 3.4    | Banners, Promos, Dynamic Content                 |
-| `ab-testing-service`   | Spring Boot 3.4    | UI/Feature experimentation ⚠️ **Kandidat hapus** |
 | `api-portal-service`   | Quarkus 3.x Native | Centralized OpenAPI Docs & Sandbox               |
 | `kyc-service`          | Python FastAPI     | OCR, Liveness Detection                          |
 | `analytics-service`    | Python FastAPI     | Fraud Scoring, User Insights                     |
 
 ### Shared Libraries (backend/shared/)
 
-| Library              | Purpose                                         |
-| :------------------- | :---------------------------------------------- |
-| `security-starter`   | Field encryption, Data masking, Audit logging   |
-| `resilience-starter` | Circuit Breaker, Retry, Bulkhead (Resilience4j) |
-| `cache-starter`      | Multi-layer caching (Redis + Caffeine)          |
+| Library               | Purpose                                            |
+| :-------------------- | :------------------------------------------------- |
+| `security-starter`    | Field encryption, Data masking, Audit logging      |
+| `resilience-starter`  | Circuit Breaker, Retry, Bulkhead (Resilience4j)    |
+| `cache-starter`       | Multi-layer caching (Redis + Caffeine)             |
+| `saga-starter`        | Saga orchestration with compensation               |
+| `outbox-starter`      | Transactional outbox pattern for event publishing  |
+| `events-starter`      | CloudEvents envelope, Kafka producer/consumer      |
+| `grpc-starter`        | gRPC interceptors, proto types, channel management |
+| `rest-client-starter` | Spring RestClient with Resilience4j                |
+| `mapper-starter`      | MapStruct compile-time entity-domain mapping       |
+| `archunit-starter`    | ArchUnit rules for hexagonal architecture          |
+| `logging-starter`     | Structured logging, MDC, TraceIdFilter             |
+| `api-commons`         | Shared DTOs, ApiResponse envelope, error codes     |
 
-Other shared modules: `api-commons`, `archunit-starter`, `events-starter`, `outbox-starter`, `saga-starter`, `flyway` (see `backend/shared/`).
+Other modules: `flyway` (see `backend/shared/`).
 
 ---
 
@@ -147,13 +156,23 @@ payu/
 │   ├── agents/           # Specialized Sub-agents (System-level prompts)
 │   ├── workflows/        # SOP for complex tasks (MUST READ BEFORE EXECUTION)
 │   └── resources/        # Shared assets (shadcn components, templates)
-├── backend/             # Microservices implementation (22 microservices)
-│   ├── shared/          # Shared Spring Boot starters
+├── backend/             # Microservices implementation (21 microservices)
+│   ├── shared/          # Shared Spring Boot starters (12 modules)
 │   │   ├── security-starter/    # PII encryption, audit logging
 │   │   ├── resilience-starter/  # Circuit breaker, retry, bulkhead
-│   │   └── cache-starter/       # Multi-layer caching
+│   │   ├── cache-starter/       # Multi-layer caching
+│   │   ├── saga-starter/        # Saga orchestration
+│   │   ├── outbox-starter/      # Transactional outbox
+│   │   ├── events-starter/      # CloudEvents, Kafka
+│   │   ├── grpc-starter/        # gRPC infrastructure
+│   │   ├── rest-client-starter/ # REST client with resilience
+│   │   ├── mapper-starter/      # MapStruct mapping
+│   │   ├── archunit-starter/    # Architecture governance
+│   │   ├── logging-starter/     # Structured logging
+│   │   └── api-commons/         # Shared DTOs, ApiResponse
 │   ├── simulators/      # External service mocks
 │   │   ├── bi-fast-simulator/   # BI-FAST mock
+│   │   ├── biller-simulator/    # Biller mock (PLN, PDAM, Telco)
 │   │   ├── dukcapil-simulator/  # Dukcapil mock
 │   │   └── qris-simulator/      # QRIS mock
 │   └── [services]/      # Individual service implementations
@@ -530,4 +549,4 @@ _Usage_: When tasked with complex refactoring or multi-service updates, read the
 
 ---
 
-_Last Updated: 2026-02-24 | Platform: Payment Gateway for TokoBapak & Nobar | Active Bug Count: ~117 (see TODOS.md)_
+_Last Updated: 2026-03-16 | Platform: Payment Gateway for TokoBapak & Nobar | Active Bug Count: 240 (58 audit + 182 deep-audit — see TODOS.md)_

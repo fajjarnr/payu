@@ -12,7 +12,7 @@
 | :----------------------- | :--------------------------------------- |
 | **Last Status Update**   | March 16, 2026                           |
 | :----------------------- | :--------------------------------------- |
-| **Production Readiness** | 93% (267 bugs fixed, 4 Won't Do, 19 open from parallel audit) |
+| **Production Readiness** | 88% (267 bugs fixed, 4 Won't Do, 240 open: 58 audit + 182 deep-audit) |
 | **OpenShift Tag**        | `v1.6.0`                                 |
 | **Namespace**            | `payu-dev`                               |
 | **Total Pods**           | 36/36 running                            |
@@ -23,13 +23,16 @@
 | **Maven Build**          | 38/38 modules SUCCESS                    |
 | **Kafka Mode**           | KRaft (no Zookeeper)                     |
 
+> ✅ **Phase 5 Skill Sync Complete (Mar 16)**: Synced 21 lessons into 8 skill reference files, fixed stale references (Zookeeper→KRaft, com.payu→id.payu).
+> ✅ **Phase 4 Backlog Hygiene Complete (Mar 16)**: Archived 34 closed + 4 Won't Do bugs. Added 7 lessons (L-015 to L-021). Deep audit addendum: 182 new findings logged.
 > ✅ **Phase 3 Bug Fixes Complete (Mar 16)**: All 34 bugs from March 16 deep audit CLOSED. Backend 38/38 SUCCESS, Frontend build SUCCESS, Playwright 544/544, Pytest 159/159.
-> ⚠️ **Parallel Re-Audit (Mar 16)**: Deeper audit discovered 19 new bugs (3 P0 backend, 5 P1-P2 frontend, 1 cross-service, 1 auth, 4 infra, 4 test quality). Tracked in `TODOS.md`.
+> ⚠️ **Parallel Re-Audit (Mar 16)**: Deeper parallel audit discovered 19 new bugs (3 P0 backend, 5 P1-P2 frontend, 1 cross-service, 1 auth, 4 infra, 4 test quality). Tracked in `TODOS.md`.
+> ⚠️ **Deep Audit Addendum (Mar 16)**: 182 additional findings across 6 areas. See `DEEP_AUDIT_2026-03-16.md`.
 > ✅ **Phase 2 Gateway Gaps Complete (Mar 16)**: All 4 P0 gateway gaps implemented (GAP-001, GAP-002, GAP-006, GAP-007). E2E regression: 544 Playwright + 159 Pytest = 703 tests, 0 failures.
 > ✅ **Phase 1 E2E Stabilization Complete (Mar 15)**: All E2E failures resolved. 544 Playwright + 159 Pytest blackbox tests passing with 0 failures, 0 skips.
 > ✅ **Code Review Complete (Feb 24-25)**: 229 of ~232 bugs fixed (~99% resolution rate).
-> **19 open bugs** remaining from parallel audit. 267 fixed + 4 Won't Do archived to CHANGELOG.
-> Lihat `TODOS.md` untuk detail.
+> **240 open bugs** remaining (58 from parallel audit + 182 from deep audit addendum). 267 fixed + 4 Won't Do archived to CHANGELOG.
+> Lihat `TODOS.md` + `DEEP_AUDIT_2026-03-16.md` untuk detail.
 
 ---
 
@@ -41,7 +44,7 @@
 | **Shared Libraries** | 10%    | 7/7 starters       | BUG-BE-091 skip (rate limit burst — acceptable) |
 | **Frontend Web-App** | 15%    | Deployed & running | ✅ All cross-service issues resolved            |
 | **Frontend Mobile**  | 5%     | Expo setup only    | Deferred                                        |
-| **Testing**          | 15%    | 399/399 E2E pass   | ✅ Auth test gaps closed (useSilentRefresh)     |
+| **Testing**          | 15%    | 703/703 E2E pass   | ✅ 544 Playwright + 159 Pytest (local)          |
 | **Security**         | 10%    | JWT + OIDC active  | ✅ BUG-BE-001 fixed (nimbus-jose-jwt)           |
 | **Infrastructure**   | 10%    | OpenShift HA       | HPA + PDB for all critical services             |
 
@@ -72,6 +75,26 @@
 ---
 
 ## 📦 Deployment Log
+
+### v1.6.3 (Completed) — March 16, 2026
+
+**Phase 4 — Backlog Hygiene & Lessons Learned:**
+
+- ✅ **Backlog Hygiene**: Archived 34 closed bugs + 4 Won't Do items from `TODOS.md` to `CHANGELOG.md`. Simplified bug scorecard to 19 open (parallel audit).
+- ✅ **Lessons Learned**: Added 7 new implementation patterns (L-015 through L-021) to `docs/guides/LESSONS.md` — IDOR, BFF whitelist, i18n, idempotency, E2E resilience, SilentRefresh, backlog hygiene.
+- ✅ **Deep Audit Addendum**: Logged 182 new findings across 6 areas in `docs/roadmap/DEEP_AUDIT_2026-03-16.md`. Open backlog expanded from 19 to 240 bugs.
+
+**Phase 5 — Skill Reference Sync:**
+
+- ✅ **Skill Sync**: Synced all 21 lessons into 8 `.agent/skills/*/references/*.md` files — INFRASTRUCTURE, DEPLOYMENT, BACKEND, API, EVENT_DRIVEN, SECURITY, FRONTEND, TESTING patterns.
+- ✅ **Stale Reference Fixes**: Fixed `com.payu` → `id.payu` in BACKEND_PATTERNS.md, Zookeeper → KRaft in EVENT_DRIVEN_PATTERNS.md.
+
+**Phase 6 — Documentation Update:**
+
+- ✅ **GEMINI.md / AGENTS.md**: Updated platform status (Feb→Mar 2026), test counts (399→703), bug count (~117→240), removed ab-testing-service, expanded shared libraries table (3→12), updated Keycloak version (24+→26.1), removed robo-advisory from investment-service, added deep audit addendum reference.
+- ✅ **PROGRESS.md**: Added Phase 4-6 milestone entries, updated scorecard.
+- ✅ **CHANGELOG.md**: Added skill sync entry under `[Unreleased]`.
+- ✅ **TODOS.md + DEEP_AUDIT**: Committed expanded 240-bug backlog from prior session.
 
 ### v1.6.2 (Completed) — March 16, 2026
 
@@ -355,7 +378,7 @@ Data Layer:
 
 | Layer        | Framework         | Status                               |
 | :----------- | :---------------- | :----------------------------------- |
-| E2E (OCP)    | Playwright        | ✅ 399/399                               |
+| E2E (OCP)    | Playwright        | ✅ 399/399 (historical)                      |
 | E2E (Local)  | Playwright        | ✅ 544 pass, 0 fail                      |
 | E2E (Local)  | Pytest Blackbox   | ✅ 159 pass, 0 skip, 0 fail              |
 | Performance  | Gatling           | ✅ Configured                        |
