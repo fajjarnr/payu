@@ -349,4 +349,172 @@ Local development with 22+ microservices, Postgres, Kafka, and large ML-based im
 
 ---
 
-_Last Updated: March 15, 2026_
+### L-015: IDOR Vulnerability Pattern — Duplicated `extractUserId()` Across Controllers
+
+**Date**: March 16, 2026 | **Severity**: Critical | **Domain**: Backend / Security
+
+Phase 3 closed 3 P0 IDOR bugs (BUG-BE-148, BUG-BE-149, BUG-BE-150) that all shared the same root cause: controllers accessing user-scoped resources without verifying ownership via the JWT subject claim.
+
+**The Pattern**: Every affected controller needed an `extractUserId()` method:
+
+```java
+private String extractUserId() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || !(auth.getPrincipal() instanceof Jwt)) {
+        throw new IllegalStateException("No valid JWT authentication found");
+    }
+    Jwt jwt = (Jwt) auth.getPrincipal();
+    return jwt.getSubject();
+}
+```
+
+This was copy-pasted into `ScheduledTransferController`, `SplitBillController`, `WalletController`, `TransactionController`, and `PaymentController`. Each has slightly different error handling (some throw, some return null), creating a consistency hazard.
+
+**Three Sub-Patterns Emerged**:
+1. **Direct comparison**: `if (!accountId.equals(userId)) throw AccessDeniedException`
+2. **Fetch-then-compare**: Load resource, check `response.getSenderAccountId().equals(userId)`
+3. **Dedicated security service**: `SplitBillSecurityService.isOwner(id, userId)` — best pattern for complex ownership rules
+
+**Rule**: Every controller endpoint accessing user-scoped resources MUST verify ownership via JWT subject BEFORE any data retrieval or mutation. Extract a shared `SecurityContextUtils.extractAuthenticatedUserId()` into `security-starter` to prevent copy-paste divergence. The method must throw `AccessDeniedException`, never return null.
+
+---
+
+### L-016: BFF Path Whitelist — Silent 400 on New Backend Routes
+
+**Date**: March 16, 2026 | **Severity**: High | **Domain**: Frontend / BFF
+
+BUG-FE-047 revealed that the BFF proxy (`frontend/web-app/src/app/api/v1/[...path]/route.ts`) uses an explicit `ALLOWED_PATH_PREFIXES` array. When backend services add new API paths, the BFF silently returns 400 because the new prefix isn't whitelisted.
+
+**Two-Layer SSRF Defense**:
+1. **Path sanitization**: Per-segment validation rejects `..`, control chars, encoded traversals
+2. **Prefix whitelist**: `fullPath.startsWith(prefix + '/')` — the trailing `/` prevents `/api/v1/accountsEvil` from matching `/api/v1/accounts`
+
+**Gotcha**: The whitelist must be manually updated whenever a new service path is added. Phase 3 added 6 missing prefixes (`cards`, `pockets`, `payments`, `topup`, `billers`, `biometric`).
+
+**Rule**: When adding a new backend API path prefix, ALWAYS add the corresponding prefix to `ALLOWED_PATH_PREFIXES` in the BFF route handler. Treat the BFF whitelist as a mandatory checklist item when onboarding a new service or domain. Validate using `startsWith(prefix + '/')` with trailing slash to prevent prefix overlap attacks.
+
+---
+
+### L-017: i18n Middleware — Locale Detection, Route Guarding, and Single Source of Truth
+
+**Date**: March 16, 2026 | **Severity**: High | **Domain**: Frontend / i18n
+
+Phase 3 closed 8 i18n bugs. Three key architectural decisions:
+
+**1. Config-driven locale pattern** — Build regex dynamically from config:
+```typescript
+const localePattern = new RegExp(`^/(${locales.join('|')})`);
+```
+Source of truth: `i18n/config.ts` (single file, imported everywhere).
+
+**2. Disable automatic locale detection** — `localeDetection: false` in middleware. Auto-detection via `Accept-Language` was causing Indonesian banking app users with English browser locale to be redirected to `/en/dashboard` unexpectedly.
+
+**3. Segment-boundary route matching** — The original `publicRoutes.includes(path)` allowed `/login-debug` to bypass auth because it started with `/login`. Fixed to:
+```typescript
+pathWithoutLocale === route || pathWithoutLocale.startsWith(route + '/')
+```
+
+**4. Locale-aware navigation** — All route navigation must use `Link`, `useRouter`, `redirect` from `@/lib/navigation` (which wraps `next-intl/navigation`), never raw `next/navigation`. BUG-I18N-002 through BUG-I18N-007 were all unprefixed routes.
+
+**Rule**: (a) Define `locales` and `defaultLocale` in exactly one file and import everywhere. (b) Disable `localeDetection` when the default locale is contextually obvious. (c) Always use segment-boundary matching (`=== route` or `startsWith(route + '/')`) for route access control. (d) Import navigation primitives exclusively from `@/lib/navigation`, never from `next/navigation` directly.
+
+---
+
+### L-018: Gateway Idempotency — Shared `@Idempotent` Annotation with Redis Lua Locking
+
+**Date**: March 16, 2026 | **Severity**: High | **Domain**: Backend / Gateway
+
+Phase 2 implemented GAP-006 (global idempotency) as a shared starter in `api-commons`.
+
+**Architecture (5 layers)**:
+1. `@Idempotent(required = true)` annotation on mutation endpoints — returns 400 if `X-Idempotency-Key` header missing
+2. `IdempotencyInterceptor` (Spring MVC `HandlerInterceptor`) — auto-registered via `IdempotencyAutoConfiguration`
+3. `IdempotencyService` — SHA-256 fingerprints request body, detects key reuse with different payloads (`ConflictException: IDEMPOTENCY_KEY_REUSE`)
+4. `RedisIdempotencyRepository` — atomic Lua script for concurrent duplicate detection (`SETEX if not EXISTS`)
+5. State machine: `IN_PROGRESS` → `COMPLETED` / `FAILED` with 24-hour TTL
+
+**Key Design**: The fingerprint check catches accidental key reuse (different requests with same key), not just exact duplicates.
+
+**Known Gap**: The `ContentCachingResponseWrapper` in `storeSuccessfulResponse()` is a placeholder with a no-op `getContentAsByteArray()`. Successful responses are never actually cached — idempotency only works for error paths currently. This needs to be replaced with Spring's actual `ContentCachingResponseWrapper`.
+
+**Rule**: Use `@Idempotent(required = true)` on ALL payment/transfer/mutation POST endpoints. The key must be UUID v4. Use Redis Lua scripts for atomic lock acquisition. CRITICAL: Replace the placeholder response wrapper to cache successful responses, otherwise duplicate POSTs get processed twice.
+
+---
+
+### L-019: E2E Test Resilience — Separating Infrastructure Failures from Business Logic Failures
+
+**Date**: March 16, 2026 | **Severity**: High | **Domain**: Testing / Quality
+
+Phase 1 achieved 100% E2E pass rate (703 tests). Key patterns:
+
+**Pytest (Backend E2E)**:
+- `X-E2E-Test: true` header enables rate limit bypass server-side
+- Rate-limited responses (429/503) trigger `pytest.skip()`, not assertion failures
+- Login fixtures skip when auth service returns 401/502/503
+
+**Playwright (Frontend E2E)**:
+- Mock auth cookies (`accessToken`, `payu_session`) injected via `BrowserContext.addCookies()` to bypass middleware
+- `safeClick()` utility retries DOM interactions up to 3 times with 500ms backoff
+- `waitForPageStable()` helper prevents assertions against loading states
+
+**Critical Gotcha**: Accepting 500 alongside 200 in the same assertion (`in [200, 201, 400, 429, 500, 503]`) hides real bugs. A test that passes when the service returns 500 provides false confidence. The correct approach:
+- **Skip** on infra issues (429, 502, 503, 504) — service isn't available for testing
+- **Fail** on business logic errors (500, unexpected 400) — something is genuinely broken
+- **Pass** on expected statuses (200, 201, 204)
+
+**Rule**: (a) Send `X-E2E-Test: true` to bypass rate limiting; the gateway MUST reject this header in production. (b) Use `pytest.skip()` for infra unavailability (429/503), not assertion tolerance. (c) Never lump 500 and 200 in the same assertion — separate "infra down" from "logic broken". (d) Frontend E2E should use dedicated auth fixtures aligned with middleware cookie names.
+
+---
+
+### L-020: SilentRefreshProvider — Every Authenticated Route Needs Token Refresh
+
+**Date**: March 16, 2026 | **Severity**: High | **Domain**: Frontend / Auth
+
+BUG-FE-053 revealed that `SilentRefreshProvider` was only mounted in `dashboard/layout.tsx`. Users navigating directly to `/transfer` or `/settings` (not through dashboard) had no silent refresh running, causing mid-session 401 errors.
+
+**The Fix**: Wrap every authenticated route layout in `<SilentRefreshProvider>`:
+- `app/[locale]/dashboard/layout.tsx` (original)
+- `app/[locale]/transfer/layout.tsx` (Phase 3)
+- `app/[locale]/settings/layout.tsx` (Phase 3)
+- `app/[locale]/exchange/layout.tsx` (Phase 3)
+
+**Four Defensive Measures in `useSilentRefresh()`**:
+1. **Concurrency lock** (`isRefreshingRef`) — prevents parallel refresh calls
+2. **Ref mirror for reactive state** — `setTimeout` captures stale closure values; `useRef` always reads current `isAuthenticated`
+3. **Immediate refresh on mount** — if `tokenExpiresAt === null`, refresh immediately rather than waiting
+4. **Exponential backoff** — 2s, 4s, 8s, 16s, 32s, max 5 retries on failure
+
+**Stale Closure Gotcha**: `setTimeout` captures `isAuthenticated` from the render when the timer was set. If the user logs out before the callback fires, the captured value still says `true`. The `useRef` mirror solves this:
+```typescript
+const isAuthenticatedRef = useRef(isAuthenticated);
+useEffect(() => { isAuthenticatedRef.current = isAuthenticated; }, [isAuthenticated]);
+```
+
+**Rule**: (a) Wrap EVERY authenticated route layout in `<SilentRefreshProvider>`. (b) In hooks using `setTimeout`/`setInterval`, store reactive state in a `useRef` mirror — never read Zustand/React state directly inside timer callbacks. (c) Implement a concurrency lock to prevent parallel refresh calls. (d) Use exponential backoff with a retry cap (5 max) for refresh failures.
+
+---
+
+### L-021: Backlog Hygiene — Bug Count Integrity and Document Routing
+
+**Date**: March 16, 2026 | **Severity**: Medium | **Domain**: Process / Documentation
+
+Phase 4 backlog hygiene uncovered a data integrity issue: the bug scorecard said "12 open" but the actual bug table had **19** entries. Frontend Logic was undercounted (4 vs actual 5 bugs: BUG-FE-060 through BUG-FE-064).
+
+**Root Cause**: The scorecard was written from memory/estimation rather than counted from the actual table data. Multiple doc locations (scorecard, metrics, footer, CHANGELOG, PROGRESS) each had independent counts that diverged.
+
+**Document Routing Rules** (from AGENTS.md, reinforced by this experience):
+| Content | Target File |
+| :--- | :--- |
+| Bug backlog, open items, actionable todos | `docs/roadmap/TODOS.md` |
+| Deployment status, completed milestones | `docs/roadmap/PROGRESS.md` |
+| Architecture decisions, gap analysis | `docs/roadmap/GATEWAY_ARCH.md` |
+| Version changelog, archived closed items | `CHANGELOG.md` |
+| Implementation patterns, lessons learned | `docs/guides/LESSONS.md` |
+
+**TODOS.md Convention**: Only contains items NOT yet done. Completed items get archived to `CHANGELOG.md`. Won't Do items get archived with rationale.
+
+**Rule**: (a) Always count bug entries from the actual table data, never from memory. (b) When a count appears in multiple locations (scorecard, metrics, footer), update ALL of them atomically. (c) Completed/closed bugs must be moved out of `TODOS.md` into `CHANGELOG.md` — the backlog should only show open work.
+
+---
+
+_Last Updated: March 16, 2026_

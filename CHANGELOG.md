@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Lessons Learned — 7 New Patterns from Phase 1–4 (2026-03-16)**:
+  - L-015: IDOR vulnerability pattern — duplicated `extractUserId()` across controllers, need shared `SecurityContextUtils`
+  - L-016: BFF path whitelist — silent 400 on new backend routes when prefix not added
+  - L-017: i18n middleware — locale detection, segment-boundary route guarding, single source of truth
+  - L-018: Gateway idempotency — `@Idempotent` annotation with Redis Lua locking (known response caching gap)
+  - L-019: E2E test resilience — separating infra failures (skip) from logic failures (fail)
+  - L-020: SilentRefreshProvider — every authenticated route needs token refresh, stale closure defense
+  - L-021: Backlog hygiene — bug count integrity and document routing rules
+
 - **Backlog Hygiene — Archived completed bugs to CHANGELOG (2026-03-16)**:
   - Moved 34 Phase 3 closed bugs (BUG-BE-148 through BUG-TEST-005) from `TODOS.md` to CHANGELOG (already documented below).
   - Archived 4 Won't Do items (BUG-BE-061, BUG-BE-076, BUG-BE-080, BUG-BE-091) from `TODOS.md` — rationale: gamification removed (SIMP-002), sandbox not yet relevant, lending pre-approval inactive, rate limit burst acceptable for early traffic phase (superseded by IMP-005).
