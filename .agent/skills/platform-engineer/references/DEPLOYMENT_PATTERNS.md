@@ -44,6 +44,18 @@
 | P95 Latency | > 500ms | Immediate rollback |
 | Pod Restarts | > 2 | Immediate rollback |
 
+## 🌐 Domain Migration — Scope & Safe Replacement (L-003)
+
+When doing bulk domain replacement across a monorepo (156 files, ~400 matches):
+
+1.  **Order matters**: Replace most-specific patterns first (`staging-api.payu.id` before `payu.id`)
+2.  **Preserve intentionally different domains**: `payu.local` (mesh trust), `payu.internal` (internal DNS), `payu.test` (test data), Java packages (`id.payu.*`)
+3.  **Java code is mostly unaffected**: Domain references in Java are OpenAPI metadata and CORS — both overridden by OpenShift configmaps at deploy time
+4.  **Always verify with negative grep**: After replacement, confirm zero stray references remain
+
+*   **Regex used**: `sed 's/payu\.id/payu.fajjjar.my.id/g'` — safe because `id.payu` (Java packages) doesn't match `payu.id`
+*   **Rule**: Replace most-specific patterns first, preserve internal domains, and always run a negative grep sweep afterward.
+
 ## 🏗️ OpenShift Image Management
 *   **Internal Registry**: Pin images to internal registry with semver (e.g., `:1.0.0` NOT `:latest`).
 *   **Image Pinning Script**: Use `sed` to bulk update manifests from `:latest` to specific versions.

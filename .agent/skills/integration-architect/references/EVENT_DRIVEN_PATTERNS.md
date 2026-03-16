@@ -22,10 +22,40 @@
     ```
 *   **Benefits**: Automatic rollback (compensation) on intermediate step failure, uniform logging/monitoring.
 
+## 🗄️ Saga Infrastructure — `saga_instances` Table Requirement (L-013)
+
+Services including `saga-starter` automatically initialize `SagaRecoveryService`, which requires a local `saga_instances` table for state persistence. If this table is missing, the application will fail to start or crash during recovery cycles.
+
+**Symptoms**:
+*   Hibernate error: `Relation "saga_instances" does not exist`
+*   Service health check failing or 503 errors on dependent endpoints
+
+**Rule**: Every microservice using `saga-starter` MUST have a Flyway migration creating the `saga_instances` table. The schema must remain consistent across all services to ensure compatibility with the shared `saga-starter` entity mappings.
+
 ## ⚡ Kafka Recovery & Failover
 *   **Recovery Test**: Verify topic integrity and message consumption continuity after broker pod failure.
 *   **Strimzi Patterns**: Use MirrorMaker 2 (`KafkaMirrorMaker2`) for multi-region active-standby replication.
-*   **Sequential Startup**: Stop both Kafka and Zookeeper -> Start Zookeeper -> Wait -> Start Kafka to avoid `NodeExists` registration errors.
+*   **KRaft Mode**: PayU uses Kafka with KRaft (no Zookeeper). Startup is simplified — just start the Kafka broker. No Zookeeper coordination or `NodeExists` registration errors to worry about.
+
+## 🔄 Kafka Deserialization — Cross-Service Class Mismatch (L-012)
+
+When sharing events via Kafka between microservices with different package structures (e.g., `fx-service` publishing `id.payu.fx.adapter.messaging.FxRatesUpdatedEvent` consumed by `wallet-service`), the default Jackson deserializer fails with `ClassNotFoundException` because the FQCN in the message header doesn't exist in the consumer.
+
+**Fix**: Use `spring.json.type.mapping` in `application.yml`:
+```yaml
+spring:
+  kafka:
+    consumer:
+      properties:
+        spring.json.type.mapping: >-
+          id.payu.fx.adapter.messaging.FxRatesUpdatedEvent:id.payu.wallet.adapter.messaging.fx.FxRatesUpdatedEvent
+```
+
+**Alternatives**:
+*   Shared event library with identical package names (best for high-traffic event contracts)
+*   Use `spring.kafka.consumer.properties.spring.json.trusted.packages=*` alongside explicit type mapping
+
+**Rule**: Always use explicit type mapping or shared event libraries with identical package names for cross-service Kafka events. Never assume the consumer has the same FQCN as the producer.
 
 ## 🚀 Quarkus Integration
 *   **Security/Resilience Gap**: Quarkus services (notification, gateway) currently lack shared starters.

@@ -17,6 +17,31 @@
     *   Try current key -> try previous keys in order.
     *   Re-encrypt data during batch migration jobs if needed.
 
+## 🚨 IDOR Vulnerability Pattern — Ownership Verification (L-015)
+
+Every controller endpoint accessing user-scoped resources MUST verify ownership via JWT subject BEFORE any data retrieval or mutation.
+
+**The Anti-Pattern**: Copy-pasting `extractUserId()` into each controller with inconsistent error handling (some throw, some return null).
+
+**Three Sub-Patterns**:
+1.  **Direct comparison**: `if (!accountId.equals(userId)) throw new AccessDeniedException(...)`
+2.  **Fetch-then-compare**: Load resource, check `response.getSenderAccountId().equals(userId)`
+3.  **Dedicated security service**: `SplitBillSecurityService.isOwner(id, userId)` — best for complex ownership rules
+
+**Rule**: Extract a shared `SecurityContextUtils.extractAuthenticatedUserId()` into `security-starter`. The method MUST throw `AccessDeniedException`, never return null. Apply to every user-scoped endpoint.
+
+## 🌐 BFF Path Whitelist — SSRF Defense (L-016)
+
+The BFF proxy (`frontend/web-app/src/app/api/v1/[...path]/route.ts`) uses an explicit `ALLOWED_PATH_PREFIXES` array. When backend services add new API paths, the BFF silently returns 400 if the prefix isn't whitelisted.
+
+**Two-Layer SSRF Defense**:
+1.  **Path sanitization**: Per-segment validation rejects `..`, control chars, encoded traversals
+2.  **Prefix whitelist**: `fullPath.startsWith(prefix + '/')` — the trailing `/` prevents `/api/v1/accountsEvil` from matching `/api/v1/accounts`
+
+**Gotcha**: The whitelist must be manually updated whenever a new service path is added. Phase 3 added 6 missing prefixes (`cards`, `pockets`, `payments`, `topup`, `billers`, `biometric`).
+
+**Rule**: When adding a new backend API path prefix, ALWAYS add the corresponding prefix to `ALLOWED_PATH_PREFIXES` in the BFF route handler. Validate using `startsWith(prefix + '/')` with trailing slash to prevent prefix overlap attacks.
+
 ## 🏗️ Security Engineering Best Practices
 *   **Zero-Trust Networking**: Use mTLS (e.g., Istio STRICT mode) between services. Apply `AuthorizationPolicy` to restrict service-to-service calls based on service account principals.
 *   **Container Security Context**:
