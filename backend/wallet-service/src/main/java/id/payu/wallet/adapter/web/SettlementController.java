@@ -1,6 +1,7 @@
 package id.payu.wallet.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.wallet.domain.model.CalculatedSplit;
 import id.payu.wallet.domain.model.RevenueSplit;
 import id.payu.wallet.domain.model.SettlementBatch;
@@ -41,6 +42,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/batches")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = true)
     @Operation(summary = "Create settlement batch", description = "Create a new settlement batch for a partner")
     public ResponseEntity<ApiResponse<SettlementBatchResponse>> createSettlementBatch(
             @RequestBody CreateSettlementBatchRequest request) {
@@ -138,6 +140,7 @@ public class SettlementController extends BaseController {
 
     @PostMapping("/revenue-splits")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BACKOFFICE')")
+    @Idempotent(required = true)
     @Operation(summary = "Create revenue split", description = "Create a new revenue split configuration")
     public ResponseEntity<ApiResponse<RevenueSplitResponse>> createRevenueSplit(
             @RequestBody CreateRevenueSplitRequest request) {

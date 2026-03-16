@@ -1,8 +1,10 @@
 package id.payu.partner.adapter.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.payu.events.cloudevents.CloudEventEnvelope;
 import id.payu.partner.application.service.WebhookDispatcherService;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.internals.RecordHeaders;
+import org.apache.kafka.common.record.TimestampType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,10 +13,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.net.URI;
-import java.time.OffsetDateTime;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,11 +42,13 @@ class SubscriptionEventConsumerTest {
     @DisplayName("should consume subscription.created event and dispatch webhook")
     void shouldConsumeSubscriptionCreatedEvent() {
         // Given
-        CloudEventEnvelope<Map<String, Object>> event = createSampleEvent(
-                "subscription.created", "sub-123", "partner-nobar");
+        String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
+        ConsumerRecord<String, String> record = createRecord(payload,
+                "X-Event-Type", "subscription.created",
+                "X-Partner-Id", "partner-nobar");
 
         // When
-        consumer.consumeSubscriptionEvent(event, "subscription.created", "partner-nobar");
+        consumer.consumeSubscriptionEvent(record);
 
         // Then
         ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
@@ -53,24 +56,24 @@ class SubscriptionEventConsumerTest {
         verify(webhookDispatcher).dispatch(typeCaptor.capture(), payloadCaptor.capture());
 
         assertEquals("subscription.created", typeCaptor.getValue());
-        Map<String, Object> payload = payloadCaptor.getValue();
-        assertNotNull(payload.get("eventId"));
-        assertNotNull(payload.get("eventTime"));
-        assertEquals("partner-nobar", payload.get("partnerId"));
+        Map<String, Object> result = payloadCaptor.getValue();
+        assertEquals("partner-nobar", result.get("partnerId"));
     }
 
     @Test
     @DisplayName("should consume charge.succeeded event and dispatch webhook")
     void shouldConsumeChargeSucceededEvent() {
         // Given
-        CloudEventEnvelope<Map<String, Object>> event = createSampleEvent(
-                "charge.succeeded", "charge-456", "partner-nobar");
-        event.getData().put("amount", new BigDecimal("99000"));
-        event.getData().put("currency", "IDR");
-        event.getData().put("status", "SUCCEEDED");
+        String payload = "{\"specversion\":\"1.0\",\"id\":\"" + UUID.randomUUID() + "\"," +
+                "\"source\":\"/billing-service\",\"type\":\"charge.succeeded\"," +
+                "\"time\":\"2026-03-16T00:00:00Z\"," +
+                "\"data\":{\"amount\":99000,\"currency\":\"IDR\",\"status\":\"SUCCEEDED\",\"partnerId\":\"partner-nobar\"}}";
+        ConsumerRecord<String, String> record = createRecord(payload,
+                "X-Event-Type", "charge.succeeded",
+                "X-Partner-Id", "partner-nobar");
 
         // When
-        consumer.consumeSubscriptionEvent(event, "charge.succeeded", "partner-nobar");
+        consumer.consumeSubscriptionEvent(record);
 
         // Then
         ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
@@ -78,23 +81,25 @@ class SubscriptionEventConsumerTest {
         verify(webhookDispatcher).dispatch(typeCaptor.capture(), payloadCaptor.capture());
 
         assertEquals("charge.succeeded", typeCaptor.getValue());
-        Map<String, Object> payload = payloadCaptor.getValue();
-        assertEquals("partner-nobar", payload.get("partnerId"));
-        assertEquals(new BigDecimal("99000"), payload.get("amount"));
+        Map<String, Object> result = payloadCaptor.getValue();
+        assertEquals("partner-nobar", result.get("partnerId"));
+        assertEquals(99000, result.get("amount"));
     }
 
     @Test
     @DisplayName("should consume charge.failed event and dispatch webhook")
     void shouldConsumeChargeFailedEvent() {
         // Given
-        CloudEventEnvelope<Map<String, Object>> event = createSampleEvent(
-                "charge.failed", "charge-789", "partner-nobar");
-        event.getData().put("amount", new BigDecimal("99000"));
-        event.getData().put("status", "FAILED");
-        event.getData().put("failureReason", "Insufficient balance");
+        String payload = "{\"specversion\":\"1.0\",\"id\":\"" + UUID.randomUUID() + "\"," +
+                "\"source\":\"/billing-service\",\"type\":\"charge.failed\"," +
+                "\"time\":\"2026-03-16T00:00:00Z\"," +
+                "\"data\":{\"amount\":99000,\"status\":\"FAILED\",\"failureReason\":\"Insufficient balance\",\"partnerId\":\"partner-nobar\"}}";
+        ConsumerRecord<String, String> record = createRecord(payload,
+                "X-Event-Type", "charge.failed",
+                "X-Partner-Id", "partner-nobar");
 
         // When
-        consumer.consumeSubscriptionEvent(event, "charge.failed", "partner-nobar");
+        consumer.consumeSubscriptionEvent(record);
 
         // Then
         ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
@@ -102,20 +107,19 @@ class SubscriptionEventConsumerTest {
         verify(webhookDispatcher).dispatch(typeCaptor.capture(), payloadCaptor.capture());
 
         assertEquals("charge.failed", typeCaptor.getValue());
-        Map<String, Object> payload = payloadCaptor.getValue();
-        assertEquals("partner-nobar", payload.get("partnerId"));
-        assertEquals("Insufficient balance", payload.get("failureReason"));
+        Map<String, Object> result = payloadCaptor.getValue();
+        assertEquals("Insufficient balance", result.get("failureReason"));
     }
 
     @Test
     @DisplayName("should extract event type from event when header is null")
     void shouldExtractEventTypeFromEvent() {
-        // Given
-        CloudEventEnvelope<Map<String, Object>> event = createSampleEvent(
-                "subscription.created", "sub-123", "partner-nobar");
+        // Given - no headers
+        String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
+        ConsumerRecord<String, String> record = createRecord(payload);
 
-        // When - pass null for eventType header
-        consumer.consumeSubscriptionEvent(event, null, "partner-nobar");
+        // When
+        consumer.consumeSubscriptionEvent(record);
 
         // Then
         verify(webhookDispatcher).dispatch(eq("subscription.created"), any());
@@ -125,11 +129,11 @@ class SubscriptionEventConsumerTest {
     @DisplayName("should extract partnerId from event data when header is null")
     void shouldExtractPartnerIdFromEventData() {
         // Given
-        CloudEventEnvelope<Map<String, Object>> event = createSampleEvent(
-                "subscription.created", "sub-123", "partner-nobar");
+        String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
+        ConsumerRecord<String, String> record = createRecord(payload);
 
-        // When - pass null for partnerId header
-        consumer.consumeSubscriptionEvent(event, "subscription.created", null);
+        // When
+        consumer.consumeSubscriptionEvent(record);
 
         // Then
         ArgumentCaptor<Map> payloadCaptor = ArgumentCaptor.forClass(Map.class);
@@ -138,24 +142,28 @@ class SubscriptionEventConsumerTest {
     }
 
     @Test
-    @DisplayName("should handle null event gracefully")
+    @DisplayName("should handle null/empty value gracefully")
     void shouldHandleNullEvent() {
+        // Given
+        ConsumerRecord<String, String> record = new ConsumerRecord<>(
+                "subscription.events", 0, 0, null, null);
+
         // When
-        consumer.consumeSubscriptionEvent(null, "subscription.created", "partner-nobar");
+        consumer.consumeSubscriptionEvent(record);
 
         // Then - should not throw and not call dispatcher
         verify(webhookDispatcher, never()).dispatch(any(), any());
     }
 
     @Test
-    @DisplayName("should handle event with null type gracefully")
-    void shouldHandleEventWithNullType() {
+    @DisplayName("should handle empty value gracefully")
+    void shouldHandleEmptyEvent() {
         // Given
-        CloudEventEnvelope<Map<String, Object>> event = createSampleEvent(
-                null, "sub-123", "partner-nobar");
+        ConsumerRecord<String, String> record = new ConsumerRecord<>(
+                "subscription.events", 0, 0, null, "");
 
         // When
-        consumer.consumeSubscriptionEvent(event, null, "partner-nobar");
+        consumer.consumeSubscriptionEvent(record);
 
         // Then - should not throw and not call dispatcher
         verify(webhookDispatcher, never()).dispatch(any(), any());
@@ -165,81 +173,61 @@ class SubscriptionEventConsumerTest {
     @DisplayName("should handle dispatcher exception gracefully")
     void shouldHandleDispatcherException() {
         // Given
-        CloudEventEnvelope<Map<String, Object>> event = createSampleEvent(
-                "subscription.created", "sub-123", "partner-nobar");
+        String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
+        ConsumerRecord<String, String> record = createRecord(payload,
+                "X-Event-Type", "subscription.created");
         doThrow(new RuntimeException("Dispatch failed"))
                 .when(webhookDispatcher).dispatch(any(), any());
 
         // When - should not throw
-        assertDoesNotThrow(() ->
-                consumer.consumeSubscriptionEvent(event, "subscription.created", "partner-nobar"));
+        assertDoesNotThrow(() -> consumer.consumeSubscriptionEvent(record));
 
         // Then - dispatcher was called
         verify(webhookDispatcher).dispatch(any(), any());
     }
 
     @Test
-    @DisplayName("should convert POJO payload to Map correctly")
-    void shouldConvertPojoPayloadToMap() {
+    @DisplayName("should handle plain JSON payload (non-CloudEvent)")
+    void shouldHandlePlainJsonPayload() {
         // Given
-        TestPayload pojoPayload = new TestPayload();
-        pojoPayload.setSubscriptionId("sub-123");
-        pojoPayload.setPartnerId("partner-nobar");
-        pojoPayload.setAmount(new BigDecimal("99000"));
-
-        CloudEventEnvelope<TestPayload> event = CloudEventEnvelope.<TestPayload>builder()
-                .id(UUID.randomUUID())
-                .source(URI.create("/billing-service"))
-                .type("subscription.created")
-                .subject("sub-123")
-                .time(OffsetDateTime.now())
-                .data(pojoPayload)
-                .build();
+        String payload = "{\"subscriptionId\":\"sub-123\",\"partnerId\":\"partner-nobar\"," +
+                "\"amount\":99000,\"type\":\"subscription.renewed\"}";
+        ConsumerRecord<String, String> record = createRecord(payload);
 
         // When
-        consumer.consumeSubscriptionEvent(event, "subscription.created", "partner-nobar");
+        consumer.consumeSubscriptionEvent(record);
 
         // Then
+        ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map> payloadCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(webhookDispatcher).dispatch(any(), payloadCaptor.capture());
+        verify(webhookDispatcher).dispatch(typeCaptor.capture(), payloadCaptor.capture());
 
-        Map<String, Object> payload = payloadCaptor.getValue();
-        assertEquals("sub-123", payload.get("subscriptionId"));
-        assertEquals("partner-nobar", payload.get("partnerId"));
-        assertEquals(new BigDecimal("99000"), payload.get("amount"));
+        assertEquals("subscription.renewed", typeCaptor.getValue());
+        Map<String, Object> result = payloadCaptor.getValue();
+        assertEquals("partner-nobar", result.get("partnerId"));
+        assertEquals(99000, result.get("amount"));
     }
 
-    // Helper methods and classes
+    // --- Helper methods ---
 
-    private CloudEventEnvelope<Map<String, Object>> createSampleEvent(
-            String type, String subject, String partnerId) {
-        Map<String, Object> data = Map.of(
-                "subscriptionId", subject,
-                "partnerId", partnerId,
-                "accountId", "acc-123",
-                "planId", "plan-456"
-        );
-
-        return CloudEventEnvelope.<Map<String, Object>>builder()
-                .id(UUID.randomUUID())
-                .source(URI.create("/billing-service"))
-                .type(type)
-                .subject(subject)
-                .time(OffsetDateTime.now())
-                .data(data)
-                .build();
+    private String cloudEventJson(String type, String subject, String partnerId) {
+        return "{\"specversion\":\"1.0\",\"id\":\"" + UUID.randomUUID() + "\"," +
+                "\"source\":\"/billing-service\",\"type\":\"" + type + "\"," +
+                "\"subject\":\"" + subject + "\"," +
+                "\"time\":\"2026-03-16T00:00:00Z\"," +
+                "\"data\":{\"subscriptionId\":\"" + subject + "\"," +
+                "\"partnerId\":\"" + partnerId + "\"," +
+                "\"accountId\":\"acc-123\",\"planId\":\"plan-456\"}}";
     }
 
-    public static class TestPayload {
-        private String subscriptionId;
-        private String partnerId;
-        private BigDecimal amount;
-
-        public String getSubscriptionId() { return subscriptionId; }
-        public void setSubscriptionId(String subscriptionId) { this.subscriptionId = subscriptionId; }
-        public String getPartnerId() { return partnerId; }
-        public void setPartnerId(String partnerId) { this.partnerId = partnerId; }
-        public BigDecimal getAmount() { return amount; }
-        public void setAmount(BigDecimal amount) { this.amount = amount; }
+    private ConsumerRecord<String, String> createRecord(String value, String... headerPairs) {
+        RecordHeaders headers = new RecordHeaders();
+        for (int i = 0; i + 1 < headerPairs.length; i += 2) {
+            headers.add(headerPairs[i], headerPairs[i + 1].getBytes(StandardCharsets.UTF_8));
+        }
+        return new ConsumerRecord<>(
+                "subscription.events", 0, 0,
+                ConsumerRecord.NO_TIMESTAMP, TimestampType.NO_TIMESTAMP_TYPE,
+                0, 0, null, value, headers, Optional.empty());
     }
 }

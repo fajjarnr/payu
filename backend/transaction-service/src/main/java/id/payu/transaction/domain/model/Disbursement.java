@@ -1,5 +1,7 @@
 package id.payu.transaction.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -45,6 +47,8 @@ import java.util.UUID;
     @Index(name = "idx_disbursement_created_at", columnList = "created_at"),
     @Index(name = "idx_disbursement_idempotency", columnList = "idempotency_key", unique = true)
 })
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class Disbursement {
     public Disbursement() {
     }
@@ -307,6 +311,14 @@ public class Disbursement {
         this.completedAt = completedAt;
     }
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
 
 
     @Id
@@ -373,6 +385,9 @@ public class Disbursement {
 
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     /**
      * Creates a new disbursement with the specified parameters.

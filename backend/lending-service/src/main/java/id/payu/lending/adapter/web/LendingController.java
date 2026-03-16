@@ -33,6 +33,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 
@@ -62,6 +63,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/loans")
     @PreAuthorize("isAuthenticated()")
+    @Idempotent(required = true)
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "Loan",
@@ -172,6 +174,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/repayment-schedules/{scheduleId}/pay")
     @PreAuthorize("isAuthenticated()")
+    @Idempotent(required = true)
     @Operation(summary = "Process repayment", description = "Make a repayment for a specific schedule")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Repayment processed successfully",
             content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
@@ -227,6 +230,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/paylater/{userId}/purchase")
     @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, authentication.principal.userId)")
+    @Idempotent(required = true)
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "PayLaterTransaction",
@@ -258,6 +262,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/paylater/{userId}/payment")
     @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPaylaterOwner(#userId, authentication.principal.userId)")
+    @Idempotent(required = true)
     @Operation(summary = "Record PayLater payment", description = "Record a payment transaction for PayLater")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Payment recorded successfully",
             content = @Content(schema = @Schema(implementation = PayLaterTransaction.class)))
@@ -396,6 +401,7 @@ public class LendingController extends BaseController {
 
     @PostMapping("/installments/checkout")
     @PreAuthorize("isAuthenticated()")
+    @Idempotent(required = true)
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
             entityType = "InstallmentCheckout",

@@ -1,5 +1,6 @@
 package id.payu.transaction.adapter.web;
 
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.application.security.SplitBillSecurityService;
 import id.payu.transaction.domain.model.SplitBill;
 import id.payu.transaction.domain.port.in.SplitBillUseCase;
@@ -38,6 +39,7 @@ public class SplitBillController {
     @PostMapping
     @Operation(summary = "Create a new split bill", description = "Create a new split bill and add initial participants")
     @PreAuthorize("isAuthenticated()")
+    @Idempotent(required = true)
     @ApiResponse(responseCode = "201", description = "Split bill created successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<SplitBillResponse> createSplitBill(@Valid @RequestBody CreateSplitBillRequest request) {
@@ -159,6 +161,7 @@ public class SplitBillController {
 
     @PostMapping("/{id}/participants/{participantId}/payment")
     @PreAuthorize("isAuthenticated()")
+    @Idempotent(required = true)
     @Operation(summary = "Make payment", description = "Make a payment towards a split bill")
     @ApiResponse(responseCode = "200", description = "Payment made successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -176,6 +179,7 @@ public class SplitBillController {
 
     @PostMapping("/{id}/settle")
     @PreAuthorize("isAuthenticated()")
+    @Idempotent(required = true)
     @Operation(summary = "Settle split bill", description = "Mark a split bill as completed")
     @ApiResponse(responseCode = "200", description = "Split bill settled successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")

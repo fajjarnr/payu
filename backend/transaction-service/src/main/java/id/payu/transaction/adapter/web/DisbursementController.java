@@ -1,5 +1,6 @@
 package id.payu.transaction.adapter.web;
 
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.domain.model.Disbursement;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.DisbursementUseCase;
@@ -41,6 +42,7 @@ public class DisbursementController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
+    @Idempotent(required = true)
     @Operation(summary = "Create a new disbursement", description = "Creates a payout to an external bank account")
     public ResponseEntity<DisbursementResponse> createDisbursement(
             @Valid @RequestBody CreateDisbursementRequest request,

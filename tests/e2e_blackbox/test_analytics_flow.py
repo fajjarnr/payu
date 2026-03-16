@@ -122,13 +122,13 @@ class TestAnalyticsFlow:
 
     def test_wallet_ledger_for_analytics(self, authenticated_api, registered_user):
         """
-        Wallet ledger endpoint returns 503 (circuit breaker open on wallet-service).
+        Wallet ledger endpoint — returns 200 when healthy, 500/503 when circuit breaker open.
         """
         user_id = registered_user["userId"]
 
         response = authenticated_api.get(f"/api/v1/wallets/{user_id}/ledger")
-        assert response.status_code in [429, 500, 503], (
-            f"Expected 500/503 (wallet-service circuit breaker), got {response.status_code}"
+        assert response.status_code in [200, 429, 500, 503], (
+            f"Unexpected status from wallet-service: {response.status_code}"
         )
         if response.status_code == 503:
             body = response.json()

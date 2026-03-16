@@ -1,6 +1,8 @@
 package id.payu.lending.entity;
 
 import id.payu.lending.domain.model.InstallmentCheckout.CheckoutStatus;
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -14,6 +16,8 @@ import java.util.UUID;
         @Index(name = "idx_installment_checkouts_loan_id", columnList = "loan_id"),
         @Index(name = "idx_installment_checkouts_external_order", columnList = "external_order_id")
 })
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class InstallmentCheckoutEntity {
 
     @Id
@@ -106,6 +110,11 @@ public class InstallmentCheckoutEntity {
     public void setFailureReason(String failureReason) { this.failureReason = failureReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
+
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getTenantId() { return tenantId; }
+    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
 }

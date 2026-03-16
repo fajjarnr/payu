@@ -62,11 +62,12 @@ export default defineConfig({
     },
     */
   ],
-  // Enable webServer for E2E tests
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  // webServer disabled — app runs in podman container on port 3001.
+  // Set PLAYWRIGHT_BASE_URL=http://localhost:3001 to override baseURL.
+  // webServer: {
+  //   command: 'npm run dev',
+  //   url: 'http://localhost:3000',
+  //   reuseExistingServer: !process.env.CI,
+  //   timeout: 120000,
+  // },
 });

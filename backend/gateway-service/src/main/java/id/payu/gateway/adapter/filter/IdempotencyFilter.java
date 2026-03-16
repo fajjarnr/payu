@@ -44,17 +44,57 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
     // Legacy header name for backward compatibility
     private static final String LEGACY_IDEMPOTENCY_KEY_HEADER = "X-Idempotency-Key";
 
-    // Financial operation paths that require idempotency key
+    // Financial operation paths that require idempotency key.
+    // Covers ALL write endpoints annotated with @Idempotent(required=true) across services.
     private static final Set<String> FINANCIAL_PATHS = Set.of(
+        // --- Core transfers & payments (existing) ---
         "/api/v1/transfers",
         "/api/v1/payments",
-        "/api/v1/wallets/debit",
-        "/api/v1/wallets/credit",
-        "/api/v1/transactions/transfer",
-        "/api/v1/transactions/qris",
         "/api/v1/billing/payments",
         "/v1/transfers",
-        "/v1/payments"
+        "/v1/payments",
+
+        // --- Wallet service: debit/credit, escrow, settlement, split-payment, journals, pockets ---
+        "/api/v1/wallets/debit",
+        "/api/v1/wallets/credit",
+        "/api/v1/wallets/escrow",
+        "/api/v1/wallets/settlement",
+        "/api/v1/wallets/split-payment",
+        "/api/v1/wallets/journal",
+        "/api/v1/wallets/pocket",
+        "/api/v1/wallets/reserve",
+
+        // --- Transaction service: transfers, QRIS, disbursements, split-bill, scheduled, VA ---
+        "/api/v1/transactions/transfer",
+        "/api/v1/transactions/qris",
+        "/api/v1/transactions/disbursement",
+        "/api/v1/transactions/batch-disbursement",
+        "/api/v1/transactions/split-bill",
+        "/api/v1/transactions/scheduled",
+        "/api/v1/transactions/virtual-account",
+
+        // --- Lending service: loans, repayments, PayLater ---
+        "/api/v1/lending/",
+
+        // --- FX service: currency conversions ---
+        "/api/v1/fx/",
+
+        // --- Dispute service: refunds & disputes ---
+        "/api/v1/disputes",
+        "/api/v1/refunds",
+
+        // --- Billing service: top-up, subscriptions ---
+        "/api/v1/topup",
+        "/api/v1/subscriptions",
+
+        // --- Investment service: mutual funds, gold, deposits ---
+        "/api/v1/investments/",
+
+        // --- Partner service: payment links, merchants ---
+        "/api/v1/partners/",
+
+        // --- Checkout (gateway-native) ---
+        "/api/v1/checkout"
     );
 
     @Inject

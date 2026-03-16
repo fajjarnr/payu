@@ -1,5 +1,7 @@
 package id.payu.billing.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +15,8 @@ import java.util.UUID;
     @Index(name = "idx_payment_account", columnList = "account_id"),
     @Index(name = "idx_payment_reference", columnList = "reference_number")
 })
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class BillPayment {
 
     @Id
@@ -60,6 +64,9 @@ public class BillPayment {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     // Constructors
     public BillPayment() {
@@ -209,6 +216,9 @@ public class BillPayment {
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
     }
+
+    public String getTenantId() { return tenantId; }
+    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
 
     /**
      * Payment status enum.

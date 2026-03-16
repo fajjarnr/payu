@@ -6,6 +6,7 @@ import id.payu.wallet.domain.port.in.EscrowUseCase;
 import id.payu.wallet.domain.port.in.JournalUseCase;
 import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.domain.port.out.EscrowPersistencePort;
+import id.payu.wallet.domain.port.out.WalletEventPublisherPort;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -43,13 +44,16 @@ public class EscrowService implements EscrowUseCase {
     private final EscrowPersistencePort escrowPersistencePort;
     private final WalletUseCase walletUseCase;
     private final JournalUseCase journalUseCase;
+    private final WalletEventPublisherPort eventPublisher;
 
     public EscrowService(EscrowPersistencePort escrowPersistencePort,
                          WalletUseCase walletUseCase,
-                         JournalUseCase journalUseCase) {
+                         JournalUseCase journalUseCase,
+                         WalletEventPublisherPort eventPublisher) {
         this.escrowPersistencePort = escrowPersistencePort;
         this.walletUseCase = walletUseCase;
         this.journalUseCase = journalUseCase;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -95,6 +99,12 @@ public class EscrowService implements EscrowUseCase {
 
         // 5. Persist escrow
         EscrowTransaction saved = escrowPersistencePort.save(escrow);
+
+        // 6. Publish escrow held event (within same transaction via outbox)
+        eventPublisher.publishEscrowHeld(saved.getId(), saved.getBuyerAccountId(),
+                saved.getSellerAccountId(), saved.getPartnerId(), saved.getAmount(),
+                saved.getCurrency(), saved.getExternalReferenceId());
+
         log.info("Escrow created and held: id={}, reservationId={}", saved.getId(), reservationId);
         return saved;
     }
@@ -111,6 +121,11 @@ public class EscrowService implements EscrowUseCase {
         createReleaseJournal(escrow);
 
         EscrowTransaction saved = escrowPersistencePort.save(escrow);
+
+        // Publish escrow released event
+        eventPublisher.publishEscrowReleased(saved.getId(), saved.getPartnerId(),
+                saved.getAmount(), saved.getCurrency());
+
         log.info("Escrow released: id={}", escrowId);
         return saved;
     }
@@ -135,6 +150,11 @@ public class EscrowService implements EscrowUseCase {
         createSettlementJournal(escrow, netAmount);
 
         EscrowTransaction saved = escrowPersistencePort.save(escrow);
+
+        // Publish escrow settled event
+        eventPublisher.publishEscrowSettled(saved.getId(), saved.getSellerAccountId(),
+                saved.getPartnerId(), netAmount, saved.getCurrency());
+
         log.info("Escrow settled: id={}, netAmount={}", escrowId, netAmount);
         return saved;
     }
@@ -164,6 +184,11 @@ public class EscrowService implements EscrowUseCase {
         createRefundJournal(escrow);
 
         EscrowTransaction saved = escrowPersistencePort.save(escrow);
+
+        // Publish escrow refunded event
+        eventPublisher.publishEscrowRefunded(saved.getId(), saved.getBuyerAccountId(),
+                saved.getPartnerId(), saved.getAmount(), saved.getCurrency(), reason);
+
         log.info("Escrow refunded: id={}", escrowId);
         return saved;
     }
@@ -206,6 +231,11 @@ public class EscrowService implements EscrowUseCase {
             try {
                 escrow.expire();
                 escrowPersistencePort.save(escrow);
+
+                // Publish escrow expired event before auto-refund
+                eventPublisher.publishEscrowExpired(escrow.getId(), escrow.getPartnerId(),
+                        escrow.getAmount(), escrow.getCurrency());
+
                 refundEscrow(escrow.getId(), "Auto-refund: escrow expired");
             } catch (Exception e) {
                 log.error("Failed to process expired escrow: id={}", escrow.getId(), e);

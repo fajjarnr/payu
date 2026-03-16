@@ -17,6 +17,7 @@ import jakarta.ws.rs.ext.Provider;
 public class TenantFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     public static final String TENANT_ID_HEADER = "X-Tenant-Id";
+    public static final String PARTNER_ID_HEADER = "X-Partner-Id";
     public static final String DEFAULT_TENANT_ID = "default";
     private static final String TENANT_PROPERTY = "tenant-id";
 
@@ -46,10 +47,17 @@ public class TenantFilter implements ContainerRequestFilter, ContainerResponseFi
     }
 
     private String extractTenantId(ContainerRequestContext requestContext) {
+        // Priority 1: Explicit X-Tenant-Id header
         String tenantId = requestContext.getHeaderString(TENANT_ID_HEADER);
-
         if (tenantId != null && !tenantId.isBlank()) {
             return tenantId;
+        }
+
+        // Priority 2: Fall back to X-Partner-Id (from SNAP-BI / API key auth)
+        String partnerId = requestContext.getHeaderString(PARTNER_ID_HEADER);
+        if (partnerId != null && !partnerId.isBlank()) {
+            Log.debugf("Using X-Partner-Id '%s' as tenant ID", partnerId);
+            return partnerId;
         }
 
         return null;

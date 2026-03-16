@@ -1,5 +1,7 @@
 package id.payu.transaction.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -47,6 +49,8 @@ import java.util.UUID;
     @Index(name = "idx_batch_created_at", columnList = "created_at"),
     @Index(name = "idx_batch_idempotency", columnList = "idempotency_key", unique = true)
 })
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class BatchDisbursement {
 
     @Id
@@ -81,6 +85,9 @@ public class BatchDisbursement {
 
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     // Default constructor
     public BatchDisbursement() {
@@ -165,6 +172,14 @@ public class BatchDisbursement {
 
     public void setCompletedAt(Instant completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
 
     /**

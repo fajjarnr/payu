@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.Audited.AuditLevel;
 import jakarta.validation.Valid;
@@ -113,6 +114,7 @@ public class FxController extends BaseController {
     }
 
     @PostMapping("/conversions")
+    @Idempotent(required = true)
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.TRANSFER,
             entityType = "FxConversion",
@@ -187,6 +189,7 @@ public class FxController extends BaseController {
     }
 
     @PostMapping("/conversions/{conversionId}/reverse")
+    @Idempotent(required = true)
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.OTHER,
             entityType = "FxConversion",

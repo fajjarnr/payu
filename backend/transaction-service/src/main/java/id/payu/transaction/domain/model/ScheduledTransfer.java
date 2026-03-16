@@ -1,5 +1,7 @@
 package id.payu.transaction.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import id.payu.transaction.domain.model.Transaction.TransactionType;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -8,6 +10,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "scheduled_transfers")
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class ScheduledTransfer {
     public ScheduledTransfer() {
     }
@@ -335,6 +339,14 @@ public class ScheduledTransfer {
         this.updatedAt = updatedAt;
     }
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -404,6 +416,9 @@ public class ScheduledTransfer {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     public enum ScheduleType {
         ONE_TIME,

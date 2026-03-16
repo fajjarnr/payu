@@ -1,5 +1,7 @@
 package id.payu.transaction.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -11,6 +13,8 @@ import java.util.UUID;
         @Index(name = "idx_archive_batch_id", columnList = "archived_batch_id"),
         @Index(name = "idx_archive_created_at", columnList = "created_at")
 })
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class TransactionArchive {
     public TransactionArchive() {
     }
@@ -268,6 +272,14 @@ public class TransactionArchive {
         this.archivedBatchId = archivedBatchId;
     }
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
 
 
     @Id
@@ -323,6 +335,9 @@ public class TransactionArchive {
 
     @Column(name = "archived_batch_id")
     private Long archivedBatchId;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     public enum TransactionType {
         TRANSFER,

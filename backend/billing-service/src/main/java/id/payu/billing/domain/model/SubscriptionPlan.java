@@ -1,5 +1,7 @@
 package id.payu.billing.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +16,8 @@ import java.util.UUID;
     @Index(name = "idx_plan_partner", columnList = "partner_id"),
     @Index(name = "idx_plan_active", columnList = "partner_id, active")
 })
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class SubscriptionPlan {
 
     @Id
@@ -54,6 +58,9 @@ public class SubscriptionPlan {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     public SubscriptionPlan() {
     }
@@ -107,4 +114,6 @@ public class SubscriptionPlan {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getTenantId() { return tenantId; }
+    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
 }

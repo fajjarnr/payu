@@ -1,5 +1,6 @@
 package id.payu.dispute.adapter.web;
 
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.dispute.domain.model.Dispute;
 import id.payu.dispute.domain.model.DisputeResolutionType;
 import id.payu.dispute.domain.port.in.DisputeUseCase;
@@ -37,6 +38,7 @@ public class DisputeController {
     private final DisputeUseCase disputeUseCase;
 
     @PostMapping
+    @Idempotent(required = true)
     @Operation(summary = "Open a dispute", description = "Creates a new dispute for a transaction")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Dispute created successfully",

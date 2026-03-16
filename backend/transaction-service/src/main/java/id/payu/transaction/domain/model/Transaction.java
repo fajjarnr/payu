@@ -1,5 +1,7 @@
 package id.payu.transaction.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -7,6 +9,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "transactions")
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class Transaction {
     public Transaction() {
     }
@@ -311,6 +315,14 @@ public class Transaction {
         this.tags = tags;
     }
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
     /**
      * Alias for getSenderAccountId() for compatibility with older code.
      * @return the source account ID (same as sender account ID)
@@ -410,6 +422,9 @@ public class Transaction {
 
     @Column(name = "tags", columnDefinition = "jsonb")
     private String tags;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     public enum TransactionType {
         INTERNAL_TRANSFER,

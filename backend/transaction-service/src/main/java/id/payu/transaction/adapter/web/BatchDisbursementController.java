@@ -1,5 +1,6 @@
 package id.payu.transaction.adapter.web;
 
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.domain.model.BatchDisbursement;
 import id.payu.transaction.domain.model.Disbursement;
 import id.payu.transaction.domain.model.Money;
@@ -42,6 +43,7 @@ public class BatchDisbursementController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
+    @Idempotent(required = true)
     @Operation(summary = "Create a new batch", description = "Creates a batch disbursement for bulk payouts")
     public ResponseEntity<BatchResponse> createBatch(
             @Valid @RequestBody CreateBatchRequest request,

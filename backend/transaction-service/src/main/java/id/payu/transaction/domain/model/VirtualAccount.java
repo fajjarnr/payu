@@ -1,5 +1,7 @@
 package id.payu.transaction.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,6 +21,8 @@ import java.util.UUID;
            @Index(name = "idx_va_expires_at", columnList = "expires_at"),
            @Index(name = "idx_va_external_id", columnList = "partner_id, external_id")
        })
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class VirtualAccount {
     public VirtualAccount() {
     }
@@ -332,6 +336,14 @@ public class VirtualAccount {
         this.idempotencyKey = idempotencyKey;
     }
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -396,6 +408,9 @@ public class VirtualAccount {
 
     @Column(name = "idempotency_key", length = 64)
     private String idempotencyKey;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     @PrePersist
     void prePersist() {

@@ -1,5 +1,7 @@
 package id.payu.dispute.adapter.persistence.entity;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,11 +20,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "dispute_evidence")
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class DisputeEvidenceEntity {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     @Column(name = "dispute_id", nullable = false)
     private UUID disputeId;

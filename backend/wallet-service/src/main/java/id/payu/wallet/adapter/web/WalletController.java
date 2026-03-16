@@ -110,6 +110,7 @@ public class WalletController extends BaseController {
     }
 
     @PostMapping("/reservations/{reservationId}/commit")
+    @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Commit reservation", description = "Commit a reserved balance to complete the transaction")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reservation committed successfully")
@@ -125,6 +126,7 @@ public class WalletController extends BaseController {
     }
 
     @PostMapping("/reservations/{reservationId}/release")
+    @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Release reservation", description = "Release a reserved balance back to available balance")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reservation released successfully")

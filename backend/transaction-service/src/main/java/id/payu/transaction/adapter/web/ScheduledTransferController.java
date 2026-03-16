@@ -1,5 +1,6 @@
 package id.payu.transaction.adapter.web;
 
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.transaction.domain.model.ScheduledTransfer;
 import id.payu.transaction.domain.port.in.ScheduledTransferUseCase;
 import id.payu.transaction.dto.CreateScheduledTransferRequest;
@@ -30,6 +31,7 @@ public class ScheduledTransferController {
     private final ScheduledTransferUseCase scheduledTransferUseCase;
 
     @PostMapping
+    @Idempotent(required = true)
     @Operation(
             summary = "Create scheduled transfer",
             description = """

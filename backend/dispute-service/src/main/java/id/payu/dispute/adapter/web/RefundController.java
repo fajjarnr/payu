@@ -1,5 +1,6 @@
 package id.payu.dispute.adapter.web;
 
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.dispute.domain.model.Refund;
 import id.payu.dispute.domain.port.in.RefundUseCase;
 import id.payu.dispute.dto.*;
@@ -36,6 +37,7 @@ public class RefundController {
     private final RefundUseCase refundUseCase;
 
     @PostMapping("/full")
+    @Idempotent(required = true)
     @Operation(summary = "Create a full refund", description = "Creates a full refund for a transaction")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Refund created successfully",
@@ -54,6 +56,7 @@ public class RefundController {
     }
 
     @PostMapping("/partial")
+    @Idempotent(required = true)
     @Operation(summary = "Create a partial refund", description = "Creates a partial refund for a transaction")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Refund created successfully",

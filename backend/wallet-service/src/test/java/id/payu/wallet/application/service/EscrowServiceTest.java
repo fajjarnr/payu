@@ -7,6 +7,7 @@ import id.payu.wallet.domain.model.LedgerEntry;
 import id.payu.wallet.domain.port.in.JournalUseCase;
 import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.domain.port.out.EscrowPersistencePort;
+import id.payu.wallet.domain.port.out.WalletEventPublisherPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -41,6 +42,9 @@ class EscrowServiceTest {
 
     @Mock
     private JournalUseCase journalUseCase;
+
+    @Mock
+    private WalletEventPublisherPort eventPublisher;
 
     @InjectMocks
     private EscrowService escrowService;

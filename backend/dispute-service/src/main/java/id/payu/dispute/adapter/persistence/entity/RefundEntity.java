@@ -1,6 +1,8 @@
 package id.payu.dispute.adapter.persistence.entity;
 
 import id.payu.dispute.domain.model.RefundStatus;
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,11 +22,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "refunds")
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class RefundEntity {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     @Column(name = "transaction_id", nullable = false)
     private UUID transactionId;

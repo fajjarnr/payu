@@ -41,7 +41,7 @@ public class EscrowController extends BaseController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER', 'SYSTEM')")
-    @Idempotent
+    @Idempotent(required = true)
     @Audited(level = AuditLevel.INFO)
     @Operation(summary = "Create and hold escrow",
             description = "Creates an escrow transaction and immediately holds buyer funds")
@@ -67,6 +67,7 @@ public class EscrowController extends BaseController {
 
     @PostMapping("/{escrowId}/release")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER', 'SYSTEM')")
+    @Idempotent(required = true)
     @Audited(level = AuditLevel.INFO)
     @Operation(summary = "Release escrow to merchant",
             description = "Releases held funds to merchant — conditions met (goods received, etc.)")
@@ -80,6 +81,7 @@ public class EscrowController extends BaseController {
 
     @PostMapping("/{escrowId}/settle")
     @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM')")
+    @Idempotent(required = true)
     @Audited(level = AuditLevel.INFO)
     @Operation(summary = "Settle escrow — credit merchant wallet",
             description = "Credits the merchant wallet with net escrow amount (amount - fee)")
@@ -93,7 +95,7 @@ public class EscrowController extends BaseController {
 
     @PostMapping("/{escrowId}/refund")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER', 'SYSTEM')")
-    @Idempotent
+    @Idempotent(required = true)
     @Audited(level = AuditLevel.INFO)
     @Operation(summary = "Refund escrow to buyer",
             description = "Refunds held funds back to buyer wallet")

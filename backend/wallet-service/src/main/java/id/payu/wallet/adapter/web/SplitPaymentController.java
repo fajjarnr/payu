@@ -46,7 +46,7 @@ public class SplitPaymentController extends BaseController {
 
     @PostMapping("/rules")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER', 'SYSTEM')")
-    @Idempotent
+    @Idempotent(required = true)
     @Audited(level = AuditLevel.INFO)
     @Operation(summary = "Create split payment rule",
             description = "Creates a reusable split payment rule defining how payments are distributed among recipients")
@@ -114,7 +114,7 @@ public class SplitPaymentController extends BaseController {
 
     @PostMapping("/execute")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER', 'SYSTEM')")
-    @Idempotent
+    @Idempotent(required = true)
     @Audited(level = AuditLevel.INFO)
     @Operation(summary = "Execute split payment",
             description = "Debits payer and credits all recipients according to the split rule or ad-hoc recipients")
@@ -185,6 +185,7 @@ public class SplitPaymentController extends BaseController {
 
     @PostMapping("/executions/{executionId}/reverse")
     @PreAuthorize("hasAnyRole('ADMIN', 'SYSTEM')")
+    @Idempotent(required = true)
     @Audited(level = AuditLevel.INFO)
     @Operation(summary = "Reverse a split payment",
             description = "Reverses a completed split payment — debits all recipients and credits payer")

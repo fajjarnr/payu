@@ -1,5 +1,7 @@
 package id.payu.transaction.domain.model;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -9,6 +11,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "split_bills")
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class SplitBill {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -54,6 +58,9 @@ public class SplitBill {
 
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
 
     public enum SplitType {
         EQUAL,
@@ -303,6 +310,14 @@ public class SplitBill {
 
     public void setCompletedAt(Instant completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
 
     // Business methods

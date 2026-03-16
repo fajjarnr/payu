@@ -1,5 +1,7 @@
 package id.payu.lending.entity;
 
+import id.payu.security.multitenancy.TenantAware;
+import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -8,6 +10,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "repayment_schedules")
+@TenantAware
+@EntityListeners(TenantEntityListener.class)
 public class RepaymentScheduleEntity {
 
     @Id
@@ -96,8 +100,13 @@ public class RepaymentScheduleEntity {
     public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
+
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getTenantId() { return tenantId; }
+    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
 
     public static Builder builder() { return new Builder(); }
 

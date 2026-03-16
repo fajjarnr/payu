@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Outbox-backed adapter for publishing wallet events using CloudEvents 1.0 envelopes.
@@ -128,6 +129,125 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
         outboxService.createEvent(AGGREGATE_TYPE, accountId, "WalletCreated",
                 envelopeToMap(envelope), null, "wallet.created");
         log.debug("Created CloudEvent outbox event for wallet-created: accountId={}", accountId);
+    }
+
+    // --- Escrow lifecycle events ---
+
+    private static final String ESCROW_AGGREGATE_TYPE = "Escrow";
+
+    @Override
+    public void publishEscrowHeld(UUID escrowId, String buyerAccountId, String sellerAccountId,
+                                   String partnerId, BigDecimal amount, String currency,
+                                   String externalReferenceId) {
+        Map<String, Object> payload = Map.of(
+                "escrowId", escrowId.toString(),
+                "buyerAccountId", buyerAccountId,
+                "sellerAccountId", sellerAccountId,
+                "partnerId", partnerId,
+                "amount", amount,
+                "currency", currency,
+                "externalReferenceId", externalReferenceId != null ? externalReferenceId : "",
+                "timestamp", LocalDateTime.now().toString());
+
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.escrow.held")
+                .subject(escrowId.toString())
+                .data(payload)
+                .build();
+
+        outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowHeld",
+                envelopeToMap(envelope), null, "escrow.held");
+        log.debug("Created outbox event for escrow-held: escrowId={}, partnerId={}", escrowId, partnerId);
+    }
+
+    @Override
+    public void publishEscrowReleased(UUID escrowId, String partnerId, BigDecimal amount, String currency) {
+        Map<String, Object> payload = Map.of(
+                "escrowId", escrowId.toString(),
+                "partnerId", partnerId,
+                "amount", amount,
+                "currency", currency,
+                "timestamp", LocalDateTime.now().toString());
+
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.escrow.released")
+                .subject(escrowId.toString())
+                .data(payload)
+                .build();
+
+        outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowReleased",
+                envelopeToMap(envelope), null, "escrow.released");
+        log.debug("Created outbox event for escrow-released: escrowId={}, partnerId={}", escrowId, partnerId);
+    }
+
+    @Override
+    public void publishEscrowSettled(UUID escrowId, String sellerAccountId, String partnerId,
+                                      BigDecimal netAmount, String currency) {
+        Map<String, Object> payload = Map.of(
+                "escrowId", escrowId.toString(),
+                "sellerAccountId", sellerAccountId,
+                "partnerId", partnerId,
+                "netAmount", netAmount,
+                "currency", currency,
+                "timestamp", LocalDateTime.now().toString());
+
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.escrow.settled")
+                .subject(escrowId.toString())
+                .data(payload)
+                .build();
+
+        outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowSettled",
+                envelopeToMap(envelope), null, "escrow.settled");
+        log.debug("Created outbox event for escrow-settled: escrowId={}, partnerId={}", escrowId, partnerId);
+    }
+
+    @Override
+    public void publishEscrowRefunded(UUID escrowId, String buyerAccountId, String partnerId,
+                                       BigDecimal amount, String currency, String reason) {
+        Map<String, Object> payload = Map.of(
+                "escrowId", escrowId.toString(),
+                "buyerAccountId", buyerAccountId,
+                "partnerId", partnerId,
+                "amount", amount,
+                "currency", currency,
+                "reason", reason != null ? reason : "",
+                "timestamp", LocalDateTime.now().toString());
+
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.escrow.refunded")
+                .subject(escrowId.toString())
+                .data(payload)
+                .build();
+
+        outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowRefunded",
+                envelopeToMap(envelope), null, "escrow.refunded");
+        log.debug("Created outbox event for escrow-refunded: escrowId={}, partnerId={}", escrowId, partnerId);
+    }
+
+    @Override
+    public void publishEscrowExpired(UUID escrowId, String partnerId, BigDecimal amount, String currency) {
+        Map<String, Object> payload = Map.of(
+                "escrowId", escrowId.toString(),
+                "partnerId", partnerId,
+                "amount", amount,
+                "currency", currency,
+                "timestamp", LocalDateTime.now().toString());
+
+        CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
+                .<Map<String, Object>>forService(SERVICE_NAME)
+                .type("id.payu.escrow.expired")
+                .subject(escrowId.toString())
+                .data(payload)
+                .build();
+
+        outboxService.createEvent(ESCROW_AGGREGATE_TYPE, escrowId.toString(), "EscrowExpired",
+                envelopeToMap(envelope), null, "escrow.expired");
+        log.debug("Created outbox event for escrow-expired: escrowId={}, partnerId={}", escrowId, partnerId);
     }
 
     /**
