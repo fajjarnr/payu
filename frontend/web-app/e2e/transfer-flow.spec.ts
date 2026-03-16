@@ -32,9 +32,12 @@ test.describe('Transfer Flow', () => {
   });
 
   test('should display schedule options', async ({ authPage: page }) => {
-    await expect(page.getByText('Sekarang')).toBeVisible();
-    await expect(page.getByText('Terjadwal')).toBeVisible();
-    await expect(page.getByText('Berulang')).toBeVisible();
+    // Schedule section is below the fold — scroll to it first
+    const scheduleSection = page.getByText('Jadwal Transfer');
+    await scheduleSection.scrollIntoViewIfNeeded();
+    await expect(page.locator('[data-testid="schedule-type-now"]')).toBeVisible();
+    await expect(page.locator('[data-testid="schedule-type-scheduled"]')).toBeVisible();
+    await expect(page.locator('[data-testid="schedule-type-recurring"]')).toBeVisible();
   });
 
   test('should show date picker when scheduled transfer selected', async ({ authPage: page }) => {

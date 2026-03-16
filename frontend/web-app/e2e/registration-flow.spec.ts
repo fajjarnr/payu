@@ -26,7 +26,7 @@ test.describe('Registration Flow', () => {
   });
 
   test('should display progress tracker with 3 steps', async ({ page }) => {
-    const steps = page.locator('.w-10.h-10.rounded-full');
+    const steps = page.locator('.w-10.h-10.rounded-xl');
     await expect(steps).toHaveCount(3);
 
     // Step labels should be visible - use first() for strict mode violations
@@ -136,7 +136,7 @@ test.describe('Registration Flow', () => {
 
   test('should have proper button styling', async ({ page }) => {
     const continueButton = page.locator('button:has-text("Lanjut ke Profil Data")');
-    await expect(continueButton).toHaveClass(/bg-emerald-600/);
+    await expect(continueButton).toHaveClass(/bg-primary/);
   });
 
   test('should be responsive on mobile viewport', async ({ page }) => {

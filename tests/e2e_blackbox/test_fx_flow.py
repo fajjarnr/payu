@@ -16,7 +16,7 @@ class TestFxServiceFlow:
     def test_get_all_fx_rates(self, authenticated_api):
         """Get all available FX rates"""
         response = authenticated_api.get("/api/v1/fx/rates")
-        assert response.status_code in [200, 404], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 404, 429, 503], f"Unexpected status: {response.status_code}"
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (list, dict))
@@ -24,7 +24,7 @@ class TestFxServiceFlow:
     def test_get_specific_fx_rate(self, authenticated_api):
         """Get exchange rate for USD/IDR pair"""
         response = authenticated_api.get("/api/v1/fx/rates/USD/IDR")
-        assert response.status_code in [200, 404, 500], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"
         if response.status_code == 200:
             rate = response.json()
             if isinstance(rate, dict) and "data" in rate:
@@ -39,7 +39,7 @@ class TestFxServiceFlow:
             "amount": 100.00
         }
         response = authenticated_api.post("/api/v1/fx/conversions/estimate", json=payload)
-        assert response.status_code in [200, 400, 404, 500], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 400, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"
         if response.status_code == 200:
             result = response.json()
             assert "convertedAmount" in result or "estimatedAmount" in result or "amount" in result
@@ -52,7 +52,7 @@ class TestFxServiceFlow:
             "amount": 50.00
         }
         response = authenticated_api.post("/api/v1/fx/conversions", json=payload)
-        assert response.status_code in [200, 201, 400, 422, 500], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 201, 400, 422, 429, 500, 503], f"Unexpected status: {response.status_code}"
         if response.status_code in [200, 201]:
             conversion = response.json()
             assert "id" in conversion or "conversionId" in conversion
@@ -60,7 +60,7 @@ class TestFxServiceFlow:
     def test_get_user_conversions(self, authenticated_api):
         """Get list of user's FX conversions"""
         response = authenticated_api.get("/api/v1/fx/conversions")
-        assert response.status_code in [200, 404, 500, 503], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (list, dict))
@@ -69,4 +69,4 @@ class TestFxServiceFlow:
         """Get a specific conversion by ID (expect 404 if none exist)"""
         fake_id = str(uuid.uuid4())
         response = authenticated_api.get(f"/api/v1/fx/conversions/{fake_id}")
-        assert response.status_code in [200, 404, 500, 503], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"

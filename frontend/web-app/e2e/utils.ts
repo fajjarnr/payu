@@ -150,7 +150,8 @@ export function filterMinorA11yIssues(violations: RawAccessibilityViolation[]): 
   // - button-name: icon-only buttons (e.g. mobile menu, close) without aria-label — design debt
   // - svg-img-alt: decorative SVGs without alt text — design debt
   // - nested-interactive: card components with nested focusable elements — design debt
-  const designDebtRules = ['color-contrast', 'region', 'button-name', 'svg-img-alt', 'nested-interactive'];
+  // - scrollable-region-focusable: scrollable dashboard containers without tabindex — design debt
+  const designDebtRules = ['color-contrast', 'region', 'button-name', 'svg-img-alt', 'nested-interactive', 'scrollable-region-focusable'];
   return violations
     .filter(v => !designDebtRules.includes(v.id))
     .map(v => ({

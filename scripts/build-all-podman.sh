@@ -6,7 +6,7 @@
 # Requirements: podman, buildah, jq
 #
 # Usage: ./build-all-podman.sh [OPTIONS]
-#   -t, --tag TAG          Tag for all images (default: payu:latest)
+#   -t, --tag TAG          Tag for all images (default: 1.4.0)
 #   -j, --jobs JOBS        Number of parallel build jobs (default: 4)
 #   -p, --push             Push images to registry after build
 #   -r, --registry REG     Registry to push to (default: localhost)
@@ -16,7 +16,7 @@
 set -euo pipefail
 
 # Configuration
-DEFAULT_TAG="payu:latest"
+DEFAULT_TAG="1.4.0"
 DEFAULT_JOBS=4
 DEFAULT_REGISTRY="localhost"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

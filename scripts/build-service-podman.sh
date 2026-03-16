@@ -7,7 +7,7 @@
 #
 # Usage: ./build-service-podman.sh <SERVICE_NAME> [OPTIONS]
 #   SERVICE_NAME           Name of the service to build
-#   -t, --tag TAG          Tag for the image (default: payu:latest)
+#   -t, --tag TAG          Tag for the image (default: 1.4.0)
 #   -p, --push             Push image to registry after build
 #   -r, --registry REG     Registry to push to (default: localhost)
 #   -v, --verbose          Verbose output
@@ -16,7 +16,7 @@
 set -euo pipefail
 
 # Configuration
-DEFAULT_TAG="payu:latest"
+DEFAULT_TAG="1.4.0"
 DEFAULT_REGISTRY="localhost"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../" && pwd)"

@@ -37,8 +37,6 @@ quarkus:
       generation: update
     log:
       sql: false
-  kafka:
-    bootstrap-servers: localhost:9092
   mailer:
     from: noreply@payu.fajjjar.my.id
     host: smtp.example.com
@@ -46,12 +44,15 @@ quarkus:
     start-tls: REQUIRED
     username: ${SMTP_USERNAME:}
     password: ${SMTP_PASSWORD:}
-    mock: true # Use mock mailer in dev
+    mock: true
   smallrye-openapi:
+    info-title: PayU Notification Service API
+    info-version: 1.0.0
+    info-description: Notification API for Push, SMS, Email
 # SMS provider configuration
 payu:
   sms:
-    provider: ${SMS_PROVIDER:LOG}   # LOG | TWILIO | VONAGE | ZENZIVA
+    provider: ${SMS_PROVIDER:LOG}
     # twilio:
     #   account-sid: ${TWILIO_SID:}
     #   auth-token: ${TWILIO_TOKEN:}
@@ -61,9 +62,7 @@ payu:
     #   api-secret: ${VONAGE_SECRET:}
     # zenziva:
     #   userkey: ${ZENZIVA_USERKEY:}
-    #   passkey: ${ZENZIVA_PASSKEY:}    info-title: PayU Notification Service API
-    info-version: 1.0.0
-    info-description: Notification API for Push, SMS, Email
+    #   passkey: ${ZENZIVA_PASSKEY:}
   log:
     level: INFO
     category:

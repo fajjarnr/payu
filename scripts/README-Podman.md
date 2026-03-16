@@ -72,7 +72,7 @@ Scan PayU container images for vulnerabilities using Trivy.
 ./scan-images-podman.sh -a
 
 # Scan specific image
-./scan-images-podman.sh -t account-service:latest
+./scan-images-podman.sh -t account-service:1.4.0
 
 # Scan with high severity only
 ./scan-images-podman.sh -a -s HIGH
@@ -151,14 +151,14 @@ export BUILDKIT_BUILD=1
 ./scan-images-podman.sh -a -s HIGH -f json -o security-report.json
 
 # CI/CD pipeline scan
-./scan-images-podman.sh -t myapp:latest -s HIGH -f junit -o security-report.xml
+./scan-images-podman.sh -t myapp:1.4.0 -s HIGH -f junit -o security-report.xml
 ```
 
 ### Running Services
 ```bash
 # Build and run a service
 ./build-service-podman.sh account-service
-podman run -d --name account-service -p 8080:8080 localhost/account-service:latest
+podman run -d --name account-service -p 8080:8080 localhost/account-service:1.4.0
 
 # Or use quadlet service
 sudo systemctl enable --now account-service

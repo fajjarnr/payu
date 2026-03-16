@@ -1,16 +1,18 @@
 import { test, expect } from '@playwright/test';
 
 test('merchant register page loads and displays correctly', async ({ page }) => {
-  await page.goto('http://localhost:3000/merchant/register');
+  await page.goto('/merchant/register');
+  await page.waitForLoadState('networkidle');
 
-  await expect(page.getByRole('heading', { name: 'DAFTAR MERCHANT BARU' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Daftar Merchant Baru' })).toBeVisible();
   await expect(page.getByText('Bergabunglah dengan ekosistem pembayaran PayU dan terima pembayaran instan dari jutaan pengguna.')).toBeVisible();
 });
 
 test('merchant register form validation', async ({ page }) => {
-  await page.goto('http://localhost:3000/merchant/register');
+  await page.goto('/merchant/register');
+  await page.waitForLoadState('networkidle');
 
-  const submitButton = page.getByRole('button', { name: /DAFTAR SEKARANG/i });
+  const submitButton = page.getByRole('button', { name: /Daftar Sekarang/i });
   await submitButton.click();
 
   await expect(page.getByText('Nama merchant minimal 3 karakter')).toBeVisible();
@@ -20,16 +22,18 @@ test('merchant register form validation', async ({ page }) => {
 });
 
 test('merchant register form submission with valid data', async ({ page }) => {
-  await page.goto('http://localhost:3000/merchant/register');
+  await page.goto('/merchant/register');
+  await page.waitForLoadState('networkidle');
 
   await page.fill('input[type="text"]', 'Test Merchant');
   await page.fill('input[type="email"]', 'merchant@test.com');
   await page.fill('input[type="tel"]', '+6281234567890');
 
-  const retailType = page.getByText('RETAIL').first();
+  // Click the Retail merchant type button (contains label text "Retail")
+  const retailType = page.locator('button', { hasText: 'Retail' }).first();
   await retailType.click();
 
-  const submitButton = page.getByRole('button', { name: /DAFTAR SEKARANG/i });
+  const submitButton = page.getByRole('button', { name: /Daftar Sekarang/i });
   await submitButton.click();
 
   await expect(page.locator('text=Nama merchant minimal 3 karakter')).not.toBeVisible();
@@ -39,23 +43,28 @@ test('merchant register form submission with valid data', async ({ page }) => {
 });
 
 test('merchant type selection', async ({ page }) => {
-  await page.goto('http://localhost:3000/merchant/register');
+  await page.goto('/merchant/register');
+  await page.waitForLoadState('networkidle');
 
-  const retailType = page.getByText('Retail').first();
+  // Click the Retail type button
+  const retailType = page.locator('button', { hasText: 'Retail' }).first();
   await retailType.click();
 
-  await expect(page.getByRole('button', { name: 'Retail' })).toBeVisible();
+  // Verify the button containing "Retail" is visible (it already was, but now selected)
+  await expect(page.locator('button', { hasText: 'Retail' }).first()).toBeVisible();
 
-  const foodType = page.getByText('Food & Beverage').first();
+  // Click the Food & Beverage type button
+  const foodType = page.locator('button', { hasText: 'Food & Beverage' }).first();
   await foodType.click();
 
-  await expect(page.getByRole('button', { name: 'Food & Beverage' })).toBeVisible();
+  await expect(page.locator('button', { hasText: 'Food & Beverage' }).first()).toBeVisible();
 });
 
 test('merchant register public key field', async ({ page }) => {
-  await page.goto('http://localhost:3000/merchant/register');
+  await page.goto('/merchant/register');
+  await page.waitForLoadState('networkidle');
 
-  const publicKeyLabel = page.getByText('PUBLIC KEY (OPSIONAL)');
+  const publicKeyLabel = page.getByText('Public Key (Opsional)');
   await expect(publicKeyLabel).toBeVisible();
 
   const publicKeyInput = page.getByPlaceholder('-----BEGIN PUBLIC KEY-----');
@@ -66,11 +75,34 @@ test('merchant register public key field', async ({ page }) => {
   await expect(publicKeyInput).toHaveValue(/test-key/);
 });
 
-test('merchant register back to dashboard link', async ({ page }) => {
-  await page.goto('http://localhost:3000/merchant/register');
+test('merchant register back to dashboard link', async ({ page, context }) => {
+  await page.goto('/merchant/register');
+  await page.waitForLoadState('networkidle');
 
-  const backButton = page.getByText('KEMBALI KE DASHBOARD MERCHANT');
+  const backButton = page.getByText('Kembali ke Dashboard Merchant');
   await expect(backButton).toBeVisible();
+
+  // Set up auth cookies before navigating to the protected /merchant route
+  await context.addCookies([
+    {
+      name: 'accessToken',
+      value: 'mock-access-token-for-e2e-tests',
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      secure: false,
+      sameSite: 'Lax',
+    },
+    {
+      name: 'payu_session',
+      value: 'mock-session-for-e2e-tests',
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      secure: false,
+      sameSite: 'Lax',
+    },
+  ]);
 
   await backButton.click();
   await page.waitForURL('**/merchant');
@@ -79,7 +111,8 @@ test('merchant register back to dashboard link', async ({ page }) => {
 });
 
 test('merchant register displays all merchant types', async ({ page }) => {
-  await page.goto('http://localhost:3000/merchant/register');
+  await page.goto('/merchant/register');
+  await page.waitForLoadState('networkidle');
 
   await expect(page.getByText('Retail')).toBeVisible();
   await expect(page.getByText('Food & Beverage')).toBeVisible();
@@ -89,12 +122,13 @@ test('merchant register displays all merchant types', async ({ page }) => {
 });
 
 test('merchant register visual elements', async ({ page }) => {
-  await page.goto('http://localhost:3000/merchant/register');
+  await page.goto('/merchant/register');
+  await page.waitForLoadState('networkidle');
 
   const svgCount = await page.locator('svg').count();
   expect(svgCount).toBeGreaterThan(0);
 
-  await expect(page.getByRole('button', { name: /DAFTAR SEKARANG/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Daftar Sekarang/i })).toBeVisible();
 
   await expect(page.getByText('Dengan mendaftar, Anda menyetujui')).toBeVisible();
 });

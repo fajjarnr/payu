@@ -4,7 +4,7 @@ set -e
 
 REGISTRY="${1:-default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id}"
 NS="payu-dev"
-TAG="latest"
+TAG="${2:-1.4.0}"
 BACKEND="/home/ubuntu/payu/backend"
 
 # Java services (Spring Boot + Quarkus)
@@ -25,9 +25,11 @@ JAVA_SERVICES=(
   compliance-service
   fx-service
   cms-service
-  ab-testing-service
   api-portal-service
   billing-service
+  dispute-service
+  integration-service
+  product-catalog-service
 )
 
 # Python services

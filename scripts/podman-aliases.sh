@@ -256,7 +256,7 @@ build-for-payu() {
         return 1
     fi
     local image_name=$1
-    local tag=${2:-latest}
+    local tag=${2:-1.4.0}
     local full_name="${PODMAN_REGISTRY:-registry.payu.internal}/${image_name}:${tag}"
     echo -e "${BLUE}Building image ${image_name} as ${full_name}...${NC}"
     podman build -t "${full_name}" .
@@ -270,7 +270,7 @@ push-to-payu() {
         return 1
     fi
     local image_name=$1
-    local tag=${2:-latest}
+    local tag=${2:-1.4.0}
     local full_name="${PODMAN_REGISTRY:-registry.payu.internal}/${image_name}:${tag}"
     echo -e "${BLUE}Pushing image ${full_name} to registry...${NC}"
     podman push "${full_name}"
@@ -284,7 +284,7 @@ pull-from-payu() {
         return 1
     fi
     local image_name=$1
-    local tag=${2:-latest}
+    local tag=${2:-1.4.0}
     local full_name="${PODMAN_REGISTRY:-registry.payu.internal}/${image_name}:${tag}"
     echo -e "${BLUE}Pulling image ${full_name} from registry...${NC}"
     podman pull "${full_name}"

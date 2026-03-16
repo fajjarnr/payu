@@ -174,7 +174,7 @@ get_images_to_scan() {
                 service_name=$(basename "$service_dir")
 
                 # Check if image exists
-                local local_image="localhost/${service_name}:latest"
+                local local_image="localhost/${service_name}:1.4.0"
                 if podman image exists "$local_image"; then
                     echo "$local_image"
                 fi

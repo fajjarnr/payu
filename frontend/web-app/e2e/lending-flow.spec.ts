@@ -14,18 +14,20 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display loan and paylater tabs', async ({ authPage: page }) => {
-    await expect(page.getByRole('button', { name: 'Pinjaman' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'PayLater' })).toBeVisible();
+    // Tabs have role="tab", not role="button"
+    await expect(page.getByRole('tab', { name: 'Pinjaman' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'PayLater' })).toBeVisible();
   });
 
   test('should have loans tab active by default', async ({ authPage: page }) => {
-    const activeTab = page.locator('button').filter({ hasText: 'Pinjaman' });
-    await expect(activeTab).toHaveClass(/bg-primary/);
+    const activeTab = page.getByRole('tab', { name: 'Pinjaman' });
+    // Radix Tabs uses data-state="active" attribute for the selected tab
+    await expect(activeTab).toHaveAttribute('data-state', 'active');
   });
 
   test('should switch to PayLater tab', async ({ authPage: page }) => {
-    // Click the PayLater tab using text content since data-testid is not available
-    await page.click('button:has-text("PayLater")');
+    // Click the PayLater tab
+    await page.getByRole('tab', { name: 'PayLater' }).click();
 
     // Wait for the PayLater content to appear with proper timeout
     await page.waitForTimeout(500);
@@ -45,16 +47,19 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display credit score progress bar', async ({ authPage: page }) => {
-    const progressBar = page.locator('.bg-white\/10.h-2.rounded-full');
-    await expect(progressBar).toBeVisible();
+    // The progress bar container uses Tailwind classes with special chars that can't be used as CSS selectors.
+    // Use the score card's gradient container as reference and find the progress bar within it.
+    const scoreCard = page.locator('[class*="bg-gradient-to-br"][class*="from-gray-900"]');
+    await expect(scoreCard).toBeVisible();
 
-    const progressFill = page.locator('.bg-gradient-to-r.from-success-light');
-    await expect(progressFill).toBeVisible();
+    // The progress bar is inside the score card - a div with h-2 and rounded-full
+    const progressBar = scoreCard.locator('[class*="h-2"][class*="rounded-full"]').first();
+    await expect(progressBar).toBeVisible();
   });
 
   test('should display total loan limit', async ({ authPage: page }) => {
     await expect(page.getByText('Total Limit Pinjaman')).toBeVisible();
-    // Use first() to handle strict mode violation since the amount appears in multiple places
+    // Intl.NumberFormat('id-ID') formats as "Rp 50.000.000" (with space after Rp)
     await expect(page.getByText(/Rp\s*50\.000\.000/).first()).toBeVisible();
   });
 
@@ -77,26 +82,24 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display PayLater limit on PayLater tab', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
     await expect(page.getByText('PayLater Limit')).toBeVisible();
-    // The amount format uses "Rp10.500.000" without space after Rp
     await expect(page.getByText(/Rp\s*10\.500\.000/)).toBeVisible();
   });
 
   test('should display PayLater usage breakdown', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
     await expect(page.getByText('Limit Terpakai')).toBeVisible();
-    // Check for usage amounts separately
     await expect(page.getByText(/Rp\s*4\.500\.000/)).toBeVisible();
     await expect(page.getByText(/Rp\s*15\.000\.000/)).toBeVisible();
   });
 
   test('should display PayLater due date', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
     await expect(page.getByText('Jatuh Tempo')).toBeVisible();
@@ -104,7 +107,7 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display minimum payment', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
     await expect(page.getByText('Pembayaran Minimum')).toBeVisible();
@@ -112,7 +115,7 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display PayLater transactions', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
     await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible();
@@ -122,21 +125,23 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display transaction status indicators', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
-    // Status text is split across multiple elements, check for key parts
-    await expect(page.getByText('Dibayar')).toBeVisible();
-    await expect(page.getByText('Menunggu')).toBeVisible(); // "Menunggu Pembayaran" is split
+    // Status text: "Dibayar" and "Menunggu Pembayaran" (full text, not truncated)
+    await expect(page.getByText('Dibayar').first()).toBeVisible();
+    await expect(page.getByText('Menunggu Pembayaran').first()).toBeVisible();
   });
 
   test('should have apply loan buttons', async ({ authPage: page }) => {
-    const applyButtons = page.locator('button:has-text("Ajukan Sekarang")');
+    // ButtonMotion wraps Button, creating nested button elements.
+    // Use data-testid to target the actual Button elements (not the ButtonMotion wrappers).
+    const applyButtons = page.locator('[data-testid^="apply-loan-"]');
     await expect(applyButtons).toHaveCount(2);
   });
 
   test('should have activate PayLater button', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
     // Check for activate button text
@@ -144,11 +149,11 @@ test.describe('Lending Flow', () => {
   });
 
   test('should have pay bill button on PayLater tab', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
-    // Check for pay button text
-    await expect(page.getByText('Bayar Tagihan')).toBeVisible();
+    // Use data-testid to target the specific pay button (avoids nested button strict mode)
+    await expect(page.getByTestId('pay-bill-button')).toBeVisible();
   });
 
   test('should be responsive on mobile viewport', async ({ authPage: page }) => {
@@ -168,13 +173,13 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display transaction summary', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
     await expect(page.getByText('Ringkasan Transaksi')).toBeVisible();
     await expect(page.getByText('Total Transaksi')).toBeVisible();
     await expect(page.getByText('Pembayaran Berhasil')).toBeVisible();
-    await expect(page.getByText('Menunggu')).toBeVisible();
+    await expect(page.getByText('Menunggu Pembayaran').first()).toBeVisible();
   });
 
   test('should display processing time for loans', async ({ authPage: page }) => {
@@ -191,7 +196,7 @@ test.describe('Lending Flow - Loan Application', () => {
   });
 
   test('should click apply for personal loan', async ({ authPage: page }) => {
-    const applyButton = page.locator('button:has-text("Ajukan Sekarang")').first();
+    const applyButton = page.getByTestId('apply-loan-0');
     await applyButton.click();
 
     // In real scenario would open loan application form
@@ -199,7 +204,7 @@ test.describe('Lending Flow - Loan Application', () => {
   });
 
   test('should click apply for multiguna loan', async ({ authPage: page }) => {
-    const applyButton = page.locator('button:has-text("Ajukan Sekarang")').nth(1);
+    const applyButton = page.getByTestId('apply-loan-1');
     await applyButton.click();
 
     // In real scenario would open loan application form
@@ -217,10 +222,10 @@ test.describe('Lending Flow - Loan Application', () => {
   });
 
   test('should display loan limits', async ({ authPage: page }) => {
-    // Check that loan limit ranges are displayed
-    await expect(page.getByText(/Rp\s*2\.000\.000/)).toBeVisible();
-    await expect(page.getByText(/Rp\s*50\.000\.000/)).toBeVisible();
-    await expect(page.getByText(/Rp\s*10\.000\.000/)).toBeVisible();
+    // Intl.NumberFormat('id-ID') formats with space: "Rp 2.000.000"
+    await expect(page.getByText(/Rp\s*2\.000\.000/).first()).toBeVisible();
+    await expect(page.getByText(/Rp\s*50\.000\.000/).first()).toBeVisible();
+    await expect(page.getByText(/Rp\s*10\.000\.000/).first()).toBeVisible();
     await expect(page.getByText(/Rp\s*200\.000\.000/)).toBeVisible();
   });
 
@@ -229,8 +234,8 @@ test.describe('Lending Flow - Loan Application', () => {
     await expect(page.getByText('Pinjaman Personal')).toBeVisible();
     await expect(page.getByText('Pinjaman Multiguna')).toBeVisible();
 
-    // Check for apply buttons
-    const applyButtons = page.locator('button:has-text("Ajukan Sekarang")');
+    // Check for apply buttons using data-testid (avoids nested button count issues)
+    const applyButtons = page.locator('[data-testid^="apply-loan-"]');
     await expect(applyButtons).toHaveCount(2);
   });
 });
@@ -238,7 +243,8 @@ test.describe('Lending Flow - Loan Application', () => {
 test.describe('Lending Flow - PayLater', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.click('button:has-text("PayLater")');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     // Wait for state to update - use a longer timeout for reliability
     await page.waitForTimeout(500);
   });
@@ -284,20 +290,21 @@ test.describe('Lending Flow - PayLater', () => {
   });
 
   test('should have pay bill button functional', async ({ authPage: page }) => {
-    const payButton = page.locator('button:has-text("Bayar Tagihan")');
+    // Use data-testid to avoid strict mode with nested buttons
+    const payButton = page.getByTestId('pay-bill-button');
     await expect(payButton).toBeVisible();
   });
 
   test('should display transaction summary stats', async ({ authPage: page }) => {
     await expect(page.getByText('Total Transaksi')).toBeVisible();
     await expect(page.getByText('Pembayaran Berhasil')).toBeVisible();
-    await expect(page.getByText('Menunggu Pembayaran')).toBeVisible();
+    await expect(page.getByText('Menunggu Pembayaran').first()).toBeVisible();
   });
 
   test('should have proper status styling', async ({ authPage: page }) => {
     // Check for status text content rather than CSS classes
-    await expect(page.getByText('Dibayar')).toBeVisible();
-    await expect(page.getByText('Menunggu')).toBeVisible();
+    await expect(page.getByText('Dibayar').first()).toBeVisible();
+    await expect(page.getByText('Menunggu Pembayaran').first()).toBeVisible();
   });
 });
 
@@ -322,13 +329,14 @@ test.describe('Lending Flow - Credit Score', () => {
   });
 
   test('should have credit score factors with icons', async ({ authPage: page }) => {
+    // The check icons use the text-success-light class
     const checkIcons = page.locator('.text-success-light');
     const checkCount = await checkIcons.count();
     expect(checkCount).toBeGreaterThanOrEqual(3);
   });
 
   test('should display credit score in gradient card', async ({ authPage: page }) => {
-    const scoreCard = page.locator('.bg-gradient-to-br.from-gray-900.to-gray-800');
+    const scoreCard = page.locator('[class*="bg-gradient-to-br"][class*="from-gray-900"]');
     await expect(scoreCard).toBeVisible();
   });
 });
@@ -356,14 +364,14 @@ test.describe('Lending Flow - Accessibility', () => {
   });
 
   test('should have accessible tab buttons', async ({ authPage: page }) => {
-    const tabs = page.locator('button').filter({ hasText: /Pinjaman|PayLater/ });
+    const tabs = page.getByRole('tab');
     await expect(tabs).toHaveCount(2);
   });
 
   test('should switch tabs with keyboard', async ({ authPage: page }) => {
     // Click the PayLater tab directly instead of relying on keyboard navigation
     // which is timing-sensitive and may not work consistently
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
     // Should switch to PayLater
@@ -413,7 +421,7 @@ test.describe('Lending Flow - Error Handling', () => {
 
   test('should handle loan application error', async ({ authPage: page }) => {
     // Click apply button (would fail if credit score too low)
-    const applyButton = page.locator('button:has-text("Ajukan Sekarang")').first();
+    const applyButton = page.getByTestId('apply-loan-0');
     await applyButton.click();
 
     // In real scenario, might show error for insufficient credit score
@@ -421,20 +429,20 @@ test.describe('Lending Flow - Error Handling', () => {
   });
 
   test('should handle PayLater activation error', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
-    // Verify activate button exists
-    const activateButton = page.locator('button:has-text("Aktifkan PayLater")');
+    // Verify activate button exists - use data-testid to avoid nested button issue
+    const activateButton = page.getByTestId('activate-paylater-button');
     await expect(activateButton).toBeVisible();
   });
 
   test('should handle payment error gracefully', async ({ authPage: page }) => {
-    await page.click('button:has-text("PayLater")');
+    await page.getByRole('tab', { name: 'PayLater' }).click();
     await page.waitForTimeout(300);
 
-    // Verify pay button exists
-    const payButton = page.locator('button:has-text("Bayar Tagihan")');
+    // Verify pay button exists - use data-testid to avoid nested button issue
+    const payButton = page.getByTestId('pay-bill-button');
     await expect(payButton).toBeVisible();
   });
 });
@@ -452,7 +460,7 @@ test.describe('Lending Flow - Interactive Elements', () => {
   });
 
   test('should have active scale effect on buttons', async ({ authPage: page }) => {
-    const applyButton = page.locator('button:has-text("Ajukan Sekarang")').first();
+    const applyButton = page.getByTestId('apply-loan-0');
 
     // Check for active scale class - the actual class name is active:scale-[0.98]
     // Playwright toHaveClass checks the actual className attribute, not CSS selector format
