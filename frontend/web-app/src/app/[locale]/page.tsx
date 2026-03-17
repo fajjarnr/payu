@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { Shield, Zap, Menu, X, PieChart, Globe, ArrowUpRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 import gsap from 'gsap';
 import { Observer } from 'gsap/Observer';
 
@@ -174,7 +175,7 @@ export default function LandingPage() {
              
              <h1 
                className="text-5xl md:text-7xl font-bold leading-tight text-white tracking-tight text-shadow-lg"
-               dangerouslySetInnerHTML={{ __html: t.raw('heroTitle') }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t.raw('heroTitle')) }}
              />
              
              {/* The Floating Card System */}
@@ -234,7 +235,7 @@ export default function LandingPage() {
                <Link href={l('/onboarding')} className="px-10 py-4 bg-white text-[#050a08] hover:bg-emerald-50 rounded-full font-bold text-base transition-colors shadow-lg">
                   {t('getStarted')}
                </Link>
-               <p className="text-emerald-100/60 text-sm font-medium">Bebas Biaya Admin Bulanan</p>
+               <p className="text-emerald-100/60 text-sm font-medium">{t('hero.freeAdmin')}</p>
             </div>
           </div>
         </section>
@@ -254,14 +255,14 @@ export default function LandingPage() {
               {/* Left Content (5 Cols) */}
               <div className="lg:col-span-5 space-y-6 md:space-y-8 text-left">
                  <div className="inline-block px-3 py-1 md:px-4 border border-emerald-500/30 rounded-full bg-emerald-900/20 backdrop-blur-sm">
-                     <span className="text-emerald-400 text-[10px] md:text-xs font-semibold uppercase tracking-wider">Inovasi Digital</span>
+                      <span className="text-emerald-400 text-[10px] md:text-xs font-semibold uppercase tracking-wider">{t('slide2.badge')}</span>
                  </div>
-                 <h2 className="text-3xl md:text-6xl font-bold text-white leading-tight">
-                    Ekosistem <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">Terintegrasi.</span>
-                 </h2>
-                 <p className="text-emerald-100/70 text-sm md:text-lg font-normal leading-relaxed max-w-md border-l-2 border-emerald-500/30 pl-4 md:pl-6">
-                    Platform perbankan yang menghubungkan setiap aspek kebutuhan finansial Anda dengan teknologi terkini.
-                 </p>
+                  <h2 className="text-3xl md:text-6xl font-bold text-white leading-tight">
+                     {t('slide2.title')} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">{t('slide2.titleHighlight')}</span>
+                  </h2>
+                  <p className="text-emerald-100/70 text-sm md:text-lg font-normal leading-relaxed max-w-md border-l-2 border-emerald-500/30 pl-4 md:pl-6">
+                     {t('slide2.subtitle')}
+                  </p>
               </div>
               
               {/* Right Content (7 Cols) - Vertical Stack on Mobile, Staggered on Desktop */}
@@ -269,20 +270,20 @@ export default function LandingPage() {
                  <div className="space-y-4 md:space-y-6 md:translate-y-12">
                       <div className="p-6 md:p-8 bg-[#0f1d18]/80 rounded-2xl md:rounded-[2rem] border border-white/5 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 group">
                          <Zap className="w-6 h-6 md:w-8 md:h-8 text-emerald-400 mb-3 md:mb-4" />
-                         <h4 className="text-lg md:text-xl font-bold text-white mb-2">Analitik Cerdas</h4>
-                         <p className="text-xs md:text-sm text-white/50 font-normal leading-relaxed">Pantau pengeluaran dan pemasukan dengan laporan detail real-time.</p>
+                          <h4 className="text-lg md:text-xl font-bold text-white mb-2">{t('slide2.analytics.title')}</h4>
+                          <p className="text-xs md:text-sm text-white/50 font-normal leading-relaxed">{t('slide2.analytics.desc')}</p>
                       </div>
                       <div className="p-6 md:p-8 bg-emerald-900/20 rounded-2xl md:rounded-[2rem] border border-white/5 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 group backdrop-blur-md">
                          <Globe className="w-6 h-6 md:w-8 md:h-8 text-emerald-400 mb-3 md:mb-4" />
-                         <h4 className="text-lg md:text-xl font-bold text-white mb-2">Konektivitas</h4>
-                         <p className="text-xs md:text-sm text-white/50 font-normal leading-relaxed">Transaksi tanpa batas ke berbagai bank dan merchant di seluruh dunia.</p>
+                          <h4 className="text-lg md:text-xl font-bold text-white mb-2">{t('slide2.connectivity.title')}</h4>
+                          <p className="text-xs md:text-sm text-white/50 font-normal leading-relaxed">{t('slide2.connectivity.desc')}</p>
                       </div>
                  </div>
                  <div className="md:pt-0">
                       <div className="p-6 md:p-8 bg-gradient-to-b from-white/5 to-[#0f1d18]/50 rounded-2xl md:rounded-[2rem] border border-white/10 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 group h-full flex flex-col justify-center">
                          <Shield className="w-8 h-8 md:w-10 md:h-10 text-emerald-400 mb-4 md:mb-6" />
-                         <h4 className="text-xl md:text-2xl font-bold text-white mb-2">Keamanan</h4>
-                         <p className="text-xs md:text-sm text-white/50 font-normal leading-relaxed">Perlindungan data pribadi dan aset Anda dengan enkripsi tingkat lanjut.</p>
+                          <h4 className="text-xl md:text-2xl font-bold text-white mb-2">{t('slide2.security.title')}</h4>
+                          <p className="text-xs md:text-sm text-white/50 font-normal leading-relaxed">{t('slide2.security.desc')}</p>
                       </div>
                  </div>
               </div>
@@ -300,19 +301,19 @@ export default function LandingPage() {
                  <div className="absolute inset-0 bg-gradient-to-r from-[#1e332b] to-transparent z-0 lg:hidden" />
                  <div className="relative z-10 space-y-12">
                      <div className="space-y-6">
-                        <span className="inline-block text-emerald-400 text-xs font-semibold tracking-wider uppercase bg-black/20 px-4 py-2 rounded-lg">Tanpa Batas</span>
-                        <h2 className="text-5xl md:text-7xl font-bold text-white leading-tight">
-                           Akses Global <br/> <span className="text-emerald-500">Kapan Saja.</span>
-                        </h2>
+                         <span className="inline-block text-emerald-400 text-xs font-semibold tracking-wider uppercase bg-black/20 px-4 py-2 rounded-lg">{t('slide3.badge')}</span>
+                         <h2 className="text-5xl md:text-7xl font-bold text-white leading-tight">
+                            {t('slide3.title')} <br/> <span className="text-emerald-500">{t('slide3.titleHighlight')}</span>
+                         </h2>
                      </div>
                      <div className="flex gap-16 border-t border-white/10 pt-8">
                         <div>
                            <p className="text-4xl font-bold text-white">50T+</p>
-                           <p className="text-sm text-emerald-400 font-medium mt-1">Transaksi Tahunan</p>
+                            <p className="text-sm text-emerald-400 font-medium mt-1">{t('slide3.statsAnnual')}</p>
                         </div>
                         <div>
                            <p className="text-4xl font-bold text-white">2.4M+</p>
-                           <p className="text-sm text-emerald-400 font-medium mt-1">Nasabah Percaya</p>
+                            <p className="text-sm text-emerald-400 font-medium mt-1">{t('slide3.statsTrusted')}</p>
                         </div>
                      </div>
                  </div>
@@ -348,20 +349,20 @@ export default function LandingPage() {
         <section className="h-screen min-w-full relative flex flex-col justify-center bg-[#0a1410] overflow-hidden">
            <div className="max-w-4xl mx-auto px-6 text-center space-y-16">
               <div className="space-y-6">
-                 <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight">Mulai Perjalanan <br/> <span className="text-emerald-500">Sekarang.</span></h2>
-                 <p className="text-white/60 text-lg font-normal">Daftar dalam 5 menit dan nikmati layanan perbankan modern.</p>
+                  <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight">{t('slide4.title')} <br/> <span className="text-emerald-500">{t('slide4.titleHighlight')}</span></h2>
+                  <p className="text-white/60 text-lg font-normal">{t('slide4.subtitle')}</p>
               </div>
 
               <div className="flex flex-col items-center gap-10">
                  <Link href={l('/onboarding')} className="px-20 py-8 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full font-black text-sm uppercase tracking-[0.5em] shadow-[0_30px_60px_rgba(16,185,129,0.3)] transition-all scale-110">
-                    Mulai Gratis
-                 </Link>
+                     {t('slide4.button')}
+                  </Link>
                  
                  <footer className="w-full flex justify-between items-center text-[8px] font-black uppercase tracking-[0.4em] text-white/10 pt-20 border-t border-white/5">
-                    <p>© 2026 PayU Digital Banking Platform</p>
-                     <div className="flex gap-8">
-                        <Link href={l('/terms')} className="hover:text-emerald-500 transition-colors">Syarat & Ketentuan</Link>
-                        <Link href={l('/privacy')} className="hover:text-emerald-500 transition-colors">Privacy Policy</Link>
+                     <p>{t('footer.rights')}</p>
+                      <div className="flex gap-8">
+                         <Link href={l('/terms')} className="hover:text-emerald-500 transition-colors">{t('slide4.terms')}</Link>
+                         <Link href={l('/privacy')} className="hover:text-emerald-500 transition-colors">{t('slide4.privacy')}</Link>
                      </div>
                  </footer>
               </div>

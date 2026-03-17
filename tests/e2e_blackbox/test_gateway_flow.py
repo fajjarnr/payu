@@ -35,7 +35,9 @@ class TestGatewayServiceFlow:
     def test_cors_preflight(self, api):
         """Test CORS preflight for OPTIONS request"""
         response = api.options("/api/v1/accounts")
-        assert response.status_code in [200, 204, 403, 404, 405, 429, 503], f"Unexpected status: {response.status_code}"
+        # OPTIONS should return 200/204 (CORS allowed) or 405 (method not allowed)
+        # 403/404/503 indicate routing/infra issues, not valid CORS responses
+        assert response.status_code in [200, 204, 405, 429], f"Unexpected status: {response.status_code}"
 
     def test_get_payment_methods(self, api):
         """Get available payment methods"""
@@ -77,13 +79,13 @@ class TestGatewayServiceFlow:
     def test_routing_to_account_service(self, api):
         """Test gateway routing to account service"""
         response = api.get("/api/v1/accounts/health")
-        # Any response means routing works; 401/404 are also valid
-        assert response.status_code in [200, 401, 403, 404, 405, 429, 503], f"Routing failed: {response.status_code}"
+        # Routing works if we get 200 (healthy) or 401 (auth required) — 404 if no /health endpoint exists
+        assert response.status_code in [200, 401, 404, 429, 503], f"Routing failed: {response.status_code}"
 
     def test_routing_to_wallet_service(self, api):
         """Test gateway routing to wallet service"""
         response = api.get("/api/v1/wallets/health")
-        assert response.status_code in [200, 401, 403, 404, 405, 429, 503], f"Routing failed: {response.status_code}"
+        assert response.status_code in [200, 401, 429, 503], f"Routing failed: {response.status_code}"
 
     def test_unauthorized_access(self, api):
         """Test that protected endpoints require authentication"""
@@ -97,4 +99,4 @@ class TestGatewayServiceFlow:
     def test_invalid_route(self, api):
         """Test that invalid routes return 404"""
         response = api.get("/api/v1/nonexistent-service/something")
-        assert response.status_code in [404, 405, 429, 503], f"Expected 404, got: {response.status_code}"
+        assert response.status_code == 404, f"Expected 404, got: {response.status_code}"

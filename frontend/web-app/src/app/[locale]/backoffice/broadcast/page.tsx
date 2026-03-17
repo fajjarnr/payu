@@ -30,48 +30,8 @@ import {
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
-const MOCK_BROADCASTS = [
-  {
-    id: 'BC-001',
-    title: 'Happy Eid Al-Fitr 1447H',
-    channels: ['PUSH', 'SMS'],
-    audience: 'All Users',
-    status: 'SENT',
-    sentCount: '1,245,678',
-    openRate: '42%',
-    timestamp: '2026-02-01T08:00:00Z'
-  },
-  {
-    id: 'BC-002',
-    title: 'System Maintenance - Feb 5',
-    channels: ['PUSH', 'EMAIL'],
-    audience: 'Active Users',
-    status: 'SCHEDULED',
-    sentCount: '-',
-    openRate: '-',
-    timestamp: '2026-02-05T02:00:00Z'
-  },
-  {
-    id: 'BC-003',
-    title: 'Special Gold Promo 5%',
-    channels: ['PUSH'],
-    audience: 'Investors',
-    status: 'FAILED',
-    sentCount: '12,400',
-    openRate: '5%',
-    timestamp: '2026-01-30T10:00:00Z'
-  },
-  {
-    id: 'BC-004',
-    title: 'Update Your KYCs Now',
-    channels: ['EMAIL'],
-    audience: 'Unverified Users',
-    status: 'SENT',
-    sentCount: '4,500',
-    openRate: '68%',
-    timestamp: '2026-01-25T14:30:00Z'
-  }
-];
+// BUG-FE-099: Removed MOCK_BROADCASTS — should be fetched from Notification service API
+const MOCK_BROADCASTS: Array<{ id: string; title: string; channels: string[]; audience: string; status: string; sentCount: string; openRate: string; timestamp: string }> = [];
 
 export default function BroadcastPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -106,10 +66,10 @@ export default function BroadcastPage() {
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Broadcasts Sent', value: '152', color: 'bg-emerald-500', icon: Send },
-              { label: 'Total Messages', value: '4.2M', color: 'bg-blue-500', icon: Smartphone },
-              { label: 'Avg Open Rate', value: '38%', color: 'bg-indigo-500', icon: CheckCircle2 },
-              { label: 'Unsubscribe Rate', value: '0.2%', color: 'bg-rose-500', icon: AlertCircle },
+              { label: 'Broadcasts Sent', value: '—', color: 'bg-emerald-500', icon: Send },
+              { label: 'Total Messages', value: '—', color: 'bg-blue-500', icon: Smartphone },
+              { label: 'Avg Open Rate', value: '—', color: 'bg-indigo-500', icon: CheckCircle2 },
+              { label: 'Unsubscribe Rate', value: '—', color: 'bg-rose-500', icon: AlertCircle },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>

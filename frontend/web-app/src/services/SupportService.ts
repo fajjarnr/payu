@@ -51,10 +51,13 @@ export interface TrainingAssignment {
   dueDate?: string;
 }
 
+// BUG-CROSS-065: Backend AssignTrainingRequest: agentId (Long), moduleId (Long), status (CompletionStatus), score (Integer), notes (String)
 export interface AssignTrainingRequest {
-  agentId: string;
-  moduleId: string;
-  dueDate?: string;
+  agentId: number;
+  moduleId: number;
+  status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  score?: number;
+  notes?: string;
 }
 
 export interface TrainingStatusSummary {
@@ -119,8 +122,9 @@ class SupportService {
 
   // === Training Status (overview) ===
 
+  // BUG-CROSS-060: Backend getTrainingStatus returns Map<String,Object> with activeAgents, trainedAgents, trainingPercentage
   /** GET /support/training-status */
-  async getTrainingStatus(): Promise<TrainingStatusSummary[]> {
+  async getTrainingStatus(): Promise<{ activeAgents: number; trainedAgents: number; trainingPercentage: number }> {
     const response = await api.get('/support/training-status');
     return response.data;
   }
@@ -151,9 +155,11 @@ class SupportService {
     return response.data;
   }
 
+  // BUG-CROSS-059: Backend updateAgentStatus takes @RequestBody Map<String, Boolean> with key 'active'
+  // id param is Long in backend
   /** PATCH /support/agents/{id}/status */
-  async updateAgentStatus(id: string, status: AgentStatus): Promise<SupportAgent> {
-    const response = await api.patch(`/support/agents/${id}/status`, { status });
+  async updateAgentStatus(id: number, active: boolean): Promise<SupportAgent> {
+    const response = await api.patch(`/support/agents/${id}/status`, { active });
     return response.data;
   }
 
@@ -197,20 +203,21 @@ class SupportService {
     return response.data;
   }
 
+  // BUG-CROSS-065: All agent/module IDs are Long (number) in backend
   /** GET /support/trainings/agent/{agentId} */
-  async getAgentTrainings(agentId: string): Promise<TrainingAssignment[]> {
+  async getAgentTrainings(agentId: number): Promise<TrainingAssignment[]> {
     const response = await api.get(`/support/trainings/agent/${agentId}`);
     return response.data;
   }
 
   /** GET /support/trainings/module/{moduleId} */
-  async getModuleTrainings(moduleId: string): Promise<TrainingAssignment[]> {
+  async getModuleTrainings(moduleId: number): Promise<TrainingAssignment[]> {
     const response = await api.get(`/support/trainings/module/${moduleId}`);
     return response.data;
   }
 
   /** GET /support/trainings/agent/{agentId}/module/{moduleId} */
-  async getAgentModuleTraining(agentId: string, moduleId: string): Promise<TrainingAssignment> {
+  async getAgentModuleTraining(agentId: number, moduleId: number): Promise<TrainingAssignment> {
     const response = await api.get(`/support/trainings/agent/${agentId}/module/${moduleId}`);
     return response.data;
   }
@@ -221,8 +228,9 @@ class SupportService {
     return response.data;
   }
 
+  // BUG-CROSS-061: Backend checkAgentTrainingStatus returns Map<String,Object> with agentId, fullyTrained
   /** GET /support/trainings/agent/{agentId}/status */
-  async getAgentTrainingStatus(agentId: string): Promise<TrainingStatusSummary> {
+  async getAgentTrainingStatus(agentId: number): Promise<{ agentId: number; fullyTrained: boolean }> {
     const response = await api.get(`/support/trainings/agent/${agentId}/status`);
     return response.data;
   }

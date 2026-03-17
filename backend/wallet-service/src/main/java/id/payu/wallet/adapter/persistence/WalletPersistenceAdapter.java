@@ -70,6 +70,11 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
     }
 
     @Override
+    public Optional<Wallet> findByAccountIdForUpdate(String accountId) {
+        return walletRepository.findByAccountIdForUpdate(accountId).map(walletMapper::toDomain);
+    }
+
+    @Override
     public WalletTransaction saveTransaction(WalletTransaction transaction) {
         WalletTransactionEntity savedEntity = transactionRepository.save(toTransactionEntity(transaction));
         return toTransactionDomain(savedEntity);

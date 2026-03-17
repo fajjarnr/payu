@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
-import { useLogout, useBalance } from '@/hooks';
+import { useLogout, useBalance, useUserMetrics, useSpendingTrends, useCashFlow, useInvestmentAccount } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -59,7 +59,12 @@ export default function Home() {
 function Dashboard({ username, handleLogout }: { username: string; handleLogout: () => void }) {
  const t = useTranslations('dashboard');
  const accountId = useAuthStore((state) => state.accountId);
+ const userId = useAuthStore((state) => state.user?.id);
  const { data: balance, isLoading: balanceLoading } = useBalance(accountId || undefined);
+ const { data: metrics, isLoading: metricsLoading } = useUserMetrics(userId);
+ const { data: spending, isLoading: spendingLoading } = useSpendingTrends(userId);
+ const { data: cashFlow, isLoading: cashFlowLoading } = useCashFlow(userId);
+ const { data: investmentAccount, isLoading: investmentLoading } = useInvestmentAccount();
 
  return (
   <DashboardLayout username={username} onLogout={handleLogout}>
@@ -77,17 +82,18 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
      {/* Balance Card - LCP Element 2 (Priority Content) */}
      <div>
       {balanceLoading ? <Skeleton className="h-64 rounded-2xl" /> : (
-       <BalanceCard
-        balance={balance?.balance || 0}
-        percentage={45.2}
-       />
-      )}
+        <BalanceCard
+         balance={balance?.balance || 0}
+         income={metrics?.totalIncome}
+         expense={metrics?.totalSpent}
+        />
+       )}
      </div>
 
      <StaggerContainer className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-8">
       {/* High Priority Actions & Health - 4/8 Split (Aligned with Balance) */}
       <StaggerItem className="md:col-span-12 lg:col-span-4">
-       <FinancialHealthScore score={78} previousScore={72} className="h-full" />
+        <FinancialHealthScore isLoading={metricsLoading} className="h-full" />
       </StaggerItem>
 
       <StaggerItem className="md:col-span-12 lg:col-span-8">
@@ -96,7 +102,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
 
       {/* Activity & Insights - 4/8 Split (Consistent Sidebar) */}
       <StaggerItem className="md:col-span-12 lg:col-span-4">
-       <SpendingInsights className="h-full" />
+        <SpendingInsights isLoading={spendingLoading} className="h-full" />
       </StaggerItem>
 
       <StaggerItem className="md:col-span-12 lg:col-span-8">
@@ -105,16 +111,16 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
 
       {/* Charts & Investment - 4/8 Split (Consistent Sidebar) */}
       <StaggerItem className="md:col-span-12 lg:col-span-4">
-       <InvestmentPerformance className="h-full" />
+        <InvestmentPerformance isLoading={investmentLoading} className="h-full" />
       </StaggerItem>
 
       <StaggerItem className="md:col-span-12 lg:col-span-8">
-       <StatsCharts className="h-full" />
+        <StatsCharts isLoading={spendingLoading} className="h-full" />
       </StaggerItem>
 
       {/* Budget & Offers - 4/8 Split */}
       <StaggerItem className="md:col-span-12 lg:col-span-4">
-       <BudgetTracking className="h-full" />
+        <BudgetTracking isLoading={spendingLoading} className="h-full" />
       </StaggerItem>
 
       <StaggerItem className="md:col-span-12 lg:col-span-8">

@@ -207,11 +207,17 @@ patches:
                   - name: REDIS_PORT
                     value: "11222"
                   - name: KEYCLOAK_ADMIN_PASSWORD
-                    value: "EONue7dM1Zx4_Q=="
+                    valueFrom:
+                      secretKeyRef:
+                        name: keycloak-credentials
+                        key: KEYCLOAK_ADMIN_PASSWORD
                   - name: SPRING_DATASOURCE_USERNAME
                     value: "payu"
                   - name: SPRING_DATASOURCE_PASSWORD
-                    value: "}9/-[a<(+bLLFCvKa2[78JPu"
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials
+                        key: password
 
   - target:
       kind: Deployment

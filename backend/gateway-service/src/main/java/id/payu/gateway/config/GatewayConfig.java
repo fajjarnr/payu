@@ -143,11 +143,21 @@ public interface GatewayConfig {
         /**
          * Test mode: when enabled, requests with X-E2E-Test header bypass rate limiting.
          * This allows E2E test suites to run without hitting rate limits (IMP-070).
-         * MUST be false in production.
+         * BUG-AUTH-025: No @WithDefault — MUST be explicitly set via env var or config.
+         * The application.yaml already defaults to false via ${GATEWAY_RATE_LIMIT_TEST_MODE:false}.
+         * Removing the interface default prevents accidental activation.
          */
         @WithName("test-mode")
         @WithDefault("false")
         boolean testMode();
+
+        /**
+         * BUG-AUTH-025: Quarkus profile check — test-mode bypass is only honored
+         * when running in test/dev profile. Production profile ignores test-mode.
+         */
+        @WithName("test-mode-profiles")
+        @WithDefault("dev,test")
+        List<String> testModeProfiles();
 
         @WithName("default")
         RateLimitRule defaultRule();
@@ -496,8 +506,10 @@ public interface GatewayConfig {
         @WithDefault("true")
         boolean enabled();
 
+        // BUG-AUTH-020: Removed hardcoded @WithDefault for jwt-secret.
+        // The secret MUST be provided via environment variable (JWT_SECRET).
+        // Application will fail fast if not configured.
         @WithName("jwt-secret")
-        @WithDefault("dGVzdC1qd3Qtc2VjcmV0LWZvci1sb2NhbC1kZXZlbG9wbWVudC0xMjM0NTY3ODkw")
         String jwtSecret();
 
         Optional<String> audience();

@@ -9,6 +9,10 @@ resources:
 namespace: payu-staging
 
 # Staging: 1 replica per service, relaxed resource limits
+images:
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev
+    newName: image-registry.openshift-image-registry.svc:5000/payu-staging
+
 patches:
   # Scale down to 1 replica for cost savings
   - patch: |-
@@ -17,7 +21,7 @@ patches:
         value: 1
     target:
       kind: Deployment
-      labelSelector: "app.kubernetes.io/part-of=payu-banking"
+      labelSelector: "app.kubernetes.io/part-of=payu"
 
 configMapGenerator:
   - name: staging-shared-config

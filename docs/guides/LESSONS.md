@@ -517,4 +517,45 @@ Phase 4 backlog hygiene uncovered a data integrity issue: the bug scorecard said
 
 ---
 
-_Last Updated: March 16, 2026_
+### L-022: Frontend Type Drift — Strict TypeScript Catches Service/Page Mismatches
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: Frontend / TypeScript
+
+During Phase 7 bulk bug fixing, fixing one TypeScript error (removing `monthlyLimit` from `cards/page.tsx`) exposed **27+ additional errors** across 8 files. The root cause: frontend service types and page-level usage had drifted apart over months of parallel development.
+
+**Common drift patterns found**:
+- Property names differ (`cardholderName` vs `cardHolderName`, `approvedAmount` vs `maxAmount`)
+- Backend returns flat array but frontend expects paginated `.content` wrapper
+- Service method signatures changed (`getStatement` → `listStatements`) but callers weren't updated
+- ID types inconsistent (`string` vs `number` for agent IDs, `string | undefined` vs `string`)
+- Extended type fields (`target`, `type` on Pocket) never added to the TypeScript interface
+
+**Rule**: (a) Run `next build` (or `tsc --noEmit`) after **every** service type change — never assume callers are compatible. (b) Define a single source-of-truth type per backend DTO and re-export it; never duplicate type shapes. (c) When fixing one type error, budget time for cascading fixes — they are the norm, not the exception.
+
+---
+
+### L-023: Bulk Audit Approach — Verify Before Fixing
+
+**Date**: March 17, 2026 | **Severity**: Medium | **Domain**: Process / Audit
+
+Of 32 backend P0 financial bugs (Batch 1), only **2 needed genuine code changes**. The other 30 were already correctly implemented — the audit descriptions were based on code snapshots that had since been fixed in earlier phases. Blindly "fixing" already-correct code would have introduced regressions.
+
+**Verification protocol**: For each bug, (1) read the current code at the exact location described, (2) check if the described vulnerability still exists, (3) only modify if the bug is confirmed present. This cut Batch 1 effort from ~32 fixes to 2.
+
+**Rule**: (a) Never batch-apply fixes from an audit report without first verifying each finding against the current codebase state. (b) Mark findings as "Already Fixed" with evidence (file:line, pattern found) rather than silently skipping them. (c) When an audit is stale, the verification pass IS the primary deliverable.
+
+---
+
+### L-024: Auth Parameter Changes Break Unit Tests
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: Backend / Testing
+
+Adding `@AuthenticationPrincipal Jwt jwt` to controller methods for security fixes (Batch 2) broke unit tests that called those methods without the new parameter. Both `CardControllerTest.java` and `LendingApplicationServiceTest.java` failed to compile.
+
+**Root Cause**: Controller unit tests call methods directly (not via MockMvc), so adding a parameter changes the method signature. Integration tests using MockMvc are unaffected because they go through the full Spring Security filter chain.
+
+**Rule**: (a) After adding `@AuthenticationPrincipal` to any controller method, immediately grep for direct method calls in test files: `grep -rn "methodName(" backend/*/src/test/`. (b) For unit tests, create a mock `Jwt` object: `Jwt.withTokenValue("test").header("alg","RS256").claim("account_id","test-id").build()`. (c) Prefer MockMvc-based tests for controllers with security annotations — they test the full stack including auth resolution.
+
+---
+
+_Last Updated: March 17, 2026_

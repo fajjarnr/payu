@@ -84,24 +84,21 @@ spec:
             subset: v1
       timeout: 5s
 
-    # Gateway Service routes
+    # Auth Service routes (bypass gateway for auth)
+    # NOTE: This route must come BEFORE the gateway /v1/auth/ route to avoid shadowing
     - match:
         - uri:
-            prefix: /v1/auth/
+            prefix: /v1/auth
       rewrite:
-        uri: /v1/auth/
+        uri: /v1/auth
       route:
         - destination:
-            host: gateway-service.payu-prod.svc.cluster.local
+            host: auth-service.payu-prod.svc.cluster.local
             port:
               number: 8080
             subset: v1
           weight: 100
-      timeout: 30s
-      retries:
-        attempts: 3
-        perTryTimeout: 10s
-        retryOn: 5xx,reset,connect-failure,refused-stream
+      timeout: 15s
 
     # Account Service routes
     - match:
@@ -113,7 +110,7 @@ spec:
         - destination:
             host: account-service.payu-prod.svc.cluster.local
             port:
-              number: 8081
+              number: 8080
             subset: v1
           weight: 100
       timeout: 10s
@@ -121,21 +118,6 @@ spec:
         attempts: 2
         perTryTimeout: 5s
         retryOn: 5xx,connect-failure
-
-    # Auth Service routes (bypass gateway for auth)
-    - match:
-        - uri:
-            prefix: /v1/auth
-      rewrite:
-        uri: /v1/auth
-      route:
-        - destination:
-            host: auth-service.payu-prod.svc.cluster.local
-            port:
-              number: 8082
-            subset: v1
-          weight: 100
-      timeout: 15s
 
     # Transaction Service routes
     - match:
@@ -147,7 +129,7 @@ spec:
         - destination:
             host: transaction-service.payu-prod.svc.cluster.local
             port:
-              number: 8083
+              number: 8080
             subset: v1
           weight: 100
       timeout: 30s
@@ -166,7 +148,7 @@ spec:
         - destination:
             host: wallet-service.payu-prod.svc.cluster.local
             port:
-              number: 8084
+              number: 8080
             subset: v1
           weight: 100
       timeout: 10s
@@ -181,7 +163,7 @@ spec:
         - destination:
             host: billing-service.payu-prod.svc.cluster.local
             port:
-              number: 8085
+              number: 8080
             subset: v1
           weight: 100
       timeout: 15s
@@ -196,7 +178,7 @@ spec:
         - destination:
             host: notification-service.payu-prod.svc.cluster.local
             port:
-              number: 8086
+              number: 8080
             subset: v1
           weight: 100
       timeout: 10s
@@ -211,7 +193,7 @@ spec:
         - destination:
             host: kyc-service.payu-prod.svc.cluster.local
             port:
-              number: 8087
+              number: 8080
             subset: v1
           weight: 100
       timeout: 60s # Longer timeout for image processing
@@ -226,7 +208,7 @@ spec:
         - destination:
             host: analytics-service.payu-prod.svc.cluster.local
             port:
-              number: 8088
+              number: 8080
             subset: v1
           weight: 100
       timeout: 30s
@@ -282,7 +264,7 @@ spec:
         - destination:
             host: account-service
             port:
-              number: 8081
+              number: 8080
             subset: v1
           weight: 100
 
@@ -294,7 +276,7 @@ spec:
         - destination:
             host: auth-service
             port:
-              number: 8082
+              number: 8080
             subset: v1
           weight: 100
 
@@ -306,7 +288,7 @@ spec:
         - destination:
             host: transaction-service
             port:
-              number: 8083
+              number: 8080
             subset: v1
           weight: 100
 
@@ -318,7 +300,7 @@ spec:
         - destination:
             host: wallet-service
             port:
-              number: 8084
+              number: 8080
             subset: v1
           weight: 100
 ---
@@ -448,19 +430,8 @@ spec:
     matchLabels:
       app: istio-ingressgateway
   jwtRules:
-    - issuer: "https://keycloak.payu.local/realms/payu"
-      jwks: |
-        {
-          "keys": [
-            {
-              "kty": "RSA",
-              "use": "sig",
-              "kid": "payu-key-id",
-              "n": "...",
-              "e": "AQAB"
-            }
-          ]
-        }
+    - issuer: "https://sso.payu.fajjjar.my.id/realms/payu"
+      jwksUri: https://sso.payu.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
       forwardOriginalToken: true
       fromHeaders:
         - name: Authorization

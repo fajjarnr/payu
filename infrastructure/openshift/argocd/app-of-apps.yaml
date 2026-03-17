@@ -65,20 +65,20 @@ data:
     end
     return hs
 
-  # Custom health checks for OpenShift resources
-  resource.customizations.health.apps.openshift.io_DeploymentConfig: |
+  # Custom health checks for OpenShift Deployments
+  resource.customizations.health.apps_Deployment: |
     hs = {}
     if obj.status ~= nil and obj.status.readyReplicas ~= nil then
       if obj.status.readyReplicas == obj.spec.replicas then
         hs.status = "Healthy"
-        hs.message = "DeploymentConfig is healthy"
+        hs.message = "Deployment is healthy"
       else
         hs.status = "Progressing"
         hs.message = "Waiting for replicas to be ready"
       end
     else
       hs.status = "Progressing"
-      hs.message = "Waiting for DeploymentConfig to be ready"
+      hs.message = "Waiting for Deployment to be ready"
     end
     return hs
 
@@ -191,8 +191,9 @@ metadata:
     app: payu
     type: argocd-secret
 stringData:
-  # Admin password (bcrypt hash of "admin" - change this!)
-  admin.password: "$2a$10$do6.sI1x.pUYx1XiQMj0qexX9c0R8nIX0v/v8jG0.3QK9yGYQUcVS"
-  # OIDC client secret
-  oidc.clientSecret: "your-client-secret-here"
+  # Admin password - MUST be replaced via ExternalSecrets or Vault in production
+  # WARNING: Placeholder value below - DO NOT use in production
+  admin.password: "${ARGOCD_ADMIN_PASSWORD_BCRYPT}"
+  # OIDC client secret - MUST be replaced via ExternalSecrets or Vault
+  oidc.clientSecret: "${ARGOCD_OIDC_CLIENT_SECRET}"
 type: Opaque

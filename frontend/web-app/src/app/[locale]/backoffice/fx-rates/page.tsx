@@ -29,13 +29,8 @@ import {
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
-const MOCK_FX_RATES = [
-  { id: '1', pair: 'USD/IDR', rate: 15720.50, spread: 0.02, auto: true, lastUpdate: '2026-02-02T05:30:00Z', trend: 'UP' },
-  { id: '2', pair: 'EUR/IDR', rate: 17150.20, spread: 0.02, auto: true, lastUpdate: '2026-02-02T05:25:00Z', trend: 'DOWN' },
-  { id: '3', pair: 'SGD/IDR', rate: 11680.75, spread: 0.03, auto: false, lastUpdate: '2026-02-02T05:00:00Z', trend: 'STABLE' },
-  { id: '4', pair: 'JPY/IDR', rate: 105.40, spread: 0.02, auto: true, lastUpdate: '2026-02-02T05:31:00Z', trend: 'DOWN' },
-  { id: '5', pair: 'THB/IDR', rate: 440.15, spread: 0.05, auto: false, lastUpdate: '2026-02-01T23:00:00Z', trend: 'STABLE' }
-];
+// BUG-FE-095: Removed MOCK_FX_RATES — should be fetched from FX service API
+const MOCK_FX_RATES: Array<{ id: string; pair: string; rate: number; spread: number; auto: boolean; lastUpdate: string; trend: string }> = [];
 
 export default function FxRatesAdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,10 +42,10 @@ export default function FxRatesAdminPage() {
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Active Currencies', value: '14', color: 'bg-emerald-500', icon: TrendingUp },
-              { label: 'Auto-Sync Provider', value: 'Reuters', color: 'bg-blue-500', icon: RefreshCw },
-              { label: 'Manual Overrides', value: '2', color: 'bg-amber-500', icon: Lock },
-              { label: 'Market Status', value: 'OPEN', color: 'bg-indigo-500', icon: CheckCircle2 },
+              { label: 'Active Currencies', value: '—', color: 'bg-emerald-500', icon: TrendingUp },
+              { label: 'Auto-Sync Provider', value: '—', color: 'bg-blue-500', icon: RefreshCw },
+              { label: 'Manual Overrides', value: '—', color: 'bg-amber-500', icon: Lock },
+              { label: 'Market Status', value: '—', color: 'bg-indigo-500', icon: CheckCircle2 },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>

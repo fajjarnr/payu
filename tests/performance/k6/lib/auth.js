@@ -12,7 +12,7 @@ import { check } from 'k6';
  * @returns {string|null} Access token or null if failed
  */
 export function login(keycloakUrl, username, password) {
-  const loginUrl = `${keycloakUrl}/auth/realms/payu/protocol/openid-connect/token`;
+  const loginUrl = `${keycloakUrl}/realms/payu/protocol/openid-connect/token`;
 
   const payload = {
     grant_type: 'password',

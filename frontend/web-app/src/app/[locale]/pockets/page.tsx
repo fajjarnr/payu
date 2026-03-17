@@ -48,9 +48,14 @@ interface SharedMember {
 }
 
 interface SharedPocket extends Pocket {
+  target?: number;
+  type?: string;
   sharedMembers?: SharedMember[];
   isShared?: boolean;
 }
+
+/** Extended Pocket type for UI display (target/type not in backend Pocket) */
+type PocketWithGoal = Pocket & { target?: number; type?: string };
 
 export default function PocketsPage() {
     // SECURITY: Get accountId from auth store, NOT localStorage
@@ -106,8 +111,7 @@ export default function PocketsPage() {
                 accountId,
                 name: newPocketName,
                 currency: 'IDR',
-                target: newPocketTarget ? parseFloat(newPocketTarget) : undefined,
-                type: newPocketType
+                description: newPocketTarget ? `Target: ${newPocketTarget}` : undefined,
             });
             toast.success('Kantong berhasil dibuat');
             setIsCreateModalOpen(false);
@@ -125,7 +129,7 @@ export default function PocketsPage() {
             await creditPocket.mutateAsync({
                 pocketId: selectedPocketForAction.id,
                 amount: parseFloat(amount),
-                currency: 'IDR'
+                description: 'Top up pocket'
             });
             toast.success('Berhasil menambah dana');
             setIsCreditModalOpen(false);
@@ -143,7 +147,7 @@ export default function PocketsPage() {
             await debitPocket.mutateAsync({
                 pocketId: selectedPocketForAction.id,
                 amount: parseFloat(amount),
-                currency: 'IDR'
+                description: 'Withdraw from pocket'
             });
             toast.success('Berhasil mengambil dana');
             setIsDebitModalOpen(false);
@@ -226,6 +230,7 @@ export default function PocketsPage() {
     const sharedPockets: SharedPocket[] = [
         {
             id: 'shared-1',
+            accountId: accountId,
             name: 'Tabungan Keluarga',
             balance: 15000000,
             target: 50000000,
@@ -241,6 +246,7 @@ export default function PocketsPage() {
         },
         {
             id: 'shared-2',
+            accountId: accountId,
             name: 'Dana Rekreasi Kantor',
             balance: 8500000,
             target: 30000000,
@@ -374,7 +380,8 @@ export default function PocketsPage() {
                                 </div>
                             ) : pocketsData && pocketsData.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {pocketsData.map((pocket) => {
+                                    {pocketsData.map((_pocket) => {
+                                        const pocket = _pocket as PocketWithGoal;
                                         const percentage = pocket.target ? Math.round((pocket.balance / pocket.target) * 100) : 0;
                                         return (
                                             <div key={pocket.id} className="bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-card transition-all group">

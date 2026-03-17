@@ -3,6 +3,7 @@ package id.payu.wallet.adapter.web;
 import id.payu.api.common.response.ApiResponse;
 import id.payu.wallet.domain.model.Card;
 import id.payu.wallet.domain.port.in.CardUseCase;
+import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.dto.CardResponse;
 import id.payu.wallet.dto.CreateCardRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,9 +35,19 @@ public class CardController extends BaseController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CardController.class);
 
     private final CardUseCase cardUseCase;
+    private final WalletUseCase walletUseCase;
 
-    public CardController(CardUseCase cardUseCase) {
+    public CardController(CardUseCase cardUseCase, WalletUseCase walletUseCase) {
         this.cardUseCase = cardUseCase;
+        this.walletUseCase = walletUseCase;
+    }
+
+    /**
+     * Verifies the card's wallet belongs to the authenticated account.
+     * Returns the account ID of the card's wallet owner.
+     */
+    private String getCardOwnerAccountId(Card card) {
+        return walletUseCase.getWallet(card.getWalletId()).getAccountId();
     }
 
     @PostMapping
@@ -44,7 +57,15 @@ public class CardController extends BaseController {
             content = @Content(schema = @Schema(implementation = CardResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    public ResponseEntity<ApiResponse<CardResponse>> createCard(@RequestBody CreateCardRequest request) {
+    public ResponseEntity<ApiResponse<CardResponse>> createCard(
+            @RequestBody CreateCardRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        if (!authenticatedAccountId.equals(request.accountId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("CARD_403", "Not authorized to create card for this account"));
+        }
+
         Card card = cardUseCase.createVirtualCard(
                 request.accountId(),
                 request.cardHolderName(),
@@ -59,7 +80,14 @@ public class CardController extends BaseController {
             content = @Content(schema = @Schema(implementation = CardResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<List<CardResponse>>> getCards(
-            @Parameter(description = "Account ID", required = true) @RequestParam String accountId) {
+            @Parameter(description = "Account ID", required = true) @RequestParam String accountId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        if (!authenticatedAccountId.equals(accountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("CARD_403", "Not authorized to access cards for this account"));
+        }
+
         List<Card> cards = cardUseCase.getCardsByAccountId(accountId);
         return ok(cards.stream()
                 .map(this::toCardResponse)
@@ -74,9 +102,17 @@ public class CardController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Card not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<CardResponse>> getCardById(
-            @Parameter(description = "Card ID", required = true) @PathVariable String cardId) {
+            @Parameter(description = "Card ID", required = true) @PathVariable String cardId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
         return cardUseCase.getCardById(cardId)
-                .map(card -> ok(toCardResponse(card)))
+                .map(card -> {
+                    if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .<ApiResponse<CardResponse>>body(ApiResponse.error("CARD_403", "Not authorized to access this card"));
+                    }
+                    return ok(toCardResponse(card));
+                })
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error("CARD_001", "Card not found")));
     }
@@ -88,7 +124,16 @@ public class CardController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Card not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<Void>> freezeCard(
-            @Parameter(description = "Card ID", required = true) @PathVariable String cardId) {
+            @Parameter(description = "Card ID", required = true) @PathVariable String cardId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        Card card = cardUseCase.getCardById(cardId)
+                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
+        if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("CARD_403", "Not authorized to freeze this card"));
+        }
+
         cardUseCase.freezeCard(cardId);
         return ok(null);
     }
@@ -100,7 +145,16 @@ public class CardController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Card not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<Void>> unfreezeCard(
-            @Parameter(description = "Card ID", required = true) @PathVariable String cardId) {
+            @Parameter(description = "Card ID", required = true) @PathVariable String cardId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        Card card = cardUseCase.getCardById(cardId)
+                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
+        if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("CARD_403", "Not authorized to unfreeze this card"));
+        }
+
         cardUseCase.unfreezeCard(cardId);
         return ok(null);
     }

@@ -86,17 +86,25 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
         return null;
     }
 
+    /**
+     * BUG-AUTH-017/024: Extract client IP safely.
+     * Only trust the rightmost (proxy-appended) value from X-Forwarded-For
+     * to prevent client-side spoofing of the header.
+     */
     private String getClientIp(ContainerRequestContext requestContext) {
-        // Check X-Forwarded-For header
+        // Check X-Forwarded-For header — use the LAST (rightmost) value
+        // which is the one appended by the trusted reverse proxy closest to us
         String forwarded = requestContext.getHeaderString("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+            String[] ips = forwarded.split(",");
+            // Rightmost entry is the one added by our trusted proxy
+            return ips[ips.length - 1].trim();
         }
 
         // Check X-Real-IP header
         String realIp = requestContext.getHeaderString("X-Real-IP");
         if (realIp != null && !realIp.isBlank()) {
-            return realIp;
+            return realIp.trim();
         }
 
         // Return unknown

@@ -9,11 +9,19 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
+interface ScoreFactorData {
+  label: string;
+  value: number;
+  color: string;
+}
+
 interface FinancialHealthScoreProps {
-  score: number;
+  score?: number;
   previousScore?: number;
+  factors?: ScoreFactorData[];
   currency?: string;
   className?: string;
+  isLoading?: boolean;
 }
 
 interface HealthLevel {
@@ -27,11 +35,30 @@ interface HealthLevel {
 export default function FinancialHealthScore({
   score,
   previousScore,
+  factors,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   currency: _currency = 'Rp',
   className = '',
+  isLoading = false,
 }: FinancialHealthScoreProps) {
   const t = useTranslations('dashboard');
+
+  if (isLoading || score == null) {
+    return (
+      <Card className={cn("relative overflow-hidden flex flex-col justify-between group", className)}>
+        <CardHeader>
+          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+            {t('financialHealthScore')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center min-h-[200px]">
+          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
+            {isLoading ? 'Memuat...' : 'Belum ada data'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Determine health level based on score
   const getHealthLevel = (score: number): HealthLevel => {
@@ -180,9 +207,17 @@ export default function FinancialHealthScore({
 
         {/* Score Factors */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-10 border-t border-border/30">
-          <ScoreFactor label="Tabungan" value={85} color="bg-emerald-500" ariaLabel="Faktor tabungan" />
-          <ScoreFactor label="Investasi" value={70} color="bg-emerald-400" ariaLabel="Faktor investasi" />
-          <ScoreFactor label="Pengeluaran" value={60} color="bg-emerald-300" ariaLabel="Faktor pengeluaran" />
+          {(factors && factors.length > 0) ? (
+            factors.map((f) => (
+              <ScoreFactor key={f.label} label={f.label} value={f.value} color={f.color} ariaLabel={`Faktor ${f.label}`} />
+            ))
+          ) : (
+            <>
+              <ScoreFactor label="Tabungan" value={0} color="bg-emerald-500" ariaLabel="Faktor tabungan" />
+              <ScoreFactor label="Investasi" value={0} color="bg-emerald-400" ariaLabel="Faktor investasi" />
+              <ScoreFactor label="Pengeluaran" value={0} color="bg-emerald-300" ariaLabel="Faktor pengeluaran" />
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

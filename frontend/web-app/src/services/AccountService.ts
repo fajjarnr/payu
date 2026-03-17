@@ -24,18 +24,27 @@ export interface User {
   updatedAt: string;
 }
 
+// BUG-CROSS-069: Backend VerifyNikRequest has: nik, fullName, birthPlace, birthDate
 export interface VerifyNikRequest {
   nik: string;
+  fullName: string;
+  birthPlace: string;
+  birthDate: string;
 }
 
+// BUG-CROSS-069: Backend VerifyNikResponse has: requestId, nik, verified, fullName, birthPlace, birthDate, gender, address, status, responseCode, responseMessage
 export interface DukcapilResponse {
+  requestId: string;
   nik: string;
+  verified: boolean;
   fullName: string;
-  dateOfBirth: string;
-  placeOfBirth: string;
+  birthPlace: string;
+  birthDate: string;
   gender: string;
   address: string;
-  isValid: boolean;
+  status: string;
+  responseCode: string;
+  responseMessage: string;
 }
 
 /**

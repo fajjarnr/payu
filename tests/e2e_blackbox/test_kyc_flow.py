@@ -22,10 +22,13 @@ class TestKycServiceFlow:
             "verification_type": "FULL_KYC"
         }
         response = authenticated_api.post("/api/v1/kyc/verify/start", json=payload)
-        assert response.status_code in [200, 201, 400, 422, 429, 503], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 201, 400, 429, 503], f"Unexpected status: {response.status_code}"
         authenticated_api.session.headers.pop("Idempotency-Key", None)
         if response.status_code == 429:
             pytest.skip("KYC rate limit reached")
+        if response.status_code == 400:
+            # 400 means the payload was understood but rejected — log and continue
+            pass
         if response.status_code in [200, 201]:
             data = response.json()
             # Handle rate-limit error body returned as 200
@@ -45,7 +48,7 @@ class TestKycServiceFlow:
             "ktp_image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgK..."
         }
         response = authenticated_api.post("/api/v1/kyc/verify/ktp", json=payload)
-        assert response.status_code in [200, 201, 400, 404, 422, 429, 503], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 201, 400, 404, 429, 503], f"Unexpected status: {response.status_code}"
         authenticated_api.session.headers.pop("Idempotency-Key", None)
 
     def test_upload_selfie(self, authenticated_api):
@@ -57,7 +60,7 @@ class TestKycServiceFlow:
             "selfie_image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgK..."
         }
         response = authenticated_api.post("/api/v1/kyc/verify/selfie", json=payload)
-        assert response.status_code in [200, 201, 400, 404, 422, 429, 503], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 201, 400, 404, 429, 503], f"Unexpected status: {response.status_code}"
         authenticated_api.session.headers.pop("Idempotency-Key", None)
 
     def test_get_verification_status(self, authenticated_api):

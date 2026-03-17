@@ -43,8 +43,11 @@ class Settings(BaseSettings):
     allowed_extensions: set = {".jpg", ".jpeg", ".png"}
 
     # Security
+    # BUG-AUTH-034: secret_key and algorithm configurable via environment.
+    # Prefer RS256 with public key in production; HS256 acceptable for
+    # gateway-validated tokens where KYC service only verifies the signature.
     secret_key: str = os.getenv("SECRET_KEY", "")
-    algorithm: str = "HS256"
+    algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")
     access_token_expire_minutes: int = 30
 
     # Logging

@@ -5,7 +5,8 @@
 # managed by the ingress-certificate in openshift-ingress namespace.
 #
 # These certificates are for service-specific TLS secrets if needed.
-# For dev, Routes use edge termination with the default ingress wildcard cert.
+# DNS names are environment-neutral; overlays patch the dnsNames per environment.
+# Routes use edge termination with the default ingress wildcard cert.
 ---
 # Certificate: Gateway service (public-facing API)
 apiVersion: cert-manager.io/v1
@@ -19,7 +20,7 @@ spec:
     kind: ClusterIssuer
     group: cert-manager.io
   dnsNames:
-    - gateway-dev.payu.fajjjar.my.id
+    - gateway.payu.fajjjar.my.id
   duration: 720h     # 30 days
   renewBefore: 168h  # 7 days before expiry
 ---
@@ -35,7 +36,7 @@ spec:
     kind: ClusterIssuer
     group: cert-manager.io
   dnsNames:
-    - dev.payu.fajjjar.my.id
+    - app.payu.fajjjar.my.id
   duration: 720h
   renewBefore: 168h
 ---
@@ -46,9 +47,9 @@ metadata:
   name: gateway-service-tls
   labels:
     app.kubernetes.io/name: gateway-service
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
-  host: gateway-dev.payu.fajjjar.my.id
+  # host is set per-environment by overlays
   to:
     kind: Service
     name: gateway-service
@@ -67,9 +68,9 @@ metadata:
   name: web-app-tls
   labels:
     app.kubernetes.io/name: web-app
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
-  host: dev.payu.fajjjar.my.id
+  # host is set per-environment by overlays
   to:
     kind: Service
     name: web-app

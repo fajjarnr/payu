@@ -31,81 +31,23 @@ interface SpendingInsightsProps {
   data?: SpendingCategory[];
   currency?: string;
   className?: string;
+  isLoading?: boolean;
 }
 
-const defaultCategories: SpendingCategory[] = [
-  {
-    id: 'food',
-    name: 'Makanan & Minuman',
-    icon: Utensils,
-    amount: 2500000,
-    percentage: 35,
-    trend: 'up',
-    trendValue: 12,
-    color: 'bg-chart-1',
-  },
-  {
-    id: 'shopping',
-    name: 'Belanja',
-    icon: ShoppingCart,
-    amount: 1800000,
-    percentage: 25,
-    trend: 'down',
-    trendValue: 8,
-    color: 'bg-chart-2',
-  },
-  {
-    id: 'housing',
-    name: 'Perumahan',
-    icon: Home,
-    amount: 1200000,
-    percentage: 17,
-    trend: 'neutral',
-    trendValue: 2,
-    color: 'bg-chart-3',
-  },
-  {
-    id: 'transport',
-    name: 'Transportasi',
-    icon: Car,
-    amount: 900000,
-    percentage: 13,
-    trend: 'up',
-    trendValue: 5,
-    color: 'bg-chart-green1',
-  },
-  {
-    id: 'bills',
-    name: 'Tagihan & Pulsa',
-    icon: Smartphone,
-    amount: 500000,
-    percentage: 7,
-    trend: 'down',
-    trendValue: 3,
-    color: 'bg-chart-green2',
-  },
-  {
-    id: 'health',
-    name: 'Kesehatan',
-    icon: HeartPulse,
-    amount: 300000,
-    percentage: 3,
-    trend: 'neutral',
-    trendValue: 0,
-    color: 'bg-chart-green3',
-  },
-];
-
 export default function SpendingInsights({
-  data = defaultCategories,
+  data,
   currency = 'Rp',
   className = '',
+  isLoading = false,
 }: SpendingInsightsProps) {
   const t = useTranslations('dashboard');
   const [viewMode, setViewMode] = useState<'category' | 'monthly'>('category');
 
-  const totalSpending = data.reduce((sum, cat) => sum + cat.amount, 0);
-  const highestCategory = data.reduce((max, cat) => (cat.amount > max.amount ? cat : max), data[0]);
+  const categories = data ?? [];
+  const totalSpending = categories.reduce((sum, cat) => sum + cat.amount, 0);
+  const highestCategory = categories.length > 0
+    ? categories.reduce((max, cat) => (cat.amount > max.amount ? cat : max), categories[0])
+    : null;
 
   // State for manual expansion removed in favor of Accordion
 
@@ -154,6 +96,16 @@ export default function SpendingInsights({
       </CardHeader>
 
       <CardContent className="flex-1 overflow-y-auto z-10 relative scrollbar-hide">
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-[120px]">
+            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="flex items-center justify-center min-h-[120px]">
+            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Belum ada data pengeluaran</p>
+          </div>
+        ) : (
+        <>
         {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <Card className="bg-muted/50 border-white/5 shadow-sm">
@@ -171,19 +123,23 @@ export default function SpendingInsights({
               <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
                 Kategori Terbesar
               </p>
+              {highestCategory && (
               <div className="flex items-center gap-2">
                 <highestCategory.icon className="h-4 w-4 text-primary" />
                 <p className="text-sm font-bold text-foreground uppercase tracking-tight">{highestCategory.name}</p>
               </div>
+              )}
+              {highestCategory && (
               <p className="text-xs text-muted-foreground tabular-nums font-medium">
                 {currency} {highestCategory.amount.toLocaleString('id-ID')}
               </p>
+              )}
             </CardContent>
           </Card>
         </div>
         {/* Category List with Shadcn Accordion */}
         <Accordion type="single" collapsible className="space-y-3 pb-2">
-          {data.map((category, index) => {
+          {categories.map((category, index) => {
             const Icon = category.icon;
 
             return (
@@ -270,6 +226,8 @@ export default function SpendingInsights({
             );
           })}
         </Accordion>
+        </>
+        )}
       </CardContent>
     </Card>
   );

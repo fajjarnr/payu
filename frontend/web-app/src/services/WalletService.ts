@@ -1,6 +1,6 @@
 import api from '@/lib/api';
 import { getFinancialMutationHeaders } from '@/lib/utils';
-import type { PocketType, BalanceResponse, WalletTransaction, Pocket } from '@/types';
+import type { BalanceResponse, WalletTransaction, Pocket } from '@/types';
 
 // IMP-014: Re-export types from centralized types/index.ts
 export type { BalanceResponse, WalletTransaction, Pocket };
@@ -93,9 +93,10 @@ export class WalletService {
     return response.data;
   }
 
-  /** GET /cards — List all cards */
-  async listCards(): Promise<VirtualCard[]> {
-    const response = await api.get<VirtualCard[]>('/cards');
+  /** GET /cards — List all cards for an account */
+  // BUG-CROSS-045: Backend CardController.getCards requires accountId as query param
+  async listCards(accountId: string): Promise<VirtualCard[]> {
+    const response = await api.get<VirtualCard[]>('/cards', { params: { accountId } });
     return response.data;
   }
 
@@ -106,15 +107,15 @@ export class WalletService {
   }
 
   /** POST /cards/{cardId}/freeze — Freeze card */
-  async freezeCard(cardId: string): Promise<VirtualCard> {
-    const response = await api.post<VirtualCard>(`/cards/${cardId}/freeze`);
-    return response.data;
+  // BUG-CROSS-046: Backend returns ApiResponse<Void>, not VirtualCard
+  async freezeCard(cardId: string): Promise<void> {
+    await api.post(`/cards/${cardId}/freeze`);
   }
 
   /** POST /cards/{cardId}/unfreeze — Unfreeze card */
-  async unfreezeCard(cardId: string): Promise<VirtualCard> {
-    const response = await api.post<VirtualCard>(`/cards/${cardId}/unfreeze`);
-    return response.data;
+  // BUG-CROSS-046: Backend returns ApiResponse<Void>, not VirtualCard
+  async unfreezeCard(cardId: string): Promise<void> {
+    await api.post(`/cards/${cardId}/unfreeze`);
   }
 
   /** DELETE /cards/{cardId} — Delete/Close card */
@@ -156,15 +157,15 @@ export class WalletService {
   }
 
   /** POST /pockets/{pocketId}/credit — Credit pocket */
-  async creditPocket(pocketId: string, amount: number, description?: string): Promise<Pocket> {
-    const response = await api.post<Pocket>(`/pockets/${pocketId}/credit`, { amount, description });
-    return response.data;
+  // BUG-CROSS-044: Backend PocketTransactionRequest uses { amount, referenceId }, returns Void
+  async creditPocket(pocketId: string, amount: number, referenceId: string): Promise<void> {
+    await api.post(`/pockets/${pocketId}/credit`, { amount, referenceId });
   }
 
   /** POST /pockets/{pocketId}/debit — Debit pocket */
-  async debitPocket(pocketId: string, amount: number, description?: string): Promise<Pocket> {
-    const response = await api.post<Pocket>(`/pockets/${pocketId}/debit`, { amount, description });
-    return response.data;
+  // BUG-CROSS-044: Backend PocketTransactionRequest uses { amount, referenceId }, returns Void
+  async debitPocket(pocketId: string, amount: number, referenceId: string): Promise<void> {
+    await api.post(`/pockets/${pocketId}/debit`, { amount, referenceId });
   }
 
   /** POST /pockets/{pocketId}/freeze — Freeze pocket */
@@ -194,45 +195,38 @@ export class WalletService {
 
 // === Card Types ===
 
+// BUG-CROSS-047: Aligned VirtualCard interface with backend CardResponse
 export interface VirtualCard {
   id: string;
-  accountId: string;
+  walletId: string;
   cardNumber: string;
-  expiryMonth: number;
-  expiryYear: number;
-  cvv?: string;
-  cardholderName: string;
+  expiryDate: string;
+  cardHolderName: string;
   status: 'ACTIVE' | 'FROZEN' | 'CANCELLED';
   dailyLimit: number;
-  monthlyLimit: number;
-  onlineEnabled: boolean;
-  internationalEnabled: boolean;
   createdAt: string;
 }
 
+// BUG-CROSS-045: Aligned CreateCardRequest with backend CreateCardRequest
 export interface CreateCardRequest {
   accountId: string;
-  cardholderName: string;
+  cardHolderName: string;
   dailyLimit?: number;
-  monthlyLimit?: number;
 }
 
 export interface UpdateCardRequest {
   dailyLimit?: number;
-  monthlyLimit?: number;
-  onlineEnabled?: boolean;
-  internationalEnabled?: boolean;
 }
 
 // === Pocket Types ===
 
 
+// BUG-CROSS-043: Aligned CreatePocketRequest with backend — removed target/type, added description
 export interface CreatePocketRequest {
   accountId: string;
   name: string;
   currency: string;
-  target?: number;
-  type?: PocketType;
+  description?: string;
 }
 
 // === Ledger Types ===

@@ -197,9 +197,17 @@ public class LendingController extends BaseController {
             content = @Content(schema = @Schema(implementation = PayLater.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - cannot activate PayLater for another user")
     public ResponseEntity<ApiResponse<PayLater>> activatePayLater(
             @Parameter(description = "User ID", required = true) @RequestParam UUID userId,
-            @Valid @RequestBody PayLaterLimitRequest request) {
+            @Valid @RequestBody PayLaterLimitRequest request,
+            java.security.Principal principal) {
+        // BUG-BE-191 FIX: Verify userId matches authenticated user
+        UUID authenticatedUserId = UUID.fromString(principal.getName());
+        if (!authenticatedUserId.equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Cannot activate PayLater for another user");
+        }
         log.info("Activating PayLater for user: {}", userId);
         PayLater payLater = lendingApplicationService.activatePayLater(userId, request);
 
@@ -299,14 +307,21 @@ public class LendingController extends BaseController {
 
     @PostMapping("/credit-score/calculate")
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Calculate credit score", description = "Calculate credit score for a user")
+    @Operation(summary = "Calculate credit score", description = "Calculate credit score for the authenticated user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Credit score calculated successfully",
             content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.CreditScore.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<id.payu.lending.domain.model.CreditScore>> calculateCreditScore(
-            @Parameter(description = "User ID", required = true) @RequestParam UUID userId) {
-        log.info("Calculating credit score for user: {}", userId);
-        return ok(lendingApplicationService.calculateCreditScore(userId));
+            @Parameter(description = "User ID", required = true) @RequestParam UUID userId,
+            java.security.Principal principal) {
+        // BUG-BE-192 FIX: Extract authenticated userId from JWT instead of trusting client-submitted value
+        UUID authenticatedUserId = UUID.fromString(principal.getName());
+        if (!authenticatedUserId.equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Cannot calculate credit score for another user");
+        }
+        log.info("Calculating credit score for user: {}", authenticatedUserId);
+        return ok(lendingApplicationService.calculateCreditScore(authenticatedUserId));
     }
 
     @GetMapping("/credit-score/{userId}")
@@ -333,9 +348,20 @@ public class LendingController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<LoanPreApprovalResponse>> checkPreApproval(
-            @Valid @RequestBody id.payu.lending.dto.LoanPreApprovalRequest request) {
-        log.info("Checking loan pre-approval for user: {}", request.userId());
-        LoanPreApprovalResponse response = preApprovalService.checkPreApproval(request);
+            @Valid @RequestBody id.payu.lending.dto.LoanPreApprovalRequest request,
+            java.security.Principal principal) {
+        // BUG-BE-193 FIX: Extract authenticated userId from JWT and override request's userId.
+        // LoanPreApprovalRequest is an immutable record, so create a new instance.
+        UUID authenticatedUserId = UUID.fromString(principal.getName());
+        id.payu.lending.dto.LoanPreApprovalRequest securedRequest = new id.payu.lending.dto.LoanPreApprovalRequest(
+                authenticatedUserId,
+                request.loanType(),
+                request.principalAmount(),
+                request.tenureMonths(),
+                request.purpose()
+        );
+        log.info("Checking loan pre-approval for authenticated user: {}", authenticatedUserId);
+        LoanPreApprovalResponse response = preApprovalService.checkPreApproval(securedRequest);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath()

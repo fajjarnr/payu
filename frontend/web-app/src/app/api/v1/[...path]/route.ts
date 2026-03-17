@@ -10,30 +10,38 @@ const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
  */
 const ALLOWED_PATH_PREFIXES = [
   '/api/v1/accounts',
+  '/api/v1/analytics',
   '/api/v1/auth',
   '/api/v1/billing',
   '/api/v1/billers',
   '/api/v1/biometric',
   '/api/v1/cards',
+  '/api/v1/cashbacks',
+  '/api/v1/cms',
   '/api/v1/compliance',
+  '/api/v1/contents',
   '/api/v1/fx',
+  '/api/v1/gamification',
   '/api/v1/investments',
   '/api/v1/lending',
+  '/api/v1/loyalty-points',
   '/api/v1/notifications',
   '/api/v1/partners',
   '/api/v1/payments',
   '/api/v1/pockets',
   '/api/v1/promotions',
+  '/api/v1/public/contents',
+  '/api/v1/referrals',
+  '/api/v1/rewards',
+  '/api/v1/scheduled-transfers',
+  '/api/v1/split-bills',
   '/api/v1/statements',
   '/api/v1/support',
   '/api/v1/topup',
   '/api/v1/transactions',
-  '/api/v1/scheduled-transfers',
-  '/api/v1/split-bills',
-  '/api/v1/wallets',
   '/api/v1/users',
+  '/api/v1/wallets',
   '/api/v1/kyc',
-  '/api/v1/cms',
   '/api/v1/backoffice',
   '/api/v1/health',
 ];
@@ -178,12 +186,13 @@ async function proxyRequest(
       headers['Accept-Version'] = apiVersion;
     }
 
-    // BUG-FE-029: Forward security and custom headers
-    // Idempotency, device tracking, signatures, etc.
+    // BUG-FE-029/085: Forward only explicitly allowed security/custom headers
+    // BUG-FE-085: Removed catch-all `lowerKey.startsWith('x-')` to prevent
+    // leaking internal headers (e.g. x-forwarded-for, x-real-ip) to the gateway.
     const allowedHeaders = ['x-idempotency-key', 'x-device-id', 'x-client-version', 'x-signature', 'x-timestamp'];
     request.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase();
-      if (allowedHeaders.includes(lowerKey) || lowerKey.startsWith('x-')) {
+      if (allowedHeaders.includes(lowerKey)) {
         // Skip already added X-Correlation-Id
         if (lowerKey !== 'x-correlation-id') {
           headers[key] = value;

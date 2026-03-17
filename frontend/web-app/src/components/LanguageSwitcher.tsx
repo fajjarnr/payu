@@ -44,8 +44,10 @@ export default function LanguageSwitcher() {
       newPath = newPath.slice(0, -1);
     }
 
+    // BUG-FE-068: Preserve query string when switching locale
+    const queryString = typeof window !== 'undefined' ? window.location.search : '';
     // Force hard navigation to ensure middleware and server components re-run
-    window.location.href = newPath || '/';
+    window.location.href = (newPath || '/') + queryString;
     setIsOpen(false);
   };
 

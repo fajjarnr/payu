@@ -166,19 +166,23 @@ public class EscrowService implements EscrowUseCase {
 
         EscrowTransaction escrow = findEscrowOrThrow(escrowId);
 
-        // If still HELD, release the reservation back first
-        if (escrow.getStatus() == EscrowTransaction.EscrowStatus.HELD) {
+        // If still HELD, release the reservation back first (this restores the buyer's available balance)
+        boolean wasHeld = escrow.getStatus() == EscrowTransaction.EscrowStatus.HELD;
+        if (wasHeld) {
             walletUseCase.releaseReservation(escrow.getReservationId());
         }
 
         escrow.refund(reason);
 
-        // Credit buyer wallet back
-        walletUseCase.credit(
-                escrow.getBuyerAccountId(),
-                escrow.getAmount(),
-                escrow.getId().toString(),
-                "Escrow refund: " + reason);
+        // Only credit buyer wallet if NOT held (e.g., EXPIRED) — for HELD status,
+        // releaseReservation already restored the balance; crediting again would double-credit.
+        if (!wasHeld) {
+            walletUseCase.credit(
+                    escrow.getBuyerAccountId(),
+                    escrow.getAmount(),
+                    escrow.getId().toString(),
+                    "Escrow refund: " + reason);
+        }
 
         // Journal: DR Escrow Holdings (2100) / CR Buyer Wallet (1100)
         createRefundJournal(escrow);

@@ -66,8 +66,12 @@ spec:
     - name: git-repo-name
       value: $(body.repository.name)
     - name: service-type
+      # TODO: This is hardcoded to spring-boot. For a monorepo with multiple service types,
+      # use a CEL interceptor or overlay to determine service-type from changed file paths.
       value: spring-boot
     - name: service-name
+      # TODO: In a monorepo, repository.name != service-name. Need CEL expression to extract
+      # the affected service from the changed file paths (e.g., backend/<service-name>/).
       value: $(body.repository.name)
 ---
 apiVersion: triggers.tekton.dev/v1

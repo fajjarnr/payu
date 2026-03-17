@@ -80,6 +80,12 @@ export default function TransactionsPage() {
   const { data: transactions, isLoading } = useTransactions(accountId || undefined, page, 20);
   const cancelTransaction = useCancelTransaction();
 
+  // Compute stats from actual transaction data
+  const totalIn = transactions?.filter((t: Transaction) => isCreditType(t.type)).reduce((sum: number, t: Transaction) => sum + t.amount, 0) ?? 0;
+  const totalOut = transactions?.filter((t: Transaction) => !isCreditType(t.type)).reduce((sum: number, t: Transaction) => sum + t.amount, 0) ?? 0;
+  const pendingCount = transactions?.filter((t: Transaction) => t.status === 'PENDING' || t.status === 'PROCESSING').length ?? 0;
+  const completedCount = transactions?.filter((t: Transaction) => t.status === 'COMPLETED').length ?? 0;
+
   const handleCancelClick = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsCancelDialogOpen(true);
@@ -155,8 +161,8 @@ export default function TransactionsPage() {
                     </div>
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Total Masuk</p>
-                      <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton className="h-7 w-24" /> : 'Rp 0'}
+                       <p className="text-xl font-bold text-foreground">
+                        {isLoading ? <Skeleton className="h-7 w-24" /> : formatAmount(totalIn, 'IDR')}
                       </p>
                     </div>
                   </div>
@@ -173,7 +179,7 @@ export default function TransactionsPage() {
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Total Keluar</p>
                       <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton className="h-7 w-24" /> : 'Rp 0'}
+                        {isLoading ? <Skeleton className="h-7 w-24" /> : formatAmount(totalOut, 'IDR')}
                       </p>
                     </div>
                   </div>
@@ -190,7 +196,7 @@ export default function TransactionsPage() {
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Menunggu</p>
                       <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton className="h-7 w-24" /> : '0'}
+                        {isLoading ? <Skeleton className="h-7 w-24" /> : String(pendingCount)}
                       </p>
                     </div>
                   </div>
@@ -207,7 +213,7 @@ export default function TransactionsPage() {
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Selesai</p>
                       <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton className="h-7 w-24" /> : '0'}
+                        {isLoading ? <Skeleton className="h-7 w-24" /> : String(completedCount)}
                       </p>
                     </div>
                   </div>

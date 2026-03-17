@@ -41,8 +41,8 @@ export function useCreateAgent() {
 export function useUpdateAgentStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: AgentStatus }) =>
-      SupportService.updateAgentStatus(id, status),
+    mutationFn: ({ id, active }: { id: number; active: boolean }) =>
+      SupportService.updateAgentStatus(id, active),
     ...MutationPresets.nonFinancial,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['support-agents'] }); },
   });
@@ -83,7 +83,7 @@ export function useUpdateModuleStatus() {
 }
 
 // ── Training Assignments ──
-export function useAgentTrainings(agentId: string) {
+export function useAgentTrainings(agentId: number) {
   return useQuery({
     queryKey: ['agent-trainings', agentId],
     queryFn: () => SupportService.getAgentTrainings(agentId),
@@ -91,7 +91,7 @@ export function useAgentTrainings(agentId: string) {
   });
 }
 
-export function useAgentTrainingStatus(agentId: string) {
+export function useAgentTrainingStatus(agentId: number) {
   return useQuery({
     queryKey: ['agent-training-status', agentId],
     queryFn: () => SupportService.getAgentTrainingStatus(agentId),

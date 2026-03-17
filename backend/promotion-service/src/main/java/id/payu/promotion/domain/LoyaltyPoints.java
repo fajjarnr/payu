@@ -41,6 +41,14 @@ public class LoyaltyPoints {
     @Column(name = "redeemed_at")
     private LocalDateTime redeemedAt;
 
+    /**
+     * BUG-BE-186: Optimistic locking version field for defense-in-depth.
+     * Complements the existing pessimistic locking (pg_advisory_xact_lock) in LoyaltyPointsService.
+     */
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -76,6 +84,9 @@ public class LoyaltyPoints {
 
     public LocalDateTime getRedeemedAt() { return redeemedAt; }
     public void setRedeemedAt(LocalDateTime redeemedAt) { this.redeemedAt = redeemedAt; }
+
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

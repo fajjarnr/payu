@@ -67,9 +67,15 @@ public class PocketController extends BaseController {
             content = @Content(schema = @Schema(implementation = PocketResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pocket not found")
     public ResponseEntity<ApiResponse<PocketResponse>> getPocket(
-            @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId) {
+            @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
         Pocket pocket = pocketUseCase.getPocketById(pocketId)
                 .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
+        if (!authenticatedAccountId.equals(pocket.getAccountId())) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("PKT_403", "Not authorized to access this pocket"));
+        }
         return ok(toResponse(pocket));
     }
 
@@ -124,6 +130,14 @@ public class PocketController extends BaseController {
             @Valid @RequestBody PocketTransactionRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        Pocket pocket = pocketUseCase.getPocketById(pocketId)
+                .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
+        if (!authenticatedAccountId.equals(pocket.getAccountId())) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("PKT_403", "Not authorized to credit this pocket"));
+        }
+
         pocketUseCase.creditPocket(pocketId, request.getAmount(), request.getReferenceId());
         return ok(null);
     }
@@ -145,6 +159,14 @@ public class PocketController extends BaseController {
             @Valid @RequestBody PocketTransactionRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        Pocket pocket = pocketUseCase.getPocketById(pocketId)
+                .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
+        if (!authenticatedAccountId.equals(pocket.getAccountId())) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("PKT_403", "Not authorized to debit this pocket"));
+        }
+
         pocketUseCase.debitPocket(pocketId, request.getAmount(), request.getReferenceId());
         return ok(null);
     }
@@ -154,7 +176,16 @@ public class PocketController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pocket frozen successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pocket not found")
     public ResponseEntity<ApiResponse<Void>> freezePocket(
-            @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId) {
+            @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        Pocket pocket = pocketUseCase.getPocketById(pocketId)
+                .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
+        if (!authenticatedAccountId.equals(pocket.getAccountId())) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("PKT_403", "Not authorized to freeze this pocket"));
+        }
+
         pocketUseCase.freezePocket(pocketId);
         return ok(null);
     }
@@ -164,7 +195,16 @@ public class PocketController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pocket unfrozen successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pocket not found")
     public ResponseEntity<ApiResponse<Void>> unfreezePocket(
-            @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId) {
+            @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        Pocket pocket = pocketUseCase.getPocketById(pocketId)
+                .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
+        if (!authenticatedAccountId.equals(pocket.getAccountId())) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("PKT_403", "Not authorized to unfreeze this pocket"));
+        }
+
         pocketUseCase.unfreezePocket(pocketId);
         return ok(null);
     }
@@ -175,7 +215,16 @@ public class PocketController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pocket not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Pocket has remaining balance")
     public ResponseEntity<ApiResponse<Void>> closePocket(
-            @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId) {
+            @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        Pocket pocket = pocketUseCase.getPocketById(pocketId)
+                .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
+        if (!authenticatedAccountId.equals(pocket.getAccountId())) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("PKT_403", "Not authorized to close this pocket"));
+        }
+
         pocketUseCase.closePocket(pocketId);
         return ok(null);
     }

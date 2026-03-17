@@ -31,18 +31,21 @@ export async function POST() {
       }
     }
 
+    // BUG-AUTH-027: Set secure cookie flags when clearing
+    const isProduction = process.env.NODE_ENV === 'production';
     const response = NextResponse.json({ success: true });
-    response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
-    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
+    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
 
     logger.info({ action: 'logout' }, 'Logout successful — cookies cleared');
     return response;
   } catch (error) {
     logger.error({ action: 'logout', err: error instanceof Error ? error : { message: String(error) } }, 'Logout error — clearing cookies anyway');
     // Even on error, clear cookies
+    const isProduction = process.env.NODE_ENV === 'production';
     const response = NextResponse.json({ success: true });
-    response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
-    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
+    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
     return response;
   }
 }

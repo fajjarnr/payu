@@ -39,16 +39,20 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
     private final id.payu.lending.adapter.persistence.PayLaterPersistenceAdapter payLaterPersistenceAdapter;
     private final id.payu.lending.adapter.persistence.CreditScorePersistenceAdapter creditScorePersistenceAdapter;
     private final id.payu.lending.adapter.messaging.KafkaLoanEventPublisherAdapter loanEventPublisherPort;
+    // BUG-BE-176 FIX: Inject EnhancedCreditScoringService for real credit scoring
+    private final EnhancedCreditScoringService enhancedCreditScoringService;
 
     public LendingApplicationService(
             id.payu.lending.adapter.persistence.LoanPersistenceAdapter loanPersistenceAdapter,
             id.payu.lending.adapter.persistence.PayLaterPersistenceAdapter payLaterPersistenceAdapter,
             id.payu.lending.adapter.persistence.CreditScorePersistenceAdapter creditScorePersistenceAdapter,
-            id.payu.lending.adapter.messaging.KafkaLoanEventPublisherAdapter loanEventPublisherPort) {
+            id.payu.lending.adapter.messaging.KafkaLoanEventPublisherAdapter loanEventPublisherPort,
+            EnhancedCreditScoringService enhancedCreditScoringService) {
         this.loanPersistenceAdapter = loanPersistenceAdapter;
         this.payLaterPersistenceAdapter = payLaterPersistenceAdapter;
         this.creditScorePersistenceAdapter = creditScorePersistenceAdapter;
         this.loanEventPublisherPort = loanEventPublisherPort;
+        this.enhancedCreditScoringService = enhancedCreditScoringService;
     }
 
     @Override
@@ -239,7 +243,16 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
     }
 
     private BigDecimal calculateDefaultScore(UUID userId) {
-        return new BigDecimal("700");
+        // BUG-BE-176 FIX: Use EnhancedCreditScoringService instead of hardcoded 700.
+        // Falls back to conservative base score of 500 if enhanced scoring fails.
+        BigDecimal baseScore = new BigDecimal("500");
+        try {
+            return enhancedCreditScoringService.calculateEnhancedCreditScore(userId, baseScore);
+        } catch (Exception e) {
+            log.warn("Enhanced credit scoring failed for user {}, using base score {}: {}",
+                    userId, baseScore, e.getMessage());
+            return baseScore;
+        }
     }
 
     private boolean isEligibleForLoan(BigDecimal creditScore, BigDecimal loanAmount) {

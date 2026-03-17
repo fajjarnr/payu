@@ -56,9 +56,11 @@ spec:
       mtls:
         # Automatically configure mTLS for all services
         enabled: true
-      # Pod annotations for sidecar injection
+      # Pod annotations (sidecar injection controlled by ServiceMeshMemberRoll, not global annotation)
       podAnnotations:
-        sidecar.istio.io/inject: "true"
+        # sidecar.istio.io/inject: "true" — REMOVED: global annotation forces injection everywhere
+        # Injection is managed per-namespace via ServiceMeshMemberRoll
+        prometheus.io/scrape: "true"
     # Pilot configuration (discovery service)
     pilot:
       resources:

@@ -9,21 +9,21 @@ from typing import Generator
 
 # Test configuration
 BASE_URL = "http://localhost:8080"
+KEYCLOAK_URL = "http://localhost:8180"
 SERVICES = {
     "gateway": "http://localhost:8080",
     "account": "http://localhost:8001",
-    "auth": "http://localhost:8002",
+    "keycloak": "http://localhost:8180",
     "transaction": "http://localhost:8003",
     "wallet": "http://localhost:8004",
     "billing": "http://localhost:8005",
     "statement": "http://localhost:8015",
 }
 
-# Test credentials
+# Test credentials (Keycloak-based)
 TEST_CREDENTIALS = {
-    "phone": "+6281234567801",
-    "pin": "123456",
-    "otp": "123456",
+    "username": "customer1",
+    "password": "P@ssw0rd123",
 }
 
 
@@ -77,42 +77,27 @@ def check_services_running():
 @pytest.fixture
 def auth_token(check_services_running) -> str:
     """
-    Get authentication token for tests
+    Get authentication token for tests via Keycloak
     Caches token for session duration
     """
-    # Login
+    # Login via Keycloak token endpoint
     payload = {
-        "phone": TEST_CREDENTIALS["phone"],
-        "pin": TEST_CREDENTIALS["pin"]
+        "grant_type": "password",
+        "client_id": "payu-backend",
+        "username": TEST_CREDENTIALS["username"],
+        "password": TEST_CREDENTIALS["password"]
     }
 
     response = requests.post(
-        f"{SERVICES['auth']}/api/v1/auth/login",
-        json=payload
+        f"{KEYCLOAK_URL}/realms/payu/protocol/openid-connect/token",
+        data=payload,
+        headers={"Content-Type": "application/x-www-form-urlencoded"}
     )
 
     if response.status_code != 200:
         pytest.skip(f"Authentication failed: {response.text}")
 
     data = response.json()
-
-    # Handle MFA if required
-    if data.get("mfa_required"):
-        mfa_payload = {
-            "user_id": data["user_id"],
-            "code": TEST_CREDENTIALS["otp"]
-        }
-
-        mfa_response = requests.post(
-            f"{SERVICES['auth']}/api/v1/auth/mfa/verify",
-            json=mfa_payload
-        )
-
-        if mfa_response.status_code != 200:
-            pytest.skip(f"MFA verification failed: {mfa_response.text}")
-
-        data = mfa_response.json()
-
     return data.get("access_token")
 
 

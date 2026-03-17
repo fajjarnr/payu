@@ -2,6 +2,7 @@ package id.payu.wallet.application.service;
 
 import id.payu.wallet.domain.model.*;
 import id.payu.wallet.domain.port.in.SettlementUseCase;
+import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.domain.port.out.SettlementPersistencePort;
 import id.payu.wallet.domain.port.out.JournalPersistencePort;
 
@@ -28,11 +29,14 @@ public class SettlementService implements SettlementUseCase {
 
     private final SettlementPersistencePort settlementPersistencePort;
     private final JournalPersistencePort journalPersistencePort;
+    private final WalletUseCase walletUseCase;
 
     public SettlementService(SettlementPersistencePort settlementPersistencePort,
-                             JournalPersistencePort journalPersistencePort) {
+                             JournalPersistencePort journalPersistencePort,
+                             WalletUseCase walletUseCase) {
         this.settlementPersistencePort = settlementPersistencePort;
         this.journalPersistencePort = journalPersistencePort;
+        this.walletUseCase = walletUseCase;
     }
 
     @Override
@@ -273,9 +277,19 @@ public class SettlementService implements SettlementUseCase {
 
         List<CalculatedSplit> calculatedSplits = split.calculateSplits(batch.getNetAmount());
 
-        // Log the splits (actual wallet credits would happen here)
+        // Reserve and commit the batch's net amount from the settlement source
+        String reservationId = walletUseCase.reserveBalance(
+                batch.getPartnerId(), batch.getNetAmount(), settlementBatchId.toString());
+        walletUseCase.commitReservation(reservationId);
+
+        // Credit each split recipient from the reserved amount
         for (CalculatedSplit calc : calculatedSplits) {
             log.info("Revenue split: {} ({}) -> {}", calc.getName(), calc.getAccountId(), calc.getAmount());
+            walletUseCase.credit(
+                    calc.getAccountId(),
+                    calc.getAmount(),
+                    settlementBatchId.toString(),
+                    "Revenue split: " + calc.getName());
         }
     }
 

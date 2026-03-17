@@ -7,7 +7,12 @@ resources:
   - secrets/secrets-template.yaml
   - monitoring/hpa.yaml
 
-namespace: payu
+namespace: payu-prod
 
 # Production: use values as-is from base (2 replicas default, gateway=3)
 # HPA will scale up based on load
+
+# Image overrides: use production registry (not dev)
+images:
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/*
+    newName: image-registry.openshift-image-registry.svc:5000/payu-prod/*

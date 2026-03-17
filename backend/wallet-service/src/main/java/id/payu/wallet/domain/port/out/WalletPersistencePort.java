@@ -18,6 +18,13 @@ public interface WalletPersistencePort {
     Optional<Wallet> findById(UUID walletId);
     
     Optional<Wallet> findByAccountId(String accountId);
+
+    /**
+     * Find wallet by account ID with pessimistic write lock.
+     * Must be called within an active transaction.
+     * Used for balance-modifying operations to prevent concurrent update races.
+     */
+    Optional<Wallet> findByAccountIdForUpdate(String accountId);
     
     WalletTransaction saveTransaction(WalletTransaction transaction);
     

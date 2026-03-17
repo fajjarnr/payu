@@ -39,12 +39,13 @@ describe('LendingService', () => {
   describe('Loan Management', () => {
     describe('applyLoan', () => {
       it('should apply for a loan successfully', async () => {
+        // BUG-CROSS-053: LoanApplicationRequest now uses externalId, loanType, principalAmount
         const mockRequest: LoanApplicationRequest = {
-          userId: 'user_123',
-          amount: 10000000,
+          externalId: 'user_123',
+          loanType: 'PERSONAL',
+          principalAmount: 10000000,
           tenureMonths: 12,
           purpose: 'Home renovation',
-          interestRate: 12.5,
         };
 
         const mockLoan: Loan = {
@@ -71,8 +72,9 @@ describe('LendingService', () => {
 
       it('should apply loan without optional interest rate', async () => {
         const mockRequest: LoanApplicationRequest = {
-          userId: 'user_456',
-          amount: 5000000,
+          externalId: 'user_456',
+          loanType: 'PERSONAL',
+          principalAmount: 5000000,
           tenureMonths: 6,
           purpose: 'Emergency fund',
         };
@@ -260,8 +262,8 @@ describe('LendingService', () => {
 
         const result = await service.processRepayment('schedule_1', 888888.89);
 
-        expect(api.post).toHaveBeenCalledWith('/lending/repayment-schedules/schedule_1/pay', null, {
-          params: { amount: 888888.89 },
+        expect(api.post).toHaveBeenCalledWith('/lending/repayment-schedules/schedule_1/pay', {
+          amount: 888888.89,
         });
         expect(result.status).toBe('PAID');
       });
@@ -558,11 +560,11 @@ describe('LendingService', () => {
   describe('Data transformation', () => {
     it('should correctly calculate loan payment details', async () => {
       const mockRequest: LoanApplicationRequest = {
-        userId: 'user_calc',
-        amount: 12000000,
+        externalId: 'user_calc',
+        loanType: 'PERSONAL',
+        principalAmount: 12000000,
         tenureMonths: 12,
         purpose: 'Test calculation',
-        interestRate: 12.0,
       };
 
       const mockLoan: Loan = {
@@ -608,8 +610,9 @@ describe('LendingService', () => {
   describe('Error handling', () => {
     it('should handle loan application errors', async () => {
       const mockRequest: LoanApplicationRequest = {
-        userId: 'user_error',
-        amount: 1000000,
+        externalId: 'user_error',
+        loanType: 'PERSONAL',
+        principalAmount: 1000000,
         tenureMonths: 12,
         purpose: 'Test error',
       };

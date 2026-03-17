@@ -45,13 +45,41 @@ interface InvestmentPerformanceProps {
   className?: string;
   roi?: number;
   totalInvestment?: number;
+  targetRoi?: number;
+  profit?: number;
+  monthlyChange?: number;
+  isLoading?: boolean;
 }
 
 export default function InvestmentPerformance({
   className,
-  roi = 12.5,
-  totalInvestment = 150000000,
+  roi,
+  totalInvestment,
+  targetRoi,
+  profit,
+  monthlyChange,
+  isLoading = false,
 }: InvestmentPerformanceProps) {
+  if (isLoading) {
+    return (
+      <Card className={cn('flex flex-col group overflow-hidden h-full', className)}>
+        <CardHeader className="items-start pb-2">
+          <CardTitle className="text-sm font-bold text-foreground tracking-widest uppercase">
+            Performa Investasi
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 flex items-center justify-center min-h-[200px]">
+          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const displayRoi = roi ?? 0;
+  const displayInvestment = totalInvestment ?? 0;
+  const displayTarget = targetRoi ?? 0;
+  const displayProfit = profit ?? 0;
+  const displayMonthlyChange = monthlyChange ?? 0;
   return (
     <Card className={cn('flex flex-col group overflow-hidden h-full', className)}>
       <CardHeader className="items-start pb-2">
@@ -72,9 +100,9 @@ export default function InvestmentPerformance({
           className="mx-auto aspect-square max-h-[220px] w-full"
         >
           <RadialBarChart
-            data={[{ ...chartData[0], value: roi }]}
+            data={[{ ...chartData[0], value: displayRoi }]}
             startAngle={90}
-            endAngle={90 + (roi / 20) * 360} // Skala 20% dianggap 100% radial untuk visualisasi
+            endAngle={90 + (displayRoi / 20) * 360} // Skala 20% dianggap 100% radial untuk visualisasi
             innerRadius={80}
             outerRadius={110}
           >
@@ -106,7 +134,7 @@ export default function InvestmentPerformance({
                           y={viewBox.cy}
                           className="fill-foreground text-3xl font-bold tabular-nums"
                         >
-                          +{roi}%
+                          +{displayRoi}%
                         </tspan>
                         <tspan
                           x={viewBox.cx}
@@ -129,23 +157,29 @@ export default function InvestmentPerformance({
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
               <Target className="h-3 w-3" /> Target
             </p>
-            <p className="text-xs font-bold text-foreground">15.0%</p>
+            <p className="text-xs font-bold text-foreground">{displayTarget > 0 ? `${displayTarget}%` : '--'}</p>
           </div>
           <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
               <ArrowUpRight className="h-3 w-3" /> Profit
             </p>
-            <p className="text-xs font-bold text-primary">Rp 18.75Jt</p>
+            <p className="text-xs font-bold text-primary">
+              {displayProfit > 0 ? `Rp ${(displayProfit / 1000000).toFixed(2)}Jt` : 'Rp 0'}
+            </p>
           </div>
         </div>
       </CardContent>
 
       <CardFooter className="flex-col gap-2 pt-0 pb-6 border-t border-border/10">
+        {displayMonthlyChange !== 0 && (
         <div className="flex items-center gap-2 leading-none font-bold text-xs uppercase tracking-widest text-primary mt-4">
-          Naik 2.1% bulan ini <TrendingUp className="h-3 w-3" />
+          {displayMonthlyChange > 0 ? 'Naik' : 'Turun'} {Math.abs(displayMonthlyChange)}% bulan ini <TrendingUp className="h-3 w-3" />
         </div>
+        )}
         <div className="text-xs text-muted-foreground lowercase leading-none">
-          Berdasarkan total investasi Rp {(totalInvestment / 1000000).toFixed(0)}Jt
+          {displayInvestment > 0
+            ? `Berdasarkan total investasi Rp ${(displayInvestment / 1000000).toFixed(0)}Jt`
+            : 'Belum ada data investasi'}
         </div>
       </CardFooter>
     </Card>

@@ -9,16 +9,23 @@ import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/M
 import { Button } from '@/components/ui/button';
 import { Building2, Key, ShieldCheck, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function MerchantDashboard() {
  const t = useTranslations('merchant');
+ const { user } = useAuthStore();
  const [partner, setPartner] = useState<Partner | null>(null);
  const [loading, setLoading] = useState(true);
 
  useEffect(() => {
   const fetchPartner = async () => {
    try {
-    const data = await PartnerService.getProfile(1);
+    const partnerId = user?.id ? Number(user.id) : 0;
+    if (!partnerId) {
+     setLoading(false);
+     return;
+    }
+    const data = await PartnerService.getProfile(partnerId);
     setPartner(data);
    } catch (error) {
     console.error('Failed to fetch partner', error);
@@ -28,7 +35,7 @@ export default function MerchantDashboard() {
   };
 
   fetchPartner();
- }, []);
+ }, [user?.id]);
 
  if (loading) {
   return (

@@ -12,15 +12,16 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+// BUG-CROSS-058: Updated mock to match backend NotificationResponse (no type, no read boolean)
 const mockNotification: Notification = {
   id: 'notif_001',
   userId: 'user_123',
-  type: 'TRANSACTION',
   channel: 'PUSH',
+  recipient: '+628123456789',
   title: 'Transfer Berhasil',
   body: 'Transfer sebesar Rp1.000.000 ke rekening 1234567890 berhasil.',
-  data: { transactionId: 'tx_001', amount: 1000000 },
-  read: false,
+  status: 'SENT',
+  createdAt: '2026-02-18T10:00:00Z',
   sentAt: '2026-02-18T10:00:00Z',
   readAt: undefined,
 };
@@ -32,13 +33,13 @@ describe('NotificationService', () => {
 
   describe('sendNotification', () => {
     it('should send a notification', async () => {
+      // BUG-CROSS-058: Updated to match backend SendNotificationRequest (no type, has recipient/templateId)
       const request: SendNotificationRequest = {
         userId: 'user_123',
-        type: 'TRANSACTION',
         channel: 'PUSH',
+        recipient: '+628123456789',
         title: 'Transfer Berhasil',
         body: 'Transfer berhasil.',
-        data: { transactionId: 'tx_001' },
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockNotification });
@@ -47,7 +48,7 @@ describe('NotificationService', () => {
 
       expect(api.post).toHaveBeenCalledWith('/notifications', request);
       expect(result.id).toBe('notif_001');
-      expect(result.read).toBe(false);
+      expect(result.status).toBe('SENT');
     });
   });
 
@@ -62,32 +63,26 @@ describe('NotificationService', () => {
     });
   });
 
+  // BUG-CROSS-057: getUserNotifications returns flat Notification[] with limit param (not paged)
   describe('getUserNotifications', () => {
-    it('should fetch user notifications with default pagination', async () => {
-      const mockResponse = {
-        content: [mockNotification],
-        totalElements: 1,
-      };
-
-      vi.mocked(api.get).mockResolvedValue({ data: mockResponse });
+    it('should fetch user notifications with default limit', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: [mockNotification] });
 
       const result = await NotificationService.getUserNotifications('user_123');
 
       expect(api.get).toHaveBeenCalledWith('/notifications/user/user_123', {
-        params: { page: 0, size: 20 },
+        params: { limit: 20 },
       });
-      expect(result.content).toHaveLength(1);
-      expect(result.totalElements).toBe(1);
+      expect(result).toHaveLength(1);
     });
 
-    it('should support custom pagination', async () => {
-      const mockResponse = { content: [], totalElements: 50 };
-      vi.mocked(api.get).mockResolvedValue({ data: mockResponse });
+    it('should support custom limit', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: [] });
 
-      await NotificationService.getUserNotifications('user_123', 2, 10);
+      await NotificationService.getUserNotifications('user_123', 10);
 
       expect(api.get).toHaveBeenCalledWith('/notifications/user/user_123', {
-        params: { page: 2, size: 10 },
+        params: { limit: 10 },
       });
     });
   });

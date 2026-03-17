@@ -208,9 +208,11 @@ public class SplitPaymentService implements SplitPaymentUseCase {
         String reservationId = walletUseCase.reserveBalance(
                 payerAccountId, totalAmount, executionId.toString());
 
+        boolean committed = false;
         try {
             // 3. Commit the reservation (deduct from payer)
             walletUseCase.commitReservation(reservationId);
+            committed = true;
 
             // 4. Credit each recipient
             for (SplitPaymentLeg leg : legs) {
@@ -229,11 +231,13 @@ public class SplitPaymentService implements SplitPaymentUseCase {
             execution.complete();
         } catch (Exception e) {
             log.error("Split payment failed: executionId={}", executionId, e);
-            // Release reservation if not yet committed
-            try {
-                walletUseCase.releaseReservation(reservationId);
-            } catch (Exception releaseEx) {
-                log.warn("Failed to release reservation: {}", reservationId, releaseEx);
+            // Only release reservation if not yet committed
+            if (!committed) {
+                try {
+                    walletUseCase.releaseReservation(reservationId);
+                } catch (Exception releaseEx) {
+                    log.warn("Failed to release reservation: {}", reservationId, releaseEx);
+                }
             }
             execution.fail(e.getMessage());
         }
@@ -265,10 +269,15 @@ public class SplitPaymentService implements SplitPaymentUseCase {
         SplitPaymentExecution execution = getExecution(executionId);
         execution.reverse();
 
-        // Debit each recipient back, credit payer
+        // Debit each credited recipient back before crediting payer
         for (SplitPaymentLeg leg : execution.getLegs()) {
             if (leg.getStatus() == SplitPaymentLeg.LegStatus.CREDITED) {
-                // We can't debit recipients directly — credit payer instead
+                // Reserve and commit debit from recipient
+                String resId = walletUseCase.reserveBalance(
+                        leg.getRecipientAccountId(),
+                        leg.getAmount(),
+                        executionId.toString());
+                walletUseCase.commitReservation(resId);
                 leg.markReversed();
             }
         }

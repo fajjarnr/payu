@@ -140,18 +140,27 @@ describe('AccountService', () => {
 
   describe('verifyNik', () => {
     it('should verify NIK successfully', async () => {
+      // BUG-CROSS-069: VerifyNikRequest now includes fullName, birthPlace, birthDate
       const mockRequest: VerifyNikRequest = {
         nik: '1234567890123456',
+        fullName: 'John Doe',
+        birthPlace: 'Jakarta',
+        birthDate: '1990-01-15',
       };
 
+      // BUG-CROSS-069: DukcapilResponse now uses verified, birthDate, birthPlace, requestId, status, responseCode, responseMessage
       const mockResponse: DukcapilResponse = {
+        requestId: 'req_001',
         nik: '1234567890123456',
+        verified: true,
         fullName: 'John Doe',
-        dateOfBirth: '1990-01-15',
-        placeOfBirth: 'Jakarta',
+        birthPlace: 'Jakarta',
+        birthDate: '1990-01-15',
         gender: 'LAKI-LAKI',
         address: 'Jl. Sudirman No. 1, Jakarta',
-        isValid: true,
+        status: 'VERIFIED',
+        responseCode: '00',
+        responseMessage: 'Success',
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
@@ -160,34 +169,44 @@ describe('AccountService', () => {
 
       expect(api.post).toHaveBeenCalledWith('/accounts/verify-nik', mockRequest);
       expect(result).toEqual(mockResponse);
-      expect(result.isValid).toBe(true);
+      expect(result.verified).toBe(true);
     });
 
     it('should handle invalid NIK', async () => {
       const mockRequest: VerifyNikRequest = {
         nik: '0000000000000000',
+        fullName: 'Unknown',
+        birthPlace: 'Unknown',
+        birthDate: '2000-01-01',
       };
 
       const mockResponse: DukcapilResponse = {
+        requestId: 'req_002',
         nik: '0000000000000000',
+        verified: false,
         fullName: '',
-        dateOfBirth: '',
-        placeOfBirth: '',
+        birthPlace: '',
+        birthDate: '',
         gender: '',
         address: '',
-        isValid: false,
+        status: 'NOT_FOUND',
+        responseCode: '01',
+        responseMessage: 'NIK not found',
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
 
       const result = await service.verifyNik(mockRequest);
 
-      expect(result.isValid).toBe(false);
+      expect(result.verified).toBe(false);
     });
 
     it('should handle NIK verification errors', async () => {
       const mockRequest: VerifyNikRequest = {
         nik: '9999999999999999',
+        fullName: 'Error User',
+        birthPlace: 'Jakarta',
+        birthDate: '1990-01-01',
       };
 
       const mockError = new Error('Dukcapil service unavailable');

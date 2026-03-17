@@ -59,17 +59,29 @@ spec:
             - name: KEYCLOAK_CLIENT_ID
               value: "payu-backend"
             - name: KEYCLOAK_CLIENT_SECRET
-              value: "payu-backend-secret"
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-credentials
+                  key: KEYCLOAK_CLIENT_SECRET
             - name: KEYCLOAK_ADMIN_USERNAME
               value: "admin"
             - name: KEYCLOAK_ADMIN_PASSWORD
-              value: "change-me"
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-credentials
+                  key: KEYCLOAK_ADMIN_PASSWORD
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_auth"
             - name: SPRING_DATASOURCE_USERNAME
-              value: "payu"
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: username
             - name: SPRING_DATASOURCE_PASSWORD
-              value: "change-me"
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
             - name: REDIS_HOST

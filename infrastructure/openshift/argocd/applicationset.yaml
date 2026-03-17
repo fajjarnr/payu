@@ -13,7 +13,7 @@ spec:
         repoURL: https://github.com/payu-digital/payu-platform.git
         revision: main
         directories:
-          - path: infrastructure/openshift/base/*
+          - path: infrastructure/openshift/overlays/*
         values:
           environment: staging
 
@@ -37,10 +37,8 @@ spec:
       source:
         repoURL: https://github.com/payu-digital/payu-platform.git
         targetRevision: main
-        path: infrastructure/openshift/base/{{path.basename}}
-        helm:
-          valueFiles:
-            - ../../overlays/{{values.environment}}/values.yaml
+        path: infrastructure/openshift/overlays/{{path.basename}}
+        # Uses Kustomize (auto-detected from kustomization.yaml)
 
       destination:
         namespace: 'payu-{{values.environment}}'
@@ -70,8 +68,8 @@ spec:
 
       # Sync Waves for dependency ordering
       ignoreDifferences:
-        - group: apps.openshift.io
-          kind: DeploymentConfig
+        - group: apps
+          kind: Deployment
           jqPathExpressions:
             - .spec.template.metadata.annotations
 

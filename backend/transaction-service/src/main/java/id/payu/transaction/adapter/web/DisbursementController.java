@@ -1,6 +1,7 @@
 package id.payu.transaction.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
+import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.domain.model.Disbursement;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.DisbursementUseCase;
@@ -14,6 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,6 +43,7 @@ import java.util.stream.Collectors;
 public class DisbursementController {
 
     private final DisbursementUseCase disbursementUseCase;
+    private final AuthorizationService authorizationService;
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -49,8 +54,10 @@ public class DisbursementController {
             @RequestHeader(value = "X-Account-Id", required = false) UUID accountId,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
 
-        // Use header account ID or extract from authentication
+        // Use header account ID or extract from authentication, then verify ownership
         UUID sourceAccountId = accountId != null ? accountId : getCurrentAccountId();
+        String userId = extractUserId();
+        authorizationService.verifyAccountOwnership(sourceAccountId, userId);
 
         Disbursement disbursement = disbursementUseCase.createDisbursement(
                 sourceAccountId,
@@ -102,6 +109,8 @@ public class DisbursementController {
             @RequestHeader(value = "X-Account-Id", required = false) UUID accountId) {
 
         UUID sourceAccountId = accountId != null ? accountId : getCurrentAccountId();
+        String userId = extractUserId();
+        authorizationService.verifyAccountOwnership(sourceAccountId, userId);
 
         List<Disbursement> disbursements = disbursementUseCase.listDisbursementsByAccount(
                 sourceAccountId, limit, offset);
@@ -145,8 +154,26 @@ public class DisbursementController {
     }
 
     private UUID getCurrentAccountId() {
-        // In a real implementation, extract from SecurityContext
-        // For now, return a placeholder
-        return UUID.randomUUID();
+        // Extract account ID from JWT claims
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt) {
+            Jwt jwt = (Jwt) authentication.getPrincipal();
+            String accountId = jwt.getClaim("account_id");
+            if (accountId != null) {
+                return UUID.fromString(accountId);
+            }
+        }
+        throw new IllegalStateException("No valid JWT authentication found");
+    }
+
+    // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+    private String extractUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
     }
 }

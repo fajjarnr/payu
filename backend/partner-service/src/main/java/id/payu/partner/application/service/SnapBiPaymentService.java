@@ -1,5 +1,9 @@
 package id.payu.partner.application.service;
 
+import id.payu.partner.adapter.persistence.repository.SnapBiPaymentRepository;
+import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
+import id.payu.partner.domain.SnapBiPayment;
+import id.payu.partner.domain.SnapBiRefund;
 import id.payu.partner.dto.snap.PaymentRequest;
 import id.payu.partner.dto.snap.PaymentResponse;
 import id.payu.partner.dto.snap.PaymentStatusResponse;
@@ -8,30 +12,48 @@ import id.payu.partner.dto.snap.RefundResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * SNAP BI Payment Service.
+ *
+ * BUG-BE-182 FIX: Replaced in-memory ConcurrentHashMap stores with JPA-backed
+ * persistence (SnapBiPayment / SnapBiRefund entities) so payment and refund
+ * records survive service restarts.
+ */
 @Service
 public class SnapBiPaymentService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SnapBiPaymentService.class);
 
-    private final Map<String, PaymentRecord> paymentStore = new ConcurrentHashMap<>();
-    private final Map<String, RefundRecord> refundStore = new ConcurrentHashMap<>();
+    private final SnapBiPaymentRepository paymentRepository;
+    private final SnapBiRefundRepository refundRepository;
 
-    // Kafka integration commented out for migration - TODO restore with KafkaTemplate
-    // @Autowired
-    // private KafkaTemplate<String, String> kafkaTemplate;
+    public SnapBiPaymentService(SnapBiPaymentRepository paymentRepository,
+                                SnapBiRefundRepository refundRepository) {
+        this.paymentRepository = paymentRepository;
+        this.refundRepository = refundRepository;
+    }
 
+    @Transactional
     public PaymentResponse createPayment(String partnerId, PaymentRequest request) {
-        String payuReferenceNo = "PAYU-" + UUID.randomUUID().toString();
-        Instant now = Instant.now();
+        // BUG-BE-183 FIX: Validate payment amount is positive
+        if (request.amount == null || request.amount.value == null
+                || request.amount.value.compareTo(BigDecimal.ZERO) <= 0) {
+            return new PaymentResponse(
+                "4002500",
+                "Amount must be greater than zero",
+                request.partnerReferenceNo,
+                null
+            );
+        }
 
-        PaymentRecord record = new PaymentRecord(
+        String payuReferenceNo = "PAYU-" + UUID.randomUUID().toString();
+
+        SnapBiPayment record = new SnapBiPayment(
             payuReferenceNo,
             partnerId,
             request.partnerReferenceNo,
@@ -40,13 +62,11 @@ public class SnapBiPaymentService {
             request.beneficiaryAccountNo,
             request.beneficiaryBankCode,
             request.sourceAccountNo,
-            "PENDING",
-            now
+            "PENDING"
         );
 
-        paymentStore.put(payuReferenceNo, record);
+        paymentRepository.save(record);
 
-        // Logic for event emission replaced with log
         LOG.info("Payment initiated payuRef={} partnerRef={} amount={}",
                 payuReferenceNo, request.partnerReferenceNo, request.amount.value);
 
@@ -58,11 +78,10 @@ public class SnapBiPaymentService {
         );
     }
 
+    @Transactional(readOnly = true)
     public PaymentStatusResponse getPaymentStatus(String partnerId, String referenceNo) {
-        PaymentRecord record = paymentStore.values().stream()
-            .filter(p -> p.partnerId.equals(partnerId) &&
-                          (p.payuReferenceNo.equals(referenceNo) || p.partnerReferenceNo.equals(referenceNo)))
-            .findFirst()
+        SnapBiPayment record = paymentRepository.findByPartnerIdAndPayuReferenceNo(partnerId, referenceNo)
+            .or(() -> paymentRepository.findByPartnerIdAndPartnerReferenceNo(partnerId, referenceNo))
             .orElse(null);
 
         if (record == null) {
@@ -82,20 +101,22 @@ public class SnapBiPaymentService {
         return new PaymentStatusResponse(
             "2002500",
             "Successful",
-            record.partnerReferenceNo,
-            record.payuReferenceNo,
-            record.amount,
-            record.currency,
-            record.status,
-            record.beneficiaryAccountNo,
-            record.createdAt.toString()
+            record.getPartnerReferenceNo(),
+            record.getPayuReferenceNo(),
+            record.getAmount(),
+            record.getCurrency(),
+            record.getStatus(),
+            record.getBeneficiaryAccountNo(),
+            record.getCreatedAt().toString()
         );
     }
 
+    @Transactional
     public void updatePaymentStatus(String payuReferenceNo, String status) {
-        PaymentRecord record = paymentStore.get(payuReferenceNo);
+        SnapBiPayment record = paymentRepository.findByPayuReferenceNo(payuReferenceNo).orElse(null);
         if (record != null) {
-            record.status = status;
+            record.setStatus(status);
+            paymentRepository.save(record);
 
             LOG.info("Payment status updated payuRef={} status={}", payuReferenceNo, status);
 
@@ -109,11 +130,10 @@ public class SnapBiPaymentService {
         }
     }
 
+    @Transactional
     public RefundResponse createRefund(String partnerId, String referenceNo, RefundRequest request) {
-        PaymentRecord record = paymentStore.values().stream()
-            .filter(p -> p.partnerId.equals(partnerId) &&
-                          (p.payuReferenceNo.equals(referenceNo) || p.partnerReferenceNo.equals(referenceNo)))
-            .findFirst()
+        SnapBiPayment record = paymentRepository.findByPartnerIdAndPayuReferenceNo(partnerId, referenceNo)
+            .or(() -> paymentRepository.findByPartnerIdAndPartnerReferenceNo(partnerId, referenceNo))
             .orElse(null);
 
         if (record == null) {
@@ -127,10 +147,40 @@ public class SnapBiPaymentService {
             );
         }
 
-        if (!"COMPLETED".equals(record.status)) {
+        if (!"COMPLETED".equals(record.getStatus())) {
             return new RefundResponse(
                 "4002502",
-                "Payment cannot be refunded. Payment status: " + record.status,
+                "Payment cannot be refunded. Payment status: " + record.getStatus(),
+                null,
+                null,
+                null,
+                null
+            );
+        }
+
+        // BUG-BE-181 FIX: Validate refund amount does not exceed original payment amount
+        if (request.amount == null || request.amount.value == null
+                || request.amount.value.compareTo(BigDecimal.ZERO) <= 0) {
+            return new RefundResponse(
+                "4002502",
+                "Refund amount must be greater than zero",
+                null,
+                null,
+                null,
+                null
+            );
+        }
+
+        // Check cumulative refunds using database aggregate query
+        BigDecimal totalRefunded = refundRepository.sumRefundedAmountByPayuReferenceNo(record.getPayuReferenceNo());
+
+        BigDecimal newTotal = totalRefunded.add(request.amount.value);
+        if (newTotal.compareTo(record.getAmount()) > 0) {
+            return new RefundResponse(
+                "4002502",
+                "Refund amount exceeds original payment. Original: " + record.getAmount()
+                        + ", already refunded: " + totalRefunded
+                        + ", requested: " + request.amount.value,
                 null,
                 null,
                 null,
@@ -140,23 +190,22 @@ public class SnapBiPaymentService {
 
         String payuRefundNo = "REFUND-" + UUID.randomUUID().toString();
 
-        RefundRecord refundRecord = new RefundRecord(
+        SnapBiRefund refundRecord = new SnapBiRefund(
             payuRefundNo,
             partnerId,
-            record.payuReferenceNo,
-            record.partnerReferenceNo,
+            record.getPayuReferenceNo(),
+            record.getPartnerReferenceNo(),
             request.partnerRefundNo,
             request.amount.value,
             request.amount.currency,
             request.reason,
-            "COMPLETED",
-            Instant.now()
+            "COMPLETED"
         );
 
-        refundStore.put(payuRefundNo, refundRecord);
+        refundRepository.save(refundRecord);
 
         LOG.info("Refund processed payuRefund={} paymentRef={} amount={}",
-                payuRefundNo, record.payuReferenceNo, request.amount.value);
+                payuRefundNo, record.getPayuReferenceNo(), request.amount.value);
 
         sendRefundWebhookNotification(refundRecord);
 
@@ -165,76 +214,16 @@ public class SnapBiPaymentService {
             "Successful",
             request.partnerRefundNo,
             payuRefundNo,
-            record.payuReferenceNo,
+            record.getPayuReferenceNo(),
             "COMPLETED"
         );
     }
 
-    private void sendWebhookNotification(PaymentRecord record, String eventType) {
-        LOG.info("Webhook notification sent for payment event payuRef={} eventType={}", record.payuReferenceNo, eventType);
+    private void sendWebhookNotification(SnapBiPayment record, String eventType) {
+        LOG.info("Webhook notification sent for payment event payuRef={} eventType={}", record.getPayuReferenceNo(), eventType);
     }
 
-    private void sendRefundWebhookNotification(RefundRecord refundRecord) {
-        LOG.info("Webhook notification sent for completed refund refundRef={}", refundRecord.payuRefundNo);
-    }
-    
-    // Internal classes kept as is but removed from static context if needed, or kept static
-    
-    static class PaymentRecord {
-        public String payuReferenceNo;
-        public String partnerId;
-        public String partnerReferenceNo;
-        public BigDecimal amount;
-        public String currency;
-        public String beneficiaryAccountNo;
-        public String beneficiaryBankCode;
-        public String sourceAccountNo;
-        public String status;
-        public Instant createdAt;
-
-        PaymentRecord(String payuReferenceNo, String partnerId, String partnerReferenceNo,
-                      BigDecimal amount, String currency, String beneficiaryAccountNo,
-                      String beneficiaryBankCode, String sourceAccountNo, String status, Instant createdAt) {
-            this.payuReferenceNo = payuReferenceNo;
-            this.partnerId = partnerId;
-            this.partnerReferenceNo = partnerReferenceNo;
-            this.amount = amount;
-            this.currency = currency;
-            this.beneficiaryAccountNo = beneficiaryAccountNo;
-            this.beneficiaryBankCode = beneficiaryBankCode;
-            this.sourceAccountNo = sourceAccountNo;
-            this.status = status;
-            this.createdAt = createdAt;
-        }
-    }
-    // Other inner classes (RefundRecord, WebhookEvent, etc.) omitted for brevity but should be there if used
-    // Since I simplified the logic to remove Event classes (PaymentEvent, RefundEvent used for Kafka only), I can remove them if not used.
-    
-    static class RefundRecord {
-        public String payuRefundNo;
-        public String partnerId;
-        public String payuReferenceNo;
-        public String partnerReferenceNo;
-        public String partnerRefundNo;
-        public BigDecimal amount;
-        public String currency;
-        public String reason;
-        public String status;
-        public Instant createdAt;
-
-        RefundRecord(String payuRefundNo, String partnerId, String payuReferenceNo, String partnerReferenceNo,
-                     String partnerRefundNo, BigDecimal amount, String currency, String reason,
-                     String status, Instant createdAt) {
-            this.payuRefundNo = payuRefundNo;
-            this.partnerId = partnerId;
-            this.payuReferenceNo = payuReferenceNo;
-            this.partnerReferenceNo = partnerReferenceNo;
-            this.partnerRefundNo = partnerRefundNo;
-            this.amount = amount;
-            this.currency = currency;
-            this.reason = reason;
-            this.status = status;
-            this.createdAt = createdAt;
-        }
+    private void sendRefundWebhookNotification(SnapBiRefund refundRecord) {
+        LOG.info("Webhook notification sent for completed refund refundRef={}", refundRecord.getPayuRefundNo());
     }
 }

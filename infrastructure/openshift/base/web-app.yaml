@@ -18,6 +18,10 @@ spec:
         app: web-app
         app.kubernetes.io/name: web-app
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: web-app
           image: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:v1.4.0

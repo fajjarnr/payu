@@ -49,7 +49,7 @@ class TransferSimulation extends Simulation {
     // Login first to get token
     .exec(
       http("Login Request")
-        .post("$authUrl/api/v1/auth/login")
+        .post(s"$authUrl/api/v1/auth/login")
         .body(StringBody(
           """{
             "username": "${username}",
@@ -64,7 +64,7 @@ class TransferSimulation extends Simulation {
     // Perform transfer
     .exec(
       http("Transfer Request")
-        .post("$transactionUrl/api/v1/transfers")
+        .post(s"$transactionUrl/api/v1/transactions/transfer")
         .header("Authorization", "Bearer ${access_token}")
         .body(StringBody(
           """{

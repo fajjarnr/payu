@@ -37,52 +37,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
-const MOCK_CAMPAIGNS = [
-  {
-    id: 'CMP-001',
-    name: 'Ramadhan Cashback Fiesta',
-    type: 'CASHBACK',
-    status: 'ACTIVE',
-    budget: 'Rp 500,000,000',
-    spent: 'Rp 142,500,000',
-    redemptions: 4250,
-    startDate: '2026-03-01',
-    endDate: '2026-04-15'
-  },
-  {
-    id: 'CMP-002',
-    name: 'New User Welcoming Reward',
-    type: 'SIGNUP_BONUS',
-    status: 'ACTIVE',
-    budget: 'Rp 1,000,000,000',
-    spent: 'Rp 890,200,000',
-    redemptions: 17804,
-    startDate: '2026-01-01',
-    endDate: '2026-12-31'
-  },
-  {
-    id: 'CMP-003',
-    name: 'Weekend BI-FAST Promo',
-    type: 'FEE_WAIVER',
-    status: 'PAUSED',
-    budget: 'Rp 100,000,000',
-    spent: 'Rp 45,000,000',
-    redemptions: 18000,
-    startDate: '2026-02-01',
-    endDate: '2026-02-28'
-  },
-  {
-    id: 'CMP-004',
-    name: 'Wealth Creator Referral',
-    type: 'REFERRAL',
-    status: 'DRAFT',
-    budget: 'Rp 250,000,000',
-    spent: 'Rp 0',
-    redemptions: 0,
-    startDate: '2026-05-01',
-    endDate: '2026-06-30'
-  }
-];
+// BUG-FE-097: Removed MOCK_CAMPAIGNS — should be fetched from Promotion service API
+const MOCK_CAMPAIGNS: Array<{ id: string; name: string; type: string; status: string; budget: string; spent: string; redemptions: number; startDate: string; endDate: string }> = [];
 
 export default function CampaignsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -116,10 +72,10 @@ export default function CampaignsPage() {
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Total Budget', value: 'Rp 1.85B', color: 'bg-emerald-500', icon: Gift },
-              { label: 'Total Rewards Sent', value: '25.6k', color: 'bg-blue-500', icon: CheckCircle2 },
-              { label: 'Active Campaigns', value: '5', color: 'bg-indigo-500', icon: Timer },
-              { label: 'Conversion Lift', value: '+14%', color: 'bg-orange-500', icon: BarChart3 },
+              { label: 'Total Budget', value: '—', color: 'bg-emerald-500', icon: Gift },
+              { label: 'Total Rewards Sent', value: '—', color: 'bg-blue-500', icon: CheckCircle2 },
+              { label: 'Active Campaigns', value: '—', color: 'bg-indigo-500', icon: Timer },
+              { label: 'Conversion Lift', value: '—', color: 'bg-orange-500', icon: BarChart3 },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>

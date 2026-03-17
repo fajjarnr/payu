@@ -3,10 +3,10 @@ package contracts.wallet
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description "Should return wallet balance for valid wallet ID"
+    description "Should return wallet balance for valid account ID"
     request {
         method GET()
-        url "/api/v1/wallets/balance"
+        url regex("/api/v1/wallets/[a-f0-9\\-]+/balance")
         headers {
             header("Authorization", "Bearer {{token}}")
             header("Content-Type", "application/json")
@@ -20,10 +20,11 @@ Contract.make {
         body([
             success: true,
             data: [
-                walletId: $(anyUuid()),
+                accountId: $(anyNonBlankString()),
                 balance: $(anyNumber()),
-                currency: "IDR",
-                availableBalance: $(anyNumber())
+                availableBalance: $(anyNumber()),
+                reservedBalance: $(anyNumber()),
+                currency: "IDR"
             ]
         ])
     }

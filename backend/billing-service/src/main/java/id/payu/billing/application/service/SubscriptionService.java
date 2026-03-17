@@ -251,6 +251,13 @@ public class SubscriptionService implements SubscriptionUseCase {
     // ═══════════════════════════════════════════════════════
 
     private void processCharge(Subscription sub) {
+        // BUG-BE-187 FIX: Skip charging subscriptions that are still in trial period
+        if (sub.getStatus() == SubscriptionStatus.TRIAL) {
+            log.info("Skipping charge for subscription {} — still in trial period (ends at {})",
+                    sub.getId(), sub.getTrialEndAt());
+            return;
+        }
+
         String idempotencyKey = "sub-" + sub.getId() + "-" + sub.getNextBillingAt();
 
         // Idempotency check

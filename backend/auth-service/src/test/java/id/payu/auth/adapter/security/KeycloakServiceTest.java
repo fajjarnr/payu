@@ -309,6 +309,7 @@ class KeycloakServiceTest {
         }
     }
 
+    @Nested
     @DisplayName("Credential Validation")
     class CredentialValidation {
 

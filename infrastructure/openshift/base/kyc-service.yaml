@@ -22,6 +22,10 @@ spec:
         prometheus.io/path: "/metrics"
         prometheus.io/port: "8080"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: kyc-service
           image: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service:v1.4.0
@@ -43,7 +47,10 @@ spec:
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4317"
             - name: SECRET_KEY
-              value: "CF2owM6bqkyWHSHCGlxMvx/PwBFQ2XCq4C3kdA7tiqQ="
+              valueFrom:
+                secretKeyRef:
+                  name: kyc-secrets
+                  key: SECRET_KEY
             - name: REDIS_HOST
               value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT

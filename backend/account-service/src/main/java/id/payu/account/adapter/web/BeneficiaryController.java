@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -41,10 +43,19 @@ public class BeneficiaryController {
     @PreAuthorize("hasAuthority('read:account')")
     public ResponseEntity<ApiResponse<List<BeneficiaryResponse>>> getBeneficiaries(
             @Parameter(description = "Account ID", required = true)
-            @PathVariable UUID accountId) {
+            @PathVariable UUID accountId,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Getting beneficiaries for account: {}", accountId);
 
-        // Note: In production, validate that the account belongs to the authenticated user
+        // BUG-BE-177: Validate that the accountId belongs to the authenticated user
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String authenticatedId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
+        if (!accountId.toString().equals(authenticatedId)) {
+            log.warn("User {} attempted to access beneficiaries for account {}", authenticatedId, accountId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
+        }
+
         List<Beneficiary> beneficiaries = beneficiaryRepository.findActiveByUserId(accountId);
         List<BeneficiaryResponse> responses = beneficiaries.stream()
                 .map(BeneficiaryResponse::from)
@@ -59,8 +70,18 @@ public class BeneficiaryController {
     public ResponseEntity<ApiResponse<BeneficiaryResponse>> createBeneficiary(
             @Parameter(description = "Account ID", required = true)
             @PathVariable UUID accountId,
-            @Valid @RequestBody BeneficiaryRequest request) {
+            @Valid @RequestBody BeneficiaryRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Creating beneficiary for account: {}", accountId);
+
+        // BUG-BE-177: Validate that the accountId belongs to the authenticated user
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String authenticatedId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
+        if (!accountId.toString().equals(authenticatedId)) {
+            log.warn("User {} attempted to create beneficiary for account {}", authenticatedId, accountId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
+        }
 
         // Check beneficiary limit
         long count = beneficiaryRepository.countActiveByUserId(accountId);

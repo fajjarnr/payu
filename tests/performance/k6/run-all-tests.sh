@@ -70,7 +70,7 @@ check_prerequisites() {
     print_section "Checking Endpoint Availability"
     echo "Gateway URL: $gateway_url"
 
-    if curl -s --max-time 5 "$gateway_url/actuator/health" > /dev/null 2>&1; then
+    if curl -s --max-time 5 "$gateway_url/q/health" > /dev/null 2>&1; then
         print_success "Gateway is accessible"
     else
         print_warning "Gateway is not accessible (status: $?)"

@@ -20,14 +20,14 @@ import json
 # =============================================================================
 BASE_URL = "http://localhost:8080/api/v1"
 GATEWAY_URL = "http://localhost:8080"
-AUTH_URL = "http://localhost:8002"
+KEYCLOAK_URL = "http://localhost:8180"
 ACCOUNT_URL = "http://localhost:8001"
 WALLET_URL = "http://localhost:8004"
 TRANSACTION_URL = "http://localhost:8003"
 BILLING_URL = "http://localhost:8005"
 
-TEST_USER_PHONE = "+6281234567801"
-TEST_USER_PIN = "123456"
+TEST_USERNAME = "customer1"
+TEST_PASSWORD = "P@ssw0rd123"
 TEST_OTP = "123456"
 
 
@@ -36,31 +36,23 @@ TEST_OTP = "123456"
 # =============================================================================
 @pytest.fixture
 def auth_token():
-    """Authenticate and return access token"""
+    """Authenticate via Keycloak and return access token"""
     payload = {
-        "phone": TEST_USER_PHONE,
-        "pin": TEST_USER_PIN
+        "grant_type": "password",
+        "client_id": "payu-backend",
+        "username": TEST_USERNAME,
+        "password": TEST_PASSWORD
     }
 
-    # Login
-    response = requests.post(f"{AUTH_URL}/api/v1/auth/login", json=payload)
+    # Login via Keycloak
+    response = requests.post(
+        f"{KEYCLOAK_URL}/realms/payu/protocol/openid-connect/token",
+        data=payload,
+        headers={"Content-Type": "application/x-www-form-urlencoded"}
+    )
     assert response.status_code == 200, f"Login failed: {response.text}"
 
     data = response.json()
-
-    # If MFA required, submit OTP
-    if data.get("mfa_required"):
-        mfa_payload = {
-            "user_id": data["user_id"],
-            "code": TEST_OTP
-        }
-        mfa_response = requests.post(
-            f"{AUTH_URL}/api/v1/auth/mfa/verify",
-            json=mfa_payload
-        )
-        assert mfa_response.status_code == 200, f"MFA failed: {mfa_response.text}"
-        data = mfa_response.json()
-
     return data.get("access_token")
 
 
@@ -121,8 +113,8 @@ class TestCriticalFinancialFlows:
         # Step 3: Complete registration
         complete_payload = {
             "phone": unique_phone,
-            "pin": TEST_USER_PIN,
-            "confirm_pin": TEST_USER_PIN,
+            "pin": TEST_PASSWORD,
+            "confirm_pin": TEST_PASSWORD,
             "full_name": "Test User",
             "email": f"test{int(time.time())}@payu.fajjjar.my.id",
             "nik": "3201234567890001"
@@ -310,7 +302,7 @@ class TestCriticalFinancialFlows:
             "biller_id": biller["id"],
             "customer_number": "08123456789",
             "amount": 10000,
-            "pin": TEST_USER_PIN
+            "pin": TEST_PASSWORD
         }
 
         response = requests.post(
@@ -438,23 +430,28 @@ class TestDataIntegrity:
         idempotency_key = f"test-{int(time.time())}-{uuid.uuid4()}"
 
         transfer_payload = {
-            "recipient_phone": "+6281234567802",
+            "sourceAccountId": str(uuid.uuid4()),
+            "destinationAccountId": str(uuid.uuid4()),
             "amount": 5000,
-            "note": "Idempotency test",
-            "idempotency_key": idempotency_key
+            "description": "Idempotency test"
+        }
+
+        idempotency_headers = {
+            **headers,
+            "X-Idempotency-Key": idempotency_key
         }
 
         # First request
         response1 = requests.post(
-            f"{TRANSACTION_URL}/api/v1/transfers",
-            headers=headers,
+            f"{TRANSACTION_URL}/api/v1/transactions/transfer",
+            headers=idempotency_headers,
             json=transfer_payload
         )
 
         # Duplicate request
         response2 = requests.post(
-            f"{TRANSACTION_URL}/api/v1/transfers",
-            headers=headers,
+            f"{TRANSACTION_URL}/api/v1/transactions/transfer",
+            headers=idempotency_headers,
             json=transfer_payload
         )
 
@@ -479,7 +476,7 @@ class TestAPICompatibility:
         """
         services = [
             (ACCOUNT_URL, "account-service"),
-            (AUTH_URL, "auth-service"),
+            (GATEWAY_URL, "auth-service"),
             (TRANSACTION_URL, "transaction-service"),
             (WALLET_URL, "wallet-service"),
             (BILLING_URL, "billing-service"),
@@ -497,7 +494,7 @@ class TestAPICompatibility:
         """
         services = [
             (ACCOUNT_URL, "account-service"),
-            (AUTH_URL, "auth-service"),
+            (GATEWAY_URL, "auth-service"),
             (TRANSACTION_URL, "transaction-service"),
             (WALLET_URL, "wallet-service"),
         ]

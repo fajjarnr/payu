@@ -44,10 +44,10 @@ class TestBillingServiceFlow:
         idempotency_key = str(uuid.uuid4())
         authenticated_api.session.headers.update({"X-Idempotency-Key": idempotency_key})
         payload = {
+            "accountId": registered_user["userId"],
             "billerCode": "PLN_PREPAID",
-            "customerNumber": "1234567890",
-            "amount": 100000,
-            "description": "PLN token purchase"
+            "customerId": "1234567890",
+            "amount": 100000
         }
         response = authenticated_api.post("/api/v1/payments", json=payload)
         assert response.status_code in [200, 201, 400, 404, 422, 429, 503], f"Unexpected status: {response.status_code}"
@@ -69,8 +69,9 @@ class TestBillingServiceFlow:
         idempotency_key = str(uuid.uuid4())
         authenticated_api.session.headers.update({"X-Idempotency-Key": idempotency_key})
         payload = {
+            "accountId": str(uuid.uuid4()),
             "provider": "GOPAY",
-            "phoneNumber": "+6281234567890",
+            "walletNumber": "+6281234567890",
             "amount": 50000
         }
         response = authenticated_api.post("/api/v1/topup", json=payload)
@@ -86,12 +87,14 @@ class TestBillingServiceFlow:
     def test_create_subscription_plan(self, authenticated_api):
         """Create a subscription plan"""
         payload = {
-            "name": f"Test Plan {fake.uuid4()[:8]}",
             "partnerId": str(uuid.uuid4()),
-            "amount": 99000,
+            "planName": f"Test Plan {fake.uuid4()[:8]}",
+            "price": 99000,
             "currency": "IDR",
             "billingInterval": "MONTHLY",
-            "description": "Test subscription plan"
+            "description": "Test subscription plan",
+            "trialDays": 0,
+            "gracePeriodDays": 3
         }
         response = authenticated_api.post("/api/v1/subscriptions/plans", json=payload)
         assert response.status_code in [200, 201, 400, 401, 403, 422, 429, 503], f"Unexpected status: {response.status_code}"

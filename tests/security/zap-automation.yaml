@@ -22,10 +22,10 @@ env:
         parameters:
           loginPageUrl: "${TARGET_URL:-http://localhost:8080}/api/v1/auth/login"
           loginRequestUrl: "${TARGET_URL:-http://localhost:8080}/api/v1/auth/login"
-          loginRequestBody: '{"email":"{%username%}","password":"{%password%}"}'
+          loginRequestBody: '{"username":"{%username%}","password":"{%password%}"}'
         verification:
           method: "response"
-          loggedInRegex: "accessToken"
+          loggedInRegex: "access_token"
       users:
         - name: "test-user"
           credentials:

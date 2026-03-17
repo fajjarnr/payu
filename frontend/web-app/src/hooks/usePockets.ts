@@ -47,8 +47,9 @@ export function useCreatePocket() {
 export function useCreditPocket() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ pocketId, amount, currency }: { pocketId: string; amount: number; currency: string }) =>
-      WalletService.creditPocket(pocketId, amount, currency),
+    // BUG-FE-070: 3rd param is `description`, not `currency`
+    mutationFn: ({ pocketId, amount, description }: { pocketId: string; amount: number; description?: string }) =>
+      WalletService.creditPocket(pocketId, amount, description ?? ''),
     ...MutationPresets.financial,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pockets'] });
@@ -60,8 +61,9 @@ export function useCreditPocket() {
 export function useDebitPocket() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ pocketId, amount, currency }: { pocketId: string; amount: number; currency: string }) =>
-      WalletService.debitPocket(pocketId, amount, currency),
+    // BUG-FE-070: 3rd param is `description`, not `currency`
+    mutationFn: ({ pocketId, amount, description }: { pocketId: string; amount: number; description?: string }) =>
+      WalletService.debitPocket(pocketId, amount, description ?? ''),
     ...MutationPresets.financial,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pockets'] });

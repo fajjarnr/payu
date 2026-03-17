@@ -46,7 +46,9 @@ describe('BillingService', () => {
 
       const result = await BillingService.createPayment(request);
 
-      expect(api.post).toHaveBeenCalledWith('/billing/payments', request);
+      expect(api.post).toHaveBeenCalledWith('/payments', request, {
+        headers: expect.any(Object),
+      });
       expect(result).toEqual(mockPayment);
       expect(result.totalAmount).toBe(152500);
     });
@@ -54,10 +56,11 @@ describe('BillingService', () => {
 
   describe('createTopUp', () => {
     it('should create top-up successfully', async () => {
+      // BUG-CROSS-072: TopUpRequest now uses provider/walletNumber (not billerCode/customerId)
       const request: TopUpRequest = {
         accountId: 'acc_123',
-        billerCode: 'TELKOMSEL',
-        customerId: '08123456789',
+        provider: 'TELKOMSEL',
+        walletNumber: '08123456789',
         amount: 50000,
       };
 
@@ -79,7 +82,9 @@ describe('BillingService', () => {
 
       const result = await BillingService.createTopUp(request);
 
-      expect(api.post).toHaveBeenCalledWith('/billing/topup', request);
+      expect(api.post).toHaveBeenCalledWith('/topup', request, {
+        headers: expect.any(Object),
+      });
       expect(result.status).toBe('COMPLETED');
     });
   });
@@ -95,7 +100,7 @@ describe('BillingService', () => {
 
       const result = await BillingService.getPaymentHistory();
 
-      expect(api.get).toHaveBeenCalledWith('/billing/payments', {
+      expect(api.get).toHaveBeenCalledWith('/payments', {
         params: { page: 0, size: 20 },
       });
       expect(result.content).toHaveLength(2);
@@ -108,7 +113,7 @@ describe('BillingService', () => {
 
       await BillingService.getPaymentHistory(2, 10);
 
-      expect(api.get).toHaveBeenCalledWith('/billing/payments', {
+      expect(api.get).toHaveBeenCalledWith('/payments', {
         params: { page: 2, size: 10 },
       });
     });
@@ -134,7 +139,7 @@ describe('BillingService', () => {
 
       const result = await BillingService.getPayment('pay_789');
 
-      expect(api.get).toHaveBeenCalledWith('/billing/payments/pay_789');
+      expect(api.get).toHaveBeenCalledWith('/payments/pay_789');
       expect(result.id).toBe('pay_789');
     });
   });
@@ -150,7 +155,7 @@ describe('BillingService', () => {
 
       const result = await BillingService.getBillers();
 
-      expect(api.get).toHaveBeenCalledWith('/billing/billers', {
+      expect(api.get).toHaveBeenCalledWith('/billers', {
         params: { category: undefined },
       });
       expect(result).toHaveLength(2);
@@ -165,7 +170,7 @@ describe('BillingService', () => {
 
       const result = await BillingService.getBillers('ELECTRICITY');
 
-      expect(api.get).toHaveBeenCalledWith('/billing/billers', {
+      expect(api.get).toHaveBeenCalledWith('/billers', {
         params: { category: 'ELECTRICITY' },
       });
       expect(result).toHaveLength(1);

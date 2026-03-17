@@ -5,10 +5,11 @@ import { MutationPresets } from '@/lib/mutation-config';
 import WalletService from '@/services/WalletService';
 import type { CreateCardRequest } from '@/services/WalletService';
 
-export function useCards() {
+export function useCards(accountId?: string) {
   return useQuery({
-    queryKey: ['cards'],
-    queryFn: () => WalletService.listCards(),
+    queryKey: ['cards', accountId],
+    queryFn: () => WalletService.listCards(accountId!),
+    enabled: !!accountId,
   });
 }
 

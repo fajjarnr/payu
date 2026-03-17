@@ -68,7 +68,7 @@ spec:
       runAfter:
         - fetch-repository
       taskRef:
-        name: golang-lint
+        name: maven
         kind: ClusterTask
       when:
         - input: "$(params.service-type)"
@@ -77,9 +77,15 @@ spec:
       workspaces:
         - name: source
           workspace: source
+        - name: maven-settings
+          workspace: maven-settings
+          optional: true
       params:
-        - name: package
-          value: ./backend/$(params.service-name)
+        - name: GOALS
+          value:
+            - checkstyle:check
+            - -pl
+            - backend/$(params.service-name)
     - name: build-spring-boot
       runAfter:
         - lint-code
@@ -157,7 +163,7 @@ spec:
         - name: DOCKERFILE
           value: Containerfile
         - name: TLSVERIFY
-          value: "false"
+          value: "true"
     - name: build-image-spring-boot
       runAfter:
         - build-spring-boot
@@ -181,7 +187,7 @@ spec:
         - name: DOCKERFILE
           value: Containerfile
         - name: TLSVERIFY
-          value: "false"
+          value: "true"
     - name: scan-image-security
       runAfter:
         - build-image-spring-boot

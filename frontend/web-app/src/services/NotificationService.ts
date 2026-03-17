@@ -2,29 +2,33 @@ import api from '@/lib/api';
 
 // --- Interfaces matching backend NotificationResource (Quarkus JAX-RS) ---
 
+// BUG-CROSS-058: Backend NotificationResponse has: id, userId, channel, recipient, title, body, status, createdAt, sentAt, readAt
+// No 'type' field. No boolean 'read' — use readAt instead.
 export interface Notification {
   id: string;
   userId: string;
-  type: NotificationType;
   channel: NotificationChannel;
+  recipient: string;
   title: string;
   body: string;
-  data?: Record<string, unknown>;
-  read: boolean;
-  sentAt: string;
+  status: string;
+  createdAt: string;
+  sentAt?: string;
   readAt?: string;
 }
 
+// BUG-CROSS-058: Backend SendNotificationRequest: userId, channel, recipient, title, body, templateId, data
+// No 'type' field.
 export interface SendNotificationRequest {
   userId: string;
-  type: NotificationType;
   channel: NotificationChannel;
+  recipient: string;
   title: string;
   body: string;
+  templateId?: string;
   data?: Record<string, unknown>;
 }
 
-export type NotificationType = 'TRANSACTION' | 'SECURITY' | 'PROMOTION' | 'SYSTEM' | 'REMINDER';
 export type NotificationChannel = 'PUSH' | 'EMAIL' | 'SMS' | 'IN_APP';
 
 // Kept for future backend implementation
@@ -59,9 +63,10 @@ class NotificationService {
     return response.data;
   }
 
+  // BUG-CROSS-057: Backend getByUser returns flat List<NotificationResponse> with @QueryParam("limit"), not paged
   /** GET /notifications/user/{userId} — Get user notifications */
-  async getUserNotifications(userId: string, page = 0, size = 20): Promise<{ content: Notification[]; totalElements: number }> {
-    const response = await api.get(`/notifications/user/${userId}`, { params: { page, size } });
+  async getUserNotifications(userId: string, limit = 20): Promise<Notification[]> {
+    const response = await api.get(`/notifications/user/${userId}`, { params: { limit } });
     return response.data;
   }
 

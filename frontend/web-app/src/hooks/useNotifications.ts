@@ -4,10 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import NotificationService from '@/services/NotificationService';
 
-export function useNotifications(userId: string, page = 0, size = 20) {
+export function useNotifications(userId: string, size = 20) {
   return useQuery({
-    queryKey: ['notifications', userId, page, size],
-    queryFn: () => NotificationService.getUserNotifications(userId, page, size),
+    queryKey: ['notifications', userId, size],
+    queryFn: () => NotificationService.getUserNotifications(userId, size),
     enabled: !!userId,
   });
 }

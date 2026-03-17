@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -40,8 +42,21 @@ public class SavingsGoalController {
     @PreAuthorize("hasAuthority('read:wallet')")
     public ResponseEntity<ApiResponse<List<SavingsGoalResponse>>> getSavingsGoals(
             @Parameter(description = "Wallet ID", required = true)
-            @PathVariable UUID walletId) {
+            @PathVariable UUID walletId,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Getting savings goals for wallet: {}", walletId);
+
+        // Ownership check: verify pocket belongs to authenticated user
+        var pocket = pocketRepository.findById(walletId).orElse(null);
+        if (pocket == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("WAL_001", "Wallet not found"));
+        }
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        if (!pocket.getAccountId().equals(authenticatedAccountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("SAV_403", "Not authorized to access savings goals for this wallet"));
+        }
 
         List<SavingsGoalEntity> goals = savingsGoalRepository.findByPocketIdAndStatusNot(
                 walletId, SavingsGoalEntity.SavingsGoalStatus.CANCELLED);
@@ -59,7 +74,8 @@ public class SavingsGoalController {
     public ResponseEntity<ApiResponse<SavingsGoalResponse>> createSavingsGoal(
             @Parameter(description = "Wallet ID", required = true)
             @PathVariable UUID walletId,
-            @Valid @RequestBody SavingsGoalRequest request) {
+            @Valid @RequestBody SavingsGoalRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Creating savings goal for wallet: {}", walletId);
 
         // Verify pocket exists
@@ -67,6 +83,13 @@ public class SavingsGoalController {
         if (pocket == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("WAL_001", "Wallet not found"));
+        }
+
+        // Ownership check
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        if (!pocket.getAccountId().equals(authenticatedAccountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("SAV_403", "Not authorized to create savings goals for this wallet"));
         }
 
         SavingsGoalEntity goal = new SavingsGoalEntity();
@@ -95,8 +118,21 @@ public class SavingsGoalController {
             @PathVariable UUID walletId,
             @Parameter(description = "Goal ID", required = true)
             @PathVariable UUID goalId,
-            @Valid @RequestBody SavingsGoalRequest request) {
+            @Valid @RequestBody SavingsGoalRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Updating savings goal: {} for wallet: {}", goalId, walletId);
+
+        // Ownership check
+        var pocket = pocketRepository.findById(walletId).orElse(null);
+        if (pocket == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("WAL_001", "Wallet not found"));
+        }
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        if (!pocket.getAccountId().equals(authenticatedAccountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("SAV_403", "Not authorized to update savings goals for this wallet"));
+        }
 
         SavingsGoalEntity goal = savingsGoalRepository.findById(goalId).orElse(null);
         if (goal == null || !goal.getPocketId().equals(walletId)) {
@@ -123,8 +159,21 @@ public class SavingsGoalController {
             @Parameter(description = "Wallet ID", required = true)
             @PathVariable UUID walletId,
             @Parameter(description = "Goal ID", required = true)
-            @PathVariable UUID goalId) {
+            @PathVariable UUID goalId,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Deleting savings goal: {} for wallet: {}", goalId, walletId);
+
+        // Ownership check
+        var pocket = pocketRepository.findById(walletId).orElse(null);
+        if (pocket == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("WAL_001", "Wallet not found"));
+        }
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        if (!pocket.getAccountId().equals(authenticatedAccountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("SAV_403", "Not authorized to delete savings goals for this wallet"));
+        }
 
         SavingsGoalEntity goal = savingsGoalRepository.findById(goalId).orElse(null);
         if (goal == null || !goal.getPocketId().equals(walletId)) {
@@ -146,8 +195,21 @@ public class SavingsGoalController {
             @Parameter(description = "Wallet ID", required = true)
             @PathVariable UUID walletId,
             @Parameter(description = "Goal ID", required = true)
-            @PathVariable UUID goalId) {
+            @PathVariable UUID goalId,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Pausing savings goal: {} for wallet: {}", goalId, walletId);
+
+        // Ownership check
+        var pocket = pocketRepository.findById(walletId).orElse(null);
+        if (pocket == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("WAL_001", "Wallet not found"));
+        }
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        if (!pocket.getAccountId().equals(authenticatedAccountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("SAV_403", "Not authorized to pause savings goals for this wallet"));
+        }
 
         SavingsGoalEntity goal = savingsGoalRepository.findById(goalId).orElse(null);
         if (goal == null || !goal.getPocketId().equals(walletId)) {
@@ -171,8 +233,21 @@ public class SavingsGoalController {
             @Parameter(description = "Wallet ID", required = true)
             @PathVariable UUID walletId,
             @Parameter(description = "Goal ID", required = true)
-            @PathVariable UUID goalId) {
+            @PathVariable UUID goalId,
+            @AuthenticationPrincipal Jwt jwt) {
         log.info("Resuming savings goal: {} for wallet: {}", goalId, walletId);
+
+        // Ownership check
+        var pocket = pocketRepository.findById(walletId).orElse(null);
+        if (pocket == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("WAL_001", "Wallet not found"));
+        }
+        String authenticatedAccountId = jwt.getClaim("account_id");
+        if (!pocket.getAccountId().equals(authenticatedAccountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("SAV_403", "Not authorized to resume savings goals for this wallet"));
+        }
 
         SavingsGoalEntity goal = savingsGoalRepository.findById(goalId).orElse(null);
         if (goal == null || !goal.getPocketId().equals(walletId)) {

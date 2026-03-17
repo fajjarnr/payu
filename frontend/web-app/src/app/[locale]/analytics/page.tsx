@@ -30,36 +30,21 @@ export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
   const { analytics, isConnected } = useAnalyticsWebSocket(accountId || undefined);
 
+  // BUG-FE-062: Replace hardcoded fallback data with zeros/empty state
   const analyticsData = analytics || {
-    totalIncome: 42500000,
-    totalExpenses: 12800000,
-    monthlySavings: 29700000,
-    investmentRoi: 5200000,
-    incomeChange: 12.5,
-    expenseChange: -4.2,
-    savingsChange: 18.1,
-    roiChange: 2.4,
-    spendingBreakdown: [
-      { label: 'Belanja', amount: 4200000, percentage: 60, color: 'bg-bank-green' },
-      { label: 'Utilitas', amount: 2800000, percentage: 30, color: 'bg-bank-emerald' },
-      { label: 'Lain-lain', amount: 1500000, percentage: 10, color: 'bg-gray-400' }
-    ]
+    totalIncome: 0,
+    totalExpenses: 0,
+    monthlySavings: 0,
+    investmentRoi: 0,
+    incomeChange: 0,
+    expenseChange: 0,
+    savingsChange: 0,
+    roiChange: 0,
+    spendingBreakdown: [] as { label: string; amount: number; percentage: number; color: string }[]
   };
 
-  const trajectoryData = [
-    { day: 'H1', masuk: 4000, keluar: 2400 },
-    { day: 'H2', masuk: 3000, keluar: 1398 },
-    { day: 'H3', masuk: 2000, keluar: 9800 },
-    { day: 'H4', masuk: 2780, keluar: 3908 },
-    { day: 'H5', masuk: 1890, keluar: 4800 },
-    { day: 'H6', masuk: 2390, keluar: 3800 },
-    { day: 'H7', masuk: 3490, keluar: 4300 },
-    { day: 'H8', masuk: 4000, keluar: 2400 },
-    { day: 'H9', masuk: 3000, keluar: 1398 },
-    { day: 'H10', masuk: 2000, keluar: 9800 },
-    { day: 'H11', masuk: 2780, keluar: 3908 },
-    { day: 'H12', masuk: 1890, keluar: 4800 },
-  ]
+  // BUG-FE-062: Use trajectory data from analytics instead of hardcoded array
+  const trajectoryData: { day: string; masuk: number; keluar: number }[] = (analytics as any)?.trajectoryData ?? []
 
   const breakdownData = analyticsData.spendingBreakdown.map(cat => ({
     name: cat.label,

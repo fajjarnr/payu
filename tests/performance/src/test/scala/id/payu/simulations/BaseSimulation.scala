@@ -85,7 +85,7 @@ abstract class BaseSimulation extends Simulation {
   // Login request
   def loginRequest(username: String = "${username}", password: String = "${password}") = {
     http("Login")
-      .post("$authUrl/api/v1/auth/login")
+      .post(s"$authUrl/api/v1/auth/login")
       .headers(commonHeaders)
       .body(StringBody(
         s"""{
@@ -102,7 +102,7 @@ abstract class BaseSimulation extends Simulation {
   // Query balance request
   def queryBalanceRequest(accountNumber: String = "${account_number}") = {
     http("Query Balance")
-      .get("$walletUrl/api/v1/wallet/balance")
+      .get(s"$walletUrl/api/v1/wallets/balance")
       .headers(authHeaders)
       .queryParam("account_number", accountNumber)
       .check(okCheck)

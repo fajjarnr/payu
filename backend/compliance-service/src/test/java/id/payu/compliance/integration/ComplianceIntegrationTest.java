@@ -405,7 +405,6 @@ class ComplianceIntegrationTest {
         String serviceName = "compliance-service";
         String resourceType = "AuditReport";
         String resourceId = UUID.randomUUID().toString();
-        UUID auditId = UUID.randomUUID();
 
         // When
         dataAccessAuditService.logDataAccess(
@@ -422,12 +421,10 @@ class ComplianceIntegrationTest {
             null
         );
 
-        // Then
-        DataAccessAudit audit = dataAccessAuditService.getDataAccessAudit(auditId);
-        // Note: Since we're using a random UUID, the actual audit won't be found
-        // In a real scenario, we would need to retrieve it by searching
-        // For integration test purposes, we verify the service doesn't throw an exception
-        assertThat(audit).isNotNull();
+        // Then — verify the audit record was persisted by querying user access history
+        LocalDateTime since = LocalDateTime.now().minusMinutes(1);
+        long accessCount = dataAccessAuditService.getUserDataAccessCount(userId, since);
+        assertThat(accessCount).isGreaterThanOrEqualTo(1);
     }
 
     @Test

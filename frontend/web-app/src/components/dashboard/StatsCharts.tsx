@@ -64,9 +64,42 @@ const spendingConfig = {
 
 interface StatsChartsProps {
   className?: string;
+  investmentChartData?: { category: string; value: number; fill: string }[];
+  spendingChartData?: { month: string; amount: number }[];
+  investmentLegend?: { color: string; label: string; percentage: string }[];
+  totalValue?: string;
+  isLoading?: boolean;
 }
 
-export default function StatsCharts({ className = '' }: StatsChartsProps) {
+export default function StatsCharts({
+  className = '',
+  investmentChartData,
+  spendingChartData,
+  investmentLegend,
+  totalValue,
+  isLoading = false,
+}: StatsChartsProps) {
+  const invData = investmentChartData ?? [];
+  const spdData = spendingChartData ?? [];
+  const legend = investmentLegend ?? [
+    { color: 'bg-emerald-500', label: 'Saham', percentage: '--' },
+    { color: 'bg-emerald-400', label: 'Obligasi', percentage: '--' },
+    { color: 'bg-emerald-300', label: 'Emas Digital', percentage: '--' },
+  ];
+  const displayTotal = totalValue ?? '--';
+
+  if (isLoading) {
+    return (
+      <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
+        <Card className="lg:col-span-5 flex items-center justify-center min-h-[300px]">
+          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
+        </Card>
+        <Card className="lg:col-span-7 flex items-center justify-center min-h-[300px]">
+          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
+        </Card>
+      </div>
+    );
+  }
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
       <Card className="lg:col-span-5 relative overflow-hidden group">
@@ -81,9 +114,9 @@ export default function StatsCharts({ className = '' }: StatsChartsProps) {
 
         <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-10">
           <div className="space-y-6 w-full sm:w-auto">
-            <ChartLegend color="bg-emerald-500" label="Saham" percentage="60%" />
-            <ChartLegend color="bg-emerald-400" label="Obligasi" percentage="25%" />
-            <ChartLegend color="bg-emerald-300" label="Emas Digital" percentage="15%" />
+            {legend.map((item) => (
+              <ChartLegend key={item.label} color={item.color} label={item.label} percentage={item.percentage} />
+            ))}
           </div>
 
           <div className="relative h-64 w-64 flex-shrink-0">
@@ -92,7 +125,7 @@ export default function StatsCharts({ className = '' }: StatsChartsProps) {
               className="mx-auto aspect-square h-full w-full"
             >
               <RadialBarChart
-                data={investmentData}
+                data={invData}
                 startAngle={0}
                 endAngle={250}
                 innerRadius={90}
@@ -126,7 +159,7 @@ export default function StatsCharts({ className = '' }: StatsChartsProps) {
                                y={viewBox.cy}
                               className="fill-foreground text-4xl font-bold tabular-nums tracking-tighter"
                             >
-                              +12.5%
+                             +{invData[0]?.value ?? 0}%
                             </tspan>
                             <tspan
                               x={viewBox.cx}
@@ -147,7 +180,7 @@ export default function StatsCharts({ className = '' }: StatsChartsProps) {
 
           <div className="text-right w-full sm:w-auto shrink-0 space-y-2">
             <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">Total Nilai</p>
-            <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">Rp 8.750k</h4>
+            <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">{displayTotal}</h4>
           </div>
         </CardContent>
       </Card>
@@ -166,7 +199,7 @@ export default function StatsCharts({ className = '' }: StatsChartsProps) {
         <CardContent>
           <ChartContainer config={spendingConfig} className="h-80 w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={spendingData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={spdData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--muted)/0.3)" />
                 <XAxis
                   dataKey="month"

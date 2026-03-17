@@ -539,6 +539,36 @@ gateway:
       service: "fx-service"
       target-prefix: "/fx-api/v1"
       methods: ["GET", "POST", "PUT", "DELETE"]
+    # BUG-BE-157: Add missing analytics route
+    analytics:
+      service: "analytics-service"
+      target-prefix: "/api/v1/analytics"
+      methods: ["GET", "POST"]
+    # BUG-CROSS-040: Add missing pockets route
+    pockets:
+      service: "wallet-service"
+      target-prefix: "/wallet-api/v1/pockets"
+      methods: ["GET", "POST"]
+    # BUG-CROSS-063: Add missing gamification route
+    gamification:
+      service: "promotion-service"
+      target-prefix: "/api/v1/gamification"
+      methods: ["GET", "POST"]
+    # BUG-CROSS-064: Add missing topup route
+    topup:
+      service: "billing-service"
+      target-prefix: "/api/v1/topup"
+      methods: ["POST"]
+    # BUG-CROSS-067: Add missing scheduled-transfers route
+    scheduled-transfers:
+      service: "transaction-service"
+      target-prefix: "/api/v1/scheduled-transfers"
+      methods: ["GET", "POST", "PUT"]
+    # BUG-CROSS-068: Add missing split-bills route
+    split-bills:
+      service: "transaction-service"
+      target-prefix: "/api/v1/split-bills"
+      methods: ["GET", "POST", "PUT"]
 
   # Response Masking (IMP-009)
   response-masking:

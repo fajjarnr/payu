@@ -33,6 +33,5 @@ resources:
   - hpa.yaml
   - pdb.yaml
   # Security & Networking
-  # NOTE: NetworkPolicies disabled in dev — re-enable for staging/prod
-  # - network-policies.yaml
+  - network-policies.yaml
   - tls-certificates.yaml

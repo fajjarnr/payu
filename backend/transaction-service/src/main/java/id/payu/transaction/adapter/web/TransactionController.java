@@ -64,8 +64,9 @@ public class TransactionController extends BaseController {
 
     /**
      * Extracts the user ID from the JWT authentication token.
+     * BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback.
      *
-     * @return The user ID from the JWT subject claim
+     * @return The user ID from the JWT
      * @throws IllegalStateException if no authentication is present
      */
     private String extractUserId() {
@@ -75,7 +76,8 @@ public class TransactionController extends BaseController {
         }
 
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        return jwt.getSubject(); // In production, use a specific claim like "user_id" or "sub"
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
     }
 
     /**

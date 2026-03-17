@@ -13,7 +13,7 @@ const intlMiddleware = createMiddleware({
 // Dynamically build locale pattern from config instead of hardcoding
 const localePattern = new RegExp(`^/(${locales.join('|')})`);
 
-export default function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Define public vs protected paths
@@ -21,13 +21,53 @@ export default function middleware(request: NextRequest) {
   const pathWithoutLocale = pathname.replace(localePattern, '') || '/';
   
   // Authentication check - verify existence of session tokens
-  // Priority: refreshToken (7 days) > accessToken (15 min) > session cookie
-  // We check refreshToken first because an expired accessToken does NOT mean
-  // the session is dead — the 401 interceptor in api.ts will silently refresh it.
-  // Only when there's no refreshToken do we treat the session as truly expired.
-  const hasSession = request.cookies.has('refreshToken') ||
-                     request.cookies.has('accessToken') ||
-                     request.cookies.has('payu_session');
+  const hasAccessToken = request.cookies.has('accessToken');
+  const hasRefreshToken = request.cookies.has('refreshToken');
+  const hasPayuSession = request.cookies.has('payu_session');
+
+  // BUG-AUTH-012: If accessToken is missing/expired but refreshToken exists,
+  // trigger a server-side refresh before proceeding. This restores the session
+  // after browser restart (refreshToken is a 7-day httpOnly cookie).
+  let response: NextResponse | undefined;
+  if (!hasAccessToken && hasRefreshToken) {
+    try {
+      edgeLogger.info('Attempting session rehydration via refresh token', {
+        action: 'middleware',
+        path: pathname,
+      });
+      const refreshUrl = new URL('/api/auth/refresh', request.url);
+      const refreshRes = await fetch(refreshUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Cookie': request.headers.get('cookie') || '',
+        },
+      });
+
+      if (refreshRes.ok) {
+        edgeLogger.info('Session rehydrated successfully', { action: 'middleware' });
+        // Forward the Set-Cookie headers from the refresh response to the client
+        response = intlMiddleware(request);
+        const setCookieHeaders = refreshRes.headers.getSetCookie();
+        for (const cookie of setCookieHeaders) {
+          response.headers.append('Set-Cookie', cookie);
+        }
+        // After successful refresh, treat as having a session for the checks below
+      } else {
+        edgeLogger.warn('Session rehydration failed — refresh token rejected', {
+          action: 'middleware',
+          status: refreshRes.status,
+        });
+      }
+    } catch (err) {
+      edgeLogger.error('Session rehydration error', {
+        action: 'middleware',
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  // Re-evaluate session status after potential rehydration
+  const hasSession = hasAccessToken || hasRefreshToken || hasPayuSession;
 
   // 1. Auto-redirect from Landing to Dashboard if already logged in
   if (pathWithoutLocale === '/' && hasSession) {
@@ -37,7 +77,14 @@ export default function middleware(request: NextRequest) {
       action: 'middleware',
       path: pathname,
     });
-    return NextResponse.redirect(new URL(`${locale}/dashboard`, request.url));
+    const redirectRes = NextResponse.redirect(new URL(`${locale}/dashboard`, request.url));
+    // BUG-AUTH-012: Carry over Set-Cookie headers from rehydration
+    if (response) {
+      for (const cookie of response.headers.getSetCookie()) {
+        redirectRes.headers.append('Set-Cookie', cookie);
+      }
+    }
+    return redirectRes;
   }
 
   // 1b. Auto-redirect from Login to Dashboard if already logged in
@@ -48,7 +95,13 @@ export default function middleware(request: NextRequest) {
       action: 'middleware',
       path: pathname,
     });
-    return NextResponse.redirect(new URL(`${locale}/dashboard`, request.url));
+    const redirectRes = NextResponse.redirect(new URL(`${locale}/dashboard`, request.url));
+    if (response) {
+      for (const cookie of response.headers.getSetCookie()) {
+        redirectRes.headers.append('Set-Cookie', cookie);
+      }
+    }
+    return redirectRes;
   }
 
   // 2. Protect authenticated routes — everything except public pages
@@ -79,7 +132,8 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return intlMiddleware(request);
+  // Return the response from rehydration (with Set-Cookie headers) or default intl response
+  return response ?? intlMiddleware(request);
 }
 
 export const config = {

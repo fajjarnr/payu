@@ -15,23 +15,24 @@ class TestAnalyticsFlow:
     These tests verify the gateway correctly reports these conditions.
     """
 
+    @pytest.mark.xfail(reason="analytics-service not routed through gateway — returns 404")
     def test_get_user_metrics(self, authenticated_api, registered_user):
         """
-        Analytics user metrics endpoint is not routed through gateway — expect 404.
+        Analytics user metrics endpoint — should return 200 when analytics is routed.
+        Currently not routed through gateway, so fails with 404.
         """
         user_id = registered_user["userId"]
 
         response = authenticated_api.get(f"/api/v1/analytics/user/{user_id}/metrics")
-        assert response.status_code == 404, (
-            f"Expected 404 (analytics not routed through gateway), got {response.status_code}"
+        assert response.status_code == 200, (
+            f"Expected 200 (analytics routed through gateway), got {response.status_code}"
         )
-        body = response.json()
-        assert body["error"] == "NOT_FOUND"
-        assert "Unable to find matching target resource method" in body["message"]
 
+    @pytest.mark.xfail(reason="analytics-service not routed through gateway — returns 404")
     def test_get_spending_trends_daily(self, authenticated_api, registered_user):
         """
-        Analytics spending trends endpoint is not routed through gateway — expect 404.
+        Analytics spending trends endpoint — should return 200 when analytics is routed.
+        Currently not routed through gateway, so fails with 404.
         """
         user_id = registered_user["userId"]
 
@@ -41,15 +42,15 @@ class TestAnalyticsFlow:
             "groupBy": "day"
         })
 
-        assert response.status_code == 404, (
-            f"Expected 404 (analytics not routed through gateway), got {response.status_code}"
+        assert response.status_code in [200, 201], (
+            f"Expected 200/201 from analytics-service, got {response.status_code}"
         )
-        body = response.json()
-        assert body["error"] == "NOT_FOUND"
 
+    @pytest.mark.xfail(reason="analytics-service not routed through gateway — returns 404")
     def test_get_spending_trends_category(self, authenticated_api, registered_user):
         """
-        Analytics spending trends by category — not routed through gateway, expect 404.
+        Analytics spending trends by category — should return 200 when analytics is routed.
+        Currently not routed through gateway, so fails with 404.
         """
         user_id = registered_user["userId"]
 
@@ -59,15 +60,15 @@ class TestAnalyticsFlow:
             "groupBy": "category"
         })
 
-        assert response.status_code == 404, (
-            f"Expected 404 (analytics not routed through gateway), got {response.status_code}"
+        assert response.status_code in [200, 201], (
+            f"Expected 200/201 from analytics-service, got {response.status_code}"
         )
-        body = response.json()
-        assert body["error"] == "NOT_FOUND"
 
+    @pytest.mark.xfail(reason="analytics-service not routed through gateway — returns 404")
     def test_get_cash_flow_analysis(self, authenticated_api, registered_user):
         """
-        Analytics cashflow endpoint is not routed through gateway — expect 404.
+        Analytics cashflow endpoint — should return 200 when analytics is routed.
+        Currently not routed through gateway, so fails with 404.
         """
         user_id = registered_user["userId"]
 
@@ -76,24 +77,22 @@ class TestAnalyticsFlow:
             "periodDays": 30
         })
 
-        assert response.status_code == 404, (
-            f"Expected 404 (analytics not routed through gateway), got {response.status_code}"
+        assert response.status_code in [200, 201], (
+            f"Expected 200/201 from analytics-service, got {response.status_code}"
         )
-        body = response.json()
-        assert body["error"] == "NOT_FOUND"
 
+    @pytest.mark.xfail(reason="analytics-service not routed through gateway — returns 404")
     def test_get_recommendations(self, authenticated_api, registered_user):
         """
-        Analytics recommendations endpoint is not routed through gateway — expect 404.
+        Analytics recommendations endpoint — should return 200 when analytics is routed.
+        Currently not routed through gateway, so fails with 404.
         """
         user_id = registered_user["userId"]
 
         response = authenticated_api.get(f"/api/v1/analytics/user/{user_id}/recommendations")
-        assert response.status_code == 404, (
-            f"Expected 404 (analytics not routed through gateway), got {response.status_code}"
+        assert response.status_code == 200, (
+            f"Expected 200 from analytics-service, got {response.status_code}"
         )
-        body = response.json()
-        assert body["error"] == "NOT_FOUND"
 
     def test_transaction_history_for_analytics(self, authenticated_api, registered_user):
         """
@@ -149,9 +148,11 @@ class TestAnalyticsFlow:
             body = response.json()
             assert body["error"] == "CIRCUIT_OPEN"
 
+    @pytest.mark.xfail(reason="analytics-service not routed through gateway — returns 404")
     def test_spending_by_period(self, authenticated_api, registered_user):
         """
-        Analytics spending trends for different periods — all return 404 (not routed).
+        Analytics spending trends for different periods — should return 200 when routed.
+        Currently not routed through gateway, so fails with 404.
         """
         user_id = registered_user["userId"]
 
@@ -163,13 +164,15 @@ class TestAnalyticsFlow:
                 "periodDays": period,
                 "groupBy": "day"
             })
-            assert response.status_code == 404, (
-                f"Expected 404 for period={period}, got {response.status_code}"
+            assert response.status_code in [200, 201], (
+                f"Expected 200/201 for period={period}, got {response.status_code}"
             )
 
+    @pytest.mark.xfail(reason="analytics-service not routed through gateway — returns 404")
     def test_comparison_analytics(self, authenticated_api, registered_user):
         """
-        Analytics comparison data — returns 404 (not routed through gateway).
+        Analytics comparison data — should return 200 when routed.
+        Currently not routed through gateway, so fails with 404.
         """
         user_id = registered_user["userId"]
 
@@ -179,6 +182,6 @@ class TestAnalyticsFlow:
             "groupBy": "day"
         })
 
-        assert response.status_code == 404, (
-            f"Expected 404 (analytics not routed through gateway), got {response.status_code}"
+        assert response.status_code in [200, 201], (
+            f"Expected 200/201 from analytics-service, got {response.status_code}"
         )

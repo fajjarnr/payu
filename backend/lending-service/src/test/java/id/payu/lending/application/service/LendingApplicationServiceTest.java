@@ -42,6 +42,9 @@ class LendingApplicationServiceTest {
     @Mock
     private KafkaLoanEventPublisherAdapter loanEventPublisherPort;
 
+    @Mock
+    private EnhancedCreditScoringService enhancedCreditScoringService;
+
     private LendingApplicationService lendingApplicationService;
 
     @BeforeEach
@@ -50,7 +53,8 @@ class LendingApplicationServiceTest {
                 loanPersistenceAdapter,
                 payLaterPersistenceAdapter,
                 creditScorePersistenceAdapter,
-                loanEventPublisherPort
+                loanEventPublisherPort,
+                enhancedCreditScoringService
         );
     }
 

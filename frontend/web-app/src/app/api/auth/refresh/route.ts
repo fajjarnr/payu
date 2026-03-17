@@ -12,6 +12,8 @@ const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
  */
 export async function POST() {
   const startTime = Date.now();
+  // BUG-AUTH-027: Secure cookie flags
+  const isProduction = process.env.NODE_ENV === 'production';
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get('refreshToken')?.value;
@@ -22,7 +24,7 @@ export async function POST() {
         { success: false, message: 'No refresh token' },
         { status: 401 },
       );
-      response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
+      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
       return response;
     }
 
@@ -39,8 +41,8 @@ export async function POST() {
     if (!res.ok) {
       logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected by gateway');
       const response = NextResponse.json(data, { status: res.status });
-      response.cookies.set('accessToken', '', { maxAge: 0, path: '/' });
-      response.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
+      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
+      response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
       return response;
     }
 
@@ -60,8 +62,8 @@ export async function POST() {
     if (newAccessToken) {
       response.cookies.set('accessToken', newAccessToken, {
         httpOnly: true,
-        secure: false, // Labs environment: relax secure requirement
-        sameSite: 'lax',
+        secure: isProduction, // BUG-AUTH-027: HTTPS-only in production
+        sameSite: 'strict', // BUG-AUTH-027: strict to prevent CSRF
         maxAge: ACCESS_TOKEN_MAX_AGE,
         path: '/',
       });
@@ -70,8 +72,8 @@ export async function POST() {
     if (newRefreshToken) {
       response.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
-        secure: false, // Labs environment: relax secure requirement
-        sameSite: 'lax',
+        secure: isProduction, // BUG-AUTH-027: HTTPS-only in production
+        sameSite: 'strict', // BUG-AUTH-027: strict to prevent CSRF
         maxAge: 604_800,
         path: '/',
       });
@@ -82,9 +84,14 @@ export async function POST() {
     return response;
   } catch (error) {
     logger.error({ action: 'refresh', err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Token refresh proxy error');
-    return NextResponse.json(
+    // BUG-AUTH-014: Clear stale cookies on all error paths to prevent
+    // infinite refresh loops when the gateway is unreachable.
+    const response = NextResponse.json(
       { success: false, message: 'Token refresh failed' },
       { status: 503 },
     );
+    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
+    return response;
   }
 }

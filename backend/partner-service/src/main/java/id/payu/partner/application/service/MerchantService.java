@@ -198,7 +198,8 @@ public class MerchantService {
 
     /**
      * Settle payment to merchant wallet.
-     * Credits the merchant's settlement account with the payment amount.
+     * BUG-BE-184 FIX: Debits payer wallet before crediting merchant wallet
+     * to prevent money creation from nothing.
      */
     private void settleToMerchantWallet(MerchantQrPayment qrPayment) {
         try {
@@ -210,7 +211,36 @@ public class MerchantService {
                 return;
             }
 
-            // Call wallet-service to credit merchant wallet
+            String payerAccountId = qrPayment.getPayerAccountId();
+            if (payerAccountId == null || payerAccountId.isEmpty()) {
+                log.error("QR payment {} has no payer account ID", qrPayment.getReferenceId());
+                publishSettlementEvent(qrPayment, merchant, "FAILED: No payer account");
+                return;
+            }
+
+            // BUG-BE-184 FIX: Debit payer wallet first (source of funds)
+            String debitUrl = WALLET_SERVICE_URL + "/" + payerAccountId + "/debit";
+            Map<String, Object> debitRequest = new HashMap<>();
+            debitRequest.put("amount", qrPayment.getAmount());
+            debitRequest.put("currency", qrPayment.getCurrency());
+            debitRequest.put("referenceId", qrPayment.getPaymentReference());
+            debitRequest.put("description", "QR Payment to merchant: " + merchant.getMerchantCode());
+            debitRequest.put("sourceType", "MERCHANT_QR_PAYMENT");
+            debitRequest.put("sourceId", qrPayment.getReferenceId());
+
+            ResponseEntity<Map> debitResponse = restTemplate.postForEntity(debitUrl, debitRequest, Map.class);
+
+            if (!debitResponse.getStatusCode().is2xxSuccessful()) {
+                log.error("Failed to debit payer {} for QR payment {}: HTTP {}",
+                        payerAccountId, qrPayment.getReferenceId(), debitResponse.getStatusCode());
+                publishSettlementEvent(qrPayment, merchant, "FAILED: Payer debit failed");
+                return;
+            }
+
+            log.info("Debited payer {} for QR payment {}: amount={}",
+                    payerAccountId, qrPayment.getReferenceId(), qrPayment.getAmount());
+
+            // Credit merchant wallet
             String url = WALLET_SERVICE_URL + "/" + settlementAccountId + "/credit";
             Map<String, Object> request = new HashMap<>();
             request.put("amount", qrPayment.getAmount());

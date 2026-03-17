@@ -39,60 +39,8 @@ import { Progress } from "@/components/ui/progress";
 import { type Experiment, ExperimentStatus, AllocationStrategy } from '@/services/ABTestingService';
 import clsx from 'clsx';
 
-const MOCK_EXPERIMENTS: Experiment[] = [
-  {
-    id: '1',
-    key: 'new-onboarding-flow',
-    name: 'New Onboarding Flow V2',
-    description: 'Testing 3-step vs 5-step onboarding flow for better conversion.',
-    status: ExperimentStatus.RUNNING,
-    allocationStrategy: AllocationStrategy.MURMURHASH3,
-    trafficPercentage: 50,
-    targetAudience: { segment: 'NEW_USERS' },
-    variants: [
-      { id: 'v1', experimentId: '1', key: 'control', name: 'Control (5 steps)', description: '', isControl: true, allocationWeight: 50, config: {}, createdAt: '' },
-      { id: 'v2', experimentId: '1', key: 'variant-a', name: 'Variant A (3 steps)', description: '', isControl: false, allocationWeight: 50, config: {}, createdAt: '' }
-    ],
-    startDate: '2026-01-20T00:00:00Z',
-    createdAt: '2026-01-15T10:00:00Z',
-    updatedAt: '2026-01-20T10:00:00Z'
-  },
-  {
-    id: '2',
-    key: 'investment-button-color',
-    name: 'Investment Button Color',
-    description: 'Testing if Emerald button converts better than Blue.',
-    status: ExperimentStatus.COMPLETED,
-    allocationStrategy: AllocationStrategy.MURMURHASH3,
-    trafficPercentage: 100,
-    targetAudience: { region: 'ID' },
-    variants: [
-      { id: 'v3', experimentId: '2', key: 'blue', name: 'Blue Button', description: '', isControl: true, allocationWeight: 50, config: { color: '#3b82f6' }, createdAt: '' },
-      { id: 'v4', experimentId: '2', key: 'emerald', name: 'Emerald Button', description: '', isControl: false, allocationWeight: 50, config: { color: '#10b981' }, createdAt: '' }
-    ],
-    startDate: '2026-01-01T00:00:00Z',
-    endDate: '2026-01-31T23:59:59Z',
-    createdAt: '2025-12-25T10:00:00Z',
-    updatedAt: '2026-02-01T00:00:00Z'
-  },
-  {
-    id: '3',
-    key: 'loyalty-rewards-multiplier',
-    name: 'Loyalty Rewards Multiplier',
-    description: 'Testing 2x vs 3x rewards for premium members.',
-    status: ExperimentStatus.DRAFT,
-    allocationStrategy: AllocationStrategy.MURMURHASH3,
-    trafficPercentage: 10,
-    targetAudience: { rank: 'GOLD' },
-    variants: [
-      { id: 'v5', experimentId: '3', key: '2x', name: '2x Points', description: '', isControl: true, allocationWeight: 50, config: { multiplier: 2 }, createdAt: '' },
-      { id: 'v6', experimentId: '3', key: '3x', name: '3x Points', description: '', isControl: false, allocationWeight: 50, config: { multiplier: 3 }, createdAt: '' }
-    ],
-    startDate: '2026-03-01T00:00:00Z',
-    createdAt: '2026-02-01T15:00:00Z',
-    updatedAt: '2026-02-01T15:00:00Z'
-  }
-];
+// BUG-FE-096: Removed MOCK_EXPERIMENTS — should be fetched from AB Testing service API
+const MOCK_EXPERIMENTS: Experiment[] = [];
 
 export default function ABTestingPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -124,10 +72,10 @@ export default function ABTestingPage() {
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Active Experiments', value: '12', color: 'bg-emerald-500', icon: Play },
-              { label: 'Total Variations', value: '48', color: 'bg-blue-500', icon: FlaskConical },
-              { label: 'Users Exposed', value: '142k', color: 'bg-indigo-500', icon: Users },
-              { label: 'Winning Variations', value: '7', color: 'bg-amber-500', icon: CheckCircle2 },
+              { label: 'Active Experiments', value: '—', color: 'bg-emerald-500', icon: Play },
+              { label: 'Total Variations', value: '—', color: 'bg-blue-500', icon: FlaskConical },
+              { label: 'Users Exposed', value: '—', color: 'bg-indigo-500', icon: Users },
+              { label: 'Winning Variations', value: '—', color: 'bg-amber-500', icon: CheckCircle2 },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>

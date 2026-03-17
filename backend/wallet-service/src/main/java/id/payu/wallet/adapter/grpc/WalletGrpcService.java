@@ -201,6 +201,7 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void transfer(TransferRequest request, StreamObserver<TransactionResponse> responseObserver) {
         try {
             log.info("gRPC transfer - from: {}, to: {}, amount: {}",

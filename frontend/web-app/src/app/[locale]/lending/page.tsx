@@ -47,24 +47,26 @@ export default function LendingPage() {
   ];
 
   const payLaterStats = {
-    creditLimit: payLaterData?.creditLimit ?? 15000000,
-    usedLimit: payLaterData?.usedLimit ?? 4500000,
-    availableLimit: payLaterData?.availableLimit ?? 10500000,
-    minimumPayment: payLaterData?.minimumPayment ?? 250000,
-    dueDate: payLaterData?.dueDate ?? '25 Jan 2026',
-    transactions: (payLaterTxns ?? [
-      { id: 1, merchant: 'TokoBapak', amount: 850000, date: '20 Jan 2026', status: 'paid' },
-      { id: 2, merchant: 'Traveloka', amount: 3200000, date: '18 Jan 2026', status: 'pending' },
-      { id: 3, merchant: 'Shopee', amount: 450000, date: '15 Jan 2026', status: 'paid' }
-    ]) as Array<{ id: number; merchant: string; amount: number; date: string; status: string }>
+    creditLimit: payLaterData?.creditLimit ?? 0,
+    usedLimit: payLaterData?.usedLimit ?? 0,
+    availableLimit: payLaterData?.availableLimit ?? 0,
+    minimumPayment: payLaterData?.minimumPayment ?? 0,
+    dueDate: payLaterData?.dueDate ?? '--',
+    transactions: (payLaterTxns ?? []).map(t => ({
+      id: Number(t.id) || 0,
+      merchant: t.merchantName ?? 'Unknown',
+      amount: t.amount,
+      date: t.createdAt ?? '--',
+      status: t.type === 'PAYMENT' ? 'paid' : 'pending',
+    }))
   };
 
   const creditScore = {
-    score: creditScoreData?.score ?? 785,
-    grade: creditScoreData?.grade ?? 'A',
+    score: creditScoreData?.score ?? 0,
+    grade: creditScoreData?.grade ?? '--',
     maxScore: 850,
-    lastUpdated: creditScoreData?.lastUpdated ?? '20 Jan 2026',
-    factors: creditScoreData?.factors ?? ['Pembayaran tepat waktu', 'Rasio utang rendah', 'Histori kredit panjang']
+    lastUpdated: creditScoreData?.lastUpdated ?? '--',
+    factors: creditScoreData?.factors ?? []
   };
 
   const formatCurrency = (amount: number) => {
@@ -141,7 +143,7 @@ export default function LendingPage() {
                         <Wallet className="h-6 w-6 text-primary" />
                       </div>
                       <h3 className="text-lg font-bold text-foreground mb-3">Total Limit Pinjaman</h3>
-                      <p className="text-3xl font-bold text-primary mb-2">{formatCurrency(50000000)}</p>
+                       <p className="text-3xl font-bold text-primary mb-2">{formatCurrency(preApprovals?.[0]?.maxAmount ?? 0)}</p>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Tersedia berdasarkan skor kredit</p>
                     </div>
                   </StaggerItem>
@@ -255,15 +257,15 @@ export default function LendingPage() {
                       <div className="space-y-4">
                         <div className="flex justify-between items-center py-3 border-b border-border">
                           <span className="text-sm text-muted-foreground font-medium">Total Transaksi</span>
-                          <span className="text-lg font-bold text-foreground">3</span>
+                          <span className="text-lg font-bold text-foreground">{payLaterStats.transactions.length}</span>
                         </div>
                         <div className="flex justify-between items-center py-3 border-b border-border">
                           <span className="text-sm text-muted-foreground font-medium">Pembayaran Berhasil</span>
-                          <span className="text-lg font-bold text-success-light">2</span>
+                          <span className="text-lg font-bold text-success-light">{payLaterStats.transactions.filter(t => t.status === 'paid').length}</span>
                         </div>
                         <div className="flex justify-between items-center py-3">
                           <span className="text-sm text-muted-foreground font-medium">Menunggu Pembayaran</span>
-                          <span className="text-lg font-bold text-warning">1</span>
+                          <span className="text-lg font-bold text-warning">{payLaterStats.transactions.filter(t => t.status !== 'paid').length}</span>
                         </div>
                       </div>
                     </div>

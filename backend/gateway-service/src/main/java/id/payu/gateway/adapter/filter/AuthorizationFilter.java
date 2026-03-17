@@ -32,6 +32,10 @@ import java.net.URL;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Gateway-level authorization filter that validates JWT tokens
@@ -49,6 +53,8 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     private static final String ROLES_HEADER = "X-User-Roles";
 
     // Public endpoints that don't require authentication
+    // BUG-AUTH-023: Tightened broad prefix patterns to specific endpoints
+    // to prevent unintended access to arbitrary sub-paths
     private static final String[] PUBLIC_ENDPOINTS = {
         "/api/v1/auth/login",
         "/api/v1/accounts/register",   // Only registration is public (BUG-BE-006 fix)
@@ -61,8 +67,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         "/api/v1/partners/webhook",
         "/api/v1/bi-fast/callback",
         "/api/v1/qris/callback",
-        "/api/v1/public/",             // Public content endpoints (CMS, etc.)
-        "/api/v1/simulator/"           // Internal simulator proxy endpoints
+        "/api/v1/public/contents"      // Only public CMS content endpoint (BUG-AUTH-023)
     };
 
     // Exact match public endpoints (must match exactly)
@@ -96,11 +101,22 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     private ReactiveValueCommands<String, String> valueCommands;
     private ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
     private JWKSource<SecurityContext> jwkSource;
+    // BUG-AUTH-029: Track JWKS URI for periodic refresh
+    private final AtomicReference<JWKSet> jwkSetRef = new AtomicReference<>();
+    private String jwksUri;
+    private ScheduledExecutorService jwksRefreshScheduler;
 
     @PostConstruct
     void init() {
         this.valueCommands = redisDataSource.value(String.class);
         initJwtProcessor();
+        // BUG-AUTH-029: Schedule periodic JWKS refresh every 5 minutes
+        this.jwksRefreshScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "jwks-refresh");
+            t.setDaemon(true);
+            return t;
+        });
+        jwksRefreshScheduler.scheduleAtFixedRate(this::refreshJwks, 5, 5, TimeUnit.MINUTES);
     }
 
     /**
@@ -120,7 +136,9 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             Log.infof("Initializing JWT processor with JWKS URI: %s", jwksUri);
 
             // Load JWKSet from JWKS endpoint
+            this.jwksUri = jwksUri;
             JWKSet jwkSet = JWKSet.load(new URL(jwksUri));
+            this.jwkSetRef.set(jwkSet);
             this.jwkSource = new ImmutableJWKSet<>(jwkSet);
 
             // Configure key selector for RS256 algorithm
@@ -157,6 +175,36 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 "JWT validation will reject all tokens until JWKS is available.");
             // Don't throw - allow service to start, but JWT validation will fail
             this.jwtProcessor = null;
+        }
+    }
+
+    /**
+     * BUG-AUTH-029: Periodically refresh JWKS to pick up key rotations.
+     * Called by the scheduled executor every 5 minutes.
+     */
+    private void refreshJwks() {
+        if (jwksUri == null) {
+            return;
+        }
+        try {
+            JWKSet newJwkSet = JWKSet.load(new URL(jwksUri));
+            this.jwkSetRef.set(newJwkSet);
+            ImmutableJWKSet<SecurityContext> newSource = new ImmutableJWKSet<>(newJwkSet);
+            this.jwkSource = newSource;
+
+            // Re-initialize the processor with the new key source
+            if (this.jwtProcessor != null) {
+                JWSAlgorithm expectedJWSAlg = JWSAlgorithm.RS256;
+                JWSKeySelector<SecurityContext> keySelector =
+                    new JWSVerificationKeySelector<>(expectedJWSAlg, newSource);
+                this.jwtProcessor.setJWSKeySelector(keySelector);
+            } else {
+                // Processor was null (initial load failed), try full init
+                initJwtProcessor();
+            }
+            Log.debug("JWKS refreshed successfully");
+        } catch (Exception e) {
+            Log.warnf("JWKS refresh failed, continuing with current keys: %s", e.getMessage());
         }
     }
 
@@ -209,10 +257,11 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 return;
             }
 
-            // Forward user context to downstream services via headers
-            requestContext.getHeaders().add(USER_ID_HEADER, userContext.userId);
-            requestContext.getHeaders().add(ACCOUNT_ID_HEADER, userContext.accountId);
-            requestContext.getHeaders().add(ROLES_HEADER, String.join(",", userContext.roles));
+            // BUG-AUTH-016: Strip any incoming identity headers to prevent spoofing,
+            // then set the validated values from the JWT token
+            requestContext.getHeaders().putSingle(USER_ID_HEADER, userContext.userId);
+            requestContext.getHeaders().putSingle(ACCOUNT_ID_HEADER, userContext.accountId);
+            requestContext.getHeaders().putSingle(ROLES_HEADER, String.join(",", userContext.roles));
 
             Log.debugf("Authorization successful for user: %s on path: %s", userContext.userId, path);
 

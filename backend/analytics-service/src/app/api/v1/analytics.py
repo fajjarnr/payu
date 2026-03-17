@@ -378,7 +378,7 @@ async def get_user_high_risk_transactions(
         query = (
             select(FraudScoreEntity)
             .where(FraudScoreEntity.user_id == user_id)
-            .where(FraudScoreEntity.is_suspicious is True)
+            .where(FraudScoreEntity.is_suspicious.is_(True))
             .where(FraudScoreEntity.scored_at > cutoff_date)
             .order_by(FraudScoreEntity.scored_at.desc())
         )

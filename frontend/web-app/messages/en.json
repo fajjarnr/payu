@@ -521,6 +521,42 @@
     },
     "ticker": {
       "label": "Trusted by Leaders:"
+    },
+    "hero": {
+      "freeAdmin": "No Monthly Admin Fees"
+    },
+    "slide2": {
+      "badge": "Digital Innovation",
+      "title": "Integrated",
+      "titleHighlight": "Ecosystem.",
+      "subtitle": "A banking platform connecting every aspect of your financial needs with cutting-edge technology.",
+      "analytics": {
+        "title": "Smart Analytics",
+        "desc": "Monitor your spending and income with detailed real-time reports."
+      },
+      "connectivity": {
+        "title": "Connectivity",
+        "desc": "Limitless transactions to banks and merchants worldwide."
+      },
+      "security": {
+        "title": "Security",
+        "desc": "Personal data and asset protection with advanced encryption."
+      }
+    },
+    "slide3": {
+      "badge": "Limitless",
+      "title": "Global Access",
+      "titleHighlight": "Anytime.",
+      "statsAnnual": "Annual Transactions",
+      "statsTrusted": "Trusted Customers"
+    },
+    "slide4": {
+      "title": "Start Your Journey",
+      "titleHighlight": "Now.",
+      "subtitle": "Register in 5 minutes and enjoy modern banking services.",
+      "button": "Start Free",
+      "terms": "Terms & Conditions",
+      "privacy": "Privacy Policy"
     }
   }
 }

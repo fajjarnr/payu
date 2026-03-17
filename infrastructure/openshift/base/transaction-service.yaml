@@ -70,6 +70,17 @@ spec:
               value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT
               value: "11222"
+            - name: KEYCLOAK_AUTH_SERVER_URL
+              value: "https://sso.payu.fajjjar.my.id"
+            - name: KEYCLOAK_REALM
+              value: "payu"
+            - name: KEYCLOAK_CLIENT_ID
+              value: "transaction-service"
+            - name: KEYCLOAK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-credentials
+                  key: client-secret
           resources:
             requests:
               memory: "256Mi"

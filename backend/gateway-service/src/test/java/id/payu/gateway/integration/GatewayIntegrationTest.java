@@ -261,7 +261,7 @@ public class GatewayIntegrationTest {
                 .header("X-API-Version", "v99")
                 .when().get("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(400), is(406))); // Either bad request or not acceptable
+                .statusCode(400); // Unsupported version should be a client error (Bad Request)
     }
 
     // ==================== API Key Validation Tests ====================
@@ -271,9 +271,9 @@ public class GatewayIntegrationTest {
     @DisplayName("Request should bypass API key validation for health endpoints")
     void testApiKeyBypassHealth() {
         given()
-                .when().get("/health")
+                .when().get("/q/health")
                 .then()
-                .statusCode(anyOf(is(200), is(404))); // Health endpoint might not exist
+                .statusCode(200); // Quarkus health endpoint should always be accessible
     }
 
     @Test
@@ -429,7 +429,7 @@ public class GatewayIntegrationTest {
         given()
                 .when().get("/api/v1/nonexistent")
                 .then()
-                .statusCode(anyOf(is(404), is(502))); // Either gateway returns 404 or 502
+                .statusCode(404); // Non-existent endpoint must return 404, not 502
     }
 
     @Test
@@ -459,7 +459,7 @@ public class GatewayIntegrationTest {
                 .when()
                 .post("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(400), is(500))); // Bad request or internal error
+                .statusCode(400); // Malformed JSON must be a 400 Bad Request
     }
 
     // ==================== Request Header Forwarding Tests ====================
@@ -619,14 +619,9 @@ public class GatewayIntegrationTest {
                 .when()
                 .patch("/api/v1/accounts/ACC-001")
                 .then()
-                .statusCode(anyOf(is(200), is(405))); // 200 or Method Not Allowed if not supported
+                .statusCode(200); // PATCH must be supported by the gateway
 
-        // Only verify if PATCH is supported
-        try {
-            accountServiceMock.verify(1, patchRequestedFor(urlPathMatching("/api/v1/accounts/.*")));
-        } catch (Exception e) {
-            // PATCH might not be supported
-        }
+        accountServiceMock.verify(1, patchRequestedFor(urlPathMatching("/api/v1/accounts/.*")));
     }
 
     // ==================== Metrics and OpenAPI Tests ====================
@@ -669,7 +664,7 @@ public class GatewayIntegrationTest {
         given()
                 .when().get("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(200), is(504))); // Either succeeds or gateway timeout
+                .statusCode(200); // With 5s delay and 30s timeout, this should succeed
     }
 
     // ==================== Request Body Tests ====================
@@ -719,7 +714,7 @@ public class GatewayIntegrationTest {
                 .when()
                 .post("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(201), is(413))); // Created or Payload Too Large
+                .statusCode(201); // 10KB body is well within limits, must succeed
     }
 
     @Test
@@ -736,7 +731,7 @@ public class GatewayIntegrationTest {
                 .when()
                 .post("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(400), is(500)));
+                .statusCode(400); // Empty body on POST should be Bad Request
     }
 
     // ==================== Query Parameters Tests ====================

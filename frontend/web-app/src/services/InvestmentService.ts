@@ -12,28 +12,27 @@ export interface InvestmentAccount {
   createdAt: string;
 }
 
+// BUG-CROSS-049: Backend createAccount takes no body — empty POST
 export interface CreateAccountRequest {
-  userId: string;
-  accountType?: string;
-  currency?: string;
+  // No fields — backend expects empty POST
 }
 
+// BUG-CROSS-050: Backend BuyDepositRequest: accountId, amount, tenure (Integer)
 export interface BuyDepositRequest {
-  userId: string;
+  accountId: string;
   amount: number;
-  tenureMonths: number;
-  interestRate?: number;
+  tenure: number;
 }
 
+// BUG-CROSS-051: Backend BuyMutualFundRequest: accountId, fundCode, amount
 export interface BuyMutualFundRequest {
-  userId: string;
-  fundId: string;
+  accountId: string;
+  fundCode: string;
   amount: number;
 }
 
+// BUG-CROSS-052: Backend BuyGoldRequest: only amount
 export interface BuyGoldRequest {
-  userId: string;
-  weightGrams: number;
   amount: number;
 }
 
@@ -105,15 +104,17 @@ class InvestmentService {
     return InvestmentService.instance;
   }
 
+  // BUG-CROSS-049: Backend createAccount takes no body — empty POST
   /** POST /investments/accounts — Create investment account */
-  async createAccount(request: CreateAccountRequest): Promise<InvestmentAccount> {
-    const response = await api.post('/investments/accounts', request);
+  async createAccount(): Promise<InvestmentAccount> {
+    const response = await api.post('/investments/accounts');
     return response.data;
   }
 
-  /** GET /investments/accounts/{userId} — Get user investment account / portfolio */
-  async getAccount(userId: string): Promise<InvestmentAccount> {
-    const response = await api.get(`/investments/accounts/${userId}`);
+  // BUG-CROSS-048: Backend getAccount uses /accounts/me, not /accounts/{userId}
+  /** GET /investments/accounts/me — Get user investment account / portfolio */
+  async getAccount(): Promise<InvestmentAccount> {
+    const response = await api.get('/investments/accounts/me');
     return response.data;
   }
 
@@ -141,9 +142,10 @@ class InvestmentService {
     return response.data;
   }
 
-  /** GET /investments/gold/{userId} — Get gold holdings */
-  async getGoldHoldings(userId: string): Promise<GoldHolding> {
-    const response = await api.get(`/investments/gold/${userId}`);
+  // BUG-CROSS-048: Backend getGoldHoldings uses /gold/me, not /gold/{userId}
+  /** GET /investments/gold/me — Get gold holdings */
+  async getGoldHoldings(): Promise<GoldHolding> {
+    const response = await api.get('/investments/gold/me');
     return response.data;
   }
 }

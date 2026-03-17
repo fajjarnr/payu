@@ -22,6 +22,10 @@ spec:
         prometheus.io/path: "/q/metrics"
         prometheus.io/port: "8080"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: api-portal-service
           image: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service:v1.4.0

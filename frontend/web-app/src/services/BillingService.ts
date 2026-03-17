@@ -23,10 +23,11 @@ export interface BillerInfo {
   isActive: boolean;
 }
 
+// BUG-CROSS-072: Backend TopUpRequest: accountId, provider, walletNumber, amount
 export interface TopUpRequest {
   accountId: string;
-  billerCode: string;
-  customerId: string;
+  provider: string;
+  walletNumber: string;
   amount: number;
 }
 

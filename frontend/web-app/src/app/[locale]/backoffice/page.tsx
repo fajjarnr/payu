@@ -5,9 +5,9 @@ import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/c
 
 export default function BackofficeDashboard() {
   const stats = [
-    { label: 'Total Customers', value: '45,289', change: '+12.5%', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Active Sessions', value: '1,204', change: '+3.2%', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { label: 'Security Alerts', value: '0', change: '0%', icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'Total Customers', value: '\u2014', change: '\u2014', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Active Sessions', value: '\u2014', change: '\u2014', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { label: 'Security Alerts', value: '\u2014', change: '\u2014', icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   ];
 
   const quickLinks = [

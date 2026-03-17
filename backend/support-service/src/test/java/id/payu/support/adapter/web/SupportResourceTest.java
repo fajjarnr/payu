@@ -2,14 +2,23 @@ package id.payu.support.adapter.web;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import id.payu.support.config.TestSecurityConfig;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
+/**
+ * Integration tests for Support Service REST endpoints.
+ * NOTE: Security is bypassed via TestSecurityConfig. Live security enforcement
+ * (OAuth2 JWT, SUPPORT_MANAGER role) is verified by E2E blackbox tests in
+ * tests/e2e_blackbox/test_support_flow.py.
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(TestSecurityConfig.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class SupportResourceTest {
 

@@ -22,8 +22,8 @@ export default function () {
   const gatewayUrl = BASE_URLS.gateway;
   const keycloakUrl = BASE_URLS.keycloak;
 
-  // Test 1: Gateway health endpoint
-  const gatewayHealth = http.get(`${gatewayUrl}/actuator/health`, {
+  // Test 1: Gateway health endpoint (Quarkus uses /q/health)
+  const gatewayHealth = http.get(`${gatewayUrl}/q/health`, {
     tags: { endpoint: 'gateway-health' }
   });
 
@@ -34,7 +34,7 @@ export default function () {
 
   // Test 2: Keycloak OIDC Discovery (Critical for auth)
   const oidcDiscovery = http.get(
-    `${keycloakUrl}/auth/realms/payu/.well-known/openid-configuration`,
+    `${keycloakUrl}/realms/payu/.well-known/openid-configuration`,
     { tags: { endpoint: 'keycloak-oidc' } }
   );
 
@@ -53,7 +53,7 @@ export default function () {
 
   // Test 3: Keycloak token endpoint (auth service health)
   const tokenEndpoint = http.post(
-    `${keycloakUrl}/auth/realms/payu/protocol/openid-connect/token`,
+    `${keycloakUrl}/realms/payu/protocol/openid-connect/token`,
     {
       grant_type: 'password',
       client_id: 'payu-backend',
@@ -98,8 +98,8 @@ export function setup() {
   console.log(`Gateway: ${BASE_URLS.gateway}`);
   console.log(`Keycloak: ${BASE_URLS.keycloak}`);
 
-  // Verify platform is accessible
-  const healthCheck = http.get(`${BASE_URLS.gateway}/actuator/health`);
+  // Verify platform is accessible (Quarkus gateway uses /q/health)
+  const healthCheck = http.get(`${BASE_URLS.gateway}/q/health`);
   console.log(`Gateway health check status: ${healthCheck.status}`);
 
   return { startTime: new Date().toISOString() };

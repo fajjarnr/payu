@@ -6,7 +6,7 @@ metadata:
   name: default-deny-ingress
   namespace: payu-prod
   labels:
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
   podSelector: {}
   policyTypes:
@@ -19,7 +19,7 @@ metadata:
   name: allow-from-router
   namespace: payu-prod
   labels:
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
   podSelector:
     matchExpressions:
@@ -43,11 +43,11 @@ metadata:
   name: allow-from-gateway
   namespace: payu-prod
   labels:
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: payu-banking
+      app.kubernetes.io/part-of: payu
   policyTypes:
     - Ingress
   ingress:
@@ -66,18 +66,18 @@ metadata:
   name: allow-intra-namespace
   namespace: payu-prod
   labels:
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: payu-banking
+      app.kubernetes.io/part-of: payu
   policyTypes:
     - Ingress
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/part-of: payu-banking
+              app.kubernetes.io/part-of: payu
 ---
 # NetworkPolicy: Allow Prometheus scraping from monitoring namespace
 apiVersion: networking.k8s.io/v1
@@ -86,11 +86,11 @@ metadata:
   name: allow-prometheus-scrape
   namespace: payu-prod
   labels:
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: payu-banking
+      app.kubernetes.io/part-of: payu
   policyTypes:
     - Ingress
   ingress:
@@ -109,19 +109,19 @@ metadata:
   name: allow-keycloak-from-auth
   namespace: payu-prod
   labels:
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
   podSelector:
     matchLabels:
-      app: keycloak
-      app.kubernetes.io/managed-by: keycloak-operator
+      app: payu-keycloak
+      app.kubernetes.io/managed-by: rhbk-operator
   policyTypes:
     - Ingress
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/part-of: payu-banking
+              app.kubernetes.io/part-of: payu
       ports:
         - protocol: TCP
           port: 8080
@@ -135,11 +135,11 @@ metadata:
   name: default-deny-egress
   namespace: payu-prod
   labels:
-    app.kubernetes.io/part-of: payu-banking
+    app.kubernetes.io/part-of: payu
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: payu-banking
+      app.kubernetes.io/part-of: payu
   policyTypes:
     - Egress
   egress:
@@ -154,7 +154,7 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/part-of: payu-banking
+              app.kubernetes.io/part-of: payu
     # Allow traffic to infrastructure namespace (DB, Kafka, Redis)
     - to:
         - namespaceSelector:
@@ -164,5 +164,5 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: keycloak
-              app.kubernetes.io/managed-by: keycloak-operator
+              app: payu-keycloak
+              app.kubernetes.io/managed-by: rhbk-operator

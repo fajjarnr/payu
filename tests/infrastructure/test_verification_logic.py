@@ -7,196 +7,78 @@ import pytest
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 
 # Add the tests/infrastructure directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from test_docker_compose_verification import DockerComposeVerification
+from test_docker_infrastructure import TestDockerComposeVerification
 
 
 class TestDockerComposeVerificationLogic:
     """Test the Docker Compose verification logic"""
 
     def test_initialization(self):
-        """Test that DockerComposeVerification initializes correctly"""
-        verifier = DockerComposeVerification()
-        assert verifier.compose_file == "docker-compose.yml"
-        # Count the actual services in the list (traefik was added later)
-        assert len(verifier.required_services) == 19
-
-    @patch('subprocess.run')
-    def test_docker_available_success(self, mock_run):
-        """Test Docker availability check when Docker is available"""
-        verifier = DockerComposeVerification()
-        
-        # Mock successful docker and docker-compose commands
-        mock_run.side_effect = [
-            Mock(returncode=0),  # docker --version
-            Mock(returncode=0),  # docker-compose --version
-        ]
-        
-        result = verifier.check_docker_available()
-        assert result is True
-        assert mock_run.call_count == 2
-
-    @patch('subprocess.run')
-    def test_docker_available_fails(self, mock_run):
-        """Test Docker availability check when Docker is not available"""
-        verifier = DockerComposeVerification()
-        
-        # Mock failed docker command
-        mock_run.return_value = Mock(returncode=1)
-        
-        result = verifier.check_docker_available()
-        assert result is False
+        """Test that TestDockerComposeVerification initializes correctly"""
+        verifier = TestDockerComposeVerification()
+        assert verifier.COMPOSE_FILE == "backend/docs/archive/deprecated-docker/docker-compose.yml"
+        # 18 services: postgres, redis, kafka, kafka-ui, keycloak,
+        # bi-fast-simulator, dukcapil-simulator, qris-simulator,
+        # account-service, auth-service, transaction-service, wallet-service,
+        # billing-service, notification-service, gateway-service,
+        # kyc-service, analytics-service, traefik
+        assert len(verifier.REQUIRED_SERVICES) == 18
 
     @patch('subprocess.run')
     def test_run_command_success(self, mock_run):
         """Test running a command successfully"""
-        verifier = DockerComposeVerification()
-        
+        verifier = TestDockerComposeVerification()
+
         mock_run.return_value = Mock(
             returncode=0,
             stdout="output",
             stderr=""
         )
-        
-        code, stdout, stderr = verifier.run_command(["echo", "test"])
-        
-        assert code == 0
-        assert stdout == "output"
-        assert stderr == ""
+
+        result = verifier.run_command(["echo", "test"])
+
+        assert result.returncode == 0
+        assert result.stdout == "output"
+        assert result.stderr == ""
 
     @patch('subprocess.run')
     def test_run_command_timeout(self, mock_run):
         """Test running a command that times out"""
-        verifier = DockerComposeVerification()
-        
+        verifier = TestDockerComposeVerification()
+
         mock_run.side_effect = subprocess.TimeoutExpired("cmd", 300)
-        
-        code, stdout, stderr = verifier.run_command(["sleep", "999"])
-        
-        assert code == -1
-        assert "timed out" in stderr
+
+        with pytest.raises(subprocess.TimeoutExpired):
+            verifier.run_command(["sleep", "999"])
 
     @patch('subprocess.run')
-    def test_run_command_exception(self, mock_run):
-        """Test running a command that raises an exception"""
-        verifier = DockerComposeVerification()
-        
-        mock_run.side_effect = Exception("command failed")
-        
-        code, stdout, stderr = verifier.run_command(["invalid", "command"])
-        
-        assert code == -1
-        assert "command failed" in stderr
+    def test_run_command_failure(self, mock_run):
+        """Test running a command that fails"""
+        verifier = TestDockerComposeVerification()
 
-    @patch('subprocess.run')
-    def test_stop_existing_containers(self, mock_run):
-        """Test stopping existing containers"""
-        verifier = DockerComposeVerification()
-        
-        mock_run.return_value = Mock(returncode=0)
-        
-        result = verifier.stop_existing_containers()
-        
-        assert result is True
-        mock_run.assert_called_once_with(
-            ["docker-compose", "-f", "docker-compose.yml", "down", "-v"],
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
-
-    @patch('subprocess.run')
-    def test_start_infrastructure_success(self, mock_run):
-        """Test starting infrastructure successfully"""
-        verifier = DockerComposeVerification()
-        
-        mock_run.return_value = Mock(returncode=0)
-        
-        result = verifier.start_infrastructure()
-        
-        assert result is True
-        mock_run.assert_called_once_with(
-            ["docker-compose", "-f", "docker-compose.yml", "up", "-d", "--build"],
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
-
-    @patch('subprocess.run')
-    def test_start_infrastructure_failure(self, mock_run):
-        """Test starting infrastructure when it fails"""
-        verifier = DockerComposeVerification()
-        
         mock_run.return_value = Mock(
             returncode=1,
-            stderr="Build failed"
-        )
-        
-        result = verifier.start_infrastructure()
-        
-        assert result is False
-
-    @patch('subprocess.run')
-    def test_stop_infrastructure(self, mock_run):
-        """Test stopping infrastructure"""
-        verifier = DockerComposeVerification()
-        
-        mock_run.return_value = Mock(returncode=0)
-        
-        result = verifier.stop_infrastructure()
-        
-        assert result is True
-        mock_run.assert_called_once_with(
-            ["docker-compose", "-f", "docker-compose.yml", "down", "-v"],
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
-
-    @patch('subprocess.run')
-    def test_verify_cleanup_success(self, mock_run):
-        """Test verifying cleanup when all containers are stopped"""
-        verifier = DockerComposeVerification()
-        
-        # Mock empty ps output (no containers running)
-        mock_run.return_value = Mock(
-            returncode=0,
             stdout="",
-            stderr=""
+            stderr="command failed"
         )
-        
-        result = verifier.verify_cleanup()
-        
-        assert result is True
 
-    @patch('subprocess.run')
-    def test_verify_cleanup_failure(self, mock_run):
-        """Test verifying cleanup when containers are still running"""
-        verifier = DockerComposeVerification()
-        
-        # Mock ps output with running containers
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="abc123\n",
-            stderr=""
-        )
-        
-        result = verifier.verify_cleanup()
-        
-        assert result is False
+        result = verifier.run_command(["invalid", "command"])
+
+        assert result.returncode == 1
+        assert "command failed" in result.stderr
 
     def test_required_services_list(self):
-        """Test that all required services are listed"""
-        verifier = DockerComposeVerification()
-        
+        """Test that all required services are listed and zookeeper is excluded"""
+        verifier = TestDockerComposeVerification()
+
         expected_services = [
             "postgres",
             "redis",
-            "zookeeper",
             "kafka",
             "kafka-ui",
             "keycloak",
@@ -214,64 +96,45 @@ class TestDockerComposeVerificationLogic:
             "analytics-service",
             "traefik"
         ]
-        
-        assert verifier.required_services == expected_services
+
+        assert verifier.REQUIRED_SERVICES == expected_services
+        assert "zookeeper" not in verifier.REQUIRED_SERVICES
+
+    def test_compose_file_path_not_root(self):
+        """Test that COMPOSE_FILE points to deprecated archive, not project root"""
+        verifier = TestDockerComposeVerification()
+        assert verifier.COMPOSE_FILE != "docker-compose.yml"
+        assert "backend/docs/archive" in verifier.COMPOSE_FILE
 
     @patch('subprocess.run')
-    def test_verify_database_connectivity_mock(self, mock_run):
-        """Test database connectivity verification with mocked commands"""
-        verifier = DockerComposeVerification()
-        
-        # Mock successful postgres commands
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="""
-                           List of databases
-       Name    |  Owner   | Encoding | Collate |  Ctype
----------------+----------+----------+---------+-------
- payu_account  | payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_auth     | payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_transaction| payu   | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_wallet   | payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_notification| payu   | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_billing  | payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_kyc     | payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_analytics| payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_bifast   | payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_dukcapil | payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
- payu_qris     | payu     | UTF8     | en_US.UTF-8 | en_US.UTF-8
-""",
-            stderr=""
-        )
-        
-        result = verifier.verify_database_connectivity()
-        
-        assert result is True
-        assert mock_run.call_count >= 2
+    def test_docker_available_success(self, mock_run):
+        """Test Docker availability check when Docker is available"""
+        verifier = TestDockerComposeVerification()
+
+        mock_run.return_value = Mock(returncode=0, stdout="Docker version 24.0", stderr="")
+
+        # Call the test method directly — it uses assert internally
+        # If Docker is available, no AssertionError is raised
+        verifier.test_docker_available()
 
     @patch('subprocess.run')
-    def test_verify_kafka_connectivity_mock(self, mock_run):
-        """Test Kafka connectivity verification with mocked commands"""
-        verifier = DockerComposeVerification()
-        
-        # Mock successful kafka command
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="",
-            stderr=""
+    def test_compose_down_cleanup(self, mock_run):
+        """Test that compose_down fixture runs docker-compose down -v"""
+        verifier = TestDockerComposeVerification()
+
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+
+        result = verifier.run_command(
+            ["docker-compose", "-f", verifier.COMPOSE_FILE, "down", "-v"],
+            timeout=120
         )
-        
-        result = verifier.verify_kafka_connectivity()
-        
-        assert result is True
+
+        assert result.returncode == 0
         mock_run.assert_called_once_with(
-            [
-                "docker", "exec", "payu-kafka",
-                "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"
-            ],
+            ["docker-compose", "-f", "backend/docs/archive/deprecated-docker/docker-compose.yml", "down", "-v"],
             capture_output=True,
             text=True,
-            timeout=300
+            timeout=120
         )
 
 

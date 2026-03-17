@@ -10,11 +10,10 @@ import time
 class TestDockerComposeVerification:
     """Test Docker Compose up/down operations"""
 
-    COMPOSE_FILE = "docker-compose.yml"
+    COMPOSE_FILE = "backend/docs/archive/deprecated-docker/docker-compose.yml"
     REQUIRED_SERVICES = [
         "postgres",
         "redis",
-        "zookeeper",
         "kafka",
         "kafka-ui",
         "keycloak",

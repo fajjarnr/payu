@@ -140,9 +140,14 @@ public class WalletService implements WalletUseCase {
     @Override
     @Transactional
     public String reserveBalance(String accountId, BigDecimal amount, String referenceId) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+
         log.info("Reserving {} for account {} with reference {}", amount, accountId, referenceId);
 
-        Wallet wallet = getWalletByAccountId(accountId)
+        // BUG-BE-164 FIX: Use pessimistic lock for balance-modifying operation
+        Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
 
         if (!wallet.hasSufficientBalance(amount)) {
@@ -195,7 +200,8 @@ public class WalletService implements WalletUseCase {
         BigDecimal reservedAmount = debitEntry.getAmount();
         String accountId = debitEntry.getAccountId();
 
-        Wallet wallet = getWalletByAccountId(accountId)
+        // BUG-BE-164 FIX: Use pessimistic lock for balance-modifying operation
+        Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
         wallet.commitReservation(reservedAmount);
         walletPersistencePort.save(wallet);
@@ -240,7 +246,8 @@ public class WalletService implements WalletUseCase {
         BigDecimal reservedAmount = releaseEntry.getAmount();
         String accountId = releaseEntry.getAccountId();
 
-        Wallet wallet = getWalletByAccountId(accountId)
+        // BUG-BE-164 FIX: Use pessimistic lock for balance-modifying operation
+        Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
         wallet.releaseReservation(reservedAmount);
         walletPersistencePort.save(wallet);
@@ -287,9 +294,14 @@ public class WalletService implements WalletUseCase {
     @Override
     @Transactional
     public String credit(String accountId, BigDecimal amount, String referenceId, String description) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+
         log.info("Crediting {} to account {} with reference {}", amount, accountId, referenceId);
 
-        Wallet wallet = getWalletByAccountId(accountId)
+        // BUG-BE-164 FIX: Use pessimistic lock for balance-modifying operation
+        Wallet wallet = walletPersistencePort.findByAccountIdForUpdate(accountId)
                 .orElseThrow(() -> new WalletNotFoundException(accountId));
 
         // Update wallet balance

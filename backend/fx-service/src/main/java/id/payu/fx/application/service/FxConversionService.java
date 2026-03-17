@@ -100,7 +100,40 @@ public class FxConversionService implements FxConversionUseCase {
             throw new IllegalStateException("Cannot reverse conversion with status: " + conversion.getStatus());
         }
         
+        String txId = conversion.getId().toString();
+
+        // BUG-BE-171 FIX: Perform actual wallet operations (inverse of createConversion).
+        // Debit the target currency that was credited during conversion
+        boolean debited = walletServicePort.debit(
+                conversion.getAccountId(), txId + "-REV",
+                conversion.getToAmount(), conversion.getToCurrency());
+
+        if (!debited) {
+            log.error("FX reversal {} failed: unable to debit {} {} (target currency) from account {}",
+                    txId, conversion.getToAmount(), conversion.getToCurrency(), conversion.getAccountId());
+            throw new IllegalStateException("Cannot reverse conversion: insufficient target currency balance");
+        }
+
+        // Credit back the source currency that was debited during conversion
+        boolean credited = walletServicePort.credit(
+                conversion.getAccountId(), txId + "-REV",
+                conversion.getFromAmount(), conversion.getFromCurrency());
+
+        if (!credited) {
+            // Compensate: reverse the debit we just did
+            log.error("FX reversal {} credit failed, reversing debit of {} {}",
+                    txId, conversion.getToAmount(), conversion.getToCurrency());
+            walletServicePort.reverseDebit(
+                    conversion.getAccountId(), txId + "-REV",
+                    conversion.getToAmount(), conversion.getToCurrency());
+            throw new IllegalStateException("Cannot reverse conversion: source currency credit failed");
+        }
+
         conversion.markReversed();
         conversionRepository.save(conversion);
+        
+        log.info("FX conversion {} reversed: debited {} {}, credited {} {}",
+                txId, conversion.getToAmount(), conversion.getToCurrency(),
+                conversion.getFromAmount(), conversion.getFromCurrency());
     }
 }

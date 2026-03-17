@@ -11,7 +11,7 @@ Contract.make {
             header("Content-Type", "application/json")
         }
         body([
-            email: $(email()),
+            username: $(anyNonBlankString()),
             password: $(anyNonBlankString())
         ])
     }
@@ -23,10 +23,10 @@ Contract.make {
         body([
             success: true,
             data: [
-                accessToken: $(anyNonBlankString()),
-                refreshToken: $(anyNonBlankString()),
-                tokenType: "Bearer",
-                expiresIn: $(anyPositiveInt())
+                access_token: $(anyNonBlankString()),
+                refresh_token: $(anyNonBlankString()),
+                token_type: "Bearer",
+                expires_in: $(anyPositiveInt())
             ]
         ])
     }

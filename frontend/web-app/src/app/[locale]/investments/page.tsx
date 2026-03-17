@@ -13,16 +13,15 @@ import { useTranslations } from 'next-intl';
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
   const { user } = useAuthStore();
-  const userId = user?.id ?? '';
-  const { data: account, isLoading: loadingAccount } = useInvestmentAccount(userId);
-  const { data: goldHoldings } = useGoldHoldings(userId);
+  const { data: account, isLoading: loadingAccount } = useInvestmentAccount();
+  const { data: goldHoldings } = useGoldHoldings();
 
-  const portfolioBalance = account?.balance ?? 152800000;
+  const portfolioBalance = account?.balance ?? 0;
   const formatRp = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 
   const investmentProducts = [
-    { name: 'Suku Bunga Tetap Plus', type: t('risk.low'), return: '5.5% p.a', icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { name: 'Equity Growth Fund', type: t('risk.high'), return: '18.2% p.a', icon: TrendingUp, color: 'text-primary', bg: 'bg-success-light' },
+    { name: 'Suku Bunga Tetap Plus', type: t('risk.low'), return: '--', icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { name: 'Equity Growth Fund', type: t('risk.high'), return: '--', icon: TrendingUp, color: 'text-primary', bg: 'bg-success-light' },
     { name: 'Emas Digital (XAU)', type: t('digitalGold'), return: t('return'), icon: Coins, color: 'text-amber-500', bg: 'bg-amber-500/10' },
   ];
 
@@ -62,7 +61,7 @@ export default function InvestmentsPage() {
                         <div className="flex flex-wrap gap-3">
                           <div className="bg-success-light px-4 py-2 rounded-xl flex items-center gap-2 border border-primary/10">
                             <TrendingUp className="h-4 w-4 text-primary" />
-                            <span className="text-xs font-bold text-primary tracking-widest">+Rp 12,4 Jt (8.2%)</span>
+                            <span className="text-xs font-bold text-primary tracking-widest">--</span>
                           </div>
                           <div className="bg-muted/50 px-4 py-2 rounded-xl flex items-center gap-2 border border-border">
                             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
@@ -72,29 +71,28 @@ export default function InvestmentsPage() {
                       </div>
 
                       <div className="flex items-end justify-end gap-2 h-32">
-                        {[40, 55, 45, 70, 60, 90, 85, 100].map((h, i) => (
-                          <div key={i} className="flex-1 bg-primary/20 rounded-t-lg relative group/bar transition-all duration-500" style={{ height: `${h}%` }}>
-                            <div className="absolute top-0 left-0 w-full h-1 bg-primary rounded-full" />
-                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-xs font-bold px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-all shadow-xl whitespace-nowrap">
-                              +{h / 10}%
-                            </div>
+                        {loadingAccount ? (
+                          <div className="flex items-center justify-center w-full h-full">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                           </div>
-                        ))}
+                        ) : (
+                          <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">Belum ada data performa</p>
+                        )}
                       </div>
                     </div>
 
                     <div className="mt-auto grid grid-cols-3 gap-6 pt-8 border-t border-border">
                       <div>
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Pasar Uang</p>
-                        <p className="text-lg font-bold text-foreground">45%</p>
+                        <p className="text-lg font-bold text-foreground">--</p>
                       </div>
                       <div>
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Saham</p>
-                        <p className="text-lg font-bold text-foreground">30%</p>
+                        <p className="text-lg font-bold text-foreground">--</p>
                       </div>
                       <div>
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Komoditas</p>
-                        <p className="text-lg font-bold text-foreground">25%</p>
+                        <p className="text-lg font-bold text-foreground">--</p>
                       </div>
                     </div>
                   </div>

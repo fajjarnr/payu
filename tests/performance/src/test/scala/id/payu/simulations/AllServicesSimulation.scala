@@ -56,7 +56,7 @@ class AllServicesSimulation extends Simulation {
     .feed(userFeeder)
     .exec(
       http("Login")
-        .post("$authUrl/api/v1/auth/login")
+        .post(s"$authUrl/api/v1/auth/login")
         .body(StringBody(
           """{
             "username": "${username}",
@@ -74,7 +74,7 @@ class AllServicesSimulation extends Simulation {
     .feed(accountFeeder)
     .exec(
       http("Login")
-        .post("$authUrl/api/v1/auth/login")
+        .post(s"$authUrl/api/v1/auth/login")
         .body(StringBody(
           """{
             "username": "${username}",
@@ -87,7 +87,7 @@ class AllServicesSimulation extends Simulation {
     .pause(1, 2)
     .exec(
       http("Query Balance")
-        .get("$walletUrl/api/v1/wallet/balance")
+        .get(s"$walletUrl/api/v1/wallets/balance")
         .header("Authorization", "Bearer ${access_token}")
         .queryParam("account_number", "${account_number}")
         .check(status.is(200))
@@ -96,7 +96,7 @@ class AllServicesSimulation extends Simulation {
     .repeat(3) {
       exec(
         http("Repeated Query Balance")
-          .get("$walletUrl/api/v1/wallet/balance")
+          .get(s"$walletUrl/api/v1/wallets/balance")
           .header("Authorization", "Bearer ${access_token}")
           .queryParam("account_number", "${account_number}")
           .check(status.is(200))
@@ -111,7 +111,7 @@ class AllServicesSimulation extends Simulation {
     .feed(transferAmounts)
     .exec(
       http("Login")
-        .post("$authUrl/api/v1/auth/login")
+        .post(s"$authUrl/api/v1/auth/login")
         .body(StringBody(
           """{
             "username": "${username}",
@@ -124,7 +124,7 @@ class AllServicesSimulation extends Simulation {
     .pause(1, 2)
     .exec(
       http("Transfer")
-        .post("$transactionUrl/api/v1/transfers")
+        .post(s"$transactionUrl/api/v1/transactions/transfer")
         .header("Authorization", "Bearer ${access_token}")
         .body(StringBody(
           """{
@@ -141,7 +141,7 @@ class AllServicesSimulation extends Simulation {
     .repeat(2) {
       exec(
         http("Query Balance After Transfer")
-          .get("$walletUrl/api/v1/wallet/balance")
+          .get(s"$walletUrl/api/v1/wallets/balance")
           .header("Authorization", "Bearer ${access_token}")
           .queryParam("account_number", "${account_number}")
           .check(status.is(200))
@@ -156,7 +156,7 @@ class AllServicesSimulation extends Simulation {
     .feed(qrisData)
     .exec(
       http("Login")
-        .post("$authUrl/api/v1/auth/login")
+        .post(s"$authUrl/api/v1/auth/login")
         .body(StringBody(
           """{
             "username": "${username}",
@@ -169,7 +169,7 @@ class AllServicesSimulation extends Simulation {
     .pause(1, 2)
     .exec(
       http("Create QRIS Payment")
-        .post("$transactionUrl/api/v1/qris/create")
+        .post(s"$transactionUrl/api/v1/qris/create")
         .header("Authorization", "Bearer ${access_token}")
         .body(StringBody(
           """{
@@ -186,7 +186,7 @@ class AllServicesSimulation extends Simulation {
     .pause(1, 3)
     .exec(
       http("Process QRIS Payment")
-        .post("$transactionUrl/api/v1/qris/process")
+        .post(s"$transactionUrl/api/v1/qris/process")
         .header("Authorization", "Bearer ${access_token}")
         .body(StringBody(
           """{
@@ -230,7 +230,7 @@ class AllServicesSimulation extends Simulation {
     global.responseTime.percentile4.lte(2000), // p99 < 2s
     global.responseTime.max.lte(5000),        // max < 5s
     global.successfulRequests.percent.gte(99), // success rate > 99%
-    global.requestsPerSec.gte(100)            // at least 100 requests/sec sustained
+    global.requestsPerSec.gte(100),            // at least 100 requests/sec sustained
 
     // Specific assertions for critical operations
     details("Login Scenario" / "Login").responseTime.percentile3.lte(1000),

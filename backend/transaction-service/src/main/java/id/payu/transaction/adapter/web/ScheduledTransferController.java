@@ -35,7 +35,8 @@ public class ScheduledTransferController {
     private final ScheduledTransferUseCase scheduledTransferUseCase;
 
     /**
-     * Extracts the authenticated user's ID from the JWT subject claim.
+     * Extracts the authenticated user's ID from the JWT.
+     * BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback.
      * BUG-BE-148: Added to enforce ownership checks on all endpoints.
      */
     private String extractUserId() {
@@ -44,7 +45,8 @@ public class ScheduledTransferController {
             throw new IllegalStateException("No valid JWT authentication found");
         }
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        return jwt.getSubject();
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
     }
 
     /**

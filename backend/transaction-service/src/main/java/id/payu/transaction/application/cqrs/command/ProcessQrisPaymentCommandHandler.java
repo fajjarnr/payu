@@ -1,6 +1,7 @@
 package id.payu.transaction.application.cqrs.command;
 
 import id.payu.transaction.application.cqrs.CommandHandler;
+import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.port.out.QrisServicePort;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
@@ -32,15 +33,18 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
     private final QrisServicePort qrisServicePort;
     private final WalletServicePort walletServicePort;
     private final TransactionEventPublisherPort eventPublisherPort;
+    private final AuthorizationService authorizationService;
 
     public ProcessQrisPaymentCommandHandler(TransactionPersistencePort transactionPersistencePort,
                                             QrisServicePort qrisServicePort,
                                             WalletServicePort walletServicePort,
-                                            TransactionEventPublisherPort eventPublisherPort) {
+                                            TransactionEventPublisherPort eventPublisherPort,
+                                            AuthorizationService authorizationService) {
         this.transactionPersistencePort = transactionPersistencePort;
         this.qrisServicePort = qrisServicePort;
         this.walletServicePort = walletServicePort;
         this.eventPublisherPort = eventPublisherPort;
+        this.authorizationService = authorizationService;
     }
 
     @Override
@@ -48,6 +52,9 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
     public Void handle(ProcessQrisPaymentCommand command) {
         log.info("Handling ProcessQrisPaymentCommand for account: {}, amount: {}",
                 command.accountId(), command.amount());
+
+        // Verify the authenticated user owns the account being debited
+        authorizationService.verifyAccountOwnership(command.accountId(), command.userId());
 
         String referenceNumber = generateReferenceNumber();
 

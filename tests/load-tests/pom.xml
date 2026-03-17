@@ -76,7 +76,7 @@
     </dependencies>
 
     <build>
-        <testSourceDirectory>src/gatling/simulations</testSourceDirectory>
+        <testSourceDirectory>src/gatling/scala</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
@@ -104,7 +104,7 @@
                 <artifactId>gatling-maven-plugin</artifactId>
                 <version>${gatling-maven-plugin.version}</version>
                 <configuration>
-                    <simulationClass>io.payu.load.simulations.PayUAPILoadTest</simulationClass>
+                    <simulationClass>id.payu.simulations.AllServicesSimulation</simulationClass>
                     <jvmArgs>
                         <jvmArg>-Xms1024m</jvmArg>
                         <jvmArg>-Xmx2048m</jvmArg>

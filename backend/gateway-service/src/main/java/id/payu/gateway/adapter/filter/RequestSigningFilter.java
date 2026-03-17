@@ -148,8 +148,10 @@ public class RequestSigningFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Compare signatures
-        if (!expectedSignature.equals(providedSignature)) {
+        // BUG-AUTH-018: Use constant-time comparison to prevent timing attacks
+        byte[] expectedBytes = expectedSignature.getBytes(StandardCharsets.UTF_8);
+        byte[] providedBytes = providedSignature.getBytes(StandardCharsets.UTF_8);
+        if (!MessageDigest.isEqual(expectedBytes, providedBytes)) {
             Log.warnf("Signature mismatch for partner %s: expected=%s, provided=%s",
                 partnerId, expectedSignature, providedSignature);
             requestContext.abortWith(
@@ -180,7 +182,7 @@ public class RequestSigningFilter implements ContainerRequestFilter {
 
     private String calculateSignature(ContainerRequestContext requestContext,
                                        String timestamp, String secretKey) throws Exception {
-        // Build string to sign: method + path + timestamp + body
+        // Build string to sign: method + path + timestamp + bodyHash
         StringBuilder payload = new StringBuilder();
         payload.append(requestContext.getMethod());
         payload.append("\n");
@@ -189,10 +191,21 @@ public class RequestSigningFilter implements ContainerRequestFilter {
         payload.append(timestamp);
         payload.append("\n");
 
-        // Add body hash if present
-        // Note: In JAX-RS ContainerRequestContext, we can't read entity stream directly
-        // This would need to be implemented with a ReaderInterceptor
-        // For now, skip body hashing
+        // BUG-AUTH-019: Include SHA-256 hash of request body in HMAC payload
+        // to ensure request body integrity
+        try {
+            if (requestContext.hasEntity()) {
+                byte[] bodyBytes = requestContext.getEntityStream().readAllBytes();
+                // Reset the entity stream so downstream filters/resources can still read it
+                requestContext.setEntityStream(new java.io.ByteArrayInputStream(bodyBytes));
+                MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+                byte[] bodyHash = sha256.digest(bodyBytes);
+                payload.append(Base64.getEncoder().encodeToString(bodyHash));
+            }
+        } catch (Exception e) {
+            Log.warnf("Could not read request body for signature: %s", e.getMessage());
+            // Continue without body hash for backward compatibility
+        }
 
         // Decode secret key
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);

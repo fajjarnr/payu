@@ -137,8 +137,22 @@ public class RiskEvaluationService {
                 });
     }
 
+    /**
+     * BUG-BE-178: Validate device fingerprint format before comparison.
+     * Rejects malformed deviceIds to prevent abuse via arbitrary client-provided values.
+     * Expected format: alphanumeric/hex string, 16-128 chars (covers UUID, SHA-256, device fingerprints).
+     */
+    private static final java.util.regex.Pattern DEVICE_ID_PATTERN =
+            java.util.regex.Pattern.compile("^[a-zA-Z0-9\\-]{16,128}$");
+
     private boolean isNewDevice(UserRiskProfileEntity profile, String deviceId) {
-        if (deviceId == null) return false;
+        if (deviceId == null || deviceId.isBlank()) return false;
+        // BUG-BE-178: Validate deviceId format — reject untrusted/malformed values
+        if (!DEVICE_ID_PATTERN.matcher(deviceId).matches()) {
+            log.warn("Rejected malformed deviceId (length={}, preview={})",
+                    deviceId.length(), deviceId.substring(0, Math.min(deviceId.length(), 20)));
+            return true; // Treat invalid deviceId as unknown → triggers new_device risk
+        }
         if (profile.getKnownDevices() == null) return true;
         
         return profile.getKnownDevices().stream()

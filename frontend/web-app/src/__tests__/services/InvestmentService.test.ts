@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import InvestmentService, {
   type InvestmentAccount,
-  type CreateAccountRequest,
   type BuyDepositRequest,
   type BuyMutualFundRequest,
   type BuyGoldRequest,
@@ -55,42 +54,38 @@ describe('InvestmentService', () => {
     vi.clearAllMocks();
   });
 
+  // BUG-CROSS-049: createAccount takes no body
   describe('createAccount', () => {
     it('should create investment account', async () => {
-      const request: CreateAccountRequest = {
-        userId: 'user_123',
-        accountType: 'PREMIUM',
-        currency: 'IDR',
-      };
-
       vi.mocked(api.post).mockResolvedValue({ data: mockAccount });
 
-      const result = await InvestmentService.createAccount(request);
+      const result = await InvestmentService.createAccount();
 
-      expect(api.post).toHaveBeenCalledWith('/investments/accounts', request);
+      expect(api.post).toHaveBeenCalledWith('/investments/accounts');
       expect(result.id).toBe('inv_acc_001');
       expect(result.status).toBe('ACTIVE');
     });
   });
 
+  // BUG-CROSS-048: getAccount uses /accounts/me
   describe('getAccount', () => {
     it('should fetch user investment account', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: mockAccount });
 
-      const result = await InvestmentService.getAccount('user_123');
+      const result = await InvestmentService.getAccount();
 
-      expect(api.get).toHaveBeenCalledWith('/investments/accounts/user_123');
+      expect(api.get).toHaveBeenCalledWith('/investments/accounts/me');
       expect(result.balance).toBe(50000000);
     });
   });
 
+  // BUG-CROSS-050: BuyDepositRequest uses accountId, tenure (not userId, tenureMonths)
   describe('buyDeposit', () => {
     it('should buy a fixed deposit', async () => {
       const request: BuyDepositRequest = {
-        userId: 'user_123',
+        accountId: 'acc_123',
         amount: 10000000,
-        tenureMonths: 12,
-        interestRate: 5.5,
+        tenure: 12,
       };
 
       const depositOrder = { ...mockOrder, type: 'DEPOSIT' as const, action: 'BUY' as const };
@@ -103,11 +98,12 @@ describe('InvestmentService', () => {
     });
   });
 
+  // BUG-CROSS-051: BuyMutualFundRequest uses accountId, fundCode (not userId, fundId)
   describe('buyMutualFund', () => {
     it('should buy mutual fund', async () => {
       const request: BuyMutualFundRequest = {
-        userId: 'user_123',
-        fundId: 'fund_001',
+        accountId: 'acc_123',
+        fundCode: 'fund_001',
         amount: 1000000,
       };
 
@@ -121,11 +117,10 @@ describe('InvestmentService', () => {
     });
   });
 
+  // BUG-CROSS-052: BuyGoldRequest only has amount
   describe('buyGold', () => {
     it('should buy gold', async () => {
       const request: BuyGoldRequest = {
-        userId: 'user_123',
-        weightGrams: 5,
         amount: 5000000,
       };
 
@@ -156,13 +151,14 @@ describe('InvestmentService', () => {
     });
   });
 
+  // BUG-CROSS-048: getGoldHoldings uses /gold/me
   describe('getGoldHoldings', () => {
     it('should fetch gold holdings for a user', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: mockGoldHolding });
 
-      const result = await InvestmentService.getGoldHoldings('user_123');
+      const result = await InvestmentService.getGoldHoldings();
 
-      expect(api.get).toHaveBeenCalledWith('/investments/gold/user_123');
+      expect(api.get).toHaveBeenCalledWith('/investments/gold/me');
       expect(result.totalWeightGrams).toBe(10.5);
       expect(result.holdings).toHaveLength(2);
       expect(result.totalValue).toBe(11025000);

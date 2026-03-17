@@ -9,20 +9,30 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useBiometricRegistrations, useRegisterBiometric, useRevokeBiometric } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
+import { toast } from 'sonner';
 
 export default function SecurityPage() {
   const { user } = useAuthStore();
   const username = user?.username ?? '';
   const { data: biometricRegs } = useBiometricRegistrations(username);
+  const registerBiometric = useRegisterBiometric();
   const revokeBiometric = useRevokeBiometric();
 
   const hasBiometric = Array.isArray(biometricRegs) && biometricRegs.length > 0;
 
-  const sessions = [
-    { device: 'MacBook Pro 16"', location: 'Jakarta, ID', status: 'Sesi Saat Ini', icon: Monitor, active: true },
-    { device: 'iPhone 15 Pro', location: 'Surabaya, ID', status: 'Aktif: 2 jam lalu', icon: Smartphone, active: false },
-    { device: 'Linux Workstation', location: 'Singapore, SG', status: 'Aktif: 1 hari lalu', icon: Monitor, active: false },
-  ];
+  const handleBiometricToggle = (checked: boolean) => {
+    if (checked) {
+      registerBiometric.mutate({ username, challengeId: '', credential: '', deviceName: 'web-browser' }, {
+        onError: () => toast.error('Gagal mengaktifkan biometrik'),
+      });
+    } else if (biometricRegs?.[0]?.registrationId) {
+      revokeBiometric.mutate(biometricRegs[0].registrationId, {
+        onError: () => toast.error('Gagal menonaktifkan biometrik'),
+      });
+    }
+  };
+
+  const sessions: Array<{ device: string; location: string; status: string; icon: typeof Monitor; active: boolean }> = [];
 
   return (
     <DashboardLayout>
@@ -65,7 +75,7 @@ export default function SecurityPage() {
                     </p>
                     <div className="flex items-center justify-between p-5 bg-muted/20 rounded-xl border border-border group-hover:border-primary/20 transition-all">
                       <span className="text-xs font-bold text-foreground tracking-widest uppercase">Status Keamanan: {hasBiometric ? 'Aktif' : 'Non-aktif'}</span>
-                      <Switch defaultChecked={hasBiometric} />
+                       <Switch checked={hasBiometric} onCheckedChange={handleBiometricToggle} />
                     </div>
                   </div>
                 </div>
@@ -107,7 +117,13 @@ export default function SecurityPage() {
                 </div>
 
                 <div className="space-y-4 relative z-10">
-                  {sessions.map((session, i) => (
+                  {sessions.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Monitor className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                      <p className="text-sm text-muted-foreground font-bold tracking-widest uppercase">Tidak ada sesi aktif yang terdeteksi</p>
+                    </div>
+                  ) : (
+                  sessions.map((session, i) => (
                     <div key={i} className="flex flex-col sm:flex-row items-center justify-between p-6 bg-muted/30 rounded-xl border border-transparent hover:border-border transition-all group hover:bg-card">
                       <div className="flex items-center gap-6 w-full">
                         <div className="h-14 w-14 bg-card rounded-xl flex items-center justify-center shadow-md border border-border group-hover:scale-105 transition-all">
@@ -120,7 +136,7 @@ export default function SecurityPage() {
                       </div>
                       <Button variant="ghost" className="sm:mt-0 mt-4 text-xs font-bold text-destructive tracking-widest uppercase hover:bg-destructive/5 px-4 h-10 border border-transparent hover:border-destructive/10 whitespace-nowrap">Putuskan Sesi</Button>
                     </div>
-                  ))}
+                  )))}
                 </div>
               </div>
             </StaggerItem>

@@ -115,6 +115,10 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // BUG-FE-102: Validation guard in case handleSubmit is called programmatically
+    if (!subject.trim() || !message.trim()) return;
+
     setIsSubmitting(true);
 
     const feedbackData: FeedbackData = {

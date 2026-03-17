@@ -9,6 +9,7 @@ export type { TransferType };
 // IMP-014: Re-export Transaction from centralized types/index.ts
 export type { Transaction };
 
+// BUG-CROSS-071: Backend InitiateTransferRequest has optional idempotencyKey and memo
 export interface InitiateTransferRequest {
   senderAccountId: string;
   recipientAccountNumber: string;
@@ -18,6 +19,8 @@ export interface InitiateTransferRequest {
   type?: TransactionType;
   transactionPin?: string;
   deviceId?: string;
+  idempotencyKey?: string;
+  memo?: string;
 }
 
 export interface InitiateTransferResponse {

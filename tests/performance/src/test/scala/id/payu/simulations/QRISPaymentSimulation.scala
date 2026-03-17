@@ -51,7 +51,7 @@ class QRISPaymentSimulation extends Simulation {
     // Login first to get token
     .exec(
       http("Login Request")
-        .post("$authUrl/api/v1/auth/login")
+        .post(s"$authUrl/api/v1/auth/login")
         .body(StringBody(
           """{
             "username": "${username}",
@@ -66,7 +66,7 @@ class QRISPaymentSimulation extends Simulation {
     // Create QRIS payment
     .exec(
       http("Create QRIS Payment")
-        .post("$transactionUrl/api/v1/qris/create")
+        .post(s"$transactionUrl/api/v1/qris/create")
         .header("Authorization", "Bearer ${access_token}")
         .body(StringBody(
           """{
@@ -85,7 +85,7 @@ class QRISPaymentSimulation extends Simulation {
     // Simulate QR code scanning and payment
     .exec(
       http("Process QRIS Payment")
-        .post("$transactionUrl/api/v1/qris/process")
+        .post(s"$transactionUrl/api/v1/qris/process")
         .header("Authorization", "Bearer ${access_token}")
         .body(StringBody(
           """{

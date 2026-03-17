@@ -32,7 +32,7 @@ export default function () {
   group('Authentication Flow', () => {
     // Get token from Keycloak
     const tokenResponse = http.post(
-      `${keycloakUrl}/auth/realms/payu/protocol/openid-connect/token`,
+      `${keycloakUrl}/realms/payu/protocol/openid-connect/token`,
       {
         grant_type: 'password',
         client_id: 'payu-backend',
@@ -61,10 +61,10 @@ export default function () {
 
   group('Core Services Health', () => {
     const services = [
-      { path: '/api/v1/accounts/actuator/health', name: 'account-health' },
-      { path: '/api/v1/wallets/actuator/health', name: 'wallet-health' },
-      { path: '/api/v1/transactions/actuator/health', name: 'transaction-health' },
-      { path: '/api/v1/auth/actuator/health', name: 'auth-health' }
+      { path: '/api/v1/accounts/public/health', name: 'account-health' },
+      { path: '/api/v1/wallets/public/health', name: 'wallet-health' },
+      { path: '/api/v1/transactions/public/health', name: 'transaction-health' },
+      { path: '/api/v1/auth/public/health', name: 'auth-health' }
     ];
 
     for (const service of services) {
@@ -117,7 +117,7 @@ export function setup() {
   console.log(`Max VUs: 100`);
 
   // Quick health check
-  const health = http.get(`${BASE_URLS.keycloak}/auth/realms/payu/.well-known/openid-configuration`);
+  const health = http.get(`${BASE_URLS.keycloak}/realms/payu/.well-known/openid-configuration`);
   if (health.status !== 200) {
     console.error('WARNING: Keycloak not accessible. Auth tests may fail.');
   }

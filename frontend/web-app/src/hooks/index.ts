@@ -11,7 +11,7 @@ export {
 } from './useWallet';
 export { useTransactions, useTransaction, useInitiateTransfer, useProcessQrisPayment, useCancelTransaction } from './useTransactions';
 export { useWebSocket } from './useWebSocket';
-export { useAnalyticsWebSocket } from './useAnalytics';
+export { useAnalyticsWebSocket, useUserMetrics, useSpendingTrends, useCashFlow } from './useAnalytics';
 export {
   useActiveContent,
   useBanners,

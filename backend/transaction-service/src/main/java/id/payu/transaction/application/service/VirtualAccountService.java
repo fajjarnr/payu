@@ -98,6 +98,14 @@ public class VirtualAccountService {
             throw new IllegalStateException("VA is not pending or has expired: " + va.getStatus());
         }
 
+        // Validate callback amount matches VA expected amount (if fixed amount VA)
+        if (va.getAmount() != null && callback.getAmount() != null
+                && va.getAmount().compareTo(java.math.BigDecimal.ZERO) > 0
+                && callback.getAmount().compareTo(va.getAmount()) != 0) {
+            throw new IllegalArgumentException(
+                    "Callback amount " + callback.getAmount() + " does not match VA expected amount " + va.getAmount());
+        }
+
         va.markPaid(callback.getAmount(), callback.getPaymentReference());
         va = virtualAccountRepository.save(va);
 

@@ -1,10 +1,12 @@
 package id.payu.support.integration;
 
+import id.payu.support.config.TestSecurityConfig;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -15,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the complete lifecycle of support agents from creation to deactivation.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(TestSecurityConfig.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AgentManagementIntegrationTest {
 

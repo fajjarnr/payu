@@ -521,6 +521,42 @@
     },
     "ticker": {
       "label": "Dipercaya oleh Pemimpin:"
+    },
+    "hero": {
+      "freeAdmin": "Bebas Biaya Admin Bulanan"
+    },
+    "slide2": {
+      "badge": "Inovasi Digital",
+      "title": "Ekosistem",
+      "titleHighlight": "Terintegrasi.",
+      "subtitle": "Platform perbankan yang menghubungkan setiap aspek kebutuhan finansial Anda dengan teknologi terkini.",
+      "analytics": {
+        "title": "Analitik Cerdas",
+        "desc": "Pantau pengeluaran dan pemasukan dengan laporan detail real-time."
+      },
+      "connectivity": {
+        "title": "Konektivitas",
+        "desc": "Transaksi tanpa batas ke berbagai bank dan merchant di seluruh dunia."
+      },
+      "security": {
+        "title": "Keamanan",
+        "desc": "Perlindungan data pribadi dan aset Anda dengan enkripsi tingkat lanjut."
+      }
+    },
+    "slide3": {
+      "badge": "Tanpa Batas",
+      "title": "Akses Global",
+      "titleHighlight": "Kapan Saja.",
+      "statsAnnual": "Transaksi Tahunan",
+      "statsTrusted": "Nasabah Percaya"
+    },
+    "slide4": {
+      "title": "Mulai Perjalanan",
+      "titleHighlight": "Sekarang.",
+      "subtitle": "Daftar dalam 5 menit dan nikmati layanan perbankan modern.",
+      "button": "Mulai Gratis",
+      "terms": "Syarat & Ketentuan",
+      "privacy": "Privacy Policy"
     }
   }
 }

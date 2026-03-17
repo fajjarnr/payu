@@ -22,6 +22,10 @@ spec:
         prometheus.io/path: "/actuator/prometheus"
         prometheus.io/port: "8080"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
@@ -49,6 +53,17 @@ spec:
                 secretKeyRef:
                   name: jwt-secret
                   key: JWT_SECRET
+            - name: KEYCLOAK_AUTH_SERVER_URL
+              value: "https://sso.payu.fajjjar.my.id"
+            - name: KEYCLOAK_REALM
+              value: "payu"
+            - name: KEYCLOAK_CLIENT_ID
+              value: "partner-service"
+            - name: KEYCLOAK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-credentials
+                  key: client-secret
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_partner"
             - name: SPRING_DATASOURCE_USERNAME

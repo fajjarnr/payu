@@ -15,10 +15,7 @@ metadata:
   name: mesh-wide-mtls
   namespace: istio-system
 spec:
-  selector:
-    matchLabels:
-      # Apply to all namespaces in the mesh
-      app: istio-ingressgateway
+  # No selector = applies to all workloads in the mesh (true mesh-wide policy)
   mtls:
     mode: STRICT # Enforce mTLS for all service-to-service communication
 ---
@@ -101,8 +98,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8081
+    8080:
       mode: STRICT
 ---
 # Service-specific PeerAuthentication for Auth Service
@@ -118,8 +114,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8082
+    8080:
       mode: STRICT
 ---
 # Service-specific PeerAuthentication for Transaction Service
@@ -135,8 +130,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8083
+    8080:
       mode: STRICT
 ---
 # Service-specific PeerAuthentication for Wallet Service
@@ -152,8 +146,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8084
+    8080:
       mode: STRICT
 ---
 # Service-specific PeerAuthentication for Billing Service
@@ -169,8 +162,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8085
+    8080:
       mode: STRICT
 ---
 # Service-specific PeerAuthentication for Notification Service
@@ -186,8 +178,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8086
+    8080:
       mode: STRICT
 ---
 # Service-specific PeerAuthentication for KYC Service
@@ -203,8 +194,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8087
+    8080:
       mode: STRICT
 ---
 # Service-specific PeerAuthentication for Analytics Service
@@ -220,8 +210,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8088
+    8080:
       mode: STRICT
 ---
 # Service-specific PeerAuthentication for Gateway Service
@@ -237,8 +226,7 @@ spec:
   mtls:
     mode: STRICT
   portLevelMtls:
-    - port:
-        number: 8080
+    8080:
       mode: STRICT
 ---
 # DISABLE mTLS for External Simulators (they don't have sidecars)
@@ -279,18 +267,14 @@ spec:
     mode: DISABLE
 ---
 # AuthorizationPolicy: Deny All by Default (Zero Trust)
+# No action + no rules = default deny (only explicitly ALLOW policies will work)
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: deny-all
   namespace: payu-prod
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/part-of: payu
-  action: DENY
-  rules:
-    - {}
+spec: {}
+  # Empty spec = default deny all traffic not explicitly allowed
 ---
 # AuthorizationPolicy: Allow Same Namespace
 apiVersion: security.istio.io/v1beta1
@@ -556,8 +540,8 @@ spec:
     matchLabels:
       app: account-service
   jwtRules:
-    - issuer: "https://keycloak.payu.local/realms/payu"
-      jwksUri: https://keycloak.payu.local/realms/payu/protocol/openid-connect/certs
+    - issuer: "https://sso.payu.fajjjar.my.id/realms/payu"
+      jwksUri: https://sso.payu.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
       forwardOriginalToken: true
       fromHeaders:
         - name: Authorization
@@ -575,8 +559,8 @@ spec:
     matchLabels:
       app: transaction-service
   jwtRules:
-    - issuer: "https://keycloak.payu.local/realms/payu"
-      jwksUri: https://keycloak.payu.local/realms/payu/protocol/openid-connect/certs
+    - issuer: "https://sso.payu.fajjjar.my.id/realms/payu"
+      jwksUri: https://sso.payu.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
       forwardOriginalToken: true
       fromHeaders:
         - name: Authorization
@@ -594,8 +578,8 @@ spec:
     matchLabels:
       app: wallet-service
   jwtRules:
-    - issuer: "https://keycloak.payu.local/realms/payu"
-      jwksUri: https://keycloak.payu.local/realms/payu/protocol/openid-connect/certs
+    - issuer: "https://sso.payu.fajjjar.my.id/realms/payu"
+      jwksUri: https://sso.payu.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
       forwardOriginalToken: true
       fromHeaders:
         - name: Authorization

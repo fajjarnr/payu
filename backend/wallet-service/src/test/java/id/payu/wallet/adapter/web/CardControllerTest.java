@@ -14,10 +14,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,20 +38,31 @@ class CardControllerTest {
     private CardController cardController;
 
     private Card testCard;
+    private Jwt mockJwt;
 
     @BeforeEach
     void setUp() {
         UUID walletId = UUID.randomUUID();
+        // Use a tokenized/synthetic card number — never a real PAN in test data
         testCard = Card.builder()
                 .id(UUID.randomUUID())
                 .walletId(walletId)
-                .cardNumber("4111222233334444")
+                .cardNumber("0000000000001234")
                 .expiryDate("12/30")
                 .cardHolderName("John Doe")
                 .status(Card.CardStatus.ACTIVE)
                 .dailyLimit(new BigDecimal("10000000"))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .build();
+
+        // Build a mock JWT with account_id claim
+        mockJwt = Jwt.withTokenValue("mock-token")
+                .header("alg", "RS256")
+                .claim("account_id", "ACC-001")
+                .claim("sub", "ACC-001")
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
                 .build();
     }
 
@@ -60,13 +74,14 @@ class CardControllerTest {
         when(cardUseCase.createVirtualCard("ACC-001", "John Doe", new BigDecimal("5000000")))
                 .thenReturn(testCard);
 
-        ResponseEntity<ApiResponse<CardResponse>> response = cardController.createCard(request);
+        ResponseEntity<ApiResponse<CardResponse>> response = cardController.createCard(request, mockJwt);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
         // PCI-DSS compliance: API response must show masked card number (only last 4 digits)
-        assertThat(response.getBody().getData().getCardNumber()).isEqualTo("**** **** **** 4444");
-        assertThat(response.getBody().getData().getFullCardNumber()).isEqualTo(testCard.getCardNumber());
+        assertThat(response.getBody().getData().getCardNumber()).isEqualTo("**** **** **** 1234");
+        // Verify internal accessor returns the synthetic test card number (never a real PAN)
+        assertThat(response.getBody().getData().getFullCardNumber()).isEqualTo("0000000000001234");
         assertThat(response.getBody().getData().getStatus()).isEqualTo(Card.CardStatus.ACTIVE.name());
         verify(cardUseCase).createVirtualCard("ACC-001", "John Doe", new BigDecimal("5000000"));
     }
@@ -76,13 +91,13 @@ class CardControllerTest {
     void shouldGetCardsByAccountId() {
         when(cardUseCase.getCardsByAccountId("ACC-001")).thenReturn(List.of(testCard));
 
-        ResponseEntity<ApiResponse<List<CardResponse>>> response = cardController.getCards("ACC-001");
+        ResponseEntity<ApiResponse<List<CardResponse>>> response = cardController.getCards("ACC-001", mockJwt);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getData()).hasSize(1);
         // PCI-DSS compliance: API response must show masked card number (only last 4 digits)
-        assertThat(response.getBody().getData().get(0).getCardNumber()).isEqualTo("**** **** **** 4444");
-        assertThat(response.getBody().getData().get(0).getFullCardNumber()).isEqualTo(testCard.getCardNumber());
+        assertThat(response.getBody().getData().get(0).getCardNumber()).isEqualTo("**** **** **** 1234");
+        assertThat(response.getBody().getData().get(0).getFullCardNumber()).isEqualTo("0000000000001234");
         verify(cardUseCase).getCardsByAccountId("ACC-001");
     }
 
@@ -90,8 +105,9 @@ class CardControllerTest {
     @DisplayName("Should freeze card")
     void shouldFreezeCard() {
         String cardId = testCard.getId().toString();
+        when(cardUseCase.getCardById(cardId)).thenReturn(Optional.of(testCard));
 
-        ResponseEntity<ApiResponse<Void>> response = cardController.freezeCard(cardId);
+        ResponseEntity<ApiResponse<Void>> response = cardController.freezeCard(cardId, mockJwt);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(cardUseCase).freezeCard(cardId);
@@ -101,8 +117,9 @@ class CardControllerTest {
     @DisplayName("Should unfreeze card")
     void shouldUnfreezeCard() {
         String cardId = testCard.getId().toString();
+        when(cardUseCase.getCardById(cardId)).thenReturn(Optional.of(testCard));
 
-        ResponseEntity<ApiResponse<Void>> response = cardController.unfreezeCard(cardId);
+        ResponseEntity<ApiResponse<Void>> response = cardController.unfreezeCard(cardId, mockJwt);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(cardUseCase).unfreezeCard(cardId);
@@ -114,13 +131,13 @@ class CardControllerTest {
         String cardId = testCard.getId().toString();
         when(cardUseCase.getCardById(cardId)).thenReturn(Optional.of(testCard));
 
-        ResponseEntity<ApiResponse<CardResponse>> response = cardController.getCardById(cardId);
+        ResponseEntity<ApiResponse<CardResponse>> response = cardController.getCardById(cardId, mockJwt);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         // PCI-DSS compliance: API response must show masked card number (only last 4 digits)
-        assertThat(response.getBody().getData().getCardNumber()).isEqualTo("**** **** **** 4444");
-        assertThat(response.getBody().getData().getFullCardNumber()).isEqualTo(testCard.getCardNumber());
+        assertThat(response.getBody().getData().getCardNumber()).isEqualTo("**** **** **** 1234");
+        assertThat(response.getBody().getData().getFullCardNumber()).isEqualTo("0000000000001234");
         verify(cardUseCase).getCardById(cardId);
     }
 
@@ -130,7 +147,7 @@ class CardControllerTest {
         String cardId = UUID.randomUUID().toString();
         when(cardUseCase.getCardById(cardId)).thenReturn(Optional.empty());
 
-        ResponseEntity<ApiResponse<CardResponse>> response = cardController.getCardById(cardId);
+        ResponseEntity<ApiResponse<CardResponse>> response = cardController.getCardById(cardId, mockJwt);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }

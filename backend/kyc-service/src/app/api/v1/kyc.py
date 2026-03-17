@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Request, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from structlog import get_logger
 from typing import Optional
@@ -14,9 +15,40 @@ from app.models.schemas import (
 from app.services.kyc_service import KycService
 from app.api.responses import ApiResponse
 from app.api.idempotency import get_cached_result, cache_result
+from app.config import get_settings
 
 logger = get_logger(__name__)
 kyc_router = APIRouter(prefix="/kyc", tags=["KYC Verification"])
+
+# BUG-AUTH-022: JWT authentication dependency for KYC endpoints
+_bearer_scheme = HTTPBearer(auto_error=False)
+_settings = get_settings()
+
+
+async def require_auth(
+    credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
+) -> dict:
+    """
+    BUG-AUTH-022: Validate JWT token from Authorization header.
+    All KYC endpoints require authentication.
+    """
+    import jwt
+
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            _settings.secret_key,
+            algorithms=[_settings.algorithm],
+            options={"verify_exp": True},
+        )
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 @kyc_router.post("/verify/start")
@@ -25,6 +57,7 @@ async def start_kyc_verification(
     request_data: StartKycVerificationRequest,
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth),
 ):
     """
     Start a new KYC verification process.
@@ -107,6 +140,7 @@ async def upload_ktp(
     request_data: UploadKtpRequest,
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth),
 ):
     """
     Upload and process KTP image for OCR.
@@ -194,6 +228,7 @@ async def upload_selfie(
     request_data: UploadSelfieRequest,
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth),
 ):
     """
     Upload and process selfie image for liveness and face matching.
@@ -278,7 +313,8 @@ async def upload_selfie(
 
 @kyc_router.get("/verify/{verification_id}")
 async def get_kyc_status(
-    request: Request, verification_id: str, db: AsyncSession = Depends(get_db_session)
+    request: Request, verification_id: str, db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth),
 ):
     """Get KYC verification status by ID."""
     log = logger.bind(
@@ -327,7 +363,8 @@ async def get_kyc_status(
 
 @kyc_router.get("/user/{user_id}")
 async def get_user_kyc_history(
-    request: Request, user_id: str, db: AsyncSession = Depends(get_db_session)
+    request: Request, user_id: str, db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth),
 ):
     """Get KYC verification history for a user."""
     log = logger.bind(

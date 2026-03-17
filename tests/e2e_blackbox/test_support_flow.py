@@ -66,11 +66,12 @@ class TestSupportFlow:
 
     def test_get_agent_by_id_not_found(self, authenticated_api):
         """
-        Get agent by non-existent ID — expect 404 or empty response.
+        Get agent by non-existent ID — expect 404.
+        Support-service uses Long IDs, not UUIDs.
         """
-        fake_id = fake.uuid4()
+        fake_id = 999999999
         response = authenticated_api.get(f"/api/v1/support/agents/{fake_id}")
-        assert response.status_code in [200, 400, 404, 429, 500, 503], (
+        assert response.status_code in [200, 404, 429, 500, 503], (
             f"Unexpected status {response.status_code}: {response.text}"
         )
 
@@ -87,15 +88,16 @@ class TestSupportFlow:
     def test_update_agent_status_requires_support_manager(self, authenticated_api):
         """
         Verify agent status update requires SUPPORT_MANAGER role.
-        May return 400 (gateway validation) before reaching auth check, or 403.
+        Support-service uses Long IDs, not UUIDs.
+        customer1 has USER role → expect 403.
         """
-        fake_id = fake.uuid4()
+        fake_id = 999999999
         response = authenticated_api.patch(
             f"/api/v1/support/agents/{fake_id}/status",
             json={"active": False}
         )
-        assert response.status_code in [400, 403, 404, 429, 503], (
-            f"Expected 400/403/404, got {response.status_code}: {response.text}"
+        assert response.status_code in [403, 404, 429, 503], (
+            f"Expected 403/404, got {response.status_code}: {response.text}"
         )
 
     def test_create_training_module_requires_support_manager(self, authenticated_api):
@@ -148,21 +150,24 @@ class TestSupportFlow:
     def test_get_module_by_id_not_found(self, authenticated_api):
         """
         Get training module by non-existent ID.
+        Support-service uses Long IDs, not UUIDs.
         """
-        fake_id = fake.uuid4()
+        fake_id = 999999999
         response = authenticated_api.get(f"/api/v1/support/modules/{fake_id}")
-        assert response.status_code in [200, 400, 404, 429, 500, 503], (
+        assert response.status_code in [200, 404, 429, 500, 503], (
             f"Unexpected status {response.status_code}: {response.text}"
         )
 
     def test_assign_training_requires_support_manager(self, authenticated_api):
         """
         Verify training assignment requires SUPPORT_MANAGER role.
+        Support-service uses Long IDs, not UUIDs.
+        DTO: AssignTrainingRequest(agentId: Long, moduleId: Long, status, score, notes).
         May return 400 (gateway/validation) before reaching auth check, or 403.
         """
         response = authenticated_api.post("/api/v1/support/trainings/assign", json={
-            "agentId": str(fake.uuid4()),
-            "moduleId": str(fake.uuid4()),
+            "agentId": 999999999,
+            "moduleId": 999999999,
             "status": "NOT_STARTED",
             "score": 0,
             "notes": "Initial assignment"
@@ -174,11 +179,12 @@ class TestSupportFlow:
     def test_get_agent_trainings(self, authenticated_api):
         """
         Get trainings for a specific agent.
+        Support-service uses Long IDs, not UUIDs.
         No role restriction — but agent may not exist.
         """
-        fake_agent_id = fake.uuid4()
+        fake_agent_id = 999999999
         response = authenticated_api.get(f"/api/v1/support/trainings/agent/{fake_agent_id}")
-        assert response.status_code in [200, 400, 404, 429, 500, 503], (
+        assert response.status_code in [200, 404, 429, 500, 503], (
             f"Unexpected status {response.status_code}: {response.text}"
         )
         if response.status_code == 200:

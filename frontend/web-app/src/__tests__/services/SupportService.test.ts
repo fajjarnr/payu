@@ -54,13 +54,11 @@ const mockAssignment: TrainingAssignment = {
   dueDate: '2026-03-18T10:00:00Z',
 };
 
-const mockStatusSummary: TrainingStatusSummary = {
-  agentId: 'agent_001',
-  totalModules: 10,
-  completedModules: 7,
-  inProgressModules: 2,
-  overdue: 1,
-  complianceRate: 70,
+// BUG-CROSS-060: Backend getTrainingStatus returns { activeAgents, trainedAgents, trainingPercentage }
+const mockTrainingStatusOverview = {
+  activeAgents: 8,
+  trainedAgents: 6,
+  trainingPercentage: 75.0,
 };
 
 describe('SupportService', () => {
@@ -70,15 +68,16 @@ describe('SupportService', () => {
 
   // === Training Status ===
 
+  // BUG-CROSS-060: getTrainingStatus returns { activeAgents, trainedAgents, trainingPercentage }
   describe('getTrainingStatus', () => {
     it('should fetch training status overview', async () => {
-      vi.mocked(api.get).mockResolvedValue({ data: [mockStatusSummary] });
+      vi.mocked(api.get).mockResolvedValue({ data: mockTrainingStatusOverview });
 
       const result = await SupportService.getTrainingStatus();
 
       expect(api.get).toHaveBeenCalledWith('/support/training-status');
-      expect(result).toHaveLength(1);
-      expect(result[0].complianceRate).toBe(70);
+      expect(result.activeAgents).toBe(8);
+      expect(result.trainingPercentage).toBe(75.0);
     });
   });
 
@@ -136,14 +135,15 @@ describe('SupportService', () => {
     });
   });
 
+  // BUG-CROSS-059: updateAgentStatus takes (id: number, active: boolean), sends { active }
   describe('updateAgentStatus', () => {
     it('should update agent status', async () => {
       const updatedAgent = { ...mockAgent, status: 'ON_LEAVE' as const };
       vi.mocked(api.patch).mockResolvedValue({ data: updatedAgent });
 
-      const result = await SupportService.updateAgentStatus('agent_001', 'ON_LEAVE');
+      const result = await SupportService.updateAgentStatus(1, true);
 
-      expect(api.patch).toHaveBeenCalledWith('/support/agents/agent_001/status', { status: 'ON_LEAVE' });
+      expect(api.patch).toHaveBeenCalledWith('/support/agents/1/status', { active: true });
       expect(result.status).toBe('ON_LEAVE');
     });
   });
@@ -227,13 +227,14 @@ describe('SupportService', () => {
     });
   });
 
+  // BUG-CROSS-065: Agent/module IDs are number (Long) in backend
   describe('getAgentTrainings', () => {
     it('should fetch trainings for specific agent', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: [mockAssignment] });
 
-      const result = await SupportService.getAgentTrainings('agent_001');
+      const result = await SupportService.getAgentTrainings(1);
 
-      expect(api.get).toHaveBeenCalledWith('/support/trainings/agent/agent_001');
+      expect(api.get).toHaveBeenCalledWith('/support/trainings/agent/1');
       expect(result[0].agentId).toBe('agent_001');
     });
   });
@@ -242,9 +243,9 @@ describe('SupportService', () => {
     it('should fetch trainings for specific module', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: [mockAssignment] });
 
-      const result = await SupportService.getModuleTrainings('mod_001');
+      const result = await SupportService.getModuleTrainings(1);
 
-      expect(api.get).toHaveBeenCalledWith('/support/trainings/module/mod_001');
+      expect(api.get).toHaveBeenCalledWith('/support/trainings/module/1');
       expect(result[0].moduleId).toBe('mod_001');
     });
   });
@@ -253,19 +254,22 @@ describe('SupportService', () => {
     it('should fetch specific agent-module training', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: mockAssignment });
 
-      const result = await SupportService.getAgentModuleTraining('agent_001', 'mod_001');
+      const result = await SupportService.getAgentModuleTraining(1, 1);
 
-      expect(api.get).toHaveBeenCalledWith('/support/trainings/agent/agent_001/module/mod_001');
+      expect(api.get).toHaveBeenCalledWith('/support/trainings/agent/1/module/1');
       expect(result.status).toBe('IN_PROGRESS');
     });
   });
 
+  // BUG-CROSS-065: AssignTrainingRequest uses number for agentId/moduleId, has status/score/notes
   describe('assignTraining', () => {
     it('should assign training to agent', async () => {
       const request: AssignTrainingRequest = {
-        agentId: 'agent_001',
-        moduleId: 'mod_001',
-        dueDate: '2026-03-18T10:00:00Z',
+        agentId: 1,
+        moduleId: 1,
+        status: 'NOT_STARTED',
+        score: 0,
+        notes: 'Initial assignment',
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockAssignment });
@@ -277,15 +281,17 @@ describe('SupportService', () => {
     });
   });
 
+  // BUG-CROSS-061: getAgentTrainingStatus returns { agentId: number, fullyTrained: boolean }
   describe('getAgentTrainingStatus', () => {
     it('should fetch agent training status summary', async () => {
-      vi.mocked(api.get).mockResolvedValue({ data: mockStatusSummary });
+      const mockAgentStatus = { agentId: 1, fullyTrained: true };
+      vi.mocked(api.get).mockResolvedValue({ data: mockAgentStatus });
 
-      const result = await SupportService.getAgentTrainingStatus('agent_001');
+      const result = await SupportService.getAgentTrainingStatus(1);
 
-      expect(api.get).toHaveBeenCalledWith('/support/trainings/agent/agent_001/status');
-      expect(result.completedModules).toBe(7);
-      expect(result.overdue).toBe(1);
+      expect(api.get).toHaveBeenCalledWith('/support/trainings/agent/1/status');
+      expect(result.fullyTrained).toBe(true);
+      expect(result.agentId).toBe(1);
     });
   });
 

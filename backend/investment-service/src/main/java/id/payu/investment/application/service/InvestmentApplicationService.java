@@ -204,42 +204,56 @@ public class InvestmentApplicationService implements
 
         walletServicePort.deductBalance(userId, amount);
 
-        BigDecimal units = amount.divide(fund.getNavPerUnit(), 4, RoundingMode.DOWN);
-        BigDecimal fee = amount.multiply(fund.getManagementFee());
+        // BUG-BE-172 FIX: Saga compensation – if save fails after wallet deduction,
+        // credit the amount back. Matches the buyDeposit pattern.
+        try {
+            BigDecimal units = amount.divide(fund.getNavPerUnit(), 4, RoundingMode.DOWN);
+            BigDecimal fee = amount.multiply(fund.getManagementFee());
 
-        LocalDateTime now = LocalDateTime.now();
-        InvestmentTransaction transaction = InvestmentTransaction.builder()
-                .id(UUID.randomUUID())
-                .accountId(accountId)
-                .type(InvestmentTransaction.TransactionType.BUY)
-                .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
-                .investmentId(fundCode)
-                .amount(amount)
-                .price(fund.getNavPerUnit())
-                .units(units)
-                .fee(fee)
-                .currency("IDR")
-                .status(InvestmentTransaction.TransactionStatus.COMPLETED)
-                .referenceNumber("MF-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+            LocalDateTime now = LocalDateTime.now();
+            InvestmentTransaction transaction = InvestmentTransaction.builder()
+                    .id(UUID.randomUUID())
+                    .accountId(accountId)
+                    .type(InvestmentTransaction.TransactionType.BUY)
+                    .investmentType(InvestmentTransaction.InvestmentType.MUTUAL_FUND)
+                    .investmentId(fundCode)
+                    .amount(amount)
+                    .price(fund.getNavPerUnit())
+                    .units(units)
+                    .fee(fee)
+                    .currency("IDR")
+                    .status(InvestmentTransaction.TransactionStatus.COMPLETED)
+                    .referenceNumber("MF-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase())
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
 
-        InvestmentTransaction savedTransaction = investmentPersistencePort.saveTransaction(transaction);
-        investmentPersistencePort.updateAccountBalance(account.getId(), amount);
+            InvestmentTransaction savedTransaction = investmentPersistencePort.saveTransaction(transaction);
+            investmentPersistencePort.updateAccountBalance(account.getId(), amount);
 
-        log.info("Mutual fund purchased successfully: {}", savedTransaction.getId());
+            log.info("Mutual fund purchased successfully: {}", savedTransaction.getId());
 
-        investmentEventPublisherPort.publishInvestmentCompleted(new InvestmentEvent(
-                savedTransaction.getId(),
-                userId,
-                "MUTUAL_FUND_PURCHASED",
-                "MUTUAL_FUND",
-                amount,
-                "COMPLETED",
-                LocalDateTime.now()));
+            investmentEventPublisherPort.publishInvestmentCompleted(new InvestmentEvent(
+                    savedTransaction.getId(),
+                    userId,
+                    "MUTUAL_FUND_PURCHASED",
+                    "MUTUAL_FUND",
+                    amount,
+                    "COMPLETED",
+                    LocalDateTime.now()));
 
-        return CompletableFuture.completedFuture(savedTransaction);
+            return CompletableFuture.completedFuture(savedTransaction);
+        } catch (Exception e) {
+            log.error("Mutual fund purchase failed after wallet deduction. Rolling back wallet for user {}: {}", userId, e.getMessage());
+            try {
+                walletServicePort.creditBalance(userId, amount);
+                log.info("Wallet rollback successful for user {}, amount {}", userId, amount);
+            } catch (Exception rollbackEx) {
+                log.error("CRITICAL: Wallet rollback FAILED for user {}, amount {}. Manual intervention required: {}",
+                        userId, amount, rollbackEx.getMessage());
+            }
+            throw new RuntimeException("Mutual fund purchase failed, wallet refunded: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -262,52 +276,66 @@ public class InvestmentApplicationService implements
 
         walletServicePort.deductBalance(userId, amount);
 
-        Gold gold = investmentPersistencePort.findGoldByUserId(userId).orElse(null);
+        // BUG-BE-172 FIX: Saga compensation – if save fails after wallet deduction,
+        // credit the amount back. Matches the buyDeposit pattern.
+        try {
+            Gold gold = investmentPersistencePort.findGoldByUserId(userId).orElse(null);
 
-        if (gold == null) {
-            gold = Gold.builder()
-                    .id(UUID.randomUUID())
-                    .userId(userId)
-                    .amount(amount.divide(currentPrice, 4, RoundingMode.DOWN))
-                    .averageBuyPrice(currentPrice)
-                    .currentPrice(currentPrice)
-                    .currentValue(amount)
-                    .unrealizedProfitLoss(BigDecimal.ZERO)
-                    .lastPriceUpdate(LocalDateTime.now())
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
-        } else {
-            BigDecimal newAmount = gold.getAmount().add(amount.divide(currentPrice, 4, RoundingMode.DOWN));
-            BigDecimal newAveragePrice = gold.getAverageBuyPrice()
-                    .multiply(gold.getAmount())
-                    .add(currentPrice.multiply(amount.divide(currentPrice, 4, RoundingMode.DOWN)))
-                    .divide(newAmount, 2, RoundingMode.HALF_UP);
+            if (gold == null) {
+                gold = Gold.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .amount(amount.divide(currentPrice, 4, RoundingMode.DOWN))
+                        .averageBuyPrice(currentPrice)
+                        .currentPrice(currentPrice)
+                        .currentValue(amount)
+                        .unrealizedProfitLoss(BigDecimal.ZERO)
+                        .lastPriceUpdate(LocalDateTime.now())
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+            } else {
+                BigDecimal newAmount = gold.getAmount().add(amount.divide(currentPrice, 4, RoundingMode.DOWN));
+                BigDecimal newAveragePrice = gold.getAverageBuyPrice()
+                        .multiply(gold.getAmount())
+                        .add(currentPrice.multiply(amount.divide(currentPrice, 4, RoundingMode.DOWN)))
+                        .divide(newAmount, 2, RoundingMode.HALF_UP);
 
-            gold.setAmount(newAmount);
-            gold.setAverageBuyPrice(newAveragePrice);
-            gold.setCurrentPrice(currentPrice);
-            gold.setCurrentValue(newAmount.multiply(currentPrice));
-            gold.setUnrealizedProfitLoss(gold.getCurrentValue().subtract(
-                    gold.getAmount().multiply(gold.getAverageBuyPrice())));
-            gold.setLastPriceUpdate(LocalDateTime.now());
-            gold.setUpdatedAt(LocalDateTime.now());
+                gold.setAmount(newAmount);
+                gold.setAverageBuyPrice(newAveragePrice);
+                gold.setCurrentPrice(currentPrice);
+                gold.setCurrentValue(newAmount.multiply(currentPrice));
+                gold.setUnrealizedProfitLoss(gold.getCurrentValue().subtract(
+                        gold.getAmount().multiply(gold.getAverageBuyPrice())));
+                gold.setLastPriceUpdate(LocalDateTime.now());
+                gold.setUpdatedAt(LocalDateTime.now());
+            }
+
+            Gold savedGold = investmentPersistencePort.saveGold(gold);
+
+            log.info("Gold purchased successfully: {}", savedGold.getId());
+
+            investmentEventPublisherPort.publishInvestmentCompleted(new InvestmentEvent(
+                    savedGold.getId(),
+                    userId,
+                    "GOLD_PURCHASED",
+                    "GOLD",
+                    amount,
+                    "COMPLETED",
+                    LocalDateTime.now()));
+
+            return CompletableFuture.completedFuture(savedGold);
+        } catch (Exception e) {
+            log.error("Gold purchase failed after wallet deduction. Rolling back wallet for user {}: {}", userId, e.getMessage());
+            try {
+                walletServicePort.creditBalance(userId, amount);
+                log.info("Wallet rollback successful for user {}, amount {}", userId, amount);
+            } catch (Exception rollbackEx) {
+                log.error("CRITICAL: Wallet rollback FAILED for user {}, amount {}. Manual intervention required: {}",
+                        userId, amount, rollbackEx.getMessage());
+            }
+            throw new RuntimeException("Gold purchase failed, wallet refunded: " + e.getMessage(), e);
         }
-
-        Gold savedGold = investmentPersistencePort.saveGold(gold);
-
-        log.info("Gold purchased successfully: {}", savedGold.getId());
-
-        investmentEventPublisherPort.publishInvestmentCompleted(new InvestmentEvent(
-                savedGold.getId(),
-                userId,
-                "GOLD_PURCHASED",
-                "GOLD",
-                amount,
-                "COMPLETED",
-                LocalDateTime.now()));
-
-        return CompletableFuture.completedFuture(savedGold);
     }
 
     @Override
@@ -321,6 +349,11 @@ public class InvestmentApplicationService implements
 
         InvestmentTransaction existingTransaction = investmentPersistencePort.findTransactionById(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+
+        // BUG-BE-173 FIX: Verify the transaction belongs to the requesting account
+        if (!existingTransaction.getAccountId().equals(accountId)) {
+            throw new IllegalArgumentException("Transaction does not belong to account: " + accountId);
+        }
 
         if (existingTransaction.getStatus() != InvestmentTransaction.TransactionStatus.COMPLETED) {
             throw new IllegalArgumentException("Cannot sell investment with status: " + existingTransaction.getStatus());
@@ -338,6 +371,13 @@ public class InvestmentApplicationService implements
             currentPrice = investmentPersistencePort.getLatestGoldPrice();
         } else {
             throw new IllegalArgumentException("Cannot sell deposit before maturity");
+        }
+
+        // BUG-BE-174 FIX: Validate that the price used for selling is reasonably fresh.
+        // Prices are snapshot into the transaction, but we should guard against stale prices
+        // that could result in incorrect sell amounts (e.g., if price feed is down).
+        if (currentPrice == null || currentPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Current price is unavailable or invalid — cannot proceed with sell");
         }
 
         BigDecimal unitsToSell = amount.divide(currentPrice, 4, RoundingMode.DOWN);

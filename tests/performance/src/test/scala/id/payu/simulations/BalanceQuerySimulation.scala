@@ -43,7 +43,7 @@ class BalanceQuerySimulation extends Simulation {
     // Login first to get token
     .exec(
       http("Login Request")
-        .post("$authUrl/api/v1/auth/login")
+        .post(s"$authUrl/api/v1/auth/login")
         .body(StringBody(
           """{
             "username": "${username}",
@@ -58,7 +58,7 @@ class BalanceQuerySimulation extends Simulation {
     // Query main balance
     .exec(
       http("Query Main Balance")
-        .get("$walletUrl/api/v1/wallet/balance")
+        .get(s"$walletUrl/api/v1/wallets/balance")
         .header("Authorization", "Bearer ${access_token}")
         .queryParam("account_number", "${account_number}")
         .check(status.is(200))
@@ -69,7 +69,7 @@ class BalanceQuerySimulation extends Simulation {
     // Query transaction history
     .exec(
       http("Query Transaction History")
-        .get("$walletUrl/api/v1/wallet/transactions")
+        .get(s"$walletUrl/api/v1/wallets/transactions")
         .header("Authorization", "Bearer ${access_token}")
         .queryParam("account_number", "${account_number}")
         .queryParam("page", "0")
@@ -82,7 +82,7 @@ class BalanceQuerySimulation extends Simulation {
     .repeat(5) {
       exec(
         http("Repeated Balance Query")
-          .get("$walletUrl/api/v1/wallet/balance")
+          .get(s"$walletUrl/api/v1/wallets/balance")
           .header("Authorization", "Bearer ${access_token}")
           .queryParam("account_number", "${account_number}")
           .check(status.is(200))

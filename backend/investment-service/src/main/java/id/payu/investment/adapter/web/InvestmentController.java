@@ -55,7 +55,8 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentAccount>>> createAccount(
             @AuthenticationPrincipal Jwt jwt) {
-        String userId = jwt.getSubject();
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
         return investmentApplicationService.createAccount(userId)
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
@@ -78,7 +79,8 @@ public class InvestmentController extends BaseController {
     public CompletableFuture<ResponseEntity<ApiResponse<Deposit>>> buyDeposit(
             @Valid @RequestBody BuyDepositRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        String userId = jwt.getSubject();
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
         return investmentApplicationService.buyDeposit(request.accountId(), userId, request.amount(), request.tenure())
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
@@ -101,7 +103,8 @@ public class InvestmentController extends BaseController {
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentTransaction>>> buyMutualFund(
             @Valid @RequestBody BuyMutualFundRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        String userId = jwt.getSubject();
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
         return investmentApplicationService.buyMutualFund(request.accountId(), userId, request.fundCode(), request.amount())
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
@@ -123,7 +126,8 @@ public class InvestmentController extends BaseController {
     public CompletableFuture<ResponseEntity<ApiResponse<Gold>>> buyGold(
             @Valid @RequestBody BuyGoldRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        String userId = jwt.getSubject();
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
         return investmentApplicationService.buyGold(userId, request.amount())
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
@@ -159,7 +163,8 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found")
     public CompletableFuture<ResponseEntity<ApiResponse<InvestmentAccount>>> getAccount(
             @AuthenticationPrincipal Jwt jwt) {
-        String userId = jwt.getSubject();
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
         return investmentApplicationService.getAccountByUserId(userId)
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);
@@ -173,7 +178,8 @@ public class InvestmentController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Gold investment not found")
     public CompletableFuture<ResponseEntity<ApiResponse<Gold>>> getGold(
             @AuthenticationPrincipal Jwt jwt) {
-        String userId = jwt.getSubject();
+        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+        String userId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
         return investmentApplicationService.getGoldByUserId(userId)
                 .orTimeout(30, TimeUnit.SECONDS)
                 .thenApply(this::ok);

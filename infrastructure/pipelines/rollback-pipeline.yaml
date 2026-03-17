@@ -37,7 +37,7 @@ spec:
     - name: slack-webhook
       type: string
       description: Slack webhook URL
-      default: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+      default: "${SLACK_WEBHOOK_URL}"
   tasks:
     - name: verify-deployment
       taskRef:
@@ -47,9 +47,9 @@ spec:
         - name: SCRIPT
           value: |
             echo "=== Current Deployment State ==="
-            oc get dc/$(params.service-name) -n $(params.namespace) -o yaml
+            oc get deployment/$(params.service-name) -n $(params.namespace) -o yaml
             echo "=== Replicas ==="
-            oc get pods -n $(params.namespace) -l deploymentconfig=$(params.service-name)
+            oc get pods -n $(params.namespace) -l app=$(params.service-name)
 
     - name: create-backup
       runAfter:
@@ -66,13 +66,14 @@ spec:
           value: |
             oc new-project $(params.backup-namespace) || true
 
-            # Backup current deployment config
-            oc get dc/$(params.service-name) -n $(params.namespace) -o yaml > /tmp/backup-dc.yaml
-            oc apply -f /tmp/backup-dc.yaml -n $(params.backup-namespace)
+            # Backup current deployment
+            oc get deployment/$(params.service-name) -n $(params.namespace) -o yaml > /tmp/backup-deploy.yaml
+            oc apply -f /tmp/backup-deploy.yaml -n $(params.backup-namespace)
 
-            # Backup secrets
-            oc get secret -n $(params.namespace) -o yaml > /tmp/backup-secrets.yaml
-            oc apply -f /tmp/backup-secrets.yaml -n $(params.backup-namespace)
+            # Backup secrets (only names, not values - avoid leaking secrets to logs)
+            oc get secret -n $(params.namespace) -o jsonpath='{.items[*].metadata.name}' > /tmp/backup-secret-names.txt
+            oc create configmap backup-secret-names -n $(params.backup-namespace) \
+              --from-file=names=/tmp/backup-secret-names.txt --dry-run=client -o yaml | oc apply -f -
 
             # Backup configmaps
             oc get configmap -n $(params.namespace) -o yaml > /tmp/backup-configmaps.yaml
@@ -95,7 +96,7 @@ spec:
         - name: SCRIPT
           value: |
             echo "=== Deployment History ==="
-            oc rollout history dc/$(params.service-name) -n $(params.namespace)
+            oc rollout history deployment/$(params.service-name) -n $(params.namespace)
 
     - name: perform-rollback
       runAfter:
@@ -109,10 +110,10 @@ spec:
           value: |
             if [ -n "$(params.rollback-to)" ]; then
               echo "Rolling back to specific version: $(params.rollback-to)"
-              oc rollout undo dc/$(params.service-name) -n $(params.namespace) --to-revision=$(params.rollback-to)
+              oc rollout undo deployment/$(params.service-name) -n $(params.namespace) --to-revision=$(params.rollback-to)
             else
               echo "Rolling back to previous version"
-              oc rollout undo dc/$(params.service-name) -n $(params.namespace)
+              oc rollout undo deployment/$(params.service-name) -n $(params.namespace)
             fi
 
     - name: wait-for-rollback
@@ -125,7 +126,7 @@ spec:
         - name: SCRIPT
           value: |
             echo "Waiting for rollback to complete..."
-            oc rollout status dc/$(params.service-name) -n $(params.namespace) --timeout=300s
+            oc rollout status deployment/$(params.service-name) -n $(params.namespace) --timeout=300s
             echo "Rollback completed successfully"
 
     - name: verify-rollback
@@ -138,10 +139,10 @@ spec:
         - name: SCRIPT
           value: |
             echo "=== Post-Rollback State ==="
-            oc get pods -n $(params.namespace) -l deploymentconfig=$(params.service-name)
-            oc get dc/$(params.service-name) -n $(params.namespace)
+            oc get pods -n $(params.namespace) -l app=$(params.service-name)
+            oc get deployment/$(params.service-name) -n $(params.namespace)
             echo "=== Running Pods ==="
-            oc get pods -n $(params.namespace) -l deploymentconfig=$(params.service-name) -o jsonpath='{.items[*].status.phase}'
+            oc get pods -n $(params.namespace) -l app=$(params.service-name) -o jsonpath='{.items[*].status.phase}'
 
     - name: health-check
       runAfter:
@@ -197,8 +198,8 @@ spec:
             echo "Timestamp: $(date)" >> /tmp/rollback-report.txt
             echo "" >> /tmp/rollback-report.txt
             echo "Deployment Status:" >> /tmp/rollback-report.txt
-            oc get dc/$(params.service-name) -n $(params.namespace) >> /tmp/rollback-report.txt
+            oc get deployment/$(params.service-name) -n $(params.namespace) >> /tmp/rollback-report.txt
             echo "" >> /tmp/rollback-report.txt
             echo "Pod Status:" >> /tmp/rollback-report.txt
-            oc get pods -n $(params.namespace) -l deploymentconfig=$(params.service-name) >> /tmp/rollback-report.txt
+            oc get pods -n $(params.namespace) -l app=$(params.service-name) >> /tmp/rollback-report.txt
             cat /tmp/rollback-report.txt

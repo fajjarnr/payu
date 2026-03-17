@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Download, FileText, Calendar, RefreshCw, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import clsx from 'clsx';
 import StatementService, { Statement, PeriodType, StatementFormat, StatementStatus } from '@/services/StatementService';
@@ -42,34 +42,40 @@ export default function StatementDownloader() {
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
 
-  // Load statements on mount
-  useEffect(() => {
-    loadStatements();
-  }, []);
-
-  const loadStatements = async () => {
+  // Load statements from API
+  const loadStatements = useCallback(async () => {
+    const { accountId: acctId } = useAuthStore.getState();
+    if (!acctId) return;
     try {
       setIsLoading(true);
       setError(null);
-      const data = await StatementService.listStatements(0, 10);
-      setStatements(data.content);
+      const result = await StatementService.listStatements();
+      const data = result.content;
+      setStatements(data);
     } catch (err) {
       console.error('Failed to load statements:', err);
-      setError('Gagal memuat daftar e-statement. Silakan coba lagi.');
+      setError('Gagal memuat daftar e-statement.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const handleGenerateStatement = async () => {
+  // Load statements on mount
+  useEffect(() => {
+    loadStatements();
+  }, [loadStatements]);
+
+  // BUG-FE-099: Read from store directly inside async handler to avoid stale closure
+  const handleGenerateStatement = useCallback(async () => {
+    const { user: currentUser, accountId: currentAccountId } = useAuthStore.getState();
     try {
       setIsGenerating(true);
       setError(null);
       setSuccess(null);
 
       await StatementService.generateAndDownload({
-        customerId: user?.id ?? '',
-        accountNumber: accountId ?? '',
+        customerId: currentUser?.id ?? '',
+        accountNumber: currentAccountId ?? '',
         year: selectedYear,
         month: selectedMonth
       });
@@ -82,9 +88,9 @@ export default function StatementDownloader() {
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [selectedYear, selectedMonth, loadStatements]);
 
-  const handleDownload = async (statement: Statement) => {
+  const handleDownload = useCallback(async (statement: Statement) => {
     if (statement.status !== 'COMPLETED') {
       setError('E-Statement belum siap untuk diunduh.');
       return;
@@ -103,7 +109,7 @@ export default function StatementDownloader() {
     } finally {
       setIsDownloading(null);
     }
-  };
+  }, []);
 
   const getStatusIcon = (status: StatementStatus) => {
     switch (status) {

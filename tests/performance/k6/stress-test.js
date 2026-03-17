@@ -18,7 +18,7 @@ export const options = {
   thresholds: {
     // Relaxed thresholds for stress test
     http_req_duration: ['p(95)<5000', 'p(99)<10000'],
-    http_req_failed: ['rate<0.50'] // Allow up to 50% errors during peak stress
+    http_req_failed: ['rate<0.15'] // Allow up to 15% errors during peak stress
   },
   tags: {
     testType: 'stress',
@@ -32,10 +32,10 @@ export default function () {
 
   group('High Load - Gateway', () => {
     const responses = http.batch([
-      ['GET', `${gatewayUrl}/actuator/health`, null, { tags: { endpoint: 'gateway-health' } }],
-      ['GET', `${gatewayUrl}/api/v1/accounts/actuator/health`, null, { tags: { endpoint: 'account-health' } }],
-      ['GET', `${gatewayUrl}/api/v1/wallets/actuator/health`, null, { tags: { endpoint: 'wallet-health' } }],
-      ['GET', `${gatewayUrl}/api/v1/transactions/actuator/health`, null, { tags: { endpoint: 'transaction-health' } }]
+      ['GET', `${gatewayUrl}/q/health`, null, { tags: { endpoint: 'gateway-health' } }],
+      ['GET', `${gatewayUrl}/api/v1/accounts/public/health`, null, { tags: { endpoint: 'account-health' } }],
+      ['GET', `${gatewayUrl}/api/v1/wallets/public/health`, null, { tags: { endpoint: 'wallet-health' } }],
+      ['GET', `${gatewayUrl}/api/v1/transactions/public/health`, null, { tags: { endpoint: 'transaction-health' } }]
     ]);
 
     for (const response of responses) {
@@ -54,9 +54,9 @@ export default function () {
   group('High Load - Keycloak', () => {
     // Multiple concurrent auth requests
     const authResponses = http.batch([
-      ['GET', `${keycloakUrl}/auth/realms/payu/.well-known/openid-configuration`, null, { tags: { endpoint: 'oidc-discovery' } }],
-      ['GET', `${keycloakUrl}/auth/realms/payu/.well-known/openid-configuration`, null, { tags: { endpoint: 'oidc-discovery' } }],
-      ['GET', `${keycloakUrl}/auth/realms/payu/.well-known/openid-configuration`, null, { tags: { endpoint: 'oidc-discovery' } }]
+      ['GET', `${keycloakUrl}/realms/payu/.well-known/openid-configuration`, null, { tags: { endpoint: 'oidc-discovery' } }],
+      ['GET', `${keycloakUrl}/realms/payu/.well-known/openid-configuration`, null, { tags: { endpoint: 'oidc-discovery' } }],
+      ['GET', `${keycloakUrl}/realms/payu/.well-known/openid-configuration`, null, { tags: { endpoint: 'oidc-discovery' } }]
     ]);
 
     for (const response of authResponses) {

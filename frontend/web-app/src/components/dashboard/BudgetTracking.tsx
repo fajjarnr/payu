@@ -40,70 +40,25 @@ interface BudgetTrackingProps {
   budgets?: Budget[];
   currency?: string;
   className?: string;
+  isLoading?: boolean;
 }
 
-const defaultBudgets: Budget[] = [
-  {
-    id: 'food',
-    category: 'Makanan & Minuman',
-    limit: 3000000,
-    spent: 2500000,
-    remaining: 500000,
-    percentage: 83.33,
-    status: 'warning',
-  },
-  {
-    id: 'shopping',
-    category: 'Belanja',
-    limit: 2000000,
-    spent: 1800000,
-    remaining: 200000,
-    percentage: 90,
-    status: 'warning',
-  },
-  {
-    id: 'transport',
-    category: 'Transportasi',
-    limit: 1500000,
-    spent: 900000,
-    remaining: 600000,
-    percentage: 60,
-    status: 'safe',
-  },
-  {
-    id: 'bills',
-    category: 'Tagihan & Pulsa',
-    limit: 1000000,
-    spent: 500000,
-    remaining: 500000,
-    percentage: 50,
-    status: 'safe',
-  },
-  {
-    id: 'entertainment',
-    category: 'Hiburan',
-    limit: 800000,
-    spent: 900000,
-    remaining: -100000,
-    percentage: 112.5,
-    status: 'exceeded',
-  },
-];
-
 export default function BudgetTracking({
-  budgets = defaultBudgets,
+  budgets,
   currency = 'Rp',
   className = '',
+  isLoading = false,
 }: BudgetTrackingProps) {
   const t = useTranslations('dashboard');
   // Manual expansion state removed
 
-  const totalBudget = budgets.reduce((sum, b) => sum + b.limit, 0);
-  const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
+  const budgetList = budgets ?? [];
+  const totalBudget = budgetList.reduce((sum, b) => sum + b.limit, 0);
+  const totalSpent = budgetList.reduce((sum, b) => sum + b.spent, 0);
   const totalRemaining = totalBudget - totalSpent;
 
-  const exceededCount = budgets.filter((b) => b.status === 'exceeded').length;
-  const warningCount = budgets.filter((b) => b.status === 'warning').length;
+  const exceededCount = budgetList.filter((b) => b.status === 'exceeded').length;
+  const warningCount = budgetList.filter((b) => b.status === 'warning').length;
 
   const getStatusColor = (status: Budget['status']) => {
     switch (status) {
@@ -170,6 +125,16 @@ export default function BudgetTracking({
       </CardHeader>
 
       <CardContent className="flex-1 overflow-y-auto scrollbar-hide">
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-[120px]">
+            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
+          </div>
+        ) : budgetList.length === 0 ? (
+          <div className="flex items-center justify-center min-h-[120px]">
+            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Belum ada anggaran</p>
+          </div>
+        ) : (
+        <>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           <SummaryCard
@@ -225,7 +190,7 @@ export default function BudgetTracking({
         )}
 
         <Accordion type="single" collapsible className="space-y-3">
-          {budgets.map((budget, index) => {
+          {budgetList.map((budget, index) => {
             const StatusIcon = getStatusIcon(budget.status);
 
             return (
@@ -305,6 +270,8 @@ export default function BudgetTracking({
             {t('manageBudgets')}
           </Button>
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );

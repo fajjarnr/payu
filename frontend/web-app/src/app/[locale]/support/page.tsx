@@ -2,7 +2,7 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { LifeBuoy, MessageCircle, Mail, Phone, ExternalLink, HelpCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { LifeBuoy, MessageCircle, Mail, Phone, ExternalLink, HelpCircle, FileText } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
@@ -96,12 +96,11 @@ export default function SupportPage() {
                     <div className="flex flex-wrap justify-center lg:justify-start gap-3">
                       {['Gateway', 'Backend', 'Database', 'Streaming'].map((svc, i) => (
                         <div key={i} className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/10 shadow-sm backdrop-blur-md">
-                          <CheckCircle2 className="h-4 w-4 text-bank-green" />
-                          <span className="text-xs font-bold tracking-widest uppercase">{svc} OK</span>
+                          <span className="text-xs font-bold tracking-widest uppercase">{svc}: —</span>
                         </div>
                       ))}
                     </div>
-                    <p className="text-sm text-gray-400 font-medium pt-2 leading-relaxed">Seluruh node infrastruktur saat ini melaporkan uptime 100%. Tidak ada gangguan atau latensi yang terdeteksi dalam 24 jam terakhir.</p>
+                    <p className="text-sm text-gray-400 font-medium pt-2 leading-relaxed">Status infrastruktur belum tersedia. Hubungi tim operasional untuk informasi real-time.</p>
                   </div>
                   <ButtonMotion className="w-full lg:w-auto">
                     <Button className="h-16 px-10 shadow-2xl shadow-bank-green/20">

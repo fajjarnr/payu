@@ -16,7 +16,7 @@ export function createTransfer(gatewayUrl, token, transferData) {
   const url = `${gatewayUrl}/api/v1/transactions/transfer`;
 
   const payload = JSON.stringify({
-    sourceWalletId: transferData.sourceWalletId,
+    sourceAccountId: transferData.sourceAccountId,
     destinationAccountId: transferData.destinationAccountId,
     amount: transferData.amount,
     description: transferData.description || 'K6 Load Test Transfer',

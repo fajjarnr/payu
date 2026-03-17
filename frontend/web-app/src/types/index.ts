@@ -48,17 +48,17 @@ export type PocketType = 'SAVINGS' | 'SHARED' | 'GOAL';
 
 export interface Pocket {
   id: string;
+  accountId: string;
   name: string;
+  description?: string;
   balance: number;
-  target?: number;
-  type: PocketType;
+  currency?: string;
+  status?: 'ACTIVE' | 'FROZEN' | 'CLOSED';
   sharedMembers?: SharedMember[];
   isShared?: boolean;
   ownerAccountId?: string;
   createdAt: string;
   updatedAt: string;
-  currency?: string;
-  status?: 'ACTIVE' | 'FROZEN' | 'CLOSED';
 }
 
 export interface SharedMember {
@@ -107,6 +107,8 @@ export interface InitiateTransferRequest {
   type: TransactionType;
   transactionPin?: string;
   deviceId?: string;
+  idempotencyKey?: string;
+  memo?: string;
   scheduledAt?: string;
   recurringDay?: number;
   recurringMonth?: number;

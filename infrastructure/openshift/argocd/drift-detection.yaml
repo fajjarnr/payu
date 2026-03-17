@@ -19,7 +19,7 @@ spec:
   generate:
     command:
       - /bin/bash
-      -c
+      - -c
       - |
         # Drift Detection Script
         set -e
@@ -61,11 +61,11 @@ spec:
         }
 
         # Check critical resources
-        check_drift deploymentconfig account-service payu-prod
-        check_drift deploymentconfig transaction-service payu-prod
-        check_drift deploymentconfig wallet-service payu-prod
-        check_drift deploymentconfig auth-service payu-prod
-        check_drift deploymentconfig gateway-service payu-prod
+        check_drift deployment account-service payu-prod
+        check_drift deployment transaction-service payu-prod
+        check_drift deployment wallet-service payu-prod
+        check_drift deployment auth-service payu-prod
+        check_drift deployment gateway-service payu-prod
 
         # Check Secrets
         check_drift secret db-credentials payu-prod
@@ -80,7 +80,7 @@ spec:
   validate:
     command:
       - /bin/bash
-      -c
+      - -c
       - |
         # Validation Script
         set -e
@@ -88,7 +88,7 @@ spec:
         echo "Validating resources against policies..."
 
         # Check for disallowed changes
-        if oc get deploymentconfig -n payu-prod -o json | jq -e '.items[] | select(.spec.replicas < 2)' > /dev/null; then
+        if oc get deployment -n payu-prod -o json | jq -e '.items[] | select(.spec.replicas < 2)' > /dev/null; then
           echo "ERROR: Deployment with replicas < 2 detected in production"
           exit 1
         fi
@@ -99,7 +99,7 @@ spec:
         fi
 
         # Check resource limits
-        if oc get deploymentconfig -n payu-prod -o json | \
+        if oc get deployment -n payu-prod -o json | \
            jq -e '.items[] | select(.spec.template.spec.containers[]?.resources.limits == null)' > /dev/null; then
           echo "ERROR: Deployment without resource limits detected"
           exit 1
@@ -189,7 +189,7 @@ spec:
             - name: SLACK_WEBHOOK_URL
               valueFrom:
                 secretKeyRef:
-                  name: slack-webhook
+                  name: drift-detection-webhook
                   key: url
           restartPolicy: OnFailure
 ---
@@ -202,7 +202,9 @@ metadata:
     app: payu
     type: drift-detection
 stringData:
-  url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+  # WARNING: Replace with actual Slack webhook URL before deploying
+  # Use ExternalSecrets or Vault in production
+  url: "${SLACK_WEBHOOK_URL}"
 type: Opaque
 ---
 apiVersion: rbac.authorization.k8s.io/v1

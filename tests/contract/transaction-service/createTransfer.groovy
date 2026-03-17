@@ -13,8 +13,8 @@ Contract.make {
             header("X-Idempotency-Key", $(anyUuid()))
         }
         body([
-            sourceWalletId: $(anyUuid()),
-            targetWalletId: $(anyUuid()),
+            sourceAccountId: $(anyUuid()),
+            destinationAccountId: $(anyUuid()),
             amount: $(anyPositiveInt()),
             currency: "IDR",
             description: $(anyNonBlankString())
@@ -29,7 +29,7 @@ Contract.make {
             success: true,
             data: [
                 transactionId: $(anyUuid()),
-                status: "COMPLETED",
+                status: "PENDING",
                 amount: fromRequest().body('$.amount'),
                 currency: "IDR"
             ]

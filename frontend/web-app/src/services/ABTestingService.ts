@@ -253,9 +253,12 @@ export class ABTestingService {
   }
 
   /**
-   * Clear all experiment caches
+   * Clear all experiment caches (localStorage + memoryCache)
    */
   clearAllCache(): void {
+    // BUG-FE-071: Also clear in-memory cache
+    this.memoryCache.clear();
+
     if (typeof window === 'undefined') {
       return;
     }

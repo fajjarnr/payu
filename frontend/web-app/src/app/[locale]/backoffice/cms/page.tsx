@@ -40,92 +40,8 @@ import {
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { type Content, type ContentType } from '@/services/CMSService';
 
-const MOCK_CONTENT: Content[] = [
-  {
-    id: '1',
-    title: 'Bonus Deposito 10%',
-    contentType: 'BANNER',
-    description: 'Dapatkan tambahan saldo untuk setiap deposito di atas 1 juta.',
-    imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=400',
-    actionUrl: '/promos/bonus-deposito',
-    actionType: 'LINK',
-    startDate: '2026-01-01',
-    endDate: '2026-06-30',
-    priority: 10,
-    status: 'ACTIVE',
-    targetingRules: {},
-    metadata: {},
-    version: 1,
-    createdAt: '2025-12-25T10:00:00Z',
-    updatedAt: '2025-12-25T10:00:00Z',
-    createdBy: 'admin',
-    updatedBy: 'admin',
-    active: true
-  },
-  {
-    id: '2',
-    title: 'Pemeliharaan Sistem',
-    contentType: 'ALERT',
-    description: 'Layanan BI-FAST akan mengalami downtime pada pukul 02:00 WIB.',
-    imageUrl: '',
-    actionUrl: '',
-    actionType: 'DISMISS',
-    startDate: '2026-02-05',
-    endDate: '2026-02-05',
-    priority: 100,
-    status: 'SCHEDULED',
-    targetingRules: {},
-    metadata: {},
-    version: 1,
-    createdAt: '2026-02-01T15:00:00Z',
-    updatedAt: '2026-02-01T15:00:00Z',
-    createdBy: 'admin',
-    updatedBy: 'admin',
-    active: false
-  },
-  {
-    id: '3',
-    title: 'Cashback Investasi Emas',
-    contentType: 'PROMO',
-    description: 'Beli emas minimal 0.5 gram dan dapatkan cashback hingga 50rb.',
-    imageUrl: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&q=80&w=400',
-    actionUrl: '/investments/gold',
-    actionType: 'LINK',
-    startDate: '2026-02-01',
-    endDate: '2026-02-28',
-    priority: 5,
-    status: 'ACTIVE',
-    targetingRules: {},
-    metadata: {},
-    version: 2,
-    createdAt: '2026-01-20T08:00:00Z',
-    updatedAt: '2026-02-01T09:00:00Z',
-    createdBy: 'marketing-1',
-    updatedBy: 'admin',
-    active: true
-  },
-  {
-    id: '4',
-    title: 'Update Syarat & Ketentuan',
-    contentType: 'POPUP',
-    description: 'Kami telah memperbarui kebijakan privasi sesuai regulasi terbaru.',
-    imageUrl: '',
-    actionUrl: '/legal/privacy-policy',
-    actionType: 'LINK',
-    startDate: '2026-01-15',
-    endDate: '2026-12-31',
-    priority: 50,
-    status: 'ACTIVE',
-    targetingRules: {},
-    metadata: {},
-    version: 1,
-    createdAt: '2026-01-10T12:00:00Z',
-    updatedAt: '2026-01-10T12:00:00Z',
-    createdBy: 'compliance-team',
-    updatedBy: 'compliance-team',
-    active: true
-  }
-];
+// BUG-FE-098: Removed MOCK_CONTENT — should be fetched from CMS service API
+const MOCK_CONTENT: Content[] = [];
 
 export default function CMSPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -175,10 +91,10 @@ export default function CMSPage() {
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Total Content', value: '42', color: 'bg-blue-500', icon: FileText },
-              { label: 'Active Now', value: '18', color: 'bg-emerald-500', icon: CheckCircle2 },
-              { label: 'Scheduled', value: '5', color: 'bg-amber-500', icon: Clock },
-              { label: 'Pending Review', value: '3', color: 'bg-rose-500', icon: AlertCircle },
+              { label: 'Total Content', value: '—', color: 'bg-blue-500', icon: FileText },
+              { label: 'Active Now', value: '—', color: 'bg-emerald-500', icon: CheckCircle2 },
+              { label: 'Scheduled', value: '—', color: 'bg-amber-500', icon: Clock },
+              { label: 'Pending Review', value: '—', color: 'bg-rose-500', icon: AlertCircle },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>
@@ -327,7 +243,7 @@ export default function CMSPage() {
             {/* Pagination */}
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                Showing <span className="text-foreground">4</span> of <span className="text-foreground">42</span> results
+                Showing <span className="text-foreground">{filteredContent.length}</span> results
               </p>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50">

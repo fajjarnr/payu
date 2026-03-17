@@ -93,8 +93,8 @@ export async function POST(request: Request) {
     if (accessToken) {
       response.cookies.set("accessToken", accessToken, {
         httpOnly: true,
-        secure: false, // Labs environment: relax secure requirement
-        sameSite: "lax",
+        secure: isProduction, // BUG-AUTH-027: HTTPS-only in production
+        sameSite: "strict", // BUG-AUTH-027: strict to prevent CSRF
         maxAge: ACCESS_TOKEN_MAX_AGE,
         path: "/",
       });
@@ -103,8 +103,8 @@ export async function POST(request: Request) {
     if (refreshToken) {
       response.cookies.set("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false, // Labs environment: relax secure requirement
-        sameSite: "lax",
+        secure: isProduction, // BUG-AUTH-027: HTTPS-only in production
+        sameSite: "strict", // BUG-AUTH-027: strict to prevent CSRF
         maxAge: 604_800, // 7 days
         path: "/",
       });

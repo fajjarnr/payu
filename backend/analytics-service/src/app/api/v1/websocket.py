@@ -11,9 +11,37 @@ from app.models.schemas import (
     KycVerifiedEvent,
     UserMetricsUpdatedEvent
 )
+from app.config import get_settings
 
 logger = get_logger(__name__)
 websocket_router = APIRouter(prefix="/ws", tags=["WebSocket"])
+
+settings = get_settings()
+
+
+async def _validate_ws_token(websocket: WebSocket) -> bool:
+    """
+    BUG-AUTH-021: Validate JWT/token on WebSocket connection.
+    Expects a token as a query parameter or in the first message.
+    Returns True if valid, False otherwise.
+    """
+    import jwt
+
+    token = websocket.query_params.get("token")
+    if not token:
+        return False
+
+    try:
+        jwt.decode(
+            token,
+            settings.secret_key,
+            algorithms=[settings.algorithm],
+            options={"verify_exp": True},
+        )
+        return True
+    except (jwt.InvalidTokenError, jwt.ExpiredSignatureError, Exception) as e:
+        logger.warning("WebSocket token validation failed", error=str(e))
+        return False
 
 
 @websocket_router.websocket("/dashboard/{user_id}")
@@ -22,6 +50,12 @@ async def dashboard_websocket(
     user_id: str,
     events: str = Query("all", description="Comma-separated list of event types to subscribe to")
 ):
+    # BUG-AUTH-021: Validate token before accepting the connection
+    if not await _validate_ws_token(websocket):
+        await websocket.close(code=4001, reason="Authentication required")
+        logger.warning("WebSocket connection rejected — invalid or missing token", user_id=user_id)
+        return
+
     requested_events = set([e.strip() for e in events.split(",")])
     if "all" in requested_events:
         requested_events = set([evt.value for evt in DashboardEventType])

@@ -3,12 +3,13 @@ import api from '@/lib/api';
 export type LoanStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISBURSED' | 'REPAID' | 'DEFAULTED';
 export type PayLaterStatus = 'ACTIVE' | 'SUSPENDED' | 'CLOSED';
 
+// BUG-CROSS-053: Backend LoanApplicationCommand: externalId, loanType, principalAmount, tenureMonths, purpose
 export interface LoanApplicationRequest {
-  userId: string;
-  amount: number;
+  externalId: string;
+  loanType: 'PERSONAL' | 'BUSINESS' | 'MORTGAGE' | 'AUTO' | 'EDUCATION';
+  principalAmount: number;
   tenureMonths: number;
   purpose: string;
-  interestRate?: number;
 }
 
 export interface Loan {
@@ -117,12 +118,12 @@ export class LendingService {
     return response.data;
   }
 
+  // BUG-CROSS-054: Backend activatePayLater takes userId as @RequestParam, body is PayLaterLimitRequest only
   // IMP-015 Fix: Moved 'userId' from query param to request body
   // Query params are logged in access logs and browser history (security risk)
   async activatePayLater(userId: string, request: PayLaterLimitRequest): Promise<PayLater> {
-    const response = await api.post<PayLater>(`/lending/paylater/activate`, {
-      ...request,
-      userId
+    const response = await api.post<PayLater>(`/lending/paylater/activate`, request, {
+      params: { userId }
     });
     return response.data;
   }
@@ -132,18 +133,18 @@ export class LendingService {
     return response.data;
   }
 
-  // BUG-BE-079 Fix: Financial data (amount, merchantName) moved from URL query params
-  // to POST JSON body. Query params are logged in access logs and browser history.
+  // BUG-CROSS-055: Backend recordPurchase takes merchantName, amount, description as @RequestParam, not body
   async recordPurchase(userId: string, merchantName: string, amount: number, description?: string): Promise<PayLaterTransaction> {
-    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/purchase`, {
-      merchantName, amount, description
+    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/purchase`, null, {
+      params: { merchantName, amount, description }
     });
     return response.data;
   }
 
+  // BUG-CROSS-056: Backend recordPayment takes amount as @RequestParam, not body
   async recordPayment(userId: string, amount: number): Promise<PayLaterTransaction> {
-    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/payment`, {
-      amount
+    const response = await api.post<PayLaterTransaction>(`/lending/paylater/${userId}/payment`, null, {
+      params: { amount }
     });
     return response.data;
   }

@@ -24,16 +24,18 @@ import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/M
 import clsx from 'clsx';
 import { useNotifications, useMarkNotificationRead } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'next/navigation';
 
 export default function NotificationsPage() {
   const { user } = useAuthStore();
+  const router = useRouter();
   const userId = user?.id ?? '';
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('ALL');
   const { data: notificationsData, isLoading } = useNotifications(userId);
   const markRead = useMarkNotificationRead();
 
-  const rawNotifications = notificationsData?.content ?? [];
+  const rawNotifications: any[] = Array.isArray(notificationsData) ? notificationsData : (notificationsData as any)?.content ?? [];
   // BUG-CROSS-032: Map backend field names (body/sentAt) to frontend display fields (content/timestamp)
   const notifications = rawNotifications.map((n: any) => ({
     id: n.id as string,
@@ -44,7 +46,7 @@ export default function NotificationsPage() {
     timestamp: (n.sentAt ?? n.timestamp ?? n.createdAt ?? '') as string,
   }));
 
-  const filteredNotifs = notifications.filter(n => {
+  const filteredNotifs = notifications.filter((n: { title: string; content: string; type: string; read: boolean }) => {
     const matchesSearch = n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           n.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filter === 'ALL' || n.type === filter || (filter === 'UNREAD' && !n.read);
@@ -157,7 +159,15 @@ export default function NotificationsPage() {
                           {n.content}
                         </p>
                         <div className="pt-4 flex items-center justify-between">
-                          <button className="text-xs font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-2 group/btn">
+                          <button
+                            onClick={() => {
+                              if (!n.read) {
+                                markRead.mutate(n.id);
+                              }
+                              router.push(`/notifications/${n.id}`);
+                            }}
+                            className="text-xs font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-2 group/btn"
+                          >
                             Lihat Detail
                             <ArrowRight className="h-3 w-3 transition-transform group-hover/btn:translate-x-1" />
                           </button>

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - 2026-03-16
+## [Unreleased] - 2026-03-17
 
 ### Changed
 
@@ -58,6 +58,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All 19 tracked in `docs/roadmap/TODOS.md`.
 
 ### Fixed
+
+- **Phase 7 — Close All 240 Audit Bugs (2026-03-17)**:
+  - **Batch 1: Backend P0 Financial Integrity (32 bugs)**: Wallet pessimistic locking (BUG-BE-165), SNAP-BI payment/refund persistence (BUG-BE-182). 30 other bugs verified already fixed in codebase.
+  - **Batch 2: Auth/Security P0 (25 bugs)**: Gateway authorization/IP whitelist/signing filters hardened. Analytics/KYC websocket auth added. SecurityConfig across 6 services updated. Frontend auth cookie improvements (HttpOnly, SameSite, Secure).
+  - **Batch 3: Frontend Logic (38 bugs)**: 20 page files fixed for analytics, lending, cards, investments, security, support, merchant, notifications, transactions, backoffice sub-pages. i18n keys added.
+  - **Batch 4: Frontend-Backend Mismatch (39 bugs)**: Gateway routes added (pockets, gamification, topup, scheduled-transfers, split-bills). BFF whitelist expanded. Multiple frontend service files aligned to backend DTOs.
+  - **Batch 5: Auth/Session Frontend (5 bugs)**: Middleware server-side token refresh. JWT claim standardized to `account_id` with `sub` fallback across 8 controllers.
+  - **Batch 6: Infrastructure (34 bugs)**: Service mesh (6), ArgoCD (3), pipelines (4), base manifests (8), overlays (3) — all OpenShift configs updated.
+  - **Batch 7: Test Quality (45 bugs + 23 stories)**: Gatling, k6, pytest blackbox, contract stubs, regression, security tests all updated to match current API contracts.
+  - **TypeScript Cleanup**: 27+ type errors fixed across 8 frontend files for clean `tsc --noEmit` and `npm run build`.
+  - **Verification**: Maven 38/38 SUCCESS, Frontend build SUCCESS (44 routes), Playwright 544/544, Pytest 159/159 (147+12 xfail).
+  - **Bug IDs closed**: BUG-BE-152 through BUG-BE-194, BUG-FE-060 through BUG-FE-106, BUG-AUTH-012 through BUG-AUTH-034, BUG-CROSS-035 through BUG-CROSS-073, BUG-INFRA-001 through BUG-INFRA-043, BUG-TEST-006 through BUG-TEST-050.
 
 - **Phase 3 — Close All 34 Audit Bugs (2026-03-16)**:
   - **Backend Security (P0)**: Fixed IDOR vulnerabilities in `ScheduledTransferController` (BUG-BE-148), `SplitBillController` (BUG-BE-149), and `WalletController` (BUG-BE-150) — all endpoints now extract JWT subject and verify resource ownership before allowing read/write operations.

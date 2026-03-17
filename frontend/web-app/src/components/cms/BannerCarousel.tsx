@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
@@ -5,6 +7,7 @@ import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBanners } from '@/hooks';
+import { useRouter } from '@/lib/navigation';
 import type { Content } from '@/services/CMSService';
 import {
   Carousel,
@@ -32,6 +35,8 @@ export default function BannerCarousel({
   onBannerClick,
 }: BannerCarouselProps) {
   const { data: banners, isLoading, error } = useBanners({ segment, location, device });
+  // BUG-FE-101: Use Next.js router for DEEP_LINK navigation
+  const router = useRouter();
   const plugin = React.useRef(
     Autoplay({ delay: autoPlayInterval, stopOnInteraction: true })
   );
@@ -43,7 +48,8 @@ export default function BannerCarousel({
       if (banner.actionType === 'LINK') {
         window.open(banner.actionUrl, '_blank', 'noopener,noreferrer');
       } else if (banner.actionType === 'DEEP_LINK') {
-        window.location.href = banner.actionUrl;
+        // BUG-FE-101: Use Next.js router instead of window.location.href
+        router.push(banner.actionUrl);
       }
     }
   };

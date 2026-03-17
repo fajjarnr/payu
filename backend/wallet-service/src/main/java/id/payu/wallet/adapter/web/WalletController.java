@@ -48,8 +48,9 @@ public class WalletController extends BaseController {
     }
 
     /**
-     * Extracts the authenticated user's ID from the JWT subject claim.
-     * BUG-BE-150: Added to enforce ownership checks on all endpoints.
+     * Extracts the authenticated user's account ID from the JWT.
+     * BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+     * across all services for consistent ownership checks.
      */
     private String extractUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -57,7 +58,8 @@ public class WalletController extends BaseController {
             throw new IllegalStateException("No valid JWT authentication found");
         }
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        return jwt.getSubject();
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
     }
 
     /**

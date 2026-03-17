@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -101,6 +103,17 @@ public class MerchantController extends BaseController {
     public ResponseEntity<ApiResponse<QrPaymentResponse>> confirmQrPayment(
             @PathVariable String referenceId,
             @RequestParam String payerAccountId) {
+        // BUG-BE-185 FIX: Verify the payerAccountId belongs to the authenticated user.
+        // Extract authenticated user's account ID from JWT and compare.
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String authenticatedAccountId = jwt.getClaimAsString("account_id");
+        if (authenticatedAccountId == null) {
+            authenticatedAccountId = jwt.getSubject();
+        }
+        if (!authenticatedAccountId.equals(payerAccountId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Cannot initiate QR payment for another user's account");
+        }
         return ok(merchantService.confirmQrPayment(referenceId, payerAccountId));
     }
 }

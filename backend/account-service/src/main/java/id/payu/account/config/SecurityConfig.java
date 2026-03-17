@@ -81,8 +81,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/v1/accounts/register").permitAll()
-                // Actuator endpoints
-                .requestMatchers("/actuator/**", "/account-service/actuator/**").permitAll()
+                // BUG-AUTH-028: Restrict actuator — only health/info are public
+                .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                .requestMatchers("/account-service/actuator/health", "/account-service/actuator/health/**", "/account-service/actuator/info").permitAll()
+                .requestMatchers("/actuator/**", "/account-service/actuator/**").authenticated()
                 // Swagger/OpenAPI docs
                 .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 // All other requests require authentication

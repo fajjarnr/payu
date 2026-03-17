@@ -45,11 +45,13 @@ import {
   useResumeScheduledTransfer,
 } from '@/hooks';
 import { useAuth } from '@/hooks';
+import { useAuthStore } from '@/stores/authStore';
 import type { ScheduledTransfer } from '@/services/TransactionService';
 
 export default function ScheduledTransfersPage() {
   const { user } = useAuth();
-  const accountId = user?.id ?? '';
+  const { accountId: storeAccountId } = useAuthStore();
+  const accountId = storeAccountId ?? '';
 
   const { data: transfers, isLoading } = useScheduledTransfers(accountId);
   const updateTransfer = useUpdateScheduledTransfer();

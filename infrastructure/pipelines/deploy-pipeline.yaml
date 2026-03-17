@@ -108,7 +108,7 @@ spec:
           value: |
             oc apply -f infrastructure/openshift/overlays/$(params.environment)/secrets/secrets-template.yaml -n $(params.namespace)
 
-    - name: create-deployment-config
+    - name: create-deployment
       runAfter:
         - apply-configmaps
         - apply-secrets
@@ -119,33 +119,31 @@ spec:
         - name: SCRIPT
           value: |
             cat <<EOF | oc apply -n $(params.namespace) -f -
-            apiVersion: apps.openshift.io/v1
-            kind: DeploymentConfig
+            apiVersion: apps/v1
+            kind: Deployment
             metadata:
               name: $(params.service-name)
               labels:
-                app: payu
-                service: $(params.service-name)
+                app: $(params.service-name)
+                app.kubernetes.io/name: $(params.service-name)
+                app.kubernetes.io/part-of: payu
                 environment: $(params.environment)
             spec:
               replicas: $(params.replicas)
               strategy:
-                type: Rolling
-                rollingParams:
-                  timeoutSeconds: 600
-                  intervalSeconds: 1
-                  updatePeriodSeconds: 1
+                type: RollingUpdate
+                rollingUpdate:
                   maxSurge: 25%
                   maxUnavailable: 0
-                resources: {}
               selector:
-                app: payu
-                deploymentconfig: $(params.service-name)
+                matchLabels:
+                  app: $(params.service-name)
               template:
                 metadata:
                   labels:
-                    app: payu
-                    deploymentconfig: $(params.service-name)
+                    app: $(params.service-name)
+                    app.kubernetes.io/name: $(params.service-name)
+                    app.kubernetes.io/part-of: payu
                 spec:
                   containers:
                   - name: $(params.service-name)
@@ -189,7 +187,7 @@ spec:
 
     - name: create-service
       runAfter:
-        - create-deployment-config
+        - create-deployment
       taskRef:
         name: openshift-client
         kind: ClusterTask
@@ -206,11 +204,10 @@ spec:
                 service: $(params.service-name)
             spec:
               selector:
-                app: payu
-                deploymentconfig: $(params.service-name)
+                app: $(params.service-name)
               ports:
               - name: http
-                port: 80
+                port: 8080
                 targetPort: 8080
                 protocol: TCP
               type: ClusterIP
@@ -246,7 +243,7 @@ spec:
 
     - name: create-hpa
       runAfter:
-        - create-deployment-config
+        - create-deployment
       taskRef:
         name: openshift-client
         kind: ClusterTask
@@ -260,8 +257,8 @@ spec:
               name: $(params.service-name)-hpa
             spec:
               scaleTargetRef:
-                apiVersion: apps.openshift.io/v1
-                kind: DeploymentConfig
+                apiVersion: apps/v1
+                kind: Deployment
                 name: $(params.service-name)
               minReplicas: 2
               maxReplicas: 10
@@ -295,7 +292,7 @@ spec:
 
     - name: wait-for-rollout
       runAfter:
-        - create-deployment-config
+        - create-deployment
         - create-hpa
       taskRef:
         name: openshift-client
@@ -304,7 +301,7 @@ spec:
         - name: SCRIPT
           value: |
             echo "Waiting for deployment to complete..."
-            oc rollout status dc/$(params.service-name) -n $(params.namespace) --timeout=$(params.health-check-timeout)s
+            oc rollout status deployment/$(params.service-name) -n $(params.namespace) --timeout=$(params.health-check-timeout)s
             echo "Deployment completed successfully"
 
     - name: smoke-tests
@@ -349,6 +346,6 @@ spec:
         - name: SCRIPT
           value: |
             echo "=== Deployment Verification ==="
-            oc get pods -n $(params.namespace) -l app=payu,deploymentconfig=$(params.service-name)
-            oc get dc/$(params.service-name) -n $(params.namespace)
+            oc get pods -n $(params.namespace) -l app=$(params.service-name)
+            oc get deployment/$(params.service-name) -n $(params.namespace)
             oc get hpa/$(params.service-name)-hpa -n $(params.namespace) || true

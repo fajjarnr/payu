@@ -25,33 +25,40 @@ class TestNotificationServiceFlow:
     def test_send_push_notification(self, authenticated_api, registered_user):
         """Send a push notification"""
         payload = {
+            "userId": registered_user["userId"],
             "channel": "PUSH",
             "recipient": registered_user["userId"],
             "title": "Test Notification",
             "body": "This is a test push notification",
+            "templateId": "test-push-template",
             "data": {"type": "test", "referenceId": str(uuid.uuid4())}
         }
         response = authenticated_api.post("/api/v1/notifications", json=payload)
         assert response.status_code in [200, 201, 400, 422, 429, 503], f"Unexpected status: {response.status_code}"
 
-    def test_send_email_notification(self, authenticated_api):
+    def test_send_email_notification(self, authenticated_api, registered_user):
         """Send an email notification"""
         payload = {
+            "userId": registered_user["userId"],
             "channel": "EMAIL",
             "recipient": f"test_{fake.uuid4()[:8]}@example.com",
             "title": "Test Email",
             "body": "<h1>Test</h1><p>This is a test email</p>",
+            "templateId": "test-email-template",
             "data": {"type": "test"}
         }
         response = authenticated_api.post("/api/v1/notifications", json=payload)
         assert response.status_code in [200, 201, 400, 422, 429, 503], f"Unexpected status: {response.status_code}"
 
-    def test_send_sms_notification(self, authenticated_api):
+    def test_send_sms_notification(self, authenticated_api, registered_user):
         """Send an SMS notification"""
         payload = {
+            "userId": registered_user["userId"],
             "channel": "SMS",
             "recipient": "+6281234567890",
+            "title": "OTP Verification",
             "body": "Your OTP is 123456",
+            "templateId": "otp-sms-template",
             "data": {"type": "otp"}
         }
         response = authenticated_api.post("/api/v1/notifications", json=payload)

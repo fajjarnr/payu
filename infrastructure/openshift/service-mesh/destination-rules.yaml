@@ -432,7 +432,7 @@ metadata:
   name: egress-services
   namespace: istio-system
 spec:
-  host: "*./*"
+  host: "*.external.payu.fajjjar.my.id"
   trafficPolicy:
     tls:
       mode: DISABLE  # External services don't support mTLS

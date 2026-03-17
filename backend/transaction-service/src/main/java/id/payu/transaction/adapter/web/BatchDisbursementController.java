@@ -1,6 +1,7 @@
 package id.payu.transaction.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
+import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.domain.model.BatchDisbursement;
 import id.payu.transaction.domain.model.Disbursement;
 import id.payu.transaction.domain.model.Money;
@@ -15,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +44,18 @@ import java.util.stream.Collectors;
 public class BatchDisbursementController {
 
     private final BatchDisbursementUseCase batchUseCase;
+    private final AuthorizationService authorizationService;
+
+    // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
+    private String extractUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
+    }
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -48,6 +64,10 @@ public class BatchDisbursementController {
     public ResponseEntity<BatchResponse> createBatch(
             @Valid @RequestBody CreateBatchRequest request,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+
+        // Verify the authenticated user owns the source account
+        String userId = extractUserId();
+        authorizationService.verifyAccountOwnership(request.getSourceAccountId(), userId);
 
         BatchDisbursement batch = batchUseCase.createBatch(
                 request.getSourceAccountId(),
@@ -165,6 +185,10 @@ public class BatchDisbursementController {
             @RequestParam UUID sourceAccountId,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset) {
+
+        // Verify the authenticated user owns the source account
+        String userId = extractUserId();
+        authorizationService.verifyAccountOwnership(sourceAccountId, userId);
 
         List<BatchDisbursement> batches = batchUseCase.listBatchesByAccount(
                 sourceAccountId, limit, offset);

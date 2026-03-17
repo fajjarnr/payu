@@ -82,12 +82,7 @@ export default function TransferPage() {
   const addToast = useUIStore((state) => state.addToast);
   const transferMutation = useInitiateTransfer();
 
-  const recentContacts = [
-    { name: 'Anya', initial: 'A', color: 'bg-primary/10 text-primary', accountId: 'acc-any123' },
-    { name: 'Budi', initial: 'B', color: 'bg-blue-500/10 text-blue-600', accountId: 'acc-bud456' },
-    { name: 'Citra', initial: 'C', color: 'bg-pink-500/10 text-pink-600', accountId: 'acc-cit789' },
-    { name: 'Dodi', initial: 'D', color: 'bg-amber-500/10 text-amber-600', accountId: 'acc-dod012' },
-  ];
+  const recentContacts: Array<{ name: string; initial: string; color: string; accountId: string }> = [];
 
   const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<TransferRequest>({
     resolver: zodResolver(transferSchema),

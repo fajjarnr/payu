@@ -73,6 +73,10 @@ public class PocketService implements PocketUseCase {
     @Override
     @Transactional
     public void creditPocket(UUID pocketId, BigDecimal amount, String referenceId) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+
         log.info("Crediting {} to pocket {} with reference {}", amount, pocketId, referenceId);
 
         Pocket pocket = pocketPersistencePort.findById(pocketId)
@@ -87,6 +91,10 @@ public class PocketService implements PocketUseCase {
     @Override
     @Transactional
     public void debitPocket(UUID pocketId, BigDecimal amount, String referenceId) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+
         log.info("Debiting {} from pocket {} with reference {}", amount, pocketId, referenceId);
 
         Pocket pocket = pocketPersistencePort.findById(pocketId)

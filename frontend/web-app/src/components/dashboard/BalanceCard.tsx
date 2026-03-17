@@ -9,10 +9,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 interface BalanceCardProps {
   balance: number;
   percentage?: number;
+  income?: number;
+  expense?: number;
+  incomeChange?: number;
+  expenseChange?: number;
+  netWorth?: number;
+  netWorthChange?: number;
   currency?: string;
+  isLoading?: boolean;
 }
 
-export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp' }: BalanceCardProps) {
+export default function BalanceCard({
+  balance,
+  percentage,
+  income,
+  expense,
+  incomeChange,
+  expenseChange,
+  netWorth,
+  netWorthChange,
+  currency = 'Rp',
+  isLoading = false,
+}: BalanceCardProps) {
   return (
     <div data-testid="balance-card" className="grid grid-cols-1 md:grid-cols-12 xl:grid-cols-3 gap-6">
       {/* Col 1: Primary Balance & Net Worth */}
@@ -39,10 +57,16 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
                 {currency} {balance.toLocaleString('id-ID')}
               </h2>
               <div className="flex items-center gap-3">
-                <span className="text-xs px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 font-bold flex items-center gap-1 uppercase tracking-tighter border border-emerald-500/10">
-                  <ArrowUpRight className="h-4 w-4" />
-                  +{percentage}%
-                </span>
+                {percentage != null ? (
+                  <span className="text-xs px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 font-bold flex items-center gap-1 uppercase tracking-tighter border border-emerald-500/10">
+                    <ArrowUpRight className="h-4 w-4" />
+                    +{percentage}%
+                  </span>
+                ) : (
+                  <span className="text-xs px-3 py-1.5 rounded-xl bg-muted/50 text-muted-foreground font-bold uppercase tracking-tighter">
+                    --
+                  </span>
+                )}
                 <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Faktor Pertumbuhan</span>
               </div>
             </div>
@@ -62,13 +86,19 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
           <CardContent>
             <div className="space-y-4">
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight">
-                {currency} {(balance * 1.5).toLocaleString('id-ID')}
+                {currency} {(netWorth ?? 0).toLocaleString('id-ID')}
               </h3>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-emerald-500 uppercase tracking-tighter flex items-center gap-1">
-                  <ArrowUpRight className="h-4 w-4" />
-                  +18% 
-                </span>
+                {netWorthChange != null ? (
+                  <span className="text-xs font-bold text-emerald-500 uppercase tracking-tighter flex items-center gap-1">
+                    <ArrowUpRight className="h-4 w-4" />
+                    +{netWorthChange}%
+                  </span>
+                ) : (
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">
+                    --
+                  </span>
+                )}
                 <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Peningkatan Total</span>
               </div>
             </div>
@@ -124,16 +154,16 @@ export default function BalanceCard({ balance, percentage = 45.2, currency = 'Rp
         <SummaryItem
           data-testid="income-card"
           label="Pemasukan"
-          amount={75200000}
-          change={+6.5}
+          amount={income ?? 0}
+          change={incomeChange ?? 0}
           isPositive={true}
           currency={currency}
         />
         <SummaryItem
           data-testid="expense-card"
           label="Pengeluaran"
-          amount={42750000}
-          change={-4.2}
+          amount={expense ?? 0}
+          change={expenseChange ?? 0}
           isPositive={false}
           currency={currency}
         />
