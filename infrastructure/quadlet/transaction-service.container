@@ -2,11 +2,11 @@
 # This file can be used with systemd to manage the container
 
 [Container]
-Image=localhost/transaction-service:latest
+Image=localhost/transaction-service:dev
 ContainerName=transaction-service
 AutoUpdate=registry
-Network=podman
-PodmanArgs=--network=host --label=io.payu.service=transaction-service
+Network=payu-network
+PodmanArgs=--label=io.payu.service=transaction-service
 # Add your custom arguments below
 # EnvironmentFile=/transaction-service/env
 # Volume=/transaction-service/config:/etc/transaction-service:ro
@@ -18,8 +18,8 @@ Restart=on-failure
 RestartSec=5s
 
 # Health check
-ExecStartPre=/usr/bin/podman check-network podman
-ExecStartPre=/usr/bin/podman pull localhost/transaction-service:latest
+ExecStartPre=/usr/bin/podman check-network payu-network
+ExecStartPre=/usr/bin/podman pull localhost/transaction-service:dev
 
 # Set resource limits
 # LimitMEM=512M

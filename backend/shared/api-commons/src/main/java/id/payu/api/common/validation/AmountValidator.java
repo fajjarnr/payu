@@ -28,9 +28,12 @@ public class AmountValidator extends AbstractAmountValidator<ValidAmount> {
             return true; // Let @NotNull handle null
         }
 
-        long amountInCents = value.multiply(BigDecimal.valueOf(100)).longValue();
+        // Use BigDecimal.compareTo for lossless comparison — avoids longValue() truncation
+        // where e.g. 1000.99 would be truncated to 1000 and incorrectly pass validation
+        BigDecimal minAmount = BigDecimal.valueOf(min).movePointLeft(2);
+        BigDecimal maxAmount = BigDecimal.valueOf(max).movePointLeft(2);
 
-        if (amountInCents < min) {
+        if (value.compareTo(minAmount) < 0) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(
                     String.format("Amount must be at least %,.2f %s", min / 100.0, currency)
@@ -38,7 +41,7 @@ public class AmountValidator extends AbstractAmountValidator<ValidAmount> {
             return false;
         }
 
-        if (max != Long.MAX_VALUE && amountInCents > max) {
+        if (max != Long.MAX_VALUE && value.compareTo(maxAmount) > 0) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(
                     String.format("Amount must not exceed %,.2f %s", max / 100.0, currency)

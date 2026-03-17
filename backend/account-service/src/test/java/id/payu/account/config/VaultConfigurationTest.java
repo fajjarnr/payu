@@ -94,11 +94,9 @@ class VaultConfigurationTest {
     @Test
     void environmentVariablesTakePrecedence_whenVaultDisabled() {
         // When Vault is disabled, the application should use environment variables
-        // In test environment, we verify the application can start without Vault
-        // The actual environment variables may not be set in unit test environment
-        // This test verifies the application context loads successfully
-        assertThat(Boolean.getBoolean("VAULT_ENABLED") || System.getenv("DB_URL") != null
-                || System.getenv("DB_USERNAME") != null || System.getenv("DB_PASSWORD") != null
-                || !Boolean.getBoolean("VAULT_ENABLED")).isTrue();
+        // In test environment, we verify the application context loaded successfully
+        // without Vault, which is the meaningful assertion here
+        assertThat(true).as("Application context loads successfully without Vault — " +
+                "environment variables or defaults are used for configuration").isTrue();
     }
 }

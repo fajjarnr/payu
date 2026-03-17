@@ -3,7 +3,6 @@ package id.payu.backoffice.application.service;
 import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.dto.CustomerCaseRequest;
 import id.payu.backoffice.dto.CustomerCaseUpdateRequest;
-import id.payu.backoffice.dto.CustomerCaseUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

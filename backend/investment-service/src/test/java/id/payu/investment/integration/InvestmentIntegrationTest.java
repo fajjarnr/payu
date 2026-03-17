@@ -155,10 +155,10 @@ public class InvestmentIntegrationTest {
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
+        // Health endpoints should always be publicly accessible
         assertThat(response.getStatusCode()).isIn(
             org.springframework.http.HttpStatus.OK,
-            org.springframework.http.HttpStatus.UNAUTHORIZED,
-            org.springframework.http.HttpStatus.FORBIDDEN
+            org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE
         );
     }
 }

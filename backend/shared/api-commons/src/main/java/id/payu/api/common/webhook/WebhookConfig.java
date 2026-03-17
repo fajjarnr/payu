@@ -2,10 +2,12 @@ package id.payu.api.common.webhook;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -42,6 +44,7 @@ import jakarta.validation.constraints.NotNull;
  * @see WebhookProcessor
  * @since 1.0.0
  */
+@Slf4j
 @Getter
 @Setter
 @Validated
@@ -72,6 +75,16 @@ public class WebhookConfig {
      */
     @NotNull
     private KafkaConfig kafka = new KafkaConfig();
+
+    private static final String DEV_DEFAULT_SECRET = "payu-webhook-dev-secret-CHANGE-ME-IN-PRODUCTION-2026";  // pragma: allowlist secret
+
+    @PostConstruct
+    void validateSecret() {
+        if (DEV_DEFAULT_SECRET.equals(security.getSecret())) {
+            log.warn("***** SECURITY WARNING: Webhook secret is using the default dev value. "
+                    + "Set 'webhook.security.secret' to a strong, unique value in production! *****");
+        }
+    }
 
     /**
      * Gets the webhook secret from security configuration.
@@ -141,7 +154,7 @@ public class WebhookConfig {
          * (e.g., in HashiCorp Vault or OpenShift Secrets) and never committed to source control.
          */
         @NotBlank(message = "Webhook secret must be configured")
-        private String secret = "changeme";  // pragma: allowlist secret
+        private String secret = "payu-webhook-dev-secret-CHANGE-ME-IN-PRODUCTION-2026";  // pragma: allowlist secret
 
         /**
          * Timestamp tolerance in seconds for replay attack prevention.

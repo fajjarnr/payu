@@ -188,7 +188,7 @@ class AgentManagementIntegrationTest {
                 .when()
                 .post("/api/v1/support/agents")
                 .then()
-                .statusCode(anyOf(is(201), is(409), is(400), is(500)));
+                .statusCode(anyOf(is(409), is(400), is(429), is(503)));
     }
 
     @Test

@@ -96,13 +96,15 @@ public class CacheInvalidationConsumer {
     private void invalidatePattern(CacheInvalidationEvent event) {
         String pattern = buildCacheKey(event.getCacheName(), event.getKey());
 
-        // Use Redis SCAN to find matching keys
+        // Use Redis SCAN (non-blocking) instead of KEYS to find matching keys
         var redisTemplate = cacheService.getDistributedCache().getRedisTemplate();
-        Set<String> keys = redisTemplate.keys(pattern.replace("*", ".*"));
-
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-            log.debug("Invalidated {} keys matching pattern: {}", keys.size(), pattern);
+        ScanOptions scanOptions = ScanOptions.scanOptions().match(pattern).count(100).build();
+        try (var cursor = redisTemplate.scan(scanOptions)) {
+            while (cursor.hasNext()) {
+                String key = cursor.next();
+                redisTemplate.delete(key);
+            }
+            log.debug("Invalidated keys matching pattern: {}", pattern);
         }
     }
 
@@ -113,12 +115,16 @@ public class CacheInvalidationConsumer {
         String pattern = buildCacheKey(event.getCacheName(), "*");
 
         var redisTemplate = cacheService.getDistributedCache().getRedisTemplate();
-        Set<String> keys = redisTemplate.keys(pattern);
-
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-            log.debug("Invalidated {} keys in cache: {}", keys.size(), event.getCacheName());
+        ScanOptions scanOptions = ScanOptions.scanOptions().match(pattern).count(100).build();
+        int count = 0;
+        try (var cursor = redisTemplate.scan(scanOptions)) {
+            while (cursor.hasNext()) {
+                String key = cursor.next();
+                redisTemplate.delete(key);
+                count++;
+            }
         }
+        log.debug("Invalidated {} keys in cache: {}", count, event.getCacheName());
     }
 
     /**

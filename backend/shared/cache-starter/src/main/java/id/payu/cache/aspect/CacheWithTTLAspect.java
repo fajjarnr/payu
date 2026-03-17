@@ -22,6 +22,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -125,19 +126,7 @@ public class CacheWithTTLAspect {
             long ttlSeconds,
             Class<?> returnType) throws Throwable {
 
-        // Check if there's already an in-flight request for this key
-        CompletableFuture<?> inFlight = inFlightRequests.get(cacheKey);
-        if (inFlight != null) {
-            log.debug("Waiting for in-flight request for key: {}", cacheKey);
-            try {
-                return inFlight.get();
-            } catch (Exception e) {
-                log.error("Error waiting for in-flight request: {}", e.getMessage());
-                // Fall through to execute the method
-            }
-        }
-
-        // Try to get from cache
+        // Try to get from cache first (fast path, no locking)
         Object cachedValue = cacheService.get(cacheKey, returnType);
         if (cachedValue != null) {
             Metrics.counter("cache.aspect.hit", "cache", cacheWithTTL.cacheName()).increment();
@@ -145,39 +134,41 @@ public class CacheWithTTLAspect {
             return cachedValue;
         }
 
-        // Create future for this request
         Metrics.counter("cache.aspect.miss", "cache", cacheWithTTL.cacheName()).increment();
         log.debug("Cache miss for key: {}", cacheKey);
 
-        CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                Object result = joinPoint.proceed();
+        // Use computeIfAbsent for stampede protection — only one thread computes
+        @SuppressWarnings("unchecked")
+        CompletableFuture<Object> future = (CompletableFuture<Object>) inFlightRequests.computeIfAbsent(cacheKey, k ->
+                CompletableFuture.supplyAsync(() -> {
+                    try {
+                        Object result = joinPoint.proceed();
 
-                // Check unless condition
-                if (StringUtils.isNotBlank(cacheWithTTL.unless())) {
-                    MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-                    Method method = signature.getMethod();
-                    if (evaluateCondition(cacheWithTTL.unless(), method, joinPoint.getArgs(), joinPoint.getTarget())) {
-                        log.debug("Cache unless condition true, not caching: {}", cacheKey);
+                        // Check unless condition
+                        if (StringUtils.isNotBlank(cacheWithTTL.unless())) {
+                            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+                            Method method = signature.getMethod();
+                            if (evaluateCondition(cacheWithTTL.unless(), method, joinPoint.getArgs(), joinPoint.getTarget())) {
+                                log.debug("Cache unless condition true, not caching: {}", cacheKey);
+                                return result;
+                            }
+                        }
+
+                        if (result != null) {
+                            cacheService.put(cacheKey, result, java.time.Duration.ofSeconds(ttlSeconds));
+                            log.debug("Cached result for key: {}", cacheKey);
+                        }
+
                         return result;
+                    } catch (Throwable e) {
+                        log.error("Error executing cached method: {}", e.getMessage());
+                        throw new RuntimeException(e);
+                    } finally {
+                        inFlightRequests.remove(cacheKey);
                     }
-                }
+                })
+        );
 
-                if (result != null) {
-                    cacheService.put(cacheKey, result, java.time.Duration.ofSeconds(ttlSeconds));
-                    log.debug("Cached result for key: {}", cacheKey);
-                }
-
-                return result;
-            } catch (Throwable e) {
-                log.error("Error executing cached method: {}", e.getMessage());
-                throw new RuntimeException(e);
-            } finally {
-                inFlightRequests.remove(cacheKey);
-            }
-        });
-
-        inFlightRequests.put(cacheKey, future);
         return future.get();
     }
 
@@ -278,18 +269,17 @@ public class CacheWithTTLAspect {
             String key = expression.getValue(context, String.class);
             return cacheName + ":" + key;
         } else {
-            // Generate default key from method signature and parameters
+            // Generate default key from class name, method name, and deep hash of arguments
+            // Uses Arrays.deepHashCode for collision resistance instead of per-object hashCode
             StringBuilder keyBuilder = new StringBuilder(cacheName);
+            keyBuilder.append(":");
+            keyBuilder.append(method.getDeclaringClass().getSimpleName());
             keyBuilder.append(":");
             keyBuilder.append(method.getName());
 
             if (args != null && args.length > 0) {
                 keyBuilder.append(":");
-                for (Object arg : args) {
-                    if (arg != null) {
-                        keyBuilder.append(arg.hashCode()).append("_");
-                    }
-                }
+                keyBuilder.append(Arrays.deepHashCode(args));
             }
 
             return keyBuilder.toString();

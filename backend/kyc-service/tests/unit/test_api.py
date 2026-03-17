@@ -171,8 +171,8 @@ class TestKycApi:
                 },
             )
 
-            # May return 422 validation error or 500 processing error
-            assert response.status_code in [422, 500]
+            # Invalid base64 should return 422 validation error
+            assert response.status_code in [422]
 
         app.dependency_overrides.clear()
 
@@ -271,8 +271,8 @@ class TestKycApi:
                 json={"verification_id": "verify_123", "ktp_image": ""},
             )
 
-            # Empty string is valid base64, but should fail processing
-            assert response.status_code in [422, 500]
+            # Empty string should fail processing with validation error
+            assert response.status_code in [422]
 
         app.dependency_overrides.clear()
 
@@ -295,7 +295,7 @@ class TestKycApi:
                 json={"verification_id": "verify_123", "selfie_image": ""},
             )
 
-            # Empty string is valid base64, but should fail processing
-            assert response.status_code in [422, 500]
+            # Empty string should fail processing with validation error
+            assert response.status_code in [422]
 
         app.dependency_overrides.clear()

@@ -607,19 +607,35 @@ public class NotificationKafkaInfrastructureTest {
     @Test
     @DisplayName("Should verify topics follow naming convention")
     void shouldVerifyTopicsFollowNamingConvention() {
-        // Verify all topics follow lowercase, dot-separated naming convention
-        List<String> topics = List.of(
-                TOPIC_WALLET_EVENTS,
-                TOPIC_TRANSACTION_EVENTS,
-                TOPIC_PAYMENT_EVENTS,
-                TOPIC_SPLIT_BILL_EVENTS,
-                TOPIC_NOTIFICATION_EVENTS
+        // PayU uses two naming conventions for Kafka topics:
+        //   - Domain event topics use dots: "wallet.balance.changed", "transaction.completed"
+        //   - Service-level aggregate topics use hyphens: "payment-events", "notification-events"
+        // Both are valid — regex accepts lowercase alphanumeric with dots and hyphens.
+
+        List<String> dotSeparatedTopics = List.of(
+                TOPIC_WALLET_EVENTS,       // wallet.balance.changed
+                TOPIC_TRANSACTION_EVENTS   // transaction.completed
+        );
+        List<String> hyphenSeparatedTopics = List.of(
+                TOPIC_PAYMENT_EVENTS,      // payment-events
+                TOPIC_SPLIT_BILL_EVENTS,   // split-bill-events
+                TOPIC_NOTIFICATION_EVENTS  // notification-events
         );
 
-        for (String topic : topics) {
-            assertThat(topic).matches("^[a-z0-9.-]+$");
-            assertThat(topic).doesNotContain("_");
-            assertThat(topic).doesNotContain(" ");
+        for (String topic : dotSeparatedTopics) {
+            assertThat(topic).as("Domain event topic: " + topic)
+                .matches("^[a-z0-9.]+$")
+                .doesNotContain("_")
+                .doesNotContain(" ")
+                .contains(".");
+        }
+
+        for (String topic : hyphenSeparatedTopics) {
+            assertThat(topic).as("Service-level topic: " + topic)
+                .matches("^[a-z0-9-]+$")
+                .doesNotContain("_")
+                .doesNotContain(" ")
+                .contains("-");
         }
     }
 

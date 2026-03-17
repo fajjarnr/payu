@@ -199,7 +199,7 @@ public class SimulatorGatewayIntegrationTest {
                 .when()
                 .post("/api/v1/simulator/bifast/inquiry")
                 .then()
-                .statusCode(anyOf(is(400), is(500)))
+                .statusCode(anyOf(is(400), is(502), is(503)))
                 .body("responseCode", containsString("01"));
     }
 
@@ -334,7 +334,7 @@ public class SimulatorGatewayIntegrationTest {
                 .when()
                 .post("/api/v1/simulator/dukcapil/verify")
                 .then()
-                .statusCode(anyOf(is(404), is(500)))
+                .statusCode(anyOf(is(404), is(502), is(503)))
                 .body("responseCode", containsString("01"));
     }
 
@@ -475,7 +475,7 @@ public class SimulatorGatewayIntegrationTest {
                 .when()
                 .post("/api/v1/simulator/qris/pay")
                 .then()
-                .statusCode(anyOf(is(400), is(500)))
+                .statusCode(anyOf(is(400), is(502), is(503)))
                 .body("responseCode", containsString("01"));
     }
 

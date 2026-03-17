@@ -47,6 +47,9 @@ class CashbackSagaOrchestratorTest {
     @Mock
     private CashbackRepository cashbackRepository;
 
+    @Mock
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+
     private CashbackSagaOrchestrator orchestrator;
 
     private static final String TEST_ACCOUNT_ID = "acc-123";
@@ -54,7 +57,7 @@ class CashbackSagaOrchestratorTest {
 
     @BeforeEach
     void setUp() {
-        orchestrator = new CashbackSagaOrchestrator(sagaRepository, sagaTaskExecutor, sagaRetryScheduler, walletServicePort, cashbackRepository);
+        orchestrator = new CashbackSagaOrchestrator(sagaRepository, sagaTaskExecutor, sagaRetryScheduler, transactionManager, walletServicePort, cashbackRepository);
     }
 
     @Test

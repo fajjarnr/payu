@@ -110,10 +110,11 @@ public class GrpcErrorHandlingInterceptor {
                                         status.getCode(),
                                         status.getDescription());
 
-                                // Map gRPC status to appropriate exception
+                                // BUG-SHARED-021: Log the mapped exception instead of throwing it.
+                                // Throwing inside onClose() corrupts the gRPC channel state.
                                 RuntimeException exception = mapStatusToException(status, method);
                                 if (exception != null) {
-                                    throw exception;
+                                    log.warn("gRPC error mapped to exception: {}", exception.getMessage());
                                 }
                             }
                             super.onClose(status, trailers);

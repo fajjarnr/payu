@@ -14,6 +14,7 @@ import id.payu.transaction.dto.BifastTransferResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.Duration;
 import java.util.List;
@@ -54,10 +55,11 @@ public class TransferSagaOrchestrator extends SagaOrchestrator<TransferSagaConte
             SagaRepository sagaRepository,
             @Qualifier("sagaTaskExecutor") TaskExecutor sagaTaskExecutor,
             @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler,
+            PlatformTransactionManager transactionManager,
             WalletServicePort walletService,
             BifastServicePort bifastService,
             TransactionPersistencePort transactionPersistence) {
-        super(sagaRepository, sagaTaskExecutor, sagaRetryScheduler);
+        super(sagaRepository, sagaTaskExecutor, sagaRetryScheduler, transactionManager);
         this.walletService = walletService;
         this.bifastService = bifastService;
         this.transactionPersistence = transactionPersistence;

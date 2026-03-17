@@ -217,7 +217,9 @@ class PayLaterIntegrationTest {
                         .build())
                 .header("Authorization", TestContainersConfig.bearerToken())
                 .exchange()
-                .expectStatus().is5xxServerError(); // IllegalStateException: Insufficient PayLater credit limit
+                // Business rule: insufficient credit should be 4xx, not 5xx
+                // TODO: Service should throw a proper BusinessException mapped to 400/422
+                .expectStatus().is4xxClientError();
     }
 
     // ─── transaction history ────────────────────────────────────────

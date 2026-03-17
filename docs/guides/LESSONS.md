@@ -558,4 +558,16 @@ Adding `@AuthenticationPrincipal Jwt jwt` to controller methods for security fix
 
 ---
 
+### L-025: Constructor Signature Changes Cascade to All Subclasses and Tests
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: Backend / Shared Libraries
+
+Adding `PlatformTransactionManager` to `SagaOrchestrator`'s constructor (BUG-SHARED-007 fix) caused a **cascading build failure** across every class that extends it: `TransferSagaOrchestrator`, `CashbackSagaOrchestrator`, and all their test files. The Maven build broke in 4+ locations.
+
+**Root Cause**: Java constructors are not inherited — every subclass that calls `super(...)` must be updated when the parent constructor signature changes. Test files that instantiate these subclasses also break.
+
+**Rule**: (a) Before changing a shared library constructor, run `grep -rn "extends ClassName" backend/ --include="*.java"` to find all subclasses. (b) For each subclass, also check its test files: `grep -rn "new SubclassName(" backend/ --include="*.java"`. (c) Update all locations in the same commit — never push a partial constructor change. (d) After fixing, run `mvn clean package -DskipTests` to verify zero compilation errors before proceeding.
+
+---
+
 _Last Updated: March 17, 2026_

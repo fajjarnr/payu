@@ -61,7 +61,7 @@ public class RateLimitAspect {
             return joinPoint.proceed();
         }
 
-        String key = buildRateLimitKey(request, rateLimit.keyPrefix());
+        String key = buildRateLimitKey(request, rateLimit.keyPrefix(), rateLimit.windowSeconds());
         int limit = rateLimit.value();
         long windowSeconds = rateLimit.windowSeconds();
 
@@ -89,13 +89,13 @@ public class RateLimitAspect {
     /**
      * Builds the rate limit key for Redis.
      */
-    private String buildRateLimitKey(HttpServletRequest request, String prefix) {
+    private String buildRateLimitKey(HttpServletRequest request, String prefix, long windowSeconds) {
         // Use IP address or user ID for rate limiting
         String identifier = getClientIdentifier(request);
         return String.format("rate_limit:%s:%s:%s",
                 prefix,
                 identifier,
-                System.currentTimeMillis() / 1000 / 60 // Minute-based window
+                System.currentTimeMillis() / 1000 / windowSeconds // Window based on annotation parameter
         );
     }
 

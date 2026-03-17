@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -134,16 +135,19 @@ public class GrpcStarterAutoConfiguration {
 
     /**
      * Provider for client interceptors that can be used by gRPC channels.
+     * Auth interceptor is optional — it may not be present if JwtDecoder is not configured.
      */
     @Bean
     @ConditionalOnMissingBean(name = "grpcClientInterceptors")
     public List<ClientInterceptor> grpcClientInterceptors(
             @Qualifier("grpcTracingClientInterceptor") ClientInterceptor tracingInterceptor,
-            @Qualifier("grpcAuthClientInterceptor") ClientInterceptor authInterceptor,
+            @Autowired(required = false) @Qualifier("grpcAuthClientInterceptor") ClientInterceptor authInterceptor,
             @Qualifier("grpcRetryInterceptor") ClientInterceptor retryInterceptor) {
         List<ClientInterceptor> interceptors = new ArrayList<>();
         interceptors.add(tracingInterceptor);
-        interceptors.add(authInterceptor);
+        if (authInterceptor != null) {
+            interceptors.add(authInterceptor);
+        }
         interceptors.add(retryInterceptor);
         return interceptors;
     }

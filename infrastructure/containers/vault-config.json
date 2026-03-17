@@ -1,4 +1,5 @@
 {
+  "_comment_storage": "DEV ONLY: 'file' backend is for local development. Production MUST use 'consul' or 'raft' backend for HA and durability.",
   "backend": {
     "file": {
       "path": "/vault/data"
@@ -8,11 +9,15 @@
     "tcp": {
       "address": "0.0.0.0:8200",
       "cluster_address": "0.0.0.0:8201",
-      "tls_disable": true
+      "_comment_tls": "DEV ONLY - Enable TLS in production with tls_cert_file and tls_key_file",
+      "tls_disable": true,
+      "tls_cert_file": "",
+      "tls_key_file": ""
     }
   },
-  "default_lease_ttl": "168h",
-  "max_lease_ttl": "720h",
+  "_comment_ttl": "DEV values. Production: default_lease_ttl=1h, max_lease_ttl=24h. Reduce further for sensitive secrets.",
+  "default_lease_ttl": "1h",
+  "max_lease_ttl": "24h",
   "ui": true,
   "api_addr": "http://0.0.0.0:8200",
   "cluster_addr": "https://0.0.0.0:8201"

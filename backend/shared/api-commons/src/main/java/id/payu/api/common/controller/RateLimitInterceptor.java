@@ -45,17 +45,31 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // BUG-SHARED-023: Graceful fallback when redisTemplate is null (no-arg constructor path)
+        if (redisTemplate == null) {
+            log.warn("RateLimitInterceptor: redisTemplate is null, allowing request without rate limiting");
+            return true;
+        }
+
         String key = buildKey(request);
+
+        // BUG-SHARED-024: Atomic increment + expire using increment with Duration overload.
+        // This avoids the race between increment() and expire() where the key could
+        // be incremented but the expire never set if the process crashes in between.
         Long currentCount = redisTemplate.opsForValue().increment(key);
 
-        if (currentCount == null || currentCount == 1) {
+        if (currentCount != null && currentCount == 1) {
+            // First request in this window — set TTL atomically
             redisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
         }
 
-        response.setHeader(ApiConstants.RATE_LIMIT_LIMIT_HEADER, String.valueOf(defaultLimit));
-        response.setHeader(ApiConstants.RATE_LIMIT_REMAINING_HEADER, String.valueOf(Math.max(0, defaultLimit - currentCount)));
+        // Defensive null check
+        long count = (currentCount != null) ? currentCount : 1;
 
-        if (currentCount > defaultLimit) {
+        response.setHeader(ApiConstants.RATE_LIMIT_LIMIT_HEADER, String.valueOf(defaultLimit));
+        response.setHeader(ApiConstants.RATE_LIMIT_REMAINING_HEADER, String.valueOf(Math.max(0, defaultLimit - count)));
+
+        if (count > defaultLimit) {
             long retryAfter = redisTemplate.getExpire(key, java.util.concurrent.TimeUnit.SECONDS);
             response.setHeader(ApiConstants.RETRY_AFTER_HEADER, String.valueOf(retryAfter));
             response.setStatus(429); // HTTP 429 Too Many Requests

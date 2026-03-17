@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Reactive saga orchestrator for non-blocking saga execution.
@@ -84,7 +85,7 @@ public abstract class ReactiveSagaOrchestrator<T> {
         // Use a concurrent map to track state across reactive operations
         final Map<String, Object> executionState = new ConcurrentHashMap<>();
         executionState.put("data", initialData);
-        executionState.put("executedSteps", new ArrayList<String>());
+        executionState.put("executedSteps", new CopyOnWriteArrayList<String>());
 
         return Flux.fromIterable(steps)
                 .concatMap(step -> executeSingleStep(sagaId, instance, step, executionState))

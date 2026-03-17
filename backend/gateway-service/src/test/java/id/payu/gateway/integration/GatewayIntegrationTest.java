@@ -405,21 +405,30 @@ public class GatewayIntegrationTest {
     @Order(60)
     @DisplayName("Gateway should return 502 when backend service is not configured")
     void testErrorServiceNotConfigured() {
-        // Try to access a service that doesn't exist in config
-        // This would require modifying the config, so we skip this test
-        // and instead test service unavailable scenario
+        // Try to access a service route that is not configured in the gateway
+        given()
+                .when().get("/api/v1/unknown-service/resource")
+                .then()
+                .statusCode(anyOf(is(404), is(502), is(503))); // Not found or bad gateway
     }
 
     @Test
     @Order(61)
     @DisplayName("Gateway should return 503 when backend service is unavailable")
     void testErrorServiceUnavailable() {
-        // Stop the account service mock to simulate unavailability
-        // Note: WireMockExtension doesn't support stop/start in JUnit 5
-        // Instead, we'll create a stub that returns a service unavailable response
+        // Stub the account service to return 503 (simulating unavailability)
+        accountServiceMock.stubFor(get(urlPathEqualTo("/api/v1/accounts"))
+                .willReturn(aResponse()
+                        .withStatus(503)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"error\":\"SERVICE_UNAVAILABLE\",\"message\":\"Service temporarily unavailable\"}")));
 
-        // This test is skipped due to WireMockExtension limitations
-        // In production, you'd use @BeforeEach to reset stubs instead
+        given()
+                .when().get("/api/v1/accounts")
+                .then()
+                .statusCode(503);
+
+        accountServiceMock.verify(1, getRequestedFor(urlPathEqualTo("/api/v1/accounts")));
     }
 
     @Test

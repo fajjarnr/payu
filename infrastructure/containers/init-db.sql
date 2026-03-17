@@ -28,6 +28,22 @@ CREATE DATABASE payu_products;
 CREATE DATABASE payu_gateway;
 CREATE DATABASE payu_api_portal;
 
+-- =============================================================================
+-- DEV ONLY: Single shared 'payu' user for local development convenience.
+--
+-- PRODUCTION: Create per-service DB users with restricted privileges, e.g.:
+--   CREATE USER svc_wallet WITH PASSWORD '${WALLET_DB_PASSWORD}';
+--   GRANT CONNECT ON DATABASE payu_wallet TO svc_wallet;
+--   GRANT USAGE ON SCHEMA public TO svc_wallet;
+--   GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO svc_wallet;
+--
+-- Critical services requiring isolated DB users in production:
+--   - wallet-service (financial ledger — no cross-service access)
+--   - transaction-service (payment processing — audit isolation)
+--   - auth-service (credentials — principle of least privilege)
+--   - compliance-service (regulatory data — access control)
+-- =============================================================================
+
 -- Create Users (Simplified for dev)
 -- User 'payu' is created via POSTGRES_USER env var
 

@@ -8,6 +8,8 @@ TARGET_URL="${1:-https://staging-api.payu.fajjjar.my.id}"
 REPORT_DIR="${2:-target/zap-reports}"
 ZAP_PORT="${ZAP_PORT:-8080}"
 ZAP_HOST="${ZAP_HOST:-localhost}"
+# DEV ONLY — set a strong, unique API key in production CI/CD secrets
+ZAP_API_KEY="${ZAP_API_KEY:-payu-zap-dev-key-change-in-prod}"
 
 echo "Starting OWASP ZAP Security Scan against: ${TARGET_URL}"
 echo "Report directory: ${REPORT_DIR}"
@@ -24,7 +26,7 @@ if ! curl -s "http://${ZAP_HOST}:${ZAP_PORT}" > /dev/null; then
         -p "${ZAP_PORT}:8080" \
         -v "$(pwd)/${REPORT_DIR}:/zap/wrk" \
         zaproxy/zap-stable:latest \
-        zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true
+        zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.key="${ZAP_API_KEY}"
 
     # Wait for ZAP to start
     echo "Waiting for ZAP to start..."
@@ -48,7 +50,7 @@ docker exec payu-zap-scanner \
     -w "${REPORT_DIR}/zap-report.md" \
     -x "${REPORT_DIR}/zap-report.xml" \
     -a \
-    -z "-config api.disablekey=true"
+    -z "-config api.key=${ZAP_API_KEY}"
 
 # Check for high risk alerts
 echo "Checking for high-risk alerts..."

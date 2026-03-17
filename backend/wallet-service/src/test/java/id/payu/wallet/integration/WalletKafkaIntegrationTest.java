@@ -158,14 +158,27 @@ public class WalletKafkaIntegrationTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
 
-        // When - Create wallet (may return 401 due to no auth, but event should be published if controller is accessible)
+        // When - Create wallet (may return 401/403 due to no auth token in test context)
         String url = "http://localhost:" + port + "/api/v1/wallets";
-        
-        // Poll Kafka for events (even if API call fails, we test the consumer is working)
+        ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+
+        // Then - Verify the endpoint responded (201 if accessible, 401/403 if auth blocks it)
+        assertThat(response.getStatusCode()).isIn(
+                HttpStatus.CREATED, HttpStatus.OK,
+                HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN,
+                HttpStatus.BAD_REQUEST
+        );
+
+        // Poll Kafka for events — if auth blocked the request, no events will be published
         ConsumerRecords<String, Map<String, Object>> records = consumer.poll(Duration.ofSeconds(3));
-        
-        // Then - Verify consumer is working  
-        assertThat(consumer.subscription()).contains("wallet.created");
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            // If the wallet was created successfully, verify Kafka event was published
+            assertThat(records.count()).isGreaterThan(0);
+        } else {
+            // Auth blocked the request — verify consumer subscription is correct at minimum
+            assertThat(consumer.subscription()).contains("wallet.created");
+        }
     }
 
     @Test
@@ -207,15 +220,15 @@ public class WalletKafkaIntegrationTest {
     }
 
     @Test
-    @DisplayName("API endpoints should respond (even with auth errors)")
+    @DisplayName("Health endpoint should respond with OK or SERVICE_UNAVAILABLE")
     void apiEndpointsShouldRespond() {
         // Given
         String url = "http://localhost:" + port + "/actuator/health";
 
-        // When - Call health endpoint (should be public)
+        // When - Call health endpoint (excluded from security via WebSecurityCustomizer)
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
-        // Then - Should respond (either 200 or 401/403)
-        assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN);
+        // Then - Health endpoint should be public; only OK or SERVICE_UNAVAILABLE are valid
+        assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.SERVICE_UNAVAILABLE);
     }
 }

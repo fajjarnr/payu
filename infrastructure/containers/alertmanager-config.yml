@@ -1,8 +1,11 @@
 global:
   resolve_timeout: 5m
+  # PRODUCTION: Configure a real SMTP relay (e.g., SES, SendGrid). localhost:25 is dev-only.
   smtp_smarthost: 'localhost:25'
   smtp_from: 'alertmanager@payu.fajjjar.my.id'
   smtp_require_tls: false
+  # PRODUCTION: Set slack_api_url globally or per-receiver using ${SLACK_WEBHOOK_URL}
+  # PRODUCTION: Set pagerduty_url if using PagerDuty
 route:
   group_by: ['alertname', 'cluster', 'service']
   group_wait: 10s
@@ -38,6 +41,7 @@ route:
 receivers:
   - name: 'default-receiver'
     email_configs:
+      # PRODUCTION: Replace with actual ops team distribution list
       - to: 'platform@payu.fajjjar.my.id'
         headers:
           Subject: '[PayU Alert] {{ .GroupLabels.alertname }}'
@@ -46,41 +50,47 @@ receivers:
       - url: 'http://localhost:8080/alerts/critical'
         send_resolved: true
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      # PRODUCTION: Replace with ${SLACK_WEBHOOK_URL} from K8s Secret or Vault
+      - api_url: '${SLACK_WEBHOOK_URL}'
         channel: '#payu-critical'
-        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        title: 'CRITICAL: {{ .GroupLabels.alertname }}'
         text: >-
           {{ range .Alerts }} *Alert:* {{ .Labels.alertname }} *Severity:* {{ .Labels.severity }} *Service:* {{ .Labels.job }} *Description:* {{ .Annotations.description }} {{ end }}
         send_resolved: true
+    pagerduty_configs:
+      # PRODUCTION: Replace with ${PAGERDUTY_SERVICE_KEY} from K8s Secret or Vault
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        description: '{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}'
+        severity: critical
   - name: 'warning-alerts'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      - api_url: '${SLACK_WEBHOOK_URL}'
         channel: '#payu-warnings'
-        title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+        title: 'WARNING: {{ .GroupLabels.alertname }}'
         text: >-
           {{ range .Alerts }} *Alert:* {{ .Labels.alertname }} *Severity:* {{ .Labels.severity }} *Service:* {{ .Labels.job }} *Description:* {{ .Annotations.description }} {{ end }}
         send_resolved: true
   - name: 'info-alerts'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      - api_url: '${SLACK_WEBHOOK_URL}'
         channel: '#payu-info'
-        title: 'ℹ️ INFO: {{ .GroupLabels.alertname }}'
+        title: 'INFO: {{ .GroupLabels.alertname }}'
         text: >-
           {{ range .Alerts }} *Alert:* {{ .Labels.alertname }} *Severity:* {{ .Labels.severity }} *Service:* {{ .Labels.job }} *Description:* {{ .Annotations.description }} {{ end }}
         send_resolved: true
   - name: 'business-alerts'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      - api_url: '${SLACK_WEBHOOK_URL}'
         channel: '#payu-business'
-        title: '💼 BUSINESS ALERT: {{ .GroupLabels.alertname }}'
+        title: 'BUSINESS ALERT: {{ .GroupLabels.alertname }}'
         text: >-
           {{ range .Alerts }} *Alert:* {{ .Labels.alertname }} *Severity:* {{ .Labels.severity }} *Service:* {{ .Labels.job }} *Description:* {{ .Annotations.description }} {{ end }}
         send_resolved: true
   - name: 'platform-alerts'
     slack_configs:
-      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      - api_url: '${SLACK_WEBHOOK_URL}'
         channel: '#payu-platform'
-        title: '🔧 PLATFORM ALERT: {{ .GroupLabels.alertname }}'
+        title: 'PLATFORM ALERT: {{ .GroupLabels.alertname }}'
         text: >-
           {{ range .Alerts }} *Alert:* {{ .Labels.alertname }} *Severity:* {{ .Labels.severity }} *Service:* {{ .Labels.job }} *Description:* {{ .Annotations.description }} {{ end }}
         send_resolved: true

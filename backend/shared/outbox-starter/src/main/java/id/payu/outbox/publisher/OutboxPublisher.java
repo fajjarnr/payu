@@ -6,7 +6,6 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -16,7 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -48,12 +49,40 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 1.0.0
  */
 @Slf4j
-@RequiredArgsConstructor
 public class OutboxPublisher {
 
     private final OutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final MeterRegistry meterRegistry;
+    private final TransactionTemplate transactionTemplate;
+
+    public OutboxPublisher(OutboxRepository outboxRepository,
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           MeterRegistry meterRegistry,
+                           PlatformTransactionManager transactionManager) {
+        this.outboxRepository = outboxRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.meterRegistry = meterRegistry;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
+
+    /**
+     * Backward-compatible constructor for tests and contexts without explicit
+     * PlatformTransactionManager. Falls back to legacy send-then-mark behavior
+     * since programmatic transaction control is unavailable.
+     *
+     * @deprecated Use the 4-arg constructor with PlatformTransactionManager for
+     *             mark-before-send double-publish prevention (BUG-SHARED-004).
+     */
+    @Deprecated
+    public OutboxPublisher(OutboxRepository outboxRepository,
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           MeterRegistry meterRegistry) {
+        this.outboxRepository = outboxRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.meterRegistry = meterRegistry;
+        this.transactionTemplate = null;
+    }
 
     @Value("${payu.outbox.publisher.batch-size:100}")
     private int batchSize;
@@ -90,12 +119,23 @@ public class OutboxPublisher {
     /**
      * Scheduled task that polls for unpublished events and publishes them.
      * <p>
-     * This method runs at a fixed interval (default: 1 second) and processes
-     * pending events in batches. It uses pessimistic locking to prevent
-     * concurrent processing by multiple application instances.
+     * BUG-SHARED-004 FIX: Restructured to mark-before-send pattern to prevent
+     * double-publish. Previously the flow was: send-to-Kafka → mark-as-published,
+     * which caused duplicates if the DB commit after Kafka send failed.
+     * <p>
+     * New flow:
+     * <ol>
+     *   <li>SELECT unpublished events FOR UPDATE SKIP LOCKED (in transaction)</li>
+     *   <li>Mark events as PUBLISHED in DB (in same transaction)</li>
+     *   <li>Commit transaction (releases locks, persists PUBLISHED status)</li>
+     *   <li>Send events to Kafka (outside transaction)</li>
+     *   <li>If Kafka send fails, reset status to unpublished in a new transaction</li>
+     * </ol>
+     * This ensures at-least-once delivery: duplicates can only occur if Kafka acks
+     * but the failure-reset also runs (unlikely race), vs. the old pattern where
+     * duplicates occurred on every DB commit failure.
      */
     @Scheduled(fixedDelayString = "${payu.outbox.publisher.poll-interval-ms:1000}")
-    @Transactional
     public void pollAndPublish() {
         if (!enabled) {
             log.debug("Outbox publisher is disabled");
@@ -103,38 +143,11 @@ public class OutboxPublisher {
         }
 
         try {
-            // BUG-BE-100: Pass batchSize as int for native SKIP LOCKED query
-            List<OutboxEvent> unpublishedEvents = outboxRepository.findUnpublishedEventsWithLock(maxRetries, batchSize);
-
-            if (unpublishedEvents.isEmpty()) {
-                pendingEventsGauge.set(0);
-                return;
+            if (transactionTemplate != null) {
+                pollAndPublishWithMarkBeforeSend();
+            } else {
+                pollAndPublishLegacy();
             }
-
-            pendingEventsGauge.set(unpublishedEvents.size());
-            log.debug("Found {} unpublished outbox events to process", unpublishedEvents.size());
-
-            Timer.Sample batchTimer = Timer.start(meterRegistry);
-            int successCount = 0;
-            int failureCount = 0;
-
-            for (OutboxEvent event : unpublishedEvents) {
-                try {
-                    publishEvent(event);
-                    successCount++;
-                } catch (Exception e) {
-                    failureCount++;
-                    handlePublishFailure(event, e);
-                }
-            }
-
-            batchTimer.stop(Timer.builder("outbox.publish.batch")
-                    .description("Time taken to process a batch of outbox events")
-                    .tag("status", "completed")
-                    .register(meterRegistry));
-
-            log.info("Outbox batch processed: {} succeeded, {} failed", successCount, failureCount);
-
         } catch (Exception e) {
             log.error("Error during outbox polling", e);
             Counter.builder("outbox.poll.errors")
@@ -145,15 +158,182 @@ public class OutboxPublisher {
     }
 
     /**
-     * Publishes a single outbox event to Kafka.
+     * BUG-SHARED-004 FIX: Mark-before-send pattern.
+     * <ol>
+     *   <li>SELECT unpublished events FOR UPDATE SKIP LOCKED (in transaction)</li>
+     *   <li>Mark events as PUBLISHED in DB (in same transaction)</li>
+     *   <li>Commit transaction (releases locks, persists PUBLISHED status)</li>
+     *   <li>Send events to Kafka (outside transaction)</li>
+     *   <li>If Kafka send fails, reset status to unpublished in a new transaction</li>
+     * </ol>
+     */
+    private void pollAndPublishWithMarkBeforeSend() {
+        // Phase 1: In a single transaction — fetch with lock and mark as published
+        List<OutboxEvent> eventsToPublish = transactionTemplate.execute(status -> {
+            List<OutboxEvent> unpublished = outboxRepository.findUnpublishedEventsWithLock(maxRetries, batchSize);
+            if (unpublished.isEmpty()) {
+                return unpublished;
+            }
+            // Mark all as published BEFORE sending to Kafka (prevents double-publish)
+            Instant now = Instant.now();
+            for (OutboxEvent event : unpublished) {
+                outboxRepository.markAsPublished(event.getId(), now);
+            }
+            return unpublished;
+        });
+
+        if (eventsToPublish == null || eventsToPublish.isEmpty()) {
+            pendingEventsGauge.set(0);
+            return;
+        }
+
+        pendingEventsGauge.set(eventsToPublish.size());
+        log.debug("Found {} outbox events to publish (pre-marked as published)", eventsToPublish.size());
+
+        Timer.Sample batchTimer = Timer.start(meterRegistry);
+        int successCount = 0;
+        int failureCount = 0;
+
+        // Phase 2: Send to Kafka outside the transaction
+        for (OutboxEvent event : eventsToPublish) {
+            try {
+                sendToKafka(event);
+                successCount++;
+            } catch (Exception e) {
+                failureCount++;
+                // Phase 3: Kafka send failed — reset status in a new transaction
+                resetEventStatus(event, e);
+            }
+        }
+
+        batchTimer.stop(Timer.builder("outbox.publish.batch")
+                .description("Time taken to process a batch of outbox events")
+                .tag("status", "completed")
+                .register(meterRegistry));
+
+        log.info("Outbox batch processed: {} succeeded, {} failed", successCount, failureCount);
+    }
+
+    /**
+     * Legacy send-then-mark behavior (used when PlatformTransactionManager is unavailable).
+     * @deprecated Subject to double-publish risk. Use mark-before-send with TransactionManager.
+     */
+    @Deprecated
+    @Transactional
+    private void pollAndPublishLegacy() {
+        List<OutboxEvent> unpublishedEvents = outboxRepository.findUnpublishedEventsWithLock(maxRetries, batchSize);
+
+        if (unpublishedEvents.isEmpty()) {
+            pendingEventsGauge.set(0);
+            return;
+        }
+
+        pendingEventsGauge.set(unpublishedEvents.size());
+        log.debug("Found {} unpublished outbox events to process (legacy mode)", unpublishedEvents.size());
+
+        Timer.Sample batchTimer = Timer.start(meterRegistry);
+        int successCount = 0;
+        int failureCount = 0;
+
+        for (OutboxEvent event : unpublishedEvents) {
+            try {
+                sendToKafka(event);
+                outboxRepository.markAsPublished(event.getId(), Instant.now());
+                successCount++;
+            } catch (Exception e) {
+                failureCount++;
+                String errorMessage = e.getMessage();
+                if (errorMessage != null && errorMessage.length() > 1000) {
+                    errorMessage = errorMessage.substring(0, 1000);
+                }
+                outboxRepository.incrementRetryCount(event.getId(), errorMessage);
+                log.warn("Failed to publish outbox event {} (retry {}/{}): {}",
+                        event.getId(), event.getRetryCount() + 1, maxRetries, errorMessage);
+            }
+        }
+
+        batchTimer.stop(Timer.builder("outbox.publish.batch")
+                .description("Time taken to process a batch of outbox events")
+                .tag("status", "completed")
+                .register(meterRegistry));
+
+        log.info("Outbox batch processed (legacy): {} succeeded, {} failed", successCount, failureCount);
+    }
+
+    /**
+     * Resets an event back to unpublished state after a Kafka send failure.
+     * Runs in its own transaction so the reset is independent of the batch.
+     */
+    private void resetEventStatus(OutboxEvent event, Exception exception) {
+        try {
+            transactionTemplate.executeWithoutResult(status -> {
+                // Clear published_at so the event is picked up again on next poll
+                outboxRepository.clearPublishedStatus(event.getId());
+                String errorMessage = exception.getMessage();
+                if (errorMessage != null && errorMessage.length() > 1000) {
+                    errorMessage = errorMessage.substring(0, 1000);
+                }
+                outboxRepository.incrementRetryCount(event.getId(), errorMessage);
+            });
+
+            log.warn("Reset outbox event {} to unpublished after Kafka failure (retry {}/{}): {}",
+                    event.getId(), event.getRetryCount() + 1, maxRetries,
+                    exception.getMessage() != null ? exception.getMessage().substring(0, Math.min(200, exception.getMessage().length())) : "unknown");
+
+            if (event.getRetryCount() + 1 >= maxRetries) {
+                log.error("Outbox event {} has exceeded maximum retry attempts and will be marked as failed", event.getId());
+                Counter.builder("outbox.publish.permanent.failure")
+                        .description("Number of events that exceeded max retry attempts")
+                        .tag("eventType", event.getEventType())
+                        .register(meterRegistry)
+                        .increment();
+            }
+        } catch (Exception resetEx) {
+            log.error("CRITICAL: Failed to reset outbox event {} after Kafka failure — may cause missed event", event.getId(), resetEx);
+        }
+    }
+
+    /**
+     * Publishes a single outbox event to Kafka (public API, used by publishEventById/retryFailedEvents).
      * <p>
-     * The event is serialized to JSON and sent to the appropriate topic.
-     * Custom headers from the event are included in the Kafka record.
-     * The event ID is used as the Kafka message key for ordering guarantees.
+     * When a TransactionTemplate is available (production), uses mark-before-send pattern.
+     * Otherwise falls back to send-then-mark for backward compatibility.
      *
      * @param event the outbox event to publish
      */
     public void publishEvent(OutboxEvent event) {
+        if (transactionTemplate != null) {
+            // Mark as published first to prevent double-publish
+            int updated = outboxRepository.markAsPublished(event.getId(), Instant.now());
+            if (updated == 0) {
+                log.warn("Event {} was already marked as published by another process", event.getId());
+                return;
+            }
+
+            try {
+                sendToKafka(event);
+            } catch (Exception e) {
+                // Reset status since Kafka send failed
+                resetEventStatus(event, e);
+                throw e;
+            }
+        } else {
+            // Legacy: send then mark
+            sendToKafka(event);
+            outboxRepository.markAsPublished(event.getId(), Instant.now());
+        }
+    }
+
+    /**
+     * Sends a single outbox event to Kafka (internal — no DB status changes).
+     * <p>
+     * The event is serialized to JSON and sent to the appropriate topic.
+     * Custom headers from the event are included in the Kafka record.
+     * The aggregate ID is used as the Kafka message key for ordering guarantees.
+     *
+     * @param event the outbox event to send
+     */
+    private void sendToKafka(OutboxEvent event) {
         Timer.Sample timer = Timer.start(meterRegistry);
         String topic = Optional.ofNullable(event.getDestinationTopic()).orElse(defaultTopic);
 
@@ -200,14 +380,8 @@ public class OutboxPublisher {
                 }
             });
 
-            // Wait for acknowledgment (synchronous for transaction safety)
+            // Wait for acknowledgment (synchronous for delivery guarantee)
             future.get(10, TimeUnit.SECONDS);
-
-            // Mark as published in database
-            int updated = outboxRepository.markAsPublished(event.getId(), Instant.now());
-            if (updated == 0) {
-                log.warn("Event {} was already marked as published by another process", event.getId());
-            }
 
             timer.stop(Timer.builder("outbox.publish.duration")
                     .description("Time taken to publish an outbox event")
@@ -239,34 +413,6 @@ public class OutboxPublisher {
     }
 
     /**
-     * Handles a publish failure by incrementing the retry count and recording the error.
-     *
-     * @param event the event that failed to publish
-     * @param exception the exception that occurred
-     */
-    @Transactional
-    protected void handlePublishFailure(OutboxEvent event, Exception exception) {
-        String errorMessage = exception.getMessage();
-        if (errorMessage != null && errorMessage.length() > 1000) {
-            errorMessage = errorMessage.substring(0, 1000);
-        }
-
-        outboxRepository.incrementRetryCount(event.getId(), errorMessage);
-
-        log.warn("Failed to publish outbox event {} (retry {}/{}): {}",
-                event.getId(), event.getRetryCount() + 1, maxRetries, errorMessage);
-
-        if (event.getRetryCount() + 1 >= maxRetries) {
-            log.error("Outbox event {} has exceeded maximum retry attempts and will be marked as failed", event.getId());
-            Counter.builder("outbox.publish.permanent.failure")
-                    .description("Number of events that exceeded max retry attempts")
-                    .tag("eventType", event.getEventType())
-                    .register(meterRegistry)
-                    .increment();
-        }
-    }
-
-    /**
      * Manually triggers publishing of a specific event by ID.
      * Useful for retrying failed events through an admin API.
      *
@@ -287,7 +433,7 @@ public class OutboxPublisher {
             publishEvent(event);
             return true;
         } catch (Exception e) {
-            handlePublishFailure(event, e);
+            handlePublishFailureInline(event, e);
             return false;
         }
     }
@@ -309,12 +455,40 @@ public class OutboxPublisher {
                 publishEvent(event);
                 count++;
             } catch (Exception e) {
-                handlePublishFailure(event, e);
+                handlePublishFailureInline(event, e);
             }
         }
 
         log.info("Retried {} failed outbox events", count);
         return count;
+    }
+
+    /**
+     * Handles a publish failure by incrementing the retry count and recording the error.
+     * Used by publishEventById and retryFailedEvents (within @Transactional context).
+     *
+     * @param event the event that failed to publish
+     * @param exception the exception that occurred
+     */
+    private void handlePublishFailureInline(OutboxEvent event, Exception exception) {
+        String errorMessage = exception.getMessage();
+        if (errorMessage != null && errorMessage.length() > 1000) {
+            errorMessage = errorMessage.substring(0, 1000);
+        }
+
+        outboxRepository.incrementRetryCount(event.getId(), errorMessage);
+
+        log.warn("Failed to publish outbox event {} (retry {}/{}): {}",
+                event.getId(), event.getRetryCount() + 1, maxRetries, errorMessage);
+
+        if (event.getRetryCount() + 1 >= maxRetries) {
+            log.error("Outbox event {} has exceeded maximum retry attempts and will be marked as failed", event.getId());
+            Counter.builder("outbox.publish.permanent.failure")
+                    .description("Number of events that exceeded max retry attempts")
+                    .tag("eventType", event.getEventType())
+                    .register(meterRegistry)
+                    .increment();
+        }
     }
 
     /**

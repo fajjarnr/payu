@@ -2,11 +2,11 @@
 # This file can be used with systemd to manage the container
 
 [Container]
-Image=localhost/auth-service:test
+Image=localhost/auth-service:dev
 ContainerName=auth-service
 AutoUpdate=registry
-Network=podman
-PodmanArgs=--network=host --label=io.payu.service=auth-service
+Network=payu-network
+PodmanArgs=--label=io.payu.service=auth-service
 # Add your custom arguments below
 # EnvironmentFile=/auth-service/env
 # Volume=/auth-service/config:/etc/auth-service:ro
@@ -18,8 +18,8 @@ Restart=on-failure
 RestartSec=5s
 
 # Health check
-ExecStartPre=/usr/bin/podman check-network podman
-ExecStartPre=/usr/bin/podman pull localhost/auth-service:test
+ExecStartPre=/usr/bin/podman check-network payu-network
+ExecStartPre=/usr/bin/podman pull localhost/auth-service:dev
 
 # Set resource limits
 # LimitMEM=512M

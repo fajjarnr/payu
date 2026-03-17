@@ -60,6 +60,13 @@ public class EncryptionService {
      * @param salt           Optional PBKDF2 salt (null for default). MUST be externalized via Vault in production (BUG-BE-019).
      */
     public EncryptionService(String encryptionKey, List<String> previousKeys, String salt) {
+        if (salt == null || salt.isEmpty()) {
+            log.warn("╔══════════════════════════════════════════════════════════════════╗");
+            log.warn("║  SECURITY WARNING: Using default PBKDF2 salt!                   ║");
+            log.warn("║  Set payu.security.encryption.salt for production!              ║");
+            log.warn("║  Default salt enables precomputation attacks.                   ║");
+            log.warn("╚══════════════════════════════════════════════════════════════════╝");
+        }
         this.pbkdf2Salt = (salt != null && !salt.isEmpty())
                 ? salt.getBytes(StandardCharsets.UTF_8)
                 : DEFAULT_PBKDF2_SALT;
@@ -269,7 +276,15 @@ public class EncryptionService {
     }
 
     private static final int PBKDF2_ITERATIONS = 600_000;
-    private static final byte[] DEFAULT_PBKDF2_SALT = "PayU-AES-Key-Derivation-Salt-v1".getBytes(StandardCharsets.UTF_8);
+
+    /**
+     * Default PBKDF2 salt — 48 characters for adequate entropy.
+     * BUG-SHARED-003 FIX: Increased from "PayUDefaultSalt2024!" (20 chars) to a longer,
+     * more complex default. Still MUST be overridden in production via
+     * {@code payu.security.encryption.salt} property and externalized via Vault.
+     */
+    private static final byte[] DEFAULT_PBKDF2_SALT =
+            "PayU-AES256-PBKDF2-Key-Derivation-Salt-v2-2026!".getBytes(StandardCharsets.UTF_8);
 
     /**
      * Derive a 256-bit key from the provided key string using PBKDF2.

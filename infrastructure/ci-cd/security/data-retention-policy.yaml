@@ -161,6 +161,7 @@ spec:
     spec:
       template:
         spec:
+          serviceAccountName: data-retention-sa
           containers:
           - name: retention-cleanup
             image: postgres:16-alpine

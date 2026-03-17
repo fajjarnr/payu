@@ -43,7 +43,7 @@ public class IdempotencyFilterTest {
             .when()
             .post("/api/v1/accounts")
             .then()
-            .statusCode(anyOf(is(200), is(201), is(202), is(404), is(500), is(503)));
+            .statusCode(anyOf(is(200), is(201), is(202), is(404), is(429), is(503)));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class IdempotencyFilterTest {
             .when()
             .post("/api/v1/accounts")
             .then()
-            .statusCode(anyOf(is(200), is(201), is(202), is(404), is(500), is(503)));
+            .statusCode(anyOf(is(200), is(201), is(202), is(404), is(429), is(503)));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class IdempotencyFilterTest {
             .when()
             .post("/api/v1/accounts")
             .then()
-            .statusCode(anyOf(is(200), is(201), is(202), is(404), is(500), is(503)));
+            .statusCode(anyOf(is(200), is(201), is(202), is(404), is(429), is(503)));
     }
 
     @Test
@@ -78,7 +78,7 @@ public class IdempotencyFilterTest {
             .when()
             .get("/api/v1/accounts")
             .then()
-            .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)));
+            .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)));
     }
 
     @Test
@@ -103,6 +103,6 @@ public class IdempotencyFilterTest {
             .when()
             .post("/api/v1/accounts")
             .then()
-            .statusCode(anyOf(is(200), is(201), is(202), is(404), is(500), is(503)));
+            .statusCode(anyOf(is(200), is(201), is(202), is(404), is(429), is(503)));
     }
 }

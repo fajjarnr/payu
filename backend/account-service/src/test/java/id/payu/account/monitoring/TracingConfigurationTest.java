@@ -99,7 +99,13 @@ class TracingConfigurationTest {
         // The OTEL_ENDPOINT environment variable should be configurable
         // In test environment, we just verify the property can be set
         String otelEndpoint = System.getenv("OTEL_ENDPOINT");
-        // If not set, tests should still pass - endpoint is optional for unit tests
-        // In production with Jaeger, this would be set to http://jaeger:4317
+
+        // Verify: either not set (unit test env) or set to a valid HTTP endpoint (CI/prod)
+        assertThat(otelEndpoint)
+            .as("OTEL_ENDPOINT env var (optional in test, required in production)")
+            .satisfiesAnyOf(
+                e -> assertThat(e).isNull(),
+                e -> assertThat(e).startsWith("http")
+            );
     }
 }

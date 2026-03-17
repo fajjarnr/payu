@@ -38,6 +38,9 @@ class SagaOrchestratorIntegrationTest {
     @Autowired
     private SagaRepository sagaRepository;
 
+    @Autowired
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+
     private TestSagaOrchestrator orchestrator;
     private final ScheduledExecutorService retryScheduler = Executors.newScheduledThreadPool(2);
 
@@ -47,8 +50,9 @@ class SagaOrchestratorIntegrationTest {
     static class TestSagaOrchestrator extends SagaOrchestrator<Map<String, Object>> {
         public TestSagaOrchestrator(SagaRepository sagaRepository,
                                     org.springframework.core.task.TaskExecutor taskExecutor,
-                                    ScheduledExecutorService retryScheduler) {
-            super(sagaRepository, taskExecutor, retryScheduler);
+                                    ScheduledExecutorService retryScheduler,
+                                    org.springframework.transaction.PlatformTransactionManager transactionManager) {
+            super(sagaRepository, taskExecutor, retryScheduler, transactionManager);
         }
 
         public void init(String sagaType, List<SagaStep<Map<String, Object>>> steps) {
@@ -65,7 +69,7 @@ class SagaOrchestratorIntegrationTest {
         taskExecutor.setQueueCapacity(50);
         taskExecutor.setThreadNamePrefix("saga-test-");
         taskExecutor.initialize();
-        orchestrator = new TestSagaOrchestrator(sagaRepository, taskExecutor, retryScheduler);
+        orchestrator = new TestSagaOrchestrator(sagaRepository, taskExecutor, retryScheduler, transactionManager);
     }
 
     @Nested

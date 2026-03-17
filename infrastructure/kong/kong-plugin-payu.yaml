@@ -72,7 +72,7 @@ config:
   redis:
     host: datagrid.payu-cache.svc  # Red Hat Data Grid in RESP mode
     port: 6379
-    password: null  # Set via Secret if auth is enabled
+    password: "${REDIS_PASSWORD}"  # REQUIRED: inject via Kong env or K8s Secret. Never leave null in production.
     database: 3     # Separate DB from 3scale/application cache
     timeout: 2000
   # Rate limit by consumer (partner), not by IP
@@ -208,4 +208,7 @@ proxy:
   write_timeout: 30000
   retries: 2
   path: /
+  # PRODUCTION: Change to 'https' and configure TLS certificates.
+  # In OpenShift, TLS termination is typically handled by the Route/Ingress,
+  # but backend protocol should still be HTTPS for defense-in-depth (mTLS).
   protocol: http

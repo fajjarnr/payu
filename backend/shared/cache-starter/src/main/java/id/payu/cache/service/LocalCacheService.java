@@ -2,12 +2,14 @@ package id.payu.cache.service;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import id.payu.cache.properties.CacheProperties;
 import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,6 +32,10 @@ public class LocalCacheService {
     private final boolean enabled;
     private final boolean recordStats;
 
+    // Per-entry TTL tracking for variable expiration support
+    private final ConcurrentHashMap<String, Long> customTtlNanos = new ConcurrentHashMap<>();
+    private final long defaultTtlNanos;
+
     // Failure tracking for circuit breaker pattern
     private volatile boolean redisAvailable = true;
     private volatile long lastRedisFailureTime = 0;
@@ -45,11 +51,29 @@ public class LocalCacheService {
         this.properties = properties;
         this.enabled = properties.getLocalCache().isEnabled();
         this.recordStats = properties.getLocalCache().isRecordStats();
+        this.defaultTtlNanos = properties.getLocalCache().getTtl().toNanos();
 
         if (enabled) {
-            Caffeine<Object, Object> builder = Caffeine.newBuilder()
+            Caffeine<String, Object> builder = Caffeine.<String, Object>newBuilder()
                     .maximumSize(properties.getLocalCache().getMaxSize())
-                    .expireAfterWrite(properties.getLocalCache().getTtl());
+                    .expireAfter(new Expiry<String, Object>() {
+                        @Override
+                        public long expireAfterCreate(String key, Object value, long currentTime) {
+                            Long customTtl = customTtlNanos.remove(key);
+                            return customTtl != null ? customTtl : defaultTtlNanos;
+                        }
+
+                        @Override
+                        public long expireAfterUpdate(String key, Object value, long currentTime, long currentDuration) {
+                            Long customTtl = customTtlNanos.remove(key);
+                            return customTtl != null ? customTtl : currentDuration;
+                        }
+
+                        @Override
+                        public long expireAfterRead(String key, Object value, long currentTime, long currentDuration) {
+                            return currentDuration;
+                        }
+                    });
 
             if (recordStats) {
                 builder.recordStats();
@@ -130,11 +154,12 @@ public class LocalCacheService {
         }
 
         try {
-            // For custom TTL, we would need to use a different approach
-            // Caffeine uses a single TTL setting per cache instance
-            cache.asMap().put(key, value);
-            log.debug("Put key in local cache with custom TTL: {}", key);
+            // Store custom TTL so Expiry callback picks it up on create/update
+            customTtlNanos.put(key, ttl.toNanos());
+            cache.put(key, value);
+            log.debug("Put key in local cache with custom TTL {}: {}", ttl, key);
         } catch (Exception e) {
+            customTtlNanos.remove(key);
             log.warn("Error putting in local cache: {}", e.getMessage());
         }
     }

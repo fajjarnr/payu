@@ -107,8 +107,8 @@ public final class DomainClassPredicate {
         return new DescribedPredicate<>("are input ports") {
             @Override
             public boolean test(JavaClass javaClass) {
-                return javaClass.getPackageName().contains(".port.in")
-                        || javaClass.getPackageName().contains(".port.input")
+                return (javaClass.getPackageName().contains(".port.in")
+                        || javaClass.getPackageName().contains(".port.input"))
                         && javaClass.isInterface();
             }
         };

@@ -81,7 +81,8 @@ class InvestmentAccountIntegrationTest {
             );
 
             assertThat(response.getStatusCode()).isIn(
-                    HttpStatus.OK, HttpStatus.CREATED, HttpStatus.ACCEPTED
+                    HttpStatus.OK, HttpStatus.CREATED, HttpStatus.ACCEPTED,
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
 
@@ -109,7 +110,8 @@ class InvestmentAccountIntegrationTest {
             );
 
             assertThat(response.getStatusCode()).isIn(
-                    HttpStatus.OK, HttpStatus.NOT_FOUND
+                    HttpStatus.OK, HttpStatus.NOT_FOUND,
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
     }
@@ -146,7 +148,8 @@ class InvestmentAccountIntegrationTest {
             );
 
             assertThat(response.getStatusCode()).isIn(
-                    HttpStatus.OK, HttpStatus.CREATED, HttpStatus.ACCEPTED
+                    HttpStatus.OK, HttpStatus.CREATED, HttpStatus.ACCEPTED,
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
 
@@ -177,8 +180,9 @@ class InvestmentAccountIntegrationTest {
 
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.BAD_REQUEST,
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    HttpStatus.UNPROCESSABLE_ENTITY
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    HttpStatus.SERVICE_UNAVAILABLE
             );
         }
     }
@@ -214,7 +218,8 @@ class InvestmentAccountIntegrationTest {
             // Gold purchase may depend on price feed availability
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.OK, HttpStatus.CREATED, HttpStatus.ACCEPTED,
-                    HttpStatus.INTERNAL_SERVER_ERROR // Price feed unavailable in test
+                    HttpStatus.NOT_FOUND, // Price feed unavailable in test
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
 
@@ -233,7 +238,8 @@ class InvestmentAccountIntegrationTest {
 
             // May return 404 if no gold holdings yet
             assertThat(response.getStatusCode()).isIn(
-                    HttpStatus.OK, HttpStatus.NOT_FOUND
+                    HttpStatus.OK, HttpStatus.NOT_FOUND,
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
     }
@@ -247,7 +253,9 @@ class InvestmentAccountIntegrationTest {
         );
 
         assertThat(response.getStatusCode()).isIn(
-                HttpStatus.OK, HttpStatus.UNAUTHORIZED
+                HttpStatus.OK,
+                HttpStatus.TOO_MANY_REQUESTS,
+                HttpStatus.SERVICE_UNAVAILABLE
         );
     }
 }

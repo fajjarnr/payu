@@ -22,8 +22,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.Collections;
 
 /**
@@ -120,10 +118,21 @@ public class SecurityAutoConfiguration {
         return new AuditLogPublisher(properties, kafkaTemplate, objectMapper);
     }
 
+    /**
+     * Returns a deterministic default key for development/testing environments.
+     * <p>
+     * BUG-SHARED-002 FIX: Previously generated a random UUID key per invocation,
+     * meaning each pod in a multi-pod deployment would derive a different AES key.
+     * Data encrypted by pod-A was undecryptable by pod-B.
+     * Now uses a fixed development-only key so all pods share the same key.
+     * A loud WARNING is logged to ensure this is never used in production.
+     */
     private String generateDefaultKey() {
-        SecureRandom random = new SecureRandom();
-        byte[] key = new byte[32];
-        random.nextBytes(key);
-        return Base64.getEncoder().encodeToString(key);
+        log.warn("╔══════════════════════════════════════════════════════════════════╗");
+        log.warn("║  SECURITY WARNING: Using default encryption key!                ║");
+        log.warn("║  Set payu.security.encryption.password in production!           ║");
+        log.warn("║  Data encrypted with default key is NOT secure.                 ║");
+        log.warn("╚══════════════════════════════════════════════════════════════════╝");
+        return "CHANGE-ME-IN-PRODUCTION-payu-dev-key-2026";
     }
 }

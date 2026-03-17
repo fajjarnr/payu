@@ -99,12 +99,12 @@ class FxConversionFlowIntegrationTest {
                     String.class
             );
 
-            // May succeed or fail depending on rate availability
+            // Success path: accept CREATED or OK; also accept 429/503 from rate limiting
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.CREATED,
                     HttpStatus.OK,
-                    HttpStatus.BAD_REQUEST,
-                    HttpStatus.NOT_FOUND
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    HttpStatus.SERVICE_UNAVAILABLE
             );
         }
 
@@ -209,7 +209,8 @@ class FxConversionFlowIntegrationTest {
 
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.NOT_FOUND,
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    HttpStatus.SERVICE_UNAVAILABLE
             );
         }
     }
@@ -231,7 +232,8 @@ class FxConversionFlowIntegrationTest {
 
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.NOT_FOUND,
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    HttpStatus.SERVICE_UNAVAILABLE
             );
         }
     }

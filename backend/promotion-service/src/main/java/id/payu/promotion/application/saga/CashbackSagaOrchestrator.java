@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -44,9 +45,10 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
             SagaRepository sagaRepository,
             @Qualifier("sagaTaskExecutor") TaskExecutor sagaTaskExecutor,
             @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler,
+            PlatformTransactionManager transactionManager,
             WalletServicePort walletServicePort,
             CashbackRepository cashbackRepository) {
-        super(sagaRepository, sagaTaskExecutor, sagaRetryScheduler);
+        super(sagaRepository, sagaTaskExecutor, sagaRetryScheduler, transactionManager);
         this.walletServicePort = walletServicePort;
         this.cashbackRepository = cashbackRepository;
 

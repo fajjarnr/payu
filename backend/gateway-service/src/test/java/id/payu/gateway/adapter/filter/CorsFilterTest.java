@@ -27,7 +27,7 @@ class CorsFilterTest {
                 .get("/api/v1/partners")
             .then()
                 .header("Access-Control-Allow-Origin", "https://payu.fajjjar.my.id")
-                .statusCode(anyOf(is(200), is(404), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(404), is(429), is(503)));
         }
 
         @Test
@@ -39,7 +39,7 @@ class CorsFilterTest {
                 .get("/api/v1/partners")
             .then()
                 .header("Access-Control-Allow-Origin", "http://localhost:3000")
-                .statusCode(anyOf(is(200), is(404), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(404), is(429), is(503)));
         }
 
         @Test
@@ -51,7 +51,7 @@ class CorsFilterTest {
                 .get("/api/v1/partners")
             .then()
                 .header("Access-Control-Allow-Origin", nullValue())
-                .statusCode(anyOf(is(200), is(404), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(404), is(429), is(503)));
         }
     }
 

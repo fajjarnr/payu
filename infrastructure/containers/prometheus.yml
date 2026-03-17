@@ -8,7 +8,9 @@ scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
-  # Core Banking Services (Spring Boot)
+  # ──────────────────────────────────────────────
+  # Core Banking Services (Spring Boot 3.4)
+  # ──────────────────────────────────────────────
   - job_name: "account-service"
     metrics_path: "/actuator/prometheus"
     static_configs:
@@ -37,7 +39,9 @@ scrape_configs:
         labels:
           service: "wallet-service"
           tier: "core"
+  # ──────────────────────────────────────────────
   # Supporting Services (Quarkus)
+  # ──────────────────────────────────────────────
   - job_name: "billing-service"
     metrics_path: "/q/metrics"
     static_configs:
@@ -59,7 +63,16 @@ scrape_configs:
         labels:
           service: "gateway-service"
           tier: "gateway"
+  - job_name: "api-portal-service"
+    metrics_path: "/q/metrics"
+    static_configs:
+      - targets: ["api-portal-service:8080"]
+        labels:
+          service: "api-portal-service"
+          tier: "supporting"
+  # ──────────────────────────────────────────────
   # ML/Analytics Services (FastAPI)
+  # ──────────────────────────────────────────────
   - job_name: "kyc-service"
     metrics_path: "/metrics"
     static_configs:
@@ -74,7 +87,9 @@ scrape_configs:
         labels:
           service: "analytics-service"
           tier: "ml"
-  # Business & Operations Services
+  # ──────────────────────────────────────────────
+  # Business & Operations Services (Spring Boot)
+  # ──────────────────────────────────────────────
   - job_name: "investment-service"
     metrics_path: "/actuator/prometheus"
     static_configs:
@@ -89,58 +104,92 @@ scrape_configs:
         labels:
           service: "lending-service"
           tier: "business"
+  - job_name: "fx-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["fx-service:8080"]
+        labels:
+          service: "fx-service"
+          tier: "business"
+  - job_name: "statement-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["statement-service:8080"]
+        labels:
+          service: "statement-service"
+          tier: "business"
+  - job_name: "compliance-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["compliance-service:8087"]
+        labels:
+          service: "compliance-service"
+          tier: "business"
+  - job_name: "cms-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["cms-service:8080"]
+        labels:
+          service: "cms-service"
+          tier: "business"
+  # ──────────────────────────────────────────────
+  # Operations Services
+  # ──────────────────────────────────────────────
   - job_name: "backoffice-service"
-    metrics_path: "/q/metrics"
+    metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: ["backoffice-service:8080"]
         labels:
           service: "backoffice-service"
           tier: "operations"
   - job_name: "partner-service"
-    metrics_path: "/q/metrics"
+    metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: ["partner-service:8080"]
         labels:
           service: "partner-service"
           tier: "operations"
   - job_name: "promotion-service"
-    metrics_path: "/q/metrics"
+    metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: ["promotion-service:8080"]
         labels:
           service: "promotion-service"
           tier: "operations"
   - job_name: "support-service"
-    metrics_path: "/q/metrics"
+    metrics_path: "/actuator/prometheus"
     static_configs:
       - targets: ["support-service:8080"]
         labels:
           service: "support-service"
           tier: "operations"
-  # Infrastructure Components
-  - job_name: "postgres"
+  # ──────────────────────────────────────────────
+  # Infrastructure Components (scrape at 30s)
+  # ──────────────────────────────────────────────
+  - job_name: "postgres-exporter"
+    scrape_interval: 30s
     static_configs:
-      - targets: ["postgres:5432"]
+      - targets: ["postgres-exporter:9187"]
         labels:
           service: "postgres"
           tier: "data"
-    metrics_path: /metrics
-  - job_name: "redis"
+  - job_name: "redis-exporter"
+    scrape_interval: 30s
     static_configs:
-      - targets: ["redis:6379"]
+      - targets: ["redis-exporter:9121"]
         labels:
           service: "redis"
           tier: "cache"
-    metrics_path: /metrics
-  - job_name: "kafka"
+  - job_name: "kafka-exporter"
+    scrape_interval: 30s
     static_configs:
-      - targets: ["kafka:29092"]
+      - targets: ["kafka-exporter:9308"]
         labels:
           service: "kafka"
           tier: "messaging"
-    metrics_path: /metrics
   # Alertmanager
   - job_name: "alertmanager"
+    scrape_interval: 30s
     static_configs:
       - targets: ["alertmanager:9093"]
         labels:

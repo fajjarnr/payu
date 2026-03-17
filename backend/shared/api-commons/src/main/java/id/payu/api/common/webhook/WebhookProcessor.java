@@ -2,6 +2,7 @@ package id.payu.api.common.webhook;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -37,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WebhookProcessor {
+public class WebhookProcessor implements DisposableBean {
 
     private static final String KEY_PREFIX = "webhook:";
     private static final String PROCESSING_SUFFIX = ":processing";
@@ -296,6 +297,25 @@ public class WebhookProcessor {
 
     private String buildKey(String webhookId) {
         return KEY_PREFIX + webhookId;
+    }
+
+    /**
+     * Shuts down the static retry scheduler on application context close
+     * to prevent thread leaks.
+     */
+    @Override
+    public void destroy() throws Exception {
+        log.info("Shutting down webhook retry scheduler");
+        RETRY_SCHEDULER.shutdown();
+        try {
+            if (!RETRY_SCHEDULER.awaitTermination(10, TimeUnit.SECONDS)) {
+                log.warn("Webhook retry scheduler did not terminate gracefully, forcing shutdown");
+                RETRY_SCHEDULER.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            RETRY_SCHEDULER.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**

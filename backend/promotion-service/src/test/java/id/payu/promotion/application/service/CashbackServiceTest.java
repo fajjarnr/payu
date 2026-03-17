@@ -185,15 +185,21 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
+        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
+        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
             .thenReturn(successResult);
 
         // When
         Cashback result = cashbackService.createCashback(request);
 
-        // Then
+        // Then — verify the mock's return value
         assertEquals(new BigDecimal("20.00"), result.getCashbackAmount());
         assertEquals(new BigDecimal("2.0000"), result.getPercentage());
+
+        // Also verify the context's calculated amount (exercises CashbackSagaContext.calculateCashbackAmount)
+        CashbackSagaContext capturedContext = contextCaptor.getValue();
+        assertEquals(new BigDecimal("20.00"), capturedContext.getAmount(),
+            "GROCERY category should calculate 2% of 1000.00 = 20.00");
     }
 
     @Test
@@ -221,7 +227,8 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
+        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
+        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
             .thenReturn(successResult);
 
         // When
@@ -230,6 +237,11 @@ class CashbackServiceTest {
         // Then
         assertEquals(new BigDecimal("30.00"), result.getCashbackAmount());
         assertEquals(new BigDecimal("3.0000"), result.getPercentage());
+
+        // Verify context's calculated amount
+        CashbackSagaContext capturedContext = contextCaptor.getValue();
+        assertEquals(new BigDecimal("30.00"), capturedContext.getAmount(),
+            "DINING category should calculate 3% of 1000.00 = 30.00");
     }
 
     @Test
@@ -257,7 +269,8 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
+        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
+        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
             .thenReturn(successResult);
 
         // When
@@ -266,6 +279,11 @@ class CashbackServiceTest {
         // Then
         assertEquals(new BigDecimal("15.00"), result.getCashbackAmount());
         assertEquals(new BigDecimal("1.5000"), result.getPercentage());
+
+        // Verify context's calculated amount
+        CashbackSagaContext capturedContext = contextCaptor.getValue();
+        assertEquals(new BigDecimal("15.00"), capturedContext.getAmount(),
+            "SHOPPING category should calculate 1.5% of 1000.00 = 15.00");
     }
 
     @Test
@@ -293,7 +311,8 @@ class CashbackServiceTest {
             context
         );
 
-        when(sagaOrchestrator.executeCashbackSaga(any(CashbackSagaContext.class)))
+        ArgumentCaptor<CashbackSagaContext> contextCaptor = ArgumentCaptor.forClass(CashbackSagaContext.class);
+        when(sagaOrchestrator.executeCashbackSaga(contextCaptor.capture()))
             .thenReturn(successResult);
 
         // When
@@ -302,6 +321,11 @@ class CashbackServiceTest {
         // Then
         assertEquals(new BigDecimal("10.00"), result.getCashbackAmount());
         assertEquals(new BigDecimal("1.0000"), result.getPercentage());
+
+        // Verify context's calculated amount
+        CashbackSagaContext capturedContext = contextCaptor.getValue();
+        assertEquals(new BigDecimal("10.00"), capturedContext.getAmount(),
+            "DEFAULT (OTHER) category should calculate 1% of 1000.00 = 10.00");
     }
 
     @Test

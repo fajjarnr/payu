@@ -26,6 +26,8 @@ auth:
   providers:
     oidc:
       development:
+        # Must match Keycloak realm 'payu'. The realm export uses clientId 'payu-web-app'.
+        # Ensure KEYCLOAK_CLIENT_ID is set to a Backstage-specific client or 'payu-web-app'.
         metadataUrl: ${KEYCLOAK_URL}/realms/payu/.well-known/openid-configuration
         clientId: ${KEYCLOAK_CLIENT_ID}
         clientSecret: ${KEYCLOAK_CLIENT_SECRET}

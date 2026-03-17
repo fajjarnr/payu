@@ -32,7 +32,7 @@ import org.mapstruct.ReportingPolicy;
         componentModel = "spring",
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        unmappedTargetPolicy = ReportingPolicy.WARN,
         unmappedSourcePolicy = ReportingPolicy.WARN,
         mappingInheritanceStrategy = MappingInheritanceStrategy.AUTO_INHERIT_FROM_CONFIG
 )

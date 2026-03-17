@@ -4,14 +4,15 @@ groups:
     rules:
       # Service Availability Alerts
       - alert: ServiceDown
-        expr: up{job=~"payu-.*"} == 0
+        # Fixed: Use 'up == 0' without job filter so it matches all scrape targets
+        expr: up == 0
         for: 2m
         labels:
           severity: critical
           team: platform
         annotations:
           summary: "Service {{ $labels.job }} is down"
-          description: "Service {{ $labels.job }} has been down for more than 2 minutes."
+          description: "Service {{ $labels.job }} ({{ $labels.instance }}) has been down for more than 2 minutes."
       - alert: HighErrorRate
         expr: |
           (
@@ -26,6 +27,21 @@ groups:
         annotations:
           summary: "High error rate on {{ $labels.job }}"
           description: "Error rate on {{ $labels.job }} is {{ $value | humanizePercentage }}"
+      # Security: High rate of 4xx (possible brute-force or enumeration)
+      - alert: HighClientErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"4.."}[5m])) by (job)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (job)
+          ) > 0.25
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High client error rate on {{ $labels.job }}"
+          description: "4xx error rate on {{ $labels.job }} is {{ $value | humanizePercentage }} — possible brute-force or enumeration attack."
   - name: payu_performance
     interval: 30s
     rules:
@@ -42,6 +58,18 @@ groups:
         annotations:
           summary: "High response time on {{ $labels.job }}"
           description: "95th percentile response time is {{ $value }}s"
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (job, le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Critical p99 latency on {{ $labels.job }}"
+          description: "99th percentile response time is {{ $value }}s (threshold: 2s)"
       - alert: VeryHighResponseTime
         expr: |
           histogram_quantile(0.95,

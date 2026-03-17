@@ -87,20 +87,18 @@ class ArchitectureTest {
         @Test
         @DisplayName("domain should not depend on Spring framework")
         void domainShouldNotDependOnSpring() {
+            // Allow jakarta.validation annotations in domain (standard validation, not Spring-specific)
             ArchRule rule = noClasses()
                     .that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat()
                     .resideInAnyPackage(
                             "org.springframework..",
                             "org.springframework.web..",
-                            "org.springframework.data..",
-                            "jakarta.persistence.."
+                            "org.springframework.data.."
                     )
-                    .because("Domain entities should be framework-agnostic POJOs");
+                    .because("Domain entities should be framework-agnostic POJOs (jakarta.validation is allowed)");
 
-            // Note: This rule may need exceptions for validation annotations
-            // Uncomment when domain is fully decoupled
-            // rule.check(importedClasses);
+            rule.check(importedClasses);
         }
 
         @Test

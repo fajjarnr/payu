@@ -7,6 +7,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,13 +60,15 @@ public class RetryAndTimeoutServiceTest {
     @Test
     @DisplayName("Should add jitter to retry delay")
     public void testRetryDelayJitter() {
-        Duration delay1 = retryAndTimeoutService.calculateRetryDelay(1, "account-service");
-        Duration delay2 = retryAndTimeoutService.calculateRetryDelay(1, "account-service");
+        // Run multiple iterations to avoid flakiness from identical jitter values
+        Set<Long> delays = new HashSet<>();
+        for (int i = 0; i < 20; i++) {
+            delays.add(retryAndTimeoutService.calculateRetryDelay(1, "account-service").toMillis());
+        }
 
-        // Same attempt should have slightly different delays due to jitter
-        // Note: This might occasionally fail if jitter is the same
-        assertNotEquals(delay2.toMillis(), delay1.toMillis(),
-            "Retry delay should include jitter");
+        // With jitter, 20 samples should produce more than 1 distinct value
+        assertTrue(delays.size() > 1,
+            "Jitter should produce varying delays across 20 attempts, got: " + delays);
     }
 
     @Test

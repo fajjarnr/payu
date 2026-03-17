@@ -74,10 +74,15 @@ gateway:
       enabled: true
       containerPort: 8443
       servicePort: 443
+      # PRODUCTION: Provide TLS certificate via K8s Secret or cert-manager.
+      # parameters:
+      #   - secretName: kong-proxy-tls
+      #   - protocols: ["TLSv1.2", "TLSv1.3"]
 
   admin:
     enabled: true
     type: ClusterIP  # NEVER expose externally
+    # PRODUCTION: Disable admin HTTP and use only HTTPS with mTLS
     http:
       enabled: true
       containerPort: 8001

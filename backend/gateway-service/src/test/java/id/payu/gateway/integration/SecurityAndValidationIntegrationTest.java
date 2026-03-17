@@ -221,7 +221,7 @@ public class SecurityAndValidationIntegrationTest {
                     .when()
                     .post("/api/v1/accounts")
                     .then()
-                    .statusCode(anyOf(is(413), is(400), is(500), is(503)));
+                    .statusCode(anyOf(is(413), is(400), is(429), is(503)));
         } catch (Exception e) {
             // Server may close connection before full body is sent (Broken pipe),
             // which is the expected behavior for oversized requests
@@ -262,7 +262,7 @@ public class SecurityAndValidationIntegrationTest {
                 .when()
                 .post("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(400), is(500), is(503))); // Bad Request or Internal Server Error or Service Unavailable
+                .statusCode(anyOf(is(400), is(429), is(503))); // Malformed JSON should be 400, not 500
     }
 
     @Test
@@ -418,7 +418,7 @@ public class SecurityAndValidationIntegrationTest {
                 .when()
                 .post("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(415), is(400), is(500))); // Unsupported Media Type
+                .statusCode(anyOf(is(415), is(400), is(429), is(503))); // Unsupported Media Type
     }
 
     @Test
@@ -461,7 +461,7 @@ public class SecurityAndValidationIntegrationTest {
                 .when()
                 .post("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(201), is(400), is(503)));
+                .statusCode(anyOf(is(400), is(429), is(503))); // XSS payload must NOT succeed (no 201)
     }
 
     @Test
@@ -476,7 +476,7 @@ public class SecurityAndValidationIntegrationTest {
                 .when()
                 .post("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(201), is(400), is(503)));
+                .statusCode(anyOf(is(400), is(429), is(503))); // SQLi payload must NOT succeed (no 201)
     }
 
     // ==================== Special Characters Tests ====================
@@ -607,7 +607,7 @@ public class SecurityAndValidationIntegrationTest {
                 .when()
                 .post("/api/v1/accounts")
                 .then()
-                .statusCode(anyOf(is(400), is(500), is(503)))
+                .statusCode(anyOf(is(400), is(429), is(503))) // Validation error should not be 500
                 .body(notNullValue());
     }
 

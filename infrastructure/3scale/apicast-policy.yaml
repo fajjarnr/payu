@@ -21,6 +21,11 @@
 ---
 # Policy definition (JSON format expected by 3scale)
 # Store this as a ConfigMap or Secret and reference in APIManager CR
+# NOTE: The APIManager CR references this as secretRef 'apicast-policy-payu-header-forwarding'
+# but this is a ConfigMap. Either:
+#   1. Change APIManager to use configMapRef, OR
+#   2. Create as Secret: oc create secret generic apicast-policy-payu-header-forwarding --from-file=...
+# For dev, ConfigMap is acceptable. For production, use Secret.
 apiVersion: v1
 kind: ConfigMap
 metadata:

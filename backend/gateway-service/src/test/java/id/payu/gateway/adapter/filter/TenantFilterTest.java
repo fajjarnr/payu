@@ -25,7 +25,7 @@ class TenantFilterTest {
             .when()
                 .get("/api/v1/accounts")
             .then()
-                .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)))
+                .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)))
                 .header("X-Tenant-Id", "tenant-123");
         }
 
@@ -36,7 +36,7 @@ class TenantFilterTest {
             .when()
                 .get("/api/v1/accounts")
             .then()
-                .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)))
+                .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)))
                 .header("X-Tenant-Id", "default");
         }
 
@@ -48,7 +48,7 @@ class TenantFilterTest {
             .when()
                 .get("/api/v1/accounts")
             .then()
-                .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)))
+                .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)))
                 .header("X-Tenant-Id", "default");
         }
 
@@ -63,7 +63,7 @@ class TenantFilterTest {
                 .when()
                     .get("/api/v1/accounts")
                 .then()
-                    .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)))
+                    .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)))
                     .header("X-Tenant-Id", tenantId);
             }
         }
@@ -81,7 +81,7 @@ class TenantFilterTest {
             .when()
                 .post("/api/v1/auth/login")
             .then()
-                .statusCode(anyOf(is(200), is(400), is(404), is(415), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(503)));
         }
 
         @Test
@@ -95,7 +95,7 @@ class TenantFilterTest {
             .when()
                 .get("/api/v1/accounts")
             .then()
-                .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)))
+                .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)))
                 .header("X-Tenant-Id", tenantId);
 
             given()
@@ -103,7 +103,7 @@ class TenantFilterTest {
             .when()
                 .get("/api/v1/accounts/register")
             .then()
-                .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)))
+                .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)))
                 .header("X-Tenant-Id", tenantId);
         }
     }

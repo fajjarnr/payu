@@ -1,5 +1,5 @@
-# ServiceAccount, Role, and RoleBinding for Developer Hub
-# Grants read access to pods, services, and deployments for the Kubernetes plugin
+# ServiceAccount, Roles, and RoleBindings for Developer Hub
+# Implements least-privilege RBAC: viewer (read-only), editor (read+update), admin (full)
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -11,10 +11,11 @@ metadata:
     app.kubernetes.io/component: developer-portal
     app.kubernetes.io/part-of: payu
 ---
+# Viewer role: read-only access to workloads (default for Developer Hub service account)
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: developer-hub-reader
+  name: developer-hub-viewer
   labels:
     app: developer-hub
     app.kubernetes.io/name: developer-hub
@@ -43,10 +44,77 @@ rules:
       - routes
     verbs: ["get", "list", "watch"]
 ---
+# Editor role: can update deployments (for restart/scale) but NOT delete
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: developer-hub-editor
+  labels:
+    app: developer-hub
+    app.kubernetes.io/name: developer-hub
+    app.kubernetes.io/part-of: payu
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - services
+      - configmaps
+      - namespaces
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["route.openshift.io"]
+    resources:
+      - routes
+    verbs: ["get", "list", "watch"]
+---
+# Admin role: full access (restricted to platform team only)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: developer-hub-admin
+  labels:
+    app: developer-hub
+    app.kubernetes.io/name: developer-hub
+    app.kubernetes.io/part-of: payu
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - services
+      - configmaps
+      - namespaces
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["route.openshift.io"]
+    resources:
+      - routes
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+# Bind the viewer role to the developer-hub service account (least privilege default)
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: developer-hub-reader-binding
+  name: developer-hub-viewer-binding
   labels:
     app: developer-hub
     app.kubernetes.io/name: developer-hub
@@ -54,7 +122,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: developer-hub-reader
+  name: developer-hub-viewer
 subjects:
   - kind: ServiceAccount
     name: developer-hub

@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Integration tests for repayment schedule creation and payment processing.
@@ -69,7 +70,7 @@ class RepaymentScheduleIntegrationTest {
     @Test
     @DisplayName("Should create repayment schedule with correct number of installments matching tenure")
     void createRepaymentSchedule_shouldReturnInstallmentsMatchingTenure() {
-        if (loanId == null) return; // guard against setup failure
+        assumeTrue(loanId != null, "loanId required from setUp — loan creation failed");
 
         byte[] responseBody = webTestClient.post()
                 .uri(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
@@ -97,7 +98,7 @@ class RepaymentScheduleIntegrationTest {
     @DisplayName("Should retrieve empty repayment schedule for loan without schedules")
     void getRepaymentSchedule_forLoanWithoutSchedules_shouldReturnEmptyList() {
         String freshLoanId = createTestLoan(3);
-        if (freshLoanId == null) return;
+        assumeTrue(freshLoanId != null, "freshLoanId required — loan creation failed");
 
         webTestClient.get()
                 .uri(BASE_PATH + "/loans/" + freshLoanId + "/repayment-schedule")
@@ -114,7 +115,7 @@ class RepaymentScheduleIntegrationTest {
     @Test
     @DisplayName("Should mark installment as FULLY_PAID when repayment covers installment amount")
     void processRepayment_withFullAmount_shouldMarkFullyPaid() {
-        if (loanId == null) return;
+        assumeTrue(loanId != null, "loanId required from setUp — loan creation failed");
 
         // Create schedule and extract first installment
         byte[] scheduleResponse = webTestClient.post()
@@ -127,7 +128,8 @@ class RepaymentScheduleIntegrationTest {
                 .getResponseBody();
 
         JsonNode schedules = extractDataArray(scheduleResponse);
-        if (schedules == null || schedules.isEmpty()) return;
+        assumeTrue(schedules != null && !schedules.isEmpty(),
+                "repayment schedule creation must succeed before testing payment");
 
         String scheduleId = schedules.get(0).path("id").asText();
         BigDecimal installmentAmount = new BigDecimal(schedules.get(0).path("installmentAmount").asText());
@@ -150,7 +152,7 @@ class RepaymentScheduleIntegrationTest {
     @Test
     @DisplayName("Should mark installment as PARTIALLY_PAID when repayment is less than full amount")
     void processRepayment_withPartialAmount_shouldMarkPartiallyPaid() {
-        if (loanId == null) return;
+        assumeTrue(loanId != null, "loanId required from setUp — loan creation failed");
 
         byte[] scheduleResponse = webTestClient.post()
                 .uri(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
@@ -162,7 +164,8 @@ class RepaymentScheduleIntegrationTest {
                 .getResponseBody();
 
         JsonNode schedules = extractDataArray(scheduleResponse);
-        if (schedules == null || schedules.isEmpty()) return;
+        assumeTrue(schedules != null && !schedules.isEmpty(),
+                "repayment schedule creation must succeed before testing partial payment");
 
         // Pick second installment to avoid collision with other tests
         JsonNode target = schedules.size() > 1 ? schedules.get(1) : schedules.get(0);
@@ -185,7 +188,7 @@ class RepaymentScheduleIntegrationTest {
     @Test
     @DisplayName("Should return error when processing repayment for already fully-paid installment")
     void processRepayment_forAlreadyPaidInstallment_shouldReturnError() {
-        if (loanId == null) return;
+        assumeTrue(loanId != null, "loanId required from setUp — loan creation failed");
 
         // Create schedule
         byte[] scheduleResponse = webTestClient.post()
@@ -198,7 +201,8 @@ class RepaymentScheduleIntegrationTest {
                 .getResponseBody();
 
         JsonNode schedules = extractDataArray(scheduleResponse);
-        if (schedules == null || schedules.isEmpty()) return;
+        assumeTrue(schedules != null && !schedules.isEmpty(),
+                "repayment schedule creation must succeed before testing duplicate payment");
 
         // Use last installment to avoid conflicts
         JsonNode target = schedules.get(schedules.size() - 1);
@@ -215,7 +219,7 @@ class RepaymentScheduleIntegrationTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        // Second payment on same installment — should fail
+        // Second payment on same installment — should fail with business error
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path(BASE_PATH + "/repayment-schedules/" + scheduleId + "/pay")
@@ -223,7 +227,9 @@ class RepaymentScheduleIntegrationTest {
                         .build())
                 .header("Authorization", TestContainersConfig.bearerToken())
                 .exchange()
-                .expectStatus().is5xxServerError(); // IllegalStateException mapped to 500
+                // Business rule: already-paid installment should be 4xx, not 5xx
+                // TODO: Service should throw BusinessException mapped to 400/409/422
+                .expectStatus().is4xxClientError();
     }
 
     // ─── helpers ────────────────────────────────────────────────────

@@ -101,9 +101,9 @@ class FxServiceIntegrationTest {
             );
 
             // Mock provider may or may not have a rate seeded
-            // Also accept 500 due to potential data integrity issues in test environment
             assertThat(response.getStatusCode()).isIn(
-                    HttpStatus.OK, HttpStatus.NOT_FOUND, HttpStatus.INTERNAL_SERVER_ERROR
+                    HttpStatus.OK, HttpStatus.NOT_FOUND,
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
 
@@ -134,7 +134,7 @@ class FxServiceIntegrationTest {
 
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.BAD_REQUEST, HttpStatus.NOT_FOUND,
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
     }
@@ -162,7 +162,7 @@ class FxServiceIntegrationTest {
 
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.OK, HttpStatus.NOT_FOUND,
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
     }
@@ -192,7 +192,7 @@ class FxServiceIntegrationTest {
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.OK, HttpStatus.CREATED,
                     HttpStatus.NOT_FOUND,
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                    HttpStatus.TOO_MANY_REQUESTS, HttpStatus.SERVICE_UNAVAILABLE
             );
         }
 
@@ -246,7 +246,8 @@ class FxServiceIntegrationTest {
 
             assertThat(response.getStatusCode()).isIn(
                     HttpStatus.NOT_FOUND,
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    HttpStatus.SERVICE_UNAVAILABLE
             );
         }
     }

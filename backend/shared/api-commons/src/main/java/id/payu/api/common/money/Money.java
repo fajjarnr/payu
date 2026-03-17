@@ -2,7 +2,6 @@ package id.payu.api.common.money;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import id.payu.api.common.exception.InsufficientFundsException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
@@ -189,7 +188,6 @@ public final class Money implements Serializable, Comparable<Money> {
      * @param other the Money to subtract (must not be null and same currency)
      * @return a new Money instance with the difference
      * @throws IllegalArgumentException if currencies don't match or result would be negative
-     * @throws InsufficientFundsException if the result would be negative
      * @throws NullPointerException     if other is null
      */
     public Money subtract(Money other) {
@@ -197,9 +195,8 @@ public final class Money implements Serializable, Comparable<Money> {
         assertSameCurrency(other);
         BigDecimal result = this.amount.subtract(other.amount);
         if (result.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InsufficientFundsException(
-                    "MONEY_001",
-                    "Insufficient funds: cannot subtract " + other + " from " + this
+            throw new IllegalArgumentException(
+                    "Insufficient amount: cannot subtract " + other + " from " + this
             );
         }
         return new Money(result, this.currencyCode);

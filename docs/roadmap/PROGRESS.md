@@ -12,7 +12,7 @@
 | :----------------------- | :--------------------------------------- |
 | **Last Status Update**   | March 17, 2026                           |
 | :----------------------- | :--------------------------------------- |
-| **Production Readiness** | 100% (507 bugs fixed, 4 Won't Do, 0 open) |
+| **Production Readiness** | 100% (621 bugs fixed, 4 Won't Do, 0 open) |
 | **OpenShift Tag**        | `v1.7.0`                                 |
 | **Namespace**            | `payu-dev`                               |
 | **Total Pods**           | 36/36 running                            |
@@ -23,6 +23,7 @@
 | **Maven Build**          | 38/38 modules SUCCESS                    |
 | **Kafka Mode**           | KRaft (no Zookeeper)                     |
 
+> ✅ **Phase 8/9/10 — 114 Audit Bugs Fixed (Mar 17)**: 39 test quality (BUG-TEST-051–089), 44 infrastructure security (BUG-INFRA-044–087), 31 shared library (BUG-SHARED-001–031). Maven 38/38 SUCCESS. **Zero open bugs.**
 > ✅ **Phase 7 All 240 Audit Bugs Fixed — Complete (Mar 17)**: All 240 open bugs closed across 7 batches (32 backend P0, 25 auth/security, 38 frontend logic, 39 frontend-backend mismatch, 5 auth/session, 34 infrastructure, 45 test quality + 23 stories). 27+ TypeScript errors fixed. Maven 38/38, Frontend build SUCCESS, Playwright 544/544, Pytest 159/159. **Zero open bugs.**
 > ✅ **Phase 5 Skill Sync Complete (Mar 16)**: Synced 21 lessons into 8 skill reference files, fixed stale references (Zookeeper→KRaft, com.payu→id.payu).
 > ✅ **Phase 4 Backlog Hygiene Complete (Mar 16)**: Archived 34 closed + 4 Won't Do bugs. Added 7 lessons (L-015 to L-021). Deep audit addendum: 182 new findings logged.
@@ -32,7 +33,7 @@
 > ✅ **Phase 2 Gateway Gaps Complete (Mar 16)**: All 4 P0 gateway gaps implemented (GAP-001, GAP-002, GAP-006, GAP-007). E2E regression: 544 Playwright + 159 Pytest = 703 tests, 0 failures.
 > ✅ **Phase 1 E2E Stabilization Complete (Mar 15)**: All E2E failures resolved. 544 Playwright + 159 Pytest blackbox tests passing with 0 failures, 0 skips.
 > ✅ **Code Review Complete (Feb 24-25)**: 229 of ~232 bugs fixed (~99% resolution rate).
-> **0 open bugs** remaining. Total: 507 fixed + 4 Won't Do = 511 tracked. All audit findings resolved.
+> **0 open bugs** remaining. Total: 621 fixed + 4 Won't Do = 625 tracked. All audit findings resolved.
 > Lihat `CHANGELOG.md` untuk detail.
 
 ---
@@ -77,6 +78,33 @@
 
 ## 📦 Deployment Log
 
+### v1.7.1 (Completed) — March 17, 2026
+
+**Phase 8 — Test Quality Audit (39/39 bugs fixed, BUG-TEST-051–089):**
+
+- ✅ **P0 (16 bugs)**: Removed `@Disabled` annotations, converted integration tests to unit tests with mocks, removed 500 from accepted status codes, tightened gateway assertions, added wallet creation calls, renamed misleading test methods.
+- ✅ **P1 (17 bugs)**: Fixed circular mocks with `ArgumentCaptor`, AND instead of OR assertions, `Assumptions.assumeTrue` for environment checks, uncommented ArchUnit rules, corrected 5xx→4xx expectations, fixed controller test wiring.
+- ✅ **P2 (6 bugs)**: Removed duplicate imports, added meaningful SecurityConfig/TracingConfig assertions, deterministic jitter tests, documented topic naming conventions.
+
+**Phase 9 — Infrastructure Security Audit (44/44 bugs fixed, BUG-INFRA-044–087):**
+
+- ✅ **P0 (10 bugs)**: Dev-only Keycloak passwords with `temporary:true`, 64-char complex client secrets, Vault TLS placeholders, `REDIS_PASSWORD` env var, ZAP API key enabled, `payu-network` in containers.
+- ✅ **P1 (31 bugs)**: Password policies, ROPC disabled, SSL=all, registration disabled, MFA/OTP config, Vault comments, SpotBugs categories, Alertmanager env vars, Prometheus endpoints fixed, ServiceDown alert fixed, security alerts, per-service DB user comments, CronJob serviceAccountName, Kong TLS comments, Backstage OIDC, 3-tier RBAC, 3scale HA, ConfigMap/Secret documented.
+- ✅ **P2 (3 bugs)**: PII verified synthetic, ZAP image pinned, quadlet tags standardized.
+
+**Phase 10 — Shared Library Audit (31/31 bugs fixed, BUG-SHARED-001–031):**
+
+- ✅ **P0 (4 bugs)**: PII masking with real PatternLayout, deterministic dev encryption key, configurable salt with warnings, outbox mark-before-send with `TransactionTemplate`.
+- ✅ **P1 (21 bugs)**: Volatile fields, static masker caching, programmatic TX in saga, `CopyOnWriteArrayList`, fixed LIKE query, per-entry Caffeine TTL via Expiry, SCAN instead of KEYS, `computeIfAbsent` stampede protection, `windowSeconds` passthrough, `verifyWithoutTimestamp` fix, `Money` throws `IllegalArgumentException`, gRPC MDC/SecurityContext via Context keys, `ScheduledExecutorService` for retry, idempotency check, `request()` replay, `onClose` no-throw, conditional auth interceptor, NPE guard for `RedisTemplate`, atomic increment+expire, WARN unmapped policy.
+- ✅ **P2 (6 bugs)**: `Arrays.deepHashCode` key, `DisposableBean` shutdown, removed dual constructor, operator precedence parens, longer webhook secret with `@PostConstruct` warning, `BigDecimal.compareTo`.
+
+**Verification:**
+
+- ✅ **Maven Build**: 38/38 modules SUCCESS
+- ✅ **Saga Cascade Fixed**: `SagaOrchestrator` constructor change propagated to 4 subclasses + 2 test inner classes.
+
+**Total Bug Count**: 621 fixed + 4 Won't Do = 625 tracked, **0 open**.
+
 ### v1.7.0 (Completed) — March 17, 2026
 
 **Phase 7 — Close All 240 Audit Bugs (7 Batches):**
@@ -99,7 +127,7 @@
 
 **Bug IDs closed**: BUG-BE-152–194, BUG-FE-060–106, BUG-AUTH-012–034, BUG-CROSS-035–073, BUG-INFRA-001–043, BUG-TEST-006–050.
 
-**Total Bug Count**: 507 fixed + 4 Won't Do = 511 tracked, **0 open**.
+**Total Bug Count (Phase 7)**: 507 fixed + 4 Won't Do = 511 tracked, **0 open** (before Phase 8/9/10).
 
 ### v1.6.3 (Completed) — March 16, 2026
 

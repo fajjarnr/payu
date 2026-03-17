@@ -32,8 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Converter(autoApply = false)
 public class EncryptedStringConverter implements AttributeConverter<String, String> {
 
-    private static EncryptionService encryptionService;
-    private static boolean encryptionDisabled = false;
+    private static volatile EncryptionService encryptionService;
+    private static volatile boolean encryptionDisabled = false;
 
     /**
      * Spring automatically injects the EncryptionService bean.

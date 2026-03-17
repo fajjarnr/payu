@@ -3,6 +3,9 @@ package id.payu.grpc.starter.interceptor;
 import io.grpc.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,9 +23,20 @@ public class GrpcRetryInterceptor implements ClientInterceptor {
     private static final long DEFAULT_MAX_BACKOFF_MS = 5000;
     private static final double BACKOFF_MULTIPLIER = 2.0;
 
+    /**
+     * Methods considered safe to retry (idempotent by nature).
+     * Non-idempotent methods (e.g., those starting with "Create", "Insert")
+     * should NOT be retried to avoid duplicate side effects.
+     */
+    private static final Set<MethodDescriptor.MethodType> IDEMPOTENT_METHOD_TYPES = Set.of(
+            MethodDescriptor.MethodType.UNARY,
+            MethodDescriptor.MethodType.SERVER_STREAMING
+    );
+
     private final int maxRetries;
     private final long initialBackoffMs;
     private final long maxBackoffMs;
+    private final ScheduledExecutorService scheduler;
 
     public GrpcRetryInterceptor() {
         this(DEFAULT_MAX_RETRIES, DEFAULT_INITIAL_BACKOFF_MS, DEFAULT_MAX_BACKOFF_MS);
@@ -32,6 +46,11 @@ public class GrpcRetryInterceptor implements ClientInterceptor {
         this.maxRetries = maxRetries;
         this.initialBackoffMs = initialBackoffMs;
         this.maxBackoffMs = maxBackoffMs;
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "grpc-retry-scheduler");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     @Override
@@ -40,7 +59,20 @@ public class GrpcRetryInterceptor implements ClientInterceptor {
             CallOptions callOptions,
             Channel next) {
 
+        // BUG-SHARED-018: Only retry idempotent method types
+        if (!isIdempotent(method)) {
+            return next.newCall(method, callOptions);
+        }
+
         return new RetryClientCall<>(method, callOptions, next);
+    }
+
+    /**
+     * Determines if a gRPC method is safe to retry.
+     * Only UNARY and SERVER_STREAMING are considered safe by default.
+     */
+    private <ReqT, RespT> boolean isIdempotent(MethodDescriptor<ReqT, RespT> method) {
+        return IDEMPOTENT_METHOD_TYPES.contains(method.getType());
     }
 
     private class RetryClientCall<ReqT, RespT> extends ClientCall<ReqT, RespT> {
@@ -53,6 +85,7 @@ public class GrpcRetryInterceptor implements ClientInterceptor {
         private Metadata headers;
         private ReqT message;
         private int retryCount = 0;
+        private int pendingRequests = 0; // BUG-SHARED-019: track request() count
 
         RetryClientCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel channel) {
             this.method = method;
@@ -74,6 +107,7 @@ public class GrpcRetryInterceptor implements ClientInterceptor {
 
         @Override
         public void request(int numMessages) {
+            pendingRequests += numMessages; // BUG-SHARED-019: accumulate request count
             delegate.request(numMessages);
         }
 
@@ -114,22 +148,23 @@ public class GrpcRetryInterceptor implements ClientInterceptor {
             log.warn("Retrying gRPC call - method: {}, attempt: {}/{}, backoff: {}ms",
                     method.getFullMethodName(), retryCount + 1, maxRetries, backoffMs);
 
-            try {
-                Thread.sleep(backoffMs);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                responseListener.onClose(Status.INTERNAL.withCause(e), new Metadata());
-                return;
-            }
-
             retryCount++;
-            startCall();
 
-            // Resend message if it was already sent
-            if (message != null) {
-                delegate.sendMessage(message);
-                delegate.halfClose();
-            }
+            // BUG-SHARED-017: Use ScheduledExecutorService instead of Thread.sleep()
+            scheduler.schedule(() -> {
+                startCall();
+
+                // BUG-SHARED-019: Replay request() count on new delegate
+                if (pendingRequests > 0) {
+                    delegate.request(pendingRequests);
+                }
+
+                // Resend message if it was already sent
+                if (message != null) {
+                    delegate.sendMessage(message);
+                    delegate.halfClose();
+                }
+            }, backoffMs, TimeUnit.MILLISECONDS);
         }
 
         private class RetryListener extends Listener<RespT> {

@@ -11,8 +11,8 @@ import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -34,6 +34,7 @@ public abstract class SagaOrchestrator<T> {
     protected final SagaRepository sagaRepository;
     protected final TaskExecutor sagaTaskExecutor;
     protected final ScheduledExecutorService sagaRetryScheduler;
+    protected final TransactionTemplate transactionTemplate;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -47,13 +48,16 @@ public abstract class SagaOrchestrator<T> {
      * @param sagaRepository the saga repository
      * @param sagaTaskExecutor the Spring-managed task executor for async operations
      * @param sagaRetryScheduler the Spring-managed scheduled executor for retries
+     * @param transactionManager the transaction manager for programmatic TX control
      */
     protected SagaOrchestrator(SagaRepository sagaRepository,
                                @Qualifier("sagaTaskExecutor") TaskExecutor sagaTaskExecutor,
-                               @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler) {
+                               @Qualifier("sagaRetryScheduler") ScheduledExecutorService sagaRetryScheduler,
+                               PlatformTransactionManager transactionManager) {
         this.sagaRepository = sagaRepository;
         this.sagaTaskExecutor = sagaTaskExecutor;
         this.sagaRetryScheduler = sagaRetryScheduler;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
     /**
@@ -71,7 +75,6 @@ public abstract class SagaOrchestrator<T> {
      * @param initialData The initial saga data
      * @return The saga execution result
      */
-    @Transactional(propagation = Propagation.REQUIRED)
     public SagaResult<T> execute(T initialData) {
         String sagaId = UUID.randomUUID().toString();
         return executeWithId(sagaId, initialData);
@@ -84,13 +87,14 @@ public abstract class SagaOrchestrator<T> {
      * @param initialData The initial saga data
      * @return The saga execution result
      */
-    @Transactional(propagation = Propagation.REQUIRED)
     public SagaResult<T> executeWithId(String sagaId, T initialData) {
         log.info("Starting saga execution: {} - type: {}", sagaId, sagaType);
 
-        // Create and persist saga instance
-        SagaInstance instance = createSagaInstance(sagaId, initialData);
-        instance = sagaRepository.save(instance);
+        // Create and persist saga instance — within a short transaction
+        SagaInstance instance = transactionTemplate.execute(status -> {
+            SagaInstance inst = createSagaInstance(sagaId, initialData);
+            return sagaRepository.save(inst);
+        });
 
         T currentData = initialData;
         List<String> executedSteps = new ArrayList<>();
@@ -106,21 +110,31 @@ public abstract class SagaOrchestrator<T> {
                     continue;
                 }
 
-                // Update state - re-fetch to get current version
-                instance = sagaRepository.findById(sagaId).orElse(instance);
-                instance.transitionTo("EXECUTING_" + step.getName());
-                instance = sagaRepository.save(instance);
+                // Update state — short transaction for DB write only
+                final String stepName = step.getName();
+                transactionTemplate.executeWithoutResult(status -> {
+                    SagaInstance inst = sagaRepository.findById(sagaId).orElse(null);
+                    if (inst != null) {
+                        inst.transitionTo("EXECUTING_" + stepName);
+                        sagaRepository.save(inst);
+                    }
+                });
 
-                // Execute step with retry logic
+                // Execute step with retry logic — OUTSIDE transaction
                 StepResult<T> result = executeStepWithRetry(step, currentData);
 
                 if (result.isSuccess()) {
-                    // Record successful step - re-fetch to get current version
-                    instance = sagaRepository.findById(sagaId).orElse(instance);
+                    // Record successful step — short transaction
                     currentData = result.getContext();
                     executedSteps.add(step.getName());
-                    instance.recordStepCompletion(step.getName(), result.getMetadata());
-                    instance = sagaRepository.save(instance);
+                    final T successData = currentData;
+                    transactionTemplate.executeWithoutResult(status -> {
+                        SagaInstance inst = sagaRepository.findById(sagaId).orElse(null);
+                        if (inst != null) {
+                            inst.recordStepCompletion(stepName, result.getMetadata());
+                            sagaRepository.save(inst);
+                        }
+                    });
                     log.debug("Step completed successfully: {} for saga: {}", step.getName(), sagaId);
                 } else {
                     // Step failed
@@ -132,11 +146,15 @@ public abstract class SagaOrchestrator<T> {
                         continue;
                     }
 
-                    // Record failure and trigger compensation - re-fetch to get current version
-                    instance = sagaRepository.findById(sagaId).orElse(instance);
-                    instance.recordError(step.getName(), result.getMessage());
-                    instance.transitionTo(SagaState.FAILED.name());
-                    instance = sagaRepository.save(instance);
+                    // Record failure and trigger compensation — short transaction
+                    transactionTemplate.executeWithoutResult(status -> {
+                        SagaInstance inst = sagaRepository.findById(sagaId).orElse(null);
+                        if (inst != null) {
+                            inst.recordError(stepName, result.getMessage());
+                            inst.transitionTo(SagaState.FAILED.name());
+                            sagaRepository.save(inst);
+                        }
+                    });
 
                     if (result.isTriggerCompensation() && !executedSteps.isEmpty()) {
                         return compensate(sagaId, executedSteps, currentData, result.getError());
@@ -146,21 +164,29 @@ public abstract class SagaOrchestrator<T> {
                 }
             }
 
-            // All steps completed successfully - re-fetch to get current version
-            instance = sagaRepository.findById(sagaId).orElse(instance);
-            instance.transitionTo(SagaState.COMPLETED.name());
-            instance.complete();
-            sagaRepository.save(instance);
+            // All steps completed successfully — short transaction
+            transactionTemplate.executeWithoutResult(status -> {
+                SagaInstance inst = sagaRepository.findById(sagaId).orElse(null);
+                if (inst != null) {
+                    inst.transitionTo(SagaState.COMPLETED.name());
+                    inst.complete();
+                    sagaRepository.save(inst);
+                }
+            });
 
             log.info("Saga completed successfully: {}", sagaId);
             return SagaResult.success(sagaId, sagaType, currentData);
 
         } catch (Exception e) {
             log.error("Unexpected error in saga: {}", sagaId, e);
-            instance = sagaRepository.findById(sagaId).orElse(instance);
-            instance.recordError("UNKNOWN", e.getMessage());
-            instance.transitionTo(SagaState.FAILED.name());
-            sagaRepository.save(instance);
+            transactionTemplate.executeWithoutResult(status -> {
+                SagaInstance inst = sagaRepository.findById(sagaId).orElse(null);
+                if (inst != null) {
+                    inst.recordError("UNKNOWN", e.getMessage());
+                    inst.transitionTo(SagaState.FAILED.name());
+                    sagaRepository.save(inst);
+                }
+            });
 
             return compensate(sagaId, executedSteps, currentData, e);
         }

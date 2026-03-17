@@ -2,11 +2,11 @@
 # This file can be used with systemd to manage the container
 
 [Container]
-Image=localhost/cms-service:latest
+Image=localhost/cms-service:dev
 ContainerName=cms-service
 AutoUpdate=registry
-Network=podman
-PodmanArgs=--network=host --label=io.payu.service=cms-service
+Network=payu-network
+PodmanArgs=--label=io.payu.service=cms-service
 # Add your custom arguments below
 # EnvironmentFile=/cms-service/env
 # Volume=/cms-service/config:/etc/cms-service:ro
@@ -18,8 +18,8 @@ Restart=on-failure
 RestartSec=5s
 
 # Health check
-ExecStartPre=/usr/bin/podman check-network podman
-ExecStartPre=/usr/bin/podman pull localhost/cms-service:latest
+ExecStartPre=/usr/bin/podman check-network payu-network
+ExecStartPre=/usr/bin/podman pull localhost/cms-service:dev
 
 # Set resource limits
 # LimitMEM=512M

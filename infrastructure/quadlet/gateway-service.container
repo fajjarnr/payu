@@ -2,7 +2,8 @@
 # This file enables systemd management of the gateway-service container
 
 [Container]
-Image=registry.payu.fajjjar.my.id/payu/gateway-service:latest
+# PRODUCTION: Use pinned semver tag from registry (e.g., :1.2.3). Never use :latest.
+Image=registry.payu.fajjjar.my.id/payu/gateway-service:dev
 ContainerName=payu-gateway-service
 AutoUpdate=registry
 Network=payu-network

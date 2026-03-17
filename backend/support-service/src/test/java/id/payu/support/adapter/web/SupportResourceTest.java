@@ -4,6 +4,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import id.payu.support.config.TestSecurityConfig;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assumptions;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
@@ -83,7 +84,7 @@ class SupportResourceTest {
     @Test
     @Order(4)
     void testGetAgentById() {
-        if (agentId == null) return;
+        Assumptions.assumeTrue(agentId != null, "agentId required from prior testCreateAgent");
 
         given()
                 .pathParam("id", agentId)
@@ -134,7 +135,8 @@ class SupportResourceTest {
     @Test
     @Order(7)
     void testAssignTraining() {
-        if (agentId == null || moduleId == null) return;
+        Assumptions.assumeTrue(agentId != null && moduleId != null,
+                "agentId and moduleId required from prior tests");
 
         String request = """
             {
@@ -157,7 +159,7 @@ class SupportResourceTest {
     @Test
     @Order(8)
     void testGetTrainingsByAgent() {
-        if (agentId == null) return;
+        Assumptions.assumeTrue(agentId != null, "agentId required from prior testCreateAgent");
 
         given()
                 .pathParam("agentId", agentId)

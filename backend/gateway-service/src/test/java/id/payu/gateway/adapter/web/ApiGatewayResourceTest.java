@@ -25,7 +25,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/partners")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -35,7 +35,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .post("/api/v1/partners")
                 .then()
-                    .statusCode(isOneOf(201, 400, 415, 503, 500));
+                    .statusCode(isOneOf(201, 400, 415, 429, 503));
         }
 
         @Test
@@ -45,7 +45,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/partners/1")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -56,7 +56,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .post("/api/v1/v1/partner/auth/token")
                 .then()
-                    .statusCode(isOneOf(200, 401, 415, 503, 500));
+                    .statusCode(isOneOf(200, 401, 415, 429, 503));
         }
     }
 
@@ -71,7 +71,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/promotions")
                 .then()
-                    .statusCode(isOneOf(200, 405, 503, 500));
+                    .statusCode(isOneOf(200, 405, 429, 503));
         }
 
         @Test
@@ -81,7 +81,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/cashbacks")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
 
         @Test
@@ -91,7 +91,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/loyalty-points")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
 
         @Test
@@ -101,7 +101,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/rewards")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
 
         @Test
@@ -111,7 +111,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/referrals")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
     }
 
@@ -126,7 +126,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/lending")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
 
         @Test
@@ -136,7 +136,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/lending/loans")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -146,7 +146,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .post("/api/v1/lending/loans")
                 .then()
-                    .statusCode(isOneOf(200, 400, 415, 503, 500));
+                    .statusCode(isOneOf(200, 400, 415, 429, 503));
         }
 
         @Test
@@ -156,7 +156,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/lending/credit-score/test-id")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
     }
 
@@ -171,7 +171,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/investments")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
 
         @Test
@@ -181,7 +181,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/investments/accounts")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -191,7 +191,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/investments/gold/test-id")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
     }
 
@@ -206,7 +206,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/compliance")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
 
         @Test
@@ -216,7 +216,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/compliance/audit-report")
                 .then()
-                    .statusCode(isOneOf(400, 404, 503, 500));
+                    .statusCode(isOneOf(400, 404, 429, 503));
         }
 
         @Test
@@ -226,7 +226,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .post("/api/v1/compliance/audit-report")
                 .then()
-                    .statusCode(isOneOf(201, 400, 415, 503, 500));
+                    .statusCode(isOneOf(201, 400, 415, 429, 503));
         }
     }
 
@@ -241,7 +241,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/backoffice")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
 
         @Test
@@ -251,7 +251,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/backoffice/kyc-reviews")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -261,7 +261,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .post("/api/v1/backoffice/kyc-reviews")
                 .then()
-                    .statusCode(isOneOf(201, 400, 415, 503, 500));
+                    .statusCode(isOneOf(201, 400, 415, 429, 503));
         }
 
         @Test
@@ -271,7 +271,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/backoffice/fraud-cases")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -281,7 +281,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/backoffice/customer-cases")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
     }
 
@@ -296,7 +296,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/support")
                 .then()
-                    .statusCode(isOneOf(200, 404, 405, 503, 500));
+                    .statusCode(isOneOf(200, 404, 405, 429, 503));
         }
 
         @Test
@@ -306,7 +306,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/support/training-status")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -316,7 +316,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/support/agents")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -326,7 +326,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/support/modules")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
 
         @Test
@@ -336,7 +336,7 @@ class ApiGatewayResourceTest {
                 .when()
                     .get("/api/v1/support/trainings")
                 .then()
-                    .statusCode(isOneOf(200, 404, 503, 500));
+                    .statusCode(isOneOf(200, 404, 429, 503));
         }
     }
 }

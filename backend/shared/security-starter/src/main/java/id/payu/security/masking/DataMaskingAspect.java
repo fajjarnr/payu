@@ -377,6 +377,12 @@ public class DataMaskingAspect {
     }
 
     /**
+     * Cached singleton masker for static mask() utility method.
+     * Stateless — safe to reuse across threads.
+     */
+    private static final DataMaskingAspect STATIC_MASKER = new DataMaskingAspect(new SecurityProperties());
+
+    /**
      * Public method to mask a value for logging
      */
     public static String mask(String value, String fieldType) {
@@ -384,18 +390,17 @@ public class DataMaskingAspect {
             return value;
         }
 
-        DataMaskingAspect aspect = new DataMaskingAspect(new SecurityProperties());
         switch (fieldType.toLowerCase()) {
             case "email":
-                return aspect.maskEmail(value);
+                return STATIC_MASKER.maskEmail(value);
             case "phone":
-                return aspect.maskPhone(value);
+                return STATIC_MASKER.maskPhone(value);
             case "card":
-                return aspect.maskCard(value);
+                return STATIC_MASKER.maskCard(value);
             case "account":
-                return aspect.maskAccount(value);
+                return STATIC_MASKER.maskAccount(value);
             default:
-                return aspect.maskGeneric(value);
+                return STATIC_MASKER.maskGeneric(value);
         }
     }
 }

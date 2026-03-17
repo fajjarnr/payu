@@ -2,7 +2,6 @@ package id.payu.cache.service;
 
 import id.payu.cache.properties.CacheProperties;
 import io.micrometer.core.instrument.Metrics;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -26,7 +25,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @ConditionalOnProperty(
     prefix = "payu.cache.cache-warming",
     name = "enabled",

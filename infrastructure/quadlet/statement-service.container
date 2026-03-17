@@ -2,11 +2,11 @@
 # This file can be used with systemd to manage the container
 
 [Container]
-Image=localhost/statement-service:latest
+Image=localhost/statement-service:dev
 ContainerName=statement-service
 AutoUpdate=registry
-Network=podman
-PodmanArgs=--network=host --label=io.payu.service=statement-service
+Network=payu-network
+PodmanArgs=--label=io.payu.service=statement-service
 # Add your custom arguments below
 # EnvironmentFile=/statement-service/env
 # Volume=/statement-service/config:/etc/statement-service:ro
@@ -18,8 +18,8 @@ Restart=on-failure
 RestartSec=5s
 
 # Health check
-ExecStartPre=/usr/bin/podman check-network podman
-ExecStartPre=/usr/bin/podman pull localhost/statement-service:latest
+ExecStartPre=/usr/bin/podman check-network payu-network
+ExecStartPre=/usr/bin/podman pull localhost/statement-service:dev
 
 # Set resource limits
 # LimitMEM=512M

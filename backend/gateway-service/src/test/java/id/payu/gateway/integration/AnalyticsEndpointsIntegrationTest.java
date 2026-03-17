@@ -612,6 +612,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .when()
                 .get("/gateway/analytics/metrics")
                 .then()
-                .statusCode(anyOf(is(200), is(404), is(500)));
+                .statusCode(anyOf(is(200), is(404), is(503)));
     }
 }

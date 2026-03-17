@@ -11,6 +11,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-03-17
 
+### Fixed
+
+- **Phase 10 — Shared Library Audit: 31 Bugs Fixed (2026-03-17)**:
+  - All 31 findings from exhaustive audit of 12 `backend/shared/` modules resolved.
+  - **P0 Critical (4)**: PII masking real PatternLayout implementation (BUG-SHARED-001), deterministic dev encryption key (BUG-SHARED-002), configurable PBKDF2 salt with startup warning (BUG-SHARED-003), outbox mark-before-send with TransactionTemplate (BUG-SHARED-004).
+  - **P1 Significant (21)**: volatile fields + static masker caching (BUG-SHARED-005/006), programmatic TX in saga (BUG-SHARED-007), CopyOnWriteArrayList for reactive saga (BUG-SHARED-008), fixed LIKE query for saga stats (BUG-SHARED-009), per-entry Caffeine TTL via Expiry (BUG-SHARED-010), SCAN instead of KEYS (BUG-SHARED-011), computeIfAbsent stampede protection (BUG-SHARED-012), windowSeconds passthrough (BUG-SHARED-013), verifyWithoutTimestamp fix (BUG-SHARED-014), Money throws IllegalArgumentException (BUG-SHARED-015), gRPC MDC/SecurityContext via Context keys (BUG-SHARED-016/020), ScheduledExecutorService for retry (BUG-SHARED-017), idempotency check (BUG-SHARED-018), request() replay (BUG-SHARED-019), onClose no-throw (BUG-SHARED-021), conditional auth interceptor (BUG-SHARED-022), NPE guard for RedisTemplate (BUG-SHARED-023), atomic increment+expire (BUG-SHARED-024), WARN unmapped policy (BUG-SHARED-025).
+  - **P2 Moderate (6)**: Arrays.deepHashCode key (BUG-SHARED-026), DisposableBean shutdown (BUG-SHARED-027), removed dual constructor (BUG-SHARED-028), operator precedence parens (BUG-SHARED-029), longer webhook secret+@PostConstruct warning (BUG-SHARED-030), BigDecimal.compareTo (BUG-SHARED-031).
+
+- **Phase 9 — Infrastructure Security Audit Phase 2: 44 Bugs Fixed (2026-03-17)**:
+  - All 44 findings from audit of 7 infrastructure directories resolved.
+  - **P0 Critical (10)**: Dev-only Keycloak passwords with `temporary:true` (BUG-INFRA-044/045), 64-char complex client secrets (BUG-INFRA-046/047), Vault TLS comment+placeholders (BUG-INFRA-048), `REDIS_PASSWORD` env var (BUG-INFRA-049/052), ZAP API key enabled (BUG-INFRA-050/051), `payu-network` instead of host network (BUG-INFRA-053).
+  - **P1 Significant (31)**: Password policy, ROPC disabled on web (BUG-INFRA-054/055), SSL=all (BUG-INFRA-056), registration disabled (BUG-INFRA-057), MFA/OTP config (BUG-INFRA-058), username editing disabled (BUG-INFRA-059), Vault storage/TTL/HTTP comments (BUG-INFRA-060/061/062), SpotBugs categories+effort (BUG-INFRA-063/064), Alertmanager env var placeholders (BUG-INFRA-065/066/067), Prometheus exporter endpoints fixed (BUG-INFRA-068/069/070), missing service targets added, scrape intervals, ServiceDown alert fixed (BUG-INFRA-071), security alerts added (BUG-INFRA-072), per-service DB user comment (BUG-INFRA-073), CronJob serviceAccountName (BUG-INFRA-074), Kong TLS comments (BUG-INFRA-075/076), Backstage OIDC verified (BUG-INFRA-077), 3-tier RBAC (BUG-INFRA-078/079), 3scale HA replicas (BUG-INFRA-080), ConfigMap/Secret documented (BUG-INFRA-081), quadlet network+tags (BUG-INFRA-082/083/084).
+  - **P2 Moderate (3)**: PII verified synthetic (BUG-INFRA-085), ZAP image pinned to 2.15.0 (BUG-INFRA-086), quadlet tags standardized to `:dev` (BUG-INFRA-087).
+
+- **Phase 8 — Test Quality Audit: 39 Bugs Fixed (2026-03-17)**:
+  - All 39 findings from comprehensive test code review resolved.
+  - **P0 Critical (16)**: Removed `@Disabled` annotations, converted to unit tests with mocks (BUG-TEST-052/053/057), removed 500 from accepted codes (BUG-TEST-055/056/066), tightened status assertions (BUG-TEST-054/058/059/060/062/063/064), added wallet creation call (BUG-TEST-065), renamed misleading tests (BUG-TEST-051), removed empty test bodies (BUG-TEST-061).
+  - **P1 Significant (17)**: Fixed circular mocks with ArgumentCaptor (BUG-TEST-067), AND instead of OR assertions (BUG-TEST-068), `Assumptions.assumeTrue` instead of silent returns (BUG-TEST-069/071/077/078), uncommented ArchUnit rules (BUG-TEST-076), changed 5xx expectations to 4xx (BUG-TEST-079/080), fixed controller test to call controller (BUG-TEST-081), tightened KYC/gateway tests (BUG-TEST-070/072/073/074/075/082/083).
+  - **P2 Moderate (6)**: Removed duplicate imports (BUG-TEST-084/085), added meaningful SecurityConfig assertions (BUG-TEST-086), added TracingConfig assertions (BUG-TEST-087), deterministic jitter test (BUG-TEST-088), documented topic naming convention (BUG-TEST-089).
+
+### Identified
+
+- **Phase 10 — Shared Library Audit: 31 New Findings (2026-03-17)**:
+  - Exhaustive audit of all 12 modules in `backend/shared/` — ~170 Java source files, 48 test files, 16 config files, 3 Flyway migrations.
+  - **P0 Critical (4)**: PII masking is a no-op across all 22 services (BUG-SHARED-001), random encryption key per pod makes data undecryptable (BUG-SHARED-002), hardcoded PBKDF2 salt (BUG-SHARED-003), outbox double-publish risk (BUG-SHARED-004).
+  - **P1 Significant (21)**: grpc-starter has 7 bugs with 0 tests — auth on wrong thread (BUG-SHARED-020), retries non-idempotent calls (BUG-SHARED-018), retried calls hang forever (BUG-SHARED-019). Saga holds DB connection during steps (BUG-SHARED-007), saga stats always 0 (BUG-SHARED-009). Cache TTL ignored (BUG-SHARED-010), blocking Redis KEYS (BUG-SHARED-011). Rate limit ignores windowSeconds (BUG-SHARED-013). WebhookVerifier always returns false (BUG-SHARED-014). MapStruct silently drops fields (BUG-SHARED-025).
+  - **P2 Moderate (6)**: hashCode cache collisions, thread leaks, build fragility, ArchUnit precedence bug, `"changeme"` webhook secret, decimal truncation in AmountValidator.
+  - **Worst modules**: grpc-starter (7 bugs, 0 tests), api-commons (7 bugs), security-starter (5 bugs incl. 3 P0), cache-starter (5 bugs).
+  - Full report: `docs/roadmap/SHARED_LIB_AUDIT_2026-03-17.md`. All 31 findings tracked in `TODOS.md` as BUG-SHARED-001 through BUG-SHARED-031.
+
+- **Phase 9 — Infrastructure Security Audit Phase 2: 44 New Findings (2026-03-17)**:
+  - Exhaustive audit of 7 previously unaudited infrastructure directories (50+ files): `3scale/`, `backstage/`, `ci-cd/`, `containers/`, `keycloak/`, `kong/`, `quadlet/`.
+  - **P0 Critical (10)**: Hardcoded Keycloak passwords `P@ssw0rd123` (BUG-INFRA-044/045), trivial client secrets (BUG-INFRA-046/047), Vault TLS disabled (BUG-INFRA-048), unauthenticated Redis (BUG-INFRA-049/052), ZAP API key disabled (BUG-INFRA-050/051), 13 containers on host network (BUG-INFRA-053).
+  - **P1 Significant (31)**: No Keycloak password/MFA policy (BUG-INFRA-054/058), ROPC enabled (BUG-INFRA-055), Prometheus scraping wrong ports (BUG-INFRA-068/069/070), ServiceDown alert never fires (BUG-INFRA-071), all Alertmanager webhooks are placeholders (BUG-INFRA-065), single DB user owns all 28 databases (BUG-INFRA-073), SpotBugs missing SSRF/XXE patterns (BUG-INFRA-063).
+  - **P2 Moderate (3)**: PII in seed data, unpinned image tags.
+  - All 44 findings tracked in `TODOS.md` as BUG-INFRA-044 through BUG-INFRA-087.
+
+- **Phase 8 — Test Quality Audit: 39 New Findings (2026-03-17)**:
+  - Comprehensive audit of 249 test files across all 20 backend services.
+  - **P0 Critical (16)**: Tests that always pass regardless of behavior — `@Disabled` test classes (BUG-TEST-052/053/057), tests accepting 3-6 HTTP status codes including 500 (BUG-TEST-054/055/056/058/059/066), gateway integration suite effectively a no-op (BUG-TEST-060/061/062/063/064), Kafka tests that never trigger events (BUG-TEST-051/065).
+  - **P1 Significant (17)**: Circular mocks testing mock responses not logic (BUG-TEST-067), silent `if(null) return` skips (BUG-TEST-071/077/078), commented-out architecture rules (BUG-TEST-076), business rules returning 5xx instead of 4xx (BUG-TEST-079/080), controller tests bypassing controller (BUG-TEST-081), SYSTEMIC gateway test ineffectiveness (BUG-TEST-083).
+  - **P2 Moderate (6)**: Duplicate imports, zero-assertion tests, flaky jitter test, topic naming inconsistency.
+  - **Clean services (8/20)**: statement, cms, api-portal, transaction, partner, billing, auth, analytics — excellent test quality, no bugs found.
+  - **Worst offender**: gateway-service (9 bugs, 6 files, ~60 test methods providing near-zero coverage for the platform's single API entry point).
+  - All 39 findings tracked in `docs/roadmap/TODOS.md` as BUG-TEST-051 through BUG-TEST-089.
+
 ### Changed
 
 - **Skill Reference Sync — 21 Lessons into 8 Skill Files (2026-03-16)**:

@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Auto-configuration for the Transactional Outbox Pattern starter.
@@ -55,6 +56,7 @@ public class OutboxAutoConfiguration {
      * @param outboxRepository the outbox repository
      * @param kafkaTemplate the Kafka template for publishing
      * @param meterRegistry the meter registry for metrics
+     * @param transactionManager the platform transaction manager for mark-before-send pattern
      * @return the configured OutboxPublisher
      */
     @Bean
@@ -62,9 +64,10 @@ public class OutboxAutoConfiguration {
     @ConditionalOnBean(KafkaTemplate.class)
     public OutboxPublisher outboxPublisher(OutboxRepository outboxRepository,
                                            KafkaTemplate<String, String> kafkaTemplate,
-                                           MeterRegistry meterRegistry) {
+                                           MeterRegistry meterRegistry,
+                                           PlatformTransactionManager transactionManager) {
         log.info("Initializing OutboxPublisher with auto-configuration");
-        OutboxPublisher publisher = new OutboxPublisher(outboxRepository, kafkaTemplate, meterRegistry);
+        OutboxPublisher publisher = new OutboxPublisher(outboxRepository, kafkaTemplate, meterRegistry, transactionManager);
         publisher.init();
         return publisher;
     }

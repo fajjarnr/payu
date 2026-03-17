@@ -6,12 +6,14 @@ import id.payu.compliance.domain.model.AuditReport;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
+import id.payu.compliance.dto.AuditReportRequest;
 import id.payu.compliance.exception.ComplianceDomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -68,13 +70,13 @@ class ComplianceAuditControllerTest {
         when(complianceAuditService.createAuditReport(any(UUID.class), eq(merchantId), eq(ComplianceStandard.PCI_DSS), any(List.class)))
                 .thenReturn(report);
 
-        AuditReport result = complianceAuditService.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
+        // Call the controller (not the service mock directly)
+        AuditReportRequest request = new AuditReportRequest(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
+        ResponseEntity<?> response = controller.createAuditReport(request);
 
-        assertNotNull(result);
-        assertEquals(transactionId, result.getTransactionId());
-        assertEquals(merchantId, result.getMerchantId());
-        assertEquals(ComplianceStandard.PCI_DSS, result.getStandard());
-        assertEquals(ComplianceCheckResult.PASS, result.getOverallStatus());
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertEquals(201, response.getStatusCode().value());
     }
 
     @Test
@@ -94,11 +96,12 @@ class ComplianceAuditControllerTest {
 
         when(complianceAuditService.getAuditReport(reportId)).thenReturn(report);
 
-        AuditReport result = complianceAuditService.getAuditReport(reportId);
+        // Call the controller (not the service mock directly)
+        ResponseEntity<?> response = controller.getAuditReport(reportId);
 
-        assertNotNull(result);
-        assertEquals(reportId, result.getId());
-        assertEquals(transactionId, result.getTransactionId());
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertEquals(200, response.getStatusCode().value());
     }
 
     @Test
@@ -109,8 +112,9 @@ class ComplianceAuditControllerTest {
         when(complianceAuditService.getAuditReport(reportId))
                 .thenThrow(new IllegalArgumentException(errorMessage));
 
+        // Call the controller (not the service mock directly)
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            complianceAuditService.getAuditReport(reportId);
+            controller.getAuditReport(reportId);
         });
 
         assertTrue(exception.getMessage().contains(errorMessage));

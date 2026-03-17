@@ -104,13 +104,24 @@ public class WebhookVerifier {
      * @return true if signature is valid
      */
     public boolean verifyWithoutTimestamp(String payload, String signature, String secret) {
-        if (!isValidInputs(payload, signature, System.currentTimeMillis(), secret)) {
+        if (payload == null || payload.isEmpty()) {
+            log.warn("Webhook payload is null or empty");
+            return false;
+        }
+        if (signature == null || signature.isEmpty()) {
+            log.warn("Webhook signature is null or empty");
+            return false;
+        }
+        if (secret == null || secret.isEmpty()) {
+            log.warn("Webhook secret is not configured");
             return false;
         }
 
+        // Use timestamp 0 as sentinel — both signer and verifier must agree
+        // on the same fixed timestamp when skipping timestamp validation
         String expectedSignature;
         try {
-            expectedSignature = computeSignature(payload, System.currentTimeMillis(), secret);
+            expectedSignature = computeSignature(payload, 0L, secret);
         } catch (WebhookSecurityException e) {
             log.error("Failed to compute webhook signature", e);
             return false;

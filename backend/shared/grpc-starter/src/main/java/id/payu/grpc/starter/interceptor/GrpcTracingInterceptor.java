@@ -61,7 +61,7 @@ public class GrpcTracingInterceptor {
                 spanId = generateSpanId();
             }
 
-            // Set in MDC for logging
+            // Set in MDC for logging (on interceptor thread — may differ from handler thread)
             MDC.put(MDC_TRACE_ID, traceId);
             MDC.put(MDC_SPAN_ID, spanId);
 
@@ -73,24 +73,74 @@ public class GrpcTracingInterceptor {
             log.debug("gRPC server call - traceId: {}, spanId: {}, method: {}",
                     traceId, spanId, call.getMethodDescriptor().getFullMethodName());
 
+            // Clear MDC on interceptor thread — will be set per-callback via Context
+            MDC.remove(MDC_TRACE_ID);
+            MDC.remove(MDC_SPAN_ID);
+
             ServerCall.Listener<ReqT> listener = Contexts.interceptCall(context, call, headers, next);
 
             return new ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT>(listener) {
-                @Override
-                public void onComplete() {
-                    clearMdc();
-                    super.onComplete();
-                }
 
-                @Override
-                public void onCancel() {
-                    clearMdc();
-                    super.onCancel();
+                private void setMdc() {
+                    String tid = TRACE_ID_CONTEXT_KEY.get();
+                    String sid = SPAN_ID_CONTEXT_KEY.get();
+                    if (tid != null) MDC.put(MDC_TRACE_ID, tid);
+                    if (sid != null) MDC.put(MDC_SPAN_ID, sid);
                 }
 
                 private void clearMdc() {
                     MDC.remove(MDC_TRACE_ID);
                     MDC.remove(MDC_SPAN_ID);
+                }
+
+                @Override
+                public void onMessage(ReqT message) {
+                    setMdc();
+                    try {
+                        super.onMessage(message);
+                    } finally {
+                        clearMdc();
+                    }
+                }
+
+                @Override
+                public void onHalfClose() {
+                    setMdc();
+                    try {
+                        super.onHalfClose();
+                    } finally {
+                        clearMdc();
+                    }
+                }
+
+                @Override
+                public void onReady() {
+                    setMdc();
+                    try {
+                        super.onReady();
+                    } finally {
+                        clearMdc();
+                    }
+                }
+
+                @Override
+                public void onComplete() {
+                    setMdc();
+                    try {
+                        super.onComplete();
+                    } finally {
+                        clearMdc();
+                    }
+                }
+
+                @Override
+                public void onCancel() {
+                    setMdc();
+                    try {
+                        super.onCancel();
+                    } finally {
+                        clearMdc();
+                    }
                 }
             };
         }

@@ -27,7 +27,7 @@ class RateLimitFilterTest {
                 .when()
                     .post("/api/v1/auth/login")
                 .then()
-                    .statusCode(anyOf(is(200), is(400), is(404), is(415), is(500), is(503)));
+                    .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(503)));
         }
 
         @Test
@@ -88,26 +88,7 @@ class RateLimitFilterTest {
             .when()
                 .post("/api/v1/transfer")
             .then()
-                .statusCode(anyOf(is(200), is(400), is(404), is(415), is(500), is(503)));
-        }
-
-        @Test
-        @DisplayName("should enforce transfer rate limit after threshold")
-        void shouldEnforceTransferRateLimitAfterThreshold() {
-            String clientId = "test-transfer-" + System.currentTimeMillis();
-            
-            Response response = given()
-                .header("X-Forwarded-For", clientId)
-            .when()
-                .post("/api/v1/transfer");
-
-            int statusCode = response.getStatusCode();
-            if (statusCode == 429) {
-                response.then()
-                    .body("error", equalTo("RATE_LIMIT_EXCEEDED"))
-                    .body("message", equalTo("Too many requests. Please try again later."))
-                    .header("Retry-After", equalTo("60"));
-            }
+                .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(503)));
         }
     }
 
@@ -122,7 +103,7 @@ class RateLimitFilterTest {
             .when()
                 .get("/api/v1/partners")
             .then()
-                .statusCode(anyOf(is(200), is(404), is(429), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(404), is(429), is(503)));
         }
 
         @Test
@@ -135,7 +116,7 @@ class RateLimitFilterTest {
             .when()
                 .get("/api/v1/partners")
             .then()
-                .statusCode(anyOf(is(200), is(404), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(404), is(429), is(503)));
         }
     }
 
@@ -225,21 +206,21 @@ class RateLimitFilterTest {
             .when()
                 .get("/api/v1/balance")
             .then()
-                .statusCode(anyOf(is(200), is(401), is(404), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(401), is(404), is(429), is(503)));
 
             given()
                 .header("X-Forwarded-For", clientId)
             .when()
                 .post("/api/v1/auth/login")
             .then()
-                .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(503)));
 
             given()
                 .header("X-Forwarded-For", clientId)
             .when()
                 .post("/api/v1/transfer")
             .then()
-                .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(500), is(503)));
+                .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(503)));
         }
     }
 }

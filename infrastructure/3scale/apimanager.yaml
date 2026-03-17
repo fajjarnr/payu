@@ -38,7 +38,8 @@ spec:
       postgresql:
         image: "registry.redhat.io/rhel9/postgresql-16"
     appSpec:
-      replicas: 1
+      # PRODUCTION: Increase to 2+ replicas for HA
+      replicas: 2
       resources:
         requests:
           cpu: 250m
@@ -58,7 +59,8 @@ spec:
 
   backend:
     listenerSpec:
-      replicas: 1
+      # PRODUCTION: Increase to 2+ replicas for HA
+      replicas: 2
       resources:
         requests:
           cpu: 100m

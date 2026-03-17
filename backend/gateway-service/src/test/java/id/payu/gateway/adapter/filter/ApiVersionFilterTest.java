@@ -20,7 +20,7 @@ public class ApiVersionFilterTest {
             .when()
             .get("/api/v1/accounts")
             .then()
-            .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)));
+            .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)));
     }
 
     @Test
@@ -31,7 +31,7 @@ public class ApiVersionFilterTest {
             .when()
             .get("/api/v1/accounts")
             .then()
-            .statusCode(anyOf(is(200), is(404), is(401), is(500), is(503)));
+            .statusCode(anyOf(is(200), is(404), is(401), is(429), is(503)));
     }
 
     @Test

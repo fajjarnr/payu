@@ -138,7 +138,8 @@ class ReferralServiceTest {
         var referrerRewards = rewardRepository.findByAccountId(REFERRER_ACCOUNT_ID);
         var refereeRewards = rewardRepository.findByAccountId(REFEREE_ACCOUNT_ID);
 
-        assertTrue(referrerRewards.size() > 0 || refereeRewards.size() > 0);
+        assertTrue(referrerRewards.size() > 0 && refereeRewards.size() > 0,
+                "Both referrer and referee must receive rewards on referral completion");
     }
 
     @Test

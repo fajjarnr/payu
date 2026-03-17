@@ -26,13 +26,13 @@ public class SagaMonitorService {
     private final SagaProperties properties;
 
     /**
-     * Get saga statistics by state.
+     * Get saga statistics by state (across all saga types).
      */
     public Map<String, Long> getSagaStatistics() {
         Map<String, Long> stats = new HashMap<>();
 
         for (SagaState state : SagaState.values()) {
-            long count = sagaRepository.countBySagaTypeAndCurrentState("%", state.name());
+            long count = sagaRepository.findByCurrentState(state.name()).size();
             stats.put(state.name(), count);
         }
 

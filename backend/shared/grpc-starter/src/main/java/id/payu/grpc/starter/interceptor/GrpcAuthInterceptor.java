@@ -40,6 +40,9 @@ public class GrpcAuthInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
+    // gRPC Context key for propagating authentication across threads
+    public static final Context.Key<Authentication> AUTH_CONTEXT_KEY = Context.key("grpc-authentication");
+
     /**
      * Server interceptor that validates JWT tokens from incoming gRPC calls.
      */
@@ -63,6 +66,8 @@ public class GrpcAuthInterceptor {
             String rolesHeader = headers.get(ROLES_KEY);
 
             try {
+                Authentication authentication = null;
+
                 if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
                     String token = authHeader.substring(BEARER_PREFIX.length());
                     Jwt jwt = jwtDecoder.decode(token);
@@ -81,7 +86,7 @@ public class GrpcAuthInterceptor {
                             .collect(Collectors.toList());
 
                     // Create authentication token
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    authentication = new UsernamePasswordAuthenticationToken(
                             subject,
                             token,
                             authorities
@@ -89,11 +94,8 @@ public class GrpcAuthInterceptor {
 
                     // Set tenant context if available
                     if (tenantId != null) {
-                        // Tenant context can be stored in a ThreadLocal or custom security context
                         log.debug("Setting tenant context: {}", tenantId);
                     }
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
                     log.debug("Authenticated gRPC call - user: {}, tenant: {}, method: {}",
                             userId, tenantId, call.getMethodDescriptor().getFullMethodName());
@@ -104,18 +106,77 @@ public class GrpcAuthInterceptor {
                             call.getMethodDescriptor().getFullMethodName());
                 }
 
-                return new ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT>(
-                        next.startCall(call, headers)) {
+                // Propagate authentication via gRPC Context (thread-safe)
+                io.grpc.Context ctx = io.grpc.Context.current();
+                if (authentication != null) {
+                    ctx = ctx.withValue(AUTH_CONTEXT_KEY, authentication);
+                }
+
+                final Authentication auth = authentication;
+
+                ServerCall.Listener<ReqT> listener = Contexts.interceptCall(ctx, call, headers, next);
+
+                return new ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT>(listener) {
+
+                    private void setSecurityContext() {
+                        Authentication ctxAuth = AUTH_CONTEXT_KEY.get();
+                        if (ctxAuth != null) {
+                            SecurityContextHolder.getContext().setAuthentication(ctxAuth);
+                        }
+                    }
+
+                    private void clearSecurityContext() {
+                        SecurityContextHolder.clearContext();
+                    }
+
+                    @Override
+                    public void onMessage(ReqT message) {
+                        setSecurityContext();
+                        try {
+                            super.onMessage(message);
+                        } finally {
+                            clearSecurityContext();
+                        }
+                    }
+
+                    @Override
+                    public void onHalfClose() {
+                        setSecurityContext();
+                        try {
+                            super.onHalfClose();
+                        } finally {
+                            clearSecurityContext();
+                        }
+                    }
+
+                    @Override
+                    public void onReady() {
+                        setSecurityContext();
+                        try {
+                            super.onReady();
+                        } finally {
+                            clearSecurityContext();
+                        }
+                    }
+
                     @Override
                     public void onComplete() {
-                        SecurityContextHolder.clearContext();
-                        super.onComplete();
+                        setSecurityContext();
+                        try {
+                            super.onComplete();
+                        } finally {
+                            clearSecurityContext();
+                        }
                     }
 
                     @Override
                     public void onCancel() {
-                        SecurityContextHolder.clearContext();
-                        super.onCancel();
+                        setSecurityContext();
+                        try {
+                            super.onCancel();
+                        } finally {
+                            clearSecurityContext();
+                        }
                     }
                 };
 

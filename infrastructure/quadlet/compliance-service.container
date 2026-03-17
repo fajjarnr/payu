@@ -2,11 +2,11 @@
 # This file can be used with systemd to manage the container
 
 [Container]
-Image=localhost/compliance-service:latest
+Image=localhost/compliance-service:dev
 ContainerName=compliance-service
 AutoUpdate=registry
-Network=podman
-PodmanArgs=--network=host --label=io.payu.service=compliance-service
+Network=payu-network
+PodmanArgs=--label=io.payu.service=compliance-service
 # Add your custom arguments below
 # EnvironmentFile=/compliance-service/env
 # Volume=/compliance-service/config:/etc/compliance-service:ro
@@ -18,8 +18,8 @@ Restart=on-failure
 RestartSec=5s
 
 # Health check
-ExecStartPre=/usr/bin/podman check-network podman
-ExecStartPre=/usr/bin/podman pull localhost/compliance-service:latest
+ExecStartPre=/usr/bin/podman check-network payu-network
+ExecStartPre=/usr/bin/podman pull localhost/compliance-service:dev
 
 # Set resource limits
 # LimitMEM=512M

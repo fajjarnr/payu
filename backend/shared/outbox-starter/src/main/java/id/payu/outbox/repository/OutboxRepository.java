@@ -126,6 +126,18 @@ public interface OutboxRepository extends JpaRepository<OutboxEvent, UUID> {
     int markAsPublished(@Param("id") UUID id, @Param("publishedAt") Instant publishedAt);
 
     /**
+     * Clears the published status of an event, resetting it to unpublished.
+     * Used when Kafka send fails after the event was pre-marked as published
+     * (BUG-SHARED-004 mark-before-send pattern).
+     *
+     * @param id the ID of the event to reset
+     * @return the number of rows affected
+     */
+    @Modifying
+    @Query("UPDATE OutboxEvent o SET o.publishedAt = NULL WHERE o.id = :id")
+    int clearPublishedStatus(@Param("id") UUID id);
+
+    /**
      * Increments the retry count and sets the error message for an event.
      *
      * @param id the ID of the event

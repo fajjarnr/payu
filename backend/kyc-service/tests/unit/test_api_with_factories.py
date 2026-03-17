@@ -77,7 +77,7 @@ class TestKycApiWithFactories:
                 json={"user_id": test_user["user_id"], "verification_type": "FULL_KYC"},
             )
 
-            assert response.status_code in [200, 201, 422]
+            assert response.status_code in [200, 201, 422, 429, 503]
 
         app.dependency_overrides.clear()
 
@@ -107,7 +107,7 @@ class TestKycApiWithFactories:
                 },
             )
 
-            assert response.status_code in [200, 201, 422, 500]
+            assert response.status_code in [200, 201, 422, 429, 503]
 
         app.dependency_overrides.clear()
 
@@ -136,7 +136,7 @@ class TestKycApiWithFactories:
                 },
             )
 
-            assert response.status_code in [200, 201, 422, 500]
+            assert response.status_code in [200, 201, 422, 429, 503]
 
         app.dependency_overrides.clear()
 

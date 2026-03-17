@@ -1,10 +1,14 @@
 #!/bin/bash
 
+# DEV ONLY: Uses HTTP. Production MUST use HTTPS with TLS certificates.
+# Production VAULT_ADDR should be https://vault.payu.internal:8200
+
 # Vault Initialization Script
 # This script configures Vault with the PayU secrets
 
 set -e
 
+# WARNING: HTTP is used for local dev only. Production MUST use HTTPS.
 VAULT_ADDR="http://localhost:8200"
 VAULT_TOKEN="${VAULT_TOKEN:?ERROR: VAULT_TOKEN must be set}"
 
@@ -62,11 +66,13 @@ echo "Writing Kafka secrets..."
 vault kv put secret/common/kafka \
     bootstrap-servers="kafka:29092"
 
+REDIS_PASSWORD="${REDIS_PASSWORD:?ERROR: REDIS_PASSWORD must be set}"
+
 # Redis secrets
 echo "Writing Redis secrets..."
 vault kv put secret/gateway-service/redis \
     hosts="redis://redis:6379" \
-    password=""
+    password="$REDIS_PASSWORD"
 
 # Grafana secrets
 echo "Writing Grafana secrets..."
