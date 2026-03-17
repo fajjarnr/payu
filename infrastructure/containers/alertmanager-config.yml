@@ -50,21 +50,16 @@ receivers:
       - url: 'http://localhost:8080/alerts/critical'
         send_resolved: true
     slack_configs:
-      # PRODUCTION: Replace with ${SLACK_WEBHOOK_URL} from K8s Secret or Vault
-      - api_url: '${SLACK_WEBHOOK_URL}'
+      # PRODUCTION: Replace with actual Slack webhook URL from K8s Secret or Vault
+      - api_url: 'https://hooks.slack.com/services/placeholder/placeholder/placeholder'
         channel: '#payu-critical'
         title: 'CRITICAL: {{ .GroupLabels.alertname }}'
         text: >-
           {{ range .Alerts }} *Alert:* {{ .Labels.alertname }} *Severity:* {{ .Labels.severity }} *Service:* {{ .Labels.job }} *Description:* {{ .Annotations.description }} {{ end }}
         send_resolved: true
-    pagerduty_configs:
-      # PRODUCTION: Replace with ${PAGERDUTY_SERVICE_KEY} from K8s Secret or Vault
-      - service_key: '${PAGERDUTY_SERVICE_KEY}'
-        description: '{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}'
-        severity: critical
   - name: 'warning-alerts'
     slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL}'
+      - api_url: 'https://hooks.slack.com/services/placeholder/placeholder/placeholder'
         channel: '#payu-warnings'
         title: 'WARNING: {{ .GroupLabels.alertname }}'
         text: >-
@@ -72,7 +67,7 @@ receivers:
         send_resolved: true
   - name: 'info-alerts'
     slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL}'
+      - api_url: 'https://hooks.slack.com/services/placeholder/placeholder/placeholder'
         channel: '#payu-info'
         title: 'INFO: {{ .GroupLabels.alertname }}'
         text: >-
@@ -80,7 +75,7 @@ receivers:
         send_resolved: true
   - name: 'business-alerts'
     slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL}'
+      - api_url: 'https://hooks.slack.com/services/placeholder/placeholder/placeholder'
         channel: '#payu-business'
         title: 'BUSINESS ALERT: {{ .GroupLabels.alertname }}'
         text: >-
@@ -88,7 +83,7 @@ receivers:
         send_resolved: true
   - name: 'platform-alerts'
     slack_configs:
-      - api_url: '${SLACK_WEBHOOK_URL}'
+      - api_url: 'https://hooks.slack.com/services/placeholder/placeholder/placeholder'
         channel: '#payu-platform'
         title: 'PLATFORM ALERT: {{ .GroupLabels.alertname }}'
         text: >-

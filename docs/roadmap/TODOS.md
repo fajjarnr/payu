@@ -18,7 +18,7 @@
 | **Tech Debt**    |   0   | All completed ✅                                      |
 | **Spikes**       |   5   | ARCH-001 – ARCH-005                                   |
 | **Deferred**     |   9   | P2-FE-003, OCP-007, OCP-010, DR-001, DEFER-001, RHPAM |
-| **Open Bugs**    |   0   | All completed ✅                                      |
+| **Open Bugs**    |   0   | All 27 E2E Coverage Gaps closed ✅                    |
 
 > **Completed Epics**: 24/24 fully done. All stories & tech debt cleared.
 > See [`PROGRESS.md`](./PROGRESS.md) for completed Epics summary.
@@ -35,9 +35,11 @@
 | Shared Libraries           |   0  | —              |
 | Test Coverage / Quality    |   0  | —              |
 | Infrastructure / OpenShift |   0  | —              |
-| **TOTAL**                  | **0** |               |
+| **TOTAL**                  |  **0** |               |
 
-> All 621 bugs fixed + 4 Won't Do archived to [`CHANGELOG.md`](../../CHANGELOG.md).
+> All 648 bugs fixed + 4 Won't Do archived to [`CHANGELOG.md`](../../CHANGELOG.md).
+> **Phase 12 E2E Coverage Gaps Closed**: All 27 findings (BUG-TEST-090–116) resolved — 10 new Playwright specs, 2 backend fixes, 12 xfail markers removed.
+> **Phase 11 E2E Coverage Gap Analysis**: 27 findings identified (BUG-TEST-090–116).
 > **Phase 10 Shared Library Audit**: 31 findings — all fixed.
 > **Phase 9 Infrastructure Audit Phase 2**: 44 findings — all fixed.
 > **Phase 8 Test Quality Audit**: 39 findings — all fixed.
@@ -81,14 +83,15 @@
 | Completed Epics   | 24/24 fully done (see PROGRESS.md)               |
 | Completed Stories | 109 done (86 + 23 test stories archived)          |
 | Completed SP      | 265/265                                          |
-| Bugs Fixed        | 507 done + 4 Won't Do (archived to CHANGELOG)    |
-| Open Bugs         | 114 (31 Shared Lib + 39 Test Audit + 44 Infra Audit Phase 2) |
+| Bugs Fixed        | 648 done + 4 Won't Do (archived to CHANGELOG)    |
+| Open Bugs         | 0 — All resolved ✅                               |
 | Tech Debt         | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)    |
 
 ---
 
-_Last Updated: March 17, 2026 | 0 Active Epics · 0 Open Stories · 114 Open Bugs · 0 Tech Debt · 5 Spikes · 9 Deferred_
-_All 507 prior bugs fixed + 4 Won't Do archived to CHANGELOG.md_
+_Last Updated: March 17, 2026 | 0 Active Epics · 0 Open Stories · 0 Open Bugs · 0 Tech Debt · 5 Spikes · 9 Deferred_
+_All 648 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
+_Phase 12 E2E Coverage Gap Fixes: All 27 findings (BUG-TEST-090–116) closed — 10 new Playwright specs, 2 backend routing fixes, 12 xfail markers removed. Pytest 159/159, Maven 38/38 — March 17, 2026_
 _Phase 10 Shared Lib Audit: 31 new findings (BUG-SHARED-001–031) from 12 backend/shared/ modules (~170 source files) — March 17, 2026_
 _Phase 9 Infra Audit Phase 2: 44 new findings (BUG-INFRA-044–087) from 50+ files across 7 infrastructure directories — March 17, 2026_
 _Phase 8 Test Quality Audit: 39 new findings (BUG-TEST-051–089) from 249 test files across 20 services — March 17, 2026_

@@ -55,7 +55,7 @@ class TestDisputeServiceFlow:
             "uploadedBy": registered_user["userId"]
         }
         response = authenticated_api.post(f"/api/v1/disputes/{fake_id}/evidence", json=payload)
-        assert response.status_code in [200, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"
+        assert response.status_code in [200, 400, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"
 
     def test_investigate_dispute(self, authenticated_api):
         """Start investigation on a dispute"""

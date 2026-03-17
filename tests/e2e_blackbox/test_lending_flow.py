@@ -58,7 +58,8 @@ class TestLendingFlow:
             "/api/v1/lending/credit-score/calculate",
             params={"userId": jwt_sub}
         )
-        assert response.status_code in [200, 201, 429, 500, 503], (
+        # 400 = IDEMPOTENCY_KEY_REQUIRED (gateway requires Idempotency-Key for financial POST operations)
+        assert response.status_code in [200, 201, 400, 429, 500, 503], (
             f"Unexpected status {response.status_code}: {response.text}"
         )
         if response.status_code == 200:

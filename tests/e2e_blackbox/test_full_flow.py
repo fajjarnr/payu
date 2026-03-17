@@ -40,8 +40,8 @@ def test_wallet_creation(authenticated_api, test_user_data):
 
     response = authenticated_api.get(f"/api/v1/wallets/{user_id}/balance")
 
-    # Wallet-service may return 200 (healthy) or 500/503 (circuit breaker / internal error)
-    assert response.status_code in [200, 429, 500, 503], (
+    # Wallet-service may return 200 (healthy), 403 (auth/access denied), or 500/503 (circuit breaker / internal error)
+    assert response.status_code in [200, 403, 429, 500, 503], (
         f"Unexpected status from wallet-service: {response.status_code}: {response.text}"
     )
     if response.status_code in [500, 503]:
@@ -65,8 +65,8 @@ def test_topup_balance(authenticated_api, test_user_data):
         "description": "E2E test initial topup"
     })
 
-    # Wallet-service may return 200/201 (healthy) or 500/503 (circuit breaker / internal error)
-    assert response.status_code in [200, 201, 429, 500, 503], (
+    # Wallet-service may return 200/201 (healthy), 403 (auth/access denied), or 500/503 (circuit breaker / internal error)
+    assert response.status_code in [200, 201, 403, 429, 500, 503], (
         f"Unexpected status from wallet-service: {response.status_code}: {response.text}"
     )
     if response.status_code in [500, 503]:

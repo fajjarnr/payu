@@ -16,7 +16,7 @@
 set -euo pipefail
 
 # Configuration
-DEFAULT_TAG="1.4.0"
+DEFAULT_TAG="1.5.0"
 DEFAULT_REGISTRY="localhost"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../" && pwd)"

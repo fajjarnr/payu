@@ -6,10 +6,10 @@ FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 # Metadata labels
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL description="PayU Gateway Service - API Gateway"
-LABEL version="1.0.0"
+LABEL version="1.5.0"
 LABEL org.opencontainers.image.title="payu-gateway-service"
 LABEL org.opencontainers.image.description="PayU Gateway Service - API Gateway with rate limiting, circuit breaker, routing"
-LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.version="1.5.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.url="https://payu.fajjjar.my.id"
 LABEL org.opencontainers.image.licenses="Proprietary"

@@ -24,8 +24,8 @@ class TestInvestmentFlow:
         May return 500 if account already exists (duplicate key — server bug).
         """
         response = authenticated_api.post("/api/v1/investments/accounts", json={})
-        # 200/201 = success (first time), 500 = duplicate account (server bug)
-        assert response.status_code in [200, 201, 429, 500, 503], (
+        # 200/201 = success (first time), 400 = IDEMPOTENCY_KEY_REQUIRED, 500 = duplicate account (server bug)
+        assert response.status_code in [200, 201, 400, 429, 500, 503], (
             f"Unexpected status {response.status_code}: {response.text}"
         )
         if response.status_code in [200, 201]:

@@ -6,10 +6,10 @@ FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 # Metadata labels
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL description="PayU QRIS Simulator - QR Code Payment Simulation"
-LABEL version="1.0.0"
+LABEL version="1.5.0"
 LABEL org.opencontainers.image.title="payu-qris-simulator"
 LABEL org.opencontainers.image.description="PayU QRIS Simulator - Simulates QRIS QR code payment operations for testing"
-LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.version="1.5.0"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.url="https://payu.fajjjar.my.id"
 LABEL org.opencontainers.image.licenses="Proprietary"

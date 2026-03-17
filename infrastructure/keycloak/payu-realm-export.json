@@ -1,7 +1,6 @@
 {
   "realm": "payu",
   "enabled": true,
-  "_comment_ssl": "DEV environments may override sslRequired to 'external'. Production MUST use 'all'.",
   "sslRequired": "all",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
@@ -63,19 +62,28 @@
       "firstName": "Customer",
       "lastName": "One",
       "attributes": {
-        "phoneNumber": ["+6281234567890"],
-        "nik": ["3201234567890001"],
-        "externalId": ["EXT-CUST-001"]
+        "phoneNumber": [
+          "+6281234567890"
+        ],
+        "nik": [
+          "3201234567890001"
+        ],
+        "externalId": [
+          "EXT-CUST-001"
+        ]
       },
       "credentials": [
         {
-          "_comment": "DEV ONLY — replace with Vault-injected credentials in production",
           "type": "password",
           "value": "dev-customer1-change-me",
           "temporary": true
         }
       ],
-      "realmRoles": ["USER", "KYC_VERIFIED", "PREMIUM"],
+      "realmRoles": [
+        "USER",
+        "KYC_VERIFIED",
+        "PREMIUM"
+      ],
       "clientRoles": {},
       "groups": []
     },
@@ -87,19 +95,26 @@
       "firstName": "Customer",
       "lastName": "Two",
       "attributes": {
-        "phoneNumber": ["+6281234567891"],
-        "nik": ["3201234567890002"],
-        "externalId": ["EXT-CUST-002"]
+        "phoneNumber": [
+          "+6281234567891"
+        ],
+        "nik": [
+          "3201234567890002"
+        ],
+        "externalId": [
+          "EXT-CUST-002"
+        ]
       },
       "credentials": [
         {
-          "_comment": "DEV ONLY — replace with Vault-injected credentials in production",
           "type": "password",
           "value": "dev-customer2-change-me",
           "temporary": true
         }
       ],
-      "realmRoles": ["USER"],
+      "realmRoles": [
+        "USER"
+      ],
       "clientRoles": {},
       "groups": []
     },
@@ -111,18 +126,24 @@
       "firstName": "System",
       "lastName": "Administrator",
       "attributes": {
-        "phoneNumber": ["+628111111111"],
-        "externalId": ["EXT-ADMIN-001"]
+        "phoneNumber": [
+          "+628111111111"
+        ],
+        "externalId": [
+          "EXT-ADMIN-001"
+        ]
       },
       "credentials": [
         {
-          "_comment": "DEV ONLY — MUST use ${KC_ADMIN_PASSWORD} or Vault-injected secret in production",
           "type": "password",
           "value": "dev-admin-change-me-in-prod",
           "temporary": true
         }
       ],
-      "realmRoles": ["ADMIN", "USER"],
+      "realmRoles": [
+        "ADMIN",
+        "USER"
+      ],
       "clientRoles": {},
       "groups": []
     },
@@ -134,18 +155,24 @@
       "firstName": "Backoffice",
       "lastName": "Staff",
       "attributes": {
-        "phoneNumber": ["+628222222222"],
-        "employeeId": ["EMP-001"]
+        "phoneNumber": [
+          "+628222222222"
+        ],
+        "employeeId": [
+          "EMP-001"
+        ]
       },
       "credentials": [
         {
-          "_comment": "DEV ONLY — replace with Vault-injected credentials in production",
           "type": "password",
           "value": "dev-backoffice-change-me",
           "temporary": true
         }
       ],
-      "realmRoles": ["BACKOFFICE", "USER"],
+      "realmRoles": [
+        "BACKOFFICE",
+        "USER"
+      ],
       "clientRoles": {},
       "groups": []
     }
@@ -157,14 +184,16 @@
       "description": "Next.js 15 web application for PayU Digital Banking",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "_comment_secret": "DEV ONLY — rotate to a cryptographically random 64-char secret in production",
       "secret": "payu-web-d3v-0nly-s3cr3t-f84a9b2c7e1d6a0f5b3e8c4d9a7f2e1b",
-      "redirectUris": ["http://localhost:3001/*"],
-      "webOrigins": ["http://localhost:3001"],
+      "redirectUris": [
+        "http://localhost:3001/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3001"
+      ],
       "publicClient": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "_comment_ropc": "ROPC (directAccessGrants) disabled for web clients per OAuth2 security best practice",
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "attributes": {
@@ -222,10 +251,13 @@
       "description": "Backend microservices for PayU platform",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "_comment_secret": "DEV ONLY — rotate to a cryptographically random 64-char secret in production",
       "secret": "payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c",
-      "redirectUris": ["http://localhost:8080/*"],
-      "webOrigins": ["http://localhost:8080"],
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
       "publicClient": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
@@ -240,10 +272,13 @@
       "description": "Quarkus API Gateway for routing and OIDC validation",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "_comment_secret": "DEV ONLY — rotate to a cryptographically random 64-char secret in production",
       "secret": "payu-gw-d3v-0nly-s3cr3t-b29e4a8c1f7d3e6a0b5c9d2f8a1e4c7b",
-      "redirectUris": ["http://localhost:8080/*"],
-      "webOrigins": ["http://localhost:8080"],
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
       "publicClient": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
@@ -259,12 +294,17 @@
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "payu-mobile-secret-dev-only",
-      "redirectUris": ["payu://auth/*", "exp://payu.auth/*"],
-      "webOrigins": ["payu://auth", "exp://payu.auth"],
+      "redirectUris": [
+        "payu://auth/*",
+        "exp://payu.auth/*"
+      ],
+      "webOrigins": [
+        "payu://auth",
+        "exp://payu.auth"
+      ],
       "publicClient": true,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "_comment_ropc": "ROPC (directAccessGrants) disabled for mobile clients per OAuth2 security best practice",
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "attributes": {},

@@ -353,6 +353,16 @@ public class ApiGatewayResource {
         return proxy("backoffice-service", "/api/v1/backoffice", "POST", body, headers);
     }
 
+    // ==================== Analytics Service ====================
+    @GET @Path("/analytics/{path: .*}")
+    public Uni<Response> analyticsGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("analytics-service", "/api/v1/analytics/" + path, "GET", body, headers);
+    }
+    @POST @Path("/analytics/{path: .*}")
+    public Uni<Response> analyticsPost(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("analytics-service", "/api/v1/analytics/" + path, "POST", body, headers);
+    }
+
     // ==================== Support Service ====================
     @GET @Path("/support/{path: .*}")
     public Uni<Response> supportGet(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
