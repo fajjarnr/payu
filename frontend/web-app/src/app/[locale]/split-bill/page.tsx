@@ -49,7 +49,7 @@ export default function SplitBillPage() {
   const [newBillName, setNewBillName] = useState('');
   const [newBillAmount, setNewBillAmount] = useState('');
 
-  const splitBills = ((splitBillsData ?? []) as unknown as Array<{
+  const splitBills = ((Array.isArray(splitBillsData) ? splitBillsData : []) as unknown as Array<{
     id: string;
     description: string;
     totalAmount: number;

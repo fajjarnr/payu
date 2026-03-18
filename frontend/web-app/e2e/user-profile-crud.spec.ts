@@ -16,7 +16,7 @@ test.describe('User Profile CRUD Operations', () => {
   test.describe('CREATE - Profile Creation (Onboarding)', () => {
     test('should display KYC upload step', async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Step 1: KYC Upload page
       await expect(page.getByText('Unggah e-KTP')).toBeVisible();
@@ -28,7 +28,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should navigate to profile form step', async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Click to proceed to step 2
       await page.click('button:has-text("Lanjut ke Profil Data")');
@@ -40,7 +40,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display all registration form fields', async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await page.waitForTimeout(1000);
@@ -54,7 +54,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should fill registration form', async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await page.waitForTimeout(1000);
@@ -71,7 +71,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should have back button on step 2', async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await page.waitForTimeout(1000);
@@ -82,7 +82,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should navigate back to KYC step', async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Go to step 2
       await page.click('button:has-text("Lanjut ke Profil Data")');
@@ -99,7 +99,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display stepper with correct steps', async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Verify stepper labels
       await expect(page.getByText('Identitas', { exact: true })).toBeVisible();
@@ -110,7 +110,7 @@ test.describe('User Profile CRUD Operations', () => {
   test.describe('READ - Profile View', () => {
     test('should display settings page heading', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify settings page heading
       await expect(authPage.getByText('Ekosistem Akun')).toBeVisible();
@@ -119,7 +119,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display profile section', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Kredensial Profil" section
       await expect(authPage.getByText('Kredensial Profil')).toBeVisible();
@@ -127,7 +127,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display profile form labels', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify form labels
       await expect(authPage.getByText('Nama Lengkap (Sesuai KTP)')).toBeVisible();
@@ -137,7 +137,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display profile form inputs', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify form inputs exist via placeholder
       await expect(authPage.locator('input[placeholder="Nama lengkap"]')).toBeVisible();
@@ -147,7 +147,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display sidebar menu items', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify sidebar menu items
       await expect(authPage.getByText('Profil Umum')).toBeVisible();
@@ -159,7 +159,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display account info in sidebar', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify account info
       await expect(authPage.getByText('ID Akun')).toBeVisible();
@@ -172,7 +172,7 @@ test.describe('User Profile CRUD Operations', () => {
   test.describe('UPDATE - Profile Modification', () => {
     test('should allow editing profile name', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the profile form is visible
       await expect(authPage.getByText('Kredensial Profil')).toBeVisible();
@@ -188,7 +188,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should allow editing email', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Update email
       const emailInput = authPage.locator('input[placeholder="email@contoh.com"]');
@@ -201,7 +201,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should allow editing phone number', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Update phone
       const phoneInput = authPage.locator('input[placeholder="+62 812-3456-7890"]');
@@ -214,7 +214,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display preferences section', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Preferensi Sistem" section
       await expect(authPage.getByRole('heading', { name: 'Preferensi Sistem' })).toBeVisible();
@@ -227,7 +227,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should switch to E-Statement tab', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify E-Statement menu button exists in the sidebar
       const eStatementButton = authPage.locator('button').filter({ hasText: 'E-Statement' });
@@ -243,7 +243,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should switch back to profile tab', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify sidebar navigation has all expected tabs
       await expect(authPage.locator('button').filter({ hasText: 'Profil Umum' })).toBeVisible();
@@ -260,7 +260,7 @@ test.describe('User Profile CRUD Operations', () => {
   test.describe('DELETE - Session Management', () => {
     test('should display Hapus Sesi button', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Hapus Sesi" button exists
       await expect(authPage.getByText('Hapus Sesi')).toBeVisible();
@@ -268,7 +268,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display both action buttons', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify both buttons exist: submit and clear session
       await expect(authPage.getByText('Sinkronisasi Profil')).toBeVisible();
@@ -277,14 +277,14 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should maintain page state after reload', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify initial load
       await expect(authPage.getByText('Ekosistem Akun')).toBeVisible();
 
       // Reload
       await authPage.reload();
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify state persists
       await expect(authPage.getByText('Ekosistem Akun')).toBeVisible();
@@ -295,7 +295,7 @@ test.describe('User Profile CRUD Operations', () => {
   test.describe('Profile Privacy & Security', () => {
     test('should display security page', async ({ authPage }) => {
       await authPage.goto('/security');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify security page heading
       await expect(authPage.getByText('Keamanan & Tata Kelola')).toBeVisible();
@@ -304,7 +304,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should display MFA section', async ({ authPage }) => {
       await authPage.goto('/security');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify MFA-related content
       await expect(authPage.getByText('Keamanan & Tata Kelola')).toBeVisible();
@@ -312,14 +312,14 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should maintain security page state after reload', async ({ authPage }) => {
       await authPage.goto('/security');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify initial load
       await expect(authPage.getByText('Keamanan & Tata Kelola')).toBeVisible();
 
       // Reload
       await authPage.reload();
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify state persists
       await expect(authPage.getByText('Keamanan & Tata Kelola')).toBeVisible();
@@ -328,17 +328,17 @@ test.describe('User Profile CRUD Operations', () => {
     test('should navigate between settings and security', async ({ authPage }) => {
       // Start on settings
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
       await expect(authPage.getByText('Ekosistem Akun')).toBeVisible();
 
       // Navigate to security
       await authPage.goto('/security');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
       await expect(authPage.getByText('Keamanan & Tata Kelola')).toBeVisible();
 
       // Navigate back to settings
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
       await expect(authPage.getByText('Ekosistem Akun')).toBeVisible();
     });
   });
@@ -346,7 +346,7 @@ test.describe('User Profile CRUD Operations', () => {
   test.describe('Profile Data Consistency', () => {
     test('should load profile data consistently', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify form elements are present
       await expect(authPage.getByText('Kredensial Profil')).toBeVisible();
@@ -354,7 +354,7 @@ test.describe('User Profile CRUD Operations', () => {
 
       // Reload and verify consistency
       await authPage.reload();
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       await expect(authPage.getByText('Kredensial Profil')).toBeVisible();
       await expect(authPage.locator('input[placeholder="Nama lengkap"]')).toBeVisible();
@@ -362,7 +362,7 @@ test.describe('User Profile CRUD Operations', () => {
 
     test('should show all settings sections on profile tab', async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify all sections present on default profile tab
       await expect(authPage.getByText('Kredensial Profil')).toBeVisible();

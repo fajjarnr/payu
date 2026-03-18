@@ -16,10 +16,11 @@ export default function FraudCasesPage() {
  const [riskLevel, setRiskLevel] = useState<string>('');
  const [page, setPage] = useState(0);
 
- const { data: cases, isLoading } = useQuery({
-  queryKey: ['fraud-cases', status, riskLevel, page],
-  queryFn: () => BackofficeService.getFraudCases(status || undefined, riskLevel || undefined, page),
- });
+  const { data: rawCases, isLoading } = useQuery({
+   queryKey: ['fraud-cases', status, riskLevel, page],
+   queryFn: () => BackofficeService.getFraudCases(status || undefined, riskLevel || undefined, page),
+  });
+  const cases = Array.isArray(rawCases) ? rawCases : [];
 
  return (
   <div className="space-y-6">
@@ -81,15 +82,15 @@ export default function FraudCasesPage() {
             <TableRow>
               <TableCell colSpan={6} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Memuat data...</TableCell>
             </TableRow>
-          ) : cases?.length === 0 ? (
+          ) : cases.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Tidak ada kasus ditemukan</TableCell>
             </TableRow>
           ) : (
-            cases?.map((c) => (
+            cases.map((c) => (
               <TableRow key={c.id} className="group cursor-pointer">
                 <TableCell>
-                  <Badge 
+                  <Badge
                     variant={c.riskLevel === FraudRiskLevel.CRITICAL ? "destructive" : "outline"}
                     className={clsx(
                       "font-bold uppercase tracking-widest",
@@ -123,10 +124,10 @@ export default function FraudCasesPage() {
           )}
         </TableBody>
       </Table>
-      
+
       <div className="px-8 py-6 border-t border-border flex justify-between items-center bg-muted/10">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setPage(p => Math.max(0, p - 1))}
           disabled={page === 0}
           className="h-10 px-6 gap-2 font-bold uppercase tracking-widest"
@@ -134,10 +135,10 @@ export default function FraudCasesPage() {
           <ChevronLeft className="h-4 w-4" /> Sebelumnya
         </Button>
         <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Halaman {page + 1}</span>
-        <Button 
+        <Button
           variant="outline"
           onClick={() => setPage(p => p + 1)}
-          disabled={cases && cases.length < 20}
+          disabled={cases.length < 20}
           className="h-10 px-6 gap-2 font-bold uppercase tracking-widest"
         >
           Selanjutnya <ChevronRight className="h-4 w-4" />

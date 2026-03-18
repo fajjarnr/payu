@@ -15,10 +15,11 @@ export default function KycReviewsPage() {
  const [status, setStatus] = useState<string>('');
  const [page, setPage] = useState(0);
 
- const { data: reviews, isLoading } = useQuery({
-  queryKey: ['kyc-reviews', status, page],
-  queryFn: () => BackofficeService.getKycReviews(status || undefined, page),
- });
+  const { data: rawReviews, isLoading } = useQuery({
+   queryKey: ['kyc-reviews', status, page],
+   queryFn: () => BackofficeService.getKycReviews(status || undefined, page),
+  });
+  const reviews = Array.isArray(rawReviews) ? rawReviews : [];
 
  return (
   <div className="space-y-6">
@@ -69,12 +70,12 @@ export default function KycReviewsPage() {
             <TableRow>
               <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Memuat data...</TableCell>
             </TableRow>
-          ) : reviews?.length === 0 ? (
+          ) : reviews.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Tidak ada review ditemukan</TableCell>
             </TableRow>
           ) : (
-            reviews?.map((review) => (
+            reviews.map((review) => (
               <TableRow key={review.id} className="group cursor-pointer">
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -95,7 +96,7 @@ export default function KycReviewsPage() {
                   {new Date(review.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </TableCell>
                 <TableCell>
-                  <Badge 
+                  <Badge
                     variant={review.status === BackofficeKycStatus.REJECTED ? "destructive" : "outline"}
                     className={clsx(
                       "font-bold uppercase tracking-widest",
@@ -118,10 +119,10 @@ export default function KycReviewsPage() {
           )}
         </TableBody>
       </Table>
-      
+
       <div className="px-8 py-6 border-t border-border flex justify-between items-center bg-muted/10">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setPage(p => Math.max(0, p - 1))}
           disabled={page === 0}
           className="h-10 px-6 gap-2 font-bold uppercase tracking-widest"
@@ -129,10 +130,10 @@ export default function KycReviewsPage() {
           <ChevronLeft className="h-4 w-4" /> Sebelumnya
         </Button>
         <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Halaman {page + 1}</span>
-        <Button 
+        <Button
           variant="outline"
           onClick={() => setPage(p => p + 1)}
-          disabled={reviews && reviews.length < 20}
+          disabled={reviews.length < 20}
           className="h-10 px-6 gap-2 font-bold uppercase tracking-widest"
         >
           Selanjutnya <ChevronRight className="h-4 w-4" />

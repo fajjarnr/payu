@@ -53,7 +53,8 @@ export default function ScheduledTransfersPage() {
   const { accountId: storeAccountId } = useAuthStore();
   const accountId = storeAccountId ?? '';
 
-  const { data: transfers, isLoading } = useScheduledTransfers(accountId);
+  const { data: rawTransfers, isLoading } = useScheduledTransfers(accountId);
+  const transfers = Array.isArray(rawTransfers) ? rawTransfers : [];
   const updateTransfer = useUpdateScheduledTransfer();
   const cancelTransfer = useCancelScheduledTransfer();
   const pauseTransfer = usePauseScheduledTransfer();

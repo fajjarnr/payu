@@ -3,7 +3,7 @@ import { test, expect } from './fixtures';
 test.describe('Registration Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should display registration page correctly', async ({ page }) => {
@@ -142,7 +142,7 @@ test.describe('Registration Flow', () => {
   test('should be responsive on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Left panel should be hidden on mobile
     await expect(page.locator('aside')).not.toBeVisible();
@@ -182,7 +182,7 @@ test.describe('Registration Flow', () => {
 test.describe('Registration Flow - Form Validation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.click('button:has-text("Lanjut ke Profil Data")');
   });
 
@@ -221,7 +221,7 @@ test.describe('Registration Flow - Form Validation', () => {
 test.describe('Registration Flow - Accessibility', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should have proper heading hierarchy', async ({ page }) => {

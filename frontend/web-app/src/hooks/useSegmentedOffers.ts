@@ -18,7 +18,7 @@ export const useSegmentedOffers = (userId: string | undefined, page = 0, size = 
     queryClient.invalidateQueries({ queryKey: ['segmented-offers', userId] });
   };
 
-  const activeOffers = query.data?.offers.filter(offer => offer.isActive) || [];
+  const activeOffers = query.data?.offers?.filter(offer => offer.isActive) ?? [];
   const cashbackOffers = activeOffers.filter(offer => offer.offerType === 'CASHBACK');
   const discountOffers = activeOffers.filter(offer => offer.offerType === 'DISCOUNT');
   const rewardOffers = activeOffers.filter(offer => offer.offerType === 'REWARD_POINTS');
@@ -51,7 +51,7 @@ export const useVIPOffers = (userId: string | undefined) => {
     queryKey: ['vip-offers', userId],
     queryFn: async () => {
       const response = await SegmentationService.getSegmentedOffers(userId!, 0, 20);
-      return response.offers.filter(offer =>
+      return (response.offers ?? []).filter(offer =>
         offer.isActive &&
         (offer.segmentTier === 'VIP' || offer.segmentTier === 'DIAMOND' || offer.segmentTier === 'PLATINUM')
       );

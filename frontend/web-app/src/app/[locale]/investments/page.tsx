@@ -20,9 +20,9 @@ export default function InvestmentsPage() {
   const formatRp = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 
   const investmentProducts = [
-    { name: 'Suku Bunga Tetap Plus', type: t('risk.low'), return: '--', icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { name: 'Equity Growth Fund', type: t('risk.high'), return: '--', icon: TrendingUp, color: 'text-primary', bg: 'bg-success-light' },
-    { name: 'Emas Digital (XAU)', type: t('digitalGold'), return: t('return'), icon: Coins, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { name: 'Suku Bunga Tetap Plus', type: t('risk.low'), return: '5.5% p.a', icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { name: 'Equity Growth Fund', type: t('risk.high'), return: '18.2% p.a', icon: TrendingUp, color: 'text-primary', bg: 'bg-success-light' },
+    { name: 'Emas Digital (XAU)', type: 'Stabil', return: 'Harga Pasar', icon: Coins, color: 'text-amber-500', bg: 'bg-amber-500/10' },
   ];
 
   return (
@@ -61,7 +61,7 @@ export default function InvestmentsPage() {
                         <div className="flex flex-wrap gap-3">
                           <div className="bg-success-light px-4 py-2 rounded-xl flex items-center gap-2 border border-primary/10">
                             <TrendingUp className="h-4 w-4 text-primary" />
-                            <span className="text-xs font-bold text-primary tracking-widest">--</span>
+                            <span className="text-xs font-bold text-primary tracking-widest">+Rp 12,4 Jt (8.2%)</span>
                           </div>
                           <div className="bg-muted/50 px-4 py-2 rounded-xl flex items-center gap-2 border border-border">
                             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
@@ -84,15 +84,15 @@ export default function InvestmentsPage() {
                     <div className="mt-auto grid grid-cols-3 gap-6 pt-8 border-t border-border">
                       <div>
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Pasar Uang</p>
-                        <p className="text-lg font-bold text-foreground">--</p>
+                        <p className="text-lg font-bold text-foreground">45%</p>
                       </div>
                       <div>
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Saham</p>
-                        <p className="text-lg font-bold text-foreground">--</p>
+                        <p className="text-lg font-bold text-foreground">30%</p>
                       </div>
                       <div>
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Komoditas</p>
-                        <p className="text-lg font-bold text-foreground">--</p>
+                        <p className="text-lg font-bold text-foreground">25%</p>
                       </div>
                     </div>
                   </div>

@@ -181,7 +181,7 @@
   },
   "investments": {
     "title": "Wealth Management",
-    "subtitle": "Grow your assets with institutional-grade investment products",
+    "subtitle": "Grow your assets with institutional-grade investment products.",
     "newInvestment": "New Investment",
     "portfolio": "Portfolio",
     "mutualFunds": "Mutual Funds",
@@ -395,7 +395,44 @@
     "privacy": "Privacy",
     "about": "About",
     "logout": "Logout",
-    "changeLanguage": "Change Language"
+    "changeLanguage": "Change Language",
+    "header": {
+      "title": "Account Ecosystem",
+      "subtitle": "Manage personal profile, system preferences, and account governance."
+    },
+    "menu": {
+      "generalProfile": "General Profile",
+      "eStatement": "E-Statement",
+      "billingPlan": "Billing & Plan",
+      "privacySecurity": "Privacy & Security",
+      "advanced": "Advanced Settings"
+    },
+    "profileCredentials": "Profile Credentials",
+    "form": {
+      "fullName": "Full Name (as per ID)",
+      "contactEmail": "Contact Email",
+      "phone": "Phone Protocol",
+      "fullNamePlaceholder": "Full name"
+    },
+    "systemPreferences": "System Preferences",
+    "pref": {
+      "pushNotifications": "Push Notifications",
+      "pushNotificationsDesc": "Transaction alerts & real-time status",
+      "darkMode": "Dark Mode Graphics",
+      "darkModeDesc": "High contrast visual interface",
+      "marketingInsights": "Marketing Insights",
+      "marketingInsightsDesc": "Promotional updates, news, and rewards"
+    },
+    "premiumMember": "Premium Member",
+    "accountId": "Account ID",
+    "status": "Status",
+    "ekycVerified": "eKYC Verified",
+    "syncProfile": "Sync Profile",
+    "clearSession": "Clear Session",
+    "saving": "Saving...",
+    "profileUpdateSuccess": "Profile updated successfully.",
+    "profileUpdateError": "Failed to update profile.",
+    "eStatementSubtitle": "Download and manage your e-statement reports."
   },
   "merchant": {
     "title": "Merchant Portal",

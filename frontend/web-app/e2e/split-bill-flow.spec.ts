@@ -12,7 +12,7 @@ test.describe('Split Bill Flow', () => {
   });
 
   test('should display split bill page with heading', async ({ authPage: page }) => {
-    await expect(page.getByText('Split Bill')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Split Bill', exact: true })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Bagi tagihan dengan teman, keluarga, atau rekan kerja secara adil.')).toBeVisible();
   });
 
@@ -38,7 +38,7 @@ test.describe('Split Bill Flow', () => {
     await expect(page.getByText('Buat Split Bill Baru')).toBeVisible({ timeout: 10000 });
     await expect(page.getByPlaceholder('Makan siang, nonton bareng...')).toBeVisible();
     await expect(page.getByPlaceholder('150000')).toBeVisible();
-    await expect(page.getByText('Buat')).toBeVisible();
-    await expect(page.getByText('Batal')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Buat', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Batal' })).toBeVisible();
   });
 });

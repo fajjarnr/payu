@@ -7,10 +7,16 @@
 import { Page, Locator } from '@playwright/test';
 
 /**
- * Wait for page to be stable (no network requests for 500ms)
+ * Wait for page to be stable after navigation.
+ *
+ * Uses 'domcontentloaded' + a short hydration delay instead of 'networkidle'
+ * because Next.js RSC prefetching keeps network connections active indefinitely,
+ * preventing 'networkidle' from ever being reached on authenticated pages.
  */
-export async function waitForPageStable(page: Page, timeout = 5000): Promise<void> {
-  await page.waitForLoadState('networkidle', { timeout });
+export async function waitForPageStable(page: Page, timeout = 10000): Promise<void> {
+  await page.waitForLoadState('domcontentloaded', { timeout });
+  // Allow React hydration and initial renders to settle
+  await page.waitForTimeout(500);
 }
 
 /**

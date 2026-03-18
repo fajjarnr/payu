@@ -3,7 +3,7 @@ import { test, expect } from './fixtures';
 test.describe('Onboarding Flow - Complete Journey', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should complete full onboarding journey', async ({ page }) => {
@@ -67,7 +67,7 @@ test.describe('Onboarding Flow - Complete Journey', () => {
 test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should display KYC upload page', async ({ page }) => {
@@ -140,7 +140,7 @@ test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
   test('should be responsive on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.getByText('Unggah e-KTP')).toBeVisible();
     await expect(page.locator('.border-2.border-dashed')).toBeVisible();
@@ -155,7 +155,7 @@ test.describe('Onboarding Flow - Step 1: KYC Upload', () => {
 test.describe('Onboarding Flow - Step 2: Profile Form', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.click('button:has-text("Lanjut ke Profil Data")');
   });
 
@@ -311,7 +311,7 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
 test.describe('Onboarding Flow - Step 3: Success', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Mock the registration API to return success (no backend running)
     await page.route('**/api/v1/accounts/register', route =>
@@ -380,7 +380,7 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
 test.describe('Onboarding Flow - Error Handling', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should handle registration error gracefully', async ({ page }) => {
@@ -429,7 +429,7 @@ test.describe('Onboarding Flow - Error Handling', () => {
 test.describe('Onboarding Flow - Accessibility', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should have proper heading hierarchy', async ({ page }) => {
@@ -489,7 +489,7 @@ test.describe('Onboarding Flow - Accessibility', () => {
 test.describe('Onboarding Flow - Visual Regression', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should match screenshots on desktop - Step 1', async ({ page }) => {
@@ -548,7 +548,7 @@ test.describe('Onboarding Flow - Visual Regression', () => {
 test.describe('Onboarding Flow - Security Features', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should display security features in branding panel', async ({ page }) => {

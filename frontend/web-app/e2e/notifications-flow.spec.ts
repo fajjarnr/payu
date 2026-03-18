@@ -26,10 +26,10 @@ test.describe('Notifications Flow', () => {
   });
 
   test('should display filter buttons', async ({ authPage: page }) => {
-    await expect(page.getByText('Semua')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: 'Semua', exact: true })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Belum Dibaca')).toBeVisible();
-    await expect(page.getByText('PROMO')).toBeVisible();
-    await expect(page.getByText('SECURITY')).toBeVisible();
+    await expect(page.locator('button').filter({ hasText: 'PROMO' })).toBeVisible();
+    await expect(page.locator('button').filter({ hasText: 'SECURITY' })).toBeVisible();
   });
 
   test('should show notifications or empty state', async ({ authPage: page }) => {
@@ -39,10 +39,10 @@ test.describe('Notifications Flow', () => {
   });
 
   test('should filter notifications by type', async ({ authPage: page }) => {
-    await page.getByText('PROMO').click();
+    const promoBtn = page.locator('button').filter({ hasText: 'PROMO' });
+    await promoBtn.click();
     await waitForAnimations(page);
     // After filtering, the PROMO button should appear active (emerald bg)
-    const promoBtn = page.locator('button').filter({ hasText: 'PROMO' });
     await expect(promoBtn).toBeVisible();
   });
 });

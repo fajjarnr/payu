@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Store, 
-  Search, 
-  Plus, 
-  CheckCircle2, 
-  AlertCircle, 
-  Globe, 
-  ShieldCheck, 
-  Key, 
-  Settings, 
+import {
+  Store,
+  Search,
+  Plus,
+  CheckCircle2,
+  AlertCircle,
+  Globe,
+  ShieldCheck,
+  Key,
+  Settings,
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
@@ -20,13 +20,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { usePartners, useRegisterPartner, useDeletePartner } from '@/hooks';
@@ -37,7 +37,7 @@ export default function PartnersPage() {
   const registerPartner = useRegisterPartner();
   const deletePartner = useDeletePartner();
 
-  const partners = ((partnersData ?? []) as unknown as Array<{
+  const partners = (Array.isArray(partnersData) ? partnersData : [] as Array<{
     id: string; name: string; type: string; status: string; apiLevel: string; transactions: string; volume: string; joined: string;
   }>).filter(p => {
     if (!searchTerm) return true;
@@ -92,15 +92,15 @@ export default function PartnersPage() {
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-96">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search partners by name or ID..." 
+                <Input
+                  placeholder="Search partners by name or ID..."
                   className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <Button variant="outline" className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
                 <Key className="h-4 w-4" />
@@ -175,7 +175,7 @@ export default function PartnersPage() {
                 ))}
               </TableBody>
             </Table>
-            
+
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 Partner Portal & SNAP BI Registry Syncing

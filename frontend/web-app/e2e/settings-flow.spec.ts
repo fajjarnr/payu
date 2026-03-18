@@ -15,13 +15,13 @@ test.describe('Settings Flow', () => {
   });
 
   test('should display user profile card', async ({ authPage: page }) => {
-    await expect(page.getByText('PENGGUNA PAYU')).toBeVisible();
+    await expect(page.getByText('E2E Test User')).toBeVisible();
     await expect(page.getByText('Premium Member')).toBeVisible();
   });
 
   test('should display account ID', async ({ authPage: page }) => {
     await expect(page.getByText('ID Akun')).toBeVisible();
-    await expect(page.getByText('PAYU-09228373')).toBeVisible();
+    await expect(page.getByText('e2e-user-001')).toBeVisible();
   });
 
   test('should display account status', async ({ authPage: page }) => {
@@ -108,7 +108,7 @@ test.describe('Settings Flow', () => {
 
     // Check that key elements are visible
     await expect(page.getByText('Ekosistem Akun')).toBeVisible();
-    await expect(page.getByText('PENGGUNA PAYU')).toBeVisible();
+    await expect(page.getByText('E2E Test User')).toBeVisible();
 
     // Take screenshot
     await page.screenshot({
@@ -126,7 +126,7 @@ test.describe('Settings Flow', () => {
   test('should have user avatar', async ({ authPage: page }) => {
     const avatar = page.locator('.w-24.h-24.bg-primary.rounded-2xl');
     await expect(avatar).toBeVisible();
-    await expect(avatar).toContainText('P');
+    await expect(avatar).toContainText('E');
   });
 
   test('should have premium member badge', async ({ authPage: page }) => {

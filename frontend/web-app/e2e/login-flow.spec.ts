@@ -3,7 +3,7 @@ import { test, expect } from './fixtures';
 test.describe('Login Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should display login page correctly', async ({ page }) => {
@@ -151,7 +151,7 @@ test.describe('Login Flow', () => {
 
     // Refresh page with new viewport
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Check that elements are still visible and properly sized
     await expect(page.getByText('Selamat Datang Kembali')).toBeVisible();
@@ -185,7 +185,7 @@ test.describe('Login Flow', () => {
 test.describe('Login Flow - Success Path', () => {
   test('should complete successful login journey', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Fill in credentials with correct placeholder
     await page.fill('input[placeholder="username123"]', 'testuser');
@@ -203,7 +203,7 @@ test.describe('Login Flow - Success Path', () => {
 test.describe('Login Flow - Accessibility', () => {
   test('should have proper heading hierarchy', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // h1 is the branding panel title, h2 is the form title
     const h1 = page.locator('h1');
@@ -213,7 +213,7 @@ test.describe('Login Flow - Accessibility', () => {
 
   test('should have keyboard navigation support', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Tab through form elements
     await page.keyboard.press('Tab');
@@ -229,7 +229,7 @@ test.describe('Login Flow - Accessibility', () => {
 
   test('should submit form with Enter key', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await page.fill('input[placeholder="username123"]', 'testuser');
     await page.fill('input[placeholder="••••••••"]', 'password123');

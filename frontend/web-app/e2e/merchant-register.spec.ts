@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('merchant register page loads and displays correctly', async ({ page }) => {
   await page.goto('/merchant/register');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   await expect(page.getByRole('heading', { name: 'Daftar Merchant Baru' })).toBeVisible();
   await expect(page.getByText('Bergabunglah dengan ekosistem pembayaran PayU dan terima pembayaran instan dari jutaan pengguna.')).toBeVisible();
@@ -10,7 +10,7 @@ test('merchant register page loads and displays correctly', async ({ page }) => 
 
 test('merchant register form validation', async ({ page }) => {
   await page.goto('/merchant/register');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const submitButton = page.getByRole('button', { name: /Daftar Sekarang/i });
   await submitButton.click();
@@ -23,7 +23,7 @@ test('merchant register form validation', async ({ page }) => {
 
 test('merchant register form submission with valid data', async ({ page }) => {
   await page.goto('/merchant/register');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   await page.fill('input[type="text"]', 'Test Merchant');
   await page.fill('input[type="email"]', 'merchant@test.com');
@@ -44,7 +44,7 @@ test('merchant register form submission with valid data', async ({ page }) => {
 
 test('merchant type selection', async ({ page }) => {
   await page.goto('/merchant/register');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   // Click the Retail type button
   const retailType = page.locator('button', { hasText: 'Retail' }).first();
@@ -62,7 +62,7 @@ test('merchant type selection', async ({ page }) => {
 
 test('merchant register public key field', async ({ page }) => {
   await page.goto('/merchant/register');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const publicKeyLabel = page.getByText('Public Key (Opsional)');
   await expect(publicKeyLabel).toBeVisible();
@@ -77,7 +77,7 @@ test('merchant register public key field', async ({ page }) => {
 
 test('merchant register back to dashboard link', async ({ page, context }) => {
   await page.goto('/merchant/register');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const backButton = page.getByText('Kembali ke Dashboard Merchant');
   await expect(backButton).toBeVisible();
@@ -112,7 +112,7 @@ test('merchant register back to dashboard link', async ({ page, context }) => {
 
 test('merchant register displays all merchant types', async ({ page }) => {
   await page.goto('/merchant/register');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   await expect(page.getByText('Retail')).toBeVisible();
   await expect(page.getByText('Food & Beverage')).toBeVisible();
@@ -123,7 +123,7 @@ test('merchant register displays all merchant types', async ({ page }) => {
 
 test('merchant register visual elements', async ({ page }) => {
   await page.goto('/merchant/register');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const svgCount = await page.locator('svg').count();
   expect(svgCount).toBeGreaterThan(0);

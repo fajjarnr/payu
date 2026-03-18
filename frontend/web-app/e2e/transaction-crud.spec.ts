@@ -15,7 +15,7 @@ test.describe('Transaction CRUD Operations', () => {
   test.describe('CREATE - Transaction Initiation', () => {
     test('should display transfer form with all fields', async ({ authPage }) => {
       await authPage.goto('/transfer');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify transfer page heading
       await expect(authPage.locator('h2').filter({ hasText: 'Transfer Instan' })).toBeVisible();
@@ -28,7 +28,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should fill transfer form fields', async ({ authPage }) => {
       await authPage.goto('/transfer');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Fill transfer form using data-testid selectors
       const recipientInput = authPage.locator('[data-testid="recipient-account-input"]');
@@ -48,7 +48,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should show review step after clicking review button', async ({ authPage }) => {
       await authPage.goto('/transfer');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Fill required fields
       await authPage.locator('[data-testid="recipient-account-input"]').fill('acc-any123');
@@ -64,7 +64,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should display bill payment page with biller categories', async ({ authPage }) => {
       await authPage.goto('/bills');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify bills page heading
       await expect(authPage.getByText('Tagihan & Top-up')).toBeVisible();
@@ -77,7 +77,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should select a biller on bills page', async ({ authPage }) => {
       await authPage.goto('/bills');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify billers are available for selection
       await expect(authPage.getByText('Pulsa')).toBeVisible();
@@ -89,7 +89,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should display transfer type options', async ({ authPage }) => {
       await authPage.goto('/transfer');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // The transfer page should have a transfer type selector
       await expect(authPage.locator('h2').filter({ hasText: 'Transfer Instan' })).toBeVisible();
@@ -101,7 +101,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should support idempotency - review button prevents double submit', async ({ authPage }) => {
       await authPage.goto('/transfer');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Fill transfer form
       await authPage.locator('[data-testid="recipient-account-input"]').fill('acc-any123');
@@ -119,7 +119,7 @@ test.describe('Transaction CRUD Operations', () => {
   test.describe('READ - Transaction History', () => {
     test('should display transaction history page', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify page heading
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
@@ -128,7 +128,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should display stats cards', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify stats cards headings
       await expect(authPage.getByText('Total Masuk')).toBeVisible();
@@ -139,7 +139,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should display transaction table section', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the table section heading
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
@@ -150,7 +150,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should show filter buttons', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify filter buttons exist
       await expect(authPage.getByText('Filter Tanggal')).toBeVisible();
@@ -159,7 +159,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should show empty state or transaction table', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Either shows transactions in a table or empty state
       const emptyState = authPage.getByText('Tidak Ada Transaksi');
@@ -177,7 +177,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should display table headers for desktop layout', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // The desktop table has these column headers
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
@@ -197,7 +197,7 @@ test.describe('Transaction CRUD Operations', () => {
   test.describe('UPDATE - Transaction Status', () => {
     test('should display cancel dialog elements', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // The transactions page has a cancel dialog component (Dialog)
       // The dialog is triggered by clicking "Batalkan Transaksi" in the dropdown menu
@@ -208,7 +208,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should show transaction ledger on pockets page', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify pockets page has transaction ledger section
       await expect(authPage.getByText('Buku Besar Terakhir')).toBeVisible();
@@ -216,7 +216,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should have view statement button on pockets page', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Lihat Rekening Koran" button exists
       await expect(authPage.getByText('Lihat Rekening Koran')).toBeVisible();
@@ -226,7 +226,7 @@ test.describe('Transaction CRUD Operations', () => {
   test.describe('DELETE - Transaction Cancellation', () => {
     test('should display transaction history with cancel infrastructure', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the page loaded
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
@@ -238,7 +238,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should handle empty transaction list gracefully', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Page should load without error regardless of transaction count
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
@@ -253,14 +253,14 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should maintain page after reload', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify initial load
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
 
       // Reload page
       await authPage.reload();
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify page still loads correctly
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
@@ -271,7 +271,7 @@ test.describe('Transaction CRUD Operations', () => {
   test.describe('Transaction Integrity & Security', () => {
     test('should have two-step transfer confirmation', async ({ authPage }) => {
       await authPage.goto('/transfer');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the two-step process: review then confirm
       await authPage.locator('[data-testid="recipient-account-input"]').fill('acc-any123');
@@ -287,7 +287,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should display transaction stats for monitoring', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Stats cards provide financial monitoring
       await expect(authPage.getByText('Total Masuk')).toBeVisible();
@@ -298,7 +298,7 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should show pagination controls when transactions exist', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify page loaded
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
@@ -317,14 +317,14 @@ test.describe('Transaction CRUD Operations', () => {
 
     test('should verify transaction data consistency after reload', async ({ authPage }) => {
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Capture current page state
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
 
       // Reload
       await authPage.reload();
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Same state after reload
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();

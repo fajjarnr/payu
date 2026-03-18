@@ -18,7 +18,7 @@ export const useUserSegment = (userId: string | undefined) => {
     queryClient.invalidateQueries({ queryKey: ['user-segments', userId] });
   };
 
-  const currentMembership = query.data?.memberships.find(m => m.status === 'ACTIVE');
+  const currentMembership = query.data?.memberships?.find(m => m.status === 'ACTIVE');
   const currentTier = query.data?.currentTier;
   const isVIP = currentTier ? SegmentationService.isVIPSegment(currentTier) : false;
 

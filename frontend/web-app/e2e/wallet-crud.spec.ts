@@ -15,7 +15,7 @@ test.describe('Wallet CRUD Operations', () => {
   test.describe('CREATE - Pocket Creation', () => {
     test('should display pockets page with create button', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify page heading
       await expect(authPage.getByText('Manajemen Kantong')).toBeVisible();
@@ -26,7 +26,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should open create pocket modal', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Click "Tambah Kantong" button
       await authPage.getByText('Tambah Kantong').click();
@@ -41,7 +41,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display create form fields in modal', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       await authPage.getByText('Tambah Kantong').click();
       await authPage.waitForTimeout(500);
@@ -58,7 +58,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should fill create pocket form', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       await authPage.getByText('Tambah Kantong').click();
       await authPage.waitForTimeout(500);
@@ -74,7 +74,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should have pocket type selector buttons', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       await authPage.getByText('Tambah Kantong').click();
       await authPage.waitForTimeout(500);
@@ -86,7 +86,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should have cancel button in create modal', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       await authPage.getByText('Tambah Kantong').click();
       await authPage.waitForTimeout(500);
@@ -97,7 +97,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should have empty state with create button when no pockets', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // The page shows either pocket cards or empty state
       // Empty state has "Belum Ada Kantong" and a "Buat Kantong" button
@@ -117,7 +117,7 @@ test.describe('Wallet CRUD Operations', () => {
   test.describe('READ - Pocket Details', () => {
     test('should display wallet balance section', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify main balance section
       await expect(authPage.getByText('Manajemen Kantong')).toBeVisible();
@@ -127,7 +127,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display "Kantong Saya" section', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the "Kantong Saya" section heading
       await expect(authPage.getByText('Kantong Saya')).toBeVisible();
@@ -135,7 +135,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display saving goals section', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Tujuan Khusus" section
       await expect(authPage.getByText('Tujuan Khusus')).toBeVisible();
@@ -147,7 +147,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display transaction ledger section', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Buku Besar Terakhir" section
       await expect(authPage.getByText('Buku Besar Terakhir')).toBeVisible();
@@ -158,7 +158,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display shared pockets section', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Kantong Bersama" section
       await expect(authPage.getByRole('heading', { name: 'Kantong Bersama' })).toBeVisible();
@@ -170,7 +170,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display reserved balance section', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Protokol Cadangan" section
       await expect(authPage.getByText('Protokol Cadangan')).toBeVisible();
@@ -178,7 +178,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display security tier section', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify security compliance section
       await expect(authPage.getByText('Keamanan Tier-1')).toBeVisible();
@@ -189,7 +189,7 @@ test.describe('Wallet CRUD Operations', () => {
   test.describe('UPDATE - Pocket Modification', () => {
     test('should have shared pocket interaction', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify shared pockets are clickable (they toggle member list)
       const sharedPocket = authPage.getByText('Tabungan Keluarga');
@@ -205,7 +205,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display shared pocket members', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Click to expand first shared pocket
       await authPage.getByText('Tabungan Keluarga').click();
@@ -219,7 +219,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should show member roles in shared pocket', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Click to expand shared pocket
       await authPage.getByText('Tabungan Keluarga').click();
@@ -233,7 +233,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should show locked funds in saving goals', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Dana Terkunci & Dijamin" label on locked goals
       await expect(authPage.getByText('Dana Terkunci & Dijamin')).toBeVisible();
@@ -241,7 +241,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display "Kantong Bersama" button', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify "Kantong Bersama" button in header
       await expect(authPage.getByRole('button', { name: /Kantong Bersama/i }).first()).toBeVisible();
@@ -251,7 +251,7 @@ test.describe('Wallet CRUD Operations', () => {
   test.describe('DELETE - Pocket Closure', () => {
     test('should display pocket management page with all sections', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify all main sections exist
       await expect(authPage.getByText('Manajemen Kantong')).toBeVisible();
@@ -262,14 +262,14 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should maintain state after page reload', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify initial state
       await expect(authPage.getByText('Manajemen Kantong')).toBeVisible();
 
       // Reload
       await authPage.reload();
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify state persists
       await expect(authPage.getByText('Manajemen Kantong')).toBeVisible();
@@ -278,7 +278,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display marketplace CTA section', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the marketplace call-to-action at the bottom
       await expect(authPage.getByText('Akselerasi Kekayaan Anda.')).toBeVisible();
@@ -289,7 +289,7 @@ test.describe('Wallet CRUD Operations', () => {
   test.describe('Wallet Ledger Integrity', () => {
     test('should display ledger with proper empty state or data', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the ledger section exists
       await expect(authPage.getByText('Buku Besar Terakhir')).toBeVisible();
@@ -306,17 +306,17 @@ test.describe('Wallet CRUD Operations', () => {
     test('should show consistent data after navigation', async ({ authPage }) => {
       // Navigate to pockets
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
       await expect(authPage.getByText('Manajemen Kantong')).toBeVisible();
 
       // Navigate away
       await authPage.goto('/transactions');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
 
       // Navigate back
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify state is consistent
       await expect(authPage.getByText('Manajemen Kantong')).toBeVisible();
@@ -325,7 +325,7 @@ test.describe('Wallet CRUD Operations', () => {
 
     test('should display Kantong Utama Cair as main pocket', async ({ authPage }) => {
       await authPage.goto('/pockets');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the main pocket label
       await expect(authPage.getByText('Kantong Utama Cair')).toBeVisible();

@@ -9,7 +9,7 @@ test.describe('Account CRUD Operations', () => {
   test.describe('CREATE - Account Registration', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
     });
 
     test('should create new account with valid data', async ({ page }) => {
@@ -85,7 +85,7 @@ test.describe('Account CRUD Operations', () => {
     test.beforeEach(async ({ authPage }) => {
       // authPage fixture already sets up auth cookies on localhost
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
     });
 
     test('should display account information', async ({ authPage }) => {
@@ -117,7 +117,7 @@ test.describe('Account CRUD Operations', () => {
   test.describe('UPDATE - Account Modification', () => {
     test.beforeEach(async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
     });
 
     test('should update account profile information', async ({ authPage }) => {
@@ -166,7 +166,7 @@ test.describe('Account CRUD Operations', () => {
     test('should enable two-factor authentication', async ({ authPage }) => {
       // Navigate to the dedicated security page
       await authPage.goto('/security');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify security page loaded
       await expect(authPage.getByText('Keamanan & Tata Kelola')).toBeVisible();
@@ -180,7 +180,7 @@ test.describe('Account CRUD Operations', () => {
   test.describe('DELETE - Account Deactivation', () => {
     test.beforeEach(async ({ authPage }) => {
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
     });
 
     test('should initiate account deletion process', async ({ authPage }) => {
@@ -207,14 +207,14 @@ test.describe('Account CRUD Operations', () => {
     test('should maintain data integrity across operations', async ({ authPage }) => {
       // 1. Navigate to onboarding to verify it loads
       await authPage.goto('/onboarding');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify onboarding page loaded
       await expect(authPage.getByText('Unggah e-KTP')).toBeVisible();
 
       // 2. Navigate to settings (authenticated) and verify data loads
       await authPage.goto('/settings');
-      await authPage.waitForLoadState('networkidle');
+      await authPage.waitForLoadState('domcontentloaded');
 
       // Verify the settings page loaded with form elements
       await expect(authPage.getByText('Ekosistem Akun')).toBeVisible();

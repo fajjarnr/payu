@@ -5,13 +5,13 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  ArrowRightLeft, 
-  TrendingUp, 
-  CheckCircle, 
-  Clock, 
-  Info, 
-  Loader2, 
+import {
+  ArrowRightLeft,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  Info,
+  Loader2,
   AlertCircle,
   History,
   TrendingDown,
@@ -148,7 +148,7 @@ export default function ExchangePage() {
   const toCurrencyInfo = SUPPORTED_CURRENCIES[toCurrency];
 
   // Recent conversions (last 5)
-  const recentConversions = conversions?.slice(0, 5) || [];
+  const recentConversions = Array.isArray(conversions) ? conversions.slice(0, 5) : [];
 
   return (
     <DashboardLayout>

@@ -3,13 +3,13 @@ import { test, expect } from './fixtures';
 test('capture landing page and dashboard', async ({ authPage: page }) => {
     // 1. Check Landing Page
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.screenshot({ path: 'test-results/landing-page.png', fullPage: true });
     console.log('Landing page screenshot saved.');
 
     // 2. Check Dashboard with authentication
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.screenshot({ path: 'test-results/dashboard-ui.png', fullPage: true });
     console.log('Dashboard screenshot saved.');
 
@@ -26,7 +26,7 @@ test('capture landing page and dashboard', async ({ authPage: page }) => {
 test.describe('UI Check - Basic Page Load', () => {
   test('should load home page', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.locator('body')).toBeVisible();
@@ -34,7 +34,7 @@ test.describe('UI Check - Basic Page Load', () => {
 
   test('should load login page', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.locator('body')).toBeVisible();
@@ -42,7 +42,7 @@ test.describe('UI Check - Basic Page Load', () => {
 
   test('should load onboarding page', async ({ page }) => {
     await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.locator('body')).toBeVisible();
@@ -52,7 +52,7 @@ test.describe('UI Check - Basic Page Load', () => {
 test.describe('UI Check - Protected Pages', () => {
   test('should load dashboard with auth', async ({ authPage: page }) => {
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.locator('body')).toBeVisible();
@@ -60,7 +60,7 @@ test.describe('UI Check - Protected Pages', () => {
 
   test('should load investments page with auth', async ({ authPage: page }) => {
     await page.goto('/investments');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.locator('body')).toBeVisible();
@@ -68,7 +68,7 @@ test.describe('UI Check - Protected Pages', () => {
 
   test('should load bills page with auth', async ({ authPage: page }) => {
     await page.goto('/bills');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.locator('body')).toBeVisible();
@@ -76,7 +76,7 @@ test.describe('UI Check - Protected Pages', () => {
 
   test('should load lending page with auth', async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.locator('body')).toBeVisible();
@@ -84,7 +84,7 @@ test.describe('UI Check - Protected Pages', () => {
 
   test('should load transfer page with auth', async ({ authPage: page }) => {
     await page.goto('/transfer');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Transfer page has its own title (e.g., "Transfer Instan")
     await expect(page).toHaveTitle(/.+/);
@@ -93,7 +93,7 @@ test.describe('UI Check - Protected Pages', () => {
 
   test('should load qris page with auth', async ({ authPage: page }) => {
     await page.goto('/qris');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page).toHaveTitle(/PayU/);
     await expect(page.locator('body')).toBeVisible();
@@ -101,7 +101,7 @@ test.describe('UI Check - Protected Pages', () => {
 
   test('should load settings page with auth', async ({ authPage: page }) => {
     await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Settings page has its own title (e.g., "Pengaturan Akun")
     await expect(page).toHaveTitle(/.+/);
@@ -113,7 +113,7 @@ test.describe('UI Check - Responsive Design', () => {
   test('should render correctly on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('body')).toBeVisible();
   });
@@ -121,7 +121,7 @@ test.describe('UI Check - Responsive Design', () => {
   test('should render correctly on tablet', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('body')).toBeVisible();
   });
@@ -129,7 +129,7 @@ test.describe('UI Check - Responsive Design', () => {
   test('should render correctly on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('body')).toBeVisible();
   });
@@ -137,7 +137,7 @@ test.describe('UI Check - Responsive Design', () => {
   test('should render dashboard correctly on mobile with auth', async ({ authPage: page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('body')).toBeVisible();
   });
@@ -154,7 +154,7 @@ test.describe('UI Check - No Console Errors', () => {
     });
 
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait a bit for any async errors
     await page.waitForTimeout(1000);
@@ -187,7 +187,7 @@ test.describe('UI Check - No Console Errors', () => {
     });
 
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
 
     const filteredErrors = errors.filter(e =>
@@ -217,7 +217,7 @@ test.describe('UI Check - No Console Errors', () => {
     });
 
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
 
     const filteredErrors = errors.filter(e =>
@@ -247,7 +247,7 @@ test.describe('UI Check - Network Requests', () => {
     });
 
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Filter out expected failures (e.g., analytics, BFF proxy to gateway, API calls, fonts, external resources)
     const filteredFailures = failedRequests.filter(url =>
@@ -271,7 +271,7 @@ test.describe('UI Check - Network Requests', () => {
     });
 
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Filter out expected failures (e.g., analytics, BFF proxy to gateway, API calls, fonts,
     // RSC prefetches, and Next.js internal navigation requests to the page itself)
@@ -295,7 +295,7 @@ test.describe('UI Check - Network Requests', () => {
 test.describe('UI Check - Visual Elements', () => {
   test('should have visible header on home page', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Home page may use nav instead of header element
     const header = page.locator('header, nav').first();
@@ -304,7 +304,7 @@ test.describe('UI Check - Visual Elements', () => {
 
   test('should have visible main content on home page', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Landing page uses sections and divs instead of <main>; check for primary content container
     const main = page.locator('main, [role="main"], section').first();
@@ -313,7 +313,7 @@ test.describe('UI Check - Visual Elements', () => {
 
   test('should have visible footer on home page', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Footer may not exist on all pages; check for footer or bottom section
     const footer = page.locator('footer, [role="contentinfo"]').first();
@@ -328,7 +328,7 @@ test.describe('UI Check - Visual Elements', () => {
 
   test('should have visible navigation on dashboard with auth', async ({ authPage: page }) => {
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Dashboard uses <aside> for desktop sidebar navigation and <header> for top bar
     const nav = page.locator('aside, header, nav').first();
@@ -341,7 +341,7 @@ test.describe('UI Check - Performance', () => {
     const startTime = Date.now();
 
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const loadTime = Date.now() - startTime;
 
@@ -353,7 +353,7 @@ test.describe('UI Check - Performance', () => {
     const startTime = Date.now();
 
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const loadTime = Date.now() - startTime;
 
@@ -365,7 +365,7 @@ test.describe('UI Check - Performance', () => {
 test.describe('UI Check - Screenshot Comparison', () => {
   test('home page screenshot capture', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await page.screenshot({
       path: 'e2e/screenshots/home-page.png',
@@ -375,7 +375,7 @@ test.describe('UI Check - Screenshot Comparison', () => {
 
   test('login page screenshot capture', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await page.screenshot({
       path: 'e2e/screenshots/login-page.png',
@@ -385,7 +385,7 @@ test.describe('UI Check - Screenshot Comparison', () => {
 
   test('dashboard screenshot capture with auth', async ({ authPage: page }) => {
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await page.screenshot({
       path: 'e2e/screenshots/dashboard-page.png',

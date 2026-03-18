@@ -23,7 +23,7 @@ test.describe('Accessibility Audit - @a11y', () => {
   test.describe('Login Page', () => {
     test('should not have any critical accessibility issues', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -38,7 +38,7 @@ test.describe('Accessibility Audit - @a11y', () => {
 
     test('should have no critical accessibility violations beyond color contrast', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -54,7 +54,7 @@ test.describe('Accessibility Audit - @a11y', () => {
 
     test('should have proper form labels', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withRules(['label', 'aria-required-attr'])
@@ -65,7 +65,7 @@ test.describe('Accessibility Audit - @a11y', () => {
 
     test('should have proper heading structure', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withRules(['heading-order'])
@@ -76,7 +76,7 @@ test.describe('Accessibility Audit - @a11y', () => {
 
     test('should have keyboard accessible elements', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withRules([
@@ -95,7 +95,7 @@ test.describe('Accessibility Audit - @a11y', () => {
   test.describe('Registration Page', () => {
     test('should not have any critical accessibility issues', async ({ page }) => {
       await page.goto('/onboarding');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -113,7 +113,7 @@ test.describe('Accessibility Audit - @a11y', () => {
   test.describe('Protected Pages - Dashboard', () => {
     test('should not have any critical accessibility issues on dashboard', async ({ authPage: page }) => {
       await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -127,7 +127,7 @@ test.describe('Accessibility Audit - @a11y', () => {
 
     test('should have proper form labels on dashboard', async ({ authPage: page }) => {
       await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withRules(['label', 'aria-required-attr'])
@@ -140,7 +140,7 @@ test.describe('Accessibility Audit - @a11y', () => {
   test.describe('Protected Pages - Investments', () => {
     test('should not have any critical accessibility issues on investments', async ({ authPage: page }) => {
       await page.goto('/investments');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -156,7 +156,7 @@ test.describe('Accessibility Audit - @a11y', () => {
   test.describe('Keyboard Navigation', () => {
     test('should have logical tab order on login page', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Get all focusable elements
       const focusableElements = await page.locator(
@@ -182,7 +182,7 @@ test.describe('Accessibility Audit - @a11y', () => {
 
     test('should submit form with Enter key', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Fill in the form with correct placeholder
       await page.fill('input[placeholder="username123"]', 'testuser');
@@ -203,7 +203,7 @@ test.describe('Accessibility Audit - @a11y', () => {
   test.describe('Screen Reader Support', () => {
     test('should have proper ARIA landmarks', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withRules([
@@ -226,7 +226,7 @@ test.describe('Accessibility Audit - @a11y', () => {
 
     test('should have proper language attribute', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const lang = await page.locator('html').getAttribute('lang');
       expect(lang).toBeTruthy();
@@ -236,7 +236,7 @@ test.describe('Accessibility Audit - @a11y', () => {
   test.describe('Focus Management', () => {
     test('should have visible focus indicators', async ({ page }) => {
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Get all interactive elements
       const interactiveElements = await page.locator(
@@ -274,7 +274,7 @@ test.describe('Accessibility Audit - @a11y', () => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto('/login');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withRules(['target-size'])
@@ -301,7 +301,7 @@ test.describe('Accessibility - Full Site Scan @a11y', () => {
   for (const { path, name } of pagesToTest) {
     test(`should pass accessibility scan on ${name} page`, async ({ page }) => {
       await page.goto(path);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa'])

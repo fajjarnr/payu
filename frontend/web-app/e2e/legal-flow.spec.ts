@@ -15,8 +15,8 @@ test.describe('Terms and Conditions Page', () => {
   });
 
   test('should display terms page heading', async ({ authPage: page }) => {
-    await expect(page.getByText('Syarat dan Ketentuan')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Versi 1.0 - Terakhir diperbarui: Januari 2026')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Syarat dan Ketentuan' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Versi 1.0 - Terakhir diperbarui: Januari 2026').first()).toBeVisible();
   });
 
   test('should display all 6 sections', async ({ authPage: page }) => {
@@ -48,8 +48,8 @@ test.describe('Privacy Policy Page', () => {
   });
 
   test('should display privacy page heading', async ({ authPage: page }) => {
-    await expect(page.getByText('Kebijakan Privasi')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Versi 1.0 - Terakhir diperbarui: Januari 2026')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Kebijakan Privasi' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Versi 1.0 - Terakhir diperbarui: Januari 2026').first()).toBeVisible();
   });
 
   test('should display all 6 sections', async ({ authPage: page }) => {

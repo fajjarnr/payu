@@ -35,7 +35,7 @@ export default function RewardsPage() {
 
   const recentPoints: Array<{ id: number; type: string; points: number; description: string; date: string }> = (loyaltyData as any)?.history ?? [];
 
-  const cashbackHistory: Array<{ id: number; merchant: string; amount: number; status: string; date: string; description: string }> = (cashbackData as any) ?? [];
+  const cashbackHistory: Array<{ id: number; merchant: string; amount: number; status: string; date: string; description: string }> = Array.isArray(cashbackData) ? (cashbackData as any) : [];
 
   // Compute cashback summary from actual data
   const cashbackCredited = cashbackHistory.filter(cb => cb.status === 'credited').reduce((sum, cb) => sum + cb.amount, 0);
@@ -51,7 +51,7 @@ export default function RewardsPage() {
     totalEarnings: (referralData as any)?.totalEarnings ?? 0
   };
 
-  const activePromotions: Array<{ id: number; name: string; description: string; type: string; value: string; endDate: string }> = (promotionsData as any) ?? [];
+  const activePromotions: Array<{ id: number; name: string; description: string; type: string; value: string; endDate: string }> = Array.isArray(promotionsData) ? (promotionsData as any) : [];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);

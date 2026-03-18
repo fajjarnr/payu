@@ -181,7 +181,7 @@
   },
   "investments": {
     "title": "Manajemen Kekayaan",
-    "subtitle": "Tumbuhkan aset Anda dengan produk investasi kelas institusi",
+    "subtitle": "Tumbuhkan aset Anda dengan produk investasi kelas institusi.",
     "newInvestment": "Investasi Baru",
     "portfolio": "Portofolio",
     "mutualFunds": "Reksa Dana",
@@ -395,7 +395,44 @@
     "privacy": "Privasi",
     "about": "Tentang",
     "logout": "Keluar",
-    "changeLanguage": "Ganti Bahasa"
+    "changeLanguage": "Ganti Bahasa",
+    "header": {
+      "title": "Ekosistem Akun",
+      "subtitle": "Kelola profil pribadi, preferensi sistem, dan tata kelola akun."
+    },
+    "menu": {
+      "generalProfile": "Profil Umum",
+      "eStatement": "E-Statement",
+      "billingPlan": "Tagihan & Paket",
+      "privacySecurity": "Privasi & Keamanan",
+      "advanced": "Pengaturan Lanjut"
+    },
+    "profileCredentials": "Kredensial Profil",
+    "form": {
+      "fullName": "Nama Lengkap (Sesuai KTP)",
+      "contactEmail": "Email Kontak",
+      "phone": "Protokol Telepon",
+      "fullNamePlaceholder": "Nama lengkap"
+    },
+    "systemPreferences": "Preferensi Sistem",
+    "pref": {
+      "pushNotifications": "Notifikasi Push",
+      "pushNotificationsDesc": "Peringatan transaksi & status real-time",
+      "darkMode": "Grafis Mode Gelap",
+      "darkModeDesc": "Antarmuka visual kontras tinggi",
+      "marketingInsights": "Wawasan Pemasaran",
+      "marketingInsightsDesc": "Pembaruan promosi, berita, dan hadiah"
+    },
+    "premiumMember": "Premium Member",
+    "accountId": "ID Akun",
+    "status": "Status",
+    "ekycVerified": "eKYC Terverifikasi",
+    "syncProfile": "Sinkronisasi Profil",
+    "clearSession": "Hapus Sesi",
+    "saving": "Menyimpan...",
+    "profileUpdateSuccess": "Profil berhasil diperbarui.",
+    "profileUpdateError": "Gagal memperbarui profil.",
+    "eStatementSubtitle": "Unduh dan kelola laporan e-statement Anda."
   },
   "merchant": {
     "title": "Portal Merchant",

@@ -82,7 +82,12 @@ export default function TransferPage() {
   const addToast = useUIStore((state) => state.addToast);
   const transferMutation = useInitiateTransfer();
 
-  const recentContacts: Array<{ name: string; initial: string; color: string; accountId: string }> = [];
+  const recentContacts: Array<{ name: string; initial: string; color: string; accountId: string }> = [
+    { name: 'Anya', initial: 'A', color: 'bg-pink-100 text-pink-600', accountId: 'acc-any123' },
+    { name: 'Budi', initial: 'B', color: 'bg-blue-100 text-blue-600', accountId: 'acc-bud456' },
+    { name: 'Citra', initial: 'C', color: 'bg-amber-100 text-amber-600', accountId: 'acc-cit789' },
+    { name: 'Dodi', initial: 'D', color: 'bg-emerald-100 text-emerald-600', accountId: 'acc-dod012' },
+  ];
 
   const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<TransferRequest>({
     resolver: zodResolver(transferSchema),
@@ -472,8 +477,8 @@ export default function TransferPage() {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between ml-2">
                           <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase">Pilih Bulan (Opsional)</label>
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => setValue('recurringMonth', undefined)}
                             className="text-xs font-bold text-emerald-600 tracking-widest uppercase hover:underline"
                           >

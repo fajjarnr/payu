@@ -12,15 +12,15 @@ test.describe('Exchange Flow', () => {
   });
 
   test('should display exchange page with heading and description', async ({ authPage: page }) => {
-    await expect(page.getByText('Currency Exchange')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Currency Exchange' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Real-time foreign exchange rates with competitive pricing.')).toBeVisible();
   });
 
   test('should display exchange calculator section', async ({ authPage: page }) => {
     await expect(page.getByText('Exchange Calculator')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('aria-label=From currency')).toBeVisible();
-    await expect(page.locator('aria-label=To currency')).toBeVisible();
-    await expect(page.locator('aria-label=Amount to exchange')).toBeVisible();
+    await expect(page.locator('[aria-label="From currency"]')).toBeVisible();
+    await expect(page.locator('[aria-label="To currency"]')).toBeVisible();
+    await expect(page.locator('[aria-label="Amount to exchange"]')).toBeVisible();
   });
 
   test('should display market status section', async ({ authPage: page }) => {

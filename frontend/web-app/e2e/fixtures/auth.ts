@@ -43,7 +43,7 @@ export async function gotoWithAuth(page: Page, context: BrowserContext, path: st
   await setupAuthCookies(context);
   await page.goto(path);
   // Wait for the page to be fully loaded
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 }
 
 /**

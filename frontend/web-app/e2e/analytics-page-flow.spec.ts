@@ -29,8 +29,8 @@ test.describe('Analytics Page Flow', () => {
   });
 
   test('should display chart legends', async ({ authPage: page }) => {
-    await expect(page.getByText('Masuk')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Keluar')).toBeVisible();
+    await expect(page.getByText('Masuk', { exact: true })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Keluar', { exact: true })).toBeVisible();
   });
 
   test('should display spending breakdown section', async ({ authPage: page }) => {

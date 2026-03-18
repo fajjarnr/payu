@@ -13,8 +13,8 @@ test.describe('Support Flow', () => {
 
   test('should display support page with heading', async ({ authPage: page }) => {
     // Uses i18n; id locale: "Bantuan"
-    const heading = page.getByText('Bantuan');
-    const headingEn = page.getByText('Support');
+    const heading = page.getByRole('heading', { name: 'Bantuan', exact: true });
+    const headingEn = page.getByRole('heading', { name: 'Support', exact: true });
     const hasId = await heading.isVisible().catch(() => false);
     const hasEn = await headingEn.isVisible().catch(() => false);
     expect(hasId || hasEn).toBeTruthy();

@@ -4,7 +4,7 @@ test.describe('Lending Flow', () => {
   test.beforeEach(async ({ authPage: page }) => {
     // Navigate to lending page (assumes user is logged in)
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should display lending page correctly', async ({ authPage: page }) => {
@@ -159,7 +159,7 @@ test.describe('Lending Flow', () => {
   test('should be responsive on mobile viewport', async ({ authPage: page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Check that key elements are visible
     await expect(page.getByText('Pinjaman & Kredit')).toBeVisible();
@@ -192,7 +192,7 @@ test.describe('Lending Flow', () => {
 test.describe('Lending Flow - Loan Application', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should click apply for personal loan', async ({ authPage: page }) => {
@@ -243,7 +243,7 @@ test.describe('Lending Flow - Loan Application', () => {
 test.describe('Lending Flow - PayLater', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('tab', { name: 'PayLater' }).click();
     // Wait for state to update - use a longer timeout for reliability
     await page.waitForTimeout(500);
@@ -311,7 +311,7 @@ test.describe('Lending Flow - PayLater', () => {
 test.describe('Lending Flow - Credit Score', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should display credit score prominently', async ({ authPage: page }) => {
@@ -329,10 +329,11 @@ test.describe('Lending Flow - Credit Score', () => {
   });
 
   test('should have credit score factors with icons', async ({ authPage: page }) => {
-    // The check icons use the text-success-light class
+    // Wait for at least one factor text to render (auto-retry ensures data is loaded)
+    await expect(page.getByText('Pembayaran tepat waktu')).toBeVisible();
+    // The check icons use the text-success-light class (grade badge + 3 factor icons = 4)
     const checkIcons = page.locator('.text-success-light');
-    const checkCount = await checkIcons.count();
-    expect(checkCount).toBeGreaterThanOrEqual(3);
+    await expect(checkIcons).toHaveCount(4);
   });
 
   test('should display credit score in gradient card', async ({ authPage: page }) => {
@@ -344,7 +345,7 @@ test.describe('Lending Flow - Credit Score', () => {
 test.describe('Lending Flow - Accessibility', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should have proper heading hierarchy', async ({ authPage: page }) => {
@@ -382,7 +383,7 @@ test.describe('Lending Flow - Accessibility', () => {
 test.describe('Lending Flow - Visual Regression', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should match screenshots on desktop', async ({ authPage: page }) => {
@@ -416,7 +417,7 @@ test.describe('Lending Flow - Visual Regression', () => {
 test.describe('Lending Flow - Error Handling', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should handle loan application error', async ({ authPage: page }) => {
@@ -450,7 +451,7 @@ test.describe('Lending Flow - Error Handling', () => {
 test.describe('Lending Flow - Interactive Elements', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/lending');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should have hover effects on loan cards', async ({ authPage: page }) => {

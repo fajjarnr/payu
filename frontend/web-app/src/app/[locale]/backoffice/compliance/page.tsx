@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Shield, 
-  Search, 
-  FileText, 
-  ClipboardCheck, 
-  AlertTriangle, 
-  Lock, 
-  UserCheck, 
-  Download, 
-  Filter, 
+import {
+  Shield,
+  Search,
+  FileText,
+  ClipboardCheck,
+  AlertTriangle,
+  Lock,
+  UserCheck,
+  Download,
+  Filter,
   Calendar,
   History,
   MoreVertical,
@@ -22,13 +22,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { useAuditReports, useFailedAccessAudits } from '@/hooks';
@@ -38,7 +38,7 @@ export default function CompliancePage() {
   const { data: auditReportsData, isLoading } = useAuditReports();
   const { data: failedAccessData } = useFailedAccessAudits();
 
-  const auditLogs = ((auditReportsData ?? []) as unknown as Array<{
+  const auditLogs = (Array.isArray(auditReportsData) ? auditReportsData : [] as Array<{
     id: string; event: string; resource: string; user: string; ip: string; risk: string; timestamp: string;
   }>).filter(log => {
     if (!searchTerm) return true;
@@ -99,8 +99,8 @@ export default function CompliancePage() {
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-96">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Filter by User, IP, or Resource..." 
+                <Input
+                  placeholder="Filter by User, IP, or Resource..."
                   className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -111,7 +111,7 @@ export default function CompliancePage() {
                 More Filters
               </Button>
             </div>
-            
+
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <Button variant="outline" className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
                 <Calendar className="h-4 w-4" />
@@ -176,7 +176,7 @@ export default function CompliancePage() {
                 ))}
               </TableBody>
             </Table>
-            
+
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 Real-time Audit Stream Active

@@ -12,7 +12,7 @@ test.describe('Scheduled Transfers Flow', () => {
   });
 
   test('should display scheduled transfers page with heading', async ({ authPage: page }) => {
-    await expect(page.getByText('Transfer Terjadwal')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Transfer Terjadwal', exact: true })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Kelola dan pantau transfer berulang Anda.')).toBeVisible();
   });
 
