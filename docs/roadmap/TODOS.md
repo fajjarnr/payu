@@ -18,7 +18,7 @@
 | **Tech Debt**    |   0   | All completed ✅                                      |
 | **Spikes**       |   5   | ARCH-001 – ARCH-005                                   |
 | **Deferred**     |   9   | P2-FE-003, OCP-007, OCP-010, DR-001, DEFER-001, RHPAM |
-| **Open Bugs**    |  26   | Temuan Logical, Security & Architecture (March 2026)  |
+| **Open Bugs**    |  30   | Temuan Logical, Security & Architecture (March 2026)  |
 
 > **Completed Epics**: 24/24 fully done. All stories & tech debt cleared.
 > See [`PROGRESS.md`](./PROGRESS.md) for completed Epics summary.
@@ -29,18 +29,19 @@
 | Kategori                   | Open | Priority Range |
 | :------------------------- | :--: | :------------- |
 | Backend Logic              |   8  | P0-P1          |
-| Frontend Logic             |   8  | P1-P2          |
+| Frontend Logic             |  11  | P1-P2          |
 | Frontend-Backend Mismatch  |   0  | —              |
 | Auth / Session             |   0  | —              |
 | Shared Libraries           |   0  | —              |
 | Test Coverage / Quality    |   0  | —              |
 | Infrastructure / OpenShift |   1  | P0             |
-| Architecture               |   6  | P1-P2          |
-| Security (PII Leakage)     |   2  | P0             |
-| **TOTAL**                  | **26** |               |
+| Architecture               |   7  | P1-P2          |
+| Security (PII Leakage)     |   3  | P0             |
+| **TOTAL**                  | **30** |               |
 
 #### 🔴 Priority 0 (Critical)
 - **[BUG-SECURITY-001]** Hardcoded default `password`/`secret` di berbagai `application.yml` (seperti `auth-service`, `statement-service`) menggunakan fallback tanpa enkripsi/Vault (`${DATABASE_PASSWORD:payu}`).
+- **[BUG-SECURITY-006]** Mekanisme In-Memory Fallback untuk Caching Eksperimen AB Testing di Frontend (`ABTestingService.ts`) menyimpan status otorisasi *session-less* akibat penanganan memori yang melampaui daur hidup *browser* secara konseptual. Jika `localStorage` gagal atau penuh, data tes eksperimental dapat bertahan dalam *memory cache* (State Leak) dan menyebabkan bentrokan keadaan antarpengguna jika menggunakan *shared device*.
 - **[BUG-SECURITY-002]** Celah IDOR pada `TopUpController.java` dan `SubscriptionController.java` (`get` endpoint). Validasi kepemilikan (`validateOwnership`) tidak diimplementasikan, sehingga user berpotensi melihat data user lain (berbeda dengan perbaikan yang sudah ada di `PaymentController`).
 - **[BUG-SECURITY-003]** Defisiensi Validasi *Payload* API (CWE-20). Ditemukan belasan _controller_ (contohnya `CardController` dan `WebhookController`) yang menerima parameter `@RequestBody` namun luput menyertakan anotasi `@Valid`. Hal ini semakin fatal karena kelas DTO yang dituju (seperti `CreateCardRequest`) sama sekali tidak dibekali anotasi konstrain bawaan JSR-380 (`@NotNull`, `@Positive`, `@NotBlank`). Ini memungkinkan _malicious caller_ mengirimkan data anomali (misal: `dailyLimit = -1000`) dan memicu eksploitasi di lapisan Domain Model.
 - **[BUG-LOGIC-002]** Tidak adanya perlindungan `Idempotency` (`@Idempotent`) pada HTTP POST endpoint paling krusial yaitu `@PostMapping("/transfer")` di dalam `TransactionController.java` (`transaction-service`). Berpotensi menimbulkan isu _replay payload_ transfer ganda.
@@ -58,6 +59,7 @@
 - **[BUG-LOGIC-004]** *Manual JSON Serializer* Rentan Injeksi. Ditemukan implementasi `mapToJson()` manual berbasis `StringBuilder` di `PaymentExpiryScheduler.java` (baris 162) dan `MerchantService.java` (baris 324) untuk membuat payload Kafka event. Implementasi ini **tidak melakukan escaping** terhadap karakter khusus JSON (`"`, `\`, newline). Jika `referenceId` atau field lainnya mengandung karakter `"`, payload JSON akan *corrupt* dan *event consumer* di downstream akan crash. Selain itu, ini membuka vektor serangan *JSON Injection*. Seharusnya menggunakan `ObjectMapper` (Jackson) yang sudah ada sebagai dependency.
 - **[BUG-LOGIC-005]** Risiko *Duplicate Execution* pada `@Scheduled` Task di Lingkungan Multi-Instance. Ditemukan 31+ metode `@Scheduled` tersebar lintas layanan (misal: `PaymentExpiryScheduler`, `SubscriptionService`, `MerchantService.expireQrPayments()`) tanpa perlindungan *distributed lock* (`ShedLock`, `@SchedulerLock`). Ketika layanan di-*scale* secara horizontal pada OpenShift (>1 pod/replica), seluruh scheduler akan berjalan **ganda secara simultan**, mengakibatkan: double-cancel pembayaran, double-charge langganan, dan data inconsistency parah.
 - **[BUG-LOGIC-006]** Anti-Pattern `@Async` + `@Transactional` pada `InvestmentApplicationService.java`. Empat metode krusial (`buyDeposit`, `buyMutualFund`, `buyGold`, `sellInvestment`) ditandai `@Transactional` **dan** `@Async` secara bersamaan. Karena `@Async` menyebabkan eksekusi di thread terpisah, Spring tidak dapat menangkap transaksi proxy dari caller thread — sehingga anotasi `@Transactional` **diam-diam tidak berfungsi**. Ini berarti debit wallet bisa berhasil tapi jika `saveDeposit` atau `saveTransaction` gagal, **rollback JPA tidak terjadi** dan uang nasabah hilang tanpa tercatat.
+- **[BUG-ARCH-007]** Pelanggaran Resiliensi `Circuit Breaker` pada Asinkronisasi (P1 – Resiliensi Backend). Fungsi `createAccountFallback` di `InvestmentApplicationService.java` berupaya melempar `RuntimeException` generik (`throw new RuntimeException("Service temporarily unavailable.")`) di dalam eksekusi *fallback* yang diasosiasikan dengan `CompletableFuture`. Pelemparan *exception* seperti ini tanpa dikemas dalam `CompletableFuture.failedFuture(...)` akan merusak eksekusi _async pipelines_ di Java (kemudian membungkan pemanggilnya dengan _TimeOut_ diam-diam).
 
 #### 🟡 Priority 2 (Medium)
 - **[BUG-ARCH-002]** Pelanggaran arsitektur standar _Error Handling_. Belasan _custom exceptions_ (seperti `InsufficientBalanceException`, `WalletNotFoundException`, dll.) tidak mewarisi base `BusinessException`. Serta melewatkan penggunaan Unique Error Code (e.g., `WAL_001`), mereka alih-alih melakukan `extends RuntimeException` secara langsung.
@@ -69,6 +71,9 @@
 - **[BUG-FE-006]** Absennya `error.tsx` dan `global-error.tsx` di Next.js App Router (P1 – Resiliensi). Tidak ada satupun file `error.tsx` maupun `global-error.tsx` pada seluruh 23 *route segment* di `frontend/web-app/src/app/[locale]/`. Padahal ini adalah mekanisme utama Next.js 13+ untuk menangkap *unhandled runtime errors* per segmen. Tanpa file ini, setiap error React yang tidak ter-catch oleh `ErrorBoundary` component akan menyebabkan **white screen of death** di production tanpa pesan apapun kepada user. Komponen `ErrorBoundary` yang ada hanya membungkus layout utama, bukan error recovery per halaman.
 - **[BUG-FE-007]** Ketimpangan `loading.tsx` Skeleton (P2 – UX). Dari 23 *route segment* di bawah `[locale]/`, hanya 5 yang memiliki `loading.tsx` (bills, dashboard, investments, lending, transfer). Sisa **18 route** (cards, exchange, backoffice, merchant, notifications, pockets, qris, rewards, scheduled-transfers, security, settings, split-bill, support, transactions, analytics, legal, login, onboarding) tidak memiliki loading state — sehingga user melihat **blank page** saat navigasi menunggu data fetch.
 - **[BUG-FE-008]** *Hardcoded id-ID Locale* pada Format Tanggal Frontend (P2 – I18n). Ditemukan puluhan penggunaan fungsi `.toLocaleDateString('id-ID', ...)` yang dipukul rata di seluruh komponen (misal: `BalanceCard.tsx`, `PromoPopup.tsx`, `TransferActivity.tsx`). Hal ini menyebabkan pengguna yang memilih bahasa Inggris (`/en/dashboard`) tetap melihat format tanggal bahasa Indonesia ("20 Maret 2026"), melanggar prinsip internasionalisasi dan standar UX global. Seharusnya menggunakan locale dinamis dari `next-intl`.
+- **[BUG-FE-009]** Risiko Skalabilitas & *Memory Leak* Akibat `WeakMap` Berlebihan pada Interceptor HTTP di `api.ts`. Variabel _state_ global seperti `let isRefreshing = false` dan *array promise* `failedQueue` digunakan untuk antrean *request* saat pembaruan *token* (`Token Refresh`). Mekanisme konfirmasi ini menggunakan mutasi *global array* secara kasar yang rentan mangkrak (tergantung di RAM tanpa dikumpul oleh _Garbage Collector_) pada koneksi yang sangat putus-nyambung karena penolakan `reject` yang mungkin terlambat atau referensi yang mengikat `originalRequest`.
+- **[BUG-FE-010]** Penggunaan Eksekusi Navigasi Kasar (`window.location.href`) di Dalam _React SSR/BFF Ecosystem_. Pada utilitas `api.ts`, jika mekanisme *token refresh* gagal total, pengguna didorong keluatr (*redirect-out*) menggunakan skrip mutlak `window.location.href = /${locale}/login`. Di Next.js App Router (13+), cara ini sangat dikutuk karena secara instan membuang seluruh *React Context* di memori klien (_Hard Reload_) sehingga pengalaman navigasi SPA menjadi patah (*Flashing Screen*). Ini terlewat ditangani karena komponen semestinya memanggil *router* `next-intl` (contoh: `useRouter().push()`) bukan menyabotase jendela `window` langsung.
+- **[BUG-FE-011]** Penumpukan Entri Penjelajahan Web Gagal (*Broken Navigation History*) di Frontend. Pada komponen pemasaran `BannerCarousel.tsx`, interaksi *klik* pada *banner* menggunakan `router.push(banner.actionUrl);` (dari *hook* Next-Intl) untuk *deep linking*. Tetapi pada interaksi ganda/cepat dari pengguna, riwayat navigasi (`history stack`) kebanjiran *path* yang sama. Pengguna secara menyiksa harus memencet tombol `Back` di Android berpuluh kali. Pemanggilan semacam rotasi promosi seharusnya mengeksekusi `router.replace` atau diberikan mekanisme pengecekan `debounce/throttle`.
 
 > All 648 bugs fixed + 4 Won't Do archived to [`CHANGELOG.md`](../../CHANGELOG.md).
 > **Phase 12 E2E Coverage Gaps Closed**: All 27 findings (BUG-TEST-090–116) resolved — 10 new Playwright specs, 2 backend fixes, 12 xfail markers removed.
@@ -117,12 +122,12 @@
 | Completed Stories | 109 done (86 + 23 test stories archived)          |
 | Completed SP      | 265/265                                          |
 | Bugs Fixed        | 648 done + 4 Won't Do (archived to CHANGELOG)    |
-| Open Bugs         | 26 — Temuan Logical Inspection Tahap Akhir (March 2026)|
+| Open Bugs         | 30 — Temuan Logical Inspection Tahap Akhir (March 2026)|
 | Tech Debt         | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)    |
 
 ---
 
-_Last Updated: March 20, 2026 | 0 Active Epics · 0 Open Stories · 26 Open Bugs · 0 Tech Debt · 5 Spikes · 9 Deferred_
+_Last Updated: March 20, 2026 | 0 Active Epics · 0 Open Stories · 30 Open Bugs · 0 Tech Debt · 5 Spikes · 9 Deferred_
 _All 648 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
 _Phase 12 E2E Coverage Gap Fixes: All 27 findings (BUG-TEST-090–116) closed — 10 new Playwright specs, 2 backend routing fixes, 12 xfail markers removed. Pytest 159/159, Maven 38/38 — March 17, 2026_
 _Phase 10 Shared Lib Audit: 31 new findings (BUG-SHARED-001–031) from 12 backend/shared/ modules (~170 source files) — March 17, 2026_
