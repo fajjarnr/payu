@@ -39,14 +39,15 @@ import java.util.UUID;
 public class TopUpController {
 
     private final PaymentService paymentService;
-
+    
     /**
      * Extract authenticated user ID from JWT token.
      */
     private String extractUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getSubject();
+            // BUG-AUTH-013: Use 'account_id' claim with 'sub' fallback
+            return jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
         }
         return null;
     }
@@ -81,6 +82,12 @@ public class TopUpController {
     public ApiResponse<TopUpResponse> createTopUp(
             @Parameter(description = "Top-up request details", required = true)
             @Valid @RequestBody TopUpRequest request) {
+        // BUG-SECURITY-014 FIX: Prevent balance theft by ensuring authenticated user matches accountId
+        String authenticatedUserId = extractUserId();
+        if (authenticatedUserId != null && !authenticatedUserId.equals(request.accountId())) {
+            throw new TopUpNotFoundException("Unauthorized top-up attempt: account ownership mismatch");
+        }
+
         BillPayment payment = paymentService.createTopUp(request);
         return ApiResponse.success(TopUpResponse.from(payment));
     }

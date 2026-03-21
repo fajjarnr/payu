@@ -57,10 +57,13 @@ public class AuthorizationService {
         // Get all account IDs for the user (multi-account support)
         List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);
 
-        // Check if user owns the sender account associated with this transaction
-        if (!userAccountIds.contains(transaction.getSenderAccountId())) {
-            log.warn("User {} attempted to access transaction {} belonging to account {}",
-                    maskUserId(userId), transactionId, transaction.getSenderAccountId());
+        // Check if user owns the sender account OR recipient account associated with this transaction
+        // (Banking standard: both parties have a "need to know" visibility for their mutual transaction)
+        if (!userAccountIds.contains(transaction.getSenderAccountId()) && 
+            !userAccountIds.contains(transaction.getRecipientAccountId())) {
+            
+            log.warn("Unauthorized access attempt: User {} tried to view transaction {} not belonging to their accounts",
+                    maskUserId(userId), transactionId);
             throw new org.springframework.security.access.AccessDeniedException(
                     "Access denied: You do not have permission to access this transaction");
         }

@@ -61,5 +61,4 @@ public interface DataAccessAuditUseCase {
             Pageable pageable
     );
 
-    void deleteDataAccessAudit(UUID auditId);
 }

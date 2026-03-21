@@ -338,17 +338,5 @@ class GdprAuditControllerTest {
         );
     }
 
-    @Test
-    void shouldDeleteDataAccessAudit() throws Exception {
-        UUID auditId = UUID.randomUUID();
 
-        doNothing().when(dataAccessAuditUseCase).deleteDataAccessAudit(auditId);
-
-        mockMvc.perform(delete("/api/v1/gdpr-audit/{auditId}", auditId)
-                        .with(user("admin").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
-
-        verify(dataAccessAuditUseCase, times(1)).deleteDataAccessAudit(auditId);
-    }
 }

@@ -1,7 +1,11 @@
 package id.payu.lending.application.security;
 
+import id.payu.lending.application.service.InstallmentService;
 import id.payu.lending.application.service.LendingApplicationService;
+import id.payu.lending.application.service.LoanManagementService;
+import id.payu.lending.application.service.LoanPreApprovalService;
 import id.payu.lending.application.service.PayLaterTransactionService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,18 +19,16 @@ import java.util.UUID;
  * Enforces RBAC policies for Loan, PayLater, and CreditScore resources.
  */
 @Service
+@RequiredArgsConstructor
 public class LendingSecurityService {
 
     private static final Logger log = LoggerFactory.getLogger(LendingSecurityService.class);
 
     private final LendingApplicationService lendingApplicationService;
     private final PayLaterTransactionService payLaterTransactionService;
-
-    public LendingSecurityService(LendingApplicationService lendingApplicationService, 
-                                  PayLaterTransactionService payLaterTransactionService) {
-        this.lendingApplicationService = lendingApplicationService;
-        this.payLaterTransactionService = payLaterTransactionService;
-    }
+    private final LoanManagementService loanManagementService;
+    private final LoanPreApprovalService preApprovalService;
+    private final InstallmentService installmentService;
 
     /**
      * Verify loan belongs to authenticated user.
@@ -79,16 +81,45 @@ public class LendingSecurityService {
     }
 
     /**
-     * Verify repayment schedule belongs to loan owned by authenticated user.
+     * BUG-SECURITY-018 FIX: Verify repayment schedule belongs to loan owned by authenticated user.
      * @param scheduleId Schedule ID to check
      * @param userId Authenticated user ID
      * @return true if schedule's loan belongs to user
      */
     public boolean isRepaymentScheduleOwner(UUID scheduleId, UUID userId) {
-        // This would need repository lookup to verify ownership
-        // For now, return true and rely on loan ownership check
         log.debug("Checking repayment schedule ownership: scheduleId={}, userId={}", scheduleId, userId);
-        return true;
+        return loanManagementService.getRepaymentSchedule(scheduleId)
+                .map(schedule -> isLoanOwner(schedule.getLoanId(), userId))
+                .orElse(false);
+    }
+ 
+    /**
+     * BUG-SECURITY-019 FIX: Verify pre-approval belongs to authenticated user.
+     * @param preApprovalId Pre-approval ID to check
+     * @param userId Authenticated user ID
+     * @return true if IDs match
+     */
+    public boolean isPreApprovalOwnerById(UUID preApprovalId, UUID userId) {
+        log.debug("Checking pre-approval ownership: preApprovalId={}, userId={}", preApprovalId, userId);
+        return preApprovalService.getPreApprovalById(preApprovalId)
+                .map(pre -> pre.getUserId().equals(userId))
+                .orElse(false);
+    }
+
+    /**
+     * BUG-SECURITY-021 FIX: Verify installment checkout belongs to authenticated user.
+     * @param checkoutId Checkout ID to check
+     * @param userId Authenticated user ID
+     * @return true if IDs match
+     */
+    public boolean isInstallmentOwner(UUID checkoutId, UUID userId) {
+        log.debug("Checking installment ownership: checkoutId={}, userId={}", checkoutId, userId);
+        try {
+            id.payu.lending.domain.model.InstallmentCheckout checkout = installmentService.getCheckout(checkoutId);
+            return checkout.getUserId().equals(userId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

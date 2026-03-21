@@ -60,10 +60,13 @@ async def start_kyc_verification(
     auth: dict = Depends(require_auth),
 ):
     """
-    Start a new KYC verification process.
+    BUG-SECURITY-017 FIX: Start a new KYC verification with IDOR check.
     Supports idempotency for safe retries.
     Rate limit: 10 requests per minute per IP.
     """
+    # Validate ownership
+    if request_data.user_id != auth.get("sub"):
+         raise HTTPException(status_code=403, detail="Forbidden: You can only start KYC for yourself")
     log = logger.bind(
         user_id=request_data.user_id,
         request_id=getattr(request.state, "request_id", None),
@@ -186,7 +189,7 @@ async def upload_ktp(
             ktp_image_base64=request_data.ktp_image,
         )
 
-        log.info("KTP OCR completed", result=result)
+        log.info("KTP OCR completed", status=result.get("status"))
 
         response_data = {
             "verification_id": request_data.verification_id,
@@ -274,7 +277,7 @@ async def upload_selfie(
             selfie_image_base64=request_data.selfie_image,
         )
 
-        log.info("KYC verification completed", result=result)
+        log.info("KYC verification completed", status=result.get("status"))
 
         response_data = {
             "verification_id": request_data.verification_id,
@@ -335,6 +338,10 @@ async def get_kyc_status(
                 request_id=getattr(request.state, "request_id", None),
             ).model_dump()
 
+        # BUG-SECURITY-017 FIX: Validate ownership
+        if verification.user_id != auth.get("sub"):
+            raise HTTPException(status_code=403, detail="Forbidden: You can only access your own KYC status")
+
         response_data = GetKycStatusResponse(
             verification_id=verification.verification_id,
             user_id=verification.user_id,
@@ -366,7 +373,10 @@ async def get_user_kyc_history(
     request: Request, user_id: str, db: AsyncSession = Depends(get_db_session),
     auth: dict = Depends(require_auth),
 ):
-    """Get KYC verification history for a user."""
+    """BUG-SECURITY-017 FIX: Get KYC verification history with IDOR check."""
+    # Validate ownership
+    if user_id != auth.get("sub"):
+         raise HTTPException(status_code=403, detail="Forbidden: You can only access your own KYC history")
     log = logger.bind(
         user_id=user_id, request_id=getattr(request.state, "request_id", None)
     )

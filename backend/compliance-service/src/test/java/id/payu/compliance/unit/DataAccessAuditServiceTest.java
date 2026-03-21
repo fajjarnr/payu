@@ -391,12 +391,5 @@ class DataAccessAuditServiceTest {
         verify(persistencePort, times(1)).findByFilters(userId, null, serviceName, operationType, null, null, pageable);
     }
 
-    @Test
-    void shouldDeleteDataAccessAudit() {
-        UUID auditId = UUID.randomUUID();
 
-        dataAccessAuditUseCase.deleteDataAccessAudit(auditId);
-
-        verify(persistencePort, times(1)).deleteById(auditId);
-    }
 }

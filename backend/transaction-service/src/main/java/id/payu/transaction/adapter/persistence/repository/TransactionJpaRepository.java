@@ -44,6 +44,9 @@ public interface TransactionJpaRepository extends JpaRepository<Transaction, UUI
     List<Transaction> findByAccountId(@Param("accountId") UUID accountId,
                                        org.springframework.data.domain.Pageable pageable);
 
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.senderAccountId = :accountId OR t.recipientAccountId = :accountId")
+    long countByAccountId(@Param("accountId") UUID accountId);
+
     /**
      * Find transactions by sender account ID only.
      * When sharding is enabled, PostgreSQL prunes to a single partition.

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from structlog import get_logger
 from typing import Optional
@@ -20,6 +20,7 @@ from app.ml.robo_advisory import RoboAdvisoryEngine
 from app.ml.fraud_detection import FraudDetectionEngine
 from app.api.responses import ApiResponse
 from app.api.idempotency import get_cached_result, cache_result
+from app.api.auth import require_auth
 
 logger = get_logger(__name__)
 analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
@@ -27,9 +28,14 @@ analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @analytics_router.get("/user/{user_id}/metrics")
 async def get_user_metrics(
-    request: Request, user_id: str, db: AsyncSession = Depends(get_db_session)
+    request: Request, user_id: str,
+    db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth)
 ):
-    """Get user analytics metrics."""
+    """BUG-SECURITY-016/017 FIX: Get user analytics metrics with Auth & IDOR check."""
+    # Validate ownership
+    if user_id != auth.get("sub") and user_id != auth.get("account_id"):
+        raise HTTPException(status_code=403, detail="Forbidden: You can only access your own metrics")
     log = logger.bind(
         user_id=user_id, request_id=getattr(request.state, "request_id", None)
     )
@@ -74,8 +80,13 @@ async def get_spending_trends(
     request: Request,
     request_data: GetSpendingTrendsRequest,
     db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth)
 ):
-    """Get user spending trends analysis."""
+    """BUG-SECURITY-016/017 FIX: Get user spending trends with Auth & IDOR check."""
+    # Validate ownership
+    user_id = request_data.user_id
+    if user_id != auth.get("sub") and user_id != auth.get("account_id"):
+        raise HTTPException(status_code=403, detail="Forbidden: You can only access your own trends")
     log = logger.bind(
         user_id=request_data.user_id,
         request_id=getattr(request.state, "request_id", None),
@@ -107,8 +118,13 @@ async def get_cash_flow_analysis(
     request: Request,
     request_data: GetAnalyticsRequest,
     db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth)
 ):
-    """Get user cash flow analysis."""
+    """BUG-SECURITY-016/017 FIX: Get user cash flow with Auth & IDOR check."""
+    # Validate ownership
+    user_id = request_data.user_id
+    if user_id != auth.get("sub") and user_id != auth.get("account_id"):
+        raise HTTPException(status_code=403, detail="Forbidden: You can only access your own cashflow")
     log = logger.bind(
         user_id=request_data.user_id,
         request_id=getattr(request.state, "request_id", None),
@@ -135,9 +151,14 @@ async def get_cash_flow_analysis(
 
 @analytics_router.get("/user/{user_id}/recommendations")
 async def get_recommendations(
-    request: Request, user_id: str, db: AsyncSession = Depends(get_db_session)
+    request: Request, user_id: str,
+    db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth)
 ):
-    """Get personalized recommendations for user."""
+    """BUG-SECURITY-016/017 FIX: Get personalized recommendations with Auth & IDOR check."""
+    # Validate ownership
+    if user_id != auth.get("sub") and user_id != auth.get("account_id"):
+        raise HTTPException(status_code=403, detail="Forbidden: You can only access your own recommendations")
     log = logger.bind(
         user_id=user_id, request_id=getattr(request.state, "request_id", None)
     )
@@ -169,11 +190,16 @@ async def get_robo_advisory(
     request: Request,
     request_data: GetRoboAdvisoryRequest,
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    auth: dict = Depends(require_auth)
 ):
     """
-    Generate robo-advisory recommendations.
+    BUG-SECURITY-016/017 FIX: Generate robo-advisory with Auth & IDOR check.
     Supports idempotency for safe retries.
     """
+    # Validate ownership
+    user_id = request_data.user_id
+    if user_id != auth.get("sub") and user_id != auth.get("account_id"):
+        raise HTTPException(status_code=403, detail="Forbidden: You can only access your own robo-advisory")
     log = logger.bind(
         user_id=request_data.user_id,
         request_id=getattr(request.state, "request_id", None),
@@ -229,12 +255,17 @@ async def calculate_fraud_score(
     request: Request,
     request_data: GetFraudScoreRequest,
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    auth: dict = Depends(require_auth)
 ):
     """
-    Calculate fraud score for a transaction.
+    BUG-SECURITY-016/017 FIX: Calculate fraud score with Auth & IDOR check.
     Supports idempotency for safe retries.
     Rate limit: 100 requests per minute per IP.
     """
+    # Validate ownership
+    user_id = request_data.user_id
+    if user_id != auth.get("sub") and user_id != auth.get("account_id"):
+        raise HTTPException(status_code=403, detail="Forbidden: You can only calculate fraud score for your own transactions")
     log = logger.bind(
         transaction_id=request_data.transaction_id,
         user_id=request_data.user_id,
@@ -303,9 +334,11 @@ async def calculate_fraud_score(
 
 @analytics_router.get("/fraud/transaction/{transaction_id}")
 async def get_transaction_fraud_score(
-    request: Request, transaction_id: str, db: AsyncSession = Depends(get_db_session)
+    request: Request, transaction_id: str,
+    db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth)
 ):
-    """Get stored fraud score for a specific transaction."""
+    """BUG-SECURITY-016/017 FIX: Get stored fraud score with Auth & IDOR check."""
     log = logger.bind(
         transaction_id=transaction_id,
         request_id=getattr(request.state, "request_id", None),
@@ -328,6 +361,10 @@ async def get_transaction_fraud_score(
                 message="Fraud score not found",
                 request_id=getattr(request.state, "request_id", None),
             ).model_dump()
+
+        # Validate ownership
+        if fraud_entity.user_id != auth.get("sub") and fraud_entity.user_id != auth.get("account_id"):
+            raise HTTPException(status_code=403, detail="Forbidden: You can only access your own fraud scores")
 
         response_data = FraudDetectionResult(
             fraud_score={
@@ -360,9 +397,14 @@ async def get_transaction_fraud_score(
 
 @analytics_router.get("/fraud/user/{user_id}/high-risk")
 async def get_user_high_risk_transactions(
-    request: Request, user_id: str, db: AsyncSession = Depends(get_db_session)
+    request: Request, user_id: str,
+    db: AsyncSession = Depends(get_db_session),
+    auth: dict = Depends(require_auth)
 ):
-    """Get high-risk transactions for a user in the last 30 days."""
+    """BUG-SECURITY-016/017 FIX: Get high-risk transactions with Auth & IDOR check."""
+    # Validate ownership
+    if user_id != auth.get("sub") and user_id != auth.get("account_id"):
+        raise HTTPException(status_code=403, detail="Forbidden: You can only access your own high-risk transactions")
     log = logger.bind(
         user_id=user_id, request_id=getattr(request.state, "request_id", None)
     )

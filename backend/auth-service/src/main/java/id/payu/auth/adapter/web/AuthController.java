@@ -94,6 +94,11 @@ public class AuthController extends BaseController {
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))
             )
     })
+    private String maskUsername(String username) {
+        if (username == null || username.length() < 4) return "***";
+        return username.substring(0, 3) + "****" + (username.contains("@") ? username.substring(username.indexOf("@")) : "");
+    }
+
     @SecurityRequirements  // No authentication required for login
     @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "login")
     public ResponseEntity<ApiResponse<?>> login(
@@ -117,7 +122,7 @@ public class AuthController extends BaseController {
 
             if (loginResponse == null) {
                 riskEvaluationService.recordFailedAttempt(request.username());
-                log.warn("Failed login attempt for user: {}", request.username());
+                log.warn("Failed login attempt for user: {}", maskUsername(request.username()));
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error(
                                 ErrorCode.AUTH_BUS_001.getCode(),
@@ -134,13 +139,13 @@ public class AuthController extends BaseController {
                         riskEx.getClass().getSimpleName(), riskEx.getMessage());
             }
 
-            log.info("Successful login for user: {}", request.username());
+            log.info("Successful login for user: {}", maskUsername(request.username()));
             return ResponseEntity.ok(ApiResponse.success(loginResponse));
 
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
             // BUG-BE-154: Handle invalid credentials from loginBlocking directly
             riskEvaluationService.recordFailedAttempt(request.username());
-            log.warn("Failed login attempt for user: {}", request.username());
+            log.warn("Failed login attempt for user: {}", maskUsername(request.username()));
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(
                             ErrorCode.AUTH_BUS_001.getCode(),
@@ -148,7 +153,7 @@ public class AuthController extends BaseController {
                     ));
         } catch (Exception e) {
             // SECURITY: Don't log full stack trace to prevent information disclosure
-            log.error("Login failed for user: {} - {}", request.username(), e.getClass().getSimpleName());
+            log.error("Login failed for user: {} - {}", maskUsername(request.username()), e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(
                             ErrorCode.INTERNAL_ERROR.getCode(),

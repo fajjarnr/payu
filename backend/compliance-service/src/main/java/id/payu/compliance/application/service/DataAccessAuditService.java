@@ -136,9 +136,4 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
         return persistencePort.findByFilters(userId, accessedBy, serviceName, operationType, startDate, endDate, pageable);
     }
 
-    @Override
-    public void deleteDataAccessAudit(UUID auditId) {
-        log.warn("Deleting data access audit: {}", auditId);
-        persistencePort.deleteById(auditId);
-    }
 }

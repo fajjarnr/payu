@@ -158,7 +158,7 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/repayment-schedules/{scheduleId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isRepaymentScheduleOwner(#scheduleId, authentication.principal.userId)")
     @Operation(summary = "Get repayment schedule by ID", description = "Retrieve a specific repayment schedule")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Repayment schedule found",
             content = @Content(schema = @Schema(implementation = RepaymentSchedule.class)))
@@ -173,7 +173,7 @@ public class LendingController extends BaseController {
     }
 
     @PostMapping("/repayment-schedules/{scheduleId}/pay")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isRepaymentScheduleOwner(#scheduleId, authentication.principal.userId)")
     @Idempotent(required = true)
     @Operation(summary = "Process repayment", description = "Make a repayment for a specific schedule")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Repayment processed successfully",
@@ -373,7 +373,7 @@ public class LendingController extends BaseController {
     }
 
     @GetMapping("/pre-approval/{preApprovalId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isPreApprovalOwnerById(#preApprovalId, authentication.principal.userId)")
     @Operation(summary = "Get pre-approval by ID", description = "Retrieve pre-approval details by ID")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pre-approval found",
             content = @Content(schema = @Schema(implementation = id.payu.lending.domain.model.LoanPreApproval.class)))
@@ -415,10 +415,13 @@ public class LendingController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Insufficient credit or invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<List<TenorOptionResponse>>> getTenorOptions(
-            @Valid @RequestBody TenorOptionsRequest request) {
-        log.info("Tenor options requested: userId={}, amount={}", request.userId(), request.amount());
+            @Valid @RequestBody TenorOptionsRequest request,
+            java.security.Principal principal) {
+        // BUG-BE-192 FIX: Extract authenticated userId from JWT instead of trusting client-submitted value
+        UUID authenticatedUserId = UUID.fromString(principal.getName());
+        log.info("Tenor options requested: userId={}, amount={}", authenticatedUserId, request.amount());
         List<TenorOptionResponse> options = installmentService
-                .getTenorOptions(request.userId(), request.amount())
+                .getTenorOptions(authenticatedUserId, request.amount())
                 .stream()
                 .map(TenorOptionResponse::from)
                 .toList();
@@ -441,18 +444,21 @@ public class LendingController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Insufficient credit or invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<InstallmentCheckoutResponse>> checkout(
-            @Valid @RequestBody InstallmentCheckoutRequest request) {
+            @Valid @RequestBody InstallmentCheckoutRequest request,
+            java.security.Principal principal) {
+        // BUG-SECURITY-020 FIX: Extract authenticated userId from JWT
+        UUID authenticatedUserId = UUID.fromString(principal.getName());
         log.info("Installment checkout: userId={}, partner={}, amount={}, tenor={}x",
-                request.userId(), request.partnerId(), request.amount(), request.tenor());
+                authenticatedUserId, request.partnerId(), request.amount(), request.tenor());
         id.payu.lending.domain.model.InstallmentCheckout result = installmentService.checkout(
-                request.userId(), request.partnerId(), request.externalOrderId(),
+                authenticatedUserId, request.partnerId(), request.externalOrderId(),
                 request.amount(), request.tenor());
         return created(InstallmentCheckoutResponse.from(result),
                 "/api/v1/lending/installments/" + result.getId());
     }
 
     @GetMapping("/installments/{checkoutId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @lendingSecurityService.isInstallmentOwner(#checkoutId, authentication.principal.userId)")
     @Operation(summary = "Get installment checkout by ID")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Checkout found",
             content = @Content(schema = @Schema(implementation = InstallmentCheckoutResponse.class)))

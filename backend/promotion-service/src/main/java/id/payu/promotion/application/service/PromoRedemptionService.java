@@ -132,6 +132,9 @@ public class PromoRedemptionService {
         LOG.info("Promo applied successfully: code={}, discount={}, finalAmount={}",
                 request.promoCode(), result.getDiscountAmount(), result.getFinalAmount());
 
+        // BUG-LOGIC-011 fix: persist the state changes (like currentUsageCount) from promo.apply()
+        promoCodeRepository.save(promo);
+
         return ApplyPromoResponse.success(
                 request.promoCode(),
                 result.getOriginalAmount(),

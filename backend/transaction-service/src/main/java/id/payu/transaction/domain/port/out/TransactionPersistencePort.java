@@ -10,6 +10,7 @@ public interface TransactionPersistencePort {
     Transaction save(Transaction transaction);
     Optional<Transaction> findById(UUID transactionId);
     List<Transaction> findByAccountId(UUID accountId, int page, int size);
+    long countByAccountId(UUID accountId);
     List<Transaction> findByReferenceNumber(String referenceNumber);
     Optional<Transaction> findByIdempotencyKey(String idempotencyKey);
 }

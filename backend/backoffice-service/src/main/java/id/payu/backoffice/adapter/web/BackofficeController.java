@@ -25,6 +25,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import id.payu.security.annotation.Audited;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -65,6 +66,7 @@ public class BackofficeController extends BaseController {
 
     @PostMapping("/kyc-reviews")
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @Audited(operation = Audited.Operation.CREATE, entityType = "KycReview", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(
             summary = "Create KYC review",
             description = "Creates a new KYC (Know Your Customer) review for manual verification. " +
@@ -211,6 +213,7 @@ public class BackofficeController extends BaseController {
 
     @PostMapping("/kyc-reviews/{id}/review")
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @Audited(operation = Audited.Operation.UPDATE, entityType = "KycReview", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(
             summary = "Submit KYC review decision",
             description = "Submits a review decision for a KYC review. Updates the status and records the reviewer."
@@ -253,6 +256,7 @@ public class BackofficeController extends BaseController {
 
     @DeleteMapping("/kyc-reviews/{id}")
     @PreAuthorize("hasAnyAuthority('admin')")
+    @Audited(operation = Audited.Operation.DELETE, entityType = "KycReview", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(
             summary = "Delete KYC review",
             description = "Deletes a KYC review. This operation is restricted to administrators only."
@@ -284,6 +288,7 @@ public class BackofficeController extends BaseController {
     // BUG-BE-158 FIX: Changed from form-encoded @RequestParam to JSON @RequestBody
     @PostMapping(value = "/fraud-cases")
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @Audited(operation = Audited.Operation.CREATE, entityType = "FraudCase", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(
             summary = "Create fraud case",
             description = "Creates a new fraud case for investigation. Used to flag suspicious transactions or activities."
@@ -353,6 +358,7 @@ public class BackofficeController extends BaseController {
 
     @PostMapping(value = "/fraud-cases/{id}/assign", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @Audited(operation = Audited.Operation.UPDATE, entityType = "FraudCase", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(summary = "Assign fraud case", description = "Assigns a fraud case to a specific investigator.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class)))
@@ -366,6 +372,7 @@ public class BackofficeController extends BaseController {
 
     @PostMapping("/fraud-cases/{id}/resolve")
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @Audited(operation = Audited.Operation.UPDATE, entityType = "FraudCase", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(summary = "Resolve fraud case", description = "Resolves a fraud case with a final decision.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class)))
@@ -381,6 +388,7 @@ public class BackofficeController extends BaseController {
 
     @DeleteMapping("/fraud-cases/{id}")
     @PreAuthorize("hasAnyAuthority('admin')")
+    @Audited(operation = Audited.Operation.DELETE, entityType = "FraudCase", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(summary = "Delete fraud case", description = "Deletes a fraud case.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Fraud case deleted successfully")
@@ -394,6 +402,7 @@ public class BackofficeController extends BaseController {
 
     @PostMapping("/customer-cases")
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @Audited(operation = Audited.Operation.CREATE, entityType = "CustomerCase", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(summary = "Create customer case", description = "Creates a new customer support case.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
@@ -447,6 +456,7 @@ public class BackofficeController extends BaseController {
 
     @PostMapping(value = "/customer-cases/{id}/assign", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @Audited(operation = Audited.Operation.UPDATE, entityType = "CustomerCase", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(summary = "Assign customer case", description = "Assigns a customer support case to a specific agent.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
@@ -460,6 +470,7 @@ public class BackofficeController extends BaseController {
 
     @PutMapping("/customer-cases/{id}")
     @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @Audited(operation = Audited.Operation.UPDATE, entityType = "CustomerCase", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(summary = "Update customer case", description = "Updates a customer support case with new status and notes.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
@@ -475,6 +486,7 @@ public class BackofficeController extends BaseController {
 
     @DeleteMapping("/customer-cases/{id}")
     @PreAuthorize("hasAnyAuthority('admin')")
+    @Audited(operation = Audited.Operation.DELETE, entityType = "CustomerCase", maskData = true, level = Audited.AuditLevel.INFO)
     @Operation(summary = "Delete customer case", description = "Deletes a customer support case.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Customer case deleted successfully")

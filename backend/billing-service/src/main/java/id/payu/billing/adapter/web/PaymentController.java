@@ -44,7 +44,8 @@ public class PaymentController {
     private String extractUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getSubject();
+            // BUG-AUTH-013: Use 'account_id' claim with 'sub' fallback
+            return jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
         }
         return null;
     }
@@ -80,6 +81,12 @@ public class PaymentController {
     public ApiResponse<PaymentResponse> createPayment(
             @Parameter(description = "Payment request details", required = true)
             @Valid @RequestBody CreatePaymentRequest request) {
+        // BUG-SECURITY-013 FIX: Prevent balance theft by ensuring authenticated user matches accountId
+        String authenticatedUserId = extractUserId();
+        if (authenticatedUserId != null && !authenticatedUserId.equals(request.accountId())) {
+            throw new PaymentNotFoundException("Unauthorized payment attempt: account ownership mismatch");
+        }
+
         BillPayment payment = paymentService.createPayment(request);
         return ApiResponse.success(PaymentResponse.from(payment));
     }
