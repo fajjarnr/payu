@@ -10,7 +10,7 @@ quarkus:
   datasource:
     db-kind: postgresql
     username: ${POSTGRES_USER:payu}
-    password: ${POSTGRES_PASSWORD:payu}
+    password: ${POSTGRES_PASSWORD}
     jdbc:
       url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:payu_va_simulator}
     health:

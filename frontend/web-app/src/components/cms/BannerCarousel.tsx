@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
@@ -40,6 +40,8 @@ export default function BannerCarousel({
   const plugin = React.useRef(
     Autoplay({ delay: autoPlayInterval, stopOnInteraction: true })
   );
+  // BUG-FE-011 FIX: Debounce navigation to prevent history flooding
+  const isNavigating = useRef(false);
 
   const handleBannerClick = (banner: Content) => {
     if (onBannerClick) {
@@ -48,8 +50,11 @@ export default function BannerCarousel({
       if (banner.actionType === 'LINK') {
         window.open(banner.actionUrl, '_blank', 'noopener,noreferrer');
       } else if (banner.actionType === 'DEEP_LINK') {
-        // BUG-FE-101: Use Next.js router instead of window.location.href
-        router.push(banner.actionUrl);
+        if (isNavigating.current) return;
+        isNavigating.current = true;
+        // BUG-FE-011 FIX: Use replace instead of push to prevent history flooding
+        router.replace(banner.actionUrl);
+        setTimeout(() => { isNavigating.current = false; }, 1000);
       }
     }
   };

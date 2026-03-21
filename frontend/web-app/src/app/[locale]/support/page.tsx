@@ -49,7 +49,7 @@ export default function SupportPage() {
                     <div className={clsx(
                       "h-20 w-20 mb-8 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110",
                       channel.color === 'primary' ? "bg-primary shadow-primary/20" :
-                        channel.color === 'blue-600' ? "bg-blue-600 shadow-blue-600/20" : "bg-foreground shadow-foreground/10"
+                        channel.color === 'blue-600' ? "bg-emerald-600 shadow-emerald-600/20" : "bg-foreground shadow-foreground/10"
                     )}>
                       <channel.icon className="h-10 w-10" />
                     </div>

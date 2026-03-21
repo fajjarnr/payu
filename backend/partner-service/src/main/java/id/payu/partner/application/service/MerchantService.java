@@ -20,6 +20,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,6 +37,7 @@ import java.util.UUID;
  */
 @Service
 @Transactional
+// TODO BUG-ARCH-004: Migrate LocalDateTime fields to OffsetDateTime or Instant for timezone safety
 public class MerchantService {
 
     private static final Logger log = LoggerFactory.getLogger(MerchantService.class);
@@ -43,6 +47,7 @@ public class MerchantService {
     private final PartnerRepository partnerRepository;
     private final WebhookDispatcherService webhookDispatcher;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
 
     private static final String WALLET_SERVICE_URL = "http://wallet-service/api/v1/wallets";
@@ -51,13 +56,19 @@ public class MerchantService {
                            MerchantQrPaymentRepository qrPaymentRepository,
                            PartnerRepository partnerRepository,
                            WebhookDispatcherService webhookDispatcher,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           ObjectMapper objectMapper) {
         this.merchantRepository = merchantRepository;
         this.qrPaymentRepository = qrPaymentRepository;
         this.partnerRepository = partnerRepository;
         this.webhookDispatcher = webhookDispatcher;
         this.kafkaTemplate = kafkaTemplate;
-        this.restTemplate = new RestTemplate();
+        this.objectMapper = objectMapper;
+        // BUG-ARCH-006 FIX: Configure RestTemplate with timeouts instead of bare new RestTemplate()
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(10000);
+        this.restTemplate = new RestTemplate(factory);
     }
 
     /**
@@ -322,20 +333,13 @@ public class MerchantService {
     }
 
     private String mapToJson(Map<String, Object> map) {
-        StringBuilder sb = new StringBuilder("{");
-        boolean first = true;
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (!first) sb.append(",");
-            first = false;
-            sb.append("\"").append(entry.getKey()).append("\":");
-            if (entry.getValue() instanceof String) {
-                sb.append("\"").append(entry.getValue()).append("\"");
-            } else {
-                sb.append(entry.getValue());
-            }
+        // BUG-LOGIC-004 FIX: Use Jackson ObjectMapper instead of manual StringBuilder
+        try {
+            return objectMapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize event to JSON", e);
+            return "{}";
         }
-        sb.append("}");
-        return sb.toString();
     }
 
     /**
@@ -343,6 +347,7 @@ public class MerchantService {
      * Runs every 2 minutes.
      */
     @Scheduled(fixedRate = 120000)
+    @SchedulerLock(name = "expireQrPayments", lockAtLeastFor = "PT1M", lockAtMostFor = "PT5M")
     public void expireQrPayments() {
         List<MerchantQrPayment> expired = qrPaymentRepository.findExpiredPendingPayments(LocalDateTime.now());
         if (!expired.isEmpty()) {

@@ -74,7 +74,7 @@ function LoginForm() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: 'Login failed' }));
-        throw new Error(err.message || 'Login gagal');
+        throw new Error(err.message || t('loginFailed'));
       }
       return res.json();
     },
@@ -97,7 +97,7 @@ function LoginForm() {
     },
     onError: (error) => {
       console.error('Login failed:', error);
-      const msg = error instanceof Error ? error.message : 'Login gagal';
+      const msg = error instanceof Error ? error.message : t('loginFailed');
       toast.error(msg);
     },
   });

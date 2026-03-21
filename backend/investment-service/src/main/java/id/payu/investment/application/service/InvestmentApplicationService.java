@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+// TODO BUG-ARCH-004: Migrate LocalDateTime fields to OffsetDateTime or Instant for timezone safety
 public class InvestmentApplicationService implements
         CreateInvestmentAccountUseCase,
         BuyDepositUseCase,
@@ -91,7 +92,7 @@ public class InvestmentApplicationService implements
 
     @Override
     @Transactional
-    @Async
+    // BUG-LOGIC-006 FIX: Removed @Async — incompatible with @Transactional (proxy boundary issue)
     @CircuitBreaker(name = "walletService", fallbackMethod = "buyDepositFallback")
     @Retry(name = "walletService")
     @TimeLimiter(name = "walletService")
@@ -178,7 +179,7 @@ public class InvestmentApplicationService implements
 
     @Override
     @Transactional
-    @Async
+    // BUG-LOGIC-006 FIX: Removed @Async — incompatible with @Transactional (proxy boundary issue)
     @CircuitBreaker(name = "walletService", fallbackMethod = "buyMutualFundFallback")
     @Retry(name = "walletService")
     @TimeLimiter(name = "walletService")
@@ -258,7 +259,7 @@ public class InvestmentApplicationService implements
 
     @Override
     @Transactional
-    @Async
+    // BUG-LOGIC-006 FIX: Removed @Async — incompatible with @Transactional (proxy boundary issue)
     @CircuitBreaker(name = "walletService", fallbackMethod = "buyGoldFallback")
     @Retry(name = "walletService")
     @TimeLimiter(name = "walletService")
@@ -340,7 +341,7 @@ public class InvestmentApplicationService implements
 
     @Override
     @Transactional
-    @Async
+    // BUG-LOGIC-006 FIX: Removed @Async — incompatible with @Transactional (proxy boundary issue)
     @CircuitBreaker(name = "walletService", fallbackMethod = "sellInvestmentFallback")
     @Retry(name = "walletService")
     @TimeLimiter(name = "walletService")
@@ -445,29 +446,34 @@ public class InvestmentApplicationService implements
 
     public CompletableFuture<InvestmentAccount> createAccountFallback(String userId, Throwable t) {
         log.error("Wallet service unavailable during account creation. Error: {}", t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable. Please try again later.");
+        // BUG-ARCH-007 FIX: Return failed future instead of throwing from fallback
+        return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
     }
 
     public CompletableFuture<Deposit> buyDepositFallback(String accountId, String userId, BigDecimal amount, 
             int tenure, Throwable t) {
         log.error("Wallet service unavailable during deposit purchase. Error: {}", t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable. Please try again later.");
+        // BUG-ARCH-007 FIX: Return failed future instead of throwing from fallback
+        return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
     }
 
     public CompletableFuture<InvestmentTransaction> buyMutualFundFallback(String accountId, String userId, 
             String fundCode, BigDecimal amount, Throwable t) {
         log.error("Wallet service unavailable during mutual fund purchase. Error: {}", t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable. Please try again later.");
+        // BUG-ARCH-007 FIX: Return failed future instead of throwing from fallback
+        return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
     }
 
     public CompletableFuture<Gold> buyGoldFallback(String userId, BigDecimal amount, Throwable t) {
         log.error("Wallet service unavailable during gold purchase. Error: {}", t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable. Please try again later.");
+        // BUG-ARCH-007 FIX: Return failed future instead of throwing from fallback
+        return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
     }
 
     public CompletableFuture<InvestmentTransaction> sellInvestmentFallback(String accountId, UUID transactionId, 
             BigDecimal amount, Throwable t) {
         log.error("Wallet service unavailable during investment sell. Error: {}", t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable. Please try again later.");
+        // BUG-ARCH-007 FIX: Return failed future instead of throwing from fallback
+        return CompletableFuture.failedFuture(new RuntimeException("Service temporarily unavailable. Please try again later."));
     }
 }

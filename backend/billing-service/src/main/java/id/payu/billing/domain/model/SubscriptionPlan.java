@@ -65,6 +65,7 @@ public class SubscriptionPlan {
     public SubscriptionPlan() {
     }
 
+    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
     public enum BillingInterval {
         DAILY,
         WEEKLY,

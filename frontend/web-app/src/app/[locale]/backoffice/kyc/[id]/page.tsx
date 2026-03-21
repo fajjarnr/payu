@@ -66,7 +66,7 @@ export default function KycReviewDetailPage() {
        <dt className="text-sm font-medium text-gray-500">Document Image</dt>
        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
          {/* In a real app, use next/image and handle auth/signed URLs */}
-         <a href={review.documentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500">
+         <a href={review.documentUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-500">
           View Document
          </a>
        </dd>
@@ -89,7 +89,7 @@ export default function KycReviewDetailPage() {
       <textarea
        id="notes"
        rows={3}
-       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
        value={decisionNotes}
        onChange={(e) => setDecisionNotes(e.target.value)}
       />

@@ -69,22 +69,34 @@ api.interceptors.response.use((response) => {
 });
 
 // ── 401 interceptor: transparent token refresh via BFF ──────────────
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value: unknown) => void;
-  reject: (reason?: unknown) => void;
-}> = [];
+// BUG-FE-009 FIX: Encapsulated token refresh state to prevent global mutation issues
+class TokenRefreshManager {
+  private isRefreshing = false;
+  private failedQueue: Array<{
+    resolve: (value: unknown) => void;
+    reject: (reason?: unknown) => void;
+  }> = [];
 
-const processQueue = (error: unknown) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(undefined);
-    }
-  });
-  failedQueue = [];
-};
+  processQueue(error: unknown) {
+    this.failedQueue.forEach(({ resolve, reject }) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(undefined);
+      }
+    });
+    this.failedQueue = [];
+  }
+
+  getIsRefreshing() { return this.isRefreshing; }
+  setIsRefreshing(value: boolean) { this.isRefreshing = value; }
+
+  addToQueue(resolve: (value: unknown) => void, reject: (reason?: unknown) => void) {
+    this.failedQueue.push({ resolve, reject });
+  }
+}
+
+const tokenRefreshManager = new TokenRefreshManager();
 
 // Track retried requests to prevent infinite retry loops
 const retriedRequests = new WeakSet<object>();
@@ -96,14 +108,14 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !retriedRequests.has(originalRequest)) {
       // Queue concurrent requests while a refresh is in-flight
-      if (isRefreshing) {
+      if (tokenRefreshManager.getIsRefreshing()) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
+          tokenRefreshManager.addToQueue(resolve, reject);
         }).then(() => api(originalRequest));
       }
 
       retriedRequests.add(originalRequest);
-      isRefreshing = true;
+      tokenRefreshManager.setIsRefreshing(true);
 
       try {
         // Ask BFF to rotate tokens (cookie → cookie, no JS exposure)
@@ -114,19 +126,24 @@ api.interceptors.response.use(
 
         if (!refreshRes.ok) throw new Error('Refresh failed');
 
-        processQueue(null);
+        tokenRefreshManager.processQueue(null);
         return api(originalRequest); // retry with fresh cookie
       } catch (refreshError) {
-        processQueue(refreshError);
+        tokenRefreshManager.processQueue(refreshError);
         if (typeof window !== 'undefined') {
           // Extract locale from current URL path for locale-aware redirect
           const pathLocale = window.location.pathname.match(/^\/(en|id)(\/|$)/);
           const locale = pathLocale ? pathLocale[1] : 'id';
-          window.location.href = `/${locale}/login`;
+          // BUG-FE-010 FIX: Dispatch event for graceful handling, with fallback redirect
+          window.dispatchEvent(new CustomEvent('auth:session-expired', { detail: { locale } }));
+          // Fallback: hard redirect if event is not handled within 100ms
+          setTimeout(() => {
+            window.location.href = `/${locale}/login`;
+          }, 100);
         }
         return Promise.reject(refreshError);
       } finally {
-        isRefreshing = false;
+        tokenRefreshManager.setIsRefreshing(false);
       }
     }
 

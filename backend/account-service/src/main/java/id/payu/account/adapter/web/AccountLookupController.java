@@ -35,7 +35,7 @@ public class AccountLookupController {
     public ResponseEntity<ApiResponse<PhoneLookupResponse>> lookupByPhone(
             @Parameter(description = "Phone number (e.g., 08123456789)", required = true)
             @RequestParam String phone) {
-        log.info("Looking up account by phone: {}", phone);
+        log.info("Looking up account by phone: {}", phone != null && phone.length() > 6 ? phone.substring(0, 3) + "****" + phone.substring(phone.length() - 3) : "***");
 
         // Find user by phone number
         User user = userRepository.findByPhoneNumber(phone).orElse(null);

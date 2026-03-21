@@ -29,9 +29,6 @@ export default function LandingPage() {
   const totalSlides = 4;
   const slideIds = ['hero', 'app', 'about', 'support'];
 
-  // Helper for localized links
-  const l = (path: string) => locale === 'id' ? path : `/${locale}${path}`;
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -89,7 +86,7 @@ export default function LandingPage() {
           </div>
 
           {/* Centered Logo */}
-          <Link href={l('/')} className="flex flex-col items-center gap-1 group cursor-pointer absolute left-1/2 -translate-x-1/2" aria-label="PayU Home">
+          <Link href={'/'} className="flex flex-col items-center gap-1 group cursor-pointer absolute left-1/2 -translate-x-1/2" aria-label="PayU Home">
             <span className="text-3xl font-black tracking-[-0.05em] text-white uppercase italic">PayU</span>
             <div className="w-8 h-0.5 bg-emerald-500 rounded-full group-hover:w-12 transition-all" />
           </Link>
@@ -97,7 +94,7 @@ export default function LandingPage() {
           {/* Right Nav */}
           <div className="hidden md:flex items-center gap-10 font-bold uppercase tracking-[0.2em] text-[10px] text-white/60">
             <a href="#support" onClick={(e) => handleNavClick(e, '#support')} className="hover:text-white transition-colors cursor-pointer">{t('nav.support')}</a>
-            <Link href={l('/login')} className="px-6 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-all border border-white/10 text-white cursor-pointer">{t('nav.login')}</Link>
+            <Link href={'/login'} className="px-6 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-all border border-white/10 text-white cursor-pointer">{t('nav.login')}</Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -219,7 +216,7 @@ export default function LandingPage() {
                          <div className="flex-1">
                              <p className="text-[1.8vw] md:text-[10px] font-semibold tracking-wider text-[#1a2e26]/60 mb-[2%]">VALID THRU</p>
                              <p className="text-[3vw] md:text-lg font-bold text-[#1a2e26] leading-none">12/27</p>
-                             <p className="text-[3.5vw] md:text-xl font-bold mt-[2%] text-[#1a2e26] truncate">Fajar Nur Rohman</p>
+                              <p className="text-[3.5vw] md:text-xl font-bold mt-[2%] text-[#1a2e26] truncate">CARDHOLDER NAME</p>
                          </div>
                          {/* Mastercard-style circles */}
                          <div className="flex -space-x-[25%] opacity-90 h-[5vw] md:h-10 items-end">
@@ -232,7 +229,7 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-col items-center gap-6">
-               <Link href={l('/onboarding')} className="px-10 py-4 bg-white text-[#050a08] hover:bg-emerald-50 rounded-full font-bold text-base transition-colors shadow-lg">
+               <Link href={'/onboarding'} className="px-10 py-4 bg-white text-[#050a08] hover:bg-emerald-50 rounded-full font-bold text-base transition-colors shadow-lg">
                   {t('getStarted')}
                </Link>
                <p className="text-emerald-100/60 text-sm font-medium">{t('hero.freeAdmin')}</p>
@@ -354,15 +351,15 @@ export default function LandingPage() {
               </div>
 
               <div className="flex flex-col items-center gap-10">
-                 <Link href={l('/onboarding')} className="px-20 py-8 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full font-black text-sm uppercase tracking-[0.5em] shadow-[0_30px_60px_rgba(16,185,129,0.3)] transition-all scale-110">
+                 <Link href={'/onboarding'} className="px-20 py-8 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full font-black text-sm uppercase tracking-[0.5em] shadow-[0_30px_60px_rgba(16,185,129,0.3)] transition-all scale-110">
                      {t('slide4.button')}
                   </Link>
                  
                  <footer className="w-full flex justify-between items-center text-[8px] font-black uppercase tracking-[0.4em] text-white/10 pt-20 border-t border-white/5">
                      <p>{t('footer.rights')}</p>
                       <div className="flex gap-8">
-                         <Link href={l('/terms')} className="hover:text-emerald-500 transition-colors">{t('slide4.terms')}</Link>
-                         <Link href={l('/privacy')} className="hover:text-emerald-500 transition-colors">{t('slide4.privacy')}</Link>
+                         <Link href={'/terms'} className="hover:text-emerald-500 transition-colors">{t('slide4.terms')}</Link>
+                         <Link href={'/privacy'} className="hover:text-emerald-500 transition-colors">{t('slide4.privacy')}</Link>
                      </div>
                  </footer>
               </div>

@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 @EntityListeners(TenantEntityListener.class)
 public class Merchant {
 
+    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
     public enum MerchantStatus {
         PENDING_REVIEW,
         ACTIVE,
@@ -32,6 +33,7 @@ public class Merchant {
         TERMINATED
     }
 
+    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
     public enum MerchantCategory {
         FOOD_BEVERAGE,
         RETAIL,

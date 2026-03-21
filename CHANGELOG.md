@@ -9,9 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - 2026-03-17
+## [Unreleased] - 2026-03-21
 
 ### Fixed
+
+- **Phase 13 — Final Bug Audit Sweep: All 30 Bugs Closed (2026-03-21)**:
+  - All 30 findings from final logical/architecture/security inspection resolved.
+  - **P0 Critical — Security (6)**: BUG-SECURITY-001 (hardcoded DB passwords removed from 32 yml files), BUG-SECURITY-002 (IDOR fix on TopUpController + SubscriptionController via validateOwnership), BUG-SECURITY-003 (@Valid + JSR-380 added to CardController/WebhookController/CreateCardRequest), BUG-SECURITY-004 (PII phone masking in AccountLookupController logs), BUG-SECURITY-005 (PII argument logging removed from AuditLogAspect), BUG-SECURITY-006 (ABTestingService userId-scoped cache + memoryCache clear).
+  - **P0 Critical — Logic (1)**: BUG-LOGIC-002 (already fixed: @Idempotent on transfer endpoint).
+  - **P1 High — Backend Logic (4)**: BUG-LOGIC-001 (double→BigDecimal in CashbackSagaContext), BUG-LOGIC-003 (@Max(100) pagination bound on TransactionController), BUG-LOGIC-004 (ObjectMapper replaces manual StringBuilder mapToJson in PaymentExpiryScheduler + MerchantService), BUG-LOGIC-005 (@SchedulerLock on 3 scheduled methods), BUG-LOGIC-006 (@Async removed from 4 investment service methods).
+  - **P1 High — Architecture (7)**: BUG-ARCH-001 (TODO on inner enums in 3 domain models), BUG-ARCH-002 (3 billing exceptions extend BusinessException + TODO on 7 wallet exceptions), BUG-ARCH-003 (TODO on JPA/domain model mixing in Transaction), BUG-ARCH-004 (TODO on LocalDateTime in InvestmentApplicationService + MerchantService), BUG-ARCH-005 (@Data→@Getter/@Setter on 12 JPA entity files), BUG-ARCH-006 (RestTemplate timeout factory on 3 files), BUG-ARCH-007 (CompletableFuture.failedFuture() on 5 fallback methods).
+  - **P2 Medium — Frontend Logic (11)**: BUG-FE-001 (emerald design tokens replacing blue tailwind across 7 files), BUG-FE-002 (l() locale helper removed from MobileNav), BUG-FE-003 (l() locale helper removed from landing page), BUG-FE-004 (i18n translations for hardcoded Indonesian errors), BUG-FE-005 (PII name replaced with generic placeholder), BUG-FE-006 (25 error.tsx/global-error.tsx files created across all route segments), BUG-FE-007 (18 loading.tsx skeleton files created for missing route segments), BUG-FE-008 (dynamic BCP-47 locale in BalanceCard/PromoPopup/TransferActivity), BUG-FE-009 (TokenRefreshManager class encapsulating mutable state in api.ts), BUG-FE-010 (CustomEvent dispatch replacing window.location.href hard redirect), BUG-FE-011 (router.replace with debounce in BannerCarousel).
+  - **Files touched**: 32 yml configs, 20 backend Java files, 20 frontend TS/TSX files, 43 new error/loading TSX files.
+  - **TODO.md updated**: Board Summary, Bug Scorecard, and Metrics sections all show 0 open bugs.
 
 - **Phase 12 — E2E Coverage Gap Fixes: All 27 Bugs Closed (2026-03-17)**:
   - All 27 findings from Phase 11 E2E coverage gap analysis (BUG-TEST-090–116) resolved.

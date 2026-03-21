@@ -14,7 +14,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/payu_compliance}
     username: ${DATABASE_USERNAME:payu}
-    password: ${DATABASE_PASSWORD:payu}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20

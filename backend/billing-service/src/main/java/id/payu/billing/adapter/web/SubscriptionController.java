@@ -22,6 +22,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,6 +42,17 @@ import java.util.UUID;
 public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
+
+    /**
+     * Extract authenticated user ID from JWT token.
+     */
+    private String extractUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getSubject();
+        }
+        return null;
+    }
 
     // ═══════════════════════════════════════════════════════
     //  Plan Management
@@ -120,6 +134,11 @@ public class SubscriptionController {
     public ApiResponse<SubscriptionResponse> getSubscription(
             @Parameter(description = "Subscription UUID") @PathVariable UUID subscriptionId) {
         Subscription sub = subscriptionService.getSubscription(subscriptionId);
+        // BUG-SECURITY-002 FIX: Validate authenticated user owns this subscription
+        String userId = extractUserId();
+        if (userId != null && sub.getAccountId() != null && !sub.getAccountId().equals(userId)) {
+            throw new IllegalArgumentException("Subscription not found");
+        }
         return ApiResponse.success(SubscriptionResponse.from(sub));
     }
 
@@ -128,6 +147,11 @@ public class SubscriptionController {
     @Operation(summary = "List subscriptions for an account")
     public ApiResponse<List<SubscriptionResponse>> getSubscriptionsByAccount(
             @Parameter(description = "Account ID") @PathVariable String accountId) {
+        // BUG-SECURITY-002 FIX: Validate authenticated user is requesting their own account
+        String userId = extractUserId();
+        if (userId != null && !accountId.equals(userId)) {
+            throw new IllegalArgumentException("Not authorized to access subscriptions for this account");
+        }
         List<SubscriptionResponse> subs = subscriptionService.getSubscriptionsByAccount(accountId)
                 .stream()
                 .map(SubscriptionResponse::from)

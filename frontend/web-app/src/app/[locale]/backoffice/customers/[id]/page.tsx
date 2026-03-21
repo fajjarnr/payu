@@ -83,7 +83,7 @@ export default function CustomerCaseDetailPage() {
       </label>
       <select
        id="status"
-       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
        value={newStatus}
        onChange={(e) => setNewStatus(e.target.value as CustomerCaseStatus)}
       >
@@ -102,7 +102,7 @@ export default function CustomerCaseDetailPage() {
      <textarea
       id="notes"
       rows={3}
-      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
       value={updateNotes}
       onChange={(e) => setUpdateNotes(e.target.value)}
      />
@@ -114,7 +114,7 @@ export default function CustomerCaseDetailPage() {
       }
      }}
      disabled={mutation.isPending || !newStatus}
-     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-emerald-300"
     >
      Update Case
     </button>

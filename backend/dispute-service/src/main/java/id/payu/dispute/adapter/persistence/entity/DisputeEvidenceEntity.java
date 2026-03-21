@@ -5,8 +5,9 @@ import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -14,7 +15,9 @@ import java.util.UUID;
 /**
  * JPA Entity for Dispute Evidence persistence.
  */
-@Data
+// BUG-ARCH-005 FIX: Replaced @Data with @Getter @Setter to avoid Lombok-generated equals/hashCode on JPA entities
+@Getter
+@Setter
 @Entity
 @Builder
 @NoArgsConstructor

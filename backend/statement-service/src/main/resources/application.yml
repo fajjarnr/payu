@@ -7,7 +7,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:${SPRING_DATASOURCE_JDBC_URL:jdbc:postgresql://localhost:5432/payu_statement}}
     username: ${SPRING_DATASOURCE_USERNAME:payu}
-    password: ${SPRING_DATASOURCE_PASSWORD:payu_secret}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20

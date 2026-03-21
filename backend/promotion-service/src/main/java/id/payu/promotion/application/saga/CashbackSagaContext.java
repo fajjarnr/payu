@@ -35,18 +35,19 @@ public class CashbackSagaContext {
     }
 
     private BigDecimal calculateCashbackAmount(CreateCashbackRequest request) {
-        double percentage = 0.01;
+        // BUG-LOGIC-001 FIX: Use BigDecimal instead of double for financial calculations
+        BigDecimal percentage = new BigDecimal("0.01");
 
         if (request.categoryCode() != null) {
             percentage = switch (request.categoryCode().toUpperCase()) {
-                case "GROCERY" -> 0.02;
-                case "DINING" -> 0.03;
-                case "SHOPPING" -> 0.015;
-                default -> 0.01;
+                case "GROCERY" -> new BigDecimal("0.02");
+                case "DINING" -> new BigDecimal("0.03");
+                case "SHOPPING" -> new BigDecimal("0.015");
+                default -> new BigDecimal("0.01");
             };
         }
 
-        return request.transactionAmount().multiply(BigDecimal.valueOf(percentage))
+        return request.transactionAmount().multiply(percentage)
             .setScale(2, java.math.RoundingMode.HALF_UP);
     }
 

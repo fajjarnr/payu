@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -58,7 +59,7 @@ public class CardController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<CardResponse>> createCard(
-            @RequestBody CreateCardRequest request,
+            @Valid @RequestBody CreateCardRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         String authenticatedAccountId = jwt.getClaim("account_id");
         if (!authenticatedAccountId.equals(request.accountId())) {
