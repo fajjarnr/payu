@@ -22,7 +22,8 @@ public class AuditLogAspect {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();
 
-        log.info("Entering {}.{} with arguments: {}", className, methodName, Arrays.toString(joinPoint.getArgs()));
+        // BUG-SECURITY-005 FIX: Removed argument logging to prevent PII leakage
+        log.info("Entering {}.{}", className, methodName);
 
         long startTime = System.currentTimeMillis();
         Object result;
@@ -43,6 +44,7 @@ public class AuditLogAspect {
     public void logControllerException(JoinPoint joinPoint, Exception ex) {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();
-        log.error("Exception in {}.{}. Arguments: {}. Error: {}", className, methodName, Arrays.toString(joinPoint.getArgs()), ex.getMessage());
+        // BUG-SECURITY-005 FIX: Removed argument logging to prevent PII leakage
+        log.error("Exception in {}.{}. Error: {}", className, methodName, ex.getMessage());
     }
 }

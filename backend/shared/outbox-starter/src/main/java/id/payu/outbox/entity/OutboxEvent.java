@@ -4,8 +4,9 @@ import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -30,7 +31,9 @@ import java.util.UUID;
         @Index(name = "idx_outbox_published", columnList = "published_at"),
         @Index(name = "idx_outbox_created", columnList = "created_at")
 })
-@Data
+// BUG-ARCH-005 FIX: Replaced @Data with @Getter @Setter to avoid Lombok-generated equals/hashCode on JPA entities
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

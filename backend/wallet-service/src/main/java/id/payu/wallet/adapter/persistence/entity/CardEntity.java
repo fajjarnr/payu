@@ -5,8 +5,9 @@ import id.payu.wallet.domain.model.Card;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,7 +25,9 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "cards")
-@Data
+// BUG-ARCH-005 FIX: Replaced @Data with @Getter @Setter to avoid Lombok-generated equals/hashCode on JPA entities
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

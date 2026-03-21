@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -225,7 +226,7 @@ public class TransactionController extends BaseController {
             @RequestParam(defaultValue = "0") int page,
 
             @Parameter(description = "Number of items per page (max 100)", example = "20")
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "20") @Max(value = 100, message = "Page size must not exceed 100") int size,
 
             @Parameter(description = "Sort field and direction (e.g., createdAt,desc)", example = "amount,asc")
             @RequestParam(required = false) String sort,

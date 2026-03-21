@@ -38,7 +38,7 @@ export function CheckoutButtonHook() {
   const buttonColor =
     variantKey === 'variant_b' ? 'bg-green-500' :
     variantKey === 'variant_c' ? 'bg-red-500' :
-    'bg-blue-500';
+    'bg-emerald-500';
 
   const buttonText =
     variantKey === 'variant_c' ? 'Checkout Now - Limited Time!' :
@@ -66,7 +66,7 @@ function ControlCheckoutFlow({ onComplete }: ControlCheckoutFlowProps) {
       <p>Complete your purchase in 3 simple steps.</p>
       <button
         onClick={onComplete}
-        className="bg-blue-500 text-white px-4 py-2 rounded"
+        className="bg-emerald-500 text-white px-4 py-2 rounded"
       >
         Continue
       </button>
@@ -101,7 +101,7 @@ function DetailedCheckoutFlow({ onComplete }: ControlCheckoutFlowProps) {
       </div>
       <button
         onClick={onComplete}
-        className="bg-blue-500 text-white px-4 py-2 rounded"
+        className="bg-emerald-500 text-white px-4 py-2 rounded"
       >
         Next Step
       </button>
@@ -272,7 +272,7 @@ export function CombinedExperimentsCheckout() {
           className={
             buttonExperiment.variantKey === 'variant_b'
               ? 'bg-green-500 text-white px-6 py-3 rounded'
-              : 'bg-blue-500 text-white px-6 py-3 rounded'
+              : 'bg-emerald-500 text-white px-6 py-3 rounded'
           }
         >
           Complete Purchase

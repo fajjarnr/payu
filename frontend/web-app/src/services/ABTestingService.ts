@@ -156,13 +156,13 @@ export class ABTestingService {
   /**
    * Get cached variant assignment if exists and not expired
    */
-  getCachedVariant(experimentKey: string): string | null {
+  getCachedVariant(experimentKey: string, userId?: string): string | null {
     if (typeof window === 'undefined') {
       return null;
     }
 
     try {
-      const cacheKey = this.CACHE_PREFIX + experimentKey;
+      const cacheKey = this.buildCacheKey(experimentKey, userId);
       const cached = localStorage.getItem(cacheKey);
 
       if (!cached) {
@@ -186,7 +186,7 @@ export class ABTestingService {
       return assignment.variantKey;
     } catch {
       // BUG-FE-031: Fall back to memory cache on localStorage error
-      const cacheKey = this.CACHE_PREFIX + experimentKey;
+      const cacheKey = this.buildCacheKey(experimentKey, userId);
       const memoryCached = this.memoryCache.get(cacheKey);
       if (memoryCached && new Date(memoryCached.expiresAt) >= new Date()) {
         return memoryCached.variantKey;
@@ -207,7 +207,7 @@ export class ABTestingService {
     }
 
     try {
-      const cacheKey = this.CACHE_PREFIX + experimentKey;
+      const cacheKey = this.buildCacheKey(experimentKey, assignment.userId);
       const expiresAt = new Date(
         Date.now() + this.CACHE_TTL_MS
       ).toISOString();
@@ -224,7 +224,7 @@ export class ABTestingService {
       this.memoryCache.set(cacheKey, cached);
     } catch (error) {
       // BUG-FE-031: On localStorage failure, use memory cache to prevent infinite re-fetch
-      const cacheKey = this.CACHE_PREFIX + experimentKey;
+      const cacheKey = this.buildCacheKey(experimentKey, assignment.userId);
       const expiresAt = new Date(Date.now() + this.CACHE_TTL_MS).toISOString();
       this.memoryCache.set(cacheKey, {
         variantKey: assignment.variantKey,
@@ -237,16 +237,26 @@ export class ABTestingService {
   }
 
   /**
+   * Build a cache key that includes userId to prevent cross-user cache leaks (BUG-SECURITY-006)
+   */
+  private buildCacheKey(experimentKey: string, userId?: string): string {
+    return userId
+      ? `${this.CACHE_PREFIX}${userId}:${experimentKey}`
+      : `${this.CACHE_PREFIX}${experimentKey}`;
+  }
+
+  /**
    * Clear cached variant assignment
    */
-  clearCachedVariant(experimentKey: string): void {
+  clearCachedVariant(experimentKey: string, userId?: string): void {
     if (typeof window === 'undefined') {
       return;
     }
 
     try {
-      const cacheKey = this.CACHE_PREFIX + experimentKey;
+      const cacheKey = this.buildCacheKey(experimentKey, userId);
       localStorage.removeItem(cacheKey);
+      this.memoryCache.delete(cacheKey);
     } catch (error) {
       console.error('Failed to clear cached variant:', error);
     }

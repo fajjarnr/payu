@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+// TODO BUG-ARCH-003: Separate JPA entity from domain model (hexagonal architecture violation)
+// Domain models should not have JPA annotations. Create a separate persistence entity with mappers.
 @Entity
 @Table(name = "transactions")
 @TenantAware
@@ -426,6 +428,7 @@ public class Transaction {
     @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
+    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
     public enum TransactionType {
         INTERNAL_TRANSFER,
         BIFAST_TRANSFER,
@@ -436,6 +439,7 @@ public class Transaction {
         TOP_UP
     }
 
+    // TODO BUG-ARCH-001: Extract to top-level enum in domain package for better reusability
     public enum TransactionStatus {
         PENDING,
         VALIDATING,

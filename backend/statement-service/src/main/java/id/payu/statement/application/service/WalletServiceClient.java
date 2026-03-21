@@ -26,7 +26,11 @@ public class WalletServiceClient implements WalletServicePort {
     private String walletServiceUrl;
 
     public WalletServiceClient() {
-        this.restTemplate = new RestTemplate();
+        // BUG-ARCH-006 FIX: Configure RestTemplate with timeouts instead of bare new RestTemplate()
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(10000);
+        this.restTemplate = new RestTemplate(factory);
     }
 
     /**

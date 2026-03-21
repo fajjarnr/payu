@@ -3,8 +3,9 @@ package id.payu.support.domain;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -16,7 +17,9 @@ import java.time.LocalDateTime;
     @UniqueConstraint(columnNames = {"agent_id", "training_module_id"})
 })
 @EntityListeners(AuditingEntityListener.class)
-@Data
+// BUG-ARCH-005 FIX: Replaced @Data with @Getter @Setter to avoid Lombok-generated equals/hashCode on JPA entities
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

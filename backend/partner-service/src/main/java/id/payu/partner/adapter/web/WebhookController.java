@@ -153,7 +153,7 @@ public class WebhookController extends BaseController {
             @PathVariable Long partnerId,
             @Parameter(description = "Webhook subscription ID", required = true)
             @PathVariable Long webhookId,
-            @RequestBody WebhookSubscriptionDTO dto) {
+            @Valid @RequestBody WebhookSubscriptionDTO dto) {
         return ok(webhookService.updateSubscription(partnerId, webhookId, dto));
     }
 

@@ -5,11 +5,14 @@ import id.payu.transaction.adapter.persistence.repository.VirtualAccountReposito
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.model.VirtualAccount;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -33,14 +36,22 @@ public class PaymentExpiryScheduler {
     private final TransactionJpaRepository transactionRepository;
     private final VirtualAccountRepository virtualAccountRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     public PaymentExpiryScheduler(TransactionJpaRepository transactionRepository,
-                                  VirtualAccountRepository virtualAccountRepository,
-                                  KafkaTemplate<String, String> kafkaTemplate) {
+                                   VirtualAccountRepository virtualAccountRepository,
+                                   KafkaTemplate<String, String> kafkaTemplate,
+                                   ObjectMapper objectMapper) {
         this.transactionRepository = transactionRepository;
         this.virtualAccountRepository = virtualAccountRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+        // BUG-ARCH-006 FIX: Configure RestTemplate with timeouts instead of bare new RestTemplate()
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(10000);
+        this.restTemplate = new RestTemplate(factory);
     }
 
     private static final String WALLET_SERVICE_URL = "http://wallet-service/api/v1/wallets";
@@ -51,6 +62,7 @@ public class PaymentExpiryScheduler {
      * Releases reserved balance and publishes payment.expired Kafka event.
      */
     @Scheduled(fixedRate = 300000) // every 5 minutes
+    @SchedulerLock(name = "expirePendingTransactions", lockAtLeastFor = "PT4M", lockAtMostFor = "PT10M")
     @Transactional
     public void expirePendingTransactions() {
         List<Transaction> expired = transactionRepository.findExpiredPendingTransactions(Instant.now());
@@ -76,6 +88,7 @@ public class PaymentExpiryScheduler {
      * Publishes payment.expired Kafka event.
      */
     @Scheduled(fixedRate = 300000) // every 5 minutes
+    @SchedulerLock(name = "expireVirtualAccounts", lockAtLeastFor = "PT4M", lockAtMostFor = "PT10M")
     @Transactional
     public void expireVirtualAccounts() {
         List<VirtualAccount> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());
@@ -160,19 +173,12 @@ public class PaymentExpiryScheduler {
     }
 
     private String mapToJson(Map<String, Object> map) {
-        StringBuilder sb = new StringBuilder("{");
-        boolean first = true;
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (!first) sb.append(",");
-            first = false;
-            sb.append("\"").append(entry.getKey()).append("\":");
-            if (entry.getValue() instanceof String) {
-                sb.append("\"").append(entry.getValue()).append("\"");
-            } else {
-                sb.append(entry.getValue());
-            }
+        // BUG-LOGIC-004 FIX: Use Jackson ObjectMapper instead of manual StringBuilder
+        try {
+            return objectMapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize event to JSON", e);
+            return "{}";
         }
-        sb.append("}");
-        return sb.toString();
     }
 }

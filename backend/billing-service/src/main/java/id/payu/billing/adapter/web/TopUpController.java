@@ -19,6 +19,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +39,28 @@ import java.util.UUID;
 public class TopUpController {
 
     private final PaymentService paymentService;
+
+    /**
+     * Extract authenticated user ID from JWT token.
+     */
+    private String extractUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getSubject();
+        }
+        return null;
+    }
+
+    /**
+     * BUG-SECURITY-002 FIX: Validate that the authenticated user owns the top-up.
+     */
+    private void validateOwnership(BillPayment payment) {
+        String userId = extractUserId();
+        if (userId != null && payment.getAccountId() != null
+                && !payment.getAccountId().equals(userId)) {
+            throw new TopUpNotFoundException("Top-up not found");
+        }
+    }
 
     @PostMapping
     @Audited(
@@ -72,7 +97,11 @@ public class TopUpController {
             @Parameter(description = "Top-up ID", required = true)
             @PathVariable UUID id) {
         return paymentService.getPayment(id)
-                .map(payment -> ApiResponse.success(TopUpResponse.from(payment)))
+                .map(payment -> {
+                    // BUG-SECURITY-002 FIX: Validate authenticated user owns this top-up
+                    validateOwnership(payment);
+                    return ApiResponse.success(TopUpResponse.from(payment));
+                })
                 .orElseThrow(() -> new TopUpNotFoundException("Top-up not found"));
     }
 
@@ -88,7 +117,11 @@ public class TopUpController {
             @Parameter(description = "Reference number", required = true)
             @PathVariable String referenceNumber) {
         return paymentService.getPaymentByReference(referenceNumber)
-                .map(payment -> ApiResponse.success(TopUpResponse.from(payment)))
+                .map(payment -> {
+                    // BUG-SECURITY-002 FIX: Validate authenticated user owns this top-up
+                    validateOwnership(payment);
+                    return ApiResponse.success(TopUpResponse.from(payment));
+                })
                 .orElseThrow(() -> new TopUpNotFoundException("Top-up not found"));
     }
 

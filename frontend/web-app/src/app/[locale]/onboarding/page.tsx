@@ -45,7 +45,7 @@ export default function OnboardingPage() {
     },
     onError: (error) => {
       console.error('Registration failed:', error);
-      toast.error('Pendaftaran gagal. Silakan coba lagi.');
+      toast.error(t('registrationFailed'));
     }
   });
 
@@ -60,7 +60,7 @@ export default function OnboardingPage() {
       <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-zinc-900 border-r border-border/10 p-8 relative overflow-hidden text-white" aria-label="Branding">
         {/* Background Effects */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
         <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" aria-hidden="true" />
 
         <div className="relative z-10">

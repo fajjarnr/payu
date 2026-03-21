@@ -19,14 +19,11 @@ export default function MobileNav() {
   const pathname = usePathname();
   const isAuthenticated = useIsAuthenticated();
 
-  // Helper to localize paths
-  const l = (path: string) => locale === 'id' ? path : `/${locale}${path}`;
-
   const navItems = [
-    { href: l('/dashboard'), icon: Home, label: t('dashboard') },
-    { href: l('/transfer'), icon: Repeat, label: t('transfers') },
-    { href: l('/pockets'), icon: Wallet, label: t('accounts') },
-    { href: l('/bills'), icon: Receipt, label: t('bills') },
+    { href: '/dashboard', icon: Home, label: t('dashboard') },
+    { href: '/transfer', icon: Repeat, label: t('transfers') },
+    { href: '/pockets', icon: Wallet, label: t('accounts') },
+    { href: '/bills', icon: Receipt, label: t('bills') },
   ];
 
   // Don't show nav on login or onboarding
@@ -41,7 +38,7 @@ export default function MobileNav() {
       className={clsx(
         "fixed bottom-0 left-0 right-0 bg-card/70 backdrop-blur-2xl border-t border-border pb-[env(safe-area-inset-bottom,1.5rem)] pt-3 px-8 z-50",
         "lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl"
-      )} role="navigation" aria-label="Navigasi Mobile">
+      )} role="navigation" aria-label={t('mobileNavigation')}>
       <div className="flex justify-between items-center max-w-lg mx-auto h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'));

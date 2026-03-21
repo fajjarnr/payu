@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLocale } from 'next-intl';
 import { Link } from '@/lib/navigation';
 import { Search, ChevronDown, MoreHorizontal, RotateCcw, ArrowRight, User, Landmark, Smartphone, ReceiptText, MoreHorizontal as MoreIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,9 @@ interface TransferActivityProps {
 }
 
 export default function TransferActivity({ className = '' }: TransferActivityProps) {
+  // BUG-FE-008 FIX: Use dynamic locale instead of hardcoded 'id-ID'
+  const locale = useLocale();
+  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
   const accountId = useAuthStore((state) => state.accountId);
   const { data: transactions, isLoading } = useTransactions(accountId || undefined, 0, 5);
   const cancelTransaction = useCancelTransaction();
@@ -60,11 +64,11 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
   const canCancel = (status: string) => status === 'PENDING' || status === 'PROCESSING';
 
   const formatAmount = (amount: number) => {
-    return `Rp ${Math.abs(amount).toLocaleString('id-ID')}`;
+    return `Rp ${Math.abs(amount).toLocaleString(bcp47Locale)}`;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString(bcp47Locale, {
       day: '2-digit',
       month: 'short',
       hour: '2-digit',

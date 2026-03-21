@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import { useLocale } from 'next-intl';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -39,6 +40,9 @@ export default function PromoPopup({
   sessionKey = 'promo-popup-session',
 }: PromoPopupProps) {
   const router = useRouter();
+  // BUG-FE-008 FIX: Use dynamic locale instead of hardcoded 'id-ID'
+  const locale = useLocale();
+  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
   const { data: popups, isLoading } = usePopups({ segment, location, device });
   const [isOpen, setIsOpen] = useState(false);
   const [currentPopupIndex, setCurrentPopupIndex] = useState(0);
@@ -248,7 +252,7 @@ export default function PromoPopup({
           {currentPopup.endDate && (
             <p className="text-xs text-center text-muted-foreground font-bold uppercase tracking-[0.1em] opacity-60">
               Valid until{' '}
-              {new Date(currentPopup.endDate).toLocaleDateString('id-ID', {
+              {new Date(currentPopup.endDate).toLocaleDateString(bcp47Locale, {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',

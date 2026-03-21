@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLocale } from 'next-intl';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { VIPBadge } from '@/components/personalization';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,10 @@ export default function BalanceCard({
   currency = 'Rp',
   isLoading = false,
 }: BalanceCardProps) {
+  // BUG-FE-008 FIX: Use dynamic locale instead of hardcoded 'id-ID'
+  const locale = useLocale();
+  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
+
   return (
     <div data-testid="balance-card" className="grid grid-cols-1 md:grid-cols-12 xl:grid-cols-3 gap-6">
       {/* Col 1: Primary Balance & Net Worth */}
@@ -42,7 +47,7 @@ export default function BalanceCard({
                 Saldo Utama
               </CardTitle>
               <CardDescription className="mt-2 text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60">
-                {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {new Date().toLocaleDateString(bcp47Locale, { day: 'numeric', month: 'short', year: 'numeric' })}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -54,7 +59,7 @@ export default function BalanceCard({
           <CardContent>
             <div className="space-y-4">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tabular-nums leading-none tracking-tighter">
-                {currency} {balance.toLocaleString('id-ID')}
+                {currency} {balance.toLocaleString(bcp47Locale)}
               </h2>
               <div className="flex items-center gap-3">
                 {percentage != null ? (
@@ -86,7 +91,7 @@ export default function BalanceCard({
           <CardContent>
             <div className="space-y-4">
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight">
-                {currency} {(netWorth ?? 0).toLocaleString('id-ID')}
+                {currency} {(netWorth ?? 0).toLocaleString(bcp47Locale)}
               </h3>
               <div className="flex items-center gap-2">
                 {netWorthChange != null ? (
@@ -158,6 +163,7 @@ export default function BalanceCard({
           change={incomeChange ?? 0}
           isPositive={true}
           currency={currency}
+          bcp47Locale={bcp47Locale}
         />
         <SummaryItem
           data-testid="expense-card"
@@ -166,6 +172,7 @@ export default function BalanceCard({
           change={expenseChange ?? 0}
           isPositive={false}
           currency={currency}
+          bcp47Locale={bcp47Locale}
         />
       </div>
     </div>
@@ -178,10 +185,11 @@ interface SummaryItemProps {
   change: number;
   isPositive: boolean;
   currency: string;
+  bcp47Locale: string;
   'data-testid'?: string;
 }
 
-function SummaryItem({ label, amount, change, isPositive, currency, 'data-testid': testId }: SummaryItemProps) {
+function SummaryItem({ label, amount, change, isPositive, currency, bcp47Locale, 'data-testid': testId }: SummaryItemProps) {
   return (
     <Card data-testid={testId} className="flex flex-col justify-between h-full relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-10">
@@ -199,7 +207,7 @@ function SummaryItem({ label, amount, change, isPositive, currency, 'data-testid
       <CardContent>
         <div className="space-y-4">
           <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">
-            {currency} {amount.toLocaleString('id-ID')}
+            {currency} {amount.toLocaleString(bcp47Locale)}
           </h4>
           <div className="flex items-center gap-2">
             <span className={cn(

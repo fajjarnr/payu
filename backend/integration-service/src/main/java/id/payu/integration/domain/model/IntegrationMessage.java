@@ -3,8 +3,9 @@ package id.payu.integration.domain.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,7 +21,9 @@ import java.util.UUID;
     @Index(name = "idx_message_created_at", columnList = "createdAt"),
     @Index(name = "idx_message_source_target", columnList = "sourceSystem,targetSystem")
 })
-@Data
+// BUG-ARCH-005 FIX: Replaced @Data with @Getter @Setter to avoid Lombok-generated equals/hashCode on JPA entities
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
