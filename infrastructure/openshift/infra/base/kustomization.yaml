@@ -48,6 +48,7 @@ resources:
   - rhacs.yaml
   - rhdh.yaml
   - service-mesh.yaml
+  - istio-cni.yaml
 
 commonLabels:
   environment: dev
