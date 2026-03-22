@@ -68,7 +68,7 @@ subjects:
 apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
-  name: payu-log-forwarder
+  name: instance
   namespace: openshift-logging
 spec:
   serviceAccount:
