@@ -1,0 +1,6 @@
+apiVersion: observability.openshift.io/v1
+kind: UIPlugin
+metadata:
+  name: cluster-observability-cr-stub
+spec:
+  type: Dashboards

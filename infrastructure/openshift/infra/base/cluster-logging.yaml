@@ -1,0 +1,5 @@
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogging
+metadata:
+  name: cluster-logging-cr-stub
+spec: {}

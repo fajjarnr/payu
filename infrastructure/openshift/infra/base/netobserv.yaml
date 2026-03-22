@@ -1,0 +1,7 @@
+apiVersion: flows.netobserv.io/v1beta1
+kind: FlowCollector
+metadata:
+  name: netobserv-cr-stub
+spec:
+  agent:
+    type: eBPF

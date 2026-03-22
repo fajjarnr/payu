@@ -1,0 +1,6 @@
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+  name: service-mesh-cr-stub
+spec:
+  version: v2.4

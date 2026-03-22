@@ -1,0 +1,5 @@
+apiVersion: rhdh.redhat.com/v1alpha1
+kind: Backstage
+metadata:
+  name: rhdh-cr-stub
+spec: {}

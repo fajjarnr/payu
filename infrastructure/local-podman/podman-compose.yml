@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-payu_account}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../containers/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ./config/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
       test:
         - CMD-SHELL
@@ -1468,8 +1468,8 @@ services:
     ports:
       - 9090:9090
     volumes:
-      - ../containers/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ../containers/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro
       - prometheus_data:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -1498,7 +1498,7 @@ services:
     ports:
       - 3100:3100
     volumes:
-      - ../containers/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - ./config/loki-config.yml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
     healthcheck:
@@ -1519,7 +1519,7 @@ services:
     podman_networks:
       - name: payu-network
     volumes:
-      - ../containers/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./config/promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/log:/var/log:ro
       - /var/lib/containers:/var/lib/containers:ro
     command: -config.file=/etc/promtail/config.yml
@@ -1540,8 +1540,8 @@ services:
       GF_SERVER_ROOT_URL: http://localhost:3000
       GF_ANALYTICS_REPORTING_ENABLED: "false"
     volumes:
-      - ../containers/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ../containers/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
@@ -1562,7 +1562,7 @@ services:
     ports:
       - 9093:9093
     volumes:
-      - ../containers/alertmanager-config.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./config/alertmanager-config.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml

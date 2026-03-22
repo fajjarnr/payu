@@ -1,0 +1,10 @@
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: loki-cr-stub
+spec:
+  size: 1x.extra-small
+  storage:
+    secret:
+      name: logging-loki-s3
+      type: s3

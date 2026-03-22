@@ -36,6 +36,18 @@ resources:
   - kubedescheduler.yaml
   # Shared ConfigMaps
   - common-configmaps.yaml
+  # Added Operator CR stubs
+  - 3scale.yaml
+  - cluster-logging.yaml
+  - cluster-observability.yaml
+  - kiali.yaml
+  - loki.yaml
+  - netobserv.yaml
+  - gitops.yaml
+  - pipelines.yaml
+  - rhacs.yaml
+  - rhdh.yaml
+  - service-mesh.yaml
 
 commonLabels:
   environment: dev
