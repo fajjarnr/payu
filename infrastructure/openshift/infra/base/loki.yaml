@@ -4,7 +4,13 @@ metadata:
   name: payu-loki
   namespace: openshift-logging
 spec:
-  size: 1x.extra-small
+  size: 1x.small
+  limits:
+    global:
+      ingestion:
+        ingestionRate: 200
+        ingestionBurstSize: 200
+        maxGlobalStreamsPerTenant: 1000000
   storage:
     schemas:
       - version: v13

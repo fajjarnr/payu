@@ -65,6 +65,19 @@ subjects:
     name: logcollector
     namespace: openshift-logging
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logcollector-loki-writer-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: logging-collector-logs-writer
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: openshift-logging
+---
 apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
@@ -76,6 +89,8 @@ spec:
   outputs:
     - name: loki-output
       type: lokiStack
+      tls:
+        insecureSkipVerify: true
       lokiStack:
         target:
           name: payu-loki
@@ -95,3 +110,42 @@ spec:
         - infrastructure
       outputRefs:
         - loki-output
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logcollector-write-application-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-logging-write-application-logs
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logcollector-write-infrastructure-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-logging-write-infrastructure-logs
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logcollector-write-audit-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-logging-write-audit-logs
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: openshift-logging
