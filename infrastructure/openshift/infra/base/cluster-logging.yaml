@@ -1,5 +1,97 @@
-apiVersion: logging.openshift.io/v1
-kind: ClusterLogging
+apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: cluster-logging-cr-stub
-spec: {}
+  name: logcollector
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: logcollector-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "namespaces", "nodes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logcollector-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: logcollector-role
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logcollector-audit-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-audit-logs
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logcollector-application-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-application-logs
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: logcollector-infrastructure-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-infrastructure-logs
+subjects:
+  - kind: ServiceAccount
+    name: logcollector
+    namespace: openshift-logging
+---
+apiVersion: observability.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: payu-log-forwarder
+  namespace: openshift-logging
+spec:
+  serviceAccount:
+    name: logcollector
+  outputs:
+    - name: loki-output
+      type: lokiStack
+      lokiStack:
+        target:
+          name: payu-loki
+          namespace: openshift-logging
+        authentication:
+          token:
+            from: serviceAccount
+  pipelines:
+    - name: payu-app-logs
+      inputRefs:
+        - application
+      outputRefs:
+        - loki-output
+      filterRefs: []
+    - name: payu-infra-logs
+      inputRefs:
+        - infrastructure
+      outputRefs:
+        - loki-output
