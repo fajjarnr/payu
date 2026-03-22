@@ -9,15 +9,12 @@ export default function GlobalError({
 }) {
   return (
     <html>
-      <body>
-        <div className="flex min-h-screen flex-col items-center justify-center p-4">
-          <h2 className="mb-4 text-2xl font-semibold text-gray-900">Something went wrong</h2>
-          <p className="mb-6 text-gray-600">An unexpected error occurred. Please try again.</p>
-          <button
-            onClick={() => reset()}
-            className="rounded-lg bg-emerald-600 px-6 py-3 text-white hover:bg-emerald-700 transition-colors"
-          >
-            Try again
+      <body className="bg-gray-950 text-white">
+        <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+          <h2 className="text-2xl font-bold text-red-500">Critical Error</h2>
+          <p className="text-gray-400">{error.message}</p>
+          <button onClick={reset} className="px-6 py-3 bg-emerald-600 rounded-lg">
+            Restart Application
           </button>
         </div>
       </body>

@@ -184,7 +184,7 @@ export default function OnboardingPage() {
                                 </div>
                             </div>
                             
-                            <input type="hidden" {...register('externalId')} defaultValue="KTP-PREMIUM-V2" />
+                            <input type="hidden" {...register('externalId: `KTP-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`" />
 
                              <div className="pt-6 flex gap-4">
                                 <Button type="button" variant="outline" onClick={() => setStep(1)} className="h-14 px-8">

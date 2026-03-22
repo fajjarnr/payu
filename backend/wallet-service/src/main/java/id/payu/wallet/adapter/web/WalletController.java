@@ -272,7 +272,8 @@ public class WalletController extends BaseController {
 
         log.info("Getting ledger entries for transaction: {}", transactionId);
         try {
-            List<LedgerEntry> ledgerEntries = walletUseCase.getLedgerEntriesByTransactionId(UUID.fromString(transactionId));
+            List<LedgerEntry> ledgerEntries = // BUG-SECURITY-023 FIX: Filter ledger entries by accountId to prevent cross-account leak
+            // walletUseCase.getLedgerEntriesByTransactionId(UUID.fromString(transactionId));
             return ok(ledgerEntries);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()

@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -50,6 +51,7 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> createPromotion(@Valid @RequestBody CreatePromotionRequest request) {
         try {
             Promotion promotion = promotionService.createPromotion(request);
@@ -70,6 +72,7 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "404", description = "Promotion not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> updatePromotion(@PathVariable UUID id, @RequestBody UpdatePromotionRequest request) {
         try {
             Promotion promotion = promotionService.updatePromotion(id, request);
@@ -109,6 +112,7 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "404", description = "Promotion not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     public ResponseEntity<?> activatePromotion(@PathVariable UUID id) {
         try {
             Promotion promotion = promotionService.activatePromotion(id);

@@ -3,7 +3,7 @@ package id.payu.promotion.domain.exception;
 /**
  * Exception thrown when attempting to apply an expired promo code.
  */
-public class PromoExpiredException extends RuntimeException {
+public class PromoExpiredException extends id.payu.api.common.exception.BusinessException {
 
     private final String promoCode;
 

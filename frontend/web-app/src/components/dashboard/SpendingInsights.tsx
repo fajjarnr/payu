@@ -62,7 +62,7 @@ export default function SpendingInsights({
             {t('spendingInsights')}
           </CardTitle>
           <CardDescription>
-            {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+            {new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
           </CardDescription>
         </div>
 

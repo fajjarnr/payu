@@ -257,7 +257,7 @@ export default function ScheduledTransfersPage() {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(transfer.nextExecutionDate).toLocaleDateString('id-ID')}
+                                  {new Date(transfer.nextExecutionDate).toLocaleDateString(undefined)}
                                 </span>
                               </div>
                             </div>

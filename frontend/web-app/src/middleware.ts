@@ -67,7 +67,8 @@ export default async function middleware(request: NextRequest) {
   }
 
   // Re-evaluate session status after potential rehydration
-  const hasSession = hasAccessToken || hasRefreshToken || hasPayuSession;
+  const hasSession = // BUG-AUTH-014 FIX: Recalculate session after potential refresh failure
+    hasAccessToken || (hasRefreshToken && refreshSucceeded) || hasPayuSession;
 
   // 1. Auto-redirect from Landing to Dashboard if already logged in
   if (pathWithoutLocale === '/' && hasSession) {

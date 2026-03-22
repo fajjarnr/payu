@@ -114,7 +114,7 @@ export default function BudgetTracking({
             {t('budgetTracking')}
           </CardTitle>
           <CardDescription className="text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
-            {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+            {new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
           </CardDescription>
         </div>
 

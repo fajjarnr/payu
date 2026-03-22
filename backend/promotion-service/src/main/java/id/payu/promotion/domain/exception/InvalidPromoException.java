@@ -3,7 +3,7 @@ package id.payu.promotion.domain.exception;
 /**
  * Exception thrown when a promo code is invalid or cannot be applied.
  */
-public class InvalidPromoException extends RuntimeException {
+public class InvalidPromoException extends id.payu.api.common.exception.BusinessException {
 
     private final String promoCode;
     private final String reason;

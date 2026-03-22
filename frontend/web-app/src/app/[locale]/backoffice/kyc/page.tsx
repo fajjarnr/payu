@@ -93,7 +93,7 @@ export default function KycReviewsPage() {
                   <div className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">{review.documentNumber}</div>
                 </TableCell>
                 <TableCell className="text-muted-foreground font-bold text-xs">
-                  {new Date(review.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {new Date(review.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                 </TableCell>
                 <TableCell>
                   <Badge

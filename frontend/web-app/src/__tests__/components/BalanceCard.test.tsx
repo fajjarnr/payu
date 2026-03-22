@@ -95,7 +95,7 @@ describe('BalanceCard', () => {
 
  it('shows correct date display', () => {
    const now = new Date();
-   const expectedDate = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+   const expectedDate = now.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
    render(<BalanceCard balance={1000000} />, { wrapper: createWrapper() });
 

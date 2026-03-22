@@ -40,7 +40,7 @@ export interface StoredIdempotencyKey extends IdempotencyKeyMetadata {
 export function generateUUID(): string {
   // RFC4122 compliant UUID v4 generator
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const random = (Math.random() * 16) | 0;
+    const random = (crypto.getRandomValues(new Uint8Array(1))[0] / 256() * 16) | 0;
     const value = c === 'x' ? random : (random & 0x3) | 0x8;
     return value.toString(16);
   });

@@ -251,11 +251,13 @@ public class LendingController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request or insufficient limit")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "PayLater not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    // BUG-LOGIC-012 FIX: Moved financial amount from @RequestParam to @RequestBody
     public ResponseEntity<ApiResponse<PayLaterTransaction>> recordPurchase(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
-            @Parameter(description = "Merchant name", required = true) @RequestParam String merchantName,
-            @Parameter(description = "Purchase amount", required = true) @RequestParam BigDecimal amount,
-            @Parameter(description = "Transaction description") @RequestParam(required = false) String description) {
+            @Valid @RequestBody java.util.Map<String, Object> body) {
+        String merchantName = (String) body.get("merchantName");
+        BigDecimal amount = new BigDecimal(body.get("amount").toString());
+        String description = body.containsKey("description") ? (String) body.get("description") : null;
         log.info("Recording PayLater purchase for user: {} at merchant: {}", userId, merchantName);
         PayLaterTransaction transaction = payLaterTransactionService.recordPurchase(userId, merchantName, amount, description);
 
@@ -277,9 +279,11 @@ public class LendingController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid amount")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "PayLater not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    // BUG-LOGIC-012 FIX: Moved financial amount from @RequestParam to @RequestBody
     public ResponseEntity<ApiResponse<PayLaterTransaction>> recordPayment(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
-            @Parameter(description = "Payment amount", required = true) @RequestParam BigDecimal amount) {
+            @Valid @RequestBody java.util.Map<String, BigDecimal> body) {
+        BigDecimal amount = body.get("amount");
         log.info("Recording PayLater payment for user: {} with amount: {}", userId, amount);
         PayLaterTransaction transaction = payLaterTransactionService.recordPayment(userId, amount);
 

@@ -1,30 +1,41 @@
 """
 Idempotency utilities for ensuring safe retry of API requests.
 
-Stores idempotency keys with their results to return the same response
-for duplicate requests within a TTL window.
+BUG-ARCH-009 FIX: Migrated from in-memory dict to Redis-backed store
+for multi-instance (pod) consistency on OpenShift.
 """
 
 import hashlib
+import json
 from typing import Optional, Any, Dict
-from datetime import datetime, timedelta
 from structlog import get_logger
 
 logger = get_logger(__name__)
 
+# Try to import Redis; fallback to in-memory for local dev
+try:
+    import redis
+    _redis_available = True
+except ImportError:
+    _redis_available = False
+
 
 class IdempotencyStore:
-    """In-memory store for idempotency keys with TTL."""
+    """Redis-backed store for idempotency keys with TTL."""
 
-    def __init__(self, ttl_seconds: int = 86400):
-        """
-        Initialize the idempotency store.
-
-        Args:
-            ttl_seconds: Time-to-live for cached results (default: 24 hours)
-        """
-        self._store: Dict[str, Dict[str, Any]] = {}
+    def __init__(self, ttl_seconds: int = 86400, redis_url: str = None):
         self._ttl_seconds = ttl_seconds
+        self._redis = None
+        self._fallback_store: Dict[str, Dict[str, Any]] = {}
+
+        if _redis_available and redis_url:
+            try:
+                self._redis = redis.from_url(redis_url, decode_responses=True)
+                self._redis.ping()
+                logger.info("Idempotency store connected to Redis", redis_url=redis_url)
+            except Exception as e:
+                logger.warning("Redis unavailable, falling back to in-memory", error=str(e))
+                self._redis = None
 
     def _generate_key(
         self,
@@ -32,25 +43,10 @@ class IdempotencyStore:
         request_path: str,
         request_body: Optional[bytes] = None,
     ) -> str:
-        """Generate a unique key combining idempotency key and request context."""
         key_data = f"{idempotency_key}:{request_path}"
         if request_body:
             key_data += f":{hashlib.sha256(request_body).hexdigest()}"
-        return hashlib.sha256(key_data.encode()).hexdigest()
-
-    def _is_expired(self, stored_at: datetime) -> bool:
-        """Check if a stored entry has expired."""
-        return datetime.utcnow() > stored_at + timedelta(seconds=self._ttl_seconds)
-
-    def _cleanup_expired(self):
-        """Remove expired entries from the store."""
-        expired_keys = [
-            key
-            for key, value in self._store.items()
-            if self._is_expired(value["stored_at"])
-        ]
-        for key in expired_keys:
-            del self._store[key]
+        return f"idempotency:{hashlib.sha256(key_data.encode()).hexdigest()}"
 
     async def get_cached_result(
         self,
@@ -58,36 +54,23 @@ class IdempotencyStore:
         request_path: str,
         request_body: Optional[bytes] = None,
     ) -> Optional[Dict[str, Any]]:
-        """
-        Retrieve cached result for an idempotency key.
-
-        Args:
-            idempotency_key: The idempotency key from the request header
-            request_path: The API endpoint path
-            request_body: Optional request body for additional uniqueness
-
-        Returns:
-            Cached result if found and not expired, None otherwise
-        """
-        self._cleanup_expired()
-
         key = self._generate_key(idempotency_key, request_path, request_body)
-        entry = self._store.get(key)
 
-        if not entry:
-            return None
+        if self._redis:
+            try:
+                cached = self._redis.get(key)
+                if cached:
+                    logger.info("Idempotency cache hit (Redis)", idempotency_key=idempotency_key)
+                    return json.loads(cached)
+            except Exception as e:
+                logger.warning("Redis get failed", error=str(e))
+        else:
+            entry = self._fallback_store.get(key)
+            if entry:
+                logger.info("Idempotency cache hit (in-memory)", idempotency_key=idempotency_key)
+                return entry.get("result")
 
-        if self._is_expired(entry["stored_at"]):
-            del self._store[key]
-            return None
-
-        logger.info(
-            "Idempotency cache hit",
-            idempotency_key=idempotency_key,
-            request_path=request_path,
-        )
-
-        return entry["result"]
+        return None
 
     async def store_result(
         self,
@@ -96,37 +79,29 @@ class IdempotencyStore:
         result: Dict[str, Any],
         request_body: Optional[bytes] = None,
     ):
-        """
-        Store result for an idempotency key.
-
-        Args:
-            idempotency_key: The idempotency key from the request header
-            request_path: The API endpoint path
-            result: The result to cache
-            request_body: Optional request body for additional uniqueness
-        """
         key = self._generate_key(idempotency_key, request_path, request_body)
 
-        self._store[key] = {"result": result, "stored_at": datetime.utcnow()}
+        if self._redis:
+            try:
+                self._redis.setex(key, self._ttl_seconds, json.dumps(result, default=str))
+                logger.info("Idempotency result stored (Redis)", idempotency_key=idempotency_key)
+                return
+            except Exception as e:
+                logger.warning("Redis set failed", error=str(e))
 
-        logger.info(
-            "Idempotency result stored",
-            idempotency_key=idempotency_key,
-            request_path=request_path,
-        )
+        self._fallback_store[key] = {"result": result}
+        logger.info("Idempotency result stored (in-memory fallback)", idempotency_key=idempotency_key)
 
 
-# Global idempotency store instance
-idempotency_store = IdempotencyStore(ttl_seconds=86400)  # 24 hours
+import os
+_redis_url = os.getenv("REDIS_URL", os.getenv("PAYU_REDIS_URL", None))
+idempotency_store = IdempotencyStore(ttl_seconds=86400, redis_url=_redis_url)
 
 
 async def get_cached_result(
     idempotency_key: str, request_path: str, request_body: Optional[bytes] = None
 ) -> Optional[Dict[str, Any]]:
-    """Convenience function to get cached result from global store."""
-    return await idempotency_store.get_cached_result(
-        idempotency_key, request_path, request_body
-    )
+    return await idempotency_store.get_cached_result(idempotency_key, request_path, request_body)
 
 
 async def cache_result(
@@ -135,7 +110,4 @@ async def cache_result(
     result: Dict[str, Any],
     request_body: Optional[bytes] = None,
 ):
-    """Convenience function to store result in global store."""
-    await idempotency_store.store_result(
-        idempotency_key, request_path, result, request_body
-    )
+    await idempotency_store.store_result(idempotency_key, request_path, result, request_body)

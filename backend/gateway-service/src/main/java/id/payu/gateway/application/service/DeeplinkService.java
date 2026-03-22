@@ -64,10 +64,16 @@ public class DeeplinkService {
 
         String deeplinkUrl = urlBuilder.toString();
 
-        // Also generate a universal link (HTTPS fallback)
-        String universalLink = "https://app.payu.fajjjar.my.id/" + action + "?token=" +
-                encode(request.token() != null ? request.token() : "") +
-                "&sig=" + encode(signature);
+        // BUG-LOGIC-009 FIX: Universal link must include all params used in signature
+        StringBuilder universalBuilder = new StringBuilder("https://app.payu.fajjjar.my.id/")
+                .append(action).append("?");
+        if (request.token() != null) universalBuilder.append("token=").append(encode(request.token())).append("&");
+        if (request.amount() != null) universalBuilder.append("amount=").append(encode(request.amount())).append("&");
+        if (request.orderId() != null) universalBuilder.append("orderId=").append(encode(request.orderId())).append("&");
+        if (request.partnerId() != null) universalBuilder.append("partnerId=").append(encode(request.partnerId())).append("&");
+        universalBuilder.append("exp=").append(expiresAt.getEpochSecond()).append("&");
+        universalBuilder.append("sig=").append(encode(signature));
+        String universalLink = universalBuilder.toString();
 
         Log.infof("Generated deeplink: action=%s token=%s", action, request.token());
 

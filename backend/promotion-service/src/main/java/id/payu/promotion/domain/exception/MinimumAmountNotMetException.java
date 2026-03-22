@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 /**
  * Exception thrown when transaction amount is below the minimum required for a promo.
  */
-public class MinimumAmountNotMetException extends RuntimeException {
+public class MinimumAmountNotMetException extends id.payu.api.common.exception.BusinessException {
 
     private final String promoCode;
     private final BigDecimal requiredAmount;

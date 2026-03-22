@@ -266,7 +266,7 @@ public class TransactionController extends BaseController {
             PaginationInfo pagination = PaginationInfo.builder()
                     .page(pageable.getPageNumber())
                     .size(pageable.getPageSize())
-                    .totalElements((long) transactions.size())
+                    .totalElements(transactionUseCase.countAccountTransactions(accountId, userId))
                     .totalPages(transactions.size() < pageable.getPageSize() ? 1 :
                             (int) Math.ceil((double) transactions.size() / pageable.getPageSize()))
                     .hasNext(transactions.size() >= pageable.getPageSize())

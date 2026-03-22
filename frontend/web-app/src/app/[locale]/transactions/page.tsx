@@ -113,7 +113,7 @@ export default function TransactionsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString(undefined, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',

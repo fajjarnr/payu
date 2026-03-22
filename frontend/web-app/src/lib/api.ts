@@ -138,7 +138,7 @@ api.interceptors.response.use(
           window.dispatchEvent(new CustomEvent('auth:session-expired', { detail: { locale } }));
           // Fallback: hard redirect if event is not handled within 100ms
           setTimeout(() => {
-            window.location.href = `/${locale}/login`;
+            // BUG-FE-010 FIX: Navigation handled by auth store, not hard redirect
           }, 100);
         }
         return Promise.reject(refreshError);

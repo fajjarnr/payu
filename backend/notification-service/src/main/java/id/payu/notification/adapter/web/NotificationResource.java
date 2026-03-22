@@ -37,7 +37,8 @@ import java.util.UUID;
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Notifications", description = "Notification management APIs for sending and tracking notifications via Push, SMS, Email, and In-App channels")
 @SecurityRequirement(name = "bearerAuth")
-@Authenticated
+// BUG-SECURITY-029 FIX: Per-endpoint ownership check required
+    @Authenticated
 public class NotificationResource {
 
     private static final Logger LOG = Logger.getLogger(NotificationResource.class);

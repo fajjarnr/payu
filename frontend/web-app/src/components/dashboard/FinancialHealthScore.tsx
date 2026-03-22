@@ -127,7 +127,7 @@ export default function FinancialHealthScore({
             {t('financialHealthScore')}
           </CardTitle>
           <CardDescription className="text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
-            Update terakhir: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+            Update terakhir: {new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
           </CardDescription>
         </div>
         {previousScore && (

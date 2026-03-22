@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    log.info({ action: "login", username: body.username }, "Login attempt");
+    log.info({ action: "login", username: body.username?.substring(0,2) + "***" }, "Login attempt");
 
     const res = await fetch(`${GATEWAY_URL}/api/v1/auth/login`, {
       method: "POST",
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const data = await res.json();
 
     if (!res.ok) {
-      log.warn({ action: "login", username: body.username, status: res.status, durationMs: Date.now() - startTime }, "Login failed");
+      log.warn({ action: "login", username: body.username?.substring(0,2) + "***", status: res.status, durationMs: Date.now() - startTime }, "Login failed");
       return NextResponse.json(data, { status: res.status });
     }
 

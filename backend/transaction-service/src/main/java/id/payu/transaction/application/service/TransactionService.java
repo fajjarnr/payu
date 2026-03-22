@@ -149,4 +149,8 @@ public class TransactionService implements TransactionUseCase {
             throw new RuntimeException("Failed to update transaction tags", e);
         }
     }
+    @Override
+    public long countAccountTransactions(UUID accountId, String userId) {
+        return transactionRepository.countByAccountId(accountId);
+    }
 }

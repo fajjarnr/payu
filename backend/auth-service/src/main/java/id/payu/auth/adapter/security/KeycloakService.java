@@ -41,7 +41,7 @@ public class KeycloakService {
     private final org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
 
     private static final String FAILED_ATTEMPTS_KEY_PREFIX = "auth:failedAttempts:";
-    private static final Duration FAILED_ATTEMPTS_TTL = Duration.ofMinutes(15);
+    // BUG-SECURITY-008 FIX: TTL now derived from lockoutDurationMinutes (configurable) instead of hardcoded 15min
 
     @Value("${payu.security.max-login-attempts:5}")
     private int maxLoginAttempts;
@@ -67,7 +67,7 @@ public class KeycloakService {
     @RateLimiter(name = "loginRateLimiter", fallbackMethod = "rateLimitFallback")
     public Mono<LoginResponse> login(String username, String password) {
         if (isAccountLocked(username)) {
-            log.warn("Login attempt for locked account: {}", username);
+            log.warn("Login attempt for locked account: {}", maskUsername(username));
             return Mono.error(new IllegalArgumentException("Account temporarily locked due to too many failed attempts"));
         }
 
@@ -104,7 +104,7 @@ public class KeycloakService {
                 })
                 .doOnError(error -> {
                     recordFailedAttemptInternal(username);
-                    log.error("Login failed for user {}: {}", username, error.getMessage(), error);
+                    log.error("Login failed for user {}: {}", maskUsername(username), error.getMessage(), error);
                 })
                 .onErrorMap(error -> new IllegalArgumentException("Invalid credentials or login failed: " + error.getClass().getSimpleName() + " - " + error.getMessage()));
     }
@@ -219,7 +219,7 @@ public class KeycloakService {
     @RateLimiter(name = "loginRateLimiter", fallbackMethod = "rateLimitFallbackBlocking")
     public LoginResponse loginBlocking(String username, String password) {
         if (isAccountLocked(username)) {
-            log.warn("Login attempt for locked account: {}", username);
+            log.warn("Login attempt for locked account: {}", maskUsername(username));
             throw new IllegalArgumentException("Account temporarily locked due to too many failed attempts");
         }
 
@@ -246,7 +246,7 @@ public class KeycloakService {
             return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
         } catch (Exception e) {
             recordFailedAttemptInternal(username);
-            log.error("Login failed for user {}: {}", username, e.getMessage());
+            log.error("Login failed for user {}: {}", maskUsername(username), e.getMessage());
             throw new IllegalArgumentException("Invalid credentials or login failed: " + e.getMessage());
         }
     }
@@ -331,26 +331,31 @@ public class KeycloakService {
                 })
                 .doOnError(error -> {
                     recordFailedAttemptInternal(username);
-                    log.error("Login failed for user {}: {}", username, error.getMessage());
+                    log.error("Login failed for user {}: {}", maskUsername(username), error.getMessage());
                 })
                 .onErrorMap(error -> new IllegalArgumentException("Invalid credentials or login failed"));
     }
 
+    // BUG-SECURITY-009 FIX: Use synchronized block on interned key to prevent race condition
     private void recordFailedAttemptInternal(String username) {
         String key = FAILED_ATTEMPTS_KEY_PREFIX + username;
-        FailedAttempt attempt = cacheService.get(key, FailedAttempt.class,
-                () -> new FailedAttempt(0, 0L));
+        Duration lockoutTtl = Duration.ofMinutes(lockoutDurationMinutes);
+        synchronized (key.intern()) {
+            FailedAttempt attempt = cacheService.get(key, FailedAttempt.class,
+                    () -> new FailedAttempt(0, 0L));
 
-        if (attempt == null) {
-            attempt = new FailedAttempt(0, 0L);
-        }
+            if (attempt == null) {
+                attempt = new FailedAttempt(0, 0L);
+            }
 
-        attempt.increment();
-        if (attempt.getCount() >= maxLoginAttempts) {
-            attempt.setLockUntil(System.currentTimeMillis() + Duration.ofMinutes(lockoutDurationMinutes).toMillis());
-            log.warn("Account locked: {} until {}", username, attempt.getLockUntil());
+            attempt.increment();
+            if (attempt.getCount() >= maxLoginAttempts) {
+                attempt.setLockUntil(System.currentTimeMillis() + lockoutTtl.toMillis());
+                log.warn("Account locked: {} until {}", maskUsername(username), attempt.getLockUntil());
+            }
+            // BUG-SECURITY-008 FIX: use lockoutTtl derived from config instead of hardcoded 15min
+            cacheService.put(key, attempt, lockoutTtl);
         }
-        cacheService.put(key, attempt, FAILED_ATTEMPTS_TTL);
         riskEvaluationService.recordFailedAttempt(username);
     }
 

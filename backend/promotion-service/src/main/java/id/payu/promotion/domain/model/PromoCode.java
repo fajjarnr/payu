@@ -15,7 +15,7 @@ import java.util.Set;
 public class PromoCode {
 
     private String code;
-    private double discountValue;
+    private BigDecimal discountValue = BigDecimal.ZERO;
     private DiscountType discountType;
     private UsageType usageType;
     private PromoStatus status;
@@ -104,10 +104,10 @@ public class PromoCode {
         BigDecimal discount;
 
         if (discountType == DiscountType.PERCENTAGE) {
-            discount = amount.multiply(BigDecimal.valueOf(discountValue))
+            discount = amount.multiply(discountValue)
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         } else {
-            discount = BigDecimal.valueOf(discountValue);
+            discount = discountValue;
         }
 
         // Apply max discount cap if set
@@ -163,11 +163,11 @@ public class PromoCode {
         this.code = code;
     }
 
-    public double getDiscountValue() {
+    public BigDecimal getDiscountValue() {
         return discountValue;
     }
 
-    public void setDiscountValue(double discountValue) {
+    public void setDiscountValue(BigDecimal discountValue) {
         this.discountValue = discountValue;
     }
 
@@ -259,7 +259,7 @@ public class PromoCode {
             return this;
         }
 
-        public Builder discountValue(double discountValue) {
+        public Builder discountValue(BigDecimal discountValue) {
             promoCode.discountValue = discountValue;
             return this;
         }

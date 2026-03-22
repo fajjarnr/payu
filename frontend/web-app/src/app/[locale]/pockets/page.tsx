@@ -553,7 +553,7 @@ export default function PocketsPage() {
                                                             <div>
                                                                 <p className="text-sm font-bold text-foreground mb-0.5">{tx.description}</p>
                                                                 <p className="text-xs font-medium text-muted-foreground tracking-tight">
-                                                                    {new Date(tx.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })} • {tx.type === 'CREDIT' ? 'Masuk' : 'Keluar'}
+                                                                    {new Date(tx.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })} • {tx.type === 'CREDIT' ? 'Masuk' : 'Keluar'}
                                                                 </p>
                                                             </div>
                                                         </div>

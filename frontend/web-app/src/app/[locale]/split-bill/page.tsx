@@ -226,7 +226,7 @@ export default function SplitBillPage() {
                             <div>
                               <h4 className="font-bold text-foreground">{bill.description}</h4>
                               <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">
-                                {new Date(bill.createdAt).toLocaleDateString('id-ID')}
+                                {new Date(bill.createdAt).toLocaleDateString(undefined)}
                               </p>
                             </div>
                           </div>

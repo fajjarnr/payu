@@ -194,10 +194,14 @@ public class StatementController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Receipt not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
+    // BUG-SECURITY-022 FIX: Add ownership validation
     public ResponseEntity<ApiResponse<ReceiptResponse>> getReceipt(
-            @Parameter(description = "Receipt ID", required = true) @PathVariable UUID receiptId) {
+            @Parameter(description = "Receipt ID", required = true) @PathVariable UUID receiptId,
+            Authentication authentication) {
 
-        ReceiptResponse response = receiptService.getReceipt(receiptId);
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String customerId = jwt.getSubject();
+        ReceiptResponse response = receiptService.getReceipt(receiptId, customerId);
         return ok(response);
     }
 
@@ -208,10 +212,14 @@ public class StatementController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Receipt not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
+    // BUG-SECURITY-022 FIX: Add ownership validation
     public ResponseEntity<ApiResponse<ReceiptResponse>> getReceiptByTransaction(
-            @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId) {
+            @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId,
+            Authentication authentication) {
 
-        return receiptService.getReceiptByTransactionId(transactionId)
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String customerId = jwt.getSubject();
+        return receiptService.getReceiptByTransactionId(transactionId, customerId)
                 .map(this::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -224,10 +232,14 @@ public class StatementController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "410", description = "Receipt has expired")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
+    // BUG-SECURITY-022 FIX: Add ownership validation
     public ResponseEntity<byte[]> downloadReceipt(
-            @Parameter(description = "Receipt ID", required = true) @PathVariable UUID receiptId) {
+            @Parameter(description = "Receipt ID", required = true) @PathVariable UUID receiptId,
+            Authentication authentication) {
 
-        byte[] pdfBytes = receiptService.generatePdf(receiptId);
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String customerId = jwt.getSubject();
+        byte[] pdfBytes = receiptService.generatePdf(receiptId, customerId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -246,10 +258,14 @@ public class StatementController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "410", description = "Receipt has expired")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
+    // BUG-SECURITY-022 FIX: Add ownership validation
     public ResponseEntity<byte[]> downloadReceiptByTransaction(
-            @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId) {
+            @Parameter(description = "Transaction ID", required = true) @PathVariable String transactionId,
+            Authentication authentication) {
 
-        byte[] pdfBytes = receiptService.generatePdfByTransactionId(transactionId);
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String customerId = jwt.getSubject();
+        byte[] pdfBytes = receiptService.generatePdfByTransactionId(transactionId, customerId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);

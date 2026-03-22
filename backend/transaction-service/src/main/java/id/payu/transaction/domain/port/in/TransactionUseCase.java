@@ -112,4 +112,5 @@ public interface TransactionUseCase {
                 accountId.toString(), userId, page, size);
         return getAccountTransactions(query);
     }
+    long countAccountTransactions(UUID accountId, String userId);
 }

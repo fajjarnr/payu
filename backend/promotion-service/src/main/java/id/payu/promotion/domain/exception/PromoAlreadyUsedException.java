@@ -3,7 +3,7 @@ package id.payu.promotion.domain.exception;
 /**
  * Exception thrown when a user attempts to use a promo code they've already used.
  */
-public class PromoAlreadyUsedException extends RuntimeException {
+public class PromoAlreadyUsedException extends id.payu.api.common.exception.BusinessException {
 
     private final String promoCode;
     private final String userId;

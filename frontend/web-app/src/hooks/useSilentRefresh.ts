@@ -69,7 +69,8 @@ export function useSilentRefresh() {
 
       if (!res.ok) {
         // refreshToken is expired — real session end
-        logout();
+        // BUG-AUTH-016 FIX: Only logout on 401, not on 503/network errors
+          if (response.status === 401) { logout(); };
         return false;
       }
 

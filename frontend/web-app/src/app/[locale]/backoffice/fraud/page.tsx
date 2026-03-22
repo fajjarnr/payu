@@ -110,7 +110,7 @@ export default function FraudCasesPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground font-bold text-xs">
-                  {new Date(c.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {new Date(c.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                 </TableCell>
                 <TableCell className="text-right">
                   <Link href={`/backoffice/fraud/${c.id}`}>
