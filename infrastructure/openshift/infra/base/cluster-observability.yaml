@@ -1,6 +1,17 @@
-apiVersion: observability.openshift.io/v1
+apiVersion: observability.openshift.io/v1alpha1
 kind: UIPlugin
 metadata:
-  name: cluster-observability-cr-stub
+  name: logging
+spec:
+  type: Logging
+  logging:
+    lokiStack:
+      name: payu-loki
+      namespace: openshift-logging
+---
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: dashboards
 spec:
   type: Dashboards
