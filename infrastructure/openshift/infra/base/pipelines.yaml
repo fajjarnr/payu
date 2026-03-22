@@ -1,6 +1,15 @@
 apiVersion: operator.tekton.dev/v1alpha1
 kind: TektonConfig
 metadata:
-  name: pipelines-cr-stub
+  name: config
 spec:
   profile: all
+  targetNamespace: openshift-pipelines
+  addon:
+    enablePipelinesAsCode: true
+  pipeline:
+    default-service-account: pipeline
+    enable-api-fields: alpha
+  trigger:
+    default-service-account: pipeline
+    enable-api-fields: alpha

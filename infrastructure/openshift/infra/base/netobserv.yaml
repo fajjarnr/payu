@@ -1,7 +1,26 @@
-apiVersion: flows.netobserv.io/v1beta1
+apiVersion: flows.netobserv.io/v1beta2
 kind: FlowCollector
 metadata:
-  name: netobserv-cr-stub
+  name: cluster
 spec:
+  namespace: netobserv
+  deploymentModel: Direct
   agent:
     type: eBPF
+    ebpf:
+      sampling: 50
+      cacheActiveTimeout: 5s
+      cacheMaxFlows: 100000
+  processor:
+    logTypes: Flows
+  loki:
+    enable: true
+    mode: LokiStack
+    lokiStack:
+      name: payu-loki
+      namespace: openshift-logging
+  consolePlugin:
+    enable: true
+    register: true
+    portNaming:
+      enable: true

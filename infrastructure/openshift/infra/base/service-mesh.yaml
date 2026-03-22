@@ -1,6 +1,18 @@
-apiVersion: maistra.io/v2
-kind: ServiceMeshControlPlane
+# Service Mesh - using Sail operator (OpenShift Service Mesh 3.x)
+# CRD: istios.sailoperator.io (NOT maistra.io)
+apiVersion: sailoperator.io/v1
+kind: Istio
 metadata:
-  name: service-mesh-cr-stub
+  name: payu-mesh
+  namespace: istio-system
 spec:
-  version: v2.4
+  version: v1.28.4
+  namespace: istio-system
+  values:
+    global:
+      meshID: payu-mesh
+    pilot:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi

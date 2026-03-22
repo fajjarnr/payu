@@ -81,7 +81,10 @@ spec:
         - name: GOALS
           value:
             - -f
-            - backend/$(params.service-name)/pom.xml
+            - backend/pom.xml
+            - -pl
+            - $(params.service-name)
+            - -am
             - clean
             - package
             - -DskipTests

@@ -1,10 +1,17 @@
 apiVersion: loki.grafana.com/v1
 kind: LokiStack
 metadata:
-  name: loki-cr-stub
+  name: payu-loki
+  namespace: openshift-logging
 spec:
   size: 1x.extra-small
   storage:
+    schemas:
+      - version: v13
+        effectiveDate: "2024-10-01"
     secret:
       name: logging-loki-s3
       type: s3
+  storageClassName: gp3-csi
+  tenants:
+    mode: openshift-logging

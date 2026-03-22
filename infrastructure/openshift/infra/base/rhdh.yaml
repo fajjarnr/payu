@@ -1,5 +1,10 @@
-apiVersion: rhdh.redhat.com/v1alpha1
+apiVersion: rhdh.redhat.com/v1alpha3
 kind: Backstage
 metadata:
-  name: rhdh-cr-stub
-spec: {}
+  name: payu-developer-hub
+  namespace: rhdh-operator
+spec:
+  application:
+    replicas: 1
+    route:
+      enabled: true
