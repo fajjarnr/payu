@@ -59,9 +59,6 @@ images:
   - name: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/cms-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
     newTag: "1.4.0"
-  - name: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/ab-testing-service
-    newName: image-registry.openshift-image-registry.svc:5000/payu-dev/ab-testing-service
-    newTag: "1.4.0"
   - name: default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/billing-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
     newTag: "1.4.0"
@@ -495,28 +492,6 @@ patches:
                   - name: REDIS_PORT
                     value: "11222"
 
-  - target:
-      kind: Deployment
-      name: ab-testing-service
-    patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: ab-testing-service
-      spec:
-        template:
-          spec:
-            containers:
-              - name: ab-testing-service
-                env:
-                  - name: SPRING_DATASOURCE_URL
-                    value: "jdbc:postgresql://payu-postgres-primary.payu-dev.svc:5432/payu_abtesting"
-                  - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-                    value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
-                  - name: REDIS_HOST
-                    value: "payu-datagrid.payu-dev.svc"
-                  - name: REDIS_PORT
-                    value: "11222"
 
   - target:
       kind: Deployment

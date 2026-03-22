@@ -5,8 +5,7 @@ This directory contains Podman quadlet configurations for local development and 
 ## Files Structure
 
 ### Podman Compose Files
-- `podman-compose.yml` - Main development environment with all services
-- `podman-compose.test.yml` - Test environment with isolated databases and services
+- `podman-compose.yml` - Development environment with all services
 
 ### Quadlet Files
 - `*.container` - Individual container configurations
@@ -28,8 +27,7 @@ This directory contains Podman quadlet configurations for local development and 
 - `keycloak.container` - Keycloak identity server
 
 ## Network Configuration
-- `payu-network.network` - Main development network (172.20.0.0/24)
-- `payu-test-network.network` - Test environment network (172.21.0.0/24)
+- `payu-network.network` - Main network (172.20.0.0/24)
 
 ## Usage
 
@@ -37,9 +35,6 @@ This directory contains Podman quadlet configurations for local development and 
 ```bash
 # Start all services using Podman Compose
 podman play podman-compose.yml
-
-# Start test environment services
-podman play podman-compose.test.yml
 
 # Start specific service (using quadlet)
 systemctl start postgres.target
@@ -69,9 +64,8 @@ podman ps | grep payu
 
 ### Managing Networks and Volumes
 ```bash
-# Create networks
+# Create network
 podman network create payu-network
-podman network create payu-test-network
 
 # Clean up volumes
 podman volume rm postgres_data redis_data
@@ -108,29 +102,14 @@ POSTGRES_DB=payu_account
 KEYCLOAK_ADMIN=admin
 KEYCLOAK_ADMIN_PASSWORD=admin
 KEYCLOAK_DB_PASSWORD=payu_secret
-
-# Test Environment
-TEST_POSTGRES_USER=payu_test
-TEST_POSTGRES_PASSWORD=test_secret
-TEST_POSTGRES_DB=payu_test_account
-TEST_KEYCLOAK_DB_PASSWORD=test_secret
 ```
 
-## Port Mapping
-
-### Main Development Environment
+### Port Mapping
 - **Database**: PostgreSQL (5432), Redis (6379)
-- **Messaging**: Kafka (9092, 29092), Zookeeper (2181)
+- **Messaging**: Kafka (9092)
 - **Identity**: Keycloak (8099)
 - **Gateway**: API Gateway (8080)
 - **Frontend**: Web App (3001)
-
-### Test Environment
-- **Database**: Test PostgreSQL (5433), Test Redis (6380)
-- **Messaging**: Test Kafka (9093), Test Zookeeper (2182)
-- **Identity**: Test Keycloak (8100)
-- **Gateway**: Test API Gateway (8180)
-- **Frontend**: Test Web App (3101)
 
 ## Health Checks
 

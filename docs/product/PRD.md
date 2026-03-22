@@ -367,9 +367,11 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 | `compliance-service` | Compliance | AML, regulatory audit, GDPR | ✅ Live |
 | `statement-service` | Financial | PDF e-statement generation | ✅ Live |
 | `cms-service` | Platform | Banners, promos, dynamic content | ✅ Live |
-| `ab-testing-service` | Platform | UI/Feature experimentation | ✅ Live |
 | `fx-service` | Financial | Currency exchange rates & conversion | ✅ Live |
 | `api-portal-service` | Platform | Centralized OpenAPI docs & sandbox | ✅ Live |
+| `dispute-service` | Operations | Refund & Dispute Management | ✅ Live |
+| `integration-service` | Ecosystem | External Swift/ISO20022 Adapter | ✅ Live |
+| `product-catalog-service`| Platform | Banking products & fees catalog | ✅ Live |
 
 ### 14.2 Infrastructure
 
@@ -427,7 +429,7 @@ TokoBapak payment-service ───► PayU API Gateway ───► PayU Transa
 
 ---
 
-**Document Version**: 1.1  
-**Last Updated**: January 2026  
+**Document Version**: 1.2  
+**Last Updated**: March 22, 2026  
 **Owner**: Product Team PayU  
 **Status**: Approved

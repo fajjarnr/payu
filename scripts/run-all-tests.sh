@@ -162,8 +162,8 @@ fi
 print_section "Step 1: Starting test environment"
 
 if [ "$SKIP_BUILD" = false ] && [ "$SKIP_INTEGRATION" = false ] || [ "$SKIP_E2E" = false ]; then
-    print_info "Starting Docker test environment..."
-    $COMPOSE_CMD -f "$PROJECT_ROOT/infrastructure/local-podman/podman-compose.test.yml" up -d postgres-test redis-test kafka-test zookeeper-test > /dev/null 2>&1 || true
+    print_info "Starting infrastructure from main compose..."
+    $COMPOSE_CMD -f "$PROJECT_ROOT/infrastructure/local-podman/podman-compose.yml" up -d postgres redis kafka > /dev/null 2>&1 || true
     print_info "Waiting for services to be healthy..."
     sleep 15
 

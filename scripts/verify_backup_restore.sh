@@ -86,18 +86,22 @@ check_docker() {
     return 0
 }
 
-# Check if docker-compose is available
-check_docker_compose() {
-    if command -v docker-compose &> /dev/null; then
-        COMPOSE_CMD="docker-compose"
-        test_passed "docker-compose is available"
+# Check if compose command is available
+check_compose() {
+    if command -v podman-compose &> /dev/null; then
+        COMPOSE_CMD="podman-compose -f ${PROJECT_ROOT}/infrastructure/local-podman/podman-compose.yml"
+        test_passed "podman-compose is available"
+        return 0
+    elif podman compose version &> /dev/null; then
+        COMPOSE_CMD="podman compose -f ${PROJECT_ROOT}/infrastructure/local-podman/podman-compose.yml"
+        test_passed "podman compose is available"
         return 0
     elif docker compose version &> /dev/null; then
-        COMPOSE_CMD="docker compose"
+        COMPOSE_CMD="docker compose -f ${PROJECT_ROOT}/infrastructure/local-podman/podman-compose.yml"
         test_passed "docker compose is available"
         return 0
     else
-        test_failed "docker-compose is not available"
+        test_failed "No compose command available"
         return 1
     fi
 }
@@ -191,7 +195,7 @@ start_infrastructure() {
 
     # Start infrastructure
     log_info "Starting infrastructure services..."
-    if $COMPOSE_CMD up -d postgres redis kafka zookeeper; then
+    if $COMPOSE_CMD up -d postgres redis kafka; then
         test_passed "Infrastructure services started"
     else
         test_failed "Failed to start infrastructure services"
@@ -533,8 +537,8 @@ main() {
         exit 1
     fi
 
-    if ! check_docker_compose; then
-        log_error "docker-compose not available, exiting"
+    if ! check_compose; then
+        log_error "No compose command available, exiting"
         exit 1
     fi
 

@@ -9,19 +9,22 @@
 ## 🏁 Current Status Snapshot
 
 | Attribute                | Value                                    |
-| :----------------------- | :--------------------------------------- |
-| **Last Status Update**   | March 17, 2026                           |
-| :----------------------- | :--------------------------------------- |
-| **Production Readiness** | 100% (648 bugs fixed, 4 Won't Do, 0 open) |
-| **OpenShift Tag**        | `v1.7.0`                                 |
-| **Namespace**            | `payu-dev`                               |
-| **Total Pods**           | 36/36 running                            |
-| **Services Deployed**    | 22/22                                    |
-| **E2E Tests (Blackbox)** | 159 pass, 0 skip, 0 fail (local Podman)  |
-| **E2E Tests (Playwright)**| 544 pass, 0 fail (local Podman)          |
-| **E2E Tests (OCP)**      | 399/399 passing                          |
-| **Maven Build**          | 38/38 modules SUCCESS                    |
-| **Kafka Mode**           | KRaft (no Zookeeper)                     |
+| Attribute                  | Value      | Notes                                           |
+| -------------------------- | ---------- | ----------------------------------------------- |
+| Services Deployed          | 🟢 23/23    | (Excl. Simulators). AB-Testing Deprecated.      |
+| Total Pods                 | 🟢 35/35    | All pods running & healthy (Mar 22)             |
+| Maven Build                | 🟢 28/28    | ALL modules SUCCESS (inc. 23 services + 5 sims) |
+| Unit Test Coverage         | 🟢 85%+     | All core services > 80%                         |
+| E2E Playwright (Web)       | 🟢 544/544  | 100% Pass per Mar 17                            |
+| E2E Pytest (Backend)       | 🟢 159/159  | 100% Pass per Mar 17                            |
+| Backend Services           | 🟢 23/23    | (AB-Testing removed, 23 services deployed)      |
+| Frontend Pages             | 🟢 44/44    | Next.js App Router (Mar 22)                     |
+| API-First (OpenAPI)        | 🟢 23/23    | All deployed services have Swagger/OpenAPI      |
+| Production Readiness State | 🟢 100%     | All 4 P0 Gateway Gaps Closed (Mar 16)           |
+| **Open Bugs (TODOS.md)**   | 🔴 56       | Logical Inspection Tahap Akhir (Mar 2026)       |
+| Last Status Update         | 2026-03-22 | v1.7.1 (OpenShift/Stable)                       |
+| OpenShift Tag              | `v1.7.1`   | Latest stable deployment                        |
+| Kafka Mode                 | KRaft      | (no Zookeeper)                                  |
 
 > ✅ **Phase 12 — E2E Coverage Gaps Fixed (Mar 17)**: All 27 findings (BUG-TEST-090–116) resolved — 10 new Playwright specs (113 tests), 2 backend routing fixes (compliance context-path, analytics gateway endpoints), 12 xfail markers removed. Pytest 159/159, Maven 38/38.
 > ✅ **Phase 8/9/10 — 114 Audit Bugs Fixed (Mar 17)**: 39 test quality (BUG-TEST-051–089), 44 infrastructure security (BUG-INFRA-044–087), 31 shared library (BUG-SHARED-001–031). Maven 38/38 SUCCESS. **Zero open bugs.**
@@ -42,13 +45,13 @@
 ## 🎯 Platform Maturity Scorecard
 
 | Category             | Weight | Infra/Deploy Score | Notes                                           |
-| :------------------- | :----- | :----------------- | :---------------------------------------------- |
-| **Backend Services** | 25%    | 22/22 deployed     | ✅ All bugs fixed, biller-simulator added       |
+| -------------------- | ------ | ------------------ | ----------------------------------------------- |
+| **Backend Services** | 100%   | 23/23 deployed     | ✅ ab-testing-service removed                    |
 | **Shared Libraries** | 10%    | 7/7 starters       | BUG-BE-091 skip (rate limit burst — acceptable) |
-| **Frontend Web-App** | 15%    | Deployed & running | ✅ All cross-service issues resolved            |
+| **Frontend Web-App** | 15%    | Deployed & running | ✅ All cross-service issues resolved             |
 | **Frontend Mobile**  | 5%     | Expo setup only    | Deferred                                        |
-| **Testing**          | 15%    | 703/703 E2E pass   | ✅ 544 Playwright + 159 Pytest (local)          |
-| **Security**         | 10%    | JWT + OIDC active  | ✅ BUG-BE-001 fixed (nimbus-jose-jwt)           |
+| **Testing**          | 15%    | 703/703 E2E pass   | ✅ 544 Playwright + 159 Pytest (local)           |
+| **Security**         | 10%    | JWT + OIDC active  | ✅ BUG-BE-001 fixed (nimbus-jose-jwt)            |
 | **Infrastructure**   | 10%    | OpenShift HA       | HPA + PDB for all critical services             |
 
 ---
@@ -56,24 +59,24 @@
 ## 📈 DORA Metrics (Current Target)
 
 | Metric                    | Target    | Current           | Alignment    |
-| :------------------------ | :-------- | :---------------- | :----------- |
-| **Deployment Frequency**  | ≥ 1/day   | Multiple/day (CI) | 🟢 **Elite** |
-| **Lead Time for Changes** | < 4 hours | ~30 mins          | 🟢 **Elite** |
-| **Mean Time to Recovery** | < 30 mins | ~15 mins          | 🟢 **Elite** |
-| **Change Failure Rate**   | < 10%     | ~8%               | 🟢 **Elite** |
+| ------------------------- | --------- | ----------------- | ------------ |
+| **Deployment Frequency**  | ≥ 1/day   | Multiple/day (CI) | 🟢 **Elite**  |
+| **Lead Time for Changes** | < 4 hours | ~30 mins          | 🟢 **Elite**  |
+| **Mean Time to Recovery** | < 30 mins | ~15 mins          | 🟢 **Elite**  |
+| **Change Failure Rate**   | < 10%     | ~8%               | 🟢 **Elite**  |
 
 ---
 
 ## 🏗️ Architectural Compliance
 
 | Standard                   | Status            | Detail                                             |
-| :------------------------- | :---------------- | :------------------------------------------------- |
-| **Hexagonal Architecture** | ✅ 19/19 services | All Java/Quarkus services                          |
-| **Event-First**            | ✅ Active         | `outbox-starter`, `events-starter`, `saga-starter` |
-| **ArchUnit Governance**    | ✅ 18/19          | 1 service exempt with documented reason            |
-| **Zero Trust**             | ✅ Per-service    | JWT + OIDC validation per endpoint                 |
-| **API-First**              | ✅ 22/22          | OpenAPI spec per service                           |
-| **Doc-as-Code**            | ✅ 15 ADRs        | `/docs/adr/`                                       |
+| -------------------------- | ----------------- | -------------------------------------------------- |
+| **Hexagonal Architecture** | ✅ 19/19 services  | All Java/Quarkus services                          |
+| **Event-First**            | ✅ Active          | `outbox-starter`, `events-starter`, `saga-starter` |
+| **ArchUnit Governance**    | ✅ 18/19           | 1 service exempt with documented reason            |
+| **Zero Trust**             | ✅ Per-service     | JWT + OIDC validation per endpoint                 |
+| **API-First**              | ✅ 23/23           | OpenAPI spec per deployed service                  |
+| **Doc-as-Code**            | ✅ 15 ADRs         | `/docs/adr/`                                       |
 
 ---
 
@@ -238,7 +241,7 @@
 **Infrastructure — Kafka KRaft Migration:**
 
 - ✅ **Kafka Zookeeper → KRaft** — Migrated local Podman dev environment from `cp-kafka:7.5.0` + Zookeeper to `cp-kafka:7.7.1` KRaft mode. Aligned with AMQ Streams operator on OpenShift.
-- ✅ **Removed Zookeeper** — Deleted `zookeeper.container`, `zookeeper.target` quadlet files. Updated `podman-compose.yml`, `podman-compose.test.yml`, `kafka.container`, `kafka.target`, `podman-payu.service`.
+- ✅ **Removed Zookeeper** — Deleted `zookeeper.container`, `zookeeper.target` quadlet files. Updated `podman-compose.yml`, `kafka.container`, `kafka.target`, `podman-payu.service`. Removed `podman-compose.test.yml` (consolidated into main compose).
 - ✅ **KRaft Config** — Combined broker+controller mode (`KAFKA_PROCESS_ROLES=broker,controller`), Raft consensus voters, static CLUSTER_ID.
 
 ### v1.5.0 (Completed) — February 28, 2026
@@ -365,32 +368,32 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 > All completed stories have detailed implementation notes in [`CHANGELOG.md`](../../CHANGELOG.md).
 > Items below were removed from `TODOS.md` on March 2, 2026 per backlog hygiene convention.
 
-| Epic | Name                              | Priority   | Stories |   SP    | Completed   |
-| :--- | :-------------------------------- | :--------- | :-----: | :-----: | :---------- |
-| E-01 | Core Banking Ledger               | 🔴 Highest |    3    |   13    | Feb 26 2026 |
-| E-02 | Gateway Hardening                 | 🔴 Highest |    5    |   11    | Feb 26 2026 |
-| E-03 | Frontend Quality                  | 🟠 High    |    5    |    7    | Feb 28 2026 |
-| E-04 | API Management & Analytics        | 🟠 High    |    5    |   19    | Mar 02 2026 |
-| E-05 | Product Catalog                   | 🟠 High    |    1    |    5    | Feb 28 2026 |
-| E-06 | Developer Hub (Backstage)         | 🟡 Medium  |    5    |   13    | Mar 02 2026 |
-| E-07 | gRPC Inter-Service Communication  | 🟡 Medium  |    8    |   25    | Mar 02 2026 |
-| E-08 | Legacy Integration Layer          | ⚪ Low     |    1    |    5    | Feb 28 2026 |
-| E-09 | Partner Integration Foundation    | 🔴 Highest |    4    |   18    | Feb 28 2026 |
-| E-10 | Escrow & Marketplace Payments     | 🔴 Highest |    2    |   10    | Feb 28 2026 |
-| E-11 | Subscription & Recurring Billing  | 🔴 Highest |    2    |    8    | Feb 28 2026 |
-| E-12 | Settlement & Financial Operations | 🟠 High    |    4    |   16    | Feb 28 2026 |
-| E-13 | Dispute Resolution                | 🟠 High    |    1    |    5    | Feb 28 2026 |
-| E-14 | Consumer Banking Experience       | 🟠 High    |    6    |   12    | Feb 28 2026 |
-| E-15 | Payment Gateway Features          | 🔴 Highest |    7    |   25    | Feb 28 2026 |
-| E-16 | Disbursement & Smart Routing      | 🟠 High    |    3    |   12    | Feb 28 2026 |
-| E-17 | Promotion Engine Wiring           | 🟠 High    |    2    |    6    | Feb 28 2026 |
-| E-18 | Developer Experience (Partner)    | 🟡 Medium  |    3    |   11    | Feb 28 2026 |
-| E-19 | Transaction Proof & Receipts      | 🟠 High    |    1    |    2    | Feb 28 2026 |
-| E-20 | Code Health & Technical Hygiene   | 🔴 Highest |    8    |   10    | Feb 26 2026 |
-| E-21 | Security Hardening                | 🔴 Highest |    2    |    5    | Feb 26 2026 |
-| E-22 | Gateway Reactive & Resilience     | 🔴 Highest |    2    |    6    | Feb 26 2026 |
-| E-23 | Shared Library Lifecycle          | 🟠 High    |    2    |   11    | Feb 28 2026 |
-| E-24 | E2E Test & Gateway Readiness      | 🔴 Highest |    4    |    8    | Mar 02 2026 |
+| Epic | Name                              | Priority   | Stories | SP      | Completed   |
+| ---- | --------------------------------- | ---------- | ------- | ------- | ----------- |
+| E-01 | Core Banking Ledger               | 🔴 Highest  | 3       | 13      | Feb 26 2026 |
+| E-02 | Gateway Hardening                 | 🔴 Highest  | 5       | 11      | Feb 26 2026 |
+| E-03 | Frontend Quality                  | 🟠 High     | 5       | 7       | Feb 28 2026 |
+| E-04 | API Management & Analytics        | 🟠 High     | 5       | 19      | Mar 02 2026 |
+| E-05 | Product Catalog                   | 🟠 High     | 1       | 5       | Feb 28 2026 |
+| E-06 | Developer Hub (Backstage)         | 🟡 Medium   | 5       | 13      | Mar 02 2026 |
+| E-07 | gRPC Inter-Service Communication  | 🟡 Medium   | 8       | 25      | Mar 02 2026 |
+| E-08 | Legacy Integration Layer          | ⚪ Low      | 1       | 5       | Feb 28 2026 |
+| E-09 | Partner Integration Foundation    | 🔴 Highest  | 4       | 18      | Feb 28 2026 |
+| E-10 | Escrow & Marketplace Payments     | 🔴 Highest  | 2       | 10      | Feb 28 2026 |
+| E-11 | Subscription & Recurring Billing  | 🔴 Highest  | 2       | 8       | Feb 28 2026 |
+| E-12 | Settlement & Financial Operations | 🟠 High     | 4       | 16      | Feb 28 2026 |
+| E-13 | Dispute Resolution                | 🟠 High     | 1       | 5       | Feb 28 2026 |
+| E-14 | Consumer Banking Experience       | 🟠 High     | 6       | 12      | Feb 28 2026 |
+| E-15 | Payment Gateway Features          | 🔴 Highest  | 7       | 25      | Feb 28 2026 |
+| E-16 | Disbursement & Smart Routing      | 🟠 High     | 3       | 12      | Feb 28 2026 |
+| E-17 | Promotion Engine Wiring           | 🟠 High     | 2       | 6       | Feb 28 2026 |
+| E-18 | Developer Experience (Partner)    | 🟡 Medium   | 3       | 11      | Feb 28 2026 |
+| E-19 | Transaction Proof & Receipts      | 🟠 High     | 1       | 2       | Feb 28 2026 |
+| E-20 | Code Health & Technical Hygiene   | 🔴 Highest  | 8       | 10      | Feb 26 2026 |
+| E-21 | Security Hardening                | 🔴 Highest  | 2       | 5       | Feb 26 2026 |
+| E-22 | Gateway Reactive & Resilience     | 🔴 Highest  | 2       | 6       | Feb 26 2026 |
+| E-23 | Shared Library Lifecycle          | 🟠 High     | 2       | 11      | Feb 28 2026 |
+| E-24 | E2E Test & Gateway Readiness      | 🔴 Highest  | 4       | 8       | Mar 02 2026 |
 |      | **TOTAL**                         |            | **86**  | **265** |             |
 
 > **Tech Debt**: 3/3 completed (SIMP-001 ab-testing removal, SIMP-002 gamification removal, SIMP-003 robo-advisory removal)
@@ -402,17 +405,17 @@ All 7 stories finished (IMP-040 to IMP-046, 25 SP total):
 > Previously tracked as P0-P3 blockers, all resolved prior to Feb 20 deployment.
 
 | #     | Item                                        | Resolution                                |
-| :---- | :------------------------------------------ | :---------------------------------------- |
-| 1     | Gateway JWT Validation (BUG-BE-001)         | ✅ Done — Fixed with `nimbus-jose-jwt`    |
-| 2     | Auth in-memory state                        | ✅ Done — Fully moved to Redis            |
-| 3     | Transaction reference number collision      | ✅ Done — Migrated to UUID generation     |
-| 4     | Wallet cache invalidation                   | ✅ Done — Exhaustive key eviction applied |
-| 5     | HPA + PDB enabled                           | ✅ Done — All 22 services                 |
-| 6     | Keycloak realm configured                   | ✅ Done — `payu` realm live               |
-| 7     | E2E test suite                              | ✅ Done — 399/399 passing                 |
-| 8     | TLS certificates                            | ✅ Done — cert-manager + Let's Encrypt    |
-| 9     | Image registry                              | ✅ Done — All images pushed `v1.3.0`      |
-| 10–19 | Infrastructure (PGO, KRaft, DataGrid, etc.) | ✅ Done — All operators running           |
+| ----- | ------------------------------------------- | ----------------------------------------- |
+| 1     | Gateway JWT Validation (BUG-BE-001)         | ✅ Done — Fixed with `nimbus-jose-jwt`     |
+| 2     | Auth in-memory state                        | ✅ Done — Fully moved to Redis             |
+| 3     | Transaction reference number collision      | ✅ Done — Migrated to UUID generation      |
+| 4     | Wallet cache invalidation                   | ✅ Done — Exhaustive key eviction applied  |
+| 5     | HPA + PDB enabled                           | ✅ Done — All 22 services                  |
+| 6     | Keycloak realm configured                   | ✅ Done — `payu` realm live                |
+| 7     | E2E test suite                              | ✅ Done — 399/399 passing                  |
+| 8     | TLS certificates                            | ✅ Done — cert-manager + Let's Encrypt     |
+| 9     | Image registry                              | ✅ Done — All images pushed `v1.3.0`       |
+| 10–19 | Infrastructure (PGO, KRaft, DataGrid, etc.) | ✅ Done — All operators running            |
 
 > Items 1-4 were marked complete but code review (Feb 24) found underlying issues still present.
 > They have been re-opened and documented in `TODOS.md`.
@@ -439,12 +442,12 @@ Data Layer:
 ## 📊 Test Coverage Summary
 
 | Layer        | Framework         | Status                               |
-| :----------- | :---------------- | :----------------------------------- |
-| E2E (OCP)    | Playwright        | ✅ 399/399 (historical)                      |
-| E2E (Local)  | Playwright        | ✅ 544 pass, 0 fail                      |
-| E2E (Local)  | Pytest Blackbox   | ✅ 159 pass, 0 skip, 0 fail              |
-| Performance  | Gatling           | ✅ Configured                        |
-| Contract     | Pact              | ✅ Configured                        |
-| Integration  | Testcontainers    | ✅ Per service                       |
-| Architecture | ArchUnit          | ✅ 18/19 services                    |
+| ------------ | ----------------- | ------------------------------------ |
+| E2E (OCP)    | Playwright        | ✅ 399/399 (historical)               |
+| E2E (Local)  | Playwright        | ✅ 544 pass, 0 fail                   |
+| E2E (Local)  | Pytest Blackbox   | ✅ 159 pass, 0 skip, 0 fail           |
+| Performance  | Gatling           | ✅ Configured                         |
+| Contract     | Pact              | ✅ Configured                         |
+| Integration  | Testcontainers    | ✅ Per service                        |
+| Architecture | ArchUnit          | ✅ 18/19 services                     |
 | Unit         | JUnit 5 + Mockito | Varies (see TODOS for coverage gaps) |

@@ -55,9 +55,9 @@
 │  CORE BANKING (Spring Boot)         SUPPORTING (Quarkus Native)         │
 │  ┌─────────────────────────────┐    ┌─────────────────────────────┐     │
 │  │ account-svc   auth-svc      │    │ gateway-svc   billing-svc   │     │
-│  │ transaction-svc wallet-svc  │    │ notification-svc card-svc   │     │
-│  │ investment-svc lending-svc  │    │ support-svc   cms-svc       │     │
-│  │ fx-svc  statement-svc       │    │ api-portal-svc ab-testing-svc│     │
+│  │ transaction-svc wallet-svc  │    │ notification-svc cms-svc       │     │
+│  │ investment-svc lending-svc  │    │ support-svc   api-portal-svc│     │
+│  │ fx-svc  statement-svc dispute-svc│                                 │
 │  └─────────────────────────────┘    └─────────────────────────────┘     │
 │                                                                          │
 │  AI/ML (FastAPI)                    SHARED LIBRARIES                    │
@@ -98,10 +98,10 @@ payu/
 | Document                                               | Description                              |
 | ------------------------------------------------------ | ---------------------------------------- |
 | [ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) | Technical Architecture & Design Patterns |
-| [GEMINI.md](./docs/guides/GEMINI.md)                   | AI Assistant Guidelines (CLAUDE.md)      |
+| [GEMINI.md](./GEMINI.md)                           | AI Assistant Guidelines (CLAUDE.md)      |
 | [PRD.md](./docs/product/PRD.md)                        | Product Requirements & Features          |
 | [TODOS.md](./docs/roadmap/TODOS.md)                    | Project Roadmap                          |
-| [CONTRIBUTING.md](./docs/guides/CONTRIBUTING.md)       | Development & Git Guidelines             |
+| [CONTRIBUTING.md](./CONTRIBUTING.md)       | Development & Git Guidelines             |
 
 ## 🚀 Getting Started
 

@@ -1,25 +1,29 @@
-# PayU Kafka - Quadlet Container File
+# PayU Kafka - Quadlet Container File (KRaft Mode)
 
 [Container]
-Image=docker.io/confluentinc/cp-kafka:7.5.0
+Image=docker.io/confluentinc/cp-kafka:7.7.1
 ContainerName=payu-kafka
 AutoUpdate=registry
 Network=payu-network
 
 # Port mapping
 PublishPort=9092:9092
-PublishPort=29092:29092
 
-# Environment variables
-Environment=KAFKA_BROKER_ID=1
-Environment=KAFKA_ZOOKEEPER_CONNECT=payu-zookeeper:2181
-Environment=KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-Environment=KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://payu-kafka:29092,PLAINTEXT_HOST://localhost:9092
+# KRaft Environment (no Zookeeper)
+Environment=KAFKA_NODE_ID=1
+Environment=KAFKA_PROCESS_ROLES=broker,controller
+Environment=KAFKA_CONTROLLER_QUORUM_VOTERS=1@payu-kafka:9093
+Environment=KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+Environment=KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://payu-kafka:9092
+Environment=KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+Environment=KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+Environment=KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
 Environment=KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
 Environment=KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
 Environment=KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
 Environment=KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
 Environment=KAFKA_HEAP_OPTS=-Xmx1G -Xms1G
+Environment=CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
 
 # Health check
 HealthCmd=kafka-broker-api-versions --bootstrap-server localhost:9092
@@ -44,9 +48,6 @@ Restart=on-failure
 RestartSec=5s
 TimeoutStartSec=120s
 TimeoutStopSec=60s
-
-# Ensure zookeeper is started first
-ExecStartPre=/usr/bin/podman start payu-zookeeper
 
 [Install]
 WantedBy=default.target

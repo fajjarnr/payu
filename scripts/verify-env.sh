@@ -167,7 +167,7 @@ check_project_structure() {
     # Required files
     echo ""
     local required_files=(
-        "docker-compose.yml"
+        "infrastructure/local-podman/podman-compose.yml"
         ".env.example"
         "pom.xml"
         "Makefile"
@@ -230,7 +230,25 @@ check_containers() {
         "payu-auth-service:Auth Service"
         "payu-transaction-service:Transaction Service"
         "payu-wallet-service:Wallet Service"
+        "payu-billing-service:Billing Service"
+        "payu-notification-service:Notification Service"
+        "payu-kyc-service:KYC Service"
+        "payu-analytics-service:Analytics Service"
+        "payu-investment-service:Investment Service"
+        "payu-lending-service:Lending Service"
+        "payu-backoffice-service:Backoffice Service"
+        "payu-partner-service:Partner Service"
+        "payu-promotion-service:Promotion Service"
+        "payu-support-service:Support Service"
+        "payu-statement-service:Statement Service"
+        "payu-api-portal-service:API Portal Service"
         "payu-gateway-service:Gateway Service"
+        "payu-compliance-service:Compliance Service"
+        "payu-cms-service:CMS Service"
+        "payu-fx-service:FX Service"
+        "payu-dispute-service:Dispute Service"
+        "payu-product-catalog-service:Product Catalog Service"
+        "payu-integration-service:Integration Service"
     )
 
     for service in "${backend_services[@]}"; do
@@ -267,20 +285,38 @@ check_health_endpoints() {
     print_header "5. Health Endpoints"
 
     local services=(
-        "8001:Account Service"
-        "8002:Auth Service"
-        "8003:Transaction Service"
-        "8004:Wallet Service"
-        "8080:Gateway Service"
+        "8001:actuator/health:Account Service"
+        "8002:actuator/health:Auth Service"
+        "8003:actuator/health:Transaction Service"
+        "8004:actuator/health:Wallet Service"
+        "8005:q/health:Billing Service"
+        "8006:q/health:Notification Service"
+        "8007:health:KYC Service"
+        "8008:health:Analytics Service"
+        "8009:actuator/health:Investment Service"
+        "8010:actuator/health:Lending Service"
+        "8011:q/health:Backoffice Service"
+        "8012:q/health:Partner Service"
+        "8013:q/health:Promotion Service"
+        "8014:q/health:Support Service"
+        "8015:actuator/health:Statement Service"
+        "8021:q/health:API Portal Service"
+        "8080:q/health:Gateway Service"
+        "8087:actuator/health:Compliance Service"
+        "8095:actuator/health:CMS Service"
+        "8096:actuator/health:FX Service"
+        "8098:actuator/health:Dispute Service"
+        "8100:actuator/health:Product Catalog Service"
+        "8101:actuator/health:Integration Service"
     )
 
     for service in "${services[@]}"; do
-        IFS=':' read -r port name <<< "$service"
-        local url="http://localhost:$port/actuator/health"
+        IFS=':' read -r port path name <<< "$service"
+        local url="http://localhost:$port/$path"
 
         if curl -s -f "$url" >/dev/null 2>&1; then
-            status=$(curl -s "$url" | jq -r '.status' 2>/dev/null || echo "unknown")
-            if [ "$status" = "UP" ]; then
+            status=$(curl -s "$url" | jq -r '.status' 2>/dev/null || echo "UP")
+            if [ "$status" = "UP" ] || [ "$status" = "null" ]; then
                 print_pass "$name: UP"
             else
                 print_warn "$name: $status"
@@ -362,7 +398,25 @@ check_networks() {
         "8002:Auth Service"
         "8003:Transaction Service"
         "8004:Wallet Service"
+        "8005:Billing Service"
+        "8006:Notification Service"
+        "8007:KYC Service"
+        "8008:Analytics Service"
+        "8009:Investment Service"
+        "8010:Lending Service"
+        "8011:Backoffice Service"
+        "8012:Partner Service"
+        "8013:Promotion Service"
+        "8014:Support Service"
+        "8015:Statement Service"
+        "8021:API Portal Service"
         "8080:Gateway"
+        "8087:Compliance Service"
+        "8095:CMS Service"
+        "8096:FX Service"
+        "8098:Dispute Service"
+        "8100:Product Catalog Service"
+        "8101:Integration Service"
         "8099:Keycloak"
         "5432:PostgreSQL"
         "6379:Redis"

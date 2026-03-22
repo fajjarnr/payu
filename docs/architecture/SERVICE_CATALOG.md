@@ -6,14 +6,13 @@
 
 | Category | Services | Count |
 |----------|----------|-------|
-| **Core Banking** | account, auth, transaction, wallet, investment, lending, fx, statement | 8 |
-| **Operations** | billing, notification, compliance | 3 |
-| **Platform** | gateway, api-portal, cms, ab-testing | 4 |
-| **Support** | support, backoffice, partner, promotion | 4 |
-| **ML/Analytics** | kyc (Python), analytics (Python) | 2 |
-| **Simulators** | bi-fast, dukcapil, qris | 3 |
+| **Core Banking** | account, auth, transaction, wallet, investment, lending, fx, statement, dispute, compliance | 10 |
+| **Operations** | billing, notification, backoffice, support | 4 |
+| **Platform** | gateway, api-portal, cms, partner, promotion, product-catalog, integration | 7 |
+| **Support** | analytics, kyc (Python) | 2 |
+| **Simulators** | bi-fast, dukcapil, qris, va | 4 |
 
-**Total: 25 services (22 microservices + 3 simulators)**
+**Total: 27 services (23 microservices + 4 simulators)**
 
 > **Port Standard**: All services expose port **8080** inside containers. Refer to `infrastructure/local-podman/podman-compose.yml` for host mappings.
 
@@ -126,7 +125,7 @@
 | **Technology** | Java 21, Spring Boot 3.4 |
 | **Database** | PostgreSQL (payu_fx) |
 | **Port** | 8080 (container) |
-| **Responsibilities** | Currency exchange rates, conversion logic |
+| **Responsibilities** | Foreign Exchange Rates & Conversion |
 | **Owner** | Financial Products Team |
 | **Documentation** | [README.md](../../backend/fx-service/README.md) |
 
@@ -138,10 +137,36 @@
 |-----------|-------|
 | **Technology** | Java 21, Spring Boot 3.4 |
 | **Database** | PostgreSQL (payu_statement) |
-| **Port** | 8080 (container) |
-| **Responsibilities** | PDF E-Statement generation & storage |
+| **Port** | 8010 (container) |
+| **Responsibilities** | E-Statement PDF Generation |
 | **Owner** | Core Banking Team |
 | **Documentation** | [README.md](../../backend/statement-service/README.md) |
+
+---
+
+### dispute-service
+
+| Attribute | Value |
+|-----------|-------|
+| **Technology** | Java 21, Spring Boot 3.4 |
+| **Database** | PostgreSQL (payu_dispute) |
+| **Port** | 8080 (container) |
+| **Responsibilities** | Transaction dispute management, chargebacks |
+| **Owner** | Core Banking Team |
+| **Documentation** | [README.md](../../backend/dispute-service/README.md) |
+
+---
+
+### compliance-service
+
+| Attribute | Value |
+|-----------|-------|
+| **Technology** | Java 21, Spring Boot 3.4 |
+| **Database** | PostgreSQL (payu_compliance) |
+| **Port** | 8080 (container) |
+| **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
+| **Owner** | Compliance Team |
+| **Documentation** | [README.md](../../backend/compliance-service/README.md) |
 
 ---
 
@@ -174,16 +199,29 @@
 
 ---
 
-### compliance-service
+### backoffice-service
 
 | Attribute | Value |
 |-----------|-------|
 | **Technology** | Java 21, Spring Boot 3.4 |
-| **Database** | PostgreSQL (payu_compliance) |
+| **Database** | PostgreSQL (payu_backoffice) |
 | **Port** | 8080 (container) |
-| **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
-| **Owner** | Compliance Team |
-| **Documentation** | [README.md](../../backend/compliance-service/README.md) |
+| **Responsibilities** | Internal admin dashboard, audit, user management |
+| **Owner** | Operations Team |
+| **Documentation** | [README.md](../../backend/backoffice-service/README.md) |
+
+---
+
+### support-service
+
+| Attribute | Value |
+|-----------|-------|
+| **Technology** | Java 21, Spring Boot 3.4 |
+| **Database** | PostgreSQL (payu_support) |
+| **Port** | 8080 (container) |
+| **Responsibilities** | Customer support, ticketing, FAQ, chat support |
+| **Owner** | Customer Experience Team |
+| **Documentation** | [README.md](../../backend/support-service/README.md) |
 
 ---
 
@@ -206,7 +244,7 @@
 | Attribute | Value |
 |-----------|-------|
 | **Technology** | Java 21, Quarkus 3.x Native |
-| **Port** | 8080 (container) |
+| **Port** | 8081 (container) |
 | **Responsibilities** | Centralized OpenAPI Docs & Sandbox |
 | **Owner** | Platform Team |
 | **Documentation** | [README.md](../../backend/api-portal-service/README.md) |
@@ -220,37 +258,9 @@
 | **Technology** | Java 21, Spring Boot 3.4 |
 | **Database** | PostgreSQL (payu_cms) |
 | **Port** | 8080 (container) |
-| **Responsibilities** | Banners, Promos, Dynamic App Content |
+| **Responsibilities** | Content Management, Banners, Promos |
 | **Owner** | Platform Team |
 | **Documentation** | [README.md](../../backend/cms-service/README.md) |
-
----
-
-### ab-testing-service
-
-| Attribute | Value |
-|-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
-| **Database** | PostgreSQL (payu_abtesting) |
-| **Port** | 8080 (container) |
-| **Responsibilities** | Feature flags, Experimentation, Variant bucketing |
-| **Owner** | Product Team |
-| **Documentation** | [README.md](../../backend/ab-testing-service/README.md) |
-
----
-
-## 🎧 Support Services
-
-### backoffice-service
-
-| Attribute | Value |
-|-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
-| **Database** | PostgreSQL (payu_backoffice) |
-| **Port** | 8080 (container) |
-| **Responsibilities** | Internal admin dashboard, audit, user management |
-| **Owner** | Operations Team |
-| **Documentation** | [README.md](../../backend/backoffice-service/README.md) |
 
 ---
 
@@ -280,20 +290,32 @@
 
 ---
 
-### support-service
+### product-catalog-service
 
 | Attribute | Value |
 |-----------|-------|
 | **Technology** | Java 21, Spring Boot 3.4 |
-| **Database** | PostgreSQL (payu_support) |
-| **Port** | 8080 (container) |
-| **Responsibilities** | Customer support, ticketing, FAQ, chat support |
-| **Owner** | Customer Experience Team |
-| **Documentation** | [README.md](../../backend/support-service/README.md) |
+| **Database** | PostgreSQL (payu_catalog) |
+| **Port** | 8012 (container) |
+| **Responsibilities** | Banking products & fees catalog |
+| **Owner** | Platform Team |
+| **Documentation** | [README.md](../../backend/product-catalog-service/README.md) |
 
 ---
 
-## 🤖 ML/Analytics Services
+### integration-service
+
+| Attribute | Value |
+|-----------|-------|
+| **Technology** | Java 21, Spring Boot 3.4 |
+| **Port** | 8080 (container) |
+| **Responsibilities** | Legacy system adapter, batch processing reconciliations |
+| **Owner** | Platform Team |
+| **Documentation** | [README.md](../../backend/integration-service/README.md) |
+
+---
+
+## 🎧 Support Services
 
 ### kyc-service
 
@@ -356,6 +378,17 @@
 
 ---
 
+### va-simulator
+
+| Attribute | Value |
+|-----------|-------|
+| **Technology** | Java 21, Quarkus 3.x |
+| **Port** | 8085 (container) |
+| **Responsibilities** | Virtual Account (VA) payment simulation |
+| **Documentation** | [README.md](../../backend/simulators/va-simulator/README.md) |
+
+---
+
 ## 📚 Shared Libraries
 
 | Library | Purpose | Documentation |
@@ -381,4 +414,4 @@
 
 ---
 
-_Last Updated: February 4, 2026_
+_Last Updated: March 22, 2026_

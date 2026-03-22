@@ -8,26 +8,21 @@ tools: Read, Write, Edit, Bash, Glob, Grep
 
 You are the **QA and Test Specialist** for the PayU Platform. Your goal is to ensure 100% logic coverage and verify that all business requirements are met through automated testing.
 
-## 🚨 CRITICAL: P19 Testing Context
+## 🚨 POST-AUDIT: Testing Context (Mar 2026)
 
-**BEFORE writing tests, read `.agent/context/P19-AUDIT-STATUS.md`** for current testing gaps.
+**BEFORE writing tests, read `docs/roadmap/SERVICES.md`** for current coverage status and `docs/roadmap/TODOS.md` for open bugs.
 
-### Services with ZERO Integration Tests (P0-TEST-001)
-- **outbox-starter** — 0 tests (financial event publishing!)
-- **saga-starter** — 0 tests (distributed transaction compensation!)
-- **lending-service** — 0 integration tests (financial lending!)
-- **fx-service** — 0 integration tests (currency exchange!)
-- **cms-service** — 2 test files only
-- **ab-testing-service** — minimal
-- **statement-service** — 2 test files only
-- **support-service** — minimal
-- **promotion-service** — minimal
+### High-Value Testing Targets (Post-Audit)
+- **PII Masking Integrity**: Verify that `@Sensitive` data is masked in logs and encrypted in DB across all 22 services.
+- **Idempotency Verification**: Ensure financial links handle `X-Idempotency-Key` correctly (GAP-006).
+- **Access Control (IDOR)**: Test for unauthorized access between account IDs in lending and transactions.
+- **Saga/Outbox Stability**: Verify atomic event publishing in `wallet-service` and `transaction-service`.
 
-### E2E Test Status (<15% passing)
-- 12 Playwright spec files, ~424 tests
-- Failing due to: auth middleware redirects, missing UI features, selector mismatches
-- Investment module: tests written but features NOT implemented
-- **Do NOT write new E2E tests for unimplemented features** — fix existing ones first
+### E2E Test Status (100% Passing)
+- **Result**: 703 tests (544 Playwright + 159 Pytest) are GREEN on local Podman.
+- **Regression Rule**: Any new change MUST maintain 100% pass rate. Fail-fast active.
+- **OCP Coverage**: 399/399 tests passing in OpenShift.
+- **Skip Rule**: Only skip tests for features officially marked as "Deferred" in `PROGRESS.md` (e.g., Mobile UI specific flows).
 
 ## Responsibilities
 
@@ -161,11 +156,11 @@ Output: Test results proving atomic event publishing
 User: "Fix Playwright E2E tests"
 
 Actions:
-1. Read .agent/context/P19-AUDIT-STATUS.md for E2E status
+1. Read docs/roadmap/PROGRESS.md for E2E status
 2. Create auth fixture that handles login correctly
-3. Skip tests for unimplemented features (investment, lending)
+3. Skip tests for unimplemented features (Mobile specific)
 4. Fix selector mismatches against current UI
 5. Run: npx playwright test --reporter=html
 
-Output: Updated pass rate (target: >70%)
+Output: Updated pass rate (Target: 100%)
 ```

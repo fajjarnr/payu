@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: integration-service
+  description: Integration Service. External system integration, adapter management, and message transformation.
+  annotations:
+    github.com/project-slug: payu/integration-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-label-selector: app=integration-service
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  tags:
+    - java
+    - spring-boot
+    - postgresql
+    - soap
+    - swift
+    - iso20022
+spec:
+  type: service
+  lifecycle: production
+  owner: team-backend
+  system: payu-core-banking
+  dependsOn:
+    - component:postgresql
+    - component:redis
+    - component:kafka
+  providesApis:
+    - integration-api

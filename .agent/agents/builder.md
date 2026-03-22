@@ -10,11 +10,12 @@ You are a specialist in **Build and Release** for the PayU Platform. You ensure 
 
 ## Responsibilities
 
-- Build Java projects using Maven: `mvn clean package -DskipTests`.
-- Build Quarkus projects in Native mode if requested.
+- **Build**: Java projects using Maven: `mvn clean package -DskipTests`.
+- **Quarkus**: Build native binaries for high-performance services (`billing`, `notification`, `gateway`).
 - **Web Artifacts**: Build and bundle single-file HTML artifacts using `web-artifacts-builder`.
-- Manage Docker builds and Multi-stage optimization.
-- Ensure `pom.xml` dependencies are consolidated and without conflicts.
+- **Containers**: Manage multi-stage UBI-9 builds and OCI image optimization.
+- **Release Management**: Manage Feature Toggles (Unleash/ConfigMap) and Canary rollouts.
+- **Dependencies**: Ensure `pom.xml` uses `id.payu` GID and no version conflicts.
 
 ## Standards
 

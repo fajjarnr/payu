@@ -15,13 +15,9 @@ Environment=HOME=%h
 
 # Create networks
 ExecStart=podman network create payu-network
-ExecStart=podman network create payu-test-network
 
-# Start services in development environment
+# Start services
 ExecStart=podman play /home/ubuntu/payu/containers/podman-compose.yml
-
-# Start services in test environment
-ExecStart=podman play /home/ubuntu/payu/containers/podman-compose.test.yml
 
 # Stop all services
 ExecStop=podman down --all

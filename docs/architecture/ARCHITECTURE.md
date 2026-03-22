@@ -8,8 +8,37 @@
 
 1. [Executive Summary](#1-executive-summary)
 2. [System Overview](#2-system-overview)
+   - 2.1 [High-Level Architecture](#21-high-level-architecture)
+   - 2.2 [Design Principles](#22-design-principles)
 3. [Microservices Architecture](#3-microservices-architecture)
-   - 3.4 [Testing Strategy](#35-testing-strategy)
+   - 3.1 [Service Decomposition](#31-service-decomposition)
+   - 3.2 [Service Specifications](#32-service-specifications)
+     - 3.2.1 [Account Service](#321-account-service)
+     - 3.2.2 [Auth Service](#322-auth-service)
+     - 3.2.3 [Transaction Service](#323-transaction-service)
+     - 3.2.4 [Wallet Service](#324-wallet-service)
+     - 3.2.5 [Billing Service](#325-billing-service)
+     - 3.2.6 [Notification Service](#326-notification-service)
+     - 3.2.7 [KYC Service](#327-kyc-service)
+     - 3.2.8 [Analytics Service](#328-analytics-service)
+     - 3.2.9 [Investment Service](#329-investment-service)
+     - 3.2.10 [Lending Service](#3210-lending-service)
+     - 3.2.11 [Backoffice Service](#3211-backoffice-service)
+     - 3.2.12 [Partner Service](#3212-partner-service)
+     - 3.2.13 [Promotion Service](#3213-promotion-service)
+     - 3.2.14 [Support Service](#3214-support-service)
+     - 3.2.15 [Statement Service](#3215-statement-service)
+     - 3.2.16 [API Portal Service](#3216-api-portal-service)
+     - 3.2.17 [Gateway Service](#3217-gateway-service)
+     - 3.2.18 [Compliance Service](#3218-compliance-service)
+     - 3.2.19 [CMS Service](#3219-cms-service)
+     - 3.2.20 [FX Service](#3220-fx-service)
+     - 3.2.21 [Dispute Service](#3221-dispute-service)
+     - 3.2.22 [Product Catalog Service](#3222-product-catalog-service)
+     - 3.2.23 [Integration Service](#3223-integration-service)
+   - 3.3 [Shared Libraries](#33-shared-libraries-common-components)
+   - 3.4 [Service Communication Matrix](#34-service-communication-matrix)
+   - 3.5 [Testing Strategy](#35-testing-strategy)
 4. [Event-Driven Architecture](#4-event-driven-architecture)
 5. [Data Architecture](#5-data-architecture)
 6. [Security Architecture](#6-security-architecture)
@@ -75,7 +104,7 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 │  │ transaction-svc wallet-svc   │     │ promotion-svc   support-svc     │    │
 │  │ investment-svc lending-svc   │     │ compliance-svc  cms-svc         │    │
 │  │ fx-svc  statement-svc        │     │ billing-svc    dispute-svc      │    │
-│  │                              │     │ product-catalog integration-svc │    │
+│  │ product-catalog-svc          │     │ integration-svc                 │    │
 │  └──────────────────────────────┘     └─────────────────────────────────┘    │
 │                                                                              │
 │  NATIVE SERVICES (Quarkus 3.x)         ML/DATA (Python 3.12 UBI)            │
@@ -158,6 +187,7 @@ C4Container
       Container(gateway_svc, "Gateway Service", "Quarkus Native", "Internal API gateway")
       Container(api_portal_svc, "API Portal Service", "Quarkus Native", "OpenAPI docs & sandbox")
       Container(analytics_svc, "Analytics Service", "Python FastAPI", "Fraud scoring, insights")
+      Container(va_sim, "VA Simulator", "Quarkus Native", "Virtual account simulation")
     }
 
     System_Boundary(admin_services, "Admin & Supporting Services") {
@@ -189,6 +219,7 @@ C4Container
   System_Ext(bi_fast, "BI-FAST Simulator", "External transfer network")
   System_Ext(dukcapil, "Dukcapil Simulator", "Identity verification")
   System_Ext(qris, "QRIS Simulator", "QR payment standard")
+  System_Ext(va_sim, "VA Simulator", "Virtual account standard")
   System_Ext(tokobapak, "TokoBapak", "E-commerce partner")
 
   Rel(customer, mobile, "Uses")
@@ -280,41 +311,49 @@ C4Container
 │  Service  │ │  Service  │ │   Service   │ │   Service    │ │   Service   │ │  Service    │
 └───────────┘ └───────────┘ └─────────────┘ └──────────────┘ └─────────────┘ └─────────────┘
 
-> Also includes: Billing Service, Product Catalog Service, Integration Service (not shown for readability)
+                               ┌─────────────────────────────────────┐
+                               │         GATEWAY & INTEGRATION       │
+                               └─────────────────────────────────────┘
+                                              │
+                           ┌──────────────────┴──────────────────┐
+                     ┌─────▼─────┐                         ┌─────▼─────┐
+                     │  Product  │                         │Integration│
+                     │  Catalog  │                         │  Service  │
+                     └───────────┘                         └───────────┘
 ```
 
 ### 3.2 Service Specifications
 
 #### 3.2.1 Account Service
 
-| Attribute            | Value                                           |
-| -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                      |
-| **Database**         | PostgreSQL                                      |
-| **Port**             | 8001                                            |
-| **Responsibilities** | User accounts, multi-pocket, profile management |
+| Attribute            | Value                                                 |
+| -------------------- | ----------------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                            |
+| **Database**         | PostgreSQL                                            |
+| **Port**             | 8001                                                  |
+| **Responsibilities** | User accounts, multi-pocket, profile management       |
 
 ```text
 account-service/
 ├── src/main/java/id/payu/account/
-│   ├── AccountServiceApplication.java
-│   ├── config/                     # Configuration classes
-│   ├── domain/
-│   │   ├── entity/                 # Account, Pocket, Profile
-│   │   ├── event/                  # Domain events
-│   │   ├── repository/             # Repository interfaces
-│   │   └── service/                # Domain services
-│   ├── application/
-│   │   ├── command/                # CQRS commands
-│   │   ├── query/                  # CQRS queries
-│   │   └── saga/                   # Saga participants
-│   ├── infrastructure/
-│   │   ├── persistence/            # JPA implementations
-│   │   ├── messaging/              # Kafka producers/consumers
-│   │   └── external/               # External service clients
-│   └── api/
-│       ├── rest/                   # REST controllers
-│       └── grpc/                   # gRPC services (internal)
+├── AccountServiceApplication.java
+├── config/                     # Configuration classes
+├── domain/
+│   ├── entity/                 # Account, Pocket, Profile
+│   ├── event/                  # Domain events
+│   ├── repository/             # Repository interfaces
+│   └── service/                # Domain services
+├── application/
+│   ├── command/                # CQRS commands
+│   ├── query/                  # CQRS queries
+│   └── saga/                   # Saga participants
+├── infrastructure/
+│   ├── persistence/            # JPA implementations
+│   ├── messaging/              # Kafka producers/consumers
+│   └── external/               # External service clients
+└── api/
+    ├── rest/                   # REST controllers
+    └── grpc/                   # gRPC services (internal)
 └── src/main/resources/
     ├── application.yml
     └── db/migration/               # Flyway migrations
@@ -333,12 +372,12 @@ account-service/
 
 #### 3.2.2 Auth Service
 
-| Attribute            | Value                                           |
-| -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x, Keycloak            |
-| **Database**         | PostgreSQL                                      |
-| **Port**             | 8002                                            |
-| **Responsibilities** | Authentication, MFA, OAuth2, session management |
+| Attribute            | Value                                                 |
+| -------------------- | ----------------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x, Keycloak                  |
+| **Database**         | PostgreSQL                                            |
+| **Port**             | 8002                                                  |
+| **Responsibilities** | Authentication, MFA, OAuth2, session management       |
 
 **Security Features:**
 
@@ -400,13 +439,46 @@ CREATE TABLE ledger_entries (
 
 ---
 
-#### 3.2.5 KYC Service
+#### 3.2.5 Billing Service
+
+| Attribute            | Value                                               |
+| -------------------- | --------------------------------------------------- |
+| **Technology**       | Java 21, Quarkus 3.x (Native)                       |
+| **Database**         | PostgreSQL                                          |
+| **Port**             | 8005                                                |
+| **Responsibilities** | Bill payments (PLN, PDAM, BPJS), wallet integration |
+
+---
+
+#### 3.2.6 Notification Service
+
+| Attribute            | Value                                                 |
+| -------------------- | ----------------------------------------------------- |
+| **Technology**       | Java 21, Quarkus 3.x (Native)                         |
+| **Database**         | PostgreSQL                                            |
+| **Cache**            | Red Hat Data Grid (RESP mode)                         |
+| **Messaging**        | AMQ Broker (AMQP 1.0)                                 |
+| **Port**             | 8006                                                  |
+| **Responsibilities** | Push notifications, SMS, Email, in-app messages       |
+
+**Notification Channels:**
+
+| Channel  | Provider       | Use Case              |
+| -------- | -------------- | --------------------- |
+| Push     | Firebase FCM   | Real-time alerts      |
+| SMS      | Twilio / Local | OTP, critical alerts  |
+| Email    | SendGrid       | Statements, marketing |
+| WhatsApp | Meta Business  | Customer support      |
+
+---
+
+#### 3.2.7 KYC Service
 
 | Attribute            | Value                                                |
 | -------------------- | ---------------------------------------------------- |
 | **Technology**       | Python 3.12, FastAPI (UBI-based)                     |
 | **Database**         | PostgreSQL (JSONB)                                   |
-| **Port**             | 8005                                                 |
+| **Port**             | 8007                                                 |
 | **Responsibilities** | eKYC, OCR, liveness detection, Dukcapil verification |
 
 **ML Pipeline:**
@@ -426,144 +498,181 @@ CREATE TABLE ledger_entries (
 
 ---
 
-#### 3.2.6 Notification Service
+#### 3.2.8 Analytics Service
 
-| Attribute            | Value                                           |
-| -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Quarkus 3.x (Native)                   |
-| **Database**         | PostgreSQL                                      |
-| **Cache**            | Red Hat Data Grid (RESP mode)                   |
-| **Messaging**        | AMQ Broker (AMQP 1.0)                           |
-| **Port**             | 8006                                            |
-| **Responsibilities** | Push notifications, SMS, Email, in-app messages |
-
-**Notification Channels:**
-
-| Channel  | Provider       | Use Case              |
-| -------- | -------------- | --------------------- |
-| Push     | Firebase FCM   | Real-time alerts      |
-| SMS      | Twilio / Local | OTP, critical alerts  |
-| Email    | SendGrid       | Statements, marketing |
-| WhatsApp | Meta Business  | Customer support      |
+| Attribute            | Value                                             |
+| -------------------- | ------------------------------------------------- |
+| **Technology**       | Python 3.12, FastAPI (UBI-based)                  |
+| **Database**         | TimescaleDB                                       |
+| **Port**             | 8008                                              |
+| **Responsibilities** | Fraud scoring, user insights, time-series metrics |
 
 ---
 
-#### 3.2.7 Investment Service
+#### 3.2.9 Investment Service
 
 | Attribute            | Value                                               |
 | -------------------- | --------------------------------------------------- |
 | **Technology**       | Java 21, Spring Boot 3.4.x                          |
 | **Database**         | PostgreSQL                                          |
-| **Port**             | 8007                                                |
+| **Port**             | 8009                                                |
 | **Responsibilities** | Mutual funds, Gold investment, Portfolio management |
 
-#### 3.2.8 Lending Service
+---
+
+#### 3.2.10 Lending Service
 
 | Attribute            | Value                                       |
 | -------------------- | ------------------------------------------- |
 | **Technology**       | Java 21, Spring Boot 3.4.x                  |
 | **Database**         | PostgreSQL                                  |
-| **Port**             | 8008                                        |
+| **Port**             | 8010                                        |
 | **Responsibilities** | Loans, PayLater, Credit scoring integration |
 
-#### 3.2.9 FX Service
+---
 
-| Attribute            | Value                                     |
-| -------------------- | ----------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                |
-| **Database**         | PostgreSQL                                |
-| **Port**             | 8009                                      |
-| **Responsibilities** | Currency exchange rates, conversion logic |
-
-#### 3.2.10 Statement Service
-
-| Attribute            | Value                                |
-| -------------------- | ------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 3.4.x           |
-| **Database**         | PostgreSQL                           |
-| **Port**             | 8010                                 |
-| **Responsibilities** | PDF E-Statement generation & storage |
-
-#### 3.2.11 CMS Service
-
-| Attribute            | Value                                |
-| -------------------- | ------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 3.4.x           |
-| **Database**         | PostgreSQL                           |
-| **Port**             | 8011                                 |
-| **Responsibilities** | Banners, Promos, Dynamic App Content |
-
-#### 3.2.12 Dispute Service _(added Feb 2026, replacing removed ab-testing-service)_
-
-| Attribute            | Value                                                  |
-| -------------------- | ------------------------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 3.4.x                             |
-| **Database**         | PostgreSQL                                             |
-| **Port**             | 8020                                                   |
-| **Responsibilities** | Refund processing, dispute resolution, chargeback mgmt |
-
-#### 3.2.18 Product Catalog Service _(added Feb 2026)_
-
-| Attribute            | Value                                        |
-| -------------------- | -------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                   |
-| **Database**         | PostgreSQL                                   |
-| **Port**             | 8021                                         |
-| **Responsibilities** | Partner product registry, catalog management |
-
-#### 3.2.19 Integration Service _(added Mar 2026)_
-
-| Attribute            | Value                                           |
-| -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 3.4.x                      |
-| **Database**         | PostgreSQL                                      |
-| **Port**             | 8022                                            |
-| **Responsibilities** | External system integration, adapter management |
-
-#### 3.2.13 Backoffice Service
+#### 3.2.11 Backoffice Service
 
 | Attribute            | Value                                            |
 | -------------------- | ------------------------------------------------ |
 | **Technology**       | Java 21, Spring Boot 3.4.x                       |
 | **Database**         | PostgreSQL                                       |
-| **Port**             | 8013                                             |
+| **Port**             | 8011                                             |
 | **Responsibilities** | Internal admin dashboard, audit, user management |
 
-#### 3.2.14 Partner Service
+---
+
+#### 3.2.12 Partner Service
 
 | Attribute            | Value                                             |
 | -------------------- | ------------------------------------------------- |
 | **Technology**       | Java 21, Spring Boot 3.4.x                        |
 | **Database**         | PostgreSQL                                        |
-| **Port**             | 8014                                              |
+| **Port**             | 8012                                              |
 | **Responsibilities** | Partner integration, API key management, webhooks |
 
-#### 3.2.15 Promotion Service
+---
+
+#### 3.2.13 Promotion Service
 
 | Attribute            | Value                                        |
 | -------------------- | -------------------------------------------- |
 | **Technology**       | Java 21, Spring Boot 3.4.x                   |
 | **Database**         | PostgreSQL                                   |
-| **Port**             | 8015                                         |
+| **Port**             | 8013                                         |
 | **Responsibilities** | Promo campaigns, vouchers, rewards, cashback |
 
-#### 3.2.16 Support Service
+---
+
+#### 3.2.14 Support Service
 
 | Attribute            | Value                                          |
 | -------------------- | ---------------------------------------------- |
 | **Technology**       | Java 21, Spring Boot 3.4.x                     |
 | **Database**         | PostgreSQL                                     |
-| **Port**             | 8016                                           |
+| **Port**             | 8014                                           |
 | **Responsibilities** | Customer support, ticketing, FAQ, chat support |
 
-#### 3.2.17 Compliance Service
+---
+
+#### 3.2.15 Statement Service
+
+| Attribute            | Value                                |
+| -------------------- | ------------------------------------ |
+| **Technology**       | Java 21, Spring Boot 3.4.x           |
+| **Database**         | PostgreSQL                           |
+| **Port**             | 8015                                 |
+| **Responsibilities** | PDF E-Statement generation & storage |
+
+---
+
+#### 3.2.16 API Portal Service
+
+| Attribute            | Value                                              |
+| -------------------- | -------------------------------------------------- |
+| **Technology**       | Java 21, Quarkus 3.x (Native)                      |
+| **Database**         | PostgreSQL                                         |
+| **Port**             | 8021                                               |
+| **Responsibilities** | Centralized OpenAPI Docs & Sandbox, partner portal |
+
+---
+
+#### 3.2.17 Gateway Service
+
+| Attribute            | Value                                               |
+| -------------------- | --------------------------------------------------- |
+| **Technology**       | Java 21, Quarkus 3.x (Native)                       |
+| **Database**         | PostgreSQL                                          |
+| **Port**             | 8080                                                |
+| **Responsibilities** | API Gateway, Routing, Rate Limiting, Authentication |
+
+---
+
+#### 3.2.18 Compliance Service
 
 | Attribute            | Value                                                 |
 | -------------------- | ----------------------------------------------------- |
 | **Technology**       | Java 21, Spring Boot 3.4.x                            |
 | **Database**         | PostgreSQL                                            |
-| **Port**             | 8017                                                  |
+| **Port**             | 8087                                                  |
 | **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
+
+---
+
+#### 3.2.19 CMS Service
+
+| Attribute            | Value                                |
+| -------------------- | ------------------------------------ |
+| **Technology**       | Java 21, Spring Boot 3.4.x           |
+| **Database**         | PostgreSQL                           |
+| **Port**             | 8095                                 |
+| **Responsibilities** | Banners, Promos, Dynamic App Content |
+
+---
+
+#### 3.2.20 FX Service
+
+| Attribute            | Value                                     |
+| -------------------- | ----------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                |
+| **Database**         | PostgreSQL                                |
+| **Port**             | 8096                                      |
+| **Responsibilities** | Currency exchange rates, conversion logic |
+
+---
+
+#### 3.2.21 Dispute Service
+
+| Attribute            | Value                                                  |
+| -------------------- | ------------------------------------------------------ |
+| **Technology**       | Java 21, Spring Boot 3.4.x                             |
+| **Database**         | PostgreSQL                                             |
+| **Port**             | 8098                                                   |
+| **Responsibilities** | Refund processing, dispute resolution, chargeback mgmt |
+
+---
+
+#### 3.2.22 Product Catalog Service
+
+| Attribute            | Value                                        |
+| -------------------- | -------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                   |
+| **Database**         | PostgreSQL                                   |
+| **Port**             | 8100                                         |
+| **Responsibilities** | Partner product registry, catalog management |
+
+---
+
+#### 3.2.23 Integration Service
+
+| Attribute            | Value                                                 |
+| -------------------- | ----------------------------------------------------- |
+| **Technology**       | Java 21, Spring Boot 3.4.x                            |
+| **Database**         | PostgreSQL                                            |
+| **Port**             | 8101                                                  |
+| **Responsibilities** | External system integration, adapter management       |
+
+---
 
 ### 3.3 Shared Libraries (Common Components)
 
@@ -1610,102 +1719,6 @@ C4Container
   Rel(api_gateway, partner_svc, "Routes to")
 ```
 
----
-
-## 12. Disaster Recovery & High Availability
-
-### 12.1 Multi-AZ Deployment
-
-### 12.2 Recovery Objectives
-
-| Metric                             | Target                           |
-| ---------------------------------- | -------------------------------- |
-| **RTO** (Recovery Time Objective)  | < 15 minutes                     |
-| **RPO** (Recovery Point Objective) | < 1 minute                       |
-| **Backup Frequency**               | Continuous + Daily snapshots     |
-| **Backup Retention**               | 30 days (7 years for compliance) |
-
-### 12.3 Backup Strategy
-
-| Data Type      | Backup Method            | Frequency  | Retention        |
-| -------------- | ------------------------ | ---------- | ---------------- |
-| PostgreSQL     | RDS Automated            | Continuous | 7 days           |
-| PostgreSQL     | Manual Snapshots         | Weekly     | 1 year           |
-| Data Grid      | Cluster backup           | Daily      | 7 days           |
-| Kafka          | Log retention            | Continuous | 7 days           |
-| S3 (Documents) | Cross-region replication | Real-time  | Compliance-based |
-
----
-
-## 13. External Service Simulators
-
-> For lab/development environment, external banking integrations use simulators.
-
-### 13.1 BI-FAST Simulator
-
-```text
-bi-fast-simulator (Quarkus Native)
-├── POST /api/v1/inquiry          → Account inquiry (name, bank)
-├── POST /api/v1/transfer         → Initiate transfer
-├── GET  /api/v1/status/{ref}     → Check transfer status
-└── POST /webhook/callback        → Async notification
-
-Features:
-• Configurable network latency (50-500ms)
-• Random failure simulation (5% default)
-• Test bank accounts database
-• Webhook callback simulation
-```
-
-**Test Bank Accounts:**
-
-| Bank Code | Account Number | Name         | Status  |
-| --------- | -------------- | ------------ | ------- |
-| BCA       | 1234567890     | John Doe     | Active  |
-| BRI       | 0987654321     | Jane Doe     | Active  |
-| MANDIRI   | 1111222233     | Test Blocked | Blocked |
-| BNI       | 9999888877     | Test Timeout | Timeout |
-
-### 13.2 Dukcapil Simulator
-
-```text
-dukcapil-simulator (Quarkus Native)
-├── POST /api/v1/verify           → NIK verification
-├── POST /api/v1/match-photo      → Face matching (KTP vs Selfie)
-└── GET  /api/v1/nik/{nik}        → Get citizen data
-
-Features:
-• Test NIK database (valid/invalid)
-• Configurable match scores (0-100%)
-• Various error scenarios
-• Photo similarity simulation
-```
-
-**Test NIK Database:**
-
-| NIK              | Name         | Status  | Match Score |
-| ---------------- | ------------ | ------- | ----------- |
-| 3201234567890001 | JOHN DOE     | Valid   | 95%         |
-| 3201234567890002 | JANE DOE     | Valid   | 88%         |
-| 3201234567890003 | BLOCKED USER | Blocked | N/A         |
-| 3299999999999999 | INVALID NIK  | Invalid | N/A         |
-
-### 13.3 QRIS Simulator
-
-```text
-qris-simulator (Quarkus Native)
-├── POST /api/v1/generate         → Generate QR code
-├── POST /api/v1/pay              → Simulate payment
-├── GET  /api/v1/status/{id}      → Check payment status
-└── POST /webhook/callback        → Payment notification
-
-Features:
-• QR code generation (PNG/Base64)
-• Payment simulation with configurable delay
-• Expiry handling (5 min default)
-• Multiple merchant simulation
-```
-
 ### 11.2 Technology Stack
 
 | Platform             | Technology                          | Purpose          | Directory                  |
@@ -1745,6 +1758,130 @@ Testing Native Features (5% of time):
 │    $ eas build --platform android       │
 │    → Download APK, install on device    │
 └─────────────────────────────────────────┘
+```
+
+---
+
+## 12. Disaster Recovery & High Availability
+
+### 12.1 Multi-AZ Deployment
+
+### 12.2 Recovery Objectives
+
+| Metric                             | Target                           |
+| ---------------------------------- | -------------------------------- |
+| **RTO** (Recovery Time Objective)  | < 15 minutes                     |
+| **RPO** (Recovery Point Objective) | < 1 minute                       |
+| **Backup Frequency**               | Continuous + Daily snapshots     |
+| **Backup Retention**               | 30 days (7 years for compliance) |
+
+### 12.3 Backup Strategy
+
+| Data Type      | Backup Method            | Frequency  | Retention        |
+| -------------- | ------------------------ | ---------- | ---------------- |
+| PostgreSQL     | RDS Automated            | Continuous | 7 days           |
+| PostgreSQL     | Manual Snapshots         | Weekly     | 1 year           |
+| Data Grid      | Cluster backup           | Daily      | 7 days           |
+| Kafka          | Log retention            | Continuous | 7 days           |
+| S3 (Documents) | Cross-region replication | Real-time  | Compliance-based |
+
+---
+
+## 13. External Service Simulators
+
+> For lab/development environment, external banking integrations use simulators.
+
+### 13.1 BI-FAST Simulator (8090)
+
+```text
+bi-fast-simulator (Quarkus Native)
+├── POST /api/v1/inquiry          → Account inquiry (name, bank)
+├── POST /api/v1/transfer         → Initiate transfer
+├── GET  /api/v1/status/{ref}     → Check transfer status
+└── POST /webhook/callback        → Async notification
+
+Features:
+• Configurable network latency (50-500ms)
+• Random failure simulation (5% default)
+• Test bank accounts database
+• Webhook callback simulation
+```
+
+**Test Bank Accounts:**
+
+| Bank Code | Account Number | Name         | Status  |
+| --------- | -------------- | ------------ | ------- |
+| BCA       | 1234567890     | John Doe     | Active  |
+| BRI       | 0987654321     | Jane Doe     | Active  |
+| MANDIRI   | 1111222233     | Test Blocked | Blocked |
+| BNI       | 9999888877     | Test Timeout | Timeout |
+
+### 13.2 Dukcapil Simulator (8091)
+
+```text
+dukcapil-simulator (Quarkus Native)
+├── POST /api/v1/verify           → NIK verification
+├── POST /api/v1/match-photo      → Face matching (KTP vs Selfie)
+└── GET  /api/v1/nik/{nik}        → Get citizen data
+
+Features:
+• Test NIK database (valid/invalid)
+• Configurable match scores (0-100%)
+• Various error scenarios
+• Photo similarity simulation
+```
+
+**Test NIK Database:**
+
+| NIK              | Name         | Status  | Match Score |
+| ---------------- | ------------ | ------- | ----------- |
+| 3201234567890001 | JOHN DOE     | Valid   | 95%         |
+| 3201234567890002 | JANE DOE     | Valid   | 88%         |
+| 3201234567890003 | BLOCKED USER | Blocked | N/A         |
+| 3299999999999999 | INVALID NIK  | Invalid | N/A         |
+
+### 13.3 QRIS Simulator (8092)
+
+```text
+qris-simulator (Quarkus Native)
+├── POST /api/v1/generate         → Generate QR code
+├── POST /api/v1/pay              → Simulate payment
+├── GET  /api/v1/status/{id}      → Check payment status
+└── POST /webhook/callback        → Payment notification
+
+Features:
+• QR code generation (PNG/Base64)
+• Payment simulation with configurable delay
+• Expiry handling (5 min default)
+• Multiple merchant simulation
+```
+
+### 13.4 Biller Simulator (8093)
+
+```text
+biller-simulator (Quarkus Native)
+├── POST /api/v1/billers/inquiry  → Bill inquiry (PLN/PDAM)
+├── POST /api/v1/billers/payment  → Execute bill payment
+└── GET  /api/v1/billers/status   → Check payment status
+
+Features:
+• Support for PLN, PDAM, Telco, and E-wallet
+• Mock responses for various biller scenarios
+• Transaction history and reconciliation simulator
+```
+
+### 13.5 VA Simulator (8085)
+
+```text
+va-simulator (Quarkus Native)
+├── POST /api/v1/generate         → Create virtual account
+├── POST /api/v1/payment          → Simulate VA payment
+└── GET  /api/v1/status/{va}      → Check VA status
+
+Features:
+• Dynamic VA generation
+• Payment lifecycle simulation
+• Real-time status updates
 ```
 
 ---
@@ -1809,6 +1946,7 @@ Testing Native Features (5% of time):
 | **BI-FAST**           | Simulator (Quarkus) | Self-built          |
 | **Dukcapil**          | Simulator (Quarkus) | Self-built          |
 | **QRIS**              | Simulator + Sandbox | Self-built + Xendit |
+| **VA Simulator**      | Simulator (Quarkus) | Self-built          |
 | **SMS OTP**           | Telesign (500 free) | telesign.com        |
 | **Push Notification** | Firebase FCM        | Free unlimited      |
 
@@ -1878,10 +2016,13 @@ Phase 6: Additional Services
 ├── 4. support-service (customer support)
 └── 5. compliance-service (regulatory, AML)
 
-Phase 7: Integration (Later)
+Phase 7: Integration
 ├── 1. TokoBapak Partner API
 ├── 2. Real BI-FAST integration
-└── 3. Real QRIS integration
+├── 3. Real QRIS integration
+├── 4. Dispute Service implementation
+├── 5. Product Catalog Service implementation
+└── 6. Integration Service implementation
 ```
 
 ---
@@ -1928,7 +2069,7 @@ Phase 7: Integration (Later)
 
 ---
 
-**Document Version**: 3.0
-**Last Updated**: March 2026
+**Document Version**: 3.0.0
+**Last Updated**: March 22, 2026
 **Owner**: Engineering Team PayU
-**Status**: Production-Ready (22 services deployed on OpenShift)
+**Status**: Production-Ready (23 services deployed on OpenShift)

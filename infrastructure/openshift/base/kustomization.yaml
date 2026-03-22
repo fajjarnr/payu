@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   # Services
-  - ab-testing-service.yaml
   - account-service.yaml
   - analytics-service.yaml
   - api-portal-service.yaml

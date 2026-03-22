@@ -94,9 +94,9 @@ backup_kafka() {
     fi
 }
 
-# Backup Docker Compose configuration
+# Backup compose configuration
 backup_config() {
-    local backup_file="${BACKUP_ROOT}/config/docker-compose_${TIMESTAMP}.yml"
+    local backup_file="${BACKUP_ROOT}/config/podman-compose_${TIMESTAMP}.yml"
 
     log "INFO" "=========================================="
     log "INFO" "Starting Configuration Backup"
@@ -104,9 +104,8 @@ backup_config() {
 
     mkdir -p "${BACKUP_ROOT}/config"
 
-    # Backup docker-compose files
-    cp "${SCRIPT_DIR}/../docker-compose.yml" "${backup_file}"
-    cp "${SCRIPT_DIR}/../docker-compose.test.yml" "${BACKUP_ROOT}/config/docker-compose.test_${TIMESTAMP}.yml"
+    # Backup docker-compose file
+    cp "${SCRIPT_DIR}/../infrastructure/local-podman/podman-compose.yml" "${backup_file}" 2>/dev/null || true
 
     # Backup .env files if they exist
     if [[ -f "${SCRIPT_DIR}/../.env" ]]; then

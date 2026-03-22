@@ -233,14 +233,40 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ab-testing-service-pdb
+  name: dispute-service-pdb
   labels:
-    app: ab-testing-service
+    app: dispute-service
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: ab-testing-service
+      app: dispute-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: product-catalog-service-pdb
+  labels:
+    app: product-catalog-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: product-catalog-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: integration-service-pdb
+  labels:
+    app: integration-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: integration-service
 
 ---
 apiVersion: policy/v1

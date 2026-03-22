@@ -74,7 +74,7 @@ Berikut adalah fitur yang **belum ada sama sekali** tapi wajib untuk payment gat
 | ID          | Gap                                     | Detail                                                                                                                                                                                                                                              | Relevan Untuk                                                                                                                                                  |
 | :---------- | :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ~~GAP-001~~ | ✅ **Outbound Webhook**                 | ~~PayU harus bisa notify partner saat transaksi selesai/gagal.~~ **COMPLETED Mar 16**: Created `FinancialEventConsumer` in partner-service — multi-topic Kafka consumer (20 financial + 5 escrow topics) routing events to `WebhookDispatcherService` with HMAC-SHA256 signed delivery. Refactored `SubscriptionEventConsumer` for StringDeserializer compatibility. | TokoBapak (payment confirmation), Nobar (subscription activated), Dolan (booking confirmed/cancelled), Sinau (enrollment confirmed), Maca (purchase delivered) |
-| ~~GAP-002~~ | ✅ **Multi-Tenancy**                    | ~~`partner-service` menyimpan partner tapi tidak ada data isolation.~~ **COMPLETED Mar 16**: Added `@TenantAware` + `TenantEntityListener` + `tenantId` column to 22 entities across 4 services (transaction: 8, lending: 7, dispute: 3, billing: 4). Flyway migrations for all tables. Gateway `TenantFilter` updated with `X-Partner-Id` fallback. | Semua project client                                                                                                                                           |
+| ~~GAP-002~~ | ✅ **Multi-Tenancy**                    | ~~`partner-service` menyimpan partner tapi tidak ada data isolation.~~ **COMPLETED Mar 16**: Added `@TenantAware` + `TenantEntityListener` + `tenantId` column across 23 microservices. Flyway migrations for all tables. Gateway `TenantFilter` updated with `X-Partner-Id` fallback. | Semua project client                                                                                                                                           |
 | ~~GAP-006~~ | ✅ **Idempotency Global**               | ~~Semua payment endpoint harus support `X-Idempotency-Key`.~~ **COMPLETED Mar 16**: `@Idempotent(required=true)` annotations added to 48 financial endpoints across 5 services (lending, fx, dispute, transaction, wallet). Gateway `IdempotencyFilter` FINANCIAL_PATHS expanded from 9 to 28. | Semua financial endpoints                                                                                                                                      |
 | ~~GAP-007~~ | ✅ **Escrow / Payment Holding Enhanced** | ~~Escrow mechanism sudah ada di wallet-service.~~ **COMPLETED Mar 16**: Added Kafka event publishing for escrow state changes (held/released/settled/refunded/expired) via transactional outbox pattern. `WalletEventPublisherPort` extended with 5 escrow event methods. `FinancialEventConsumer` listens to 5 escrow topics for webhook delivery. | TokoBapak, Dolan                                                                                                                                               |
 | ~~GAP-008~~ | ✅ **Recurring / Subscription Billing** | ~~Nobar: auto-debit streaming bulanan.~~ **COMPLETED Feb 28**: Subscription event webhooks dengan `SubscriptionEventAdapter`, event types: `subscription.created`, `subscription.renewed`, `subscription.cancelled`, `subscription.payment_failed`. | Nobar, Sinau, Maca                                                                                                                                             |
@@ -121,7 +121,7 @@ Yang sudah ada dan relevan untuk payment gateway:
 
 ## 🏗️ Target Integration Architecture
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────┐
 │                    PROJECT CLIENT ECOSYSTEM                      │
 ├──────────┬──────────┬──────────┬──────────┬─────────────────────┤
@@ -220,7 +220,7 @@ Yang sudah ada dan relevan untuk payment gateway:
 ### Phase 6: Developer Hub & Platform Maturity ✅ COMPLETED
 
 - [x] ~~Implement IMP-021 — Deploy Red Hat Developer Hub~~ ✅ Mar 02 — RHDH manifests in `infrastructure/backstage/`
-- [x] ~~Implement IMP-022 — `catalog-info.yaml` untuk 22 services~~ ✅ Mar 01
+- [x] ~~Implement IMP-022 — `catalog-info.yaml` untuk 23 services~~ ✅ Mar 22
 - [x] ~~Implement IMP-023 — OpenAPI coverage 80%+~~ ✅ Mar 01 — Annotations on gateway, account, partner, transaction, wallet
 - [x] ~~Implement IMP-024 — Backstage software template~~ ✅ Mar 01 — `.agent/resources/templates/payu-microservice-template/`
 - [x] ~~Implement IMP-025 — TechDocs integration~~ ✅ Mar 01 — `mkdocs.yml` with Material theme

@@ -3,10 +3,10 @@
 Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestrasi **Agents** (Dedicated execution units) untuk mencapai efisiensi maksimal dalam siklus pengembangan PayU.
 
 > **Note**: Setelah konsolidasi Januari 2026, PayU memiliki **17 Skills** yang terintegrasi.
-> 
-> **🚨 P19 AUDIT (Feb 2026)**: Production Readiness **48/100** — 5 P0 blockers.
-> **ALWAYS read `.agent/context/P19-AUDIT-STATUS.md` FIRST** before any development work.
-> Fix instructions: `docs/guides/REMEDIATION_PLAYBOOK.md` | Remediation workflow: `.agent/workflows/p19-remediation.md`
+> **🚨 POST-AUDIT STATUS (Mar 2026)**: Phase 1–12 Complete (Readiness 100%).
+> **CURRENT FOCUS**: Post-Audit Deep Remediation (56 Open Bugs per Mar 2026).
+> **Technical Inventory**: `docs/roadmap/SERVICES.md` | Actionable items: `docs/roadmap/TODOS.md`
+> Fix instructions: `docs/guides/LESSONS.md` | Remediation workflow: `.agent/workflows/p19-remediation.md`
 
 ## 🏗️ Core Mapping Strategy
 
@@ -42,22 +42,22 @@ Dokumen ini memetakan bagaimana **Skills** (High-level capabilities) mengorkestr
 
 Berdasarkan `antigravity-lifecycle`, berikut adalah bagaimana kolaborasi terjadi:
 
-1. **Fase Plan**: `@lifecycle-manager` merancang rencana implementasi.
-2. **Fase Build**:
-   - `@logic-builder` menulis fungsionalitas kode.
-   - `@tester` menulis unit tests secara paralel.
-   - `@migrator` menangani perubahan skema database.
-   - `@builder` memastikan kode dapat di-compile dan di-package.
-3. **Fase Verify**:
-   - `@tester` menjalankan seluruh suite testing (Unit, Integration).
-   - `@auditor` melakukan penilaian keamanan dan kualitas kode.
-4. **Fase Sign-off**: `@orchestrator` menangani PR dan integrasi git.
+1.  **Fase Plan**: `@lifecycle-manager` merancang rencana implementasi.
+2.  **Fase Build**:
+    -   `@logic-builder` menulis fungsionalitas kode.
+    -   `@tester` menulis unit tests secara paralel.
+    -   `@migrator` menangani perubahan skema database.
+    -   `@builder` memastikan kode dapat di-compile dan di-package.
+3.  **Fase Verify**:
+    -   `@tester` menjalankan seluruh suite testing (Unit, Integration).
+    -   `@auditor` melakukan penilaian keamanan dan kualitas kode.
+4.  **Fase Sign-off**: `@orchestrator` menangani PR dan integrasi git.
 
 ## 🛡️ Guardrails
 
-- **Single Responsibility**: Setiap agen hanya memiliki satu tujuan spesifik.
-- **Context Isolation**: Penggunaan agen mengisolasi context eksekusi.
-- **Unattended Execution**: Agents dirancang untuk berjalan secara mandiri.
+-   **Single Responsibility**: Setiap agen hanya memiliki satu tujuan spesifik.
+-   **Context Isolation**: Penggunaan agen mengisolasi context eksekusi.
+-   **Unattended Execution**: Agents dirancang untuk berjalan secara mandiri.
 
 ---
 
@@ -82,33 +82,31 @@ Skills now support **Implicit Context Loading** via the `requires: [...]` direct
 
 Untuk mencapai kecepatan ekstrim, asisten AI harus menjalankan agen secara paralel ketika menangani tugas yang melibatkan banyak skill:
 
-1. **Parallel Dispatching**: Jika tugas melibatkan Frontend (`@frontend-architect`) dan Backend (`@core-banking-engineer`), aktifkan `@styler` and `@logic-builder` secara bersamaan (Swarm Mode).
-2. **Skill-to-Agent Handshake**:
-   - Jika `@frontend-architect` butuh visualisasi data, delegasikan ke `@web-artifacts-builder` -> `@builder`.
-   - Jika pengembangan fitur butuh presentasi, delegasikan ke `@dx-engineer` -> `@styler`.
-3. **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama.
+1.  **Parallel Dispatching**: Jika tugas melibatkan Frontend (`@frontend-architect`) dan Backend (`@core-banking-engineer`), aktifkan `@styler` and `@logic-builder` secara bersamaan (Swarm Mode).
+2.  **Skill-to-Agent Handshake**:
+    -   Jika `@frontend-architect` butuh visualisasi data, delegasikan ke `@web-artifacts-builder` -> `@builder`.
+    -   Jika pengembangan fitur butuh presentasi, delegasikan ke `@dx-engineer` -> `@styler`.
+3.  **Automated Interconnect**: Asisten wajib secara proaktif memanggil agen spesialis jika instruksi mencakup area yang di luar tanggung jawab agen utama.
 
 ---
 
-## 🔧 P19 Remediation Orchestration (Feb 2026 Priority)
+## 🔧 Post-Audit Remediation Orchestration (Mar 2026 Priority)
 
-Untuk membawa platform dari 48% → 80%, gunakan alur ini:
+Platform has completed Phase 1–12. Current priority is closing the 56 findings from the March 21 Deep Audit:
 
-| Phase | Remedy | Agents | SP |
+| Phase | Action | Agents | Priority |
 |:------|:-------|:-------|:---|
-| **P0 Sprint 1** | R-001: JWT BFF | `@frontend-architect` + `@cybersecurity-architect` | 8 |
-| **P0 Sprint 1** | R-002: Outbox integration | `@integration-architect` + `@core-banking-engineer` | 5 |
-| **P0 Sprint 1** | R-003: Credential cleanup | `@cybersecurity-architect` + `@platform-engineer` | 3 |
-| **P0 Sprint 1** | R-004: Starter tests | `@tester` | 5 |
-| **P0 Sprint 1** | R-005: Port conflict | `@platform-engineer` | 1 |
-| **P0 Sprint 1** | R-006: Starter integration | `@core-banking-engineer` | 3 |
-| **P1 Sprint 2-3** | R-007: Quarkus security | `@core-banking-engineer` + `@cybersecurity-architect` | 8 |
-| **P1 Sprint 2-3** | R-008: Hexagonal refactor | `@core-banking-engineer` + `@scaffolding-expert` | 13 |
-| **P1 Sprint 2-3** | R-009: Fix E2E tests | `@tester` + `@frontend-architect` | 8 |
-| **P2 Sprint 4** | R-013: Load tests | `@tester` | 8 |
-| **P2 Sprint 4** | R-014: Contract tests | `@tester` | 5 |
+| **Remediation** | PII Masking in Backoffice | `@core-banking-engineer` + `@cybersecurity-architect` | P1 |
+| **Remediation** | IDOR/Access Control Fixes | `@api-architect` + `@cybersecurity-architect` | P0 |
+| **Remediation** | Account Lockout Bypass | `@core-banking-engineer` + `@lifecycle-manager` | P1 |
+| **Verification**| E2E Regression (703 tests) | `@tester` | Constant |
+
+**Status Tracking**:
+- Technical Status: `docs/roadmap/SERVICES.md`
+- Roadmap Progress: `docs/roadmap/PROGRESS.md`
+- Bug Backlog: `docs/roadmap/TODOS.md`
 
 **Full workflow**: See `.agent/workflows/p19-remediation.md`
 
 ---
-*Last Updated: February 2026 (v3.1.0 - P19 Audit Integration)*
+*Last Updated: March 2026 (v3.2.1 - Post-Audit Integration)*

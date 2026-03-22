@@ -29,16 +29,31 @@ print_warning() {
     echo -e "${YELLOW}⚠${NC} $1"
 }
 
-# Check if test environment is running
+# Determine container CLI (podman or docker)
+if command -v podman > /dev/null 2>&1; then
+    CONTAINER_CLI="podman"
+else
+    CONTAINER_CLI="docker"
+fi
+
+if command -v podman-compose > /dev/null 2>&1; then
+    COMPOSE_CMD="podman-compose -f infrastructure/local-podman/podman-compose.yml"
+elif podman compose version > /dev/null 2>&1; then
+    COMPOSE_CMD="podman compose -f infrastructure/local-podman/podman-compose.yml"
+else
+    COMPOSE_CMD="docker compose -f infrastructure/local-podman/podman-compose.yml"
+fi
+
+# Check if environment is running
 echo ""
-echo "Checking test environment..."
-if ! docker ps | grep -q "payu-postgres-test"; then
-    echo "Test environment not running. Starting..."
-    docker compose -f docker-compose.test.yml up -d postgres-test redis-test
+echo "Checking environment..."
+if ! $CONTAINER_CLI ps | grep -q "payu-postgres"; then
+    echo "Environment not running. Starting..."
+    $COMPOSE_CMD up -d postgres redis
     sleep 10
 fi
 
-POSTGRES_CMD="docker exec payu-postgres-test psql -U payu_test"
+POSTGRES_CMD="$CONTAINER_CLI exec payu-postgres psql -U payu"
 
 echo ""
 echo "Step 1: Creating test users table..."

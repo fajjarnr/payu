@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - 2026-03-22
+
+### Changed
+
+- **Documentation Architecture Refactoring (2026-03-22)**:
+  - Comprehensive sync of all documentation with actual `backend/` implementation status.
+  - **ARCHITECTURE.md**: Updated C4 diagrams, service specifications (3.2.12-3.2.19), added VA Simulator (13.4), and fixed TOC/section ordering.
+  - **GEMINI.md / PROGRESS.md**: Updated service counts to 23 microservices + 5 simulators (28 modules). Fixed bug count to 56 items.
+  - **SERVICES.md / SERVICE_CATALOG.md**: Added `va-simulator`, `cms-service`, `product-catalog-service`, and `integration-service` to all catalogs.
+  - **INDEX.md**: Updated service navigation hub with missing modules and correct port mappings.
+  - **GATEWAY_ARCH.md**: Updated multi-tenancy and catalog coverage to 23 services.
+  - **Cleanup**: Deleted `backend/docs/archive/deprecated-docker/` directory.
+
+### Added
+
+- **Backstage Integration**: Created `backend/integration-service/catalog-info.yaml` to complete the 100% service catalog coverage (23/23 services).
+
 ## [Unreleased] - 2026-03-21
 
 ### Fixed

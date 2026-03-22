@@ -8,7 +8,6 @@ set -e
 PROJECT_ROOT="/home/ubuntu/payu"
 CONTAINERS_DIR="$PROJECT_ROOT/containers"
 COMPOSE_FILE="$PROJECT_ROOT/podman-compose.yml"
-TEST_COMPOSE_FILE="$PROJECT_ROOT/podman-compose.test.yml"
 
 # Colors for output
 RED='\033[0;31m'
@@ -96,10 +95,6 @@ start_dev() {
         print_info "Created payu-network"
     fi
 
-    if ! podman network exists payu-test-network; then
-        podman network create payu-test-network
-        print_info "Created payu-test-network"
-    fi
 
     # Start services
     if [ -f "$COMPOSE_FILE" ]; then
@@ -111,19 +106,6 @@ start_dev() {
     fi
 }
 
-# Start test environment
-start_test() {
-    print_info "Starting PayU test environment..."
-    check_podman
-
-    if [ -f "$TEST_COMPOSE_FILE" ]; then
-        podman play "$TEST_COMPOSE_FILE"
-        print_info "Started test environment"
-    else
-        print_error "Test compose file not found: $TEST_COMPOSE_FILE"
-        exit 1
-    fi
-}
 
 # Stop all services
 stop_all() {
@@ -162,7 +144,6 @@ logs() {
 build() {
     print_info "Building PayU services..."
     podman compose --file "$COMPOSE_FILE" build
-    podman compose --file "$TEST_COMPOSE_FILE" build
     print_info "Services built"
 }
 
@@ -228,7 +209,6 @@ Commands:
 
 Examples:
     $0 start-dev          # Start development environment
-    $0 start-test         # Start test environment
     $0 stop postgres      # Stop PostgreSQL only
     $0 logs keycloak      # View Keycloak logs
     $0 deploy             # Deploy quadlet files (requires sudo)
@@ -237,11 +217,8 @@ EOF
 
 # Main script logic
 case "${1:-help}" in
-    start-dev)
+    start-dev|start)
         start_dev
-        ;;
-    start-test)
-        start_test
         ;;
     stop)
         if [ -n "$2" ]; then

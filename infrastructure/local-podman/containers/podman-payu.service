@@ -3,7 +3,6 @@ Description=PayU Podman Compose Services
 Documentation=man:podman-systemd(1)
 After=network.target
 Requires=payu-network.target
-Requires=payu-test-network.target
 
 [Service]
 Type=oneshot
@@ -16,7 +15,6 @@ Environment=HOME=%h
 
 # Start services
 ExecStart=/usr/bin/podman play /home/ubuntu/payu/containers/podman-compose.yml
-ExecStart=/usr/bin/podman play /home/ubuntu/payu/containers/podman-compose.test.yml
 
 # Stop services
 ExecStop=/usr/bin/podman down --all

@@ -1,1 +1,1 @@
-docs/guides/GEMINI.md
+GEMINI.md
