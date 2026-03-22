@@ -4,7 +4,7 @@
 *   **100% Coverage**: ALL REST endpoints MUST have `@Operation` annotations with `summary`, `description`, and appropriate `ApiResponse` codes.
 *   **Tags**: Group operations by business domain (e.g., `Transactions`, `Accounts`, `Identity`).
 *   **Idempotency Reporting**: Clearly document which endpoints support/require the `X-Idempotency-Key` header.
-*   **Validation Script**: Use `./scripts/validate-openapi.py` to audit documentation coverage. CI/CD pipelines should enforce a minimum coverage threshold (default 90%+).
+*   **Validation Script**: Use `./scripts/validation/validate-openapi.py` to audit documentation coverage. CI/CD pipelines should enforce a minimum coverage threshold (default 90%+).
 
 ## 🔄 REST Best Practices
 *   **Status Codes**:
