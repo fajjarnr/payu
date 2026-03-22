@@ -1,0 +1,171 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: payu-build-pipeline
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: build
+spec:
+  description: |
+    Build pipeline for PayU services.
+    Supports Spring Boot, Quarkus (Java) and Python services.
+  params:
+    - name: service-name
+      type: string
+    - name: git-url
+      type: string
+      default: "https://github.com/fajjarnr/payu.git"
+    - name: git-revision
+      type: string
+      default: main
+    - name: service-type
+      type: string
+      default: spring-boot
+    - name: build-image-tag
+      type: string
+      default: v1.7.1
+    - name: registry-url
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: registry-namespace
+      type: string
+      default: payu-dev
+  workspaces:
+    - name: source
+      description: Workspace for source code
+  tasks:
+    # ── Step 1: Clone git repo ──
+    - name: fetch-repository
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: URL
+          value: $(params.git-url)
+        - name: REVISION
+          value: $(params.git-revision)
+        - name: DELETE_EXISTING
+          value: "true"
+
+    # ── Step 2a: Maven build (Spring Boot / Quarkus) ──
+    - name: build-java
+      runAfter:
+        - fetch-repository
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: maven
+          - name: namespace
+            value: openshift-pipelines
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: GOALS
+          value:
+            - -f
+            - backend/$(params.service-name)/pom.xml
+            - clean
+            - package
+            - -DskipTests
+            - -T1C
+        - name: SUBDIRECTORY
+          value: ""
+
+    # ── Step 3a: Buildah image (Java services) ──
+    - name: build-push-image
+      runAfter:
+        - build-java
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["spring-boot", "quarkus"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: CONTEXT
+          value: backend/$(params.service-name)
+        - name: DOCKERFILE
+          value: Containerfile
+        - name: TLS_VERIFY
+          value: "false"
+
+    # ── Step 2b/3b: Buildah image (Python services — no maven) ──
+    - name: build-push-python
+      runAfter:
+        - fetch-repository
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      when:
+        - input: "$(params.service-type)"
+          operator: in
+          values: ["python"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: CONTEXT
+          value: backend/$(params.service-name)
+        - name: DOCKERFILE
+          value: Containerfile
+        - name: TLS_VERIFY
+          value: "false"
+
+    # ── Step 4: Tag as stable ──
+    - name: tag-stable
+      runAfter:
+        - build-push-image
+        - build-push-python
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: SCRIPT
+          value: |
+            oc tag $(params.registry-namespace)/$(params.service-name):$(params.build-image-tag) \
+                   $(params.registry-namespace)/$(params.service-name):stable \
+                   --reference-only || true
