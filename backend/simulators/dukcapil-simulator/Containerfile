@@ -7,11 +7,13 @@ FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-dukcapil-simulator"
 LABEL org.opencontainers.image.description="PayU dukcapil-simulator - Dukcapil NIK verification simulation"
-LABEL org.opencontainers.image.version="1.5.0"
+LABEL org.opencontainers.image.version="1.7.2"
 LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.source="https://github.com/payu/backend/simulators/dukcapil-simulator"
 LABEL id.payu.service.tier="simulator"
 
+USER root
+RUN microdnf update -y && microdnf clean all
 USER 185
 WORKDIR /deployments
 
