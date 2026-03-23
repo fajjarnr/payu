@@ -14,11 +14,11 @@
     <artifactId>account-service</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>account-service</name>
-    <description>Core Banking - Account Service (Spring Boot 4 Pilot)</description>
+    <description>Core Banking - Account Service</description>
 
     <properties>
         <java.version>21</java.version>
-        <spring-boot.version>4.0.4</spring-boot.version>
+        <spring-cloud.version>2024.0.0</spring-cloud.version>
         <test.excluded.groups>integration</test.excluded.groups>
         <lombok.version>1.18.42</lombok.version>
     </properties>
@@ -239,16 +239,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>4.0.4</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2025.1.0-SNAPSHOT</version>
+                <version>2024.0.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
