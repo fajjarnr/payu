@@ -59,6 +59,7 @@
         <module>simulators/biller-simulator</module>
         <module>simulators/dukcapil-simulator</module>
         <module>simulators/qris-simulator</module>
+        <module>simulators/va-simulator</module>
 
         <!-- Core Services -->
         <module>account-service</module>
@@ -337,6 +338,7 @@
                 <module>simulators/biller-simulator</module>
                 <module>simulators/dukcapil-simulator</module>
                 <module>simulators/qris-simulator</module>
+                <module>simulators/va-simulator</module>
             </modules>
         </profile>
 
