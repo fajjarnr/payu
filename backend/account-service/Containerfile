@@ -2,7 +2,7 @@
 # PayU account-service - Runtime Container
 # Expects pre-built JAR: mvn -f backend/pom.xml clean package -DskipTests -pl account-service
 ####
-FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-5
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24
 
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-account-service"
