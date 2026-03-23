@@ -1,27 +1,35 @@
 #!/bin/bash
 # Trigger PayU Quarkus Services Pipelines (including Simulators)
 # Semantic Versioning: v1.7.2
+# Decoupled Service Name (Image) from Service Path (Context)
 
 NAMESPACE="payu-cicd"
 GIT_URL="https://github.com/fajjarnr/payu.git"
 GIT_REVISION="main"
 IMAGE_TAG="1.7.2"
 
-# Core Services
-CORE_SERVICES=("gateway-service" "notification-service" "api-portal-service")
-
-# Simulators
-SIMULATORS=("simulators/bi-fast-simulator" "simulators/biller-simulator" "simulators/qris-simulator" "simulators/dukcapil-simulator" "simulators/va-simulator")
-
-SERVICES=("${CORE_SERVICES[@]}" "${SIMULATORS[@]}")
+# Format: "service-name|service-path"
+SERVICES=(
+  "gateway-service|gateway-service"
+  "notification-service|notification-service"
+  "api-portal-service|api-portal-service"
+  "bi-fast-simulator|simulators/bi-fast-simulator"
+  "biller-simulator|simulators/biller-simulator"
+  "qris-simulator|simulators/qris-simulator"
+  "dukcapil-simulator|simulators/dukcapil-simulator"
+  "va-simulator|simulators/va-simulator"
+)
 
 echo "🚀 Triggering Quarkus Services Pipelines for $IMAGE_TAG..."
 
-for SERVICE in "${SERVICES[@]}"; do
-  # Replace slash with dash for valid Tekton resource naming
-  SAFE_NAME=$(echo "$SERVICE" | sed 's/\//-/g')
+for ENTRY in "${SERVICES[@]}"; do
+  SVC_NAME=$(echo "$ENTRY" | cut -d'|' -f1)
+  SVC_PATH=$(echo "$ENTRY" | cut -d'|' -f2)
   
-  echo "--- Triggering $SERVICE (named: build-$SAFE_NAME) ---"
+  # Safe Name for Tekton Run
+  SAFE_NAME=$(echo "$SVC_NAME" | sed 's/\//-/g')
+  
+  echo "--- Triggering $SVC_NAME (Path: $SVC_PATH) ---"
   
   cat <<EOF | oc create -f -
 apiVersion: tekton.dev/v1
@@ -37,7 +45,9 @@ spec:
     name: payu-build-pipeline
   params:
     - name: service-name
-      value: "${SERVICE}"
+      value: "${SVC_NAME}"
+    - name: service-path
+      value: "${SVC_PATH}"
     - name: git-url
       value: "${GIT_URL}"
     - name: git-revision

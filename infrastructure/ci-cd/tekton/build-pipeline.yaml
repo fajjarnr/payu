@@ -14,6 +14,10 @@ spec:
   params:
     - name: service-name
       type: string
+    - name: service-path
+      type: string
+      description: "The directory path of the service inside backend/ (default: same as service-name)"
+      default: ""
     - name: git-url
       type: string
       default: "https://github.com/fajjarnr/payu.git"
@@ -77,7 +81,7 @@ spec:
             - -f
             - backend/pom.xml
             - -pl
-            - $(params.service-name)
+            - $(params.service-path)
             - -am
             - clean
             - package
@@ -108,7 +112,7 @@ spec:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
         - name: CONTEXT
-          value: backend/$(params.service-name)
+          value: backend/$(params.service-path)
         - name: DOCKERFILE
           value: Containerfile
         - name: TLS_VERIFY
@@ -138,7 +142,7 @@ spec:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
         - name: CONTEXT
-          value: backend/$(params.service-name)
+          value: backend/$(params.service-path)
         - name: DOCKERFILE
           value: Containerfile
         - name: TLS_VERIFY
