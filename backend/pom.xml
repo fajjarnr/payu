@@ -31,7 +31,7 @@
         <!-- Third-party Versions -->
         <resilience4j.version>2.2.0</resilience4j.version>
         <cloudevents.version>4.0.1</cloudevents.version>
-        <hypersistence.version>3.9.0</hypersistence.version>
+        <hypersistence.version>3.15.2</hypersistence.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <springdoc.version>2.3.0</springdoc.version>
         <lombok.version>1.18.42</lombok.version>
@@ -197,6 +197,12 @@
                 <groupId>io.hypersistence</groupId>
                 <artifactId>hypersistence-utils-hibernate-63</artifactId>
                 <version>${hypersistence.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.hibernate.orm</groupId>
+                        <artifactId>hibernate-core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- SpringDoc OpenAPI -->
