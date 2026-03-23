@@ -1,0 +1,53 @@
+# Custom Maven Task with JDK 21 for PayU services
+# Replaces the cluster maven task which uses UBI-minimal without JDK 21
+# ============================================================
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: maven-java21
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: build
+spec:
+  description: Maven build task with JDK 21 support for PayU services.
+  params:
+    - name: GOALS
+      type: array
+      description: Maven goals to run
+      default:
+        - package
+    - name: MAVEN_MIRROR_URL
+      type: string
+      description: Maven repository mirror URL
+      default: ""
+    - name: SUBDIRECTORY
+      type: string
+      description: Subdirectory within workspace for sources
+      default: ""
+    - name: MAVEN_IMAGE
+      type: string
+      description: Maven image to use
+      default: docker.io/library/maven:3.9-eclipse-temurin-21
+  workspaces:
+    - name: source
+      description: Workspace with source code
+    - name: maven-settings
+      description: Maven settings.xml
+      optional: true
+  steps:
+    - name: maven-goals
+      image: $(params.MAVEN_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.SUBDIRECTORY)
+      env:
+        - name: HOME
+          value: /tekton/home
+        - name: MAVEN_MIRROR_URL
+          value: $(params.MAVEN_MIRROR_URL)
+      command:
+        - /usr/bin/mvn
+      args:
+        - "$(params.GOALS[*])"
+        - -Dmaven.repo.local=$(workspaces.source.path)/.m2
+        - -Duser.home=/tekton/home
+

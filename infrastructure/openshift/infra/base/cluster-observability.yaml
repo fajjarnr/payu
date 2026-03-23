@@ -1,3 +1,5 @@
+# Cluster Observability UI Plugins
+# ============================================================
 apiVersion: observability.openshift.io/v1alpha1
 kind: UIPlugin
 metadata:

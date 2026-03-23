@@ -1,12 +1,13 @@
 # Kube Descheduler Configuration for PayU
-# Enables automatic pod rebalancing across worker nodes
+# Ensures pods are evenly spread across all worker nodes
 #
-# IMPORTANT: This CR must be applied to openshift-kube-descheduler-operator namespace
-# The operator subscription is in openshift-operators, but the CR goes to the
-# operator's dedicated namespace
+# Profiles:
+#   - TopologyAndDuplicates: evicts duplicate pods on same node + enforces topology spread
+#   - LifecycleAndUtilization: rebalances pods from overutilized to underutilized nodes
+#   - SoftTopologyAndDuplicates: also handles soft topology constraints
 #
-# Location: infrastructure/openshift/infra/base/kubedescheduler.yaml
-# Applied via: oc apply -k infrastructure/openshift/infra/overlays/dev/
+# Applied to: openshift-kube-descheduler-operator namespace
+# Applied via: oc apply -f infrastructure/openshift/infra/base/kubedescheduler.yaml
 # ============================================================
 apiVersion: operator.openshift.io/v1
 kind: KubeDescheduler
@@ -17,49 +18,24 @@ metadata:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: descheduler
 spec:
-  # Operator management state
   managementState: Managed
-
-  # Logging level
   logLevel: Normal
   operatorLogLevel: Normal
 
-  # Descheduling interval in seconds (5 minutes)
-  deschedulingIntervalSeconds: 300
+  # Run every 2 minutes for faster rebalancing
+  deschedulingIntervalSeconds: 120
 
-  # Profiles for pod eviction strategies
+  # All three profiles combined for maximum spread
   profiles:
-    # Spread pods evenly across topology domains (nodes)
-    - TopologyAndDuplicates
-    # Balance based on pod lifecycle and node utilization
+    # Utilization: move pods from overloaded nodes to underloaded nodes
     - LifecycleAndUtilization
-    # Allow evicting pods with PVC (required for postgres, kafka)
-    - EvictPodsWithPVC
+    # Soft topology: handles both hard & soft topology constraints + removes duplicates
+    - SoftTopologyAndDuplicates
 
-  # Mode: Automatic = actually evict pods, Predictive = dry-run only
+  # Automatic = actually evict and reschedule pods
   mode: Automatic
 
-  # Profile customizations
+  # Profile customizations — no namespace filter = applies to entire cluster
   profileCustomizations:
-    # Target only payu-dev namespace
-    namespaces:
-      included:
-        - payu-dev
-    # Do not evict pods with local storage (avoid data loss)
-    # podsWithLocalStorage: false  # Default behavior
-
----
-# Note: Topology Spread Constraints are applied per-deployment
-# via the deployment manifests in infrastructure/openshift/deploy/
-# Example configuration applied to each PayU service:
-#
-# spec:
-#   template:
-#     spec:
-#       topologySpreadConstraints:
-#         - maxSkew: 1
-#           topologyKey: kubernetes.io/hostname
-#           whenUnsatisfiable: ScheduleAnyway
-#           labelSelector:
-#             matchLabels:
-#               app: <service-name>
+    # Low threshold = more aggressive rebalancing (triggers even at small imbalance)
+    devLowNodeUtilizationThresholds: Low

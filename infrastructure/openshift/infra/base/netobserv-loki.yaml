@@ -1,0 +1,29 @@
+# LokiStack for Network Observability (NetObserv)
+# Separated from the main logging LokiStack (payu-loki) because:
+#   - Flow logs have very different volume patterns vs app logs
+#   - Prevents NetObserv flow data from overwhelming application log queries
+#   - Allows independent retention & sizing tuning
+# ============================================================
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: netobserv-loki
+  namespace: netobserv
+spec:
+  size: 1x.extra-small
+  limits:
+    global:
+      ingestion:
+        ingestionRate: 30
+        ingestionBurstSize: 60
+        maxGlobalStreamsPerTenant: 50000
+  storage:
+    schemas:
+      - version: v13
+        effectiveDate: "2024-10-01"
+    secret:
+      name: netobserv-loki-s3
+      type: s3
+  storageClassName: gp3-csi
+  tenants:
+    mode: openshift-network

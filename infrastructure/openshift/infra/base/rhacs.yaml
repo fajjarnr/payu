@@ -1,3 +1,7 @@
+# RHACS (Red Hat Advanced Cluster Security) Configuration
+# Central: ACS management server (stackrox namespace)
+# SecuredCluster: registers this cluster for runtime monitoring & compliance
+# ============================================================
 apiVersion: platform.stackrox.io/v1alpha1
 kind: Central
 metadata:
@@ -18,10 +22,57 @@ spec:
       requests:
         cpu: 500m
         memory: 1Gi
+  # Disable legacy scanner, use Scanner V4 only
   scanner:
     analyzer:
+      scaling:
+        autoScaling: Disabled
+        replicas: 1
+  scannerV4:
+    scannerComponent: Default
+    indexer:
       scaling:
         autoScaling: Enabled
         maxReplicas: 3
         minReplicas: 1
-        replicas: 1
+        replicas: 2
+    matcher:
+      scaling:
+        autoScaling: Enabled
+        maxReplicas: 3
+        minReplicas: 1
+        replicas: 2
+    db:
+      persistence:
+        persistentVolumeClaim:
+          claimName: scanner-v4-db
+---
+# SecuredCluster: registers this OpenShift cluster to ACS Central
+# Uses cluster-registration-secret created from ACS UI/API
+apiVersion: platform.stackrox.io/v1alpha1
+kind: SecuredCluster
+metadata:
+  name: payu-secured-cluster
+  namespace: stackrox
+spec:
+  clusterName: payu-openshift
+  centralEndpoint: central.stackrox.svc:443
+  registrationSecret:
+    name: cluster-registration-secret
+  admissionControl:
+    listenOnCreates: true
+    listenOnUpdates: true
+    listenOnEvents: true
+  perNode:
+    collector:
+      collection: EBPF
+      imageFlavor: Regular
+    taintToleration: TolerateTaints
+  sensor:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi

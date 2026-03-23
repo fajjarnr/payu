@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # Tasks
+  - tasks/buildah-task.yaml
+  - tasks/deploy-task.yaml
+  - tasks/maven-task.yaml
+  - tasks/maven-java21-task.yaml
+  - tasks/pytest-task.yaml
+  - tasks/rhacs-tasks.yaml
+  - tasks/security-scan-task.yaml
+  - tasks/trivy-task.yaml
+
+  # Pipelines
+  - build-pipeline.yaml
+  # - deploy-pipeline.yaml
+  # - test-pipeline.yaml
+  # - rollback-pipeline.yaml
+
+  # Triggers and Webhooks (require triggers.tekton.dev/v1beta1)
+  # - triggers/git-webhook-trigger.yaml

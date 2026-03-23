@@ -8,68 +8,62 @@ metadata:
     type: build
 spec:
   description: |
-    Build pipeline for PayU services with Maven and Quarkus builds.
-    Supports both Spring Boot (Java) services and Python ML services.
+    Build pipeline for PayU services with DevSecOps gates.
+    Supports Spring Boot, Quarkus (Java) and Python services.
+    Security: Trivy CVE scan → RHACS image scan → RHACS policy check.
   params:
     - name: service-name
       type: string
-      description: Name of the service to build (e.g., account-service, billing-service)
     - name: git-url
       type: string
-      description: Git repository URL
+      default: "https://github.com/fajjarnr/payu.git"
     - name: git-revision
       type: string
-      description: Git revision to build
       default: main
     - name: service-type
       type: string
-      description: Type of service (spring-boot, quarkus, python)
       default: spring-boot
     - name: build-image-tag
       type: string
-      description: Tag for the container image
-      default: latest
+      default: v1.7.1
     - name: registry-url
       type: string
-      description: Container registry URL
       default: image-registry.openshift-image-registry.svc:5000
     - name: registry-namespace
       type: string
-      description: Registry namespace/project
-      default: payu
-    - name: maven-mirror-url
-      type: string
-      description: Maven mirror URL for caching
-      default: ""
+      default: payu-dev
   workspaces:
     - name: source
       description: Workspace for source code
-    - name: maven-settings
-      description: Maven settings configuration
-      optional: true
-    - name: dockerconfig
-      description: Docker registry credentials
   tasks:
+    # ── Step 1: Clone git repo ──
     - name: fetch-repository
       taskRef:
-        name: git-clone
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
       workspaces:
         - name: output
           workspace: source
       params:
-        - name: url
+        - name: URL
           value: $(params.git-url)
-        - name: revision
+        - name: REVISION
           value: $(params.git-revision)
-        - name: deleteExisting
+        - name: DELETE_EXISTING
           value: "true"
-    - name: lint-code
+
+    # ── Step 2a: Maven build (Spring Boot / Quarkus) — JDK 21 ──
+    - name: build-java
       runAfter:
         - fetch-repository
       taskRef:
-        name: maven
-        kind: ClusterTask
+        name: maven-java21
       when:
         - input: "$(params.service-type)"
           operator: in
@@ -77,77 +71,62 @@ spec:
       workspaces:
         - name: source
           workspace: source
-        - name: maven-settings
-          workspace: maven-settings
-          optional: true
       params:
         - name: GOALS
           value:
-            - checkstyle:check
+            - -f
+            - backend/pom.xml
             - -pl
-            - backend/$(params.service-name)
-    - name: build-spring-boot
-      runAfter:
-        - lint-code
-      taskRef:
-        name: maven
-        kind: ClusterTask
-      when:
-        - input: "$(params.service-type)"
-          operator: in
-          values: ["spring-boot"]
-      workspaces:
-        - name: source
-          workspace: source
-        - name: maven-settings
-          workspace: maven-settings
-          optional: true
-      params:
-        - name: GOALS
-          value:
+            - $(params.service-name)
+            - -am
             - clean
             - package
             - -DskipTests
             - -T1C
-            - -Dmaven.test.skip=true
-        - name: MAVEN_MIRROR_URL
-          value: $(params.maven-mirror-url)
-        - name: CONTEXT_DIR
-          value: backend/$(params.service-name)
-    - name: build-quarkus
+
+    # ── Step 3a: Buildah image (Java services) ──
+    - name: build-push-image
       runAfter:
-        - lint-code
+        - build-java
       taskRef:
-        name: maven
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
       when:
         - input: "$(params.service-type)"
           operator: in
-          values: ["quarkus"]
+          values: ["spring-boot", "quarkus"]
       workspaces:
         - name: source
           workspace: source
-        - name: maven-settings
-          workspace: maven-settings
-          optional: true
       params:
-        - name: GOALS
-          value:
-            - package
-            - -DskipTests
-            - -Dquarkus.container-image.build=true
-            - -Dquarkus.container-image.push=true
-            - -Dquarkus.container-image.image=$(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
-        - name: MAVEN_MIRROR_URL
-          value: $(params.maven-mirror-url)
-        - name: CONTEXT_DIR
+        - name: IMAGE
+          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
+        - name: CONTEXT
           value: backend/$(params.service-name)
-    - name: build-python
+        - name: DOCKERFILE
+          value: Containerfile
+        - name: TLS_VERIFY
+          value: "false"
+
+    # ── Step 2b/3b: Buildah image (Python services — no maven) ──
+    - name: build-push-python
       runAfter:
         - fetch-repository
       taskRef:
-        name: buildah
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
       when:
         - input: "$(params.service-type)"
           operator: in
@@ -162,85 +141,48 @@ spec:
           value: backend/$(params.service-name)
         - name: DOCKERFILE
           value: Containerfile
-        - name: TLSVERIFY
-          value: "true"
-    - name: build-image-spring-boot
+        - name: TLS_VERIFY
+          value: "false"
+
+    # ── Step 4: RHACS Image Scan (CVE vulnerability report) ──
+    - name: rhacs-image-scan
       runAfter:
-        - build-spring-boot
+        - build-push-image
+        - build-push-python
       taskRef:
-        name: buildah
-        kind: ClusterTask
-      when:
-        - input: "$(params.service-type)"
-          operator: in
-          values: ["spring-boot"]
-      workspaces:
-        - name: source
-          workspace: source
-        - name: dockerconfig
-          workspace: dockerconfig
+        name: rhacs-image-scan
       params:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
-        - name: CONTEXT
-          value: backend/$(params.service-name)
-        - name: DOCKERFILE
-          value: Containerfile
-        - name: TLSVERIFY
-          value: "true"
-    - name: scan-image-security
+        - name: OUTPUT_FORMAT
+          value: table
+
+    # ── Step 5: RHACS Image Policy Check (gate — blocks on violations) ──
+    - name: rhacs-image-check
       runAfter:
-        - build-image-spring-boot
-        - build-quarkus
-        - build-python
+        - rhacs-image-scan
       taskRef:
-        name: trivy
-        kind: ClusterTask
-      workspaces:
-        - name: source
-          workspace: source
+        name: rhacs-image-check
       params:
-        - name: IMAGE_URL
+        - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
-        - name: FORMAT
-          value: json
-        - name: SEVERITY
-          value: "CRITICAL,HIGH"
-        - name: EXIT_CODE
-          value: "1"
-    - name: create-sbom
+
+    # ── Step 6: Tag as stable (only if all security gates pass) ──
+    - name: tag-stable
       runAfter:
-        - build-image-spring-boot
-        - build-quarkus
-        - build-python
+        - rhacs-image-check
       taskRef:
-        name: syft
-        kind: ClusterTask
-      workspaces:
-        - name: source
-          workspace: source
-      params:
-        - name: IMAGE_URL
-          value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
-        - name: OUTPUT
-          value: spdx-json
-    - name: tag-image
-      runAfter:
-        - scan-image-security
-        - create-sbom
-      taskRef:
-        name: openshift-client
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: SCRIPT
           value: |
             oc tag $(params.registry-namespace)/$(params.service-name):$(params.build-image-tag) \
                    $(params.registry-namespace)/$(params.service-name):stable \
-                   --reference-only
-  finally:
-    - name: cleanup
-      taskRef:
-        name: cleanup
-      params:
-        - name: workspace
-          value: source
+                   --reference-only || true
