@@ -460,3 +460,19 @@ debts:
 
 ---
 *Last Updated: January 2026*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-006: OSS Version Compatibility Matrix
+
+**Date**: February 26, 2026 | **Severity**: Medium | **Domain**: Architecture
+
+Maintain a compatibility matrix between Red Hat products and OSS equivalents.
+**Rule**: Verify wire compatibility when client/broker versions differ (e.g., Kafka client 3.8 ↔ broker 3.5).
+
+### L-023: Bulk Audit Approach — Verify Before Fixing
+
+**Date**: March 17, 2026 | **Severity**: Medium | **Domain**: Process / Audit
+
+Verification protocol: (1) read current code, (2) check if vulnerability exists, (3) only modify if confirmed.
+**Rule**: Never batch-apply fixes without verification; mark findings as "Already Fixed" with evidence.

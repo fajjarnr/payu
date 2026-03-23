@@ -659,4 +659,26 @@ slidev export --format pptx
 
 ---
 *Last Updated: January 2026*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-005: Backstage catalog-info.yaml — Single Root File
+
+**Date**: February 26, 2026 | **Severity**: Medium | **Domain**: Developer Hub
+
+For a monorepo with 22+ services, use a single root `catalog-info.yaml` with YAML multi-document (`---`) separators.
+**Rule**: Single import point in Backstage/RHDH for better maintainability.
+
+### L-021: Backlog Hygiene — Bug Count Integrity
+
+**Date**: March 16, 2026 | **Severity**: Medium | **Domain**: Process / Documentation
+
+Document Routing Rules for consistency:
+- Bug backlog/open items: `docs/roadmap/TODOS.md`
+- Deployment/milestones: `docs/roadmap/PROGRESS.md`
+- Decisions/gap analysis: `docs/roadmap/GATEWAY_ARCH.md`
+- Changelog/archived: `CHANGELOG.md`
+- Lessons/patterns: `docs/guides/LESSONS.md`
+
+**Rule**: Always count bugs from actual data, not memory. Update all count locations atomically.
 ```

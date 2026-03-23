@@ -769,3 +769,33 @@ void shouldProcessOnlyOneTransactionForSameIdempotencyKey() {
 
 ---
 *Last Updated: February 2026 (P19 Audit)*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-019: E2E Test Resilience — Separating Infrastructure Failures from Business Logic Failures
+
+**Date**: March 16, 2026 | **Severity**: High | **Domain**: Testing / Quality
+
+Accepting 500 alongside 200 in the same assertion hides real bugs.
+**Rule**: (a) Use `pytest.skip()` for infra issues (429/503). (b) Fail on business logic errors (500). (c) Pass on expected statuses (200/201). (d) Use dedicated auth fixtures for Playwright.
+
+### L-023: Bulk Audit Approach — Verify Before Fixing
+
+**Date**: March 17, 2026 | **Severity**: Medium | **Domain**: Process / Audit
+
+Never batch-apply fixes from an audit report without first verifying each finding against the current codebase state.
+**Rule**: Mark findings as "Already Fixed" with evidence rather than silently skipping them.
+
+### L-024: Auth Parameter Changes Break Unit Tests
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: Backend / Testing
+
+Adding `@AuthenticationPrincipal Jwt jwt` to controller methods breaks unit tests that call those methods directly.
+**Rule**: (a) Grep for direct method calls in tests after signature changes. (b) Use MockMvc-based tests for controllers to test the full auth stack.
+
+### L-025: Constructor Signature Changes Cascade to All Subclasses and Tests
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: Backend / Shared Libraries
+
+Shared library constructor changes cause cascading build failures in all subclasses and their tests.
+**Rule**: (a) Find all subclasses using `grep` before changing parent constructors. (b) Update all subclasses and tests in the same commit. (c) Run `mvn clean package -DskipTests` to verify compilation.

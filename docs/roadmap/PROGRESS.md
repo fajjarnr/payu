@@ -82,6 +82,16 @@
 
 ## 📦 Deployment Log
 
+### v1.7.6 (Completed) — March 23, 2026
+
+**Security Hardening & Dependency Alignment:**
+
+- ✅ **Quarkus Upgrade**: All 23 Quarkus services and simulators upgraded to version `3.32.3` for baseline stability and performance.
+- ✅ **Jackson Security Patch**: Overrode Jackson versions to `2.18.6` across the platform to resolve RHACS-identified vulnerabilities while maintaining Spring Boot 3.4 compatibility.
+- ✅ **Commons-Fileupload Patch**: Forced `commons-fileupload:1.6.0` in parent POM to address CVE-2025-48976 (High Severity).
+- ✅ **Base Image Hardening**: Updated `account-service` and core Java services to use base image version `1.24` (OpenJDK 21 runtime) for OS-level CVE remediation.
+- ⚠️ **Spring Boot 4 Pilot**: Attempted upgrade of `account-service` to 4.0.4; rolled back to 3.4.13 due to Spring Cloud Vault incompatibility mapping (Tracked in `TODOS.md` as ARCH-006).
+
 ### v1.7.1 (Completed) — March 17, 2026
 
 **Phase 12 — E2E Coverage Gap Fixes (27/27 bugs closed, BUG-TEST-090–116):**

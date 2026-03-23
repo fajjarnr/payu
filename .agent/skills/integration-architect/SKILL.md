@@ -742,3 +742,19 @@ See `docs/guides/LESSONS.md` § "Saga Orchestration Pattern Integration":
 
 ---
 *Last Updated: February 2026 (P19 Audit)*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-012: Kafka Client `bootstrap.servers` — Use Internal K8s DNS
+
+**Date**: February 26, 2026 | **Severity**: Medium | **Domain**: Infrastructure
+
+Always use internal K8s service names (`payu-kafka-bootstrap:9092`) for inter-service communication.
+**Rule**: External IPs change; internal DNS is stable.
+
+### L-013: Exactly-Once Semantics (EOS) Performance Tax
+
+**Date**: February 26, 2026 | **Severity**: High | **Domain**: Performance
+
+EOS adds ~15-20% latency overhead. Use it ONLY for ledger-impacting topics.
+**Rule**: Standard `acks=all` is sufficient for non-financial notification events.

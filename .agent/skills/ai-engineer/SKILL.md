@@ -504,3 +504,19 @@ class ModelMonitor:
 
 ---
 *Last Updated: January 2026*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-001: Python ML/AI Services — Stay on Debian Slim, Not UBI9
+
+**Date**: February 26, 2026 | **Severity**: High | **Domain**: Platform
+
+UBI9 `python-312` has known compatibility issues with native ML/AI dependencies:
+
+- PaddleOCR, OpenCV, PyTorch — prebuilt wheels expect Debian/glibc paths
+- Missing shared libraries (`libGL`, `libglib`, `libgomp`) require different package names on RHEL
+- `site-packages` path differs (`/opt/app-root/lib/` vs `/usr/local/lib/`)
+
+**Decision**: Keep `python:3.12-slim` for `kyc-service` and `analytics-service`. All Java (UBI9 OpenJDK 21) and Node.js (UBI9 Node 20) services use UBI9.
+
+**Rule**: Do not migrate Python ML services to UBI9 without full dependency compatibility testing first.

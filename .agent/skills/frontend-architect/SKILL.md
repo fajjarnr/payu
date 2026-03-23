@@ -1027,3 +1027,63 @@ export async function POST(req: NextRequest) {
 
 ---
 *Last Updated: February 2026 (P19 Audit)*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-016: Next.js Layout vs Page — Context Scope
+
+**Date**: February 27, 2026 | **Severity**: Medium | **Domain**: Development
+
+`layout.tsx` does NOT re-render on navigation between child pages. Use `page.tsx` for state that must reset.
+**Rule**: Put shared UI (Sidebar/Nav) in Layout; put domain-specific state in Page.
+
+### L-017: Framer Motion Layout Animations — `layoutId`
+
+**Date**: February 27, 2026 | **Severity**: Low | **Domain**: UX
+
+Use `layoutId` for smooth transitions of shared elements (e.g., a selection pill moving between tabs).
+**Rule**: Improves perceived performance and premium feel.
+
+### L-020: Accessibility — `aria-live` for Error Messages
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: A11y
+
+Form error messages must be in an `aria-live="polite"` region to be announced by screen readers.
+**Rule**: Never rely on visual color alone for error state.
+
+### L-022: Mobile Responsive — `100dvh` vs `100vh`
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: UX
+
+Always use `100dvh` (Dynamic Viewport Height) to prevent layout jumping on mobile when browser chrome (URL bar) hides/shows.
+**Rule**: Ensures a stable, fullscreen-like app experience.
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-016: Next.js Layout vs Page — Context Scope
+
+**Date**: February 27, 2026 | **Severity**: Medium | **Domain**: Development
+
+`layout.tsx` does NOT re-render on navigation between child pages. Use `page.tsx` for state that must reset.
+**Rule**: Put shared UI (Sidebar/Nav) in Layout; put domain-specific state in Page.
+
+### L-017: Framer Motion Layout Animations — `layoutId`
+
+**Date**: February 27, 2026 | **Severity**: Low | **Domain**: UX
+
+Use `layoutId` for smooth transitions of shared elements (e.g., a selection pill moving between tabs).
+**Rule**: Improves perceived performance and premium feel.
+
+### L-020: Accessibility — `aria-live` for Error Messages
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: A11y
+
+Form error messages must be in an `aria-live="polite"` region to be announced by screen readers.
+**Rule**: Never rely on visual color alone for error state.
+
+### L-022: Mobile Responsive — `100dvh` vs `100vh`
+
+**Date**: March 17, 2026 | **Severity**: High | **Domain**: UX
+
+Always use `100dvh` (Dynamic Viewport Height) to prevent layout jumping on mobile when browser chrome (URL bar) hides/shows.
+**Rule**: Ensures a stable, fullscreen-like app experience.

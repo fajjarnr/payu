@@ -1,6 +1,6 @@
 # PayU Backend Services Status
 
-> **Last Updated**: March 22, 2026
+> **Last Updated**: March 23, 2026
 > **Total Services**: 28 (23 microservices + 5 simulators)  
 > **Lab Status**: 🟢 Production Ready (Phase 1–12 Complete) | ⚠️ Post-Audit Remediation In Progress (56 Open Bugs)
 >
@@ -32,34 +32,34 @@
 
 | Service                     | Language    | Framework         | Status     | Notes                                                       |
 | --------------------------- | ----------- | ----------------- | ---------- | ----------------------------------------------------------- |
-| **account-service**         | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Hexagonal architecture, eKYC integration, tests             |
-| **auth-service**            | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Keycloak integration, JWT auth, lockout mechanism, tests    |
-| **wallet-service**          | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Hexagonal architecture, ledger, virtual cards, Kafka events |
-| **transaction-service**     | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Hexagonal architecture, BI-FAST integration, Kafka events   |
-| **billing-service**         | Java 21     | Quarkus 3.17      | ✅ Complete | Bill payments, wallet integration, Kafka events, tests      |
-| **notification-service**    | Java 21     | Quarkus 3.17      | ✅ Complete | Multi-channel notifications, Kafka consumer, tests          |
-| **gateway-service**         | Java 21     | Quarkus 3.17      | ✅ Complete | API routing, rate limiting, circuit breaker, tracing        |
+| **account-service**         | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Hexagonal architecture, eKYC integration, tests (Sec Patch 1.7.6) |
+| **auth-service**            | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Keycloak integration, JWT auth, lockout mechanism, tests    |
+| **wallet-service**          | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Hexagonal architecture, ledger, virtual cards, Kafka events |
+| **transaction-service**     | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Hexagonal architecture, BI-FAST integration, Kafka events   |
+| **billing-service**         | Java 21     | Quarkus 3.32.3    | ✅ Complete | Bill payments, wallet integration, Kafka events, tests      |
+| **notification-service**    | Java 21     | Quarkus 3.32.3    | ✅ Complete | Multi-channel notifications, Kafka consumer, tests          |
+| **gateway-service**         | Java 21     | Quarkus 3.32.3    | ✅ Complete | API routing, rate limiting, circuit breaker, tracing        |
 | **kyc-service**             | Python 3.12 | FastAPI 0.115.0   | ✅ Complete | OCR, liveness, face matching, tests                         |
 | **analytics-service**       | Python 3.12 | FastAPI 0.115.0   | ✅ Complete | TimescaleDB, ML recommendations, tests                      |
-| **bi-fast-simulator**       | Java 21     | Quarkus 3.17      | ✅ Complete | BI-FAST API, latency/failure simulation                     |
-| **dukcapil-simulator**      | Java 21     | Quarkus 3.17      | ✅ Complete | NIK verification, face matching simulation                  |
-| **qris-simulator**          | Java 21     | Quarkus 3.17      | ✅ Complete | QR generation, payment simulation                           |
-| **compliance-service**      | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Regulatory audits, PCI-DSS                                  |
-| **support-service**         | Java 21     | Quarkus 3.17      | ✅ Complete | Support training mgmt                                       |
-| **investment-service**      | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Deposits, Funds, Gold                                       |
-| **lending-service**         | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Loans, PayLater                                             |
-| **promotion-service**       | Java 21     | Quarkus 3.17      | ✅ Complete | Rewards, Cashback                                           |
-| **backoffice-service**      | Java 21     | Quarkus 3.17      | ✅ Complete | Admin, Fraud Ops                                            |
-| **partner-service**         | Java 21     | Quarkus 3.17      | ✅ Complete | SNAP BI Basic                                               |
-| **dispute-service**         | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Refund & Dispute Management                                 |
-| **integration-service**     | Java 21     | Spring Boot 3.4.1 | ✅ Complete | External Swift/ISO20022 Adapter                             |
-| **biller-simulator**        | Java 21     | Quarkus 3.17      | ✅ Complete | PLN, PDAM, Telco simulation                                 |
-| **va-simulator**            | Java 21     | Quarkus 3.17      | ✅ Complete | Virtual Account simulation                                  |
-| **cms-service**             | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Content Management, Banners                                 |
-| **fx-service**              | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Foreign Exchange Rates                                      |
-| **product-catalog-service** | Java 21     | Spring Boot 3.4.1 | ✅ Complete | Banking products & fees catalog                             |
-| **api-portal-service**      | Java 21     | Quarkus 3.17      | ✅ Complete | Centralized OpenAPI Docs & Sandbox                          |
-| **statement-service**       | Java 21     | Spring Boot 3.4.1 | ✅ Complete | E-Statement PDF Generation                                  |
+| **bi-fast-simulator**       | Java 21     | Quarkus 3.32.3    | ✅ Complete | BI-FAST API, latency/failure simulation                     |
+| **dukcapil-simulator**      | Java 21     | Quarkus 3.32.3    | ✅ Complete | NIK verification, face matching simulation                  |
+| **qris-simulator**          | Java 21     | Quarkus 3.32.3    | ✅ Complete | QR generation, payment simulation                           |
+| **compliance-service**      | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Regulatory audits, PCI-DSS                                  |
+| **support-service**         | Java 21     | Quarkus 3.32.3    | ✅ Complete | Support training mgmt                                       |
+| **investment-service**      | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Deposits, Funds, Gold                                       |
+| **lending-service**         | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Loans, PayLater                                             |
+| **promotion-service**       | Java 21     | Quarkus 3.32.3    | ✅ Complete | Rewards, Cashback                                           |
+| **backoffice-service**      | Java 21     | Quarkus 3.32.3    | ✅ Complete | Admin, Fraud Ops                                            |
+| **partner-service**         | Java 21     | Quarkus 3.32.3    | ✅ Complete | SNAP BI Basic                                               |
+| **dispute-service**         | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Refund & Dispute Management                                 |
+| **integration-service**     | Java 21     | Spring Boot 3.4.13 | ✅ Complete | External Swift/ISO20022 Adapter                             |
+| **biller-simulator**        | Java 21     | Quarkus 3.32.3    | ✅ Complete | PLN, PDAM, Telco simulation                                 |
+| **va-simulator**            | Java 21     | Quarkus 3.32.3    | ✅ Complete | Virtual Account simulation                                  |
+| **cms-service**             | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Content Management, Banners                                 |
+| **fx-service**              | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Foreign Exchange Rates                                      |
+| **product-catalog-service** | Java 21     | Spring Boot 3.4.13 | ✅ Complete | Banking products & fees catalog                             |
+| **api-portal-service**      | Java 21     | Quarkus 3.32.3    | ✅ Complete | Centralized OpenAPI Docs & Sandbox                          |
+| **statement-service**       | Java 21     | Spring Boot 3.4.13 | ✅ Complete | E-Statement PDF Generation                                  |
 
 ---
 

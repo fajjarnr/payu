@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.6] - 2026-03-23
+
+### Changed
+
+- **Platform Technical Upgrade & Security Hardening (2026-03-23)**:
+  - **Quarkus Upgrade**: All 23 Quarkus services and simulators standardizing on version `3.32.3`.
+  - **Jackson Security Patch**: Overrode Jackson version to `2.18.6` across Spring Boot services to resolve RHACS-detected vulnerabilities (Important severity).
+  - **Base Image Hardening**: Updated `account-service` and core Java services to use base image version `1.24` (OpenJDK 21 runtime) to remediate OS-level CVEs.
+  - **Dependency Patch**: Overrode `commons-fileupload` to version `1.6.0` in parent POM (CVE-2025-48976).
+  - **Spring Boot 4 Pilot (Rollback)**: Reverted `account-service` to 3.4.13 after successful pilot build verification but identification of Spring Cloud (Vault) compatibility gaps.
+
 ## [Unreleased] - 2026-03-22
 
 ### Changed

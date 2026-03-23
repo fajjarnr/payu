@@ -1018,3 +1018,77 @@ cat .dockerignore | grep target
 
 ---
 *Last Updated: January 2026*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-001: Python ML/AI Services — Stay on Debian Slim, Not UBI9
+
+**Date**: February 26, 2026 | **Severity**: High | **Domain**: Platform
+
+UBI9 `python-312` has known compatibility issues with native ML/AI dependencies:
+- PaddleOCR, OpenCV, PyTorch — prebuilt wheels expect Debian/glibc paths
+- Missing shared libraries (`libGL`, `libglib`, `libgomp`) require different package names on RHEL
+- `site-packages` path differs (`/opt/app-root/lib/` vs `/usr/local/lib/`)
+
+**Decision**: Keep `python:3.12-slim` for `kyc-service` and `analytics-service`. All Java (UBI9 OpenJDK 21) and Node.js (UBI9 Node 20) services use UBI9.
+
+### L-002: Domain Routing Strategy — Gateway API + Istio Ingress (Updated)
+
+**Date**: February 26, 2026 (Updated) | **Severity**: Critical | **Domain**: Infrastructure
+
+**Dual-ingress architecture** separating application traffic from platform traffic:
+
+| Traffic Type      | Ingress Controller | Domain Pattern | Example |
+| :--- | :--- | :--- | :--- |
+| **App (Prod)**    | Istio Ingress Gateway | `payu.fajjjar.my.id` + `*.payu.fajjjar.my.id` | `api.payu.fajjjar.my.id` |
+| **App (Dev)**     | Istio Ingress Gateway | `*.dev.payu.fajjjar.my.id` | `api.dev.payu.fajjjar.my.id` |
+| **OCP Platform**  | OCP Ingress Controller (HAProxy) | `*.apps.payu.ocp.fajjjar.my.id` | `console-openshift-console.apps.payu.ocp.fajjjar.my.id` |
+
+**Rule**: ALL environments use Istio Ingress Gateway for application traffic. `*.apps.payu.ocp.*` is exclusively for OCP platform components.
+
+### L-003: Domain Migration — Scope & Safe Replacement
+
+**Date**: February 26, 2026 | **Severity**: High | **Domain**: DevOps
+
+When doing bulk domain replacement across a monorepo:
+1. **Order matters**: Replace most-specific patterns first (`staging-api.payu.id` before `payu.id`)
+2. **Preserve intentionally different domains**: `payu.local` (mesh trust), `payu.internal` (internal DNS)
+3. **Always verify with negative grep**: After replacement, confirm zero stray references remain
+
+### L-004: Container Image Pinning
+
+**Date**: February 26, 2026 | **Severity**: Medium | **Domain**: Platform
+
+Never use `:latest` in compose files or Quadlet containers. Pin to specific versions:
+- Keycloak: `:26.1`
+- kafka-ui: `:v0.7.2`
+- timescaledb: `:2.17.2-pg16`
+
+**Rule**: Every image reference must have an explicit version tag for reproducibility.
+
+### L-007: Istio Ingress Gateway — Router Node Placement
+
+**Date**: February 26, 2026 | **Severity**: High | **Domain**: Infrastructure
+
+When running both OCP Ingress Controller and Istio Ingress Gateway on the same cluster:
+- 3 router nodes with taint `node-role.kubernetes.io/router:NoSchedule`
+- Istio Ingress Gateway pods must explicitly opt-in with `nodeSelector` + `tolerations`.
+- Use separate LB VIPs with different ports (80/443 vs 8080/8443).
+
+### L-011: .gitignore `out/` vs Hexagonal `port/out/`
+
+**Date**: March 14, 2026 | **Severity**: Critical | **Domain**: Platform / Architecture
+
+A root `.gitignore` entry `out/` matched all `port/out/` directories in the Hexagonal Architecture.
+**Fix**: Use `/out/` (root-only) instead of `out/` (recursive).
+
+### L-014: Podman Local Infrastructure — Storage Management
+
+**Date**: March 15, 2026 | **Severity**: Medium | **Domain**: Platform / DevOps
+
+Local development with 22+ services rapidly consumes disk space.
+**Cleanup Ritual**:
+1. `podman system prune -f`
+2. `podman builder prune -f`
+3. `rm -rf ~/.m2/repository` (if corrupted)
+4. `rm -rf /tmp/*`

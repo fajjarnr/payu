@@ -647,3 +647,17 @@ When auditing ANY PayU service, check these P19-specific items FIRST:
 
 ---
 *Last Updated: February 2026 (P19 Audit)*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-015: JWT Token Storage — The BFF Pattern
+
+**Date**: February 27, 2026 | **Severity**: Critical | **Domain**: Security
+
+Never store JWTs in `localStorage` in the browser. Use the **Backend-for-Frontend (BFF)** pattern:
+1. Frontend calls BFF (Node/Next.js)
+2. BFF handles Token Exchange with Keycloak
+3. BFF sets token in an `httpOnly`, `Secure`, `SameSite=Strict` cookie
+4. Browser sends cookie automatically; JS cannot read it (XSS protection)
+
+**Rule**: All web applications must use the BFF pattern for session management.

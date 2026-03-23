@@ -524,3 +524,12 @@ spectral lint ./docs/openapi/service-spec.yaml --ruleset .spectral.yaml --fail-s
 
 ---
 *Last Updated: January 2026*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-018: Webhook Validation — Replay Attack Protection
+
+**Date**: March 16, 2026 | **Severity**: Critical | **Domain**: Security
+
+Never verify webhook signatures without checking a timestamp (e.g., `X-PayU-Timestamp`). 
+**Rule**: Reject webhooks older than 5 minutes, even if the signature is valid.

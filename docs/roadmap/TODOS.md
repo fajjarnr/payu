@@ -11,13 +11,6 @@
 
 ## 📊 Board Summary
 
-| Status           | Count | Breakdown                                                                                                                                                |
-| :--------------- | :---: | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Active Epics** |   0   | All completed ✅                                                                                                                                         |
-| **Open Stories** |   0   | All completed ✅ (archived to CHANGELOG)                                                                                                                 |
-| **Tech Debt**    |   0   | All completed ✅                                                                                                                                         |
-| **Spikes**       |   5   | ARCH-001 – ARCH-005                                                                                                                                      |
-| **Deferred**     |   9   | P2-FE-003, OCP-007, OCP-010, DR-001, DEFER-001, RHPAM                                                                                                    |
 | **Open Bugs**    |  45   | 🟢 Total Open Bugs: 45 items (P0: 4, P1: 8, P2: 15, P3: 18) 🔴 Critical Sec Bugs: 10 items (PII Leakage, Audit gaps, remaining auth issues) (March 2026) |
 
 > **Completed Epics**: 24/24 fully done. All stories & tech debt cleared.
@@ -173,6 +166,7 @@
 | ARCH-003 | Spike | Support ticket: end-user PayU atau project client?                                    | Multi-tenancy `support-service`      | 📋 To Do |
 | ARCH-004 | Spike | CMS: hanya PayU web-app atau multi-tenant project client?                             | Multi-tenant mode `cms-service`      | 📋 To Do |
 | ARCH-005 | Spike | RHPAM/Kogito/Drools PoC: evaluate rules engine untuk credit scoring & fraud detection | ADR-0015, `rules-starter` shared lib | 📋 To Do |
+| ARCH-006 | Spike | Spring Boot 4.0 & Jakarta EE 11 Migration Strategy: Audit Spring Cloud compatibility (specifically Vault) before platform-wide rollout. | Oakwood Release Train | 📋 To Do |
 
 ---
 
@@ -207,7 +201,7 @@
 
 ---
 
-_Last Updated: March 21, 2026 | 0 Active Epics · 0 Open Stories · 42 Open Bugs · 0 Tech Debt · 5 Spikes · 9 Deferred_
+_Last Updated: March 23, 2026 | 0 Active Epics · 0 Open Stories · 45 Open Bugs · 0 Tech Debt · 6 Spikes · 9 Deferred_
 _All 648 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
 _Phase 12 E2E Coverage Gap Fixes: All 27 findings (BUG-TEST-090–116) closed — 10 new Playwright specs, 2 backend routing fixes, 12 xfail markers removed. Pytest 159/159, Maven 38/38 — March 17, 2026_
 _Phase 10 Shared Lib Audit: 31 new findings (BUG-SHARED-001–031) from 12 backend/shared/ modules (~170 source files) — March 17, 2026_

@@ -415,4 +415,13 @@ public class LBUReportGenerator {
 
 ---
 *Last Updated: January 2026*
+
+## 🧠 Lessons Learned (Session Log)
+
+### L-010: Settlement Window — Match Switching Cutoff
+
+**Date**: February 26, 2026 | **Severity**: High | **Domain**: Treasury
+
+Settlement batches MUST align with switching network (Alto/Prima) cutoff times (usually 23:00 WIB).
+**Rule**: T+1 settlement is relative to the *switching* business day, not calendar day.
 ```
