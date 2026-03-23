@@ -12,6 +12,10 @@ LABEL org.opencontainers.image.vendor="PayU Indonesia"
 LABEL org.opencontainers.image.source="https://github.com/payu/backend/gateway-service"
 LABEL id.payu.service.tier="core"
 
+USER root
+# Patch OS vulnerabilities immediately so RHACS DevSecOps scan passes!
+RUN microdnf update -y && microdnf clean all
+
 USER 185
 WORKDIR /deployments
 
