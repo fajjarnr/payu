@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Link } from '@/lib/navigation';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from '@/lib/navigation';
 import {
   LayoutDashboard,
   BarChart3,
@@ -34,13 +34,6 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { PersonalizedGreeting } from './personalization';
 import { useLogout } from '@/hooks';
-import { useRouter } from 'next/navigation';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Sheet,
   SheetContent,

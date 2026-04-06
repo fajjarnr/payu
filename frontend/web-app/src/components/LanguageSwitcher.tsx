@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from '@/lib/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Languages, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
@@ -46,8 +46,8 @@ export default function LanguageSwitcher() {
 
     // BUG-FE-068: Preserve query string when switching locale
     const queryString = typeof window !== 'undefined' ? window.location.search : '';
-    // Force hard navigation to ensure middleware and server components re-run
-    window.location.href = (newPath || '/') + queryString;
+    // Use router.push for client-side navigation with locale preservation
+    router.push((newPath || '/') + queryString);
     setIsOpen(false);
   };
 

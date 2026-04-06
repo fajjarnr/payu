@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Link } from '@/lib/navigation';
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/lib/navigation';
 import { 
   ShieldCheck, 
   Users, 

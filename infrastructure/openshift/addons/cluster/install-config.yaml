@@ -9,7 +9,7 @@ compute:
         rootVolume:
           size: 100
           type: gp3
-        type: m5.4xlarge
+        type: m5.2xlarge
         metadataService:
           authentication: Required
         zones:
@@ -58,5 +58,5 @@ platform:
       - subnet-046358054e0a9f1e9
       - subnet-0a904e9b9fe840684
 publish: External
-sshKey: ''
-pullSecret: ''
+sshKey: ""
+pullSecret: ""

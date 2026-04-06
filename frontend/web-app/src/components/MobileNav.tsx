@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/lib/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { Home, Wallet, Repeat, Receipt } from 'lucide-react';
 import clsx from 'clsx';

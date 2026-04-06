@@ -24,7 +24,7 @@ import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/M
 import clsx from 'clsx';
 import { useNotifications, useMarkNotificationRead } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 
 export default function NotificationsPage() {
   const { user } = useAuthStore();
