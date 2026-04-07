@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -34,7 +36,32 @@ public class LoyaltyPointsResource {
         this.loyaltyPointsService = loyaltyPointsService;
     }
 
+    /**
+     * BUG-SECURITY-024 FIX: Extract accountId from JWT principal.
+     * Uses 'account_id' claim with 'sub' fallback for consistency with other PayU services.
+     */
+    private String extractAccountId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
+    }
+
+    /**
+     * BUG-SECURITY-024 FIX: Verify the authenticated user owns the given account.
+     */
+    private void verifyAccountOwnership(String accountId) {
+        String jwtAccountId = extractAccountId();
+        if (!accountId.equals(jwtAccountId)) {
+            throw new AccessDeniedException("Access denied: you don't own this resource");
+        }
+    }
+
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Add loyalty points", description = "Add loyalty points to an account")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Loyalty points added successfully",
@@ -46,9 +73,14 @@ public class LoyaltyPointsResource {
     })
     public ResponseEntity<?> addPoints(@Valid @RequestBody CreateLoyaltyPointsRequest request) {
         try {
+            // BUG-SECURITY-024 FIX: Verify caller owns the account
+            verifyAccountOwnership(request.accountId());
             LoyaltyPoints loyaltyPoints = loyaltyPointsService.addPoints(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(LoyaltyPointsResponse.from(loyaltyPoints));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(e.getMessage()));
@@ -56,6 +88,7 @@ public class LoyaltyPointsResource {
     }
 
     @PostMapping("/redeem")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Redeem loyalty points", description = "Redeem loyalty points from an account")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Loyalty points redeemed successfully",
@@ -67,8 +100,13 @@ public class LoyaltyPointsResource {
     })
     public ResponseEntity<?> redeemPoints(@Valid @RequestBody RedeemLoyaltyPointsRequest request) {
         try {
+            // BUG-SECURITY-024 FIX: Verify caller owns the account
+            verifyAccountOwnership(request.accountId());
             LoyaltyPoints loyaltyPoints = loyaltyPointsService.redeemPoints(request);
             return ResponseEntity.ok(LoyaltyPointsResponse.from(loyaltyPoints));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(e.getMessage()));
@@ -76,6 +114,7 @@ public class LoyaltyPointsResource {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get loyalty points record by ID", description = "Retrieve loyalty points record by ID")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Loyalty points record found",
@@ -88,13 +127,17 @@ public class LoyaltyPointsResource {
     public ResponseEntity<?> getLoyaltyPoints(@PathVariable UUID id) {
         Optional<LoyaltyPoints> loyaltyPointsOpt = loyaltyPointsService.getLoyaltyPoints(id);
         if (loyaltyPointsOpt.isPresent()) {
-            return ResponseEntity.ok(LoyaltyPointsResponse.from(loyaltyPointsOpt.get()));
+            // BUG-SECURITY-024 FIX: Verify ownership
+            LoyaltyPoints lp = loyaltyPointsOpt.get();
+            verifyAccountOwnership(lp.getAccountId());
+            return ResponseEntity.ok(LoyaltyPointsResponse.from(lp));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ErrorResponse("Loyalty points record not found"));
     }
 
     @GetMapping("/account/{accountId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get loyalty points by account", description = "Retrieve all loyalty points for an account")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Loyalty points retrieved successfully"),
@@ -102,12 +145,15 @@ public class LoyaltyPointsResource {
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<List<LoyaltyPointsResponse>> getLoyaltyPointsByAccount(@PathVariable String accountId) {
+    public ResponseEntity<?> getLoyaltyPointsByAccount(@PathVariable String accountId) {
+        // BUG-SECURITY-024 FIX: Verify caller owns the account
+        verifyAccountOwnership(accountId);
         List<LoyaltyPoints> loyaltyPoints = loyaltyPointsService.getLoyaltyPointsByAccount(accountId);
         return ResponseEntity.ok(loyaltyPoints.stream().map(LoyaltyPointsResponse::from).toList());
     }
 
     @GetMapping("/account/{accountId}/balance")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get loyalty points balance", description = "Retrieve loyalty points balance for an account")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Balance retrieved successfully"),
@@ -115,7 +161,9 @@ public class LoyaltyPointsResource {
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<LoyaltyBalanceResponse> getBalance(@PathVariable String accountId) {
+    public ResponseEntity<?> getBalance(@PathVariable String accountId) {
+        // BUG-SECURITY-024 FIX: Verify caller owns the account
+        verifyAccountOwnership(accountId);
         LoyaltyBalanceResponse balance = loyaltyPointsService.getBalance(accountId);
         return ResponseEntity.ok(balance);
     }

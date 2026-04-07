@@ -172,11 +172,11 @@ public class DisbursementService implements DisbursementUseCase {
         // Transition to COMPLETED
         disbursement.complete(bankReference);
 
-        // Commit the reserved balance
+        // BUG-LOGIC-013 FIX: Use disbursement ID as reservationId (matches reserveBalance call in createDisbursement)
         walletService.commitBalance(
                 disbursement.getSourceAccountId(),
                 disbursement.getId().toString(),
-                null, // reservationId would be stored in a real implementation
+                disbursement.getId().toString(),
                 disbursement.getAmount().getAmount()
         );
 
@@ -195,11 +195,11 @@ public class DisbursementService implements DisbursementUseCase {
         // Transition to FAILED
         disbursement.fail(reason);
 
-        // Release the reserved balance
+        // BUG-LOGIC-013 FIX: Use disbursement ID as reservationId (matches reserveBalance call in createDisbursement)
         walletService.releaseBalance(
                 disbursement.getSourceAccountId(),
                 disbursement.getId().toString(),
-                null, // reservationId would be stored in a real implementation
+                disbursement.getId().toString(),
                 disbursement.getAmount().getAmount()
         );
 

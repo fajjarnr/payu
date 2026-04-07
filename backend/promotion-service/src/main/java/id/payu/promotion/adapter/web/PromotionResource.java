@@ -6,6 +6,9 @@ import id.payu.promotion.dto.UpdatePromotionRequest;
 import id.payu.promotion.dto.ClaimPromotionRequest;
 import id.payu.promotion.dto.PromotionResponse;
 import id.payu.promotion.dto.RewardResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import id.payu.promotion.application.service.PromotionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,6 +42,20 @@ public class PromotionResource extends BaseController {
 
     public PromotionResource(PromotionService promotionService) {
         this.promotionService = promotionService;
+    }
+
+    /**
+     * BUG-SECURITY-025 FIX: Extract accountId from JWT principal.
+     * Uses 'account_id' claim with 'sub' fallback for consistency with other PayU services.
+     */
+    private String extractAccountId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
     }
 
     @PostMapping
@@ -92,9 +109,19 @@ public class PromotionResource extends BaseController {
         @ApiResponse(responseCode = "403", description = "Forbidden"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> claimPromotion(@PathVariable String code, @Valid @RequestBody ClaimPromotionRequest request) {
         try {
-            id.payu.promotion.domain.Reward reward = promotionService.claimPromotion(code, request);
+            // BUG-SECURITY-025 FIX: Override accountId from JWT to prevent identity spoofing
+            String jwtAccountId = extractAccountId();
+            ClaimPromotionRequest securedRequest = new ClaimPromotionRequest(
+                    jwtAccountId,
+                    request.transactionId(),
+                    request.transactionAmount(),
+                    request.merchantCode(),
+                    request.categoryCode()
+            );
+            id.payu.promotion.domain.Reward reward = promotionService.claimPromotion(code, securedRequest);
             return created(RewardResponse.from(reward), "/api/v1/promotions/rewards/{id}", reward.getId());
         } catch (IllegalArgumentException e) {
             return badRequest("PROMO_003", e.getMessage());

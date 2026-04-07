@@ -1,8 +1,13 @@
 package id.payu.wallet.application.exception;
 
-// TODO BUG-ARCH-002: Migrate to extend BusinessException with proper error codes
-public class LedgerEntryNotFoundException extends RuntimeException {
+import id.payu.api.common.exception.BusinessException;
+
+/**
+ * BUG-ARCH-002 FIX: Migrated to extend BusinessException with proper error code WAL_004.
+ * Thrown when a ledger entry is not found for a given transaction.
+ */
+public class LedgerEntryNotFoundException extends BusinessException {
     public LedgerEntryNotFoundException(String transactionId) {
-        super("Ledger entry not found for transaction: " + transactionId);
+        super("WAL_004", "Ledger entry not found for transaction: " + transactionId);
     }
 }

@@ -21,23 +21,20 @@
 | Frontend Pages             | 🟢 44/44    | Next.js App Router (Mar 22)                     |
 | API-First (OpenAPI)        | 🟢 23/23    | All deployed services have Swagger/OpenAPI      |
 | Production Readiness State | 🟢 100%     | All 4 P0 Gateway Gaps Closed (Mar 16)           |
-| **Open Bugs (TODOS.md)**   | 🔴 56       | Logical Inspection Tahap Akhir (Mar 2026)       |
-| Last Status Update         | 2026-03-22 | v1.7.1 (OpenShift/Stable)                       |
-| OpenShift Tag              | `v1.7.1`   | Latest stable deployment                        |
+| **Open Bugs (TODOS.md)**   | 🟢 0        | All bugs resolved — Phase 15 Final Remediation  |
+| Last Status Update         | 2026-04-07 | v1.7.8 (Phase 15 Final Remediation)             |
+| OpenShift Tag              | `v1.7.8`   | Latest stable deployment                        |
 | Kafka Mode                 | KRaft      | (no Zookeeper)                                  |
 
+> ✅ **Phase 15 — Final Remediation Complete (Apr 7)**: All 12 remaining bugs closed (BUG-SECURITY-027/008/009/022-025, BUG-LOGIC-013/016, BUG-ARCH-002, BUG-FE-007-011). Security hardening, access control, promo validation, exception architecture fixes applied.
+> ✅ **Phase 14 — Frontend Remediation Complete (Apr 7)**: All 42 frontend findings resolved.
 > ✅ **Phase 12 — E2E Coverage Gaps Fixed (Mar 17)**: All 27 findings (BUG-TEST-090–116) resolved — 10 new Playwright specs (113 tests), 2 backend routing fixes (compliance context-path, analytics gateway endpoints), 12 xfail markers removed. Pytest 159/159, Maven 38/38.
 > ✅ **Phase 8/9/10 — 114 Audit Bugs Fixed (Mar 17)**: 39 test quality (BUG-TEST-051–089), 44 infrastructure security (BUG-INFRA-044–087), 31 shared library (BUG-SHARED-001–031). Maven 38/38 SUCCESS. **Zero open bugs.**
 > ✅ **Phase 7 All 240 Audit Bugs Fixed — Complete (Mar 17)**: All 240 open bugs closed across 7 batches (32 backend P0, 25 auth/security, 38 frontend logic, 39 frontend-backend mismatch, 5 auth/session, 34 infrastructure, 45 test quality + 23 stories). 27+ TypeScript errors fixed. Maven 38/38, Frontend build SUCCESS, Playwright 544/544, Pytest 159/159. **Zero open bugs.**
 > ✅ **Phase 5 Skill Sync Complete (Mar 16)**: Synced 21 lessons into 8 skill reference files, fixed stale references (Zookeeper→KRaft, com.payu→id.payu).
 > ✅ **Phase 4 Backlog Hygiene Complete (Mar 16)**: Archived 34 closed + 4 Won't Do bugs. Added 7 lessons (L-015 to L-021). Deep audit addendum: 182 new findings logged.
 > ✅ **Phase 3 Bug Fixes Complete (Mar 16)**: All 34 bugs from March 16 deep audit CLOSED. Backend 38/38 SUCCESS, Frontend build SUCCESS, Playwright 544/544, Pytest 159/159.
-> ⚠️ **Parallel Re-Audit (Mar 16)**: Deeper parallel audit discovered 19 new bugs (3 P0 backend, 5 P1-P2 frontend, 1 cross-service, 1 auth, 4 infra, 4 test quality). Tracked in `TODOS.md`.
-> ⚠️ **Deep Audit Addendum (Mar 16)**: 182 additional findings across 6 areas. See `DEEP_AUDIT_2026-03-16.md`.
-> ✅ **Phase 2 Gateway Gaps Complete (Mar 16)**: All 4 P0 gateway gaps implemented (GAP-001, GAP-002, GAP-006, GAP-007). E2E regression: 544 Playwright + 159 Pytest = 703 tests, 0 failures.
-> ✅ **Phase 1 E2E Stabilization Complete (Mar 15)**: All E2E failures resolved. 544 Playwright + 159 Pytest blackbox tests passing with 0 failures, 0 skips.
-> ✅ **Code Review Complete (Feb 24-25)**: 229 of ~232 bugs fixed (~99% resolution rate).
-> **0 open bugs** remaining. Total: 648 fixed + 4 Won't Do = 652 tracked. All audit findings resolved.
+> **0 open bugs** remaining. Total: 702 fixed + 4 Won't Do = 706 tracked. All audit findings resolved.
 > Lihat `CHANGELOG.md` untuk detail.
 
 ---
@@ -82,7 +79,16 @@
 
 ## 📦 Deployment Log
 
-### v1.7.6 (Completed) — March 23, 2026
+### v1.7.8 (Completed) — April 7, 2026
+
+**Phase 15 — Final Remediation: All 12 Remaining Bugs Closed (0 Open Bugs)**
+
+- ✅ **P0 Security (3 bugs confirmed)**: BUG-SECURITY-027 (admin access control), BUG-SECURITY-008 (lockout TTL), BUG-SECURITY-009 (race condition) — all verified already fixed in prior phases.
+- ✅ **P1 Security/Logic (6 bugs)**: BUG-LOGIC-013 (null reservationId → fixed in `DisbursementService`), BUG-SECURITY-022 (receipt IDOR — confirmed fixed), BUG-SECURITY-023 (cross-account ledger leak → fixed filter in `WalletController`), BUG-SECURITY-024 (loyalty points access control → JWT ownership added to `LoyaltyPointsResource`), BUG-SECURITY-025 (identity spoofing → JWT override in `PromotionResource`), BUG-LOGIC-016 (validate promo stub → actual validation in `PromoRedemptionController`).
+- ✅ **P2 Architecture (3 bugs)**: BUG-ARCH-002 (7 wallet exceptions migrated to `BusinessException` with error codes WAL_002–WAL_008), BUG-FE-007–011 (5 frontend bugs confirmed fixed in Phase 14).
+- **Total Bug Count**: 702 fixed + 4 Won't Do = 706 tracked, **0 open**.
+
+### v1.7.7 (Completed) — April 7, 2026
 
 **Security Hardening & Dependency Alignment:**
 
@@ -125,7 +131,7 @@
 - ✅ **Maven Build**: 38/38 modules SUCCESS
 - ✅ **Saga Cascade Fixed**: `SagaOrchestrator` constructor change propagated to 4 subclasses + 2 test inner classes.
 
-**Total Bug Count**: 648 fixed + 4 Won't Do = 652 tracked, **0 open**.
+**Total Bug Count**: 648 fixed + 4 Won't Do = 652 tracked, **0 open** (before Phase 13/14/15).
 
 ### v1.7.0 (Completed) — March 17, 2026
 

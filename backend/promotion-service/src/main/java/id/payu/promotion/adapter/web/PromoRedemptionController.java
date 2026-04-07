@@ -114,13 +114,43 @@ public class PromoRedemptionController extends BaseController {
 
         LOG.info("Validating promo code: {}, amount: {}", promoCode, amount);
 
-        // For validation, we just check if the promo exists and user hasn't used it
-        // This is a simplified validation - full validation happens on apply
+        // BUG-LOGIC-016 FIX: Perform actual validation instead of always returning {valid: true}
+        try {
+            // Create a dry-run apply request to validate without side effects
+            ApplyPromoRequest dryRunRequest = new ApplyPromoRequest(
+                    promoCode,
+                    userId,
+                    "VALIDATION_DRY_RUN",
+                    amount,
+                    null,
+                    null
+            );
 
-        return ok(Map.of(
-                "valid", true,
-                "promoCode", promoCode,
-                "message", "Promo code is valid"
-        ));
+            ApplyPromoResponse result = promoRedemptionService.applyPromo(dryRunRequest);
+
+            if (result.success()) {
+                return ok(Map.of(
+                        "valid", true,
+                        "promoCode", promoCode,
+                        "message", "Promo code is valid",
+                        "discountAmount", result.discountAmount(),
+                        "finalAmount", result.finalAmount()
+                ));
+            } else {
+                return ok(Map.of(
+                        "valid", false,
+                        "promoCode", promoCode,
+                        "errorCode", result.errorCode() != null ? result.errorCode() : "UNKNOWN",
+                        "message", result.errorMessage() != null ? result.errorMessage() : "Promo code is not valid"
+                ));
+            }
+        } catch (Exception e) {
+            LOG.error("Error validating promo code: {}", e.getMessage());
+            return ok(Map.of(
+                    "valid", false,
+                    "promoCode", promoCode,
+                    "message", "Promo code validation failed: " + e.getMessage()
+            ));
+        }
     }
 }

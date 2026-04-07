@@ -1,12 +1,14 @@
 package id.payu.wallet.application.service;
 
+import id.payu.api.common.exception.BusinessException;
+
 /**
- * Exception thrown when a settlement batch is not found.
+ * BUG-ARCH-002 FIX: Migrated to extend BusinessException with proper error code WAL_005.
+ * Thrown when a settlement batch is not found.
  */
-// TODO BUG-ARCH-002: Migrate to extend BusinessException with proper error codes
-public class SettlementNotFoundException extends RuntimeException {
+public class SettlementNotFoundException extends BusinessException {
 
     public SettlementNotFoundException(String batchId) {
-        super("Settlement batch not found: " + batchId);
+        super("WAL_005", "Settlement batch not found: " + batchId);
     }
 }

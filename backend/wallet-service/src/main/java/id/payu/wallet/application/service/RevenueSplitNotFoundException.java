@@ -1,12 +1,14 @@
 package id.payu.wallet.application.service;
 
+import id.payu.api.common.exception.BusinessException;
+
 /**
- * Exception thrown when a revenue split is not found.
+ * BUG-ARCH-002 FIX: Migrated to extend BusinessException with proper error code WAL_008.
+ * Thrown when a revenue split is not found.
  */
-// TODO BUG-ARCH-002: Migrate to extend BusinessException with proper error codes
-public class RevenueSplitNotFoundException extends RuntimeException {
+public class RevenueSplitNotFoundException extends BusinessException {
 
     public RevenueSplitNotFoundException(String splitId) {
-        super("Revenue split not found: " + splitId);
+        super("WAL_008", "Revenue split not found: " + splitId);
     }
 }

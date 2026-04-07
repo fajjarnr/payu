@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.8] - 2026-04-07
+
+### Fixed — Phase 15: Final Remediation — All 12 Remaining Bugs Closed (0 Open Bugs)
+
+#### P0 Critical Security (3 bugs — confirmed already fixed)
+- **BUG-SECURITY-027**: Broken Access Control on `promotion-service` admin endpoints — confirmed `@PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")` present on all admin CRUD endpoints with `@EnableMethodSecurity`.
+- **BUG-SECURITY-008**: Account Lockout Bypass via hardcoded 15min Cache TTL — confirmed fix uses configurable `lockoutDurationMinutes` for Redis TTL in `KeycloakService.java`.
+- **BUG-SECURITY-009**: Race Condition in brute-force counter (read-modify-write anti-pattern) — confirmed fix uses `synchronized (key.intern())` block in `recordFailedAttemptInternal()`.
+
+#### P1 High Priority (6 bugs)
+- **BUG-LOGIC-013**: Fixed null `reservationId` in `DisbursementService.java` — `completeDisbursement()` and `failDisbursement()` now pass `disbursement.getId().toString()` instead of `null` for commit/release operations.
+- **BUG-SECURITY-022**: IDOR on receipt endpoints in `statement-service` — confirmed all 4 receipt endpoints extract JWT `customerId` and pass to service methods for ownership validation.
+- **BUG-SECURITY-023**: Fixed cross-account ledger leak in `WalletController.java` — `getLedgerEntriesByTransaction()` now fetches entries by transactionId then filters by the authenticated user's `accountId`.
+- **BUG-SECURITY-024**: Fixed Broken Access Control on loyalty points in `LoyaltyPointsResource.java` — added JWT extraction (`extractAccountId()`) and ownership verification (`verifyAccountOwnership()`) to all 6 endpoints.
+- **BUG-SECURITY-025**: Fixed Identity Spoofing on claim promotion in `PromotionResource.java` — `claimPromotion()` now overrides `accountId` from JWT principal instead of trusting request body.
+- **BUG-LOGIC-016**: Fixed `validatePromo()` in `PromoRedemptionController.java` — replaced hardcoded `{valid: true}` stub with actual validation via `PromoRedemptionService.applyPromo()` dry-run.
+
+#### P2 Medium Priority (3 bugs)
+- **BUG-ARCH-002**: Migrated 6 wallet-service exceptions (`InsufficientBalanceException`, `ReservationNotFoundException`, `LedgerEntryNotFoundException`, `SettlementNotFoundException`, `FxRateNotFoundException`, `PocketNotFoundException`, `RevenueSplitNotFoundException`) from `RuntimeException` to `BusinessException` with proper error codes (WAL_002–WAL_008).
+- **BUG-FE-007 through BUG-FE-011**: Confirmed all 5 frontend bugs already fixed in Phase 14 (loading skeletons, i18n locale, token refresh, SPA navigation, banner carousel debounce).
+
+### Changed
+- Updated `docs/roadmap/TODOS.md`: Open Bug count reduced from 12 to 0. Scorecard zeroed across all categories. Total bugs fixed: 702 + 4 Won't Do.
+- Updated `docs/roadmap/PROGRESS.md`: Added Phase 15 entry.
+
+---
+
 ## [1.7.7] - 2026-04-07
 
 ### Added
