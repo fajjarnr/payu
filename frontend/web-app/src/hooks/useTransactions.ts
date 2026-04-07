@@ -3,12 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import TransactionService from '@/services/TransactionService';
 import { MutationPresets } from '@/lib/mutation-config';
-import type { InitiateTransferRequest, ProcessQrisPaymentRequest } from '@/types';
+import type { InitiateTransferRequest, ProcessQrisPaymentRequest, TransactionFilters } from '@/types';
 
-export const useTransactions = (accountId: string | undefined, page = 0, size = 20) => {
+export const useTransactions = (accountId: string | undefined, page = 0, size = 20, filters?: TransactionFilters) => {
   return useQuery({
-    queryKey: ['transactions', accountId, page, size],
-    queryFn: () => TransactionService.getAccountTransactions(accountId!, page, size),
+    queryKey: ['transactions', accountId, page, size, filters],
+    queryFn: () => TransactionService.getAccountTransactions(accountId!, page, size, filters),
     enabled: !!accountId,
     staleTime: 60000,
     gcTime: 300000

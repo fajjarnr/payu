@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import DashboardLayout from '@/components/DashboardLayout';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { useAuthStore } from '@/stores';
@@ -48,7 +48,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import clsx from 'clsx';
-import type { Transaction } from '@/services/TransactionService';
+import type { Transaction, TransactionFilters, TransactionStatus, TransactionType } from '@/types';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
@@ -76,8 +76,11 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(0);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [filters, setFilters] = useState<TransactionFilters>({});
+  const locale = useLocale();
+  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
 
-  const { data: transactions, isLoading } = useTransactions(accountId || undefined, page, 20);
+  const { data: transactions, isLoading } = useTransactions(accountId || undefined, page, 20, filters);
   const cancelTransaction = useCancelTransaction();
 
   // Compute stats from actual transaction data
@@ -105,7 +108,7 @@ export default function TransactionsPage() {
   };
 
   const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('id-ID', {
+    return new Intl.NumberFormat(bcp47Locale, {
       style: 'currency',
       currency: currency || 'IDR',
       minimumFractionDigits: 0,
@@ -113,7 +116,7 @@ export default function TransactionsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
+    return new Date(dateString).toLocaleDateString(bcp47Locale, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -139,14 +142,59 @@ export default function TransactionsPage() {
               </p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" className="gap-2">
-                <Calendar className="h-4 w-4" />
-                Filter Tanggal
-              </Button>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
+              {(filters.status || filters.type) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setFilters({})}
+                  className="text-xs font-bold text-muted-foreground hover:text-primary"
+                >
+                  Hapus Filter
+                </Button>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Filter className="h-4 w-4" />
+                    {filters.status ? statusConfig[filters.status].label : 'Status'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setFilters({ ...filters, status: undefined })}>
+                    Semua Status
+                  </DropdownMenuItem>
+                  {Object.keys(statusConfig).map((status) => (
+                    <DropdownMenuItem 
+                      key={status} 
+                      onClick={() => setFilters({ ...filters, status: status as TransactionStatus })}
+                    >
+                      {statusConfig[status].label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <ArrowLeftRight className="h-4 w-4" />
+                    {filters.type ? typeConfig[filters.type]?.label : 'Tipe'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => setFilters({ ...filters, type: undefined })}>
+                    Semua Tipe
+                  </DropdownMenuItem>
+                  {Object.keys(typeConfig).map((type) => (
+                    <DropdownMenuItem 
+                      key={type} 
+                      onClick={() => setFilters({ ...filters, type: type as TransactionType })}
+                    >
+                      {typeConfig[type].label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
@@ -156,8 +204,8 @@ export default function TransactionsPage() {
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                      <ArrowDownLeft className="h-6 w-6 text-emerald-500" />
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/10">
+                      <ArrowDownLeft className="h-6 w-6 text-primary" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Total Masuk</p>
@@ -284,12 +332,12 @@ export default function TransactionsPage() {
                               <TableCell className="py-6">
                                 <div className="flex items-center gap-3">
                                   <div className={clsx(
-                                    "h-10 w-10 rounded-xl flex items-center justify-center",
-                                    isCreditType(transaction.type) ? "bg-emerald-500/10" : "bg-primary/10"
+                                    "h-10 w-10 rounded-xl flex items-center justify-center border",
+                                    isCreditType(transaction.type) ? "bg-primary/10 border-primary/10" : "bg-muted/50 border-border/50"
                                   )}>
                                     <TypeIcon className={clsx(
                                       "h-5 w-5",
-                                      isCreditType(transaction.type) ? "text-emerald-500" : "text-primary"
+                                      isCreditType(transaction.type) ? "text-primary" : "text-muted-foreground"
                                     )} />
                                   </div>
                                   <span className="text-sm font-bold text-foreground">{type.label}</span>
@@ -308,7 +356,7 @@ export default function TransactionsPage() {
                               </TableCell>
                               <TableCell className={clsx(
                                 "py-6 text-right font-bold tabular-nums",
-                                isCreditType(transaction.type) ? "text-emerald-600" : "text-foreground"
+                                isCreditType(transaction.type) ? "text-primary" : "text-foreground"
                               )}>
                                 {isCreditType(transaction.type) ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
                               </TableCell>
@@ -357,12 +405,12 @@ export default function TransactionsPage() {
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
                               <div className={clsx(
-                                "h-10 w-10 rounded-xl flex items-center justify-center",
-                                isCreditType(transaction.type) ? "bg-emerald-500/10" : "bg-primary/10"
+                                "h-10 w-10 rounded-xl flex items-center justify-center border",
+                                isCreditType(transaction.type) ? "bg-primary/10 border-primary/10" : "bg-muted/50 border-border/50"
                               )}>
                                 <TypeIcon className={clsx(
                                   "h-5 w-5",
-                                    isCreditType(transaction.type) ? "text-emerald-500" : "text-primary"
+                                    isCreditType(transaction.type) ? "text-primary" : "text-muted-foreground"
                                 )} />
                               </div>
                               <div>
@@ -381,7 +429,7 @@ export default function TransactionsPage() {
                             </p>
                             <p className={clsx(
                               "text-sm font-bold tabular-nums",
-                              isCreditType(transaction.type) ? "text-emerald-600" : "text-foreground"
+                              isCreditType(transaction.type) ? "text-primary" : "text-foreground"
                             )}>
                               {isCreditType(transaction.type) ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
                             </p>

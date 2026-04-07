@@ -9,7 +9,7 @@ public class InvalidPromoException extends id.payu.api.common.exception.Business
     private final String reason;
 
     public InvalidPromoException(String promoCode, String reason) {
-        super(String.format("Promo code '%s' is invalid: %s", promoCode, reason));
+        super("PRM_VAL_001", String.format("Promo code '%s' is invalid: %s", promoCode, reason));
         this.promoCode = promoCode;
         this.reason = reason;
     }

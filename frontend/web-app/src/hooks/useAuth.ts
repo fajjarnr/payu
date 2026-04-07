@@ -21,7 +21,10 @@ export const useLogin = () => {
       // We only store user profile and account ID in the store
       const user = response.data?.user;
       if (user) {
-        setAuth(user, user.id);
+        // BUG-CROSS-033 FIX: Use explicit accountId from JWT claims,
+        // not user.id (which is JWT 'sub' / userId)
+        const accountId = user.accountId || response.data?.accountId || user.id;
+        setAuth(user, accountId);
       }
       // Track when the accessToken cookie will expire so useSilentRefresh
       // can proactively refresh before it expires (no token is exposed here)

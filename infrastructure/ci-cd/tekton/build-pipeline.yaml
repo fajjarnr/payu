@@ -17,7 +17,7 @@ spec:
     - name: service-path
       type: string
       description: "The directory path of the service inside backend/ (default: same as service-name)"
-      default: ""
+      default: "$(params.service-name)"
     - name: git-url
       type: string
       default: "https://github.com/fajjarnr/payu.git"

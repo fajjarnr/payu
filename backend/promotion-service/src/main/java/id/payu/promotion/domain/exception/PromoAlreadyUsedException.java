@@ -9,7 +9,7 @@ public class PromoAlreadyUsedException extends id.payu.api.common.exception.Busi
     private final String userId;
 
     public PromoAlreadyUsedException(String promoCode, String userId) {
-        super(String.format("Promo code '%s' has already been used by user '%s'", promoCode, userId));
+        super("PRM_VAL_003", String.format("Promo code '%s' already used by customer %s", promoCode, userId));
         this.promoCode = promoCode;
         this.userId = userId;
     }

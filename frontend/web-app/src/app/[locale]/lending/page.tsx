@@ -6,6 +6,7 @@ import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCi
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreApprovals } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
@@ -14,10 +15,10 @@ export default function LendingPage() {
   const [activeTab, setActiveTab] = useState<'loans' | 'paylater'>('loans');
   const { user } = useAuthStore();
   const userId = user?.id ?? '';
-  const { data: creditScoreData } = useCreditScore(userId);
-  const { data: payLaterData } = usePayLater(userId);
-  const { data: payLaterTxns } = usePayLaterTransactions(userId);
-  const { data: preApprovals } = useActivePreApprovals(userId);
+  const { data: creditScoreData, isLoading: isLoadingScore } = useCreditScore(userId);
+  const { data: payLaterData, isLoading: isLoadingPayLater } = usePayLater(userId);
+  const { data: payLaterTxns, isLoading: isLoadingTxns } = usePayLaterTransactions(userId);
+  const { data: preApprovals, isLoading: isLoadingPreApprovals } = useActivePreApprovals(userId);
 
   const loanProducts = [
     {
@@ -108,12 +109,18 @@ export default function LendingPage() {
                         <div>
                           <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">Skor Kredit Anda</p>
                           <div className="flex items-baseline gap-3">
-                            <h3 className="text-5xl font-bold">{creditScore.score}</h3>
+                            <h3 className="text-5xl font-bold">
+                              {isLoadingScore ? <Skeleton className="h-12 w-20 bg-white/20" /> : creditScore.score}
+                            </h3>
                             <div className="flex items-center gap-2 bg-success-light/20 px-3 py-1 rounded-full border border-success-light/20">
-                              <span className="text-lg font-bold text-success-light">Grade {creditScore.grade}</span>
+                              <span className="text-lg font-bold text-success-light">
+                                Grade {isLoadingScore ? "..." : creditScore.grade}
+                              </span>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mt-3">Terakhir diperbarui: {creditScore.lastUpdated}</p>
+                          <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mt-3">
+                            Terakhir diperbarui: {isLoadingScore ? "..." : creditScore.lastUpdated}
+                          </p>
                         </div>
                         <div className="h-16 w-16 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                           <ShieldCheck className="h-8 w-8 text-bank-green" />
@@ -121,14 +128,16 @@ export default function LendingPage() {
                       </div>
 
                       <div className="space-y-3 mb-8">
-                        {creditScore.factors.map((factor, i) => (
-                          <div key={i} className="flex items-center gap-3">
-                            <div className="h-6 w-6 rounded-full bg-success-light/20 flex items-center justify-center">
-                              <CheckCircle className="h-4 w-4 text-success-light" />
+                        {isLoadingScore 
+                          ? [1,2].map(i => <Skeleton key={i} className="h-5 w-48 bg-white/10" />)
+                          : creditScore.factors.map((factor, i) => (
+                            <div key={i} className="flex items-center gap-3">
+                                <div className="h-6 w-6 rounded-full bg-success-light/20 flex items-center justify-center">
+                                <CheckCircle className="h-4 w-4 text-success-light" />
+                                </div>
+                                <span className="text-sm font-medium">{factor}</span>
                             </div>
-                            <span className="text-sm font-medium">{factor}</span>
-                          </div>
-                        ))}
+                          ))}
                       </div>
 
                       <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
@@ -143,7 +152,9 @@ export default function LendingPage() {
                         <Wallet className="h-6 w-6 text-primary" />
                       </div>
                       <h3 className="text-lg font-bold text-foreground mb-3">Total Limit Pinjaman</h3>
-                       <p className="text-3xl font-bold text-primary mb-2">{formatCurrency(preApprovals?.[0]?.maxAmount ?? 0)}</p>
+                       <p className="text-3xl font-bold text-primary mb-2">
+                        {isLoadingPreApprovals ? <Skeleton className="h-9 w-32" /> : formatCurrency(preApprovals?.[0]?.maxAmount ?? 0)}
+                       </p>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Tersedia berdasarkan skor kredit</p>
                     </div>
                   </StaggerItem>
@@ -207,7 +218,9 @@ export default function LendingPage() {
                             </div>
                             <div>
                               <p className="text-xs font-bold text-white/80 tracking-widest uppercase">PayLater Limit</p>
-                              <h3 className="text-2xl font-bold">{formatCurrency(payLaterStats.availableLimit)}</h3>
+                              <h3 className="text-2xl font-bold">
+                                {isLoadingPayLater ? <Skeleton className="h-8 w-32 bg-white/20" /> : formatCurrency(payLaterStats.availableLimit)}
+                              </h3>
                             </div>
                           </div>
                           <p className="text-sm text-white/80">Tersedia untuk belanja sekarang, bayar nanti</p>
@@ -216,7 +229,9 @@ export default function LendingPage() {
                           <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Jatuh Tempo</p>
                           <div className="flex items-center gap-2 justify-end">
                             <Calendar className="h-4 w-4" />
-                            <span className="font-bold">{payLaterStats.dueDate}</span>
+                            <span className="font-bold">
+                                {isLoadingPayLater ? "..." : payLaterStats.dueDate}
+                            </span>
                           </div>
                         </div>
                       </div>

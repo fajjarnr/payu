@@ -16,7 +16,7 @@ export function formatDate(
     locale?: string;
   } = {}
 ): string {
-  const { format = 'short', locale = 'id-ID' } = options;
+  const { format = 'short', locale } = options;
 
   if (!date) {
     return '-';
@@ -77,7 +77,7 @@ export function formatDateTime(
     format?: 'short' | 'long';
   } = {}
 ): string {
-  const { showSeconds = false, locale = 'id-ID', format = 'short' } = options;
+  const { showSeconds = false, locale, format = 'short' } = options;
 
   if (!date) {
     return '-';
@@ -392,7 +392,7 @@ export function formatDateRange(
   endDate: Date | string | number,
   options: { locale?: string; format?: 'short' | 'long' } = {}
 ): string {
-  const { locale = 'id-ID', format = 'short' } = options;
+  const { locale, format = 'short' } = options;
 
   const start = typeof startDate === 'string' || typeof startDate === 'number' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' || typeof endDate === 'number' ? new Date(endDate) : endDate;
@@ -518,7 +518,7 @@ export function formatDateTimeWithSuffix(
   date: Date | string | number | null | undefined,
   options: { locale?: string } = {}
 ): string {
-  const { locale = 'id-ID' } = options;
+  const { locale } = options;
 
   if (!date) {
     return '-';

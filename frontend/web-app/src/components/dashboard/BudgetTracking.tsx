@@ -10,7 +10,7 @@ import {
   Trash2,
   ChevronDown as ChevronDownIcon
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import clsx from 'clsx';
 
 import { cn } from '@/lib/utils';
@@ -290,7 +290,7 @@ function SummaryCard({ label, value, currency, color, textColor }: SummaryCardPr
     <div className={clsx('p-4 rounded-2xl border border-white/5 shadow-sm', color)}>
       <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">{label}</p>
       <p className={clsx('text-base sm:text-lg font-bold tabular-nums tracking-tight', textColor)}>
-        {currency} {value.toLocaleString('id-ID')}
+        {currency} {value.toLocaleString(bcp47Locale)}
       </p>
     </div>
   );
@@ -309,7 +309,7 @@ function DetailItem({ label, value, currency, valueColor = 'text-foreground', is
     <div className="space-y-1">
       <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider opacity-60">{label}</p>
       <p className={clsx('text-sm font-bold tabular-nums tracking-tight', valueColor)}>
-        {isPercentage ? value : `${currency} ${Number(value).toLocaleString('id-ID')}`}
+        {isPercentage ? value : `${currency} ${Number(value).toLocaleString(bcp47Locale)}`}
       </p>
     </div>
   );

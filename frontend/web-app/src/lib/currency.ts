@@ -21,7 +21,7 @@ export function formatCurrency(
   const {
     withDecimals = false,
     symbol = 'Rp',
-    locale = 'id-ID',
+    locale,
     compact = false,
   } = options;
 
@@ -70,7 +70,7 @@ export function formatCurrencyWithoutSymbol(
   amount: number | string | null | undefined,
   options: { withDecimals?: boolean; locale?: string } = {}
 ): string {
-  const { withDecimals = false, locale = 'id-ID' } = options;
+  const { withDecimals = false, locale } = options;
 
   if (amount === null || amount === undefined) {
     return '0';

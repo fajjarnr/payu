@@ -312,6 +312,9 @@
     "noAccount": "Belum memiliki akun?",
     "registerLink": "Daftar Sekarang",
     "loginSuccess": "Berhasil masuk!",
+    "mfaRequired": "MFA Diperlukan: Terdeteksi pola login mencurigakan.",
+    "invalidResponse": "Login gagal: Respon server tidak valid",
+    "loginFailed": "Login gagal. Silakan periksa kredensial Anda.",
     "onboarding": {
       "title": "Selamat Datang di PayU",
       "subtitle": "Platform perbankan digital masa depan",
@@ -346,9 +349,10 @@
       "step3": {
         "title": "Akun Siap Digunakan!",
         "subtitle": "Mengalihkan Anda ke gerbang login aman dalam beberapa detik...",
-        "success": "Registrasi Berhasil!",
-        "redirect": "Mengalihkan ke halaman login..."
+        "success": "Registrasi Berhasil!"
       },
+      "registrationFailed": "Pendaftaran gagal. Silakan coba lagi.",
+      "redirect": "Mengalihkan ke halaman login...",
       "branding": {
         "title": "Verifikasi Identitas Digital.",
         "desc": "Bergabung dengan 2 Juta+ pengguna yang telah mempercayakan masa depan finansial mereka pada ekosistem PayU.",
@@ -432,7 +436,54 @@
     "saving": "Menyimpan...",
     "profileUpdateSuccess": "Profil berhasil diperbarui.",
     "profileUpdateError": "Gagal memperbarui profil.",
-    "eStatementSubtitle": "Unduh dan kelola laporan e-statement Anda."
+    "eStatementSubtitle": "Unduh dan kelola laporan e-statement Anda.",
+    "statements": {
+      "generator": {
+        "title": "Generator E-Statement",
+        "subtitle": "Buat dan unduh laporan transaksi Anda",
+        "periodType": "Jenis Periode",
+        "year": "Tahun",
+        "month": "Bulan",
+        "quarter": "Kuartal",
+        "monthly": "Bulanan",
+        "quarterly": "Kuartalan",
+        "annually": "Tahunan",
+        "generate": "Buat & Unduh E-Statement",
+        "processing": "Memproses E-Statement...",
+        "success": "E-Statement berhasil dibuat dan diunduh!",
+        "errorGen": "Gagal membuat e-statement. Silakan coba lagi."
+      },
+      "history": {
+        "title": "Riwayat E-Statement",
+        "subtitle": "Daftar statement yang tersedia",
+        "empty": "Belum ada e-statement tersedia",
+        "emptyDesc": "Buat e-statement pertama Anda di atas",
+        "status": "Status",
+        "transactionCount": "{count} transaksi",
+        "closingBalance": "Saldo Akhir",
+        "openingBalance": "Saldo Awal",
+        "totalCredits": "Total Kredit",
+        "totalDebits": "Total Debit",
+        "download": "Unduh",
+        "notReady": "E-Statement belum siap untuk diunduh.",
+        "errorLoad": "Gagal memuat daftar e-statement.",
+        "errorDownload": "Gagal mengunduh e-statement. Silakan coba lagi."
+      },
+      "months": {
+        "1": "Januari",
+        "2": "Februari",
+        "3": "Maret",
+        "4": "April",
+        "5": "Mei",
+        "6": "Juni",
+        "7": "Juli",
+        "8": "Agustus",
+        "9": "September",
+        "10": "Oktober",
+        "11": "November",
+        "12": "Desember"
+      }
+    }
   },
   "merchant": {
     "title": "Portal Merchant",

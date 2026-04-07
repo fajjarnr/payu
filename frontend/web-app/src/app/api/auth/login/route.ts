@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    log.info({ action: "login", username: body.username?.substring(0,2) + "***" }, "Login attempt");
+    log.info({ action: "login" }, "Login attempt");
 
     const res = await fetch(`${GATEWAY_URL}/api/v1/auth/login`, {
       method: "POST",
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const data = await res.json();
 
     if (!res.ok) {
-      log.warn({ action: "login", username: body.username?.substring(0,2) + "***", status: res.status, durationMs: Date.now() - startTime }, "Login failed");
+      log.warn({ action: "login", status: res.status, durationMs: Date.now() - startTime }, "Login failed");
       return NextResponse.json(data, { status: res.status });
     }
 
@@ -64,8 +64,12 @@ export async function POST(request: Request) {
     if (!user && accessToken) {
       const claims = decodeJwtPayload(accessToken);
       if (claims) {
+        // BUG-CROSS-033 FIX: Extract account_id from JWT claim (same logic as gateway AuthorizationFilter)
+        // Gateway uses 'account_id' claim, falling back to 'account-' + sub
+        const accountId = (claims.account_id as string) || `account-${claims.sub}`;
         user = {
           id: claims.sub as string,
+          accountId, // separate from user id
           username: claims.preferred_username as string,
           fullName: (claims.name as string) || "",
           email: (claims.email as string) || "",
@@ -110,7 +114,7 @@ export async function POST(request: Request) {
       });
     }
 
-    log.info({ action: "login", userId: user?.id, username: user?.username, durationMs: Date.now() - startTime }, "Login successful");
+    log.info({ action: "login", userId: user?.id, durationMs: Date.now() - startTime }, "Login successful");
 
     return response;
   } catch (error) {

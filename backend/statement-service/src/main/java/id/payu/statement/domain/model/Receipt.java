@@ -39,6 +39,7 @@ public class Receipt {
 
     private UUID id;
     private String transactionId;
+    private String customerId;
     private BigDecimal amount;
     private String currency;
     private SenderInfo senderInfo;
@@ -64,18 +65,20 @@ public class Receipt {
      * @throws IllegalArgumentException if any validation fails
      */
     public static Receipt generate(String transactionId,
+                                    String customerId,
                                     BigDecimal amount,
                                     String currency,
                                     SenderInfo senderInfo,
                                     RecipientInfo recipientInfo,
                                     String referenceNumber) {
-        validateInputs(transactionId, amount, senderInfo, recipientInfo, referenceNumber);
+        validateInputs(transactionId, customerId, amount, senderInfo, recipientInfo, referenceNumber);
 
         LocalDateTime now = LocalDateTime.now();
 
         return Receipt.builder()
                 .id(UUID.randomUUID())
                 .transactionId(transactionId)
+                .customerId(customerId)
                 .amount(amount)
                 .currency(currency != null ? currency : "IDR")
                 .senderInfo(senderInfo)
@@ -93,12 +96,16 @@ public class Receipt {
      * Validates all inputs for receipt generation.
      */
     private static void validateInputs(String transactionId,
+                                        String customerId,
                                         BigDecimal amount,
                                         SenderInfo senderInfo,
                                         RecipientInfo recipientInfo,
                                         String referenceNumber) {
         if (transactionId == null || transactionId.isBlank()) {
             throw new IllegalArgumentException("Transaction ID is required");
+        }
+        if (customerId == null || customerId.isBlank()) {
+            throw new IllegalArgumentException("Customer ID is required");
         }
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be positive");

@@ -31,6 +31,10 @@ export interface User {
   kycStatus: KycStatus;
   createdAt: string;
   updatedAt: string;
+  // BUG-CROSS-033: accountId from JWT claim (separate from user id)
+  accountId?: string;
+  // Roles from JWT realm_access claim
+  roles?: string[];
 }
 
 // BUG-FE-024: Tokens are httpOnly cookies managed by BFF — must not be in JS response type
@@ -137,6 +141,15 @@ export interface Transaction {
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
+}
+
+export interface TransactionFilters {
+  status?: TransactionStatus;
+  type?: TransactionType;
+  startDate?: string;
+  endDate?: string;
+  minAmount?: number;
+  maxAmount?: number;
 }
 
 export interface WalletTransaction {

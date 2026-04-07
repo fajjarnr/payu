@@ -130,32 +130,33 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 10. Cluster Logging Operator
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: cluster-logging
-  namespace: openshift-logging
-spec:
-  channel: stable-6.4
-  name: cluster-logging
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-  installPlanApproval: Automatic
+# ---
+# # 10. Cluster Logging Operator
+# apiVersion: operators.coreos.com/v1alpha1
+# kind: Subscription
+# metadata:
+#   name: cluster-logging
+#   namespace: openshift-logging
+# spec:
+#   channel: stable-6.4
+#   name: cluster-logging
+#   source: redhat-operators
+#   sourceNamespace: openshift-marketplace
+#   installPlanApproval: Automatic
 
----
-# 11. Cluster Observability Operator
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: cluster-observability-operator
-  namespace: openshift-cluster-observability-operator
-spec:
-  channel: stable
-  name: cluster-observability-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-  installPlanApproval: Automatic
+# ---
+# # 11. Cluster Observability Operator
+# apiVersion: operators.coreos.com/v1alpha1
+# kind: Subscription
+# metadata:
+#   name: cluster-observability-operator
+#   namespace: openshift-cluster-observability-operator
+# spec:
+#   channel: stable
+#   name: cluster-observability-operator
+#   source: redhat-operators
+#   sourceNamespace: openshift-marketplace
+#   installPlanApproval: Automatic
 
 ---
 # 12. Kiali Operator (Service Mesh)
@@ -172,32 +173,33 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 13. Loki Operator
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: loki-operator
-  namespace: openshift-operators-redhat
-spec:
-  channel: stable-6.4
-  name: loki-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-  installPlanApproval: Automatic
+# ---
+# # 13. Loki Operator
+# apiVersion: operators.coreos.com/v1alpha1
+# kind: Subscription
+# metadata:
+#   name: loki-operator
+#   namespace: openshift-operators-redhat
+# spec:
+#   channel: stable-6.4
+#   name: loki-operator
+#   source: redhat-operators
+#   sourceNamespace: openshift-marketplace
+#   installPlanApproval: Automatic
 
----
-# 14. NetObserv Operator
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: netobserv-operator
-  namespace: openshift-netobserv-operator
-spec:
-  channel: stable
-  name: netobserv-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-  installPlanApproval: Automatic
+# ---
+# # 14. NetObserv Operator
+# apiVersion: operators.coreos.com/v1alpha1
+# kind: Subscription
+# metadata:
+#   name: netobserv-operator
+#   namespace: openshift-netobserv-operator
+# spec:
+#   channel: stable
+#   name: netobserv-operator
+#   source: redhat-operators
+#   sourceNamespace: openshift-marketplace
+#   installPlanApproval: Automatic
 
 ---
 # 15. OpenShift GitOps Operator

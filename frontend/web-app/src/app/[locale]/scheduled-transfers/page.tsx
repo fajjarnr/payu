@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Repeat
 } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import { Link } from '@/lib/navigation';
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,8 @@ export default function ScheduledTransfersPage() {
   const { user } = useAuth();
   const { accountId: storeAccountId } = useAuthStore();
   const accountId = storeAccountId ?? '';
+  const locale = useLocale();
+  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
 
   const { data: rawTransfers, isLoading } = useScheduledTransfers(accountId);
   const transfers = Array.isArray(rawTransfers) ? rawTransfers : [];
@@ -117,7 +120,7 @@ export default function ScheduledTransfersPage() {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string }> = {
-      ACTIVE: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+      ACTIVE: { variant: 'default', className: 'bg-primary/10 text-primary border-primary/20' },
       PAUSED: { variant: 'secondary', className: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
       CANCELLED: { variant: 'destructive', className: 'bg-red-500/10 text-red-500 border-red-500/20' },
       COMPLETED: { variant: 'outline', className: 'bg-gray-500/10 text-gray-500 border-gray-500/20' },
@@ -179,7 +182,7 @@ export default function ScheduledTransfersPage() {
                   label: 'Aktif',
                   value: transfers?.filter((t) => t.status === 'ACTIVE').length || 0,
                   icon: CheckCircle2,
-                  color: 'bg-emerald-500/10 text-emerald-500',
+                  color: 'bg-primary/10 text-primary',
                 },
                 {
                   label: 'Dijeda',
@@ -249,7 +252,7 @@ export default function ScheduledTransfersPage() {
                               <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <ArrowRightLeft className="h-3 w-3" />
-                                  Rp {transfer.amount.toLocaleString('id-ID')}
+                                  Rp {transfer.amount.toLocaleString(bcp47Locale)}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
@@ -257,7 +260,7 @@ export default function ScheduledTransfersPage() {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(transfer.nextExecutionDate).toLocaleDateString(undefined)}
+                                  {new Date(transfer.nextExecutionDate).toLocaleDateString(bcp47Locale)}
                                 </span>
                               </div>
                             </div>

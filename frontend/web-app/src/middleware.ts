@@ -29,6 +29,7 @@ export default async function middleware(request: NextRequest) {
   // trigger a server-side refresh before proceeding. This restores the session
   // after browser restart (refreshToken is a 7-day httpOnly cookie).
   let response: NextResponse | undefined;
+  let refreshSucceeded = false;
   if (!hasAccessToken && hasRefreshToken) {
     try {
       edgeLogger.info('Attempting session rehydration via refresh token', {
@@ -44,6 +45,7 @@ export default async function middleware(request: NextRequest) {
       });
 
       if (refreshRes.ok) {
+        refreshSucceeded = true;
         edgeLogger.info('Session rehydrated successfully', { action: 'middleware' });
         // Forward the Set-Cookie headers from the refresh response to the client
         response = intlMiddleware(request);

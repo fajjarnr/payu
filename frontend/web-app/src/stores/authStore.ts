@@ -99,7 +99,12 @@ export const useAuthStore = create<AuthState>()(
       // Only persist non-sensitive data (user profile, account ID)
       // Tokens are NEVER persisted - they're in httpOnly cookies
       partialize: (state) => ({
-        user: state.user,
+        user: state.user ? {
+          id: state.user.id,
+          username: state.user.username,
+          roles: state.user.roles,
+          accountId: state.user.accountId
+        } as Partial<User> as User : null,
         accountId: state.accountId,
         isAuthenticated: state.isAuthenticated
         // tokenExpiresAt intentionally NOT persisted:

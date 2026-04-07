@@ -312,6 +312,9 @@
     "noAccount": "Don't have an account?",
     "registerLink": "Register Now",
     "loginSuccess": "Login successful!",
+    "mfaRequired": "MFA Required: Suspicious login pattern detected.",
+    "invalidResponse": "Login failed: Invalid server response",
+    "loginFailed": "Login failed. Please check your credentials.",
     "onboarding": {
       "title": "Welcome to PayU",
       "subtitle": "The digital banking platform of the future",
@@ -346,9 +349,10 @@
       "step3": {
         "title": "Account Ready!",
         "subtitle": "Redirecting you to the secure login gateway in a few seconds...",
-        "success": "Registration Successful!",
-        "redirect": "Redirecting to login page..."
+        "success": "Registration Successful!"
       },
+      "registrationFailed": "Registration failed. Please try again.",
+      "redirect": "Redirecting to login page...",
       "branding": {
         "title": "Digital Identity Verification.",
         "desc": "Join 2 Million+ users who have entrusted their financial future to the PayU ecosystem.",
@@ -432,7 +436,54 @@
     "saving": "Saving...",
     "profileUpdateSuccess": "Profile updated successfully.",
     "profileUpdateError": "Failed to update profile.",
-    "eStatementSubtitle": "Download and manage your e-statement reports."
+    "eStatementSubtitle": "Download and manage your e-statement reports.",
+    "statements": {
+      "generator": {
+        "title": "E-Statement Generator",
+        "subtitle": "Generate and download your transaction reports",
+        "periodType": "Period Type",
+        "year": "Year",
+        "month": "Month",
+        "quarter": "Quarter",
+        "monthly": "Monthly",
+        "quarterly": "Quarterly",
+        "annually": "Annually",
+        "generate": "Generate & Download E-Statement",
+        "processing": "Processing E-Statement...",
+        "success": "E-Statement successfully generated and downloaded!",
+        "errorGen": "Failed to generate e-statement. Please try again."
+      },
+      "history": {
+        "title": "E-Statement History",
+        "subtitle": "List of available statements",
+        "empty": "No e-statements available yet",
+        "emptyDesc": "Generate your first e-statement above",
+        "status": "Status",
+        "transactionCount": "{count} transactions",
+        "closingBalance": "Closing Balance",
+        "openingBalance": "Opening Balance",
+        "totalCredits": "Total Credits",
+        "totalDebits": "Total Debits",
+        "download": "Download",
+        "notReady": "E-Statement is not ready for download.",
+        "errorLoad": "Failed to load e-statement list.",
+        "errorDownload": "Failed to download e-statement. Please try again."
+      },
+      "months": {
+        "1": "January",
+        "2": "February",
+        "3": "March",
+        "4": "April",
+        "5": "May",
+        "6": "June",
+        "7": "July",
+        "8": "August",
+        "9": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December"
+      }
+    }
   },
   "merchant": {
     "title": "Merchant Portal",

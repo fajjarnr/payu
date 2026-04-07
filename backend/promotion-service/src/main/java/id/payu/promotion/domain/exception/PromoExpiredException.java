@@ -8,7 +8,7 @@ public class PromoExpiredException extends id.payu.api.common.exception.Business
     private final String promoCode;
 
     public PromoExpiredException(String promoCode) {
-        super(String.format("Promo code '%s' has expired", promoCode));
+        super("PRM_VAL_004", String.format("Promo code '%s' has expired", promoCode));
         this.promoCode = promoCode;
     }
 

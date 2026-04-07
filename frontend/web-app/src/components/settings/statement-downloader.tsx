@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, FileText, Calendar, RefreshCw, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 import StatementService, { Statement, PeriodType, StatementFormat, StatementStatus } from '@/services/StatementService';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
@@ -19,6 +20,7 @@ import { useAuthStore } from '@/stores/authStore';
  * - WCAG AA compliant accessibility
  */
 export default function StatementDownloader() {
+  const t = useTranslations('settings.statements');
   const { user, accountId } = useAuthStore();
   const [statements, setStatements] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +56,7 @@ export default function StatementDownloader() {
       setStatements(data);
     } catch (err) {
       console.error('Failed to load statements:', err);
-      setError('Gagal memuat daftar e-statement.');
+      setError(t('history.errorLoad'));
     } finally {
       setIsLoading(false);
     }
@@ -79,12 +81,11 @@ export default function StatementDownloader() {
         year: selectedYear,
         month: selectedMonth
       });
-
-      setSuccess('E-Statement berhasil dibuat dan diunduh!');
+      setSuccess(t('generator.success'));
       await loadStatements();
     } catch (err) {
       console.error('Failed to generate statement:', err);
-      setError(err instanceof Error ? err.message : 'Gagal membuat e-statement. Silakan coba lagi.');
+      setError(err instanceof Error ? err.message : t('generator.errorGen'));
     } finally {
       setIsGenerating(false);
     }
@@ -92,7 +93,7 @@ export default function StatementDownloader() {
 
   const handleDownload = useCallback(async (statement: Statement) => {
     if (statement.status !== 'COMPLETED') {
-      setError('E-Statement belum siap untuk diunduh.');
+      setError(t('history.notReady'));
       return;
     }
 
@@ -102,10 +103,10 @@ export default function StatementDownloader() {
       setSuccess(null);
 
       await StatementService.downloadStatementWithFilename(statement.id);
-      setSuccess('E-Statement berhasil diunduh!');
+      setSuccess(t('generator.success'));
     } catch (err) {
       console.error('Failed to download statement:', err);
-      setError('Gagal mengunduh e-statement. Silakan coba lagi.');
+      setError(t('history.errorDownload'));
     } finally {
       setIsDownloading(null);
     }
@@ -135,9 +136,9 @@ export default function StatementDownloader() {
             <FileText className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground">E-Statement Generator</h3>
+            <h3 className="text-xl font-bold text-foreground">{t('generator.title')}</h3>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight mt-0.5">
-              Buat dan unduh laporan transaksi Anda
+              {t('generator.subtitle')}
             </p>
           </div>
         </div>
@@ -169,7 +170,7 @@ export default function StatementDownloader() {
           {/* Period Type Selector */}
           <div className="space-y-3">
             <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-              Jenis Periode
+              {t('generator.periodType')}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {(['monthly', 'quarterly', 'annually'] as PeriodType[]).map((period) => (
@@ -185,7 +186,7 @@ export default function StatementDownloader() {
                   aria-pressed={selectedPeriod === period}
                   {...getA11yProps({ label: `Pilih periode ${StatementService.formatPeriodType(period)}` })}
                 >
-                  {period === 'monthly' ? 'Bulan' : period === 'quarterly' ? 'Kuartal' : 'Tahun'}
+                  {period === 'monthly' ? t('generator.monthly') : period === 'quarterly' ? t('generator.quarterly') : t('generator.annually')}
                 </button>
               ))}
             </div>
@@ -194,7 +195,7 @@ export default function StatementDownloader() {
           {/* Year Selector */}
           <div className="space-y-3">
             <label htmlFor="statement-year" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-              Tahun
+              {t('generator.year')}
             </label>
             <select
               id="statement-year"
@@ -215,7 +216,7 @@ export default function StatementDownloader() {
           {selectedPeriod !== 'annually' && (
             <div className="space-y-3">
               <label htmlFor="statement-month" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-                {selectedPeriod === 'quarterly' ? 'Kuartal' : 'Bulan'}
+                {selectedPeriod === 'quarterly' ? t('generator.quarter') : t('generator.month')}
               </label>
               {selectedPeriod === 'monthly' ? (
                 <select
@@ -225,9 +226,9 @@ export default function StatementDownloader() {
                   className="w-full rounded-xl border border-border bg-muted/30 p-4 text-sm font-bold text-foreground outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
                   {...getA11yProps({ label: 'Pilih bulan statement' })}
                 >
-                  {monthNames.map((name, index) => (
-                    <option key={index + 1} value={index + 1}>
-                      {name}
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                    <option key={month} value={month}>
+                      {t(`months.${month}`)}
                     </option>
                   ))}
                 </select>
@@ -271,12 +272,12 @@ export default function StatementDownloader() {
             {isGenerating ? (
               <>
                 <RefreshCw className="h-5 w-5 animate-spin" />
-                <span>Memproses E-Statement...</span>
+                <span>{t('generator.processing')}</span>
               </>
             ) : (
               <>
                 <FileText className="h-5 w-5" />
-                <span>Buat & Unduh E-Statement</span>
+                <span>{t('generator.generate')}</span>
               </>
             )}
           </button>
@@ -296,9 +297,9 @@ export default function StatementDownloader() {
               <Calendar className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-foreground">Riwayat E-Statement</h3>
+              <h3 className="text-xl font-bold text-foreground">{t('history.title')}</h3>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight mt-0.5">
-                Daftar statement yang tersedia
+                {t('history.subtitle')}
               </p>
             </div>
           </div>
@@ -313,8 +314,8 @@ export default function StatementDownloader() {
           ) : statements.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-sm text-muted-foreground font-medium">Belum ada e-statement tersedia</p>
-              <p className="text-xs text-muted-foreground mt-1">Buat e-statement pertama Anda di atas</p>
+              <p className="text-sm text-muted-foreground font-medium">{t('history.empty')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('history.emptyDesc')}</p>
             </div>
           ) : (
             statements.map((statement) => (
@@ -346,7 +347,7 @@ export default function StatementDownloader() {
                           {StatementService.formatStatementStatus(statement.status)}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {statement.transactionCount} transaksi
+                          {t('history.transactionCount', { count: statement.transactionCount })}
                         </span>
                       </div>
                     </div>
@@ -358,7 +359,7 @@ export default function StatementDownloader() {
                         <p className="text-sm font-bold text-foreground">
                           {statement.closingBalanceFormatted}
                         </p>
-                        <p className="text-xs text-muted-foreground">Saldo Akhir</p>
+                        <p className="text-xs text-muted-foreground">{t('history.closingBalance')}</p>
                       </div>
                     )}
                     <button
@@ -378,7 +379,7 @@ export default function StatementDownloader() {
                       ) : (
                         <Download className="h-4 w-4" />
                       )}
-                      <span className="hidden sm:inline">Unduh</span>
+                      <span className="hidden sm:inline">{t('history.download')}</span>
                     </button>
                   </div>
                 </div>
@@ -387,25 +388,25 @@ export default function StatementDownloader() {
                 {statement.status === 'COMPLETED' && (
                   <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Saldo Awal</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('history.openingBalance')}</p>
                       <p className="text-sm font-bold text-foreground mt-1">
                         {statement.openingBalanceFormatted}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Kredit</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('history.totalCredits')}</p>
                       <p className="text-sm font-bold text-primary mt-1">
                         +{statement.totalCreditsFormatted}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Debit</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('history.totalDebits')}</p>
                       <p className="text-sm font-bold text-destructive mt-1">
                         -{statement.totalDebitsFormatted}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Saldo Akhir</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('history.closingBalance')}</p>
                       <p className="text-sm font-bold text-foreground mt-1">
                         {statement.closingBalanceFormatted}
                       </p>
@@ -425,7 +426,7 @@ export default function StatementDownloader() {
               className="w-full py-4 text-center text-xs font-bold text-primary hover:text-bank-emerald transition-all uppercase tracking-wider"
               {...getA11yProps({ label: 'Muat lebih banyak e-statement' })}
             >
-              Muat Lebih Banyak
+              {t('history.loadMore')}
             </button>
           </div>
         )}

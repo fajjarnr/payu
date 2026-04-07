@@ -35,12 +35,14 @@ import { Input } from './ui/input';
 import { PersonalizedGreeting } from './personalization';
 import { useLogout } from '@/hooks';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SidebarItemProps {
   href: string;
@@ -55,7 +57,7 @@ const SidebarItem = ({ href, icon: Icon, label, active }: SidebarItemProps) => (
     className={clsx(
       "flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group text-base font-bold cursor-pointer",
       active
-        ? "bg-emerald-500/10 text-emerald-500 shadow-[inset_0_0_20px_rgba(16,185,129,0.05)] border border-emerald-500/20"
+        ? "bg-primary/10 text-primary shadow-[inset_0_0_20px_rgba(16,185,129,0.05)] border border-primary/20"
         : "text-foreground/40 hover:bg-foreground/5 hover:text-foreground"
     )}
     aria-label={label}
@@ -63,7 +65,7 @@ const SidebarItem = ({ href, icon: Icon, label, active }: SidebarItemProps) => (
   >
     <Icon className={clsx(
       "h-6 w-6 transition-colors",
-      active ? "text-emerald-500" : "text-foreground/30 group-hover:text-foreground"
+      active ? "text-primary" : "text-foreground/30 group-hover:text-foreground"
     )} aria-hidden="true" />
     <span className="tracking-tight uppercase text-xs sm:text-sm tracking-[0.12em]">{label}</span>
   </Link>
@@ -83,27 +85,24 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
   const logoutMutation = useLogout();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Helper to localize paths
-  const l = (path: string) => locale === 'id' ? path : `/${locale}${path}`;
-
   const mainMenu = [
-    { href: l('/dashboard'), icon: LayoutDashboard, label: t('dashboard') },
-    { href: l('/pockets'), icon: Wallet, label: t('accounts') },
-    { href: l('/transfer'), icon: ArrowRightLeft, label: t('transfers') },
-    { href: l('/transactions'), icon: History, label: 'Riwayat' },
-    { href: l('/scheduled-transfers'), icon: Calendar, label: 'Terjadwal' },
-    { href: l('/exchange'), icon: TrendingUp, label: t('exchange') },
-    { href: l('/qris'), icon: QrCode, label: t('qrPayment') },
-    { href: l('/bills'), icon: Receipt, label: t('bills') },
-    { href: l('/cards'), icon: CreditCard, label: t('cards') },
-    { href: l('/investments'), icon: TrendingUp, label: t('investments') },
-    { href: l('/analytics'), icon: BarChart3, label: t('analytics') },
+    { href: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
+    { href: '/pockets', icon: Wallet, label: t('accounts') },
+    { href: '/transfer', icon: ArrowRightLeft, label: t('transfers') },
+    { href: '/transactions', icon: History, label: t('history') || 'Riwayat' },
+    { href: '/scheduled-transfers', icon: Calendar, label: t('scheduled') || 'Terjadwal' },
+    { href: '/exchange', icon: TrendingUp, label: t('exchange') },
+    { href: '/qris', icon: QrCode, label: t('qrPayment') },
+    { href: '/bills', icon: Receipt, label: t('bills') },
+    { href: '/cards', icon: CreditCard, label: t('cards') },
+    { href: '/investments', icon: TrendingUp, label: t('investments') },
+    { href: '/analytics', icon: BarChart3, label: t('analytics') },
   ];
 
   const otherMenu = [
-    { href: l('/security'), icon: ShieldCheck, label: t('security') },
-    { href: l('/settings'), icon: Settings, label: t('settings') },
-    { href: l('/support'), icon: LifeBuoy, label: t('support') },
+    { href: '/security', icon: ShieldCheck, label: t('security') },
+    { href: '/settings', icon: Settings, label: t('settings') },
+    { href: '/support', icon: LifeBuoy, label: t('support') },
   ];
 
   return (
@@ -114,8 +113,8 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
         aria-label="Sidebar Navigasi Desktop"
       >
         <div className="flex items-center gap-5 mb-16 px-2 group cursor-pointer">
-          <Link href={l('/')} className="flex items-center gap-5">
-            <div className="h-14 w-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-emerald-500/20 rotate-3 transition-transform group-hover:rotate-0">
+          <Link href="/" className="flex items-center gap-5">
+            <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-primary/20 rotate-3 transition-transform group-hover:rotate-0">
               U
             </div>
             <span className="text-4xl 2xl:text-5xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
@@ -123,7 +122,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
         </div>
 
         <div className="space-y-6 2xl:space-y-8 mb-14">
-          <p className="text-xs sm:text-sm font-bold text-emerald-500/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('main')}</p>
+          <p className="text-xs sm:text-sm font-bold text-primary/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('main')}</p>
           {mainMenu.map((item) => (
             <SidebarItem
               key={item.href}
@@ -134,7 +133,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
         </div>
 
         <div className="space-y-6 2xl:space-y-8 mt-auto">
-          <p className="text-xs sm:text-sm font-bold text-emerald-500/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('others')}</p>
+          <p className="text-xs sm:text-sm font-bold text-primary/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('others')}</p>
           {otherMenu.map((item) => (
             <SidebarItem
               key={item.href}
@@ -167,7 +166,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                   <SheetHeader className="p-8 pb-4">
                     <SheetTitle className="sr-only">Navigasi Utama</SheetTitle>
                     <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                      <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
                         U
                       </div>
                       <span className="text-2xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
@@ -208,8 +207,8 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                <ThemeToggle />
                <LanguageSwitcher />
 
-                <div className="hidden xl:flex items-center bg-card rounded-2xl px-6 w-96 gap-4 border border-emerald-500/10 focus-within:border-emerald-500/40 focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all shadow-sm focus-within:shadow-md group">
-                  <Search className="h-5 w-5 text-emerald-500/40 group-focus-within:text-emerald-500 transition-colors" />
+                <div className="hidden xl:flex items-center bg-card rounded-2xl px-6 w-96 gap-4 border border-primary/10 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 transition-all shadow-sm focus-within:shadow-md group">
+                  <Search className="h-5 w-5 text-primary/40 group-focus-within:text-primary transition-colors" />
                   <Input
                     type="text"
                     data-testid="search-input"
@@ -222,11 +221,11 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                  variant="ghost"
                  size="icon"
                  data-testid="notification-button"
-                 className="w-14 h-14 bg-card text-foreground/60 hover:text-emerald-500 hover:bg-emerald-500/5 rounded-2xl relative shadow-sm border border-emerald-500/10 hover:border-emerald-500/30 transition-all"
+                 className="w-14 h-14 bg-card text-foreground/60 hover:text-primary hover:bg-primary/5 rounded-2xl relative shadow-sm border border-primary/10 hover:border-primary/30 transition-all"
                  aria-label="Notifikasi"
                  onClick={() => router.push(`/${locale}/notifications`)}
                >
-                 <div className="absolute top-5 right-5 h-2.5 w-2.5 bg-emerald-500 rounded-full border-2 border-card shadow-sm" aria-label="Notifikasi baru" />
+                 <div className="absolute top-5 right-5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-card shadow-sm" aria-label="Notifikasi baru" />
                  <Bell className="h-6 w-6" aria-hidden="true" />
                </Button>
 
@@ -235,19 +234,19 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                     <Button
                       variant="ghost"
                       data-testid="profile-menu-trigger"
-                      className="p-0 h-auto rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-emerald-500 shadow-lg border border-emerald-500/10"
+                      className="p-0 h-auto rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary shadow-lg border border-primary/10"
                       aria-label="Menu profil pengguna"
                     >
                       <Avatar className="h-14 w-14 border-2 border-card shadow-md">
-                        <AvatarFallback className="bg-emerald-500/5">
-                          <User className="h-7 w-7 text-emerald-500" aria-hidden="true" />
+                        <AvatarFallback className="bg-primary/5">
+                          <User className="h-7 w-7 text-primary" aria-hidden="true" />
                         </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-80 bg-card border border-border rounded-2xl shadow-[0_40px_80px_rgba(0,0,0,0.25)] py-6 glass" align="end" sideOffset={16}>
                     <div className="px-8 py-5 border-b border-border/10 mb-4">
-                      <p className="text-xs font-bold text-emerald-500/50 uppercase tracking-[0.3em] mb-2">Authenticated User</p>
+                      <p className="text-xs font-bold text-primary/50 uppercase tracking-[0.3em] mb-2">Authenticated User</p>
                       <p className="text-xl font-bold truncate text-foreground uppercase tracking-tight">{username}</p>
                     </div>
                     <DropdownMenuItem className="p-0">

@@ -49,13 +49,13 @@ export default function MobileNav() {
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               className={clsx(
                 "flex flex-col items-center gap-1.5 transition-all relative group",
-                isActive ? "text-emerald-500 scale-105" : "text-foreground/40 hover:text-foreground"
+                isActive ? "text-primary scale-105" : "text-foreground/40 hover:text-foreground"
               )}
               aria-current={isActive ? 'page' : undefined}
             >
               <div className={clsx(
                 "p-3 rounded-2xl transition-all duration-300",
-                isActive ? "bg-emerald-500/10 shadow-[inset_0_0_15px_rgba(16,185,129,0.1)] border border-emerald-500/20" : "group-hover:bg-foreground/5 "
+                isActive ? "bg-primary/10 shadow-[inset_0_0_15px_rgba(16,185,129,0.1)] border border-primary/20" : "group-hover:bg-foreground/5 "
               )}>
                 <item.icon className={clsx("h-6 w-6 transition-all", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} aria-hidden="true" />
               </div>

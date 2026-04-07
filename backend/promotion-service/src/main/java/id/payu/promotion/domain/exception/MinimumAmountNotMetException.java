@@ -12,7 +12,7 @@ public class MinimumAmountNotMetException extends id.payu.api.common.exception.B
     private final BigDecimal actualAmount;
 
     public MinimumAmountNotMetException(String promoCode, BigDecimal requiredAmount, BigDecimal actualAmount) {
-        super(String.format("Promo '%s' requires minimum transaction of %s, but got %s",
+        super("PRM_VAL_002", String.format("Promo '%s' requires minimum transaction of %s, but got %s",
                 promoCode, requiredAmount, actualAmount));
         this.promoCode = promoCode;
         this.requiredAmount = requiredAmount;

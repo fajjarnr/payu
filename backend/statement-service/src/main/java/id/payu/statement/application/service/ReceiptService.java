@@ -103,6 +103,7 @@ public class ReceiptService {
         // Generate receipt
         Receipt receipt = Receipt.generate(
                 request.getTransactionId(),
+                request.getCustomerId(),
                 txnData.getAmount(),
                 txnData.getCurrency(),
                 senderInfo,
@@ -127,11 +128,13 @@ public class ReceiptService {
      * @throws ReceiptException if receipt not found
      */
     @Transactional(readOnly = true)
-    public ReceiptResponse getReceipt(UUID receiptId) {
-        log.info("Fetching receipt: {}", receiptId);
+    public ReceiptResponse getReceipt(UUID receiptId, String customerId) {
+        log.info("Fetching receipt: {} for customer: {}", receiptId, customerId);
 
         Receipt receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new ReceiptException("RECEIPT_002", "Receipt not found: " + receiptId));
+
+        validateOwnership(receipt, customerId);
 
         // Check if expired
         if (receipt.isExpired() && receipt.getStatus() != ReceiptStatus.EXPIRED) {
@@ -149,11 +152,14 @@ public class ReceiptService {
      * @return Optional containing the receipt response if found
      */
     @Transactional(readOnly = true)
-    public Optional<ReceiptResponse> getReceiptByTransactionId(String transactionId) {
-        log.info("Fetching receipt for transaction: {}", transactionId);
+    public Optional<ReceiptResponse> getReceiptByTransactionId(String transactionId, String customerId) {
+        log.info("Fetching receipt for transaction: {} and customer: {}", transactionId, customerId);
 
         return receiptRepository.findByTransactionId(transactionId)
-                .map(this::mapToResponse);
+                .map(receipt -> {
+                    validateOwnership(receipt, customerId);
+                    return mapToResponse(receipt);
+                });
     }
 
     /**
@@ -164,11 +170,13 @@ public class ReceiptService {
      * @throws ReceiptException if receipt not found or PDF generation fails
      */
     @Transactional
-    public byte[] generatePdf(UUID receiptId) {
-        log.info("Generating PDF for receipt: {}", receiptId);
+    public byte[] generatePdf(UUID receiptId, String customerId) {
+        log.info("Generating PDF for receipt: {} and customer: {}", receiptId, customerId);
 
         Receipt receipt = receiptRepository.findById(receiptId)
                 .orElseThrow(() -> new ReceiptException("RECEIPT_002", "Receipt not found: " + receiptId));
+
+        validateOwnership(receipt, customerId);
 
         // Check if expired
         if (receipt.isExpired()) {
@@ -195,13 +203,26 @@ public class ReceiptService {
      * @throws ReceiptException if receipt not found or PDF generation fails
      */
     @Transactional
-    public byte[] generatePdfByTransactionId(String transactionId) {
-        log.info("Generating PDF for transaction: {}", transactionId);
+    public byte[] generatePdfByTransactionId(String transactionId, String customerId) {
+        log.info("Generating PDF for transaction: {} and customer: {}", transactionId, customerId);
 
         Receipt receipt = receiptRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new ReceiptException("RECEIPT_002", "Receipt not found for transaction: " + transactionId));
 
-        return generatePdf(receipt.getId());
+        validateOwnership(receipt, customerId);
+
+        return generatePdf(receipt.getId(), customerId);
+    }
+
+    /**
+     * Validates that the customer owns the receipt.
+     */
+    private void validateOwnership(Receipt receipt, String customerId) {
+        if (!receipt.getCustomerId().equals(customerId)) {
+            log.warn("Access denied: Customer {} attempted to access receipt {} owned by {}", 
+                    customerId, receipt.getId(), receipt.getCustomerId());
+            throw new ReceiptException("RECEIPT_005", "Cannot access receipt of another user");
+        }
     }
 
     /**

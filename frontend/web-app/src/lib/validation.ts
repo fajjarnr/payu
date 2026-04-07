@@ -461,13 +461,14 @@ export function validateAmount(
     min?: number;
     max?: number;
     allowZero?: boolean;
+    locale?: string;
   } = {}
 ): {
   isValid: boolean;
   error?: string;
   parsed?: number;
 } {
-  const { min = 10000, max = 50000000, allowZero = false } = options;
+  const { min = 10000, max = 50000000, allowZero = false, locale = 'id-ID' } = options;
 
   if (amount === null || amount === undefined || amount === '') {
     return { isValid: false, error: 'Nominal wajib diisi' };
@@ -487,11 +488,11 @@ export function validateAmount(
   }
 
   if (parsed < min) {
-    return { isValid: false, error: `Nominal minimal ${new Intl.NumberFormat('id-ID').format(min)}` };
+    return { isValid: false, error: `Nominal minimal ${new Intl.NumberFormat(locale).format(min)}` };
   }
 
   if (parsed > max) {
-    return { isValid: false, error: `Nominal maksimal ${new Intl.NumberFormat('id-ID').format(max)}` };
+    return { isValid: false, error: `Nominal maksimal ${new Intl.NumberFormat(locale).format(max)}` };
   }
 
   return { isValid: true, parsed };

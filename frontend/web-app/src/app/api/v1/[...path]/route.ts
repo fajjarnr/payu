@@ -220,8 +220,13 @@ async function proxyRequest(
           headers: { Cookie: request.headers.get('cookie') || '' },
         });
         if (refreshRes.ok) {
-          const newCookieStore = await cookies();
-          const newToken = newCookieStore.get('accessToken')?.value;
+          const setCookieHeaders = refreshRes.headers.getSetCookie();
+          let newToken = '';
+          for (const cookie of setCookieHeaders) {
+            if (cookie.startsWith('accessToken=')) {
+              newToken = cookie.split(';')[0].split('=')[1];
+            }
+          }
           if (newToken) {
             headers['Authorization'] = `Bearer ${newToken}`;
             const retryRes = await fetch(url.toString(), {
@@ -230,12 +235,17 @@ async function proxyRequest(
               body,
             });
             const retryBody = await retryRes.text();
+            
+            const responseHeaders = new Headers();
+            responseHeaders.set('Content-Type', retryRes.headers.get('Content-Type') || 'application/json');
+            for (const cookie of setCookieHeaders) {
+              responseHeaders.append('Set-Cookie', cookie);
+            }
+            
             log.info({ action: 'proxy', path: `/api/v1/${backendPath}`, status: retryRes.status, durationMs: Date.now() - startTime }, 'Proxy retry response after refresh');
             return new NextResponse(retryBody, {
               status: retryRes.status,
-              headers: {
-                'Content-Type': retryRes.headers.get('Content-Type') || 'application/json',
-              },
+              headers: responseHeaders,
             });
           }
         }

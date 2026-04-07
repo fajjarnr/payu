@@ -39,6 +39,38 @@ const getQueryClient = () => {
 
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
+import { useSilentRefresh } from '@/hooks/useSilentRefresh';
+import { SessionBootstrap } from '@/components/SessionBootstrap';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/stores';
+import { createLocaleHref } from '@/lib/navigation';
+import { useLocale } from 'next-intl';
+
+function SilentRefreshRunner() {
+  useSilentRefresh();
+  return null;
+}
+
+/**
+ * BUG-FE-010 FIX: Handle auth:session-expired events from the API interceptor
+ * using Next.js router instead of hard window.location.href redirect.
+ */
+function AuthSessionExpiredHandler() {
+  const logout = useAuthStore((state) => state.logout);
+  const locale = useLocale();
+
+  useEffect(() => {
+    const handler = () => {
+      logout();
+      // Use replace to avoid polluting browser history
+      window.location.replace(createLocaleHref('/login', locale));
+    };
+    window.addEventListener('auth:session-expired', handler);
+    return () => window.removeEventListener('auth:session-expired', handler);
+  }, [logout, locale]);
+
+  return null;
+}
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => getQueryClient());
@@ -47,6 +79,9 @@ export default function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <ExperimentProvider>
+          <SessionBootstrap />
+          <SilentRefreshRunner />
+          <AuthSessionExpiredHandler />
           {children}
           <Toaster position="top-right" richColors />
         </ExperimentProvider>

@@ -1,0 +1,64 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { useAuthStore } from '@/stores';
+
+/**
+ * SessionBootstrap — Reconciles server-side cookie session with client-side Zustand store.
+ *
+ * BUG-CROSS-035 FIX:
+ * When a user returns to the app with a valid refresh cookie but an empty/stale Zustand store,
+ * the middleware lets them through (cookie-based), but all client components render as
+ * unauthenticated. This component detects the mismatch and triggers a refresh to populate
+ * the store.
+ *
+ * BUG-FE-012 FIX:
+ * By deferring store reads to useEffect (client-only), we avoid hydration mismatches between
+ * the server render (no localStorage) and client render (with localStorage data).
+ */
+export function SessionBootstrap() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+  const accountId = useAuthStore((state) => state.accountId);
+  const { setAuth, setTokenExpiry, setAuthenticated } = useAuthStore();
+  const bootstrapAttempted = useRef(false);
+
+  useEffect(() => {
+    // Only run once on mount
+    if (bootstrapAttempted.current) return;
+
+    // If the store already has auth data, nothing to do
+    if (isAuthenticated && user && accountId) return;
+
+    bootstrapAttempted.current = true;
+
+    // Attempt to validate the existing cookie session via the BFF refresh endpoint
+    // This is a lightweight check: if cookies are valid, we get a new token + user data
+    const bootstrapSession = async () => {
+      try {
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const expiresIn = data.expiresIn ?? 900;
+          setAuthenticated(true);
+          setTokenExpiry(Date.now() + expiresIn * 1000);
+
+          // Note: The refresh endpoint doesn't return user data.
+          // The store will be populated on the next API call that includes user context,
+          // or the SilentRefreshRunner will maintain the session going forward.
+        }
+        // If refresh fails (401/503), we don't have a valid session — leave store as-is
+      } catch {
+        // Network error — silently fail, store stays unauthenticated
+      }
+    };
+
+    bootstrapSession();
+  }, [isAuthenticated, user, accountId, setAuth, setTokenExpiry, setAuthenticated]);
+
+  return null;
+}

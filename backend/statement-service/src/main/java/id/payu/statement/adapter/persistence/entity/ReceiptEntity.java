@@ -22,6 +22,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "receipts", indexes = {
     @Index(name = "idx_receipts_transaction_id", columnList = "transaction_id", unique = true),
+    @Index(name = "idx_receipts_customer_id", columnList = "customer_id"),
     @Index(name = "idx_receipts_status", columnList = "status"),
     @Index(name = "idx_receipts_expiry_date", columnList = "expiry_date")
 })
@@ -40,6 +41,9 @@ public class ReceiptEntity {
 
     @Column(name = "transaction_id", nullable = false, length = 100, unique = true)
     private String transactionId;
+
+    @Column(name = "customer_id", nullable = false, length = 100)
+    private String customerId;
 
     @Column(name = "amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;

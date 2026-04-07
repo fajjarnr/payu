@@ -82,7 +82,7 @@ function LoginForm() {
       const user = response.data?.user;
       
       if (response.data?.mfa_required) {
-        toast.warning(response.data.message || 'MFA Required: Suspicious login pattern detected.');
+        toast.warning(response.data.message || t('mfaRequired'));
         return;
       }
       
@@ -92,7 +92,7 @@ function LoginForm() {
         // Use locale-aware router for navigation (BUG-I18N-002)
         router.push(callbackUrl);
       } else {
-        toast.error('Login failed: Invalid server response');
+        toast.error(t('invalidResponse'));
       }
     },
     onError: (error) => {

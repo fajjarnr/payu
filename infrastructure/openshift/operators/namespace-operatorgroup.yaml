@@ -41,3 +41,67 @@ metadata:
 spec:
   targetNamespaces:
     - openshift-kube-descheduler-operator
+
+---
+# 3. New OperatorGroups for remaining namespaces
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: rhacs-operator-group
+  namespace: rhacs-operator
+spec:
+  upgradeStrategy: Default
+
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: rhdh-operator-group
+  namespace: rhdh-operator
+spec:
+  upgradeStrategy: Default
+
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-gitops-operator-group
+  namespace: openshift-gitops-operator
+spec:
+  upgradeStrategy: Default
+
+# ---
+# apiVersion: operators.coreos.com/v1
+# kind: OperatorGroup
+# metadata:
+#   name: openshift-logging-group
+#   namespace: openshift-logging
+# spec:
+#   upgradeStrategy: Default
+
+# ---
+# apiVersion: operators.coreos.com/v1
+# kind: OperatorGroup
+# metadata:
+#   name: openshift-netobserv-operator-group
+#   namespace: openshift-netobserv-operator
+# spec:
+#   upgradeStrategy: Default
+
+# ---
+# apiVersion: operators.coreos.com/v1
+# kind: OperatorGroup
+# metadata:
+#   name: cluster-observability-operator-group
+#   namespace: openshift-cluster-observability-operator
+# spec:
+#   upgradeStrategy: Default
+
+# ---
+# apiVersion: operators.coreos.com/v1
+# kind: OperatorGroup
+# metadata:
+#   name: loki-operator-group
+#   namespace: openshift-operators-redhat
+# spec:
+#   upgradeStrategy: Default

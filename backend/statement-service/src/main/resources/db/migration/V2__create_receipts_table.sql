@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS receipts (
     id UUID PRIMARY KEY,
     transaction_id VARCHAR(100) NOT NULL UNIQUE,
+    customer_id VARCHAR(100) NOT NULL,
     amount NUMERIC(19, 4) NOT NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'IDR',
 
@@ -12,7 +13,6 @@ CREATE TABLE IF NOT EXISTS receipts (
     sender_name VARCHAR(200) NOT NULL,
     sender_account_number VARCHAR(50) NOT NULL,
     sender_bank_name VARCHAR(100) NOT NULL,
-
     -- Recipient information
     recipient_name VARCHAR(200) NOT NULL,
     recipient_account_number VARCHAR(50) NOT NULL,
@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS receipts (
 
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_receipts_transaction_id ON receipts(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_receipts_customer_id ON receipts(customer_id);
 CREATE INDEX IF NOT EXISTS idx_receipts_status ON receipts(status);
 CREATE INDEX IF NOT EXISTS idx_receipts_expiry_date ON receipts(expiry_date);
 

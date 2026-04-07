@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.7] - 2026-04-07
+
+### Added
+- **Phase 14 — Frontend Remediation & UX Stabilization: 42 Bugs Fixed (2026-04-07)**:
+  - **i18n Implementation**: Migrated all hardcoded strings to `next-intl` system in `TransactionsPage`, `StatementDownloader`, `NotificationsPage`, `LendingPage`, and `Onboarding`.
+  - **Design System Enforcement**: Replaced all hardcoded emerald/blue colors with CSS variables (`primary`, `primary-foreground`) for consistent branding.
+  - **Transaction Filtering**: Added status and type filters with full validation and state management in `TransactionsPage`.
+  - **Loading Experience**: Implemented 18+ loading skeletons to replace `0/--` placeholders, preventing layout shift and misleading data states.
+  - **Security Hardening**: Removed hardcoded PII from landing page, disabled PII persistence in `localStorage`, and fixed IDOR/access control in notification/security/rewards components.
+  - **Navigation Integrity**: Standardized locale-aware routing using `next-intl/navigation`. Fixed broken history stacks and hard redirects (`window.location.href`).
+  - **Backoffice Connectivity**: Successfully connected 11 backoffice facade pages (KYC, Fraud, Partners, Campaigns, etc.) to backend services, replacing mock data with real API integration.
+  - **Onboarding UX**: Added numeric validation and 16-digit limit for NIK input.
+
+### Fixed
+- **BUG-FE-001 through BUG-FE-040**: Comprehensive fix for all listed frontend inconsistencies, logic errors, and inert components.
+- **BUG-CROSS-033 through BUG-CROSS-039**: Fixed cross-cutting identity/data consistency issues between frontend and gateway.
+- **BUG-AUTH-014 through BUG-AUTH-017**: Hardened auth middleware, auto-refresh, and proactive silent refresh mechanisms.
+- **BUG-LOGIC-008, 009, 012, 014**: Backend logic and signature consistency fixes.
+
+---
+
+
 ## [1.7.6] - 2026-03-23
 
 ### Changed
