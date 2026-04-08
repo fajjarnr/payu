@@ -49,7 +49,8 @@ class OnboardingControllerTest {
                 "test@example.com",
                 "+6281234567890",
                 "John Doe",
-                "3201234567890001"
+                "3201234567890001",
+                "SecureP@ss123"
         );
 
         registeredUser = User.builder()
@@ -104,7 +105,8 @@ class OnboardingControllerTest {
                     "invalid-email",
                     "+6281234567890",
                     "John Doe",
-                    "3201234567890001"
+                    "3201234567890001",
+                    "SecureP@ss123"
             );
 
             // When/Then

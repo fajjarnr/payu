@@ -342,6 +342,10 @@
         "emailPlaceholder": "nama@email.com",
         "username": "Username",
         "usernamePlaceholder": "unik & mudah diingat",
+        "password": "Kata Sandi",
+        "passwordPlaceholder": "Min. 8 karakter",
+        "confirmPassword": "Konfirmasi Kata Sandi",
+        "confirmPasswordPlaceholder": "Masukkan ulang kata sandi",
         "backButton": "Kembali",
         "submitButton": "Konfirmasi Pendaftaran",
         "submitting": "Memproses..."

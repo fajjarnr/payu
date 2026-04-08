@@ -16,7 +16,9 @@ import {
   ArrowLeft,
   Loader2,
   ScanFace,
-  Fingerprint
+  Fingerprint,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from '@/lib/navigation';
@@ -32,13 +34,19 @@ export default function OnboardingPage() {
   const t = useTranslations('auth.onboarding');
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterUserRequest>({
     resolver: zodResolver(registerUserSchema)
   });
 
   const mutation = useMutation({
-    mutationFn: (data: RegisterUserRequest) => api.post('/accounts/register', data),
+    mutationFn: (data: RegisterUserRequest) => {
+      // Strip confirmPassword before sending to API (it's only for client-side validation)
+      const { confirmPassword, ...payload } = data as RegisterUserRequest & { confirmPassword?: string };
+      return api.post('/accounts/register', payload);
+    },
     onSuccess: () => {
       setStep(3);
       setTimeout(() => router.push('/login'), 2500);
@@ -194,6 +202,57 @@ export default function OnboardingPage() {
                                     <Label htmlFor="onboarding-username" className="font-bold">{t('step2.username')}</Label>
                                     <Input id="onboarding-username" {...register('username')} placeholder={t('step2.usernamePlaceholder')} className="h-12" aria-invalid={!!errors.username} />
                                     {errors.username && <p className="text-red-500 text-xs font-bold" role="alert">{errors.username.message}</p>}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-5">
+                                <div className="space-y-2 col-span-2 md:col-span-1">
+                                    <Label htmlFor="onboarding-password" className="font-bold">{t('step2.password')}</Label>
+                                    <div className="relative">
+                                        <Input 
+                                            id="onboarding-password" 
+                                            {...register('password')} 
+                                            type={showPassword ? 'text' : 'password'} 
+                                            placeholder={t('step2.passwordPlaceholder')} 
+                                            className="h-12 pr-12" 
+                                            aria-invalid={!!errors.password} 
+                                            autoComplete="new-password"
+                                        />
+                                        <button 
+                                            type="button" 
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" 
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                    {errors.password && <p className="text-red-500 text-xs font-bold" role="alert">{errors.password.message}</p>}
+                                </div>
+                                <div className="space-y-2 col-span-2 md:col-span-1">
+                                    <Label htmlFor="onboarding-confirm-password" className="font-bold">{t('step2.confirmPassword')}</Label>
+                                    <div className="relative">
+                                        <Input 
+                                            id="onboarding-confirm-password" 
+                                            {...register('confirmPassword')} 
+                                            type={showConfirmPassword ? 'text' : 'password'} 
+                                            placeholder={t('step2.confirmPasswordPlaceholder')} 
+                                            className="h-12 pr-12" 
+                                            aria-invalid={!!errors.confirmPassword} 
+                                            autoComplete="new-password"
+                                        />
+                                        <button 
+                                            type="button" 
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" 
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                            tabIndex={-1}
+                                        >
+                                            {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                    {errors.confirmPassword && <p className="text-red-500 text-xs font-bold" role="alert">{errors.confirmPassword.message}</p>}
                                 </div>
                             </div>
                             

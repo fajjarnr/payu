@@ -2,6 +2,7 @@ package id.payu.account.application.service;
 
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
+import id.payu.account.domain.port.out.IdentityProviderPort;
 import id.payu.account.domain.port.out.KycVerificationPort;
 import id.payu.account.domain.port.out.UserPersistencePort;
 import id.payu.account.dto.DukcapilResponse;
@@ -25,6 +26,7 @@ public class UserApplicationService implements RegisterUserUseCase {
 
     private final UserPersistencePort userPersistencePort;
     private final KycVerificationPort kycVerificationPort;
+    private final IdentityProviderPort identityProviderPort;
     private final id.payu.account.domain.port.out.UserEventPublisherPort userEventPublisherPort;
 
     @Override
@@ -45,7 +47,11 @@ public class UserApplicationService implements RegisterUserUseCase {
             throw new IllegalArgumentException("Username already exists");
         }
 
-        // Attempt KYC verification — if unavailable, register with PENDING status.
+        // Step 1: Provision identity in Keycloak BEFORE creating account.
+        // If IAM provisioning fails, we don't create an orphaned DB record.
+        identityProviderPort.provisionUser(command.username(), command.email(), command.password(), command.fullName());
+
+        // Step 2: Attempt KYC verification — if unavailable, register with PENDING status.
         // Simple try-catch replaces resilience4j annotations which caused double-fallback
         // (both @CircuitBreaker and @Bulkhead fired registerFallback, leading to duplicate key errors).
         // Registration is low-throughput and non-idempotent — circuit breaking adds no value here.

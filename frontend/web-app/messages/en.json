@@ -342,6 +342,10 @@
         "emailPlaceholder": "name@email.com",
         "username": "Username",
         "usernamePlaceholder": "unique & easy to remember",
+        "password": "Password",
+        "passwordPlaceholder": "Min. 8 characters",
+        "confirmPassword": "Confirm Password",
+        "confirmPasswordPlaceholder": "Re-enter your password",
         "backButton": "Back",
         "submitButton": "Confirm Registration",
         "submitting": "Processing..."

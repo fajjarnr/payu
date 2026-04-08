@@ -5,12 +5,12 @@
   "description": "Schema for token refresh requests",
   "type": "object",
   "properties": {
-    "refreshToken": {
+    "refresh_token": {
       "type": "string",
       "minLength": 10,
-      "description": "Refresh token"
+      "description": "Refresh token (snake_case per OAuth2 spec and auth-service DTO)"
     }
   },
-  "required": ["refreshToken"],
+  "required": ["refresh_token"],
   "additionalProperties": false
 }

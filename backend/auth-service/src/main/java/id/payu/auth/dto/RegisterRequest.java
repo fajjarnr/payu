@@ -1,35 +1,28 @@
-package id.payu.account.dto;
+package id.payu.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import id.payu.security.annotation.Sensitive;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
-public record RegisterUserRequest(
-    @NotBlank(message = "External ID is required")
-    String externalId,
-
+/**
+ * DTO for user registration in Keycloak identity provider.
+ * Called by account-service during the onboarding flow.
+ */
+public record RegisterRequest(
     @NotBlank(message = "Username is required")
-    @Sensitive
     String username,
 
     @NotBlank(message = "Email is required")
     @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$", message = "Invalid email format")
-    @Sensitive
     String email,
 
-    @Sensitive
-    String phoneNumber,
-
-    @NotBlank(message = "Full Name is required")
-    @Sensitive
-    String fullName,
-
-    @NotBlank(message = "NIK is required")
-    @Pattern(regexp = "^[0-9]{16}$", message = "NIK must be exactly 16 digits")
-    @Sensitive
-    String nik,
-
     @NotBlank(message = "Password is required")
+    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
     @Sensitive(value = Sensitive.SensitivityLevel.CRITICAL)
-    String password
+    String password,
+
+    @JsonProperty("fullName")
+    String fullName
 ) {}

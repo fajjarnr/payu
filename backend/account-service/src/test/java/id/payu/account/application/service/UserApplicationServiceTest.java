@@ -1,6 +1,7 @@
 package id.payu.account.application.service;
 
 import id.payu.account.domain.model.User;
+import id.payu.account.domain.port.out.IdentityProviderPort;
 import id.payu.account.domain.port.out.KycVerificationPort;
 import id.payu.account.domain.port.out.UserEventPublisherPort;
 import id.payu.account.domain.port.out.UserPersistencePort;
@@ -37,6 +38,9 @@ class UserApplicationServiceTest {
     private KycVerificationPort kycVerificationPort;
 
     @Mock
+    private IdentityProviderPort identityProviderPort;
+
+    @Mock
     private UserEventPublisherPort userEventPublisherPort;
 
     @InjectMocks
@@ -53,7 +57,8 @@ class UserApplicationServiceTest {
                 "test@example.com",
                 "+6281234567890",
                 "John Doe",
-                "3201234567890001");
+                "3201234567890001",
+                "SecureP@ss123");
 
         successfulKycResponse = new DukcapilResponse(
                 "REQ-001",
@@ -204,7 +209,8 @@ class UserApplicationServiceTest {
                         "test" + phoneNumber.substring(5) + "@example.com", // unique email
                         phoneNumber,
                         validRequest.fullName(),
-                        validRequest.nik());
+                        validRequest.nik(),
+                        "SecureP@ss123");
 
                 given(userPersistencePort.existsByEmail(request.email())).willReturn(false);
                 given(userPersistencePort.existsByUsername(request.username())).willReturn(false);

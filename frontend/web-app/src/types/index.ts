@@ -7,6 +7,11 @@ export const registerUserSchema = z.object({
   phoneNumber: z.string().min(10, 'Phone number is too short').optional(),
   fullName: z.string().min(1, 'Full name is required'),
   nik: z.string().length(16, 'NIK must be exactly 16 digits'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
 });
 
 export type RegisterUserRequest = z.infer<typeof registerUserSchema>;

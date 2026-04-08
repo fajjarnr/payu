@@ -1,6 +1,7 @@
 package id.payu.account.integration;
 
 import id.payu.account.adapter.client.GatewayClient;
+import id.payu.account.adapter.client.IdentityProviderAdapter;
 import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.account.application.service.UserApplicationService;
 import id.payu.account.domain.model.User;
@@ -47,6 +48,9 @@ class OnboardingIntegrationTest {
     @MockBean
     private GatewayClient gatewayClient;
 
+    @MockBean
+    private IdentityProviderAdapter identityProviderAdapter;
+
     @BeforeAll
     static void startContainer() {
         postgres.start();
@@ -67,7 +71,8 @@ class OnboardingIntegrationTest {
                 "integration@payu.fajjjar.my.id",
                 "+628123456789",
                 "Integration Test User",
-                "3201234567890001"
+                "3201234567890001",
+                "SecureP@ss123"
         );
 
         given(gatewayClient.verifyNik(any()))

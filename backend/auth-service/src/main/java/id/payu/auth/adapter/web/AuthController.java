@@ -8,6 +8,7 @@ import id.payu.api.common.response.ApiResponse;
 import id.payu.auth.domain.model.LoginContext;
 import id.payu.auth.dto.LoginRequest;
 import id.payu.auth.dto.LoginResponse;
+import id.payu.auth.dto.RegisterRequest;
 import id.payu.auth.dto.RefreshTokenRequest;
 import id.payu.auth.dto.RefreshTokenResponse;
 import id.payu.auth.dto.SessionValidationResponse;
@@ -301,6 +302,49 @@ public class AuthController extends BaseController {
                     .body(ApiResponse.error(
                             ErrorCode.INTERNAL_ERROR.getCode(),
                             ErrorCode.INTERNAL_ERROR.getMessage()
+                    ));
+        }
+    }
+
+    /**
+     * Register a new user in Keycloak identity provider.
+     * Called by account-service during the onboarding flow to provision IAM credentials.
+     */
+    @PostMapping("/register")
+    @Audited(
+            operation = id.payu.security.annotation.Audited.Operation.CREATE,
+            entityType = "User",
+            maskData = true,
+            level = AuditLevel.INFO
+    )
+    @Operation(
+            summary = "Register user in IAM",
+            description = "Creates a new user in Keycloak with the provided credentials. " +
+                    "Called internally by account-service during registration."
+    )
+    @SecurityRequirements
+    @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "register")
+    public ResponseEntity<ApiResponse<String>> register(
+            @Valid @RequestBody RegisterRequest request
+    ) {
+        try {
+            keycloakService.createUser(request.username(), request.email(), request.password());
+            log.info("Registered user in IAM: {}", maskUsername(request.username()));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("User registered in IAM"));
+        } catch (IllegalArgumentException e) {
+            log.warn("Registration rejected for {}: {}", maskUsername(request.username()), e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(
+                            ErrorCode.AUTH_BUS_001.getCode(),
+                            e.getMessage()
+                    ));
+        } catch (Exception e) {
+            log.error("IAM registration failed for {}: {}", maskUsername(request.username()), e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(
+                            ErrorCode.INTERNAL_ERROR.getCode(),
+                            "Failed to register user in identity provider"
                     ));
         }
     }

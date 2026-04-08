@@ -6,8 +6,10 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.Map;
+
 /**
- * Feign client for communicating with Dukcapil simulator through API Gateway.
+ * Feign client for communicating with backend services through API Gateway.
  * Provides circuit breaker and retry capabilities through resilience patterns.
  */
 @FeignClient(
@@ -25,4 +27,13 @@ public interface GatewayClient {
      */
     @PostMapping("/api/v1/simulator/dukcapil/verify")
     VerifyNikResponse verifyNik(@RequestBody VerifyNikRequest request);
+
+    /**
+     * Register a new user in the identity provider (Keycloak) via auth-service.
+     *
+     * @param request map containing username, email, password, fullName
+     * @return response body from auth-service
+     */
+    @PostMapping("/api/v1/auth/register")
+    Map<String, Object> registerIdentity(@RequestBody Map<String, String> request);
 }
