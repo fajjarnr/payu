@@ -1,1 +1,2 @@
 id.payu.commons.idempotency.IdempotencyAutoConfiguration
+id.payu.api.common.config.ApiCommonsAutoConfiguration

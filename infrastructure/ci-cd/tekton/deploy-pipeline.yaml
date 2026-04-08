@@ -68,7 +68,13 @@ spec:
       params:
         - name: SCRIPT
           value: |
-            oc new-project $(params.namespace) --skip-config-write || true
+            if oc get namespace $(params.namespace) >/dev/null 2>&1; then
+              echo "[*] Namespace $(params.namespace) already exists"
+            else
+              echo "[*] Creating namespace $(params.namespace)"
+              oc new-project $(params.namespace) --skip-config-write
+            fi
+
             oc label namespace $(params.namespace) environment=$(params.environment) app=payu --overwrite
 
     - name: apply-configmaps
@@ -86,8 +92,14 @@ spec:
       params:
         - name: SCRIPT
           value: |
+            config_path="infrastructure/openshift/overlays/$(params.environment)/config/configmaps.yaml"
+
             echo "[*] Applying configmaps for $(params.environment)"
-            oc apply -f infrastructure/openshift/overlays/$(params.environment)/config/configmaps.yaml -n $(params.namespace) || true
+            if [ -f "$config_path" ]; then
+              oc apply -f "$config_path" -n $(params.namespace)
+            else
+              echo "[*] Skipping configmaps apply; $config_path is not available in this PipelineRun workspace"
+            fi
 
     - name: create-deployment
       runAfter:
@@ -104,70 +116,16 @@ spec:
       params:
         - name: SCRIPT
           value: |
-            cat <<EOF | oc apply -n $(params.namespace) -f -
-            apiVersion: apps/v1
-            kind: Deployment
-            metadata:
-              name: $(params.service-name)
-              labels:
-                app: $(params.service-name)
-                app.kubernetes.io/name: $(params.service-name)
-                app.kubernetes.io/part-of: payu
-                environment: $(params.environment)
-            spec:
-              replicas: $(params.replicas)
-              strategy:
-                type: RollingUpdate
-                rollingUpdate:
-                  maxSurge: 25%
-                  maxUnavailable: 0
-              selector:
-                matchLabels:
-                  app: $(params.service-name)
-              template:
-                metadata:
-                  labels:
-                    app: $(params.service-name)
-                    app.kubernetes.io/name: $(params.service-name)
-                    app.kubernetes.io/part-of: payu
-                spec:
-                  containers:
-                  - name: $(params.service-name)
-                    image: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.image-tag)
-                    ports:
-                    - containerPort: 8080
-                      protocol: TCP
-                    env:
-                    - name: JAVA_OPTS
-                      value: "-Xms512m -Xmx1024m -XX:+UseG1GC"
-                    - name: SPRING_PROFILES_ACTIVE
-                      value: "$(params.environment)"
-                    resources:
-                      limits:
-                        cpu: "2"
-                        memory: "2Gi"
-                      requests:
-                        cpu: "500m"
-                        memory: "1Gi"
-                    livenessProbe:
-                      httpGet:
-                        path: /actuator/health/liveness
-                        port: 8080
-                      initialDelaySeconds: 60
-                      timeoutSeconds: 5
-                      periodSeconds: 10
-                      successThreshold: 1
-                      failureThreshold: 3
-                    readinessProbe:
-                      httpGet:
-                        path: /actuator/health/readiness
-                        port: 8080
-                      initialDelaySeconds: 30
-                      timeoutSeconds: 5
-                      periodSeconds: 5
-                      successThreshold: 1
-                      failureThreshold: 3
-            EOF
+            if oc get deployment/$(params.service-name) -n $(params.namespace) >/dev/null 2>&1; then
+              echo "[*] Updating existing deployment $(params.service-name)"
+
+              oc patch deployment $(params.service-name) -n $(params.namespace) --type merge -p '{"metadata":{"labels":{"app":"$(params.service-name)","app.kubernetes.io/name":"$(params.service-name)","app.kubernetes.io/part-of":"payu","environment":"$(params.environment)"}},"spec":{"replicas":$(params.replicas),"template":{"metadata":{"labels":{"app":"$(params.service-name)","app.kubernetes.io/name":"$(params.service-name)","app.kubernetes.io/part-of":"payu"}}}}}'
+              oc set image deployment/$(params.service-name) $(params.service-name)=$(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.image-tag) -n $(params.namespace)
+            else
+              echo "Deployment $(params.service-name) does not exist in namespace $(params.namespace)."
+              echo "This pipeline currently supports updating existing deployments so service-specific env, probes, and secrets are preserved."
+              exit 1
+            fi
 
     - name: create-service
       runAfter:

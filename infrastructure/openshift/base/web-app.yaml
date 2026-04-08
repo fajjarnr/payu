@@ -17,6 +17,7 @@ spec:
       labels:
         app: web-app
         app.kubernetes.io/name: web-app
+        app.kubernetes.io/part-of: payu
     spec:
       securityContext:
         runAsNonRoot: true

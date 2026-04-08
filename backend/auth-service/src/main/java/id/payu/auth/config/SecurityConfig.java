@@ -48,7 +48,10 @@ public class SecurityConfig {
         "/api/v1/auth/reset-password",
         // BUG-BE-166: MFA endpoints must be public — user doesn't have JWT yet during MFA flow
         "/api/v1/auth/mfa/verify",
-        "/api/v1/auth/mfa/challenge"
+        "/api/v1/auth/mfa/challenge",
+        // /error must be public so validation errors (400) are not converted to 401
+        // by the JWT security chain when DefaultHandlerExceptionResolver forwards to /error
+        "/error"
     };
 
     private static final String[] PUBLIC_ACTUATOR_ENDPOINTS = {

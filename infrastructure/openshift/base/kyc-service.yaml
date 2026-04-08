@@ -46,6 +46,8 @@ spec:
               value: "kafka-kafka-bootstrap.payu-dev.svc:9092"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4317"
+            - name: OTLP_ENDPOINT
+              value: "http://jaeger:4317"
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:

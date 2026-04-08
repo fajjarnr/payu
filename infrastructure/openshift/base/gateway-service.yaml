@@ -17,6 +17,7 @@ spec:
       labels:
         app: gateway-service
         app.kubernetes.io/name: gateway-service
+        app.kubernetes.io/part-of: payu
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/q/metrics"
