@@ -359,7 +359,7 @@ public class KeycloakService {
         riskEvaluationService.recordFailedAttempt(username);
     }
 
-    public void createUser(String username, String email, String password) {
+    public void createUser(String username, String email, String password, String fullName) {
         validatePassword(password);
 
         UserRepresentation user = new UserRepresentation();
@@ -367,6 +367,12 @@ public class KeycloakService {
         user.setEmail(email);
         user.setEnabled(true);
         user.setEmailVerified(true);
+
+        if (fullName != null && !fullName.isBlank()) {
+            String[] parts = fullName.trim().split("\\s+", 2);
+            user.setFirstName(parts[0]);
+            user.setLastName(parts.length > 1 ? parts[1] : parts[0]);
+        }
 
         Response response = keycloakAdmin.realm(keycloakConfig.getRealm())
                 .users().create(user);

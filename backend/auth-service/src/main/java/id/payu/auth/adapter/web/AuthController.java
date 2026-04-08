@@ -328,7 +328,7 @@ public class AuthController extends BaseController {
             @Valid @RequestBody RegisterRequest request
     ) {
         try {
-            keycloakService.createUser(request.username(), request.email(), request.password());
+            keycloakService.createUser(request.username(), request.email(), request.password(), request.fullName());
             log.info("Registered user in IAM: {}", maskUsername(request.username()));
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success("User registered in IAM"));
