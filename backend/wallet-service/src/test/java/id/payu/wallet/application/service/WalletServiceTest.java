@@ -137,7 +137,11 @@ class WalletServiceTest {
     @DisplayName("Should create new wallet")
     void shouldCreateNewWallet() {
         when(walletPersistencePort.findByAccountId("ACC-NEW")).thenReturn(Optional.empty());
-        when(walletPersistencePort.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(walletPersistencePort.save(any(Wallet.class))).thenAnswer(inv -> {
+            Wallet wallet = inv.getArgument(0);
+            wallet.setId(UUID.randomUUID());
+            return wallet;
+        });
 
         Wallet result = walletService.createWallet("ACC-NEW");
 
@@ -193,7 +197,7 @@ class WalletServiceTest {
     @Test
     @DisplayName("Should reserve balance")
     void shouldReserveBalance() {
-        when(walletPersistencePort.findByAccountId(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
+        when(walletPersistencePort.findByAccountIdForUpdate(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
         when(walletPersistencePort.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
 
         String reservationId = walletService.reserveBalance(testWallet.getAccountId(), new BigDecimal("5000000"), "REF-001");
@@ -207,7 +211,7 @@ class WalletServiceTest {
     @Test
     @DisplayName("Should throw exception when reserving with insufficient balance")
     void shouldThrowExceptionWhenReservingWithInsufficientBalance() {
-        when(walletPersistencePort.findByAccountId(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
+        when(walletPersistencePort.findByAccountIdForUpdate(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
 
         assertThatThrownBy(() -> walletService.reserveBalance(testWallet.getAccountId(), new BigDecimal("20000000"), "REF-001"))
                 .isInstanceOf(InsufficientBalanceException.class);
@@ -221,7 +225,7 @@ class WalletServiceTest {
         UUID reservationId = testLedgerEntry.getTransactionId();
         testWallet.setReservedBalance(new BigDecimal("5000000"));
         when(walletPersistencePort.findByTransactionId(reservationId)).thenReturn(List.of(testLedgerEntry));
-        when(walletPersistencePort.findByAccountId(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
+        when(walletPersistencePort.findByAccountIdForUpdate(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
         when(walletPersistencePort.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
 
         walletService.commitReservation(reservationId.toString());
@@ -250,7 +254,7 @@ class WalletServiceTest {
         UUID reservationId = testLedgerEntry.getTransactionId();
         testWallet.setReservedBalance(new BigDecimal("5000000"));
         when(walletPersistencePort.findByTransactionId(reservationId)).thenReturn(List.of(testLedgerEntry));
-        when(walletPersistencePort.findByAccountId(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
+        when(walletPersistencePort.findByAccountIdForUpdate(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
         when(walletPersistencePort.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
 
         walletService.releaseReservation(reservationId.toString());
@@ -266,7 +270,7 @@ class WalletServiceTest {
     @Test
     @DisplayName("Should credit amount to wallet")
     void shouldCreditAmountToWallet() {
-        when(walletPersistencePort.findByAccountId(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
+        when(walletPersistencePort.findByAccountIdForUpdate(testWallet.getAccountId())).thenReturn(Optional.of(testWallet));
         when(walletPersistencePort.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
 
         walletService.credit(testWallet.getAccountId(), new BigDecimal("5000000"), "REF-001", "Test credit");

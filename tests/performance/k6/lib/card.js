@@ -5,35 +5,38 @@ import http from 'k6/http';
 import { check } from 'k6';
 import { getAuthHeaders } from './auth.js';
 
+function parseJson(body) {
+  try {
+    return JSON.parse(body || '{}');
+  } catch (error) {
+    return {};
+  }
+}
+
 /**
  * Get card list (Card READ)
  * @param {string} gatewayUrl - Gateway base URL
  * @param {string} token - Access token
+ * @param {string} accountId - Account ID
  * @returns {Array|null} Array of cards or null
  */
-export function getCards(gatewayUrl, token) {
-  const url = `${gatewayUrl}/api/v1/cards`;
+export function getCards(gatewayUrl, token, accountId) {
+  const url = `${gatewayUrl}/api/v1/cards?accountId=${encodeURIComponent(accountId)}`;
 
   const response = http.get(url, {
     headers: getAuthHeaders(token),
     tags: { endpoint: 'card-list' }
   });
 
+  const body = parseJson(response.body);
+
   const success = check(response, {
     'list cards status is 200': (r) => r.status === 200,
-    'list cards returns array': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return Array.isArray(body) || Array.isArray(body.data);
-      } catch (e) {
-        return false;
-      }
-    }
+    'list cards returns array': () => Array.isArray(body.data)
   });
 
   if (success) {
-    const body = JSON.parse(response.body);
-    return body.data || body;
+    return body.data;
   }
 
   return null;
@@ -47,13 +50,12 @@ export function getCards(gatewayUrl, token) {
  * @returns {Object} Response with success status and card data
  */
 export function createVirtualCard(gatewayUrl, token, cardData) {
-  const url = `${gatewayUrl}/api/v1/cards/virtual`;
+  const url = `${gatewayUrl}/api/v1/cards`;
 
   const payload = JSON.stringify({
+    accountId: cardData.accountId,
     cardHolderName: cardData.cardHolderName,
-    dailyLimit: cardData.dailyLimit || 10000000,
-    monthlyLimit: cardData.monthlyLimit || 100000000,
-    walletId: cardData.walletId
+    dailyLimit: cardData.dailyLimit || 10000000
   });
 
   const response = http.post(url, payload, {
@@ -61,22 +63,17 @@ export function createVirtualCard(gatewayUrl, token, cardData) {
     tags: { endpoint: 'card-create' }
   });
 
+  const body = parseJson(response.body);
+
   const success = check(response, {
     'create card status is 201': (r) => r.status === 201,
-    'create card returns id': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body.cardId !== undefined || body.id !== undefined;
-      } catch (e) {
-        return false;
-      }
-    }
+    'create card returns id': () => body.data !== undefined && body.data.id !== undefined
   });
 
   return {
     success: success,
     response: response,
-    body: JSON.parse(response.body || '{}')
+    body: body
   };
 }
 
@@ -95,20 +92,15 @@ export function getCardDetails(gatewayUrl, token, cardId) {
     tags: { endpoint: 'card-read' }
   });
 
+  const body = parseJson(response.body);
+
   const success = check(response, {
     'get card details status is 200': (r) => r.status === 200,
-    'get card details returns data': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body.cardId !== undefined || body.id !== undefined;
-      } catch (e) {
-        return false;
-      }
-    }
+    'get card details returns data': () => body.data !== undefined && body.data.id !== undefined
   });
 
   if (success) {
-    return JSON.parse(response.body);
+    return body.data;
   }
 
   return null;

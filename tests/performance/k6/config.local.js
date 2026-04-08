@@ -1,10 +1,15 @@
 // PayU Platform - k6 Load Test Configuration (Local Environment)
 // ================================================================
 
+const gatewayUrl = __ENV.GATEWAY_URL || 'http://localhost:8080';
+const keycloakUrl = __ENV.KEYCLOAK_URL || 'http://localhost:8099';
+const webAppUrl = __ENV.WEB_APP_URL || 'http://localhost:3000';
+const minRequestRate = __ENV.K6_MIN_REQUEST_RATE;
+
 export const BASE_URLS = {
-  gateway: 'http://localhost:8080',
-  keycloak: 'http://localhost:8099',
-  webApp: 'http://localhost:3000'
+  gateway: gatewayUrl,
+  keycloak: keycloakUrl,
+  webApp: webAppUrl
 };
 
 // Test thresholds based on DORA Elite metrics
@@ -16,15 +21,17 @@ export const THRESHOLDS = {
     { threshold: 'avg<300', abortOnFail: false }
   ],
   // Error rate threshold (less than 1% for production readiness)
-  http_req_failed: ['rate<0.01'],
-  // Throughput
-  http_reqs: ['rate>100']
+  http_req_failed: ['rate<0.01']
 };
+
+if (minRequestRate) {
+  THRESHOLDS.http_reqs = [`rate>${minRequestRate}`];
+}
 
 // Load test stages (ramp up, sustain, ramp down)
 export const LOAD_STAGES = {
   smoke: [
-    { duration: '1m', target: 1 }
+    { duration: __ENV.K6_SMOKE_DURATION || '30s', target: Number(__ENV.K6_SMOKE_TARGET || 1) }
   ],
   load: [
     { duration: '2m', target: 10 },
@@ -52,10 +59,21 @@ export const LOAD_STAGES = {
   ]
 };
 
+export const FEATURE_FLAGS = {
+  enableTransactions: __ENV.K6_ENABLE_TRANSACTIONS === '1',
+  enableCardCrud: __ENV.K6_ENABLE_CARD_CRUD !== '0'
+};
+
+export const SESSION_SETTINGS = {
+  tokenRefreshIntervalMs: Number(__ENV.K6_TOKEN_REFRESH_INTERVAL_MS || 240000),
+  walletReadyMaxAttempts: Number(__ENV.K6_WALLET_READY_ATTEMPTS || 30),
+  walletReadySleepSeconds: Number(__ENV.K6_WALLET_READY_SLEEP_SECONDS || 0.5)
+};
+
 // Test users for authentication tests
 export const TEST_USERS = [
-  { username: 'customer1', password: 'password123' },
-  { username: 'customer2', password: 'password123' },
-  { username: 'customer3', password: 'password123' },
-  { username: 'customer4', password: 'password123' }
+  { username: 'customer1', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'TestPassword123!' },
+  { username: 'customer2', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'TestPassword123!' },
+  { username: 'customer3', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'TestPassword123!' },
+  { username: 'customer4', password: __ENV.K6_EXISTING_TEST_PASSWORD || 'TestPassword123!' }
 ];

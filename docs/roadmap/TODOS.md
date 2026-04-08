@@ -44,6 +44,8 @@
 > **Phase 9 Infrastructure Audit Phase 2**: 44 findings — all fixed.
 > **Phase 8 Test Quality Audit**: 39 findings — all fixed.
 
+> ℹ️ Open bug count remains `0`. The operational carry-over items below are validation/resume tasks from the April 8, 2026 k6 cluster run, not newly opened backlog bugs.
+
 ---
 
 ## 🔍 Spikes (Research / Architecture Decision)
@@ -75,6 +77,18 @@
 
 ---
 
+## ⏭️ Operational Follow-Up (Resume Checklist)
+
+| Key             | Type | Summary                                                                                                      | Notes / Current State                                                                                           | Status   |
+| :-------------- | :--- | :----------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------- | :------- |
+| OPS-2026-04-08-01 | Task | Validate that the new `wallet-service` rollout no longer emits `DistributedCacheService` wallet cache deserialization warnings. | `cache-starter` compatibility fix added and `wallet-service` image rolled out; post-rollout in-cluster probe was interrupted before verification. | 📋 To Do |
+| OPS-2026-04-08-02 | Task | Re-run the full 40-minute `tests/performance/k6/crud-stress-test.js` job in `payu-dev` using the verified Job/ConfigMap pattern. | Previous full run completed profile but failed on p99 latency; Data Grid memory fix and wallet cache fix landed afterward. | 📋 To Do |
+| OPS-2026-04-08-03 | Task | If full stress still breaches `http_req_duration p(99) < 10s`, isolate the slow endpoint from gateway, wallet, and account logs during the same run window. | Auth/cache instability improved sharply after `payu-datagrid` moved from `512Mi` to `1Gi`; residual tail latency investigation remains open. | 📋 To Do |
+| OPS-2026-04-08-04 | Task | Re-run the full `tests/performance/k6/crud-data-consistency-test.js` job after stress revalidation is acceptable. | Consistency canary already passed earlier with test-mode/bypass flow; final full run still pending in the latest cluster state. | 📋 To Do |
+| OPS-2026-04-08-05 | Task | Decide whether to disable `GATEWAY_RATE_LIMIT_TEST_MODE` in `payu-dev` after final validation, then record the final cluster/test outcome in roadmap docs. | Test mode is still enabled for controlled k6 validation; needs an explicit post-validation cleanup decision. | 📋 To Do |
+
+---
+
 ## 📊 Metrics
 
 ### Current State
@@ -87,11 +101,13 @@
 | Bugs Fixed        | 702 done + 4 Won't Do (archived to CHANGELOG)           |
 | Open Bugs         | 0 — All bugs resolved (April 2026)                      |
 | Tech Debt         | 3/3 completed (SIMP-001, SIMP-002, SIMP-003)            |
+| Operational Follow-Ups | 5 carry-over validation tasks (April 8, 2026 pause point) |
 
 ---
 
-_Last Updated: April 7, 2026 | 0 Active Epics · 0 Open Stories · 0 Open Bugs · 0 Tech Debt · 6 Spikes · 9 Deferred_
+_Last Updated: April 8, 2026 | 0 Active Epics · 0 Open Stories · 0 Open Bugs · 0 Tech Debt · 5 Operational Follow-Ups · 6 Spikes · 9 Deferred_
 _All 702 bugs fixed + 4 Won't Do archived to CHANGELOG.md_
+_Operational carry-over: wallet cache rollout completed, final post-rollout probe + full k6 stress/consistency reruns still pending — April 8, 2026_
 _Phase 15 Final Remediation: ✅ COMPLETE (All 12 remaining bugs closed) — April 7, 2026_
 _Phase 14 Frontend Remediation: ✅ COMPLETE (All 42 frontend bugs closed) — April 7, 2026_
 _Phase 13 Security & Idempotency: ✅ COMPLETE (All 10 critical sec findings closed) — April 7, 2026_

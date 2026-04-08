@@ -2,8 +2,11 @@ package id.payu.auth.domain.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,13 +16,18 @@ import java.util.Set;
 
 @Entity
 @Table(name = "user_risk_profiles")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class UserRiskProfileEntity {
 
     @Id
     @Column(name = "username")
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private String username;
 
     @Column(name = "failed_attempts")

@@ -76,6 +76,8 @@ management:
 
 # Application-specific overrides
 payu:
+  gateway:
+    url: ${GATEWAY_URL:http://gateway-service:8080}
   security:
     encryption-enabled: false
     masking-enabled: false

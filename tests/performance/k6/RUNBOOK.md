@@ -221,10 +221,10 @@ Best practice load testing mencakup **full CRUD operations**, bukan hanya health
 ### CRUD Operations Coverage
 
 ```
-Account:   CREATE (register) → READ (profile) → UPDATE (profile)
-Wallet:    CREATE (pocket) → READ (balance) → UPDATE (credit/freeze) → DELETE (close)
-Transaction: CREATE (transfer) → READ (history/details)
-Card:      CREATE (virtual) → READ (details) → UPDATE (freeze/unfreeze)
+Account:   CREATE (accounts/register) → READ (auth/validate)
+Wallet:    READ (wallet balance) → Pocket CREATE → READ → UPDATE → DELETE
+Transaction: disabled by default until funded sender/recipient data is supplied explicitly
+Card:      READ (list) → CREATE (virtual card) → READ (details) → UPDATE (freeze/unfreeze)
 ```
 
 ### Run CRUD Tests
@@ -246,6 +246,15 @@ k6 run crud-data-consistency-test.js  # 25 min
 # With JSON output
 k6 run crud-load-test.js --out json=crud-results.json
 ```
+
+### Verified Runtime Assumptions
+
+- CRUD scripts authenticate through the gateway (`/api/v1/auth/login`), not direct password-grant against Keycloak.
+- CRUD scripts onboard dynamic users through `/api/v1/accounts/register` and use `auth/validate` `user_id` as the wallet/card identity.
+- Pocket financial operations always send `Idempotency-Key`.
+- Transfer scenarios are off by default because the current dev-cluster contract does not expose funded sender account IDs and recipient account numbers from standard onboarding alone.
+- When running inside `payu-dev` via an ephemeral pod or Job, set `GATEWAY_URL=http://gateway-service:8080` and label the pod `app.kubernetes.io/part-of=payu` so namespace NetworkPolicy allows access to PayU services.
+- The load and stress scripts warm up wallet readiness before counting CRUD assertions; transient `wallet not ready yet` polling during async provisioning is treated as precondition handling, not as a CRUD failure threshold.
 
 ### CRUD Metrics
 

@@ -1,6 +1,5 @@
 package id.payu.wallet.adapter.messaging;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.wallet.domain.port.in.WalletUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,29 +14,23 @@ import java.util.Map;
 public class WalletEventConsumer {
 
     private final WalletUseCase walletUseCase;
-    private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "user.created", groupId = "wallet-service-group")
-    public void consumeUserCreatedEvent(String message) {
-        log.info("Received user.created event: {}", message);
+    @KafkaListener(
+            topics = "user.created",
+            groupId = "wallet-service-group",
+            properties = {"spring.json.value.default.type=java.util.HashMap"}
+    )
+    public void consumeUserCreatedEvent(Map<String, Object> payload) {
+        log.info("Received user.created event: {}", payload);
         try {
-            // We expect JSON payload. Since account-service sends an object, it's
-            // serialized to JSON by Spring Kafka.
-            // We can parse it to a Map or a specific DTO.
-            Map<String, Object> payload = objectMapper.readValue(message, Map.class);
-            String accountId = (String) payload.get("userId"); // DTO has userId, but it's UUID.
-
-            // Note: account-service sends user ID as UUID, but wallet service uses String
-            // for accountId.
-            // Let's verify what account-service sends.
-            // It sends UserCreatedEvent(UUID userId, ...).
-            // JSON will have "userId": "uuid-string"
+            Object externalId = payload.get("externalId");
+            Object userId = payload.get("userId");
+            String accountId = externalId != null && !externalId.toString().isBlank()
+                    ? externalId.toString()
+                    : userId != null ? userId.toString() : null;
 
             if (accountId == null) {
-                // Try "id" if "userId" is missing? AccountDto usually has "id" or "userId".
-                // Looking at UserCreatedEvent: record UserCreatedEvent(UUID userId, ...)
-                // So field name is "userId".
-                log.warn("userId not found in payload");
+                log.warn("No account identifier found in user.created payload");
                 return;
             }
 

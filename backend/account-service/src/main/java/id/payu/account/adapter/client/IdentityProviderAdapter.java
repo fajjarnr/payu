@@ -23,7 +23,7 @@ public class IdentityProviderAdapter implements IdentityProviderPort {
     @Override
     @CircuitBreaker(name = "authService", fallbackMethod = "provisionUserFallback")
     @Retry(name = "authService")
-    public void provisionUser(String username, String email, String password, String fullName) {
+    public String provisionUser(String username, String email, String password, String fullName) {
         log.info("Provisioning IAM identity for user: {}", maskUsername(username));
 
         Map<String, String> request = Map.of(
@@ -33,16 +33,41 @@ public class IdentityProviderAdapter implements IdentityProviderPort {
             "fullName", fullName != null ? fullName : username
         );
 
-        gatewayClient.registerIdentity(request);
+        Map<String, Object> response = gatewayClient.registerIdentity(request);
+        String userId = extractUserId(response);
+
+        if (userId == null || userId.isBlank()) {
+            log.warn("IAM registration response missing user_id for user: {}", maskUsername(username));
+            return null;
+        }
+
         log.info("IAM identity provisioned successfully for user: {}", maskUsername(username));
+        return userId;
     }
 
-    private void provisionUserFallback(String username, String email, String password, String fullName, Throwable throwable) {
+    private String provisionUserFallback(String username, String email, String password, String fullName, Throwable throwable) {
         log.error("Failed to provision IAM identity for user {} after retries: {}",
                 maskUsername(username), throwable.getMessage());
         throw new RuntimeException(
             "Identity provider unavailable. Please try again later.", throwable
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    private String extractUserId(Map<String, Object> response) {
+        if (response == null) {
+            return null;
+        }
+
+        Object data = response.get("data");
+        if (data instanceof Map<?, ?> dataMap) {
+            Object userId = ((Map<String, Object>) dataMap).get("user_id");
+            if (userId != null) {
+                return userId.toString();
+            }
+        }
+
+        return null;
     }
 
     private String maskUsername(String username) {

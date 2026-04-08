@@ -49,7 +49,18 @@ public class UserApplicationService implements RegisterUserUseCase {
 
         // Step 1: Provision identity in Keycloak BEFORE creating account.
         // If IAM provisioning fails, we don't create an orphaned DB record.
-        identityProviderPort.provisionUser(command.username(), command.email(), command.password(), command.fullName());
+        String iamUserId = identityProviderPort.provisionUser(
+            command.username(),
+            command.email(),
+            command.password(),
+            command.fullName()
+        );
+        String externalId = iamUserId;
+        if (externalId == null || externalId.isBlank()) {
+            log.warn("Falling back to request externalId for user {} because IAM user id was not returned",
+                command.username());
+            externalId = command.externalId();
+        }
 
         // Step 2: Attempt KYC verification — if unavailable, register with PENDING status.
         // Simple try-catch replaces resilience4j annotations which caused double-fallback
@@ -71,7 +82,7 @@ public class UserApplicationService implements RegisterUserUseCase {
         }
 
         User user = User.builder()
-                .externalId(command.externalId())
+            .externalId(externalId)
                 .username(command.username())
                 .email(command.email())
                 .phoneNumber(command.phoneNumber())

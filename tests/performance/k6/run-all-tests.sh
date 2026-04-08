@@ -100,36 +100,12 @@ run_smoke_test() {
 # Run CRUD smoke test
 run_crud_smoke_test() {
     print_section "Running CRUD Smoke Test"
-    echo "Duration: ~2 minutes"
+    echo "Duration: ~30 seconds"
     echo "Virtual Users: 1"
-    echo "Coverage: Full CRUD operations (Account, Wallet, Transaction, Card)"
+    echo "Coverage: Verified onboarding, wallet balance, pocket CRUD, and card CRUD"
     echo ""
 
-    # Create a minimal CRUD test for smoke testing
-    cat > crud-smoke-test.js << 'EOF'
-import { login, getProfile } from './lib/auth.js';
-import { getWallets } from './lib/wallet.js';
-import { BASE_URLS, TEST_USERS } from './config.js';
-
-export const options = {
-    stages: [{ duration: '30s', target: 1 }],
-    thresholds: {
-        http_req_duration: ['p(95)<1000'],
-        http_req_failed: ['rate<0.1']
-    }
-};
-
-export default function () {
-    const token = login(BASE_URLS.keycloak, TEST_USERS[0].username, TEST_USERS[0].password);
-    if (token) {
-        getProfile(BASE_URLS.gateway, token);
-        getWallets(BASE_URLS.gateway, token);
-    }
-}
-EOF
-
-    k6 run crud-smoke-test.js
-    rm crud-smoke-test.js
+    k6 run --vus 1 --iterations 1 crud-load-test-short.js
 
     if [ $? -eq 0 ]; then
         print_success "CRUD smoke test completed"
@@ -167,11 +143,11 @@ run_crud_load_test() {
     print_section "Running CRUD Load Test"
     echo "Duration: ~25 minutes"
     echo "Max Virtual Users: 100"
-    echo "Coverage: Full CRUD operations"
-    echo "  - Account: READ, UPDATE"
-    echo "  - Wallet/Pocket: CREATE, READ, UPDATE, DELETE"
-    echo "  - Transaction: CREATE, READ (transfer)"
+    echo "Coverage: Verified onboarding, wallet balance, pocket CRUD, and card CRUD"
+    echo "  - Account: CREATE, READ (session validation)"
+    echo "  - Wallet/Pocket: READ, CREATE, UPDATE, DELETE"
     echo "  - Card: CREATE, READ, UPDATE"
+    echo "  - Transaction: disabled by default"
     echo ""
     echo "Press Ctrl+C within 5 seconds to cancel..."
     sleep 5

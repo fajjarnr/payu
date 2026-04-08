@@ -12,6 +12,7 @@ import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.model.WalletTransaction;
 import id.payu.wallet.domain.model.LedgerEntry;
 import id.payu.wallet.domain.port.out.WalletPersistencePort;
+import id.payu.wallet.multitenancy.TenantContext;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +56,20 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
 
     @Override
     public Wallet save(Wallet wallet) {
-        WalletEntity savedEntity = walletRepository.save(walletMapper.toEntity(wallet));
+        WalletEntity entity = walletMapper.toEntity(wallet);
+
+        if (wallet.getId() != null) {
+            walletRepository.findById(wallet.getId())
+                    .map(WalletEntity::getTenantId)
+                    .filter(tenantId -> tenantId != null && !tenantId.isBlank())
+                    .ifPresent(entity::setTenantId);
+        }
+
+        if (entity.getTenantId() == null || entity.getTenantId().isBlank()) {
+            entity.setTenantId(TenantContext.getTenantId());
+        }
+
+        WalletEntity savedEntity = walletRepository.saveAndFlush(entity);
         return walletMapper.toDomain(savedEntity);
     }
 

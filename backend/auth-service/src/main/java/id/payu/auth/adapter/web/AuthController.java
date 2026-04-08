@@ -38,6 +38,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 /**
  * Authentication controller for PayU Digital Banking Platform.
  * Handles user authentication, MFA verification, and risk-based authentication.
@@ -324,14 +326,22 @@ public class AuthController extends BaseController {
     )
     @SecurityRequirements
     @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "register")
-    public ResponseEntity<ApiResponse<String>> register(
+    public ResponseEntity<ApiResponse<?>> register(
             @Valid @RequestBody RegisterRequest request
     ) {
         try {
-            keycloakService.createUser(request.username(), request.email(), request.password(), request.fullName());
+            String userId = keycloakService.createUser(
+                    request.username(),
+                    request.email(),
+                    request.password(),
+                    request.fullName()
+            );
             log.info("Registered user in IAM: {}", maskUsername(request.username()));
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success("User registered in IAM"));
+                    .body(ApiResponse.success(Map.of(
+                            "message", "User registered in IAM",
+                            "user_id", userId
+                    )));
         } catch (IllegalArgumentException e) {
             log.warn("Registration rejected for {}: {}", maskUsername(request.username()), e.getMessage());
             return ResponseEntity.badRequest()

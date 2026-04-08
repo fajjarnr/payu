@@ -22,7 +22,7 @@ public class PocketPersistenceAdapter implements PocketPersistencePort {
     @Override
     public Pocket save(Pocket pocket) {
         PocketEntity entity = toEntity(pocket);
-        PocketEntity savedEntity = repository.save(entity);
+        PocketEntity savedEntity = repository.saveAndFlush(entity);
         return toDomain(savedEntity);
     }
 

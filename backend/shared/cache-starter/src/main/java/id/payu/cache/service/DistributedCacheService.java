@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -35,6 +36,23 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class DistributedCacheService {
+
+    private static final Set<String> SERIALIZER_METADATA_KEYS = Set.of(
+        "@class",
+        "_class",
+        "@type",
+        "_type",
+        "javaClass"
+    );
+
+    private static final Set<String> SIMPLE_VALUE_WRAPPER_KEYS = Set.of(
+        "value",
+        "@class",
+        "_class",
+        "@type",
+        "_type",
+        "javaClass"
+    );
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ValueOperations<String, Object> valueOps;
@@ -338,13 +356,19 @@ public class DistributedCacheService {
         // Case 2: LinkedHashMap from GenericJackson2JsonRedisSerializer
         if (value instanceof Map) {
             try {
-                Map<String, Object> map = (Map<String, Object>) value;
+                Map<String, Object> map = sanitizeMap((Map<?, ?>) value);
                 // Check if map looks like a CacheEntry (has value, createdAt, softTtl, hardTtl)
                 if (map.containsKey("value") && map.containsKey("createdAt")) {
                     // Convert the entire map to CacheEntry using ObjectMapper
                     JavaType cacheEntryType = objectMapper.getTypeFactory()
                             .constructParametricType(CacheEntry.class, innerType);
-                    return objectMapper.convertValue(value, cacheEntryType);
+                    CacheEntry<T> entry = objectMapper.convertValue(map, cacheEntryType);
+                    Object innerValue = entry.getValue();
+                    if (innerValue != null && !innerType.isInstance(innerValue)) {
+                        T converted = convertToType(innerValue, innerType);
+                        return CacheEntry.create(converted, entry.getSoftTtl(), entry.getHardTtl(), entry.getCreatedAt());
+                    }
+                    return entry;
                 }
             } catch (Exception e) {
                 log.debug("Value is not a CacheEntry map for type {}: {}", innerType.getSimpleName(), e.getMessage());
@@ -372,12 +396,59 @@ public class DistributedCacheService {
             return type.cast(value);
         }
 
+        Object sanitizedValue = sanitizeSerializedValue(value);
+        Object unwrappedValue = unwrapSimpleValueWrapper(sanitizedValue);
+
+        if (type.isInstance(unwrappedValue)) {
+            return type.cast(unwrappedValue);
+        }
+
         // Convert via ObjectMapper (handles LinkedHashMap → POJO, number conversions, etc.)
         try {
-            return objectMapper.convertValue(value, type);
+            return objectMapper.convertValue(unwrappedValue, type);
         } catch (IllegalArgumentException e) {
             log.warn("Failed to convert cached value to type {}: {}", type.getSimpleName(), e.getMessage());
             return null;
         }
+    }
+
+    private Object sanitizeSerializedValue(Object value) {
+        if (value instanceof Map<?, ?> mapValue) {
+            return sanitizeMap(mapValue);
+        }
+        return value;
+    }
+
+    private Map<String, Object> sanitizeMap(Map<?, ?> rawMap) {
+        Map<String, Object> sanitized = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+            if (!(entry.getKey() instanceof String key) || SERIALIZER_METADATA_KEYS.contains(key)) {
+                continue;
+            }
+            sanitized.put(key, sanitizeSerializedValue(entry.getValue()));
+        }
+        return sanitized;
+    }
+
+    private Object unwrapSimpleValueWrapper(Object value) {
+        if (!(value instanceof Map<?, ?> rawMap) || !rawMap.containsKey("value")) {
+            return value;
+        }
+
+        boolean cacheEntryLike = rawMap.containsKey("createdAt")
+                || rawMap.containsKey("softTtl")
+                || rawMap.containsKey("hardTtl")
+                || rawMap.containsKey("version");
+        if (cacheEntryLike) {
+            return value;
+        }
+
+        for (Object rawKey : rawMap.keySet()) {
+            if (!(rawKey instanceof String key) || !SIMPLE_VALUE_WRAPPER_KEYS.contains(key)) {
+                return value;
+            }
+        }
+
+        return sanitizeSerializedValue(rawMap.get("value"));
     }
 }

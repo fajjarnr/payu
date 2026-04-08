@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,15 +32,12 @@ public class PocketService implements PocketUseCase {
         log.info("Creating pocket {} for account {} with currency {}", name, accountId, currency);
 
         Pocket pocket = Pocket.builder()
-                .id(UUID.randomUUID())
                 .accountId(accountId)
                 .name(name)
                 .description(description)
                 .currency(currency)
                 .balance(BigDecimal.ZERO)
                 .status(Pocket.PocketStatus.ACTIVE)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         Pocket saved = pocketPersistencePort.save(pocket);

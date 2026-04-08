@@ -223,13 +223,25 @@ public class RateLimitFilter implements ContainerRequestFilter {
      * Get client identifier from request context.
      * Uses IP for unauthenticated, IP+user for authenticated.
      */
-    private String getClientId(ContainerRequestContext requestContext) {
+    String getClientId(ContainerRequestContext requestContext) {
         StringBuilder clientId = new StringBuilder();
         String ip = getClientIp(requestContext);
         clientId.append(ip.replace(":", "_")); // IPv6 safe
 
         String authHeader = requestContext.getHeaderString("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String userId = requestContext.getHeaderString("X-User-Id");
+            if (userId != null && !userId.isBlank()) {
+                clientId.append(":").append(userId);
+                return clientId.toString();
+            }
+
+            String accountId = requestContext.getHeaderString("X-Account-Id");
+            if (accountId != null && !accountId.isBlank()) {
+                clientId.append(":").append(accountId);
+                return clientId.toString();
+            }
+
             clientId.append(":authenticated");
         }
 

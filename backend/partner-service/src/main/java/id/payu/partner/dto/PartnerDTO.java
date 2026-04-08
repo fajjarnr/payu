@@ -1,5 +1,6 @@
 package id.payu.partner.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -11,6 +12,7 @@ public class PartnerDTO {
     public String name;
     
     @NotBlank
+    @JsonAlias("partnerType")
     public String type;
     
     @NotBlank

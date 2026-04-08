@@ -86,8 +86,8 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     String jwtSecret;
 
     @Inject
-    @ConfigProperty(name = "quarkus.oidc.token.issuer", defaultValue = "http://localhost:8080/realms/payu")
-    String jwtIssuer;
+    @ConfigProperty(name = "quarkus.oidc.token.issuer")
+    Optional<String> configuredJwtIssuer;
 
     @Inject
     @ConfigProperty(name = "quarkus.oidc.auth-server-url", defaultValue = "http://localhost:8080/realms/payu")
@@ -155,7 +155,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
             // Build expected claims with issuer and audience
             JWTClaimsSet.Builder expectedClaimsBuilder = new JWTClaimsSet.Builder()
-                .issuer(jwtIssuer);
+                .issuer(resolveJwtIssuer());
 
             // Add audience validation if configured
             String jwtAudience = gatewayConfig.authorization().audience().orElse("");
@@ -220,6 +220,12 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
         return baseUrl + "/protocol/openid-connect/certs";
+    }
+
+    private String resolveJwtIssuer() {
+        return configuredJwtIssuer
+            .filter(issuer -> !issuer.isBlank())
+            .orElse(authServerUrl);
     }
 
     @Override
@@ -313,10 +319,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     private UserContext validateToken(String token) {
         try {
             // Check if token is blacklisted (for logout scenarios)
-            String blacklisted = valueCommands.get("blacklist:token:" + token)
-                    .await().atMost(Duration.ofSeconds(1));
-
-            if (blacklisted != null) {
+            if (isTokenBlacklisted(token)) {
                 Log.warn("Token is blacklisted");
                 return null;
             }
@@ -372,6 +375,19 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         } catch (Exception e) {
             Log.errorf(e, "Token validation error");
             return null;
+        }
+    }
+
+    private boolean isTokenBlacklisted(String token) {
+        try {
+            String blacklisted = valueCommands.get("blacklist:token:" + token)
+                .await().atMost(Duration.ofSeconds(1));
+            return blacklisted != null;
+        } catch (Exception e) {
+            // Redis-backed token revocation is advisory during transient cache failures.
+            // Continue with JWT signature/claims validation rather than rejecting valid tokens.
+            Log.warnf(e, "Failed to check token blacklist in Redis, continuing with JWT validation");
+            return false;
         }
     }
 

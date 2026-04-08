@@ -1,5 +1,6 @@
 package id.payu.wallet.application.service;
 
+import id.payu.wallet.application.exception.WalletNotFoundException;
 import id.payu.wallet.domain.model.Card;
 import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.port.in.CardUseCase;
@@ -42,7 +43,7 @@ public class CardService implements CardUseCase {
         log.info("Creating virtual card for account: {}", accountId);
 
         Wallet wallet = walletPersistencePort.findByAccountId(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Wallet not found for account: " + accountId));
+                .orElseThrow(() -> new WalletNotFoundException(accountId));
 
         String cardNumber;
         do {
@@ -76,10 +77,13 @@ public class CardService implements CardUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<Card> getCardsByAccountId(String accountId) {
-        Wallet wallet = walletPersistencePort.findByAccountId(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Wallet not found for account: " + accountId));
+        Optional<Wallet> wallet = walletPersistencePort.findByAccountId(accountId);
+        if (wallet.isEmpty()) {
+            log.debug("No wallet found for account {}, returning empty card list", accountId);
+            return List.of();
+        }
 
-        return cardPersistencePort.findByWalletId(wallet.getId());
+        return cardPersistencePort.findByWalletId(wallet.get().getId());
     }
 
     @Override

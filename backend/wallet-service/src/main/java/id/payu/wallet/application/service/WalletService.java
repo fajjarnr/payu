@@ -86,21 +86,18 @@ public class WalletService implements WalletUseCase {
         }
 
         Wallet wallet = Wallet.builder()
-                .id(UUID.randomUUID())
                 .accountId(accountId)
                 .balance(BigDecimal.ZERO)
                 .reservedBalance(BigDecimal.ZERO)
                 .currency("IDR")
                 .status(Wallet.WalletStatus.ACTIVE)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
-        walletPersistencePort.save(wallet);
-        walletEventPublisher.publishWalletCreated(accountId, wallet.getId().toString());
+        Wallet savedWallet = walletPersistencePort.save(wallet);
+        walletEventPublisher.publishWalletCreated(accountId, savedWallet.getId().toString());
 
-        log.info("Wallet created successfully: {}", wallet.getId());
-        return wallet;
+        log.info("Wallet created successfully: {}", savedWallet.getId());
+        return savedWallet;
     }
 
     @Override

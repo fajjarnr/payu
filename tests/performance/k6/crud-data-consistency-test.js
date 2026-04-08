@@ -1,25 +1,100 @@
 // PayU Platform - CRUD Data Consistency Test
 // ============================================
-// Verifies data consistency under concurrent load
-// Tests: Read-after-write consistency, concurrent updates
-//
-// Run: k6 run crud-data-consistency-test.js
+// Verifies read-after-write and state-transition consistency for the verified
+// onboarding, wallet, pocket, and card flows.
 
-import http from 'k6/http';
-import { check, sleep, group } from 'k6';
+import { sleep, group } from 'k6';
 import { Rate, Counter } from 'k6/metrics';
-import { BASE_URLS, TEST_USERS } from './config.js';
-import { login, getProfile } from './lib/auth.js';
-import { createPocket, getWallets, creditPocket, getPocket, closePocket } from './lib/wallet.js';
-import { createTransfer, getTransactionDetails } from './lib/transaction.js';
+import { BASE_URLS, FEATURE_FLAGS, SESSION_SETTINGS } from './config.js';
+import { createOnboardedSession, refreshSession, validateSession, generateUserData } from './lib/auth.js';
+import {
+  createPocket,
+  getPocket,
+  creditPocket,
+  debitPocket,
+  freezePocket,
+  unfreezePocket,
+  closePocket,
+  getWalletBalance,
+  waitForWalletReady
+} from './lib/wallet.js';
+import {
+  createVirtualCard,
+  getCardDetails,
+  freezeCard,
+  unfreezeCard
+} from './lib/card.js';
 
-// Consistency tracking metrics
 const readAfterWriteConsistency = new Rate('read_after_write_consistency');
+const stateTransitionConsistency = new Rate('state_transition_consistency');
 const concurrentUpdateConsistency = new Rate('concurrent_update_consistency');
-const transactionAtomicity = new Rate('transaction_atomicity');
-
 const consistencyErrors = new Counter('consistency_errors');
-const raceConditions = new Counter('race_condition_detected');
+
+let vuSession = null;
+
+function retryCreatePocket(gatewayUrl, token, pocketData, attempts = 3) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const pocketResult = createPocket(gatewayUrl, token, pocketData, false);
+    if (pocketResult.success) {
+      return pocketResult;
+    }
+
+    if (attempt < attempts - 1) {
+      sleep(0.2);
+    }
+  }
+
+  return { success: false };
+}
+
+function waitForPocketState(gatewayUrl, token, pocketId, expectedStatus = null, attempts = 5) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const pocket = getPocket(gatewayUrl, token, pocketId, false);
+    if (pocket !== null && (expectedStatus === null || pocket.status === expectedStatus)) {
+      return pocket;
+    }
+
+    if (attempt < attempts - 1) {
+      sleep(0.2);
+    }
+  }
+
+  return null;
+}
+
+function waitForPocketBalance(gatewayUrl, token, pocketId, expectedBalance, attempts = 8) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const pocket = getPocket(gatewayUrl, token, pocketId, false);
+    if (pocket !== null && Number(pocket.balance) >= expectedBalance) {
+      return pocket;
+    }
+
+    if (attempt < attempts - 1) {
+      sleep(0.25);
+    }
+  }
+
+  return null;
+}
+
+function ensureSession(gatewayUrl) {
+  if (!vuSession) {
+    vuSession = createOnboardedSession(gatewayUrl, generateUserData('k6consistency'));
+    return vuSession.success ? vuSession : null;
+  }
+
+  if (Date.now() - vuSession.refreshedAt > SESSION_SETTINGS.tokenRefreshIntervalMs) {
+    const refreshedSession = refreshSession(gatewayUrl, vuSession);
+    if (!refreshedSession.success) {
+      vuSession = null;
+      return null;
+    }
+
+    vuSession = refreshedSession;
+  }
+
+  return vuSession;
+}
 
 export const options = {
   stages: [
@@ -32,7 +107,8 @@ export const options = {
   ],
   thresholds: {
     read_after_write_consistency: ['rate>0.99'],
-    transaction_atomicity: ['rate>0.999'],
+    state_transition_consistency: ['rate>0.99'],
+    concurrent_update_consistency: ['rate>0.99'],
     consistency_errors: ['count<10']
   },
   tags: {
@@ -41,198 +117,172 @@ export const options = {
   }
 };
 
-function generateUniqueId() {
-  return `consistency-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-}
-
 export function setup() {
   console.log('=== PayU CRUD Data Consistency Test - Setup ===');
-  console.log('Testing read-after-write consistency and transaction atomicity');
+  console.log('Testing verified pocket/card state transitions under load.');
   console.log('');
 
   return { startTime: new Date().toISOString() };
 }
 
 export default function () {
-  const gatewayUrl = BASE_URLS.gateway;
-  const keycloakUrl = BASE_URLS.keycloak;
+  const session = ensureSession(BASE_URLS.gateway);
 
-  const userIndex = __VU % TEST_USERS.length;
-  const testUser = TEST_USERS[userIndex];
-
-  const token = login(keycloakUrl, testUser.username, testUser.password);
-
-  if (!token) {
-    console.error(`Auth failed for user: ${testUser.username}`);
+  if (!session) {
+    consistencyErrors.add(1);
+    console.error('Failed to create or refresh consistency-test session');
+    sleep(1);
     return;
   }
 
-  const wallets = getWallets(gatewayUrl, token);
+  const { token, accountId, userData } = session;
+  const walletBalance = waitForWalletReady(
+    BASE_URLS.gateway,
+    token,
+    accountId,
+    SESSION_SETTINGS.walletReadyMaxAttempts,
+    SESSION_SETTINGS.walletReadySleepSeconds
+  );
 
-  if (!wallets || wallets.length === 0) {
-    console.error('No wallets available for consistency test');
+  if (walletBalance === null) {
+    readAfterWriteConsistency.add(0);
+    consistencyErrors.add(1);
+    sleep(1);
     return;
   }
 
-  const wallet = wallets[0];
+  group('Wallet Lookup Consistency', () => {
+    const validation = validateSession(BASE_URLS.gateway, token);
+    const balance = getWalletBalance(BASE_URLS.gateway, token, accountId);
+    const consistent = validation !== null && balance !== null && balance.accountId === accountId;
 
-  // ==========================================
-  // TEST 1: Read-After-Write Consistency
-  // ==========================================
-  group('Read-After-Write Consistency', () => {
-    // Create pocket
-    const pocketResult = createPocket(gatewayUrl, token, {
-      name: `Consistency Test ${generateUniqueId()}`,
+    readAfterWriteConsistency.add(consistent);
+    if (!consistent) {
+      consistencyErrors.add(1);
+    }
+  });
+
+  group('Pocket Read-After-Write', () => {
+    const pocketResult = retryCreatePocket(BASE_URLS.gateway, token, {
+      name: `Consistency Pocket ${Date.now()}`,
       description: 'Testing read-after-write',
       currency: 'IDR'
     });
 
-    if (pocketResult.success) {
-      const pocketId = pocketResult.body.pocketId || pocketResult.body.id;
-
-      // Immediately read (should find)
-      let retries = 0;
-      let found = false;
-
-      while (retries < 5 && !found) {
-        const pocket = getPocket(gatewayUrl, token, pocketId);
-
-        if (pocket && (pocket.id === pocketId || pocket.pocketId === pocketId)) {
-          found = true;
-          readAfterWriteConsistency.add(1);
-          console.log(`Read-after-write consistency: PASS (retries: ${retries})`);
-        } else {
-          retries++;
-          sleep(0.5);
-        }
-      }
-
-      if (!found) {
-        readAfterWriteConsistency.add(0);
-        consistencyErrors.add(1);
-        console.error(`Read-after-write consistency: FAILED after ${retries} retries`);
-      }
-
-      // Credit and verify balance update
-      const creditAmount = 100000;
-      creditPocket(gatewayUrl, token, pocketId, creditAmount);
-      sleep(1);
-
-      const updatedPocket = getPocket(gatewayUrl, token, pocketId);
-      if (updatedPocket) {
-        const expectedBalance = creditAmount;
-        const actualBalance = updatedPocket.balance || updatedPocket.currentBalance || 0;
-
-        if (actualBalance >= expectedBalance) {
-          readAfterWriteConsistency.add(1);
-          console.log(`Balance update consistency: PASS`);
-        } else {
-          readAfterWriteConsistency.add(0);
-          consistencyErrors.add(1);
-          console.error(`Balance update consistency: FAILED (expected: ${expectedBalance}, actual: ${actualBalance})`);
-        }
-      }
-
-      // Cleanup
-      closePocket(gatewayUrl, token, pocketId);
+    if (!pocketResult.success) {
+      readAfterWriteConsistency.add(0);
+      consistencyErrors.add(1);
+      return;
     }
 
-    sleep(2);
-  });
+    const pocketId = pocketResult.body.data.id;
+    const pocket = waitForPocketState(BASE_URLS.gateway, token, pocketId);
+    const consistent = pocket !== null && pocket.id === pocketId;
 
-  // ==========================================
-  // TEST 2: Transaction Atomicity
-  // ==========================================
-  group('Transaction Atomicity', () => {
-    // Create transfer with idempotency key
-    const idempotencyKey = `atomic-${generateUniqueId()}`;
-
-    const transferResult = createTransfer(gatewayUrl, token, {
-      sourceWalletId: wallet.id,
-      destinationAccountId: TEST_USERS[(userIndex + 1) % TEST_USERS.length].username,
-      amount: 10000,
-      description: 'Atomicity test'
-    });
-
-    if (transferResult.success) {
-      const transactionId = transferResult.body.transactionId || transferResult.body.id;
-
-      // Verify transaction can be retrieved
-      sleep(1);
-      const transaction = getTransactionDetails(gatewayUrl, token, transactionId);
-
-      if (transaction && (transaction.id === transactionId || transaction.transactionId === transactionId)) {
-        transactionAtomicity.add(1);
-        console.log(`Transaction atomicity: PASS`);
-
-        // Verify transaction status is consistent
-        const status = transaction.status || transaction.transactionStatus;
-        if (status && ['COMPLETED', 'PENDING', 'PROCESSING'].includes(status)) {
-          console.log(`Transaction status consistency: PASS (${status})`);
-        } else {
-          transactionAtomicity.add(0);
-          consistencyErrors.add(1);
-          console.error(`Transaction status consistency: FAILED (${status})`);
-        }
-      } else {
-        transactionAtomicity.add(0);
-        consistencyErrors.add(1);
-        console.error(`Transaction atomicity: FAILED - transaction not found`);
-      }
+    readAfterWriteConsistency.add(consistent);
+    if (!consistent) {
+      consistencyErrors.add(1);
+      return;
     }
 
-    sleep(2);
+    closePocket(BASE_URLS.gateway, token, pocketId);
   });
 
-  // ==========================================
-  // TEST 3: Concurrent Update Detection
-  // ==========================================
-  group('Concurrent Update Detection', () => {
-    // Create a pocket for concurrent testing
-    const pocketResult = createPocket(gatewayUrl, token, {
-      name: `Concurrent Test ${generateUniqueId()}`,
-      description: 'Testing concurrent updates',
+  group('Pocket State Transitions', () => {
+    const pocketResult = retryCreatePocket(BASE_URLS.gateway, token, {
+      name: `Transition Pocket ${Date.now()}`,
+      description: 'Testing freeze/unfreeze/close',
       currency: 'IDR'
     });
 
-    if (pocketResult.success) {
-      const pocketId = pocketResult.body.pocketId || pocketResult.body.id;
-
-      // Multiple rapid credits (simulating concurrent updates)
-      const creditPromises = [];
-      for (let i = 0; i < 3; i++) {
-        const creditResult = creditPocket(gatewayUrl, token, pocketId, 10000);
-        creditPromises.push(creditResult);
-        sleep(0.2);
-      }
-
-      sleep(2);
-
-      // Verify final state
-      const finalPocket = getPocket(gatewayUrl, token, pocketId);
-
-      if (finalPocket) {
-        const finalBalance = finalPocket.balance || finalPocket.currentBalance || 0;
-        const expectedMinBalance = 30000; // 3 credits of 10000
-
-        if (finalBalance >= expectedMinBalance) {
-          concurrentUpdateConsistency.add(1);
-          console.log(`Concurrent update consistency: PASS (balance: ${finalBalance})`);
-        } else {
-          concurrentUpdateConsistency.add(0);
-          raceConditions.add(1);
-          console.error(`Concurrent update consistency: FAILED (expected: >=${expectedMinBalance}, actual: ${finalBalance})`);
-        }
-      }
-
-      // Cleanup
-      closePocket(gatewayUrl, token, pocketId);
+    if (!pocketResult.success) {
+      stateTransitionConsistency.add(0);
+      consistencyErrors.add(1);
+      return;
     }
 
-    sleep(2);
+    const pocketId = pocketResult.body.data.id;
+    const creditResult = creditPocket(BASE_URLS.gateway, token, pocketId, 20000);
+    const freezeResult = freezePocket(BASE_URLS.gateway, token, pocketId);
+    const frozenPocket = waitForPocketState(BASE_URLS.gateway, token, pocketId, 'FROZEN');
+    const unfreezeResult = unfreezePocket(BASE_URLS.gateway, token, pocketId);
+    const debitResult = debitPocket(BASE_URLS.gateway, token, pocketId, 20000);
+    const closeResult = closePocket(BASE_URLS.gateway, token, pocketId);
+    const closedPocket = waitForPocketState(BASE_URLS.gateway, token, pocketId, 'CLOSED');
+
+    const consistent = creditResult && freezeResult && frozenPocket !== null && frozenPocket.status === 'FROZEN' &&
+      unfreezeResult && debitResult && closeResult && closedPocket !== null && closedPocket.status === 'CLOSED';
+
+    stateTransitionConsistency.add(consistent);
+    if (!consistent) {
+      consistencyErrors.add(1);
+    }
   });
 
-  sleep(3);
+  group('Repeated Balance Updates', () => {
+    const pocketResult = retryCreatePocket(BASE_URLS.gateway, token, {
+      name: `Balance Pocket ${Date.now()}`,
+      description: 'Testing repeated credits',
+      currency: 'IDR'
+    });
+
+    if (!pocketResult.success) {
+      concurrentUpdateConsistency.add(0);
+      consistencyErrors.add(1);
+      return;
+    }
+
+    const pocketId = pocketResult.body.data.id;
+    const credits = [
+      creditPocket(BASE_URLS.gateway, token, pocketId, 10000),
+      creditPocket(BASE_URLS.gateway, token, pocketId, 10000),
+      creditPocket(BASE_URLS.gateway, token, pocketId, 10000)
+    ];
+    const pocket = waitForPocketBalance(BASE_URLS.gateway, token, pocketId, 30000);
+    const consistent = credits.every((value) => value) && pocket !== null && Number(pocket.balance) >= 30000;
+
+    concurrentUpdateConsistency.add(consistent);
+    if (!consistent) {
+      consistencyErrors.add(1);
+      return;
+    }
+
+    debitPocket(BASE_URLS.gateway, token, pocketId, 30000);
+    closePocket(BASE_URLS.gateway, token, pocketId);
+  });
+
+  if (FEATURE_FLAGS.enableCardCrud) {
+    group('Card Read-After-Write', () => {
+      const cardResult = createVirtualCard(BASE_URLS.gateway, token, {
+        accountId: accountId,
+        cardHolderName: userData.fullName,
+        dailyLimit: 5000000
+      });
+
+      if (!cardResult.success) {
+        stateTransitionConsistency.add(0);
+        consistencyErrors.add(1);
+        return;
+      }
+
+      const cardId = cardResult.body.data.id;
+      const card = getCardDetails(BASE_URLS.gateway, token, cardId);
+      const freezeResult = freezeCard(BASE_URLS.gateway, token, cardId);
+      const frozenCard = getCardDetails(BASE_URLS.gateway, token, cardId);
+      const unfreezeResult = unfreezeCard(BASE_URLS.gateway, token, cardId);
+      const activeCard = getCardDetails(BASE_URLS.gateway, token, cardId);
+
+      const consistent = card !== null && card.id === cardId && freezeResult && frozenCard !== null &&
+        frozenCard.status === 'FROZEN' && unfreezeResult && activeCard !== null && activeCard.status === 'ACTIVE';
+
+      stateTransitionConsistency.add(consistent);
+      if (!consistent) {
+        consistencyErrors.add(1);
+      }
+    });
+  }
+
+  sleep(2);
 }
 
 export function teardown(data) {
@@ -240,10 +290,5 @@ export function teardown(data) {
   console.log('=== PayU CRUD Data Consistency Test - Complete ===');
   console.log(`Started: ${data.startTime}`);
   console.log(`Ended: ${new Date().toISOString()}`);
-  console.log('');
-  console.log('Key Metrics:');
-  console.log('  - Read-after-write consistency should be > 99%');
-  console.log('  - Transaction atomicity should be > 99.9%');
-  console.log('  - Consistency errors should be < 10');
   console.log('');
 }

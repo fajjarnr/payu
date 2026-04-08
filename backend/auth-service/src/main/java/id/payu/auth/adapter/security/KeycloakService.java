@@ -359,7 +359,7 @@ public class KeycloakService {
         riskEvaluationService.recordFailedAttempt(username);
     }
 
-    public void createUser(String username, String email, String password, String fullName) {
+    public String createUser(String username, String email, String password, String fullName) {
         validatePassword(password);
 
         UserRepresentation user = new UserRepresentation();
@@ -393,6 +393,7 @@ public class KeycloakService {
                 .users().get(userId).resetPassword(credential);
 
         log.info("Created user {} in Keycloak with ID {}", maskUsername(username), userId);
+        return userId;
     }
 
     private boolean isAccountLocked(String username) {

@@ -73,6 +73,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **k6 CRUD Suite Contract Sync (2026-04-08)**:
+  - Reworked the `tests/performance/k6/` CRUD helpers and entrypoints to use the live onboarding and auth flow (`/api/v1/accounts/register`, `/api/v1/auth/login`, `/api/v1/auth/validate`).
+  - Updated wallet, pocket, and card coverage to the current gateway contracts, including `GET /api/v1/wallets/{accountId}/balance`, pocket financial operations with `Idempotency-Key`, and `POST /api/v1/cards`.
+  - Documented the in-cluster execution requirement for ephemeral k6 pods in `payu-dev`, including the internal gateway URL and required NetworkPolicy label.
+
+- **Identity Alignment for Account Onboarding and Wallet Provisioning (2026-04-08)**:
+  - Updated `auth-service` IAM registration to return the created Keycloak user ID.
+  - Updated `account-service` onboarding to persist the IAM user ID as `externalId` instead of the caller-provided placeholder value.
+  - Updated `wallet-service` `user.created` consumer to provision wallets against `externalId` first, aligning wallet lookups with JWT `sub` and `auth/validate` `user_id`.
+
 - **OpenShift Runtime & Deploy Pipeline Hardening (2026-04-08)**:
   - Fixed the Tekton deploy pipeline so existing services are updated in place without replacing service-specific environment variables, probes, and secret wiring.
   - Added explicit namespace existence checks and configmap workspace guards to the deploy pipeline, removing false-start failures during `tkn` runs.

@@ -43,6 +43,11 @@ public class CardController extends BaseController {
         this.walletUseCase = walletUseCase;
     }
 
+    private String extractAccountId(Jwt jwt) {
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
+    }
+
     /**
      * Verifies the card's wallet belongs to the authenticated account.
      * Returns the account ID of the card's wallet owner.
@@ -61,7 +66,7 @@ public class CardController extends BaseController {
     public ResponseEntity<ApiResponse<CardResponse>> createCard(
             @Valid @RequestBody CreateCardRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         if (!authenticatedAccountId.equals(request.accountId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("CARD_403", "Not authorized to create card for this account"));
@@ -83,7 +88,7 @@ public class CardController extends BaseController {
     public ResponseEntity<ApiResponse<List<CardResponse>>> getCards(
             @Parameter(description = "Account ID", required = true) @RequestParam String accountId,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         if (!authenticatedAccountId.equals(accountId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("CARD_403", "Not authorized to access cards for this account"));
@@ -105,7 +110,7 @@ public class CardController extends BaseController {
     public ResponseEntity<ApiResponse<CardResponse>> getCardById(
             @Parameter(description = "Card ID", required = true) @PathVariable String cardId,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         return cardUseCase.getCardById(cardId)
                 .map(card -> {
                     if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {
@@ -127,7 +132,7 @@ public class CardController extends BaseController {
     public ResponseEntity<ApiResponse<Void>> freezeCard(
             @Parameter(description = "Card ID", required = true) @PathVariable String cardId,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         Card card = cardUseCase.getCardById(cardId)
                 .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
         if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {
@@ -148,7 +153,7 @@ public class CardController extends BaseController {
     public ResponseEntity<ApiResponse<Void>> unfreezeCard(
             @Parameter(description = "Card ID", required = true) @PathVariable String cardId,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         Card card = cardUseCase.getCardById(cardId)
                 .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
         if (!authenticatedAccountId.equals(getCardOwnerAccountId(card))) {

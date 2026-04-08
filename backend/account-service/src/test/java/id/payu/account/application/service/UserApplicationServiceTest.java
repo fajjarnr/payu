@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -77,14 +78,20 @@ class UserApplicationServiceTest {
         @DisplayName("should successfully register new user when all validations pass")
         void shouldRegisterUserSuccessfully() throws ExecutionException, InterruptedException {
             // Given
+            String iamUserId = UUID.randomUUID().toString();
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
+            given(identityProviderPort.provisionUser(
+                    validRequest.username(),
+                    validRequest.email(),
+                    validRequest.password(),
+                    validRequest.fullName())).willReturn(iamUserId);
             given(kycVerificationPort.verifyNik(validRequest.nik(), validRequest.fullName()))
                     .willReturn(successfulKycResponse);
 
             User savedUser = User.builder()
                     .id(UUID.randomUUID())
-                    .externalId(validRequest.externalId())
+                    .externalId(iamUserId)
                     .username(validRequest.username())
                     .email(validRequest.email())
                     .phoneNumber(validRequest.phoneNumber())
@@ -104,11 +111,19 @@ class UserApplicationServiceTest {
             assertThat(registeredUser.getEmail()).isEqualTo(validRequest.email());
             assertThat(registeredUser.getFullName()).isEqualTo(validRequest.fullName());
             assertThat(registeredUser.getKycStatus()).isEqualTo(User.KycStatus.APPROVED);
+            assertThat(registeredUser.getExternalId()).isEqualTo(iamUserId);
 
             verify(userPersistencePort).existsByEmail(validRequest.email());
             verify(userPersistencePort).existsByUsername(validRequest.username());
+            verify(identityProviderPort).provisionUser(
+                    validRequest.username(),
+                    validRequest.email(),
+                    validRequest.password(),
+                    validRequest.fullName());
             verify(kycVerificationPort).verifyNik(validRequest.nik(), validRequest.fullName());
-            verify(userPersistencePort).save(any(User.class));
+            ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+            verify(userPersistencePort).save(userCaptor.capture());
+            assertThat(userCaptor.getValue().getExternalId()).isEqualTo(iamUserId);
             verify(userEventPublisherPort).publishUserCreated(any(id.payu.account.dto.UserCreatedEvent.class));
         }
 

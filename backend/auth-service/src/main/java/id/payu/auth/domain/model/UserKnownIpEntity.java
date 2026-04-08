@@ -1,16 +1,22 @@
 package id.payu.auth.domain.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_known_ips")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class UserKnownIpEntity {
 
     @Id
@@ -22,6 +28,8 @@ public class UserKnownIpEntity {
     private UserRiskProfileEntity userRiskProfile;
 
     @Column(name = "ip_address", nullable = false)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private String ipAddress;
 
     @UpdateTimestamp

@@ -31,7 +31,7 @@ import java.util.UUID;
  * Driving adapter in Hexagonal Architecture.
  */
 @RestController
-@RequestMapping("/wallet-api/v1/pockets")
+@RequestMapping({"/wallet-api/v1/pockets", "/api/v1/wallets/pockets"})
 @Tag(name = "Pocket", description = "Pocket (sub-wallet) management APIs")
 @SecurityRequirement(name = "bearerAuth")
 public class PocketController extends BaseController {
@@ -42,6 +42,11 @@ public class PocketController extends BaseController {
         this.pocketUseCase = pocketUseCase;
     }
 
+        private String extractAccountId(Jwt jwt) {
+                String accountId = jwt.getClaimAsString("account_id");
+                return accountId != null ? accountId : jwt.getSubject();
+        }
+
     @PostMapping
     @Operation(summary = "Create pocket", description = "Creates a new pocket for the authenticated user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pocket created successfully",
@@ -51,7 +56,7 @@ public class PocketController extends BaseController {
             @Valid @RequestBody CreatePocketRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String accountId = jwt.getClaim("account_id");
+        String accountId = extractAccountId(jwt);
         Pocket pocket = pocketUseCase.createPocket(
                 accountId,
                 request.getName(),
@@ -69,7 +74,7 @@ public class PocketController extends BaseController {
     public ResponseEntity<ApiResponse<PocketResponse>> getPocket(
             @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         Pocket pocket = pocketUseCase.getPocketById(pocketId)
                 .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
         if (!authenticatedAccountId.equals(pocket.getAccountId())) {
@@ -86,7 +91,7 @@ public class PocketController extends BaseController {
     public ResponseEntity<ApiResponse<List<PocketResponse>>> getPockets(
             @AuthenticationPrincipal Jwt jwt) {
 
-        String accountId = jwt.getClaim("account_id");
+                String accountId = extractAccountId(jwt);
         List<Pocket> pockets = pocketUseCase.getPocketsByAccountId(accountId);
 
         List<PocketResponse> responses = pockets.stream()
@@ -104,7 +109,7 @@ public class PocketController extends BaseController {
             @Parameter(description = "Currency code", required = true) @PathVariable String currency,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String accountId = jwt.getClaim("account_id");
+                String accountId = extractAccountId(jwt);
         List<Pocket> pockets = pocketUseCase.getPocketsByAccountIdAndCurrency(accountId, currency);
 
         List<PocketResponse> responses = pockets.stream()
@@ -130,7 +135,7 @@ public class PocketController extends BaseController {
             @Valid @RequestBody PocketTransactionRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         Pocket pocket = pocketUseCase.getPocketById(pocketId)
                 .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
         if (!authenticatedAccountId.equals(pocket.getAccountId())) {
@@ -159,7 +164,7 @@ public class PocketController extends BaseController {
             @Valid @RequestBody PocketTransactionRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         Pocket pocket = pocketUseCase.getPocketById(pocketId)
                 .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
         if (!authenticatedAccountId.equals(pocket.getAccountId())) {
@@ -178,7 +183,7 @@ public class PocketController extends BaseController {
     public ResponseEntity<ApiResponse<Void>> freezePocket(
             @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         Pocket pocket = pocketUseCase.getPocketById(pocketId)
                 .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
         if (!authenticatedAccountId.equals(pocket.getAccountId())) {
@@ -197,7 +202,7 @@ public class PocketController extends BaseController {
     public ResponseEntity<ApiResponse<Void>> unfreezePocket(
             @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         Pocket pocket = pocketUseCase.getPocketById(pocketId)
                 .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
         if (!authenticatedAccountId.equals(pocket.getAccountId())) {
@@ -217,7 +222,7 @@ public class PocketController extends BaseController {
     public ResponseEntity<ApiResponse<Void>> closePocket(
             @Parameter(description = "Pocket ID", required = true) @PathVariable UUID pocketId,
             @AuthenticationPrincipal Jwt jwt) {
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = extractAccountId(jwt);
         Pocket pocket = pocketUseCase.getPocketById(pocketId)
                 .orElseThrow(() -> new PocketNotFoundException(pocketId.toString()));
         if (!authenticatedAccountId.equals(pocket.getAccountId())) {
@@ -237,7 +242,7 @@ public class PocketController extends BaseController {
             @Parameter(description = "Target currency code", required = true) @PathVariable String targetCurrency,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String accountId = jwt.getClaim("account_id");
+                String accountId = extractAccountId(jwt);
         var totalBalance = pocketUseCase.getTotalBalanceInCurrency(accountId, targetCurrency);
 
         TotalBalanceResponse response = new TotalBalanceResponse();

@@ -14,5 +14,5 @@ public interface IdentityProviderPort {
      * @param password the password (will be set in Keycloak)
      * @param fullName the user's full name
      */
-    void provisionUser(String username, String email, String password, String fullName);
+    String provisionUser(String username, String email, String password, String fullName);
 }

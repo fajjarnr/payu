@@ -74,7 +74,9 @@ class CacheThreadPoolConfigTest {
         config.cacheRefreshExecutor(properties, meterRegistry);
 
         // Then
-        assertThat(meterRegistry.find("cache.refresh.executor").timers()).isNotEmpty();
+        assertThat(meterRegistry.getMeters())
+            .anySatisfy(meter -> assertThat(meter.getId().getTag("name"))
+                .isEqualTo("cache.refresh.executor"));
     }
 
     private CacheProperties createCacheProperties(int refreshThreadPoolSize) {
