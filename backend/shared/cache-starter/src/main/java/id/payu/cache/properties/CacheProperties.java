@@ -123,6 +123,11 @@ public class CacheProperties {
         private int port = 6379;
 
         /**
+         * Redis username (optional, for Redis 6+ ACL or Data Grid).
+         */
+        private String username;
+
+        /**
          * Redis password (optional).
          */
         private String password;

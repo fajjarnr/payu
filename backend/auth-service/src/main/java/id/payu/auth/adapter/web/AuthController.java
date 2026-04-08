@@ -57,6 +57,11 @@ public class AuthController extends BaseController {
      * Authenticate user with username and password.
      * Returns JWT tokens or prompts for MFA if required by risk evaluation.
      */
+    private String maskUsername(String username) {
+        if (username == null || username.length() < 4) return "***";
+        return username.substring(0, 3) + "****" + (username.contains("@") ? username.substring(username.indexOf("@")) : "");
+    }
+
     @PostMapping("/login")
     @Audited(
             operation = id.payu.security.annotation.Audited.Operation.LOGIN,
@@ -94,11 +99,6 @@ public class AuthController extends BaseController {
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))
             )
     })
-    private String maskUsername(String username) {
-        if (username == null || username.length() < 4) return "***";
-        return username.substring(0, 3) + "****" + (username.contains("@") ? username.substring(username.indexOf("@")) : "");
-    }
-
     @SecurityRequirements  // No authentication required for login
     @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "login")
     public ResponseEntity<ApiResponse<?>> login(

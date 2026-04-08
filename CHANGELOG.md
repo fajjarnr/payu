@@ -73,6 +73,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **OpenShift Runtime & Deploy Pipeline Hardening (2026-04-08)**:
+  - Fixed the Tekton deploy pipeline so existing services are updated in place without replacing service-specific environment variables, probes, and secret wiring.
+  - Added explicit namespace existence checks and configmap workspace guards to the deploy pipeline, removing false-start failures during `tkn` runs.
+  - Aligned `web-app` and `gateway-service` pod-template labels with the existing `allow-intra-namespace` NetworkPolicy selector to restore in-cluster connectivity.
+  - Added `OTLP_ENDPOINT` to the `kyc-service` OpenShift manifest so tracing uses the in-cluster collector endpoint instead of falling back to `localhost:4317`.
+
 - **OpenShift Dev Stabilization (2026-04-07)**:
   - Restored `payu-dev` readiness for all backend services and `web-app` by aligning runtime secrets, rebuilding patched local-source images, and correcting OpenShift manifests.
   - Added `ENCRYPTION_KEY` wiring for `account-service` from the `encryption-keys` secret and corrected `compliance-service` actuator probe paths to `/actuator/health/*`.

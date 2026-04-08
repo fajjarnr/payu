@@ -101,6 +101,9 @@ public class RedisCacheConfig {
         config.setHostName(properties.getRedis().getHost());
         config.setPort(properties.getRedis().getPort());
 
+        if (properties.getRedis().getUsername() != null && !properties.getRedis().getUsername().isBlank()) {
+            config.setUsername(properties.getRedis().getUsername());
+        }
         if (properties.getRedis().getPassword() != null) {
             config.setPassword(properties.getRedis().getPassword());
         }
