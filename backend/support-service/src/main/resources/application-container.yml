@@ -40,7 +40,7 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${OIDC_ISSUER:http://localhost:8080/realms/payu}
-            jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/realms/payu/protocol/openid-connect/certs}
 management:
   health:
     kafka:
