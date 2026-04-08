@@ -28,8 +28,8 @@ public class KeycloakConfig {
     public Keycloak keycloakAdmin() {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
-                .realm(realm) // Admin operations usually target the specific realm or 'master'
-                .clientId("admin-cli") // Use standard admin-cli or configured client with admin rights
+                .realm("master") // Admin user lives in master realm
+                .clientId("admin-cli")
                 .username(admin.username)
                 .password(admin.password)
                 .build();
