@@ -134,7 +134,7 @@ class ReceiptServiceTest {
         when(receiptRepository.findById(RECEIPT_ID)).thenReturn(Optional.of(receipt));
 
         // When
-        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID);
+        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID, CUSTOMER_ID);
 
         // Then
         assertNotNull(response);
@@ -151,7 +151,7 @@ class ReceiptServiceTest {
 
         // When & Then
         ReceiptException exception = assertThrows(ReceiptException.class, () ->
-                receiptService.getReceipt(RECEIPT_ID)
+                receiptService.getReceipt(RECEIPT_ID, CUSTOMER_ID)
         );
         assertEquals("RECEIPT_002", exception.getErrorCode());
         assertTrue(exception.getMessage().contains("Receipt not found"));
@@ -166,7 +166,7 @@ class ReceiptServiceTest {
                 .thenReturn(Optional.of(receipt));
 
         // When
-        Optional<ReceiptResponse> response = receiptService.getReceiptByTransactionId(TRANSACTION_ID);
+        Optional<ReceiptResponse> response = receiptService.getReceiptByTransactionId(TRANSACTION_ID, CUSTOMER_ID);
 
         // Then
         assertTrue(response.isPresent());
@@ -181,7 +181,7 @@ class ReceiptServiceTest {
                 .thenReturn(Optional.empty());
 
         // When
-        Optional<ReceiptResponse> response = receiptService.getReceiptByTransactionId(TRANSACTION_ID);
+        Optional<ReceiptResponse> response = receiptService.getReceiptByTransactionId(TRANSACTION_ID, CUSTOMER_ID);
 
         // Then
         assertTrue(response.isEmpty());
@@ -196,7 +196,7 @@ class ReceiptServiceTest {
         when(receiptRepository.save(any(Receipt.class))).thenReturn(receipt);
 
         // When
-        byte[] pdfBytes = receiptService.generatePdf(RECEIPT_ID);
+        byte[] pdfBytes = receiptService.generatePdf(RECEIPT_ID, CUSTOMER_ID);
 
         // Then
         assertNotNull(pdfBytes);
@@ -234,7 +234,7 @@ class ReceiptServiceTest {
 
         // When & Then
         ReceiptException exception = assertThrows(ReceiptException.class, () ->
-                receiptService.generatePdf(RECEIPT_ID)
+                receiptService.generatePdf(RECEIPT_ID, CUSTOMER_ID)
         );
         assertEquals("RECEIPT_003", exception.getErrorCode());
         assertTrue(exception.getMessage().contains("expired"));
@@ -250,7 +250,7 @@ class ReceiptServiceTest {
         when(receiptRepository.save(any(Receipt.class))).thenReturn(receipt);
 
         // When
-        byte[] pdfBytes = receiptService.generatePdfByTransactionId(TRANSACTION_ID);
+        byte[] pdfBytes = receiptService.generatePdfByTransactionId(TRANSACTION_ID, CUSTOMER_ID);
 
         // Then
         assertNotNull(pdfBytes);
@@ -266,7 +266,7 @@ class ReceiptServiceTest {
 
         // When & Then
         ReceiptException exception = assertThrows(ReceiptException.class, () ->
-                receiptService.generatePdfByTransactionId(TRANSACTION_ID)
+                receiptService.generatePdfByTransactionId(TRANSACTION_ID, CUSTOMER_ID)
         );
         assertEquals("RECEIPT_002", exception.getErrorCode());
     }
@@ -300,7 +300,7 @@ class ReceiptServiceTest {
         when(receiptRepository.save(any(Receipt.class))).thenReturn(expiredReceipt);
 
         // When
-        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID);
+        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID, CUSTOMER_ID);
 
         // Then
         assertTrue(response.isExpired());
@@ -316,7 +316,7 @@ class ReceiptServiceTest {
         when(receiptRepository.findById(RECEIPT_ID)).thenReturn(Optional.of(receipt));
 
         // When
-        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID);
+        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID, CUSTOMER_ID);
 
         // Then
         assertNotNull(response.getFormattedAmount());
@@ -332,7 +332,7 @@ class ReceiptServiceTest {
         when(receiptRepository.findById(RECEIPT_ID)).thenReturn(Optional.of(receipt));
 
         // When
-        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID);
+        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID, CUSTOMER_ID);
 
         // Then
         assertNotNull(response.getFormattedTimestamp());
@@ -347,7 +347,7 @@ class ReceiptServiceTest {
         when(receiptRepository.findById(RECEIPT_ID)).thenReturn(Optional.of(receipt));
 
         // When
-        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID);
+        ReceiptResponse response = receiptService.getReceipt(RECEIPT_ID, CUSTOMER_ID);
 
         // Then
         assertEquals("****7890", response.getSenderAccountMasked());
@@ -363,7 +363,7 @@ class ReceiptServiceTest {
         when(receiptRepository.save(any(Receipt.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        receiptService.generatePdf(RECEIPT_ID);
+        receiptService.generatePdf(RECEIPT_ID, CUSTOMER_ID);
 
         // Then
         verify(receiptRepository).save(argThat(savedReceipt ->

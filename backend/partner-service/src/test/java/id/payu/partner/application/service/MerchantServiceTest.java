@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.math.BigDecimal;
@@ -46,6 +47,9 @@ class MerchantServiceTest {
     @Mock
     private KafkaTemplate<String, String> kafkaTemplate;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     private MerchantService merchantService;
 
     private Partner activePartner;
@@ -53,7 +57,7 @@ class MerchantServiceTest {
 
     @BeforeEach
     void setUp() {
-        merchantService = new MerchantService(merchantRepository, qrPaymentRepository, partnerRepository, webhookDispatcher, kafkaTemplate);
+        merchantService = new MerchantService(merchantRepository, qrPaymentRepository, partnerRepository, webhookDispatcher, kafkaTemplate, objectMapper);
 
         activePartner = new Partner("Test Partner", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);
