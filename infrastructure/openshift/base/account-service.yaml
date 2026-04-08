@@ -68,13 +68,18 @@ spec:
               value: "payu-datagrid.payu-dev.svc"
             - name: REDIS_PORT
               value: "11222"
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: encryption-keys
+                  key: AES_ENCRYPTION_KEY
           resources:
             requests:
               memory: "256Mi"
               cpu: "100m"
             limits:
               memory: "1Gi"
-              cpu: "1000m"
+              cpu: "500m"
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness

@@ -14,9 +14,10 @@ resources:
 
   # Pipelines
   - build-pipeline.yaml
-  # - deploy-pipeline.yaml
-  # - test-pipeline.yaml
-  # - rollback-pipeline.yaml
+  - deploy-pipeline.yaml
+  - test-pipeline.yaml
+  - rollback-pipeline.yaml
+  - quality-gates/quality-gate-pipeline.yaml
 
   # Triggers and Webhooks (require triggers.tekton.dev/v1beta1)
-  # - triggers/git-webhook-trigger.yaml
+  - triggers/git-webhook-trigger.yaml

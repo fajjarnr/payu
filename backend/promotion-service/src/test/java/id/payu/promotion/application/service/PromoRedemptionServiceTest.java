@@ -267,7 +267,7 @@ class PromoRedemptionServiceTest {
     private PromoCode createPromoCode(String code, double discountValue, DiscountType type) {
         return PromoCode.builder()
                 .code(code)
-                .discountValue(discountValue)
+                                .discountValue(BigDecimal.valueOf(discountValue))
                 .discountType(type)
                 .usageType(UsageType.UNLIMITED)
                 .status(PromoStatus.ACTIVE)

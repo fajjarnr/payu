@@ -16,8 +16,12 @@ spec:
       type: string
     - name: service-path
       type: string
-      description: "The directory path of the service inside backend/ (default: same as service-name)"
+      description: "The directory path of the service"
       default: "$(params.service-name)"
+    - name: service-base-dir
+      type: string
+      description: "Base directory (e.g., backend, frontend)"
+      default: "backend"
     - name: git-url
       type: string
       default: "https://github.com/fajjarnr/payu.git"
@@ -29,7 +33,7 @@ spec:
       default: spring-boot
     - name: build-image-tag
       type: string
-      default: v1.7.1
+      default: v1.7.8
     - name: registry-url
       type: string
       default: image-registry.openshift-image-registry.svc:5000
@@ -112,14 +116,14 @@ spec:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
         - name: CONTEXT
-          value: backend/$(params.service-path)
+          value: $(params.service-base-dir)/$(params.service-path)
         - name: DOCKERFILE
           value: Containerfile
         - name: TLS_VERIFY
           value: "false"
 
-    # ── Step 2b/3b: Buildah image (Python services — no maven) ──
-    - name: build-push-python
+    # ── Step 2b/3b: Buildah image (Services with direct Containerfile like Python/Node.js) ──
+    - name: build-push-direct
       runAfter:
         - fetch-repository
       taskRef:
@@ -134,7 +138,7 @@ spec:
       when:
         - input: "$(params.service-type)"
           operator: in
-          values: ["python"]
+          values: ["python", "nextjs"]
       workspaces:
         - name: source
           workspace: source
@@ -142,7 +146,7 @@ spec:
         - name: IMAGE
           value: $(params.registry-url)/$(params.registry-namespace)/$(params.service-name):$(params.build-image-tag)
         - name: CONTEXT
-          value: backend/$(params.service-path)
+          value: $(params.service-base-dir)/$(params.service-path)
         - name: DOCKERFILE
           value: Containerfile
         - name: TLS_VERIFY
@@ -152,7 +156,7 @@ spec:
     - name: rhacs-image-scan
       runAfter:
         - build-push-image
-        - build-push-python
+        - build-push-direct
       taskRef:
         name: rhacs-image-scan
       params:

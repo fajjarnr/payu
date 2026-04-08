@@ -50,4 +50,11 @@ spec:
         - "$(params.GOALS[*])"
         - -Dmaven.repo.local=$(workspaces.source.path)/.m2
         - -Duser.home=/tekton/home
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "250m"
+        limits:
+          memory: "4Gi"
+          cpu: "1000m"
 

@@ -50,6 +50,7 @@ export default function BudgetTracking({
   isLoading = false,
 }: BudgetTrackingProps) {
   const t = useTranslations('dashboard');
+  const locale = useLocale();
   // Manual expansion state removed
 
   const budgetList = budgets ?? [];
@@ -141,6 +142,7 @@ export default function BudgetTracking({
             label="Total Anggaran"
             value={totalBudget}
             currency={currency}
+            locale={locale}
             color="bg-success-light"
             textColor="text-primary"
           />
@@ -148,6 +150,7 @@ export default function BudgetTracking({
             label="Terpakai"
             value={totalSpent}
             currency={currency}
+            locale={locale}
             color="bg-muted/50"
             textColor="text-foreground"
           />
@@ -155,6 +158,7 @@ export default function BudgetTracking({
             label="Sisa"
             value={totalRemaining}
             currency={currency}
+            locale={locale}
             color={totalRemaining >= 0 ? 'bg-success-light' : 'bg-destructive/10'}
             textColor={totalRemaining >= 0 ? 'text-primary' : 'text-destructive'}
           />
@@ -237,15 +241,16 @@ export default function BudgetTracking({
                 <AccordionContent className="px-5 pb-5 pt-0">
                   <div className="pt-4 border-t border-border/20 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <DetailItem label="Batas Anggaran" value={budget.limit} currency={currency} />
-                      <DetailItem label="Terpakai" value={budget.spent} currency={currency} />
+                      <DetailItem label="Batas Anggaran" value={budget.limit} currency={currency} locale={locale} />
+                      <DetailItem label="Terpakai" value={budget.spent} currency={currency} locale={locale} />
                       <DetailItem 
                         label={budget.remaining >= 0 ? t('budgetRemaining') : t('budgetOver')} 
                         value={Math.abs(budget.remaining)} 
                         currency={currency}
+                        locale={locale}
                         valueColor={budget.remaining >= 0 ? 'text-primary' : 'text-destructive'}
                       />
-                      <DetailItem label="Persentase" value={`${budget.percentage.toFixed(1)}%`} currency="" isPercentage />
+                      <DetailItem label="Persentase" value={`${budget.percentage.toFixed(1)}%`} currency="" locale={locale} isPercentage />
                     </div>
 
                     <div className="flex gap-2">
@@ -281,16 +286,17 @@ interface SummaryCardProps {
   label: string;
   value: number;
   currency: string;
+  locale: string;
   color: string;
   textColor: string;
 }
 
-function SummaryCard({ label, value, currency, color, textColor }: SummaryCardProps) {
+function SummaryCard({ label, value, currency, locale, color, textColor }: SummaryCardProps) {
   return (
     <div className={clsx('p-4 rounded-2xl border border-white/5 shadow-sm', color)}>
       <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">{label}</p>
       <p className={clsx('text-base sm:text-lg font-bold tabular-nums tracking-tight', textColor)}>
-        {currency} {value.toLocaleString(bcp47Locale)}
+        {currency} {value.toLocaleString(locale)}
       </p>
     </div>
   );
@@ -300,16 +306,17 @@ interface DetailItemProps {
   label: string;
   value: number | string;
   currency: string;
+  locale: string;
   valueColor?: string;
   isPercentage?: boolean;
 }
 
-function DetailItem({ label, value, currency, valueColor = 'text-foreground', isPercentage = false }: DetailItemProps) {
+function DetailItem({ label, value, currency, locale, valueColor = 'text-foreground', isPercentage = false }: DetailItemProps) {
   return (
     <div className="space-y-1">
       <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider opacity-60">{label}</p>
       <p className={clsx('text-sm font-bold tabular-nums tracking-tight', valueColor)}>
-        {isPercentage ? value : `${currency} ${Number(value).toLocaleString(bcp47Locale)}`}
+        {isPercentage ? value : `${currency} ${Number(value).toLocaleString(locale)}`}
       </p>
     </div>
   );

@@ -73,6 +73,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **OpenShift Dev Stabilization (2026-04-07)**:
+  - Restored `payu-dev` readiness for all backend services and `web-app` by aligning runtime secrets, rebuilding patched local-source images, and correcting OpenShift manifests.
+  - Added `ENCRYPTION_KEY` wiring for `account-service` from the `encryption-keys` secret and corrected `compliance-service` actuator probe paths to `/actuator/health/*`.
+  - Fixed frontend build drift in backoffice pages, dashboard formatting helpers, auth hooks, and `DashboardLayout`, allowing the `web-app` image to build and roll out successfully on OpenShift.
+
 - **Documentation Architecture Refactoring (2026-03-22)**:
   - Comprehensive sync of all documentation with actual `backend/` implementation status.
   - **ARCHITECTURE.md**: Updated C4 diagrams, service specifications (3.2.12-3.2.19), added VA Simulator (13.4), and fixed TOC/section ordering.

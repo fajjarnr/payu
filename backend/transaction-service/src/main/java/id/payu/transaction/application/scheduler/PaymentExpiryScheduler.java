@@ -5,7 +5,6 @@ import id.payu.transaction.adapter.persistence.repository.VirtualAccountReposito
 import id.payu.transaction.domain.model.Transaction;
 import id.payu.transaction.domain.model.VirtualAccount;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -62,7 +61,6 @@ public class PaymentExpiryScheduler {
      * Releases reserved balance and publishes payment.expired Kafka event.
      */
     @Scheduled(fixedRate = 300000) // every 5 minutes
-    @SchedulerLock(name = "expirePendingTransactions", lockAtLeastFor = "PT4M", lockAtMostFor = "PT10M")
     @Transactional
     public void expirePendingTransactions() {
         List<Transaction> expired = transactionRepository.findExpiredPendingTransactions(Instant.now());
@@ -88,7 +86,6 @@ public class PaymentExpiryScheduler {
      * Publishes payment.expired Kafka event.
      */
     @Scheduled(fixedRate = 300000) // every 5 minutes
-    @SchedulerLock(name = "expireVirtualAccounts", lockAtLeastFor = "PT4M", lockAtMostFor = "PT10M")
     @Transactional
     public void expireVirtualAccounts() {
         List<VirtualAccount> expired = virtualAccountRepository.findExpiredPendingVAs(Instant.now());

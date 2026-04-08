@@ -151,6 +151,6 @@ public class TransactionService implements TransactionUseCase {
     }
     @Override
     public long countAccountTransactions(UUID accountId, String userId) {
-        return transactionRepository.countByAccountId(accountId);
+        return transactionPersistencePort.countByAccountId(accountId);
     }
 }

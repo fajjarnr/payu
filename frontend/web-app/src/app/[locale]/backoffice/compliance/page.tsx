@@ -32,15 +32,42 @@ import {
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { useAuditReports, useFailedAccessAudits } from '@/hooks';
+import type { AuditReport } from '@/services';
+
+type ComplianceAuditRow = {
+  id: string;
+  event: string;
+  resource: string;
+  user: string;
+  ip: string;
+  risk: string;
+  timestamp: string;
+};
+
+function toAuditRow(report: AuditReport): ComplianceAuditRow {
+  const risk = report.overallStatus === 'FAIL'
+    ? 'HIGH'
+    : report.overallStatus === 'WARNING'
+      ? 'MEDIUM'
+      : 'LOW';
+
+  return {
+    id: report.id,
+    event: `AUDIT_${report.standard}`,
+    resource: report.transactionId || report.merchantId,
+    user: report.createdBy,
+    ip: 'N/A',
+    risk,
+    timestamp: report.createdAt,
+  };
+}
 
 export default function CompliancePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: auditReportsData, isLoading } = useAuditReports();
   const { data: failedAccessData } = useFailedAccessAudits();
 
-  const auditLogs = (Array.isArray(auditReportsData) ? auditReportsData : [] as Array<{
-    id: string; event: string; resource: string; user: string; ip: string; risk: string; timestamp: string;
-  }>).filter(log => {
+  const auditLogs = (Array.isArray(auditReportsData) ? auditReportsData.map(toAuditRow) : []).filter((log) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return log.user?.toLowerCase().includes(term) || log.ip?.toLowerCase().includes(term) || log.resource?.toLowerCase().includes(term);

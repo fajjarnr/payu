@@ -1,0 +1,60 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  labels:
+    machine.openshift.io/cluster-api-cluster: payu-hxftx
+  name: payu-hxftx-worker-us-east-2c
+  namespace: openshift-machine-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: payu-hxftx
+      machine.openshift.io/cluster-api-machineset: payu-hxftx-worker-us-east-2c
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: payu-hxftx
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: payu-hxftx-worker-us-east-2c
+    spec:
+      providerSpec:
+        value:
+          ami:
+            id: ami-0b264801b0e00009c
+          apiVersion: machine.openshift.io/v1beta1
+          blockDevices:
+          - ebs:
+              encrypted: true
+              iops: 0
+              volumeSize: 100
+              volumeType: gp3
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: payu-hxftx-worker-profile
+          instanceType: r6a.4xlarge
+          kind: AWSMachineProviderConfig
+          metadataServiceOptions:
+            authentication: Required
+          placement:
+            availabilityZone: us-east-2c
+            region: us-east-2
+          securityGroups:
+          - filters:
+            - name: tag:Name
+              values:
+              - payu-hxftx-node
+          - filters:
+            - name: tag:Name
+              values:
+              - payu-hxftx-lb
+          subnet:
+            id: subnet-005f6e6e10472e966
+          tags:
+          - name: kubernetes.io/cluster/payu-hxftx
+            value: owned
+          userDataSecret:
+            name: worker-user-data

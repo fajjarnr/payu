@@ -30,6 +30,29 @@ import {
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { usePartners, useRegisterPartner, useDeletePartner } from '@/hooks';
+import type { Partner } from '@/services';
+
+type PartnerRow = {
+  id: number;
+  name: string;
+  type: string;
+  status: 'ACTIVE' | 'UNDER_REVIEW';
+  apiLevel: string;
+  transactions: string;
+  volume: string;
+};
+
+function toPartnerRow(partner: Partner): PartnerRow {
+  return {
+    id: partner.id,
+    name: partner.name,
+    type: partner.type,
+    status: partner.active ? 'ACTIVE' : 'UNDER_REVIEW',
+    apiLevel: partner.publicKey ? 'SNAP BI Ready' : 'Pending Setup',
+    transactions: '--',
+    volume: 'N/A',
+  };
+}
 
 export default function PartnersPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,12 +60,10 @@ export default function PartnersPage() {
   const registerPartner = useRegisterPartner();
   const deletePartner = useDeletePartner();
 
-  const partners = (Array.isArray(partnersData) ? partnersData : [] as Array<{
-    id: string; name: string; type: string; status: string; apiLevel: string; transactions: string; volume: string; joined: string;
-  }>).filter(p => {
+  const partners = (Array.isArray(partnersData) ? partnersData.map(toPartnerRow) : []).filter((p) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
-    return p.name?.toLowerCase().includes(term) || p.id?.toLowerCase().includes(term);
+    return p.name?.toLowerCase().includes(term) || String(p.id ?? '').toLowerCase().includes(term);
   });
 
   const activeCount = partners.filter(p => p.status === 'ACTIVE').length;

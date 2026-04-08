@@ -59,9 +59,16 @@ class ApiResponse(BaseModel):
         request_id: Optional[str] = None,
     ) -> "ApiResponse":
         """Create a successful response."""
-        if meta and request_id:
+        if meta is None and request_id:
+            meta = MetaData(request_id=request_id)
+        elif meta and request_id:
             meta.request_id = request_id
-        return cls.create_success(data=data, meta=meta, request_id=request_id)
+
+        return cls(success=True, data=data, meta=meta)
+
+    def model_dump(self, *args, **kwargs):
+        kwargs.setdefault("mode", "json")
+        return super().model_dump(*args, **kwargs)
 
     # BUG-BE-156: Add convenience aliases used by analytics.py and kyc.py
     # to resolve inconsistency between create_success/create_error and success/error

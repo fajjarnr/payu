@@ -35,6 +35,10 @@ import { Input } from './ui/input';
 import { PersonalizedGreeting } from './personalization';
 import { useLogout } from '@/hooks';
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {

@@ -2,6 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: security-scan
+  namespace: payu-cicd
   labels:
     app: payu-ci-cd
 spec:

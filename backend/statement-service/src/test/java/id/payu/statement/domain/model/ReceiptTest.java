@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReceiptTest {
 
     private static final String TRANSACTION_ID = "TXN-20240301-ABC123";
+    private static final String CUSTOMER_ID = "CUST-20240301-001";
     private static final BigDecimal AMOUNT = new BigDecimal("150000.00");
     private static final String CURRENCY = "IDR";
     private static final String REFERENCE_NUMBER = "REF-BIFAST-789456";
@@ -49,6 +50,7 @@ class ReceiptTest {
         Receipt receipt = Receipt.builder()
                 .id(UUID.randomUUID())
                 .transactionId(TRANSACTION_ID)
+                .customerId(CUSTOMER_ID)
                 .amount(AMOUNT)
                 .currency(CURRENCY)
                 .senderInfo(sender)
@@ -61,6 +63,7 @@ class ReceiptTest {
         // Then
         assertNotNull(receipt.getId());
         assertEquals(TRANSACTION_ID, receipt.getTransactionId());
+        assertEquals(CUSTOMER_ID, receipt.getCustomerId());
         assertEquals(AMOUNT, receipt.getAmount());
         assertEquals(CURRENCY, receipt.getCurrency());
         assertEquals(sender, receipt.getSenderInfo());
@@ -78,7 +81,7 @@ class ReceiptTest {
         RecipientInfo recipient = createRecipientInfo();
 
         // When
-        Receipt receipt = Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
         // Then
         assertNotNull(receipt.getId());
@@ -102,7 +105,7 @@ class ReceiptTest {
         LocalDateTime beforeGeneration = LocalDateTime.now();
 
         // When
-        Receipt receipt = Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
         LocalDateTime afterGeneration = LocalDateTime.now();
 
         // Then
@@ -120,12 +123,13 @@ class ReceiptTest {
         // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
-        Receipt receipt = Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
         // Manually set expiry to past date for testing
         Receipt expiredReceipt = Receipt.builder()
                 .id(receipt.getId())
                 .transactionId(receipt.getTransactionId())
+                .customerId(receipt.getCustomerId())
                 .amount(receipt.getAmount())
                 .currency(receipt.getCurrency())
                 .senderInfo(receipt.getSenderInfo())
@@ -146,7 +150,7 @@ class ReceiptTest {
         // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
-        Receipt receipt = Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
         // When & Then
         assertFalse(receipt.isExpired());
@@ -158,7 +162,7 @@ class ReceiptTest {
         // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
-        Receipt receipt = Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
         // When
         receipt.markAsExpired();
@@ -173,7 +177,7 @@ class ReceiptTest {
         // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
-        Receipt receipt = Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
         // When
         ShareableReceipt shareable = receipt.toShareableFormat();
@@ -208,7 +212,7 @@ class ReceiptTest {
 
         // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                Receipt.generate(TRANSACTION_ID, BigDecimal.ZERO, CURRENCY, sender, recipient, REFERENCE_NUMBER)
+                Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, BigDecimal.ZERO, CURRENCY, sender, recipient, REFERENCE_NUMBER)
         );
         assertEquals("Amount must be positive", exception.getMessage());
     }
@@ -222,7 +226,7 @@ class ReceiptTest {
 
         // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                Receipt.generate("", AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER)
+                Receipt.generate("", CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER)
         );
         assertEquals("Transaction ID is required", exception.getMessage());
     }
@@ -235,7 +239,7 @@ class ReceiptTest {
 
         // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, null, recipient, REFERENCE_NUMBER)
+                Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, null, recipient, REFERENCE_NUMBER)
         );
         assertEquals("Sender information is required", exception.getMessage());
     }
@@ -248,7 +252,7 @@ class ReceiptTest {
 
         // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, null, REFERENCE_NUMBER)
+                Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, null, REFERENCE_NUMBER)
         );
         assertEquals("Recipient information is required", exception.getMessage());
     }
@@ -262,7 +266,7 @@ class ReceiptTest {
 
         // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, recipient, "")
+                Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, "")
         );
         assertEquals("Reference number is required", exception.getMessage());
     }
@@ -285,8 +289,8 @@ class ReceiptTest {
         RecipientInfo recipient = createRecipientInfo();
 
         // When
-        Receipt receipt1 = Receipt.generate(TRANSACTION_ID + "1", AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
-        Receipt receipt2 = Receipt.generate(TRANSACTION_ID + "2", AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt1 = Receipt.generate(TRANSACTION_ID + "1", CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt2 = Receipt.generate(TRANSACTION_ID + "2", CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
         // Then
         assertNotEquals(receipt1.getId(), receipt2.getId());
@@ -298,7 +302,7 @@ class ReceiptTest {
         // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
-        Receipt receipt = Receipt.generate(TRANSACTION_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
         // When
         receipt.recordAccess();
@@ -315,7 +319,7 @@ class ReceiptTest {
         // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
-        Receipt receipt = Receipt.generate(TRANSACTION_ID, new BigDecimal("1500000.50"), CURRENCY, sender, recipient, REFERENCE_NUMBER);
+        Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, new BigDecimal("1500000.50"), CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
         // When
         String formattedAmount = receipt.getFormattedAmount();
@@ -335,6 +339,7 @@ class ReceiptTest {
         Receipt receipt = Receipt.builder()
                 .id(UUID.randomUUID())
                 .transactionId(TRANSACTION_ID)
+                .customerId(CUSTOMER_ID)
                 .amount(AMOUNT)
                 .currency(CURRENCY)
                 .senderInfo(sender)

@@ -1,4 +1,4 @@
-apiVersion: triggers.tekton.dev/v1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
   name: payu-build-template
@@ -52,7 +52,7 @@ spec:
               secretName: registry-credentials
         timeout: 1h30m
 ---
-apiVersion: triggers.tekton.dev/v1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerBinding
 metadata:
   name: payu-build-binding
@@ -74,7 +74,7 @@ spec:
       # the affected service from the changed file paths (e.g., backend/<service-name>/).
       value: $(body.repository.name)
 ---
-apiVersion: triggers.tekton.dev/v1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
   name: payu-build-listener

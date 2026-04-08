@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -347,7 +346,6 @@ public class MerchantService {
      * Runs every 2 minutes.
      */
     @Scheduled(fixedRate = 120000)
-    @SchedulerLock(name = "expireQrPayments", lockAtLeastFor = "PT1M", lockAtMostFor = "PT5M")
     public void expireQrPayments() {
         List<MerchantQrPayment> expired = qrPaymentRepository.findExpiredPendingPayments(LocalDateTime.now());
         if (!expired.isEmpty()) {

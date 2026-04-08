@@ -48,7 +48,7 @@ class PromoRedemptionIntegrationTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("DISCOUNT20")
-                .discountValue(20)
+                .discountValue(BigDecimal.valueOf(20))
                 .discountType(DiscountType.PERCENTAGE)
                 .usageType(UsageType.UNLIMITED)
                 .status(PromoStatus.ACTIVE)
@@ -74,7 +74,7 @@ class PromoRedemptionIntegrationTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("CASH5000")
-                .discountValue(5000)
+                .discountValue(BigDecimal.valueOf(5000))
                 .discountType(DiscountType.FIXED)
                 .usageType(UsageType.UNLIMITED)
                 .status(PromoStatus.ACTIVE)
@@ -116,7 +116,7 @@ class PromoRedemptionIntegrationTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("BIGONLY")
-                .discountValue(10)
+                .discountValue(BigDecimal.valueOf(10))
                 .discountType(DiscountType.PERCENTAGE)
                 .minimumAmount(new BigDecimal("100000"))
                 .status(PromoStatus.ACTIVE)
@@ -141,7 +141,7 @@ class PromoRedemptionIntegrationTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("IDEMPOTENT")
-                .discountValue(10)
+                .discountValue(BigDecimal.valueOf(10))
                 .discountType(DiscountType.PERCENTAGE)
                 .status(PromoStatus.ACTIVE)
                 .build();

@@ -54,6 +54,14 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
     }
 
     @Override
+    public long countByAccountId(UUID accountId) {
+        if (shardingConfig.isEnabled()) {
+            log.debug("Counting transactions for account {}", accountId);
+        }
+        return transactionJpaRepository.countByAccountId(accountId);
+    }
+
+    @Override
     public List<Transaction> findByReferenceNumber(String referenceNumber) {
         if (shardingConfig.isEnabled()) {
             log.debug("Finding transactions by reference number {}", referenceNumber);

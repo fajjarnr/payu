@@ -23,7 +23,7 @@ export const useLogin = () => {
       if (user) {
         // BUG-CROSS-033 FIX: Use explicit accountId from JWT claims,
         // not user.id (which is JWT 'sub' / userId)
-        const accountId = user.accountId || response.data?.accountId || user.id;
+        const accountId = user.accountId || user.id;
         setAuth(user, accountId);
       }
       // Track when the accessToken cookie will expire so useSilentRefresh

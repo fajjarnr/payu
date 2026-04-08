@@ -25,6 +25,10 @@ class PromoCodeTest {
     private static final String USER_ID = "user-123";
     private static final String PARTNER_ID = "partner-456";
 
+        private BigDecimal discount(String value) {
+                return new BigDecimal(value);
+        }
+
     private TransactionContext createContext(BigDecimal amount) {
         return TransactionContext.builder()
                 .userId(USER_ID)
@@ -40,7 +44,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("DISCOUNT10")
-                .discountValue(10)
+                .discountValue(discount("10"))
                 .discountType(DiscountType.PERCENTAGE)
                 .build();
 
@@ -62,7 +66,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("EXPIRED")
-                .discountValue(10)
+                .discountValue(discount("10"))
                 .discountType(DiscountType.PERCENTAGE)
                 .expiryDate(Instant.now().minusSeconds(86400))
                 .build();
@@ -83,7 +87,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("ONETIME")
-                .discountValue(10)
+                .discountValue(discount("10"))
                 .discountType(DiscountType.PERCENTAGE)
                 .usageType(UsageType.ONCE_PER_USER)
                 .build();
@@ -106,7 +110,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("BIGONLY")
-                .discountValue(10)
+                .discountValue(discount("10"))
                 .discountType(DiscountType.PERCENTAGE)
                 .minimumAmount(new BigDecimal("100000"))
                 .build();
@@ -127,7 +131,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("CASH5000")
-                .discountValue(5000)
+                .discountValue(discount("5000"))
                 .discountType(DiscountType.FIXED)
                 .build();
 
@@ -148,7 +152,7 @@ class PromoCodeTest {
         // Given - 50% discount with 10000 max cap
         PromoCode promo = PromoCode.builder()
                 .code("BIGDISCOUNT")
-                .discountValue(50)
+                .discountValue(discount("50"))
                 .discountType(DiscountType.PERCENTAGE)
                 .maxDiscountAmount(new BigDecimal("10000"))
                 .build();
@@ -171,7 +175,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("SINGLEUSE")
-                .discountValue(10)
+                .discountValue(discount("10"))
                 .discountType(DiscountType.PERCENTAGE)
                 .usageType(UsageType.ONCE_PER_USER)
                 .build();
@@ -192,7 +196,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("UNLIMITED")
-                .discountValue(5)
+                .discountValue(discount("5"))
                 .discountType(DiscountType.PERCENTAGE)
                 .usageType(UsageType.UNLIMITED)
                 .build();
@@ -217,7 +221,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("INACTIVE")
-                .discountValue(10)
+                .discountValue(discount("10"))
                 .discountType(DiscountType.PERCENTAGE)
                 .status(PromoStatus.INACTIVE)
                 .build();
@@ -238,7 +242,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("NOPARTNER")
-                .discountValue(10)
+                .discountValue(discount("10"))
                 .discountType(DiscountType.PERCENTAGE)
                 .excludedPartnerIds(java.util.Set.of(PARTNER_ID))
                 .build();
@@ -259,7 +263,7 @@ class PromoCodeTest {
         // Given - 33.33% discount on 100 should be 33.33
         PromoCode promo = PromoCode.builder()
                 .code("WEIRD")
-                .discountValue(33.33)
+                .discountValue(discount("33.33"))
                 .discountType(DiscountType.PERCENTAGE)
                 .build();
 
@@ -280,7 +284,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("TOOBIG")
-                .discountValue(1000)
+                .discountValue(discount("1000"))
                 .discountType(DiscountType.FIXED)
                 .build();
 
@@ -301,7 +305,7 @@ class PromoCodeTest {
         // Given
         PromoCode promo = PromoCode.builder()
                 .code("LIMITED")
-                .discountValue(10)
+                .discountValue(discount("10"))
                 .discountType(DiscountType.PERCENTAGE)
                 .maxUsageCount(3)
                 .build();

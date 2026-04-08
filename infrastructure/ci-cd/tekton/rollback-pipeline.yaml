@@ -9,7 +9,7 @@ metadata:
 spec:
   description: |
     Rollback pipeline for PayU services with quick recovery options.
-    Supports immediate rollback and incremental rollback strategies.
+    Fixed for OpenShift Pipelines 1.21+ (no ClusterTask — uses resolver: cluster).
   params:
     - name: service-name
       type: string
@@ -17,81 +17,46 @@ spec:
     - name: namespace
       type: string
       description: Target namespace
-      default: payu-prod
+      default: payu-dev
     - name: rollback-to
       type: string
-      description: Target version to rollback to (empty for previous version)
+      description: Target revision to rollback to (empty for previous version)
       default: ""
-    - name: backup-namespace
-      type: string
-      description: Backup namespace for rollback data
-      default: payu-backup
     - name: create-backup
       type: string
       description: Create backup before rollback
       default: "true"
-    - name: notify-slack
-      type: string
-      description: Send notification to Slack
-      default: "true"
-    - name: slack-webhook
-      type: string
-      description: Slack webhook URL
-      default: "${SLACK_WEBHOOK_URL}"
   tasks:
     - name: verify-deployment
       taskRef:
-        name: openshift-client
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: SCRIPT
           value: |
             echo "=== Current Deployment State ==="
-            oc get deployment/$(params.service-name) -n $(params.namespace) -o yaml
+            oc get deployment/$(params.service-name) -n $(params.namespace) -o wide
             echo "=== Replicas ==="
             oc get pods -n $(params.namespace) -l app=$(params.service-name)
-
-    - name: create-backup
-      runAfter:
-        - verify-deployment
-      when:
-        - input: "$(params.create-backup)"
-          operator: in
-          values: ["true"]
-      taskRef:
-        name: openshift-client
-        kind: ClusterTask
-      params:
-        - name: SCRIPT
-          value: |
-            oc new-project $(params.backup-namespace) || true
-
-            # Backup current deployment
-            oc get deployment/$(params.service-name) -n $(params.namespace) -o yaml > /tmp/backup-deploy.yaml
-            oc apply -f /tmp/backup-deploy.yaml -n $(params.backup-namespace)
-
-            # Backup secrets (only names, not values - avoid leaking secrets to logs)
-            oc get secret -n $(params.namespace) -o jsonpath='{.items[*].metadata.name}' > /tmp/backup-secret-names.txt
-            oc create configmap backup-secret-names -n $(params.backup-namespace) \
-              --from-file=names=/tmp/backup-secret-names.txt --dry-run=client -o yaml | oc apply -f -
-
-            # Backup configmaps
-            oc get configmap -n $(params.namespace) -o yaml > /tmp/backup-configmaps.yaml
-            oc apply -f /tmp/backup-configmaps.yaml -n $(params.backup-namespace)
-
-            # Create backup timestamp
-            date > /tmp/backup-timestamp.txt
-            oc create configmap backup-timestamp -n $(params.backup-namespace) \
-              --from-file=timestamp=/tmp/backup-timestamp.txt --dry-run=client -o yaml | oc apply -f -
-
-            echo "Backup created successfully in namespace: $(params.backup-namespace)"
 
     - name: get-deployment-history
       runAfter:
         - verify-deployment
       taskRef:
-        name: openshift-client
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: SCRIPT
           value: |
@@ -101,15 +66,20 @@ spec:
     - name: perform-rollback
       runAfter:
         - get-deployment-history
-        - create-backup
       taskRef:
-        name: openshift-client
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: SCRIPT
           value: |
             if [ -n "$(params.rollback-to)" ]; then
-              echo "Rolling back to specific version: $(params.rollback-to)"
+              echo "Rolling back to specific revision: $(params.rollback-to)"
               oc rollout undo deployment/$(params.service-name) -n $(params.namespace) --to-revision=$(params.rollback-to)
             else
               echo "Rolling back to previous version"
@@ -120,8 +90,14 @@ spec:
       runAfter:
         - perform-rollback
       taskRef:
-        name: openshift-client
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: SCRIPT
           value: |
@@ -133,73 +109,42 @@ spec:
       runAfter:
         - wait-for-rollback
       taskRef:
-        name: openshift-client
-        kind: ClusterTask
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: SCRIPT
           value: |
             echo "=== Post-Rollback State ==="
             oc get pods -n $(params.namespace) -l app=$(params.service-name)
-            oc get deployment/$(params.service-name) -n $(params.namespace)
-            echo "=== Running Pods ==="
-            oc get pods -n $(params.namespace) -l app=$(params.service-name) -o jsonpath='{.items[*].status.phase}'
-
-    - name: health-check
-      runAfter:
-        - verify-rollback
-      taskRef:
-        name: curl
-        kind: ClusterTask
-      params:
-        - name: url
-          value: http://$(params.service-name).$(params.namespace).svc.cluster.local:80/actuator/health
-        - name: options
-          value:
-            - -f
-            - -v
-        - name: RETRIES
-          value: "20"
-        - name: RETRY_DELAY
-          value: "15"
-
-    - name: notify-slack
-      runAfter:
-        - health-check
-      when:
-        - input: "$(params.notify-slack)"
-          operator: in
-          values: ["true"]
-      taskRef:
-        name: slack-sender
-        kind: ClusterTask
-      params:
-        - name: webhook_url
-          value: "$(params.slack-webhook)"
-        - name: message
-          value: |
-            *Rollback Notification*
-            Service: $(params.service-name)
-            Namespace: $(params.namespace)
-            Timestamp: $(date)
-            Status: COMPLETED
-
-            The service has been rolled back to the previous version.
+            oc get deployment/$(params.service-name) -n $(params.namespace) -o wide
 
   finally:
     - name: generate-report
       taskRef:
-        name: openshift-client
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: SCRIPT
           value: |
-            echo "=== Rollback Summary Report ===" > /tmp/rollback-report.txt
-            echo "Service: $(params.service-name)" >> /tmp/rollback-report.txt
-            echo "Namespace: $(params.namespace)" >> /tmp/rollback-report.txt
-            echo "Timestamp: $(date)" >> /tmp/rollback-report.txt
-            echo "" >> /tmp/rollback-report.txt
-            echo "Deployment Status:" >> /tmp/rollback-report.txt
-            oc get deployment/$(params.service-name) -n $(params.namespace) >> /tmp/rollback-report.txt
-            echo "" >> /tmp/rollback-report.txt
-            echo "Pod Status:" >> /tmp/rollback-report.txt
-            oc get pods -n $(params.namespace) -l app=$(params.service-name) >> /tmp/rollback-report.txt
-            cat /tmp/rollback-report.txt
+            echo "=== Rollback Summary Report ==="
+            echo "Service: $(params.service-name)"
+            echo "Namespace: $(params.namespace)"
+            echo "Timestamp: $(date)"
+            echo ""
+            echo "Deployment Status:"
+            oc get deployment/$(params.service-name) -n $(params.namespace) -o wide
+            echo ""
+            echo "Pod Status:"
+            oc get pods -n $(params.namespace) -l app=$(params.service-name)

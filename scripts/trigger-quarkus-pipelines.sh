@@ -6,7 +6,7 @@
 NAMESPACE="payu-cicd"
 GIT_URL="https://github.com/fajjarnr/payu.git"
 GIT_REVISION="main"
-IMAGE_TAG="1.7.2"
+IMAGE_TAG="v1.7.8"
 
 # Format: "service-name|service-path"
 SERVICES=(
@@ -48,6 +48,8 @@ spec:
       value: "${SVC_NAME}"
     - name: service-path
       value: "${SVC_PATH}"
+    - name: service-base-dir
+      value: "backend"
     - name: git-url
       value: "${GIT_URL}"
     - name: git-revision
