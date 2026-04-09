@@ -3,9 +3,18 @@ kind: MachineAutoscaler
 metadata:
   name: payu-worker-us-east-2a
   namespace: openshift-machine-api
+  annotations:
+    # Updated for k6 distributed performance testing (April 2026)
+    # k6 stress TestRun (parallelism=4, 1.5 CPU/pod) may need 1-2 extra nodes.
+    # r6a.4xlarge = 16 vCPU / 128 GiB RAM per node.
+    payu.io/updated-at: "2026-04-09"
+    payu.io/reason: "k6 distributed load testing autoscaling support"
 spec:
-  minReplicas: 1
-  maxReplicas: 3
+  # Minimum 2 — baseline for PayU services on this AZ (was 1)
+  minReplicas: 2
+  # Maximum 5 — supports PayU services + 2 extra nodes for k6 runners during stress
+  # 5 nodes × 16 CPU = 80 CPU ceiling per AZ
+  maxReplicas: 5
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
@@ -16,9 +25,15 @@ kind: MachineAutoscaler
 metadata:
   name: payu-worker-us-east-2b
   namespace: openshift-machine-api
+  annotations:
+    payu.io/updated-at: "2026-04-09"
+    payu.io/reason: "k6 distributed load testing autoscaling support — AZ 2b now active"
 spec:
+  # Minimum 1 — required because EBS PVs (postgres, datagrid, mysql, redis) are bound to us-east-2b
+  # Without at least 1 worker in 2b, these stateful pods cannot schedule (PV node affinity)
   minReplicas: 1
-  maxReplicas: 3
+  # Maximum 4 — secondary AZ for k6 overflow and PayU service HA
+  maxReplicas: 4
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
@@ -29,9 +44,14 @@ kind: MachineAutoscaler
 metadata:
   name: payu-worker-us-east-2c
   namespace: openshift-machine-api
+  annotations:
+    payu.io/updated-at: "2026-04-09"
+    payu.io/reason: "k6 distributed load testing autoscaling support — AZ 2c now active"
 spec:
-  minReplicas: 1
-  maxReplicas: 3
+  # Allow scale from 0 — tertiary AZ for extreme burst scenarios
+  minReplicas: 0
+  # Maximum 4 — balanceSimilarNodeGroups ensures fair distribution across AZs
+  maxReplicas: 4
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet

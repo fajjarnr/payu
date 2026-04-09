@@ -163,7 +163,6 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("wallet:id:" + wallet.getId());
 
         LedgerEntry debitEntry = LedgerEntry.builder()
-                .id(UUID.randomUUID())
                 .transactionId(UUID.fromString(reservationId))
                 .accountId(accountId) // accountId is String in both Wallet and Ledger now
                 .entryType(LedgerEntry.EntryType.DEBIT)
@@ -210,7 +209,6 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("wallet:id:" + wallet.getId());
 
         LedgerEntry commitEntry = LedgerEntry.builder()
-                .id(UUID.randomUUID())
                 .transactionId(UUID.fromString(reservationId))
                 .accountId(accountId)
                 .entryType(LedgerEntry.EntryType.DEBIT)
@@ -256,7 +254,6 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("wallet:id:" + wallet.getId());
 
         LedgerEntry creditEntry = LedgerEntry.builder()
-                .id(UUID.randomUUID())
                 .transactionId(UUID.fromString(reservationId))
                 .accountId(accountId)
                 .entryType(LedgerEntry.EntryType.CREDIT)
@@ -317,7 +314,6 @@ public class WalletService implements WalletUseCase {
 
         // Create Ledger Entry
         LedgerEntry creditEntry = LedgerEntry.builder()
-                .id(UUID.randomUUID())
                 .transactionId(transactionId)
                 .accountId(accountId)
                 .entryType(LedgerEntry.EntryType.CREDIT)

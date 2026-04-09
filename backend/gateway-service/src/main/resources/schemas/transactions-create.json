@@ -2,33 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://payu.id/schemas/transactions-create.json",
   "title": "Create Transaction Request",
-  "description": "Schema for generic transaction creation",
+  "description": "Fallback schema for transaction sub-endpoints (disbursements, VAs, split-bills, etc.)",
   "type": "object",
   "properties": {
-    "type": {
-      "type": "string",
-      "enum": ["TRANSFER", "PAYMENT", "TOP_UP", "WITHDRAWAL"],
-      "description": "Transaction type"
-    },
     "amount": {
       "type": "number",
       "exclusiveMinimum": 0,
       "description": "Transaction amount"
-    },
-    "currency": {
-      "type": "string",
-      "pattern": "^[A-Z]{3}$",
-      "default": "IDR"
-    },
-    "sourceAccountId": {
-      "type": "string",
-      "minLength": 1
-    },
-    "description": {
-      "type": "string",
-      "maxLength": 255
     }
   },
-  "required": ["type", "amount", "sourceAccountId"],
-  "additionalProperties": false
+  "required": ["amount"],
+  "additionalProperties": true
 }

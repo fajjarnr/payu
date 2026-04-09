@@ -98,8 +98,10 @@ public class ApiGatewayResource {
     public Uni<Response> walletPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
         return proxy("wallet-service", "/api/v1/wallets/" + path, "PUT", body, headers);
     }
-    // Wallet service typically doesn't have root /wallets endpoint access directly in this design (usually under accounts), but if needed:
-    // Skipping wallet root for now as not in original code explicitly (wait, original code didn't have wallet root)
+    @DELETE @Path("/wallets/{path: .*}")
+    public Uni<Response> walletDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/wallets/" + path, "DELETE", body, headers);
+    }
 
     // ==================== Transaction Service ====================
     @GET @Path("/transactions/{path: .*}")
@@ -115,6 +117,15 @@ public class ApiGatewayResource {
     public Uni<Response> transactionRootGet(String body, @Context HttpHeaders headers) {
         return proxy("transaction-service", "/api/v1/transactions", "GET", body, headers);
     }
+    @PUT @Path("/transactions/{path: .*}")
+    public Uni<Response> transactionPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/transactions/" + path, "PUT", body, headers);
+    }
+    @DELETE @Path("/transactions/{path: .*}")
+    public Uni<Response> transactionDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("transaction-service", "/api/v1/transactions/" + path, "DELETE", body, headers);
+    }
+
     @POST @Path("/transactions")
     public Uni<Response> transactionRootPost(String body, @Context HttpHeaders headers) {
         return proxy("transaction-service", "/api/v1/transactions", "POST", body, headers);
@@ -169,6 +180,11 @@ public class ApiGatewayResource {
     @PUT @Path("/cards/{path: .*}")
     public Uni<Response> cardPut(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
         return proxy("wallet-service", "/api/v1/cards/" + path, "PUT", body, headers);
+    }
+
+    @DELETE @Path("/cards/{path: .*}")
+    public Uni<Response> cardDelete(@PathParam("path") String path, String body, @Context HttpHeaders headers) {
+        return proxy("wallet-service", "/api/v1/cards/" + path, "DELETE", body, headers);
     }
 
     @GET @Path("/cards")

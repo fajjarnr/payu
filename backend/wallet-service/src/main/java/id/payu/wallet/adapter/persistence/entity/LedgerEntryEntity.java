@@ -1,6 +1,7 @@
 package id.payu.wallet.adapter.persistence.entity;
 
 import jakarta.persistence.*;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,13 +15,15 @@ import java.util.UUID;
     @Index(name = "idx_ledger_journal_id", columnList = "journal_entry_id"),
     @Index(name = "idx_ledger_coa_code", columnList = "coa_code")
 })
-@NamedEntityGraph
-public class LedgerEntryEntity {
+public class LedgerEntryEntity implements Persistable<UUID> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    @Transient
+    private boolean isNew = true;
 
     @Column(name = "transaction_id", nullable = false)
     private UUID transactionId;
@@ -74,6 +77,17 @@ public class LedgerEntryEntity {
         this.referenceType = referenceType;
         this.referenceId = referenceId;
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNew = false;
     }
 
     @PrePersist

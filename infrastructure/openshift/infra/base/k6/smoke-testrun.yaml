@@ -1,0 +1,65 @@
+# PayU k6 Operator — Smoke TestRun (validates cluster connectivity)
+# Run: kubectl apply -f smoke-testrun.yaml -n payu-k6
+apiVersion: k6.io/v1alpha1
+kind: TestRun
+metadata:
+  name: payu-smoke
+  namespace: payu-k6
+  labels:
+    app.kubernetes.io/part-of: payu-platform
+    app.kubernetes.io/component: k6-performance
+    test-type: smoke
+spec:
+  parallelism: 1
+  script:
+    configMap:
+      name: k6-smoke-test
+      file: smoke-test.js
+  runner:
+    serviceAccountName: k6-runner
+    image: grafana/k6:latest
+    env:
+      - name: GATEWAY_URL
+        value: "https://gateway-dev.payu.fajjjar.my.id"
+      - name: KEYCLOAK_URL
+        value: "https://sso.dev.payu.fajjjar.my.id"
+      - name: K6_SMOKE_DURATION
+        value: "30s"
+      - name: K6_SMOKE_TARGET
+        value: "1"
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    # Mount lib helpers alongside main script
+    volumeMounts:
+      - name: lib-auth
+        mountPath: /scripts/lib/auth.js
+        subPath: auth.js
+      - name: lib-wallet
+        mountPath: /scripts/lib/wallet.js
+        subPath: wallet.js
+      - name: lib-card
+        mountPath: /scripts/lib/card.js
+        subPath: card.js
+      - name: lib-transaction
+        mountPath: /scripts/lib/transaction.js
+        subPath: transaction.js
+    volumes:
+      - name: lib-auth
+        configMap:
+          name: k6-lib-auth
+      - name: lib-wallet
+        configMap:
+          name: k6-lib-wallet
+      - name: lib-card
+        configMap:
+          name: k6-lib-card
+      - name: lib-transaction
+        configMap:
+          name: k6-lib-transaction
+  # Separate initializer from runners
+  separate: false

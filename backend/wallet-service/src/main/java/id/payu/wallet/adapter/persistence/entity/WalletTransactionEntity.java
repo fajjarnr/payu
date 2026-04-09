@@ -2,6 +2,7 @@ package id.payu.wallet.adapter.persistence.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,11 +16,14 @@ import java.util.UUID;
     @Index(name = "idx_txn_wallet_id", columnList = "walletId"),
     @Index(name = "idx_txn_reference_id", columnList = "referenceId")
 })
-public class WalletTransactionEntity {
+public class WalletTransactionEntity implements Persistable<UUID> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
     private UUID id;
+
+    @Transient
+    private boolean isNew = true;
 
     @Column(nullable = false)
     private UUID walletId;
@@ -45,6 +49,17 @@ public class WalletTransactionEntity {
     private LocalDateTime createdAt;
 
     public WalletTransactionEntity() {
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNew = false;
     }
 
     public WalletTransactionEntity(UUID id, UUID walletId, String referenceId, TransactionType type, BigDecimal amount, BigDecimal balanceAfter, String description, LocalDateTime createdAt) {

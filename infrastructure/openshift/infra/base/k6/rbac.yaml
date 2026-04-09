@@ -1,0 +1,87 @@
+# ServiceAccount for k6 runner pods in payu-k6 namespace
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k6-runner
+  namespace: payu-k6
+  labels:
+    app.kubernetes.io/part-of: payu-platform
+    app.kubernetes.io/component: k6-runner
+---
+# ClusterRole giving k6 runner pods ability to watch its own pods (for coordination)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k6-runner
+  labels:
+    app.kubernetes.io/part-of: payu-platform
+    app.kubernetes.io/component: k6-runner
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "configmaps", "services"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["k6.io"]
+    resources: ["testruns"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k6-runner
+  labels:
+    app.kubernetes.io/part-of: payu-platform
+    app.kubernetes.io/component: k6-runner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k6-runner
+subjects:
+  - kind: ServiceAccount
+    name: k6-runner
+    namespace: payu-k6
+---
+# OpenShift: allow k6 runner pods to run as non-root (SCC anyuid not needed,
+# but privileged is denied — use restricted-v2 via SCC annotation below)
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: k6-runner-scc
+  labels:
+    app.kubernetes.io/part-of: payu-platform
+    app.kubernetes.io/component: k6-runner
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities: []
+defaultAddCapabilities: []
+fsGroup:
+  type: MustRunAs
+  ranges:
+    - min: 1000
+      max: 65534
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+  - ALL
+runAsUser:
+  type: MustRunAsRange
+  uidRangeMin: 1000
+  uidRangeMax: 65534
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: MustRunAs
+  ranges:
+    - min: 1000
+      max: 65534
+volumes:
+  - configMap
+  - emptyDir
+  - projected
+  - secret
+users:
+  - system:serviceaccount:payu-k6:k6-runner
+groups: []

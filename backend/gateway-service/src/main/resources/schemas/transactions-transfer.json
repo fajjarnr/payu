@@ -2,18 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://payu.id/schemas/transactions-transfer.json",
   "title": "Transfer Request",
-  "description": "Schema for fund transfer requests",
+  "description": "Schema for fund transfer requests (matches InitiateTransferRequest DTO)",
   "type": "object",
   "properties": {
-    "sourceAccountId": {
+    "senderAccountId": {
       "type": "string",
       "minLength": 1,
-      "description": "Source account ID"
+      "description": "Sender account UUID"
     },
-    "destinationAccountId": {
+    "recipientAccountNumber": {
       "type": "string",
-      "minLength": 1,
-      "description": "Destination account ID"
+      "minLength": 10,
+      "maxLength": 20,
+      "pattern": "^[0-9]+$",
+      "description": "Recipient account number (10-20 digits)"
     },
     "amount": {
       "type": "number",
@@ -27,23 +29,34 @@
     },
     "description": {
       "type": "string",
-      "maxLength": 255,
-      "description": "Transfer description/note"
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Transfer description (required)"
     },
-    "transferType": {
+    "type": {
       "type": "string",
-      "enum": ["INTERNAL", "BI_FAST", "RTGS", "SKN"],
-      "description": "Transfer type"
+      "enum": ["INTERNAL_TRANSFER", "BIFAST_TRANSFER", "SKN_TRANSFER", "RTGS_TRANSFER", "QRIS_PAYMENT", "BILL_PAYMENT", "TOP_UP"],
+      "description": "Transaction type"
     },
-    "beneficiaryName": {
+    "transactionPin": {
       "type": "string",
-      "maxLength": 100
+      "pattern": "^[0-9]{6}$",
+      "description": "6-digit transaction PIN"
     },
-    "beneficiaryBank": {
+    "deviceId": {
       "type": "string",
-      "maxLength": 100
+      "description": "Device identifier"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "description": "Idempotency key for duplicate prevention"
+    },
+    "memo": {
+      "type": "string",
+      "maxLength": 140,
+      "description": "Optional memo"
     }
   },
-  "required": ["sourceAccountId", "destinationAccountId", "amount"],
+  "required": ["senderAccountId", "recipientAccountNumber", "amount", "description"],
   "additionalProperties": false
 }

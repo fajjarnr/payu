@@ -9,6 +9,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed — CRUD Validation & Multi-Service Bug Fixes (2026-04-09)
+
+#### Wallet-Service (tag: `crudfix6` → `authfix2`)
+- **Wallet Credit OptimisticLockingFailure**: Fixed `ObjectOptimisticLockingFailureException` on `LedgerEntryEntity` during credit. Root cause: pre-assigned UUID via `.id(UUID.randomUUID())` caused `merge()` instead of `persist()`. Fix: `LedgerEntryEntity` and `WalletTransactionEntity` implement `Persistable<UUID>` with `isNew()` pattern; removed pre-assigned IDs from `WalletService`; changed `JournalEntryEntity` cascade from `ALL` to `PERSIST`; removed bare `@NamedEntityGraph`.
+- **JWT Authority Mapping**: Added `keycloakGrantedAuthoritiesConverter()` to `SecurityConfig` — maps `realm_access.roles` → `ROLE_*`, derives fine-grained permissions (`read:wallet`, `write:wallet`, etc.) from `default-roles-payu`.
+- **SavingsGoalController ownership**: Replaced 6 occurrences of `jwt.getClaim("account_id")` (always null) with `jwt.getSubject()`.
+
+#### Transaction-Service (tag: `authfix1`)
+- **JWT Authority Mapping**: Added same `keycloakGrantedAuthoritiesConverter()` to `SecurityConfig` — maps realm roles to `write:transaction`, `write:payment`, `read:transaction`.
+- **Account Service URL**: Fixed `application.yml` — changed `services.account.url` from `http://localhost:8081` to `http://account-service:8080`.
+- **BuildConfig**: Patched `transaction-service-binary` BC to use local `Containerfile` instead of inline Dockerfile (multi-stage build failed without parent POM).
+
+#### Account-Service (tag: `accfix1`, build-6)
+- **JWT Authority Mapping**: Added same `keycloakGrantedAuthoritiesConverter()` to `SecurityConfig`.
+- **AccountSecurityService** (NEW): Created `@Service` bean for `BudgetController`'s `@PreAuthorize` SpEL expression `@accountSecurityService.isAccountOwner()`. Extracts KC sub → finds User by externalId → checks account ownership.
+- **UserAccountController** (NEW): Created endpoint `GET /api/v1/accounts/users/{userId}/account-ids` — returns `List<UUID>` of account IDs for a user. Required by transaction-service's `AccountServiceAdapter` for authorization.
+- **BeneficiaryController ownership**: Fixed ownership check — was comparing JWT `sub` (Keycloak externalId) directly against `accountId` (internal User UUID). Now resolves externalId → User UUID before comparison.
+
+#### Gateway-Service (tag: `gwfix1`, build-6)
+- **Schema `transactions-transfer.json`**: Rewrote to match `InitiateTransferRequest` DTO — `senderAccountId`, `recipientAccountNumber`, correct enum values, added `transactionPin`, `deviceId`, `idempotencyKey`, `memo`.
+- **Schema `transactions-create.json`**: Changed to lenient catch-all — requires only `amount`, allows `additionalProperties: true`.
+- **Schema `accounts-create.json`**: Changed to `required: []` and `additionalProperties: true` for budget/beneficiary sub-path POSTs.
+- **DELETE/PUT routes**: Added `@DELETE` for `/wallets/*`, `/transactions/*`, `/cards/*` and `@PUT` for `/transactions/*` in `ApiGatewayResource.java`.
+
+#### Database Migrations (applied via SQL in `payu-dev`)
+- Added `tenant_id` column to `beneficiaries` table (`ALTER TABLE beneficiaries ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(50) NOT NULL DEFAULT 'default'`).
+- Created Account records for test users (account_number `2001001001`, `2001001002`).
+- Fixed AccountType enum values: `MAIN` → `SAVINGS`, `POCKET_SAVINGS`/`POCKET_EMERGENCY` → `POCKET`.
+
+#### Infrastructure
+- **PV Affinity Fix**: Scaled worker node in `us-east-2b` (MachineSet replica 0→1) to match EBS volume AZ. Updated MachineAutoscaler min=1 for 2b.
+- **Tekton RBAC**: Created ClusterRoleBinding for pipeline ServiceAccount `namespace-patcher`.
+
+### Added — k6 Operator Distributed Load Testing on OpenShift (2026-04-09)
+
+- **k6 Operator**: Installed Grafana k6 Operator v0.0.x via official `bundle.yaml` into `k6-operator-system` namespace on OpenShift 4.21. Operator manages `TestRun` CRDs for distributed k6 execution.
+- **Namespace `payu-k6`**: Created dedicated namespace with `k6-runner` ServiceAccount, ClusterRole, ClusterRoleBinding, and OpenShift SCC (`k6-runner-scc`) for non-root runner pod execution.
+- **ConfigMaps**: Uploaded all 4 k6 test scripts (`smoke-test.js`, `crud-stress-test.js`, `crud-load-test.js`, `crud-data-consistency-test.js`) and 4 lib helpers (`auth.js`, `wallet.js`, `card.js`, `transaction.js`) as ConfigMaps in `payu-k6`.
+- **TestRun CRDs** (`infrastructure/openshift/infra/base/k6/`):
+  - `smoke-testrun.yaml` — 1 runner, 30s smoke validation (parallelism=1)
+  - `crud-stress-testrun.yaml` — 4 runners, stress profile up to 1000 VUs (parallelism=4, 1.5 CPU/pod — designed to trigger ClusterAutoscaler)
+  - `crud-load-testrun.yaml` — 2 runners, 40-min load profile (addresses OPS-2026-04-08-02)
+  - `crud-consistency-testrun.yaml` — 2 runners, data consistency validation (addresses OPS-2026-04-08-04)
+- **Smoke Test Verified**: `payu-smoke` TestRun completed 30 iterations with 1 VU in 30s. Lifecycle confirmed: initializer → starter → runner → finished. HTTP failures expected (public DNS not reachable from pod network — in-cluster Istio gateway routes needed for full success).
+
+### Changed — ClusterAutoscaler & MachineAutoscaler (2026-04-09)
+
+- **`cluster-autoscaler.yaml`**: Updated for k6 distributed load testing:
+  - `maxNodesTotal`: 24 → 14 (realistic ceiling: 3 master + 2 infra + 9 workers across 3 AZs)
+  - `cores.max`: 256 → 224 (3×16 master + 2×16 infra + 9×16 worker)
+  - `memory.max`: 512 → 1536 GiB
+  - `scaleDown.unneededTime`: 5m → 10m (prevents premature teardown during k6 ramp-down)
+  - `scaleDown.delayAfterFailure`: 3m → 5m (avoids rapid loop during k6 spikes)
+  - Added `payu.io/` annotations documenting change rationale
+- **`worker-machineautoscalers.yaml`**: Raised autoscaling limits for k6 burst capacity:
+  - `us-east-2a`: min 1→2, max 3→5 (baseline AZ, always has worker capacity)
+  - `us-east-2b`: min 1→0, max 3→4 (secondary AZ, scales from 0 for overflow)
+  - `us-east-2c`: min 1→0, max 3→4 (tertiary AZ, scales from 0 for overflow)
+  - All 3 MachineAutoscalers applied and verified live on cluster
+
+---
+
 ## [1.7.8] - 2026-04-07
 
 ### Fixed — Phase 15: Final Remediation — All 12 Remaining Bugs Closed (0 Open Bugs)

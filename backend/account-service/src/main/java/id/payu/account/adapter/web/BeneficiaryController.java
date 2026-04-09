@@ -47,11 +47,12 @@ public class BeneficiaryController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Getting beneficiaries for account: {}", accountId);
 
-        // BUG-BE-177: Validate that the accountId belongs to the authenticated user
-        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
-        String authenticatedId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
-        if (!accountId.toString().equals(authenticatedId)) {
-            log.warn("User {} attempted to access beneficiaries for account {}", authenticatedId, accountId);
+        // BUG-BE-177 / BUG-AUTH-013: Resolve Keycloak externalId to internal User UUID
+        // JWT sub = Keycloak externalId, accountId path var = internal User UUID in this controller
+        String externalId = jwt.getSubject();
+        var userOpt = userRepository.findByExternalId(externalId);
+        if (userOpt.isEmpty() || !userOpt.get().getId().equals(accountId)) {
+            log.warn("User externalId={} attempted to access beneficiaries for account {}", externalId, accountId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
         }
@@ -74,11 +75,11 @@ public class BeneficiaryController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Creating beneficiary for account: {}", accountId);
 
-        // BUG-BE-177: Validate that the accountId belongs to the authenticated user
-        // BUG-AUTH-013: Standardized to use 'account_id' claim with 'sub' fallback
-        String authenticatedId = jwt.getClaimAsString("account_id") != null ? jwt.getClaimAsString("account_id") : jwt.getSubject();
-        if (!accountId.toString().equals(authenticatedId)) {
-            log.warn("User {} attempted to create beneficiary for account {}", authenticatedId, accountId);
+        // BUG-BE-177 / BUG-AUTH-013: Resolve Keycloak externalId to internal User UUID
+        String externalId = jwt.getSubject();
+        var userOpt2 = userRepository.findByExternalId(externalId);
+        if (userOpt2.isEmpty() || !userOpt2.get().getId().equals(accountId)) {
+            log.warn("User externalId={} attempted to create beneficiary for account {}", externalId, accountId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("BEN_004", "Access denied — account does not belong to authenticated user"));
         }

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-k6
+  labels:
+    app.kubernetes.io/part-of: payu-platform
+    app.kubernetes.io/managed-by: k6-operator
+    environment: dev
+    cost-center: platform-team
+  annotations:
+    openshift.io/description: "PayU k6 distributed performance testing namespace"
+    openshift.io/display-name: "PayU k6 Performance Tests"

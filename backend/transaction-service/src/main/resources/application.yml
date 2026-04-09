@@ -108,7 +108,7 @@ services:
   qris:
     url: http://localhost:9001
   account:
-    url: http://localhost:8081
+    url: http://account-service:8080
 management:
   endpoints:
     web:

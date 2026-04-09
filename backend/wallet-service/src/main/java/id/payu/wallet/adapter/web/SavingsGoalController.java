@@ -52,7 +52,7 @@ public class SavingsGoalController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("WAL_001", "Wallet not found"));
         }
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = jwt.getSubject();
         if (!pocket.getAccountId().equals(authenticatedAccountId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("SAV_403", "Not authorized to access savings goals for this wallet"));
@@ -86,7 +86,7 @@ public class SavingsGoalController {
         }
 
         // Ownership check
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = jwt.getSubject();
         if (!pocket.getAccountId().equals(authenticatedAccountId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("SAV_403", "Not authorized to create savings goals for this wallet"));
@@ -128,7 +128,7 @@ public class SavingsGoalController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("WAL_001", "Wallet not found"));
         }
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = jwt.getSubject();
         if (!pocket.getAccountId().equals(authenticatedAccountId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("SAV_403", "Not authorized to update savings goals for this wallet"));
@@ -169,7 +169,7 @@ public class SavingsGoalController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("WAL_001", "Wallet not found"));
         }
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = jwt.getSubject();
         if (!pocket.getAccountId().equals(authenticatedAccountId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("SAV_403", "Not authorized to delete savings goals for this wallet"));
@@ -205,7 +205,7 @@ public class SavingsGoalController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("WAL_001", "Wallet not found"));
         }
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = jwt.getSubject();
         if (!pocket.getAccountId().equals(authenticatedAccountId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("SAV_403", "Not authorized to pause savings goals for this wallet"));
@@ -243,7 +243,7 @@ public class SavingsGoalController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("WAL_001", "Wallet not found"));
         }
-        String authenticatedAccountId = jwt.getClaim("account_id");
+        String authenticatedAccountId = jwt.getSubject();
         if (!pocket.getAccountId().equals(authenticatedAccountId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("SAV_403", "Not authorized to resume savings goals for this wallet"));

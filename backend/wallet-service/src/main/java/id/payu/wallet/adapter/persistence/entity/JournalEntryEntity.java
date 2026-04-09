@@ -51,7 +51,7 @@ public class JournalEntryEntity {
     @Column(name = "created_by", length = 100)
     private String createdBy;
 
-    @OneToMany(mappedBy = "journalEntry", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "journalEntry", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<LedgerEntryEntity> entries = new ArrayList<>();
 
     public JournalEntryEntity() {

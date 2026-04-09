@@ -27,6 +27,6 @@
       "description": "Initial deposit amount"
     }
   },
-  "required": ["accountType"],
-  "additionalProperties": false
+  "required": [],
+  "additionalProperties": true
 }
